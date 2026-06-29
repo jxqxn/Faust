@@ -14,6 +14,7 @@ config/name="Faust"
 config/features=PackedStringArray("4.6")
 run/main_scene="res://scenes/main.tscn"
 config/version="0.1.0"
+config/description="苏丹的游戏 Godot 克隆 — 忠实还原原作核心系统"
 
 [autoload]
 
