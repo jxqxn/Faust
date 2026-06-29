@@ -88,10 +88,18 @@ static func use_redraw(state, rng) -> int:
 		return -1
 	# Remove the most recent active sudan card.
 	var discarded: int = state.active_sudan_cards.pop_back().card_id
-	# Re-insert it into the deck at a random position, then draw.
-	SudanCards.redraw(rng, state.sudan_deck, discarded)
 	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
+	# Original order: draw NEW card first (RemoveLast from pool), THEN insert
+	# the discarded card back at a random position. This prevents the redrawn
+	# card from being the discarded one if the pool is small.
+	# [SRC: GameController.c @ RedrawSudanCard: GenSudanCard(RemoveLast) THEN
+	#  set_life(old,0) THEN Insert(Random.Range(0,count), old)]
 	var new_id: int = SudanCards.draw(state.sudan_deck)
+	# Now insert the discarded card back into the pool.
+	if not state.sudan_deck.is_empty():
+		SudanCards.redraw(rng, state.sudan_deck, discarded)
+	else:
+		state.sudan_deck.append(discarded)
 	if new_id >= 0:
 		state.active_sudan_cards.append(ActiveSudan.new(new_id, life, state.round_number))
 		# Consume the redraw charge ONLY after a successful generate+insert.

@@ -154,6 +154,13 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 		var weights: Array = GameModels.difficulty_weights(st.difficulty_config)
 		var rng = ctx.get("rng")
 		var gold := int(ctx.get("gold_dice_used", 0))
+		# Per-type gold dice scoping: the original keys goldDiceCounts by the
+		# FuncCompare type string. A scalar gold_dice_used applies to all types.
+		# [SRC: FuncCompare.c @ IsSatisfied: goldDiceCounts[type] keyed by param_1+0x20]
+		var gold_map = ctx.get("gold_dice_map", {})
+		if gold_map is Dictionary and gold_map.size() > 0:
+			var type_key: String = "r1" if is_r else "f"
+			gold = int(gold_map.get(type_key, gold))
 		return Dice.is_satisfied(rng, attr_val, y, x, op, weights, gold)
 	else:
 		# f: pure attribute compare against val.

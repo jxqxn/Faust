@@ -199,6 +199,9 @@ func _do_resolve() -> void:
 		"attr_slots": ["s1", "s2"], "rite_id": _rite_id,
 	}
 	var res = RiteResolver.resolve(_rite, ctx, _gold_used_this_resolve)
+	# Gold dice map is already set by the resolver from the scalar (backward
+	# compat). The scalar applies to both r1 and f types, which is correct for
+	# the current single-check-per-rite structure.
 	_last_result = res
 	_display_result(res)
 	_update_gold_button()

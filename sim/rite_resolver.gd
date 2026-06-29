@@ -1,4 +1,4 @@
-﻿## Rite settlement pipeline.
+## Rite settlement pipeline.
 ## verified-conclusions + spec sec 10.1, re-confirmed vs
 ## decompiled/RiteResultPanelController.c:
 ##   settlement_prior  -> FIRST matching entry wins (mutually exclusive)
@@ -26,10 +26,15 @@ class RiteResult:
 
 ## Resolve a rite end-to-end.
 ## ctx must contain: db, state, rng, rite_state{s1..s4->card_id}, rite_id.
-## gold_dice_used: gold dice the player spent (added to successes on re-resolve).
 static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: int = 0) -> RiteResult:
 	var res := RiteResult.new()
 	ctx["gold_dice_used"] = gold_dice_used
+	# Per-type gold dice map for FuncCompare conditions keyed by check-type.
+	# [SRC: FuncCompare.c @ IsSatisfied: goldDiceCounts[type] at param_2+0x50]
+	if typeof(gold_dice_used) == TYPE_DICTIONARY:
+		ctx["gold_dice_map"] = gold_dice_used
+	else:
+		ctx["gold_dice_map"] = {"r1": gold_dice_used, "f": gold_dice_used}
 	ctx["rite_id"] = int(rite.get("id", 0))
 	# 1. settlement_prior: first match wins.
 	for entry in rite.get("settlement_prior", []):
