@@ -1,7 +1,11 @@
 ## Rite view: shows the rite's card slots, lets the player place cards from the
-## hand, spend gold dice, resolve via RiteResolver, and shows the result + gold.
-## FIX: tracks gold dice spent THIS resolve separately from the state counter,
-## so RiteResolver.resolve() receives the correct gold_dice_used value.
+## hand, resolves via RiteResolver, and shows the result + gold.
+## Gold dice flow (RISK#3 fix): dice are spent REACTIVELY after a failed/low
+## settlement, not proactively before resolve. The player resolves, sees the
+## outcome, and if the r1 check produced a sub-optimal result they can spend
+## gold dice to add successes and re-resolve. This matches the original's
+## GoldDiceException -> Promise.Reject -> re-resolve flow.
+## [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 extends Control
 
 signal closed()
@@ -17,10 +21,12 @@ var _rite_id: int = 5000001
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> card_id
 var _gold_used_this_resolve: int = 0
+var _last_result = null  # last RiteResult
 
 var _slots_container: VBoxContainer
 var _result_label: RichTextLabel
 var _gold_dice_label: Label
+var _gold_dice_btn: Button
 var _resolve_btn: Button
 
 
@@ -64,7 +70,6 @@ func _build_ui() -> void:
 	desc.add_theme_font_size_override("font_size", 14)
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(0, 0)
 	root.add_child(desc)
 	# Slot panel.
 	var slots_panel := _panel()
@@ -81,18 +86,19 @@ func _build_ui() -> void:
 	slots_col.add_child(_slots_container)
 	_build_slots()
 	root.add_child(slots_panel)
-	# Gold dice + resolve bar.
+	# Action bar: resolve + gold dice (reactive).
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 12)
 	_gold_dice_label = Label.new()
 	_gold_dice_label.add_theme_font_size_override("font_size", 18)
 	_gold_dice_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	action_row.add_child(_gold_dice_label)
-	var gold_btn := Button.new()
-	gold_btn.text = "使用金骰 (+1成功)"
-	gold_btn.custom_minimum_size = Vector2(180, 44)
-	gold_btn.pressed.connect(_use_gold_dice)
-	action_row.add_child(gold_btn)
+	_gold_dice_btn = Button.new()
+	_gold_dice_btn.text = "投入金骰 (+1成功 · 重新结算)"
+	_gold_dice_btn.custom_minimum_size = Vector2(260, 44)
+	_gold_dice_btn.disabled = true
+	_gold_dice_btn.pressed.connect(_use_gold_dice_reactive)
+	action_row.add_child(_gold_dice_btn)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	action_row.add_child(spacer)
@@ -124,6 +130,7 @@ func _build_ui() -> void:
 	close_btn.custom_minimum_size = Vector2(120, 44)
 	close_btn.pressed.connect(func(): closed.emit())
 	root.add_child(close_btn)
+	_result_label.text = "[color=#a89880]放入卡牌后点击「掷骰结算」。[/color]"
 	_refresh_gold_label()
 
 
@@ -137,7 +144,6 @@ func _build_slots() -> void:
 		var slot_def: Dictionary = slots[slot_key]
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
-		# Slot label.
 		var info_col := VBoxContainer.new()
 		info_col.custom_minimum_size = Vector2(280, 0)
 		info_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -153,7 +159,6 @@ func _build_slots() -> void:
 		slot_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		info_col.add_child(slot_desc)
 		row.add_child(info_col)
-		# Card dropdown.
 		var opt := OptionButton.new()
 		opt.custom_minimum_size = Vector2(360, 36)
 		opt.add_item("（空）", 0)
@@ -177,21 +182,13 @@ func _on_slot_selected(slot_key: String, opt: OptionButton, index: int) -> void:
 		_placed[slot_key] = cid
 
 
-func _use_gold_dice() -> void:
-	if _state.gold_dice <= 0:
-		return
-	_state.gold_dice -= 1
-	_gold_used_this_resolve += 1
-	_refresh_gold_label()
-
-
-func _refresh_gold_label() -> void:
-	if _gold_dice_label:
-		_gold_dice_label.text = "金骰: %d (本次 +%d)" % [_state.gold_dice, _gold_used_this_resolve]
-
-
 func _resolve() -> void:
-	# Place selected cards onto the table.
+	# Fresh resolve: reset gold-dice-used, place cards, resolve.
+	_gold_used_this_resolve = 0
+	_do_resolve()
+
+
+func _do_resolve() -> void:
 	_state.table_cards.clear()
 	for slot_key in _placed:
 		var slot_num: int = slot_key.substr(1).to_int()
@@ -201,8 +198,14 @@ func _resolve() -> void:
 		"rite_state": _placed.duplicate(),
 		"attr_slots": ["s1", "s2"], "rite_id": _rite_id,
 	}
-	# Pass the gold dice spent THIS resolve to the resolver (bug fix).
 	var res = RiteResolver.resolve(_rite, ctx, _gold_used_this_resolve)
+	_last_result = res
+	_display_result(res)
+	_update_gold_button()
+	_refresh_gold_label()
+
+
+func _display_result(res) -> void:
 	var entry: Dictionary = res.normal_entry
 	var txt := ""
 	if entry.is_empty():
@@ -214,13 +217,43 @@ func _resolve() -> void:
 			txt += "[color=#e0c486]" + t1 + "[/color]\n"
 		if t2 != "":
 			txt += t2 + "\n"
+		# Show dice check info if the condition had an r1.
+		var cond: Dictionary = entry.get("condition", {})
+		for k in cond:
+			if k.begins_with("r1:"):
+				txt += "\n[color=#a89880]检定: %s[/color]" % k
+				break
 	txt += "\n[color=#c9a96a]当前金币: %d[/color]" % _state.coin_count
 	if not res.extre_log.is_empty():
 		txt += "\n[color=#a89880]（附加结算 %d 条已执行）[/color]" % res.extre_log.size()
+	if _gold_used_this_resolve > 0:
+		txt += "\n[color=#e0c486]（已投入金骰 +%d成功）[/color]" % _gold_used_this_resolve
 	_result_label.text = txt
-	# Reset per-resolve gold count after resolving.
-	_gold_used_this_resolve = 0
-	_refresh_gold_label()
+
+
+func _update_gold_button() -> void:
+	# Gold dice can be spent reactively after a resolve (RISK#3 fix).
+	# Enable the button if: player has gold dice AND a resolve has been done.
+	var can_spend: bool = _state.gold_dice > 0 and _last_result != null
+	_gold_dice_btn.disabled = not can_spend
+	if can_spend:
+		_gold_dice_btn.text = "投入金骰 (+1成功 · 重新结算)"
+	else:
+		_gold_dice_btn.text = "金骰耗尽" if _state.gold_dice <= 0 else "投入金骰 (+1成功)"
+
+
+func _use_gold_dice_reactive() -> void:
+	# Spend one gold die, increment the per-resolve counter, re-resolve.
+	if _state.gold_dice <= 0:
+		return
+	_state.gold_dice -= 1
+	_gold_used_this_resolve += 1
+	_do_resolve()
+
+
+func _refresh_gold_label() -> void:
+	if _gold_dice_label:
+		_gold_dice_label.text = "金骰: %d" % _state.gold_dice
 
 
 func _panel() -> PanelContainer:

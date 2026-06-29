@@ -117,6 +117,12 @@ static func run_auto_rites(state, db, rng) -> Array:
 		var rite: Dictionary = db.rites[rid]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
+		# Only auto-resolve rites with auto_result=1. Many rites have auto_begin=1
+		# (404) but only 7 also have auto_result=1 — those are the ones that
+		# actually fire their settlement automatically. The rest are auto-opened
+		# but require player interaction.
+		if int(rite.get("auto_result", 0)) != 1:
+			continue
 		var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"], "rite_id": int(rid)}
 		var res := RiteResolver.resolve(rite, ctx, 0)
 		out.append({"id": int(rid), "result": res})

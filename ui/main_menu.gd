@@ -5,6 +5,10 @@ extends Control
 signal difficulty_selected(index: int)
 
 const FaustTheme = preload("res://ui/theme.gd")
+const SaveSystem = preload("res://sim/save_system.gd")
+
+signal continue_pressed()
+
 
 const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
 const DIFF_DESC := [
@@ -48,6 +52,15 @@ func _build_ui() -> void:
 	sub.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	vbox.add_child(sub)
 	vbox.add_child(_spacer(12))
+	# Continue button (only if a save exists).
+	if SaveSystem.has_save():
+		var cont := Button.new()
+		cont.text = "继续游戏"
+		cont.custom_minimum_size = Vector2(560, 50)
+		cont.add_theme_font_size_override("font_size", 22)
+		cont.pressed.connect(func(): continue_pressed.emit())
+		vbox.add_child(cont)
+		vbox.add_child(_spacer(8))
 	# Difficulty cards.
 	for i in 3:
 		vbox.add_child(_make_diff_card(i))

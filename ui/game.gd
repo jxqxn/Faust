@@ -13,6 +13,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
+const SaveSystem = preload("res://sim/save_system.gd")
 
 var db: ConfigDB
 var state: GameState
@@ -32,8 +33,18 @@ func _show_menu() -> void:
 	_clear_current()
 	var menu := MainMenu.new()
 	menu.difficulty_selected.connect(_on_difficulty_selected)
+	menu.continue_pressed.connect(_on_continue)
 	add_child(menu)
 	_current = menu
+
+
+func _on_continue() -> void:
+	var loaded = SaveSystem.load(db)
+	if loaded == null:
+		_show_menu()
+		return
+	state = loaded
+	_show_game()
 
 
 func _on_difficulty_selected(index: int) -> void:
@@ -51,6 +62,8 @@ func _show_game() -> void:
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
+	# Autosave on entering the game.
+	SaveSystem.save(state)
 	add_child(gs)
 	_current = gs
 	gs.refresh()
@@ -101,6 +114,7 @@ func _on_advance() -> void:
 
 
 func _show_game_over() -> void:
+	SaveSystem.delete_save()
 	_clear_current()
 	var go := preload("res://ui/game_over.gd").new()
 	go.setup(state, db)
