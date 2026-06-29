@@ -26,7 +26,7 @@ class RiteResult:
 
 ## Resolve a rite end-to-end.
 ## ctx must contain: db, state, rng, rite_state{s1..s4->card_id}, rite_id.
-static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: int = 0) -> RiteResult:
+static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant = 0) -> RiteResult:
 	var res := RiteResult.new()
 	ctx["gold_dice_used"] = gold_dice_used
 	# Per-type gold dice map for FuncCompare conditions keyed by check-type.

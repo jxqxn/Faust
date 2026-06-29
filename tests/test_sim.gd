@@ -111,6 +111,14 @@ func test_rite_5000001_pays_gold_when_attributes_high():
 	# Gold count is between 1 and 5 (the four branches give 1,2,3,5 gold).
 	assert_between(st.coin_count, 1, 5)
 
+func test_funccompare_gold_dice_map_can_satisfy_r1_without_dice():
+	var st := GameState.new()
+	st.difficulty_config = db.get_difficulty(1)
+	var ctx := _make_ctx(st, RNG.new(1))
+	ctx["gold_dice_used"] = {"r1": 1}
+	ctx["gold_dice_map"] = {"r1": 1}
+	assert_true(ConditionEval.eval_key("r1:智慧>=", [1, 5], ctx), "per-type gold dice map satisfies r1")
+
 func test_settlement_extre_all_match():
 	# Find a rite whose settlement_extre has multiple entries that can match.
 	# 5000001 extre has many s4.is / s3.is entries; with no such cards none match,

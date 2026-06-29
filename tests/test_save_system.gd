@@ -24,6 +24,8 @@ func test_save_load_round_trip_preserves_state():
 	state.gold_dice = 1
 	state.day = 3
 	state.round_number = 2
+	state.add_card_to_slot(2000001, 1, db)
+	state.table_cards[0].tags["临时标记"] = 7
 	# Serialize.
 	var data := SaveSystem.serialize(state)
 	# Deserialize into a fresh state.
@@ -38,6 +40,11 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
 	assert_eq(state2.active_sudan_cards.size(), 1, "active sudan card preserved")
+	assert_eq(state2.table_cards.size(), 1, "table card preserved")
+	if state2.table_cards.size() > 0:
+		assert_eq(int(state2.table_cards[0].get("id", 0)), 2000001, "table card id preserved")
+		assert_eq(int(state2.table_cards[0].get("slot", 0)), 1, "table card slot preserved")
+		assert_eq(int(state2.table_cards[0].get("tags", {}).get("临时标记", 0)), 7, "table card tags preserved")
 	if state2.active_sudan_cards.size() > 0:
 		var asc = state2.active_sudan_cards[0]
 		assert_eq(asc.card_id, state.active_sudan_cards[0].card_id, "sudan card_id preserved")

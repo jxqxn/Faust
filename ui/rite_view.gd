@@ -13,6 +13,7 @@ signal closed()
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
 const RiteResolver = preload("res://sim/rite_resolver.gd")
+const SaveSystem = preload("res://sim/save_system.gd")
 
 var _state
 var _db
@@ -21,6 +22,7 @@ var _rite_id: int = 5000001
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> card_id
 var _gold_used_this_resolve: int = 0
+var _resolve_baseline: Dictionary = {}
 var _last_result = null  # last RiteResult
 
 var _slots_container: VBoxContainer
@@ -180,19 +182,30 @@ func _on_slot_selected(slot_key: String, opt: OptionButton, index: int) -> void:
 	else:
 		var cid: int = opt.get_item_metadata(index)
 		_placed[slot_key] = cid
+	_resolve_baseline.clear()
+	_last_result = null
+	_gold_used_this_resolve = 0
+	_update_gold_button()
+	_refresh_gold_label()
 
 
 func _resolve() -> void:
-	# Fresh resolve: reset gold-dice-used, place cards, resolve.
+	# Fresh resolve: reset gold-dice-used, place cards, snapshot the pre-result
+	# state, then resolve. Gold-dice re-resolves restore this baseline before
+	# applying results, matching the original Promise.Reject unwind path.
+	# [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 	_gold_used_this_resolve = 0
+	_prepare_table_from_placements()
+	_resolve_baseline = SaveSystem.serialize(_state)
 	_do_resolve()
 
 
 func _do_resolve() -> void:
-	_state.table_cards.clear()
-	for slot_key in _placed:
-		var slot_num: int = slot_key.substr(1).to_int()
-		_state.add_card_to_slot(int(_placed[slot_key]), slot_num, _db)
+	if not _resolve_baseline.is_empty():
+		SaveSystem.deserialize(_resolve_baseline, _state, _db)
+		_state.gold_dice = max(0, int(_resolve_baseline.get("gold_dice", 0)) - _gold_used_this_resolve)
+	else:
+		_prepare_table_from_placements()
 	var ctx := {
 		"db": _db, "state": _state, "rng": _rng,
 		"rite_state": _placed.duplicate(),
@@ -249,7 +262,6 @@ func _use_gold_dice_reactive() -> void:
 	# Spend one gold die, increment the per-resolve counter, re-resolve.
 	if _state.gold_dice <= 0:
 		return
-	_state.gold_dice -= 1
 	_gold_used_this_resolve += 1
 	_do_resolve()
 
@@ -263,3 +275,10 @@ func _panel() -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", FaustTheme.card_style())
 	return p
+
+
+func _prepare_table_from_placements() -> void:
+	_state.table_cards.clear()
+	for slot_key in _placed:
+		var slot_num: int = slot_key.substr(1).to_int()
+		_state.add_card_to_slot(int(_placed[slot_key]), slot_num, _db)

@@ -18,6 +18,9 @@ static func serialize(state) -> Dictionary:
 			"days_left": asc.days_left,
 			"drawn_round": asc.drawn_round,
 		})
+	var table_cards_data: Array = []
+	for tc in state.table_cards:
+		table_cards_data.append(tc.duplicate(true))
 	return {
 		"version": 1,
 		"difficulty_index": state.difficulty_index,
@@ -30,6 +33,7 @@ static func serialize(state) -> Dictionary:
 		"hand": state.hand.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
+		"table_cards": table_cards_data,
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
 	}
@@ -60,6 +64,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 			int(asc_data.get("drawn_round", 0))
 		)
 		state.active_sudan_cards.append(asc)
+	state.table_cards.clear()
+	for tc in data.get("table_cards", []):
+		if tc is Dictionary:
+			state.table_cards.append(tc.duplicate(true))
 	state.local_counters = data.get("local_counters", {}).duplicate(true)
 	state.global_counters = data.get("global_counters", {}).duplicate(true)
 
