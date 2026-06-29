@@ -34,7 +34,9 @@ static func generate(rng: GameRNG, node: Dictionary, owned_ids: Array = [], cond
 					out.append(picked)
 				# Empty filtered set => returns nothing for that iteration.
 		4:
-			out = _weighted_n_choose_m(rng, items)
+			# M = the node's repeat/count field (node+0x20 in .c), NOT sum(num).
+			# [SRC: GenLoot.c @ Generate (0x511990) type-4: passes node+0x20 as M]
+			out = _weighted_n_choose_m(rng, items, repeat)
 		99:
 			for _i in repeat:
 				for it in items:
@@ -64,15 +66,12 @@ static func _simple_weight(rng: GameRNG, items: Array) -> Variant:
 
 
 ## WeightedNChooseM: float precision, without replacement.
-## M = sum of each item's "num" (how many to draw). For a fixed-pool draw,
-## we pick M distinct items weighted by float weight, removing each picked.
-static func _weighted_n_choose_m(rng: GameRNG, items: Array) -> Array:
+## M = the count to draw (the node's repeat/count, NOT sum of item nums).
+## [SRC: GenLoot.c @ Generate type-4 passes node+0x20 as M; offset-consistent
+##  with the repeat/count loop bound in every other type branch]
+static func _weighted_n_choose_m(rng: GameRNG, items: Array, m: int) -> Array:
 	if items.is_empty():
 		return []
-	# Determine M: sum of num fields (default 1 each).
-	var m := 0
-	for it in items:
-		m += int(it.get("num", 1))
 	var pool: Array = items.duplicate(true)
 	var out: Array = []
 	var count := minf(m, pool.size())

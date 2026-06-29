@@ -27,6 +27,30 @@ func test_counter_apply_ops():
 	assert_eq(CounterSystem.apply(5, 10, CounterSystem.Op.SET), 10)
 	assert_eq(CounterSystem.apply(5, 3, CounterSystem.Op.NONE), 5)
 
+func test_counter_real_change_value_card_tag():
+	# GetRealChangeValue: op != SET AND static_value == 0 -> card tag value.
+	# [SRC: ModifyCounter.c @ GetRealChangeValue (0x515d60)]
+	# ADD with static 0 -> use card tag (e.g. card's 智慧=4).
+	assert_eq(CounterSystem.real_change_value(CounterSystem.Op.ADD, 0, 4), 4)
+	# SUB with static 0 -> use card tag.
+	assert_eq(CounterSystem.real_change_value(CounterSystem.Op.SUB, 0, 4), 4)
+	# SET never uses card tag (op == SET).
+	assert_eq(CounterSystem.real_change_value(CounterSystem.Op.SET, 0, 4), 0)
+	# Non-zero static value always wins.
+	assert_eq(CounterSystem.real_change_value(CounterSystem.Op.ADD, 7, 4), 7)
+
+func test_counter_clamp_nonneg_gated():
+	# Special id 0x6c5667 always clamps to >= 0.
+	# [SRC: PlayerExtensions.c @ SetCounter]
+	assert_eq(CounterSystem.clamp_nonneg(0x6c5667, -5), 0)
+	assert_eq(CounterSystem.clamp_nonneg(0x6c5667, 5), 5)
+	# Ungated counter passes through.
+	assert_eq(CounterSystem.clamp_nonneg(7000001, -5), -5)
+	# Registered counter clamps.
+	CounterSystem.register_nonneg(7100006)
+	assert_eq(CounterSystem.clamp_nonneg(7100006, -3), 0)
+	assert_true(CounterSystem.is_nonneg_gated(7100006))
+
 # ---- Tag (vc#15, pitfall#5: no clamp) ----
 func test_tag_add_sub_set():
 	var tags := {"智慧": 3}
@@ -108,6 +132,8 @@ func test_loot_type99_condition_gated():
 func test_loot_type4_weighted_n_choose_m_no_replacement():
 	var rng := RNG.new(5)
 	var node := {
+		# M = repeat (node count), NOT sum of item nums. [SRC: GenLoot.c type-4]
+		"repeat": 3,
 		"type": 4,
 		"item": [
 			{"id": "1001", "weight": 100, "num": "1"},
@@ -115,13 +141,30 @@ func test_loot_type4_weighted_n_choose_m_no_replacement():
 			{"id": "1003", "weight": 100, "num": "1"},
 		]
 	}
-	# M = 3 = pool size -> all drawn, no dupes.
+	# M=3 = pool size -> all drawn, no dupes.
 	var out := LootSystem.generate(rng, node)
 	assert_eq(out.size(), 3)
 	var uniq := {}
 	for id in out:
 		uniq[id] = true
 	assert_eq(uniq.size(), 3, "no duplicates (without replacement)")
+
+func test_loot_type4_m_is_repeat_not_sum_num():
+	# M = repeat field; item num is irrelevant to draw count.
+	var rng := RNG.new(8)
+	var node := {
+		"repeat": 2,
+		"type": 4,
+		"item": [
+			{"id": "1001", "weight": 100, "num": "5"},
+			{"id": "1002", "weight": 100, "num": "5"},
+			{"id": "1003", "weight": 100, "num": "5"},
+			{"id": "1004", "weight": 100, "num": "5"},
+		]
+	}
+	var out := LootSystem.generate(rng, node)
+	# M=2 (repeat), not 20 (sum of num). Draw 2 distinct.
+	assert_eq(out.size(), 2, "M=repeat=2, not sum(num)=20")
 
 # ---- ScopeFilter (vc#11-#12) ----
 func test_scope_parse_and_targets():

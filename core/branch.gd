@@ -15,11 +15,13 @@ extends RefCounted
 
 
 ## ChooseOperations: shuffle the list and take the first `count`.
-## Returns [] if count<1, whole list if count>=list size.
+## Returns [] if count<1, whole list if count>list size.
+## At count==size the game STILL shuffles (verified-conclusions #13:
+## count<=list.Count -> Shuffle+GetRange). Whole-unshuffled only when count>size.
 static func choose_operations(rng: GameRNG, operations: Array, count: int) -> Array:
 	if count < 1:
 		return []
-	if count >= operations.size():
+	if count > operations.size():
 		return operations.duplicate()
 	var shuffled := rng.shuffle(operations)
 	return shuffled.slice(0, count)
@@ -27,7 +29,9 @@ static func choose_operations(rng: GameRNG, operations: Array, count: int) -> Ar
 
 ## RandomOperations: count how many dice hit `point` exactly, take that many.
 ## dice_values: the shared dice cache. point: the exact value to match.
-## Returns the chosen operations (shuffled slice, or whole list if N>list).
+## Returns the chosen operations (shuffled slice, or whole unshuffled list
+## only when hits>list size). At hits==size the game STILL shuffles
+## (verified-conclusions #14: list.Count<N -> whole unshuffled).
 static func random_operations(rng: GameRNG, operations: Array, dice_values: Array, point: int) -> Array:
 	var hits := 0
 	for d in dice_values:
@@ -35,7 +39,7 @@ static func random_operations(rng: GameRNG, operations: Array, dice_values: Arra
 			hits += 1
 	if hits < 1:
 		return []
-	if hits >= operations.size():
+	if hits > operations.size():
 		# list.Count < N -> whole unshuffled list.
 		return operations.duplicate()
 	var shuffled := rng.shuffle(operations)
