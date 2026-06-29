@@ -1,0 +1,80 @@
+{
+  "id": 6000124,
+  "name": "热娜-血钻坑-产出2",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "2001261",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001262",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001263",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001268",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001269",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001270",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001264",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001265",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001266",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001271",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001272",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001273",
+      "type": "card",
+      "weight": 60
+    }
+  ]
+}

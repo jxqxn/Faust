@@ -1,0 +1,91 @@
+{
+  "id": 6001003,
+  "name": "扎齐伊事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000121<": 1,
+        "counter.7100001>=": 8,
+        "counter.7000125<": 1,
+        "have.2000062": 1,
+        "counter.7000154<": 1
+      },
+      "num": "1",
+      "id": "5320011",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000122<": 1,
+        "counter.7100001>=": 14,
+        "counter.7000125<": 1,
+        "have.2000062": 1,
+        "!have.2000063.密教徒": 1
+      },
+      "num": "1",
+      "id": "5320012",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000123<": 1,
+        "counter.7100002>=": 3,
+        "counter.7100004>=": 6,
+        "have.妻子": 1,
+        "have.2000062": 1
+      },
+      "num": "1",
+      "id": "5320014",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000125<": 1,
+        "counter.7100002>=": 5,
+        "counter.7100004>=": 5,
+        "have.2000062": 1,
+        "counter.7000124>=": 1,
+        "counter.7000121<": 1
+      },
+      "num": "1",
+      "id": "5320015",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100003>=": 5,
+        "counter.7100004>=": 8,
+        "counter.7000126<": 1
+      },
+      "num": "1",
+      "id": "5320017",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000130<": 1,
+        "counter.7100003>=": 10,
+        "counter.7100002>=": 3,
+        "counter.7100004>=": 10,
+        "have.2000062.激情": 1,
+        "have.2000062.命运的羁绊": 1,
+        "have.2000063.激情": 1,
+        "have.2000063.命运的羁绊": 1,
+        "have.主角": 1,
+        "!have.2000062.侧室": 1,
+        "counter.7000127>=": 1
+      },
+      "num": "1",
+      "id": "5320020",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": 6001069,
+  "name": "拜铃耶自己营业的掉落",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "5321165",
+      "type": "event",
+      "weight": 70
+    },
+    {
+      "num": "1",
+      "id": "5321166",
+      "type": "event",
+      "weight": 6
+    },
+    {
+      "num": "1",
+      "id": "5321167",
+      "type": "event",
+      "weight": 6
+    },
+    {
+      "num": "1",
+      "id": "5321168",
+      "type": "event",
+      "weight": 6
+    },
+    {
+      "num": "1",
+      "id": "5321169",
+      "type": "event",
+      "weight": 6
+    },
+    {
+      "num": "1",
+      "id": "5321170",
+      "type": "event",
+      "weight": 6
+    }
+  ]
+}

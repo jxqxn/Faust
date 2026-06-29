@@ -1,0 +1,44 @@
+{
+  "id": 6001115,
+  "name": "结局投放孤儿们",
+  "repeat": 1,
+  "type": 99,
+  "item": [
+    {
+      "condition": {
+        "have.2001115": 1
+      },
+      "num": "1",
+      "id": "2001115",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000889 ": 1
+      },
+      "num": "1",
+      "id": "2000889 ",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000867 ": 1
+      },
+      "num": "1",
+      "id": "2000867 ",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000887": 1
+      },
+      "num": "1",
+      "id": "2000887",
+      "type": "card",
+      "weight": 60
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": 6001106,
+  "name": "宫斗的妹妹1",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "table_have.2000129.rare=": 1
+      },
+      "num": "1",
+      "id": "5321270",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "table_have.2000129.rare=": 2,
+        "counter.7000911<": 1
+      },
+      "num": "1",
+      "id": "5321271",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "table_have.2000129.rare=": 3,
+        "counter.7000910<": 1
+      },
+      "num": "1",
+      "id": "5321272",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

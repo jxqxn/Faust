@@ -1,0 +1,32 @@
+{
+  "id": 6001055,
+  "name": "法尔达克声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000345<": 1,
+        "counter.7000366<": 1,
+        "counter.7000356>=": 1,
+        "counter.7100001>=": 5
+      },
+      "num": "1",
+      "id": "5321063",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000351<": 1,
+        "counter.7000069<": 1,
+        "counter.7000346<": 1,
+        "counter.7100003>=": 4
+      },
+      "num": "1",
+      "id": "5321064",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

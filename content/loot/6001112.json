@@ -1,0 +1,30 @@
+{
+  "id": 6001112,
+  "name": "莎姬的反馈",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "condition": {
+        "have.2000010": 1,
+        "have.2000129": 1,
+        "counter.7000532>=": 1
+      },
+      "num": "1",
+      "id": "5321286",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000010": 1,
+        "have.2000129": 1,
+        "counter.7000532<": 1
+      },
+      "num": "1",
+      "id": "5321285",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

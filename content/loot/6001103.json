@@ -1,0 +1,26 @@
+{
+  "id": 6001102,
+  "name": "旅行的妹妹4",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000866>=": 1
+      },
+      "num": "1",
+      "id": "5321255",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000866<": 1
+      },
+      "num": "1",
+      "id": "5321256",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

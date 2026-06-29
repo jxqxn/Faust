@@ -1,0 +1,19 @@
+{
+  "id": 6001109,
+  "name": "宫斗的妹妹2",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "have.2000010": 1,
+        "table_have.2000129.rare=": 4,
+        "counter.7000909<": 1
+      },
+      "num": "1",
+      "id": "5321274",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

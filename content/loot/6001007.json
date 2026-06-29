@@ -1,0 +1,123 @@
+{
+  "id": 6001007,
+  "name": "妻子声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000176<": 1,
+        "counter.7000175>=": 1,
+        "have.妻子": 1
+      },
+      "num": "1",
+      "id": "5320530",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000179<": 1,
+        "counter.7000178>=": 1,
+        "have.妻子": 1
+      },
+      "num": "1",
+      "id": "5320532",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000180<": 1,
+        "counter.7000179>=": 1,
+        "have.妻子": 1,
+        "counter.7000170>=": 1,
+        "hand_have.2000061": 1
+      },
+      "num": "1",
+      "id": "5320533",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000185<": 1,
+        "counter.7000184>=": 1,
+        "have.妻子": 1,
+        "counter.7000186<": 1
+      },
+      "num": "1",
+      "id": "5320542",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100002>=": 3,
+        "counter.7000206<": 1,
+        "have.妻子": 1
+      },
+      "num": "1",
+      "id": "5321002",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100001>=": 3,
+        "have.妻子": 1,
+        "counter.7000206<": 1,
+        "counter.7000207<": 1
+      },
+      "num": "1",
+      "id": "5321001",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100001>=": 3,
+        "have.妻子": 1,
+        "counter.7000212<": 1
+      },
+      "num": "1",
+      "id": "5321003",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100003>=": 8,
+        "have.妻子": 1,
+        "counter.7000216<": 1
+      },
+      "num": "1",
+      "id": "5321004",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100004>=": 3,
+        "have.妻子": 1,
+        "counter.7000217<": 1
+      },
+      "num": "1",
+      "id": "5321005",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100004>=": 5,
+        "have.妻子.激情": 1,
+        "have.妻子": 1,
+        "counter.7000218<": 1
+      },
+      "num": "1",
+      "id": "5321006",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

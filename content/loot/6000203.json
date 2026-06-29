@@ -1,0 +1,93 @@
+{
+  "id": 6000203,
+  "name": "珠宝订单随机loot",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000817>=": 1
+      },
+      "num": "1",
+      "id": "5320607",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000817>=": 1
+      },
+      "num": "1",
+      "id": "5320608",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000817>=": 1
+      },
+      "num": "1",
+      "id": "5320609",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000818>=": 1
+      },
+      "num": "1",
+      "id": "5320612",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000818>=": 1
+      },
+      "num": "1",
+      "id": "5320613",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000818>=": 1,
+        "any": {
+          "hand_have.2001267": 1,
+          "hand_have.2001274": 1
+        }
+      },
+      "num": "1",
+      "id": "5320614",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000819>=": 1
+      },
+      "num": "1",
+      "id": "5320628",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000819>=": 1
+      },
+      "num": "1",
+      "id": "5320629",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000819>=": 1
+      },
+      "num": "1",
+      "id": "5320630",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

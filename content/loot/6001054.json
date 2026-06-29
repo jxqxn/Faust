@@ -1,0 +1,56 @@
+{
+  "id": 6001054,
+  "name": "哲瓦德大敌事件",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "5008034",
+      "type": "rite",
+      "weight": 15
+    },
+    {
+      "num": "1",
+      "id": "5008035",
+      "type": "rite",
+      "weight": 15
+    },
+    {
+      "num": "1",
+      "id": "5008036",
+      "type": "rite",
+      "weight": 10
+    },
+    {
+      "num": "1",
+      "id": "5008038",
+      "type": "rite",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "5008039",
+      "type": "rite",
+      "weight": 5
+    },
+    {
+      "num": "1",
+      "id": "5008040",
+      "type": "rite",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "5008041",
+      "type": "rite",
+      "weight": 10
+    },
+    {
+      "num": "1",
+      "id": "5008042",
+      "type": "rite",
+      "weight": 5
+    }
+  ]
+}

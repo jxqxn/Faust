@@ -1,0 +1,18 @@
+{
+  "id": 6001053,
+  "name": "哲瓦德声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000319<": 1,
+        "counter.7100003>=": 13
+      },
+      "num": "1",
+      "id": "5321040",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

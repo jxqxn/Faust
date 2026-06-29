@@ -1,0 +1,94 @@
+extends GutTest
+
+const ConfigDB = preload("res://data/db.gd")
+const GameModels = preload("res://data/models.gd")
+
+var db: ConfigDB
+
+func before_all():
+	db = ConfigDB.new()
+	db.load_all()
+
+func test_cards_loaded():
+	# Card 2000001 = 阿尔图 (the protagonist), type char.
+	assert_true(db.cards.has(2000001), "protagonist card 2000001 loaded")
+	var c := db.get_card(2000001)
+	assert_eq(c.get("name"), "阿尔图")
+	assert_eq(c.get("type"), "char")
+	# Attributes present as tags.
+	assert_true(c.get("tag", {}).has("智慧"), "has 智慧 tag")
+	assert_true(c.get("tag", {}).has("体魄"), "has 体魄 tag")
+
+func test_card_attr_sum():
+	# 2000001 阿尔图: 体魄=3,魅力=2,智慧=1,社交=1.
+	var c := db.get_card(2000001)
+	assert_eq(GameModels.card_attr_sum(c, ["智慧", "社交"]), 2)
+	assert_eq(GameModels.card_attr_sum(c, ["体魄"]), 3)
+
+func test_tags_loaded():
+	# wisdom -> 智慧, physique -> 体魄.
+	assert_true(db.tags_by_code.has("wisdom"))
+	assert_eq(db.tags_by_code["wisdom"].get("name"), "智慧")
+	assert_true(db.tag_name_to_code.has("体魄"))
+	assert_eq(db.tag_name_to_code["体魄"], "physique")
+
+func test_difficulty_weights():
+	var easy := db.get_difficulty(0)
+	assert_eq(easy.get("title"), "简单")
+	var w := GameModels.difficulty_weights(easy)
+	# Easy weights [100,100,100,100,300,300] (JSON parses as floats; compare as ints).
+	assert_eq(w.size(), 6)
+	var w_int: Array = []
+	for x in w:
+		w_int.append(int(x))
+	assert_eq(w_int, [100,100,100,100,300,300])
+	var hard := db.get_difficulty(2)
+	var hw := GameModels.difficulty_weights(hard)
+	var hw_int: Array = []
+	for x in hw:
+		hw_int.append(int(x))
+	assert_eq(hw_int, [150,150,150,150,200,200])
+
+func test_sudan_pool_loaded():
+	var pool := db.get_sudan_pool()
+	assert_true(pool.size() > 20, "sudan pool populated")
+	# First entries are 2010001 (岩石杀戮) repeated.
+	assert_eq(int(pool[0]), 2010001)
+
+func test_rite_loaded():
+	# 5000001 = 治理家业 (manage estate), the auto rite.
+	var r := db.get_rite(5000001)
+	assert_eq(r.get("name"), "治理家业")
+	assert_true(r.has("cards_slot"), "has cards_slot")
+	assert_true(r.has("settlement"), "has settlement")
+	assert_true(r.has("settlement_extre"), "has settlement_extre")
+	# s1 slot requires a 贵族.
+	var s1: Dictionary = r.get("cards_slot", {}).get("s1", {})
+	assert_true(s1.get("condition", {}).has("贵族"), "s1 requires 贵族")
+
+func test_rite_settlement_has_r1_dice_check():
+	# 5000001 settlement has an entry with "r1:智慧+社交>=".
+	var r := db.get_rite(5000001)
+	var found := false
+	for entry in r.get("settlement", []):
+		var cond: Dictionary = entry.get("condition", {})
+		for k in cond:
+			if k.begins_with("r1:"):
+				found = true
+				# Values are [needed_successes, success_line], e.g. [3,5].
+				var v = cond[k]
+				assert_true(v is Array and v.size() == 2, "r1 values are [X,Y]")
+	assert_true(found, "found r1 dice check in settlement")
+
+func test_loot_loaded():
+	var ids := db.loots.keys()
+	assert_true(ids.size() > 100, "loot table loaded")
+	# Pick any loot node and verify shape.
+	var sample: Dictionary = db.loots[ids[0]]
+	assert_true(sample.has("type"), "loot has type")
+	assert_true(sample.has("item"), "loot has item array")
+
+func test_resolve_card_id_string_and_int():
+	assert_eq(db.resolve_card_id("2000001"), 2000001)
+	assert_eq(db.resolve_card_id(2000001), 2000001)
+	assert_eq(db.resolve_card_id(2000001.0), 2000001)

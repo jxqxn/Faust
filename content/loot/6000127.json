@@ -1,0 +1,112 @@
+{
+  "id": 6000127,
+  "name": "结局-龙眼",
+  "repeat": 1,
+  "type": 99,
+  "item": [
+    {
+      "condition": {
+        "any": {
+          "have.2000021": 1,
+          "have.2000022": 1
+        }
+      },
+      "num": "1",
+      "id": "5310871",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "!have.2000312.大敌": 1,
+        "!have.2000312.秘誓": 1
+      },
+      "num": "1",
+      "id": "5310872",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "have.2000312.大敌": 1
+      },
+      "num": "1",
+      "id": "5310873",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "!have.2000312.大敌": 1,
+        "have.2000312.秘誓": 1
+      },
+      "num": "1",
+      "id": "5310874",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000057": 1,
+        "!have.2000057.追随者": 1,
+        "!have.2000057.大敌": 1
+      },
+      "num": "1",
+      "id": "5310875",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000057": 1,
+        "have.2000057.大敌": 1
+      },
+      "num": "1",
+      "id": "5310876",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000055": 1,
+        "!have.2000055.追随者": 1,
+        "!have.2000055.大敌": 1
+      },
+      "num": "1",
+      "id": "5310877",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000055": 1,
+        "have.2000055.大敌": 1
+      },
+      "num": "1",
+      "id": "5310878",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000371": 1,
+        "have.2000369": 1,
+        "have.2000369.大敌": 1
+      },
+      "num": "1",
+      "id": "5310879",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5310898",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

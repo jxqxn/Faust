@@ -1,0 +1,105 @@
+{
+  "id": 6000106,
+  "name": "结局--造反-征服者",
+  "repeat": 1,
+  "type": 99,
+  "item": [
+    {
+      "condition": {
+        "any": {
+          "have.2000021": 1,
+          "have.2000022": 1
+        }
+      },
+      "num": "1",
+      "id": "5310440",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "!have.2000312.大敌": 1,
+        "!have.2000312.秘誓": 1
+      },
+      "num": "1",
+      "id": "5310441",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "have.2000312.大敌": 1
+      },
+      "num": "1",
+      "id": "5310442",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000312": 1,
+        "!have.2000312.大敌": 1,
+        "have.2000312.秘誓": 1
+      },
+      "num": "1",
+      "id": "5310443",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000057": 1,
+        "!have.2000057.追随者": 1,
+        "!have.2000057.大敌": 1
+      },
+      "num": "1",
+      "id": "5310444",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000057": 1,
+        "have.2000057.大敌": 1
+      },
+      "num": "1",
+      "id": "5310445",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000055": 1,
+        "!have.2000055.追随者": 1,
+        "!have.2000055.大敌": 1
+      },
+      "num": "1",
+      "id": "5310446",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000055": 1,
+        "have.2000055.大敌": 1
+      },
+      "num": "1",
+      "id": "5310447",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000371": 1,
+        "have.2000369": 1,
+        "have.2000369.大敌": 1
+      },
+      "num": "1",
+      "id": "5310451",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

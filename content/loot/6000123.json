@@ -1,0 +1,38 @@
+{
+  "id": 6000123,
+  "name": "热娜-血钻坑-产出",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "5",
+      "id": "2000029",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "10",
+      "id": "2000029",
+      "type": "card",
+      "weight": 40
+    },
+    {
+      "num": "15",
+      "id": "2000029",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001267",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "2",
+      "id": "2001267",
+      "type": "card",
+      "weight": 60
+    }
+  ]
+}

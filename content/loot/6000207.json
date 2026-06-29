@@ -1,0 +1,68 @@
+{
+  "id": 6000207,
+  "name": "古利斯地兴趣",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320400",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320401",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320401",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320402",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320403",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000113": 1
+      },
+      "num": "1",
+      "id": "5320404",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "!have.2000113": 1
+      },
+      "num": "1",
+      "id": "5320405",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "5320406",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

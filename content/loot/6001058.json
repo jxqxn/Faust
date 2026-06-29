@@ -1,0 +1,48 @@
+{
+  "id": 6001058,
+  "name": "哈比卜的宴会",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "num": "1",
+      "id": "5008102",
+      "type": "rite",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "5008103",
+      "type": "rite",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "5008104",
+      "type": "rite",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "hand_have.2000726": 1,
+        "hand_have.2000727": 1,
+        "hand_have.2000728": 1
+      },
+      "num": "1",
+      "id": "5008105",
+      "type": "rite",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "have.2000022.追随者>=": 1,
+        "have.2000022.密教徒>=": 1,
+        "have.2000014.密教徒>=": 1
+      },
+      "num": "1",
+      "id": "5008106",
+      "type": "rite",
+      "weight": 60
+    }
+  ]
+}

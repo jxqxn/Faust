@@ -1,0 +1,18 @@
+{
+  "id": 6001057,
+  "name": "阿里木声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000437<": 1,
+        "counter.7000426>=": 20
+      },
+      "num": "1",
+      "id": "5321090",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

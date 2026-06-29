@@ -1,0 +1,94 @@
+{
+  "id": 6001100,
+  "name": "旅行的妹妹",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000864>=": 1,
+        "counter.7000868<": 1
+      },
+      "num": "1",
+      "id": "5320158",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "any": {
+          "counter.7000864<": 1,
+          "counter.7000868>=": 1
+        },
+        "counter.7000865>=": 1,
+        "counter.7000869<": 1
+      },
+      "num": "1",
+      "id": "5320159",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "any": {
+          "all": {
+            "counter.7000864<": 1,
+            "counter.7000869>=": 1
+          }
+        },
+        "counter.7000866>=": 1,
+        "counter.7000870<": 1
+      },
+      "num": "1",
+      "id": "5320168",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000868>=": 1,
+        "any": {
+          "all": {
+            "counter.7000865>=": 1,
+            "counter.7000866>=": 1,
+            "counter.7000870>=": 1
+          }
+        },
+        "counter.7000864>=": 1,
+        "counter.7000871<": 1
+      },
+      "num": "1",
+      "id": "5320170",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000868>=": 1,
+        "counter.7000869>=": 1,
+        "counter.7000870>=": 1,
+        "counter.7000871>=": 1,
+        "counter.7000872<": 1
+      },
+      "num": "1",
+      "id": "5320158",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000864<": 1,
+        "counter.7000865<": 1,
+        "counter.7000866<": 1,
+        "counter.7000865>=": 1,
+        "counter.7000866>=": 1,
+        "counter.7000872<": 1,
+        "counter.7000873<": 1
+      },
+      "num": "1",
+      "id": "5320158",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

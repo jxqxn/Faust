@@ -1,0 +1,44 @@
+{
+  "id": 6000128,
+  "name": "热娜-珠宝收集-普通宝石，大颗加多",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "2001261",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "2001262",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "2001263",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "2001268",
+      "type": "card",
+      "weight": 70
+    },
+    {
+      "num": "1",
+      "id": "2001269",
+      "type": "card",
+      "weight": 70
+    },
+    {
+      "num": "1",
+      "id": "2001270",
+      "type": "card",
+      "weight": 70
+    }
+  ]
+}

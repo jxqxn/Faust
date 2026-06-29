@@ -1,0 +1,60 @@
+{
+  "id": 6001010,
+  "name": "小圆声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "have.2000369.追随者": 1,
+        "counter.7000240<": 1,
+        "counter.7000247<": 1,
+        "counter.7000246>=": 1
+      },
+      "num": "1",
+      "id": "5320162",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100004>=": 7,
+        "have.2000369.追随者": 1,
+        "!have.2000369.命运的羁绊": 1,
+        "have.妻子.追随者": 1,
+        "counter.7000255<": 1,
+        "counter.7000265>=": 1
+      },
+      "num": "1",
+      "id": "5320175",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100004>=": 7,
+        "have.2000369.追随者": 1,
+        "have.2000369.命运的羁绊": 1,
+        "have.妻子.追随者": 1,
+        "counter.7000255<": 1,
+        "counter.7000265>=": 1
+      },
+      "num": "1",
+      "id": "5320414",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7100001>=": 20,
+        "counter.7000258>=": 1,
+        "counter.7000261>=": 1,
+        "counter.7000262<": 1
+      },
+      "num": "1",
+      "id": "5320187",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "id": 6000122,
+  "name": "热娜-珠宝收集-高级宝石",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "2001264",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001265",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001266",
+      "type": "card",
+      "weight": 60
+    },
+    {
+      "num": "1",
+      "id": "2001271",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "2001272",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "2001273",
+      "type": "card",
+      "weight": 30
+    }
+  ]
+}

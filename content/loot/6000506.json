@@ -1,0 +1,57 @@
+{
+  "id": 6000506,
+  "name": "怪物",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000493",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000494",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000495",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000496",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000498",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000499",
+      "type": "card",
+      "weight": 50
+    },
+    {
+      "condition": {},
+      "num": "1",
+      "id": "2000501",
+      "type": "card",
+      "weight": 50
+    }
+  ]
+}

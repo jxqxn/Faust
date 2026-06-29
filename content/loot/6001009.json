@@ -1,0 +1,65 @@
+{
+  "id": 6001009,
+  "name": "铁头声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000239>=": 1,
+        "counter.7000251<": 1,
+        "counter.7000240<": 1,
+        "counter.7000254<": 1,
+        "counter.7000241<": 1,
+        "counter.7100001>=": 5
+      },
+      "num": "1",
+      "id": "5320158",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000240<": 1,
+        "counter.7000254<": 1,
+        "counter.7000242<": 1,
+        "counter.7100001>=": 9
+      },
+      "num": "1",
+      "id": "5320159",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000242>=": 1,
+        "counter.7000241>=": 1,
+        "counter.7000240<": 1,
+        "counter.7000251<": 1,
+        "counter.7000254<": 1,
+        "counter.7000243<": 1,
+        "counter.7100001>=": 16,
+        "!have.2000369.密教徒": 1
+      },
+      "num": "1",
+      "id": "5320168",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000240<": 1,
+        "counter.7000251<": 1,
+        "counter.7000245>=": 1,
+        "counter.7000254<": 1,
+        "counter.7000244<": 1,
+        "counter.7100004>=": 20,
+        "!have.2000369.密教徒": 1
+      },
+      "num": "1",
+      "id": "5320170",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": 6001052,
+  "name": "盖斯声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000256<": 1,
+        "counter.7100003>=": 9,
+        "counter.7000281>=": 1
+      },
+      "num": "1",
+      "id": "5321018",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "id": 6001004,
+  "name": "鲁梅拉声望事件",
+  "repeat": 1,
+  "type": 3,
+  "item": [
+    {
+      "condition": {
+        "counter.7000131<": 1,
+        "counter.7000100>=": 5
+      },
+      "num": "1",
+      "id": "5320021",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000134<": 1,
+        "counter.7100003>=": 12,
+        "counter.7000132>=": 1
+      },
+      "num": "1",
+      "id": "5320023",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000138<": 1,
+        "counter.7000137>=": 1,
+        "counter.7000198>=": 1
+      },
+      "num": "1",
+      "id": "5320026",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000139<": 1,
+        "counter.7100004>=": 11,
+        "counter.7000133>=": 1
+      },
+      "num": "1",
+      "id": "5320027",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "counter.7000141<": 1,
+        "counter.7000140>=": 1
+      },
+      "num": "1",
+      "id": "5320030",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

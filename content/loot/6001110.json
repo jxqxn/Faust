@@ -1,0 +1,45 @@
+{
+  "id": 6001110,
+  "name": "莎姬赢了",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "condition": {
+        "counter.7000905>=": 1,
+        "counter.7000532>=": 1,
+        "have.2000010": 1
+      },
+      "num": "1",
+      "id": "5321279",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "any": {
+          "counter.7000905<": 1,
+          "counter.7000532<": 1
+        },
+        "!have.2000129.密教徒": 1
+      },
+      "num": "1",
+      "id": "5321280",
+      "type": "event",
+      "weight": 60
+    },
+    {
+      "condition": {
+        "any": {
+          "counter.7000905<": 1,
+          "counter.7000532<": 1
+        },
+        "have.2000129.密教徒": 1
+      },
+      "num": "1",
+      "id": "5321281",
+      "type": "event",
+      "weight": 60
+    }
+  ]
+}

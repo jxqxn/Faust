@@ -1,0 +1,32 @@
+{
+  "id": 6001075,
+  "name": "舞会掉落",
+  "repeat": 1,
+  "type": 2,
+  "item": [
+    {
+      "num": "1",
+      "id": "6000005",
+      "type": "loot",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "6001076",
+      "type": "loot",
+      "weight": 30
+    },
+    {
+      "num": "5",
+      "id": "2000029",
+      "type": "card",
+      "weight": 30
+    },
+    {
+      "num": "1",
+      "id": "6000045",
+      "type": "loot",
+      "weight": 30
+    }
+  ]
+}
