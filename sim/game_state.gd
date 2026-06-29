@@ -9,6 +9,7 @@ const GameModels = preload("res://data/models.gd")
 
 # Counter system for non-negative clamping on gated counters.
 const CounterSystem = preload("res://core/counter.gd")
+const SudanCards = preload("res://sim/sudan_cards.gd")
 
 # Counters. Local counters are per-run; global persist across runs (prestige etc).
 var local_counters := {}    # id(int) -> int
@@ -41,6 +42,10 @@ var sudan_deck: Array[int] = []
 # Rites started/opened by auto-begin processing. Auto-begin is not the same as
 # auto-resolve; the original DoStartAutoBeginRite calls Rite.set_start.
 var started_rites: Array[int] = []
+# Runtime auto-resolution state. The original tracks auto_result_rites and a
+# rite_auto_result flag separately from auto_begin.
+var auto_result_rites: Array[int] = []
+var rite_auto_result := false
 
 
 func _init() -> void:
@@ -55,20 +60,27 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	back_to_prev_left = int(difficulty_config.get("back_to_prev_round_count", 0))
 	# Redraws per round (sudan_redraw_times_per_round) recovered every
 	# sudan_redraw_times_recovery_round rounds.
-	redraws_left = int(db.init_config.get("sudan_redraw_times_per_round", 1))
+	redraws_left = _redraws_per_round(db)
 	# Starting hand: default_cards.
 	for cid in db.get_default_cards():
 		hand.append(int(cid))
 	# Sudan deck from pool (shuffled last-first).
-	sudan_deck = []
-	for cid in db.get_sudan_pool():
-		sudan_deck.append(int(cid))
+	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
 	# Day/round.
 	round_number = 1
 	day = 1
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
 	started_rites.clear()
+	auto_result_rites.clear()
+	rite_auto_result = false
+
+
+func _redraws_per_round(db) -> int:
+	return int(difficulty_config.get(
+		"sudan_redraw_times_per_round",
+		db.init_config.get("sudan_redraw_times_per_round", 1)
+	))
 
 
 # ---- Counter access ----

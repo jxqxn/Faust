@@ -43,6 +43,7 @@ func test_auto_begin_starts_rites_without_resolving_results():
 	assert_true(opened.size() > 7, "all auto_begin rites are opened, not just auto_result rites")
 	assert_true(5000001 in state.started_rites, "治理家业 is marked started")
 	assert_eq(state.coin_count, 0, "auto-begin does not execute settlement rewards")
+	assert_eq(state.auto_result_rites.size(), 0, "auto-result runtime state is separate from auto-begin")
 
 func test_rite_resolution_with_placed_cards():
 	var rng := RNG.new(300)

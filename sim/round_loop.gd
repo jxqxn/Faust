@@ -53,7 +53,7 @@ static func start_round(state, db, rng) -> int:
 	state.round_number += 1
 	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
 	if state.round_number % recovery == 0:
-		state.redraws_left = int(db.init_config.get("sudan_redraw_times_per_round", 1))
+		state.redraws_left = _redraws_per_round(state, db)
 	return draw_weekly_sudan(state, db, rng)
 
 
@@ -67,8 +67,9 @@ static func use_redraw(state, rng) -> int:
 		return -1
 	if state.sudan_deck.is_empty():
 		return -1
-	var discarded: int = state.active_sudan_cards.pop_back().card_id
-	var carried_life: int = int(state.difficulty_config.get("sudan_life_time", 7))
+	var old_card = state.active_sudan_cards.pop_back()
+	var discarded: int = old_card.card_id
+	var carried_life: int = old_card.days_left
 	var new_id: int = SudanCards.draw(state.sudan_deck)
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
@@ -119,3 +120,10 @@ static func start_auto_begin_rites(state, db) -> Array:
 			state.started_rites.append(id)
 		out.append({"id": id, "started": true})
 	return out
+
+
+static func _redraws_per_round(state, db) -> int:
+	return int(state.difficulty_config.get(
+		"sudan_redraw_times_per_round",
+		db.init_config.get("sudan_redraw_times_per_round", 1)
+	))

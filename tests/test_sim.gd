@@ -119,6 +119,28 @@ func test_funccompare_gold_dice_map_can_satisfy_r1_without_dice():
 	ctx["gold_dice_map"] = {"r1": 1}
 	assert_true(ConditionEval.eval_key("r1:智慧>=", [1, 5], ctx), "per-type gold dice map satisfies r1")
 
+func test_funccompare_gold_dice_map_uses_real_r_type_key():
+	var st := GameState.new()
+	st.difficulty_config = db.get_difficulty(1)
+	var ctx := _make_ctx(st, RNG.new(1))
+	ctx["gold_dice_used"] = {"r2": 1}
+	ctx["gold_dice_map"] = {"r2": 1}
+	assert_true(ConditionEval.eval_key("r2:智慧>=", [1, 5], ctx), "gold dice map satisfies the exact r2 type")
+	assert_false(ConditionEval.eval_key("r3:智慧>=", [1, 5], ctx), "r2 gold dice does not leak into r3")
+
+func test_funccompare_reuses_cached_dice_without_advancing_rng():
+	var st := GameState.new()
+	st.difficulty_config = db.get_difficulty(1)
+	st.add_card_to_slot(2000005, 1, db)
+	var rng := RNG.new(99)
+	var ctx := _make_ctx(st, rng)
+	ctx["dice_cache"] = {}
+	ConditionEval.eval_key("r1:智慧>=", [99, 5], ctx)
+	var after_first := rng.get_state()
+	ctx["gold_dice_map"] = {"r1": 99}
+	assert_true(ConditionEval.eval_key("r1:智慧>=", [99, 5], ctx), "cached dice plus gold can satisfy without reroll")
+	assert_eq(rng.get_state(), after_first, "cached FuncCompare does not advance RNG on re-evaluation")
+
 func test_settlement_extre_all_match():
 	# Find a rite whose settlement_extre has multiple entries that can match.
 	# 5000001 extre has many s4.is / s3.is entries; with no such cards none match,

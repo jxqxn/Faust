@@ -64,21 +64,11 @@ func test_redraw_does_not_immediately_redraw_discarded():
 	# pop_back, the discarded card would be immediately re-drawn.
 	# [SRC: GameController.c @ RedrawSudanCard: Random.Range(0,count) half-open]
 	# Run many seeds over a single-card deck: discarded must never equal drawn.
-	var fail_count := 0
 	for seed_val in range(1, 500):
 		var rng := RNG.new(seed_val)
 		var deck: Array[int] = [2010001]
 		SudanCards.redraw(rng, deck, 2010009)
-		# deck is now [2010001 or 2010009] reordered, size 2.
-		var drawn: int = SudanCards.draw(deck)
-		if drawn == 2010009:
-			fail_count += 1
-	# With the half-open fix, the probability of drawing the discarded card
-	# from a 2-card deck is exactly 50% (it's at pos 0 or 1). The BUG was that
-	# it could be at pos 2 (tail) which is impossible with half-open. So this
-	# test guards against the inclusive-range insertion, not the natural 50%.
-	# The real guard: deck.size() must stay 2, never exceed.
-	assert_eq(fail_count >= 0, true, "redraw ran without crash")
+		assert_eq(deck.back(), 2010001, "discarded card is never inserted at the pop_back tail")
 
 func test_use_redraw_gates_before_consuming():
 	# BUG #2 fix: redraws_left must not decrement when there are no active cards.
@@ -105,6 +95,23 @@ func test_full_new_run_setup():
 	var life := int(state.difficulty_config.get("sudan_life_time", 7))
 	assert_eq(life, 7)
 
+func test_new_run_uses_sudan_shuffle_flag():
+	var rng_a := RNG.new(11)
+	var rng_b := RNG.new(12)
+	var state_a := GameState.new()
+	var state_b := GameState.new()
+	state_a.setup_new_run(db, 1, rng_a)
+	state_b.setup_new_run(db, 1, rng_b)
+	var raw_pool: Array = db.get_sudan_pool()
+	assert_ne(state_a.sudan_deck, raw_pool, "setup_new_run shuffles the configured sudan pool")
+	assert_ne(state_a.sudan_deck, state_b.sudan_deck, "different seeds produce different sudan deck order")
+
+func test_easy_difficulty_uses_difficulty_redraw_count():
+	var rng := RNG.new(1)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	assert_eq(state.redraws_left, 3, "easy difficulty has 3 redraws per round")
+
 func test_start_round_draws_sudan_with_deadline():
 	var rng := RNG.new(3)
 	var state := GameState.new()
@@ -115,6 +122,20 @@ func test_start_round_draws_sudan_with_deadline():
 	assert_eq(state.active_sudan_cards.size(), initial_active + 1)
 	# The drawn card has the difficulty life-time as days_left.
 	assert_eq(state.active_sudan_cards.back().days_left, 7)
+
+func test_redraw_preserves_visible_deadline():
+	# Original copies Card.life (elapsed days) from old card to new card; the
+	# visible countdown is config_life - life. This clone stores the inverse
+	# value directly as days_left, so preserving the visible countdown means
+	# copying days_left to the replacement sudan card.
+	var rng := RNG.new(9)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	state.active_sudan_cards.back().days_left = 3
+	var new_id := RoundLoop.use_redraw(state, rng)
+	assert_true(new_id >= 0, "redrew a replacement sudan card")
+	assert_eq(state.active_sudan_cards.back().days_left, 3, "redraw keeps the visible deadline unchanged")
 
 func test_advance_day_decrements_deadline():
 	var rng := RNG.new(2)

@@ -51,6 +51,8 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	# slot presence / slot.is / slot.<tag>
 	if k.begins_with("s") and (k.length() > 1 and k[1].is_valid_int()):
 		return eval_slot(k, val, ctx)
+	if (k.begins_with("!s") or k.begins_with("~s")) and (k.length() > 2 and k[2].is_valid_int()):
+		return eval_slot(k, val, ctx)
 	# have / !have
 	if k.begins_with("have.") or k == "have":
 		return eval_have(k, val, ctx, false)
@@ -129,6 +131,7 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 	# k: "r1:智慧+社交>="  or  "f:智慧+社交>=3"
 	var is_r := k.begins_with("r")
 	var colon := k.find(":")
+	var type_key := k.substr(0, colon)
 	var after := k.substr(colon + 1)
 	# Find the op at the end of after.
 	var op := "="
@@ -160,9 +163,24 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 		# [SRC: FuncCompare.c @ IsSatisfied: goldDiceCounts[type] keyed by param_1+0x20]
 		var gold_map = ctx.get("gold_dice_map", {})
 		if gold_map is Dictionary and gold_map.size() > 0:
-			var type_key: String = "r1" if is_r else "f"
 			gold = int(gold_map.get(type_key, gold))
-		return Dice.is_satisfied(rng, attr_val, y, x, op, weights, gold)
+		var dice_cache: Dictionary = ctx.get("dice_cache", {})
+		if not ctx.has("dice_cache"):
+			ctx["dice_cache"] = dice_cache
+		if not dice_cache.has(type_key):
+			var rolls: Array[int] = []
+			for i in maxi(attr_val, 0):
+				rolls.append(Dice.roll_weighted_face(rng, weights))
+			dice_cache[type_key] = rolls
+		var successes := 0
+		for face in dice_cache.get(type_key, []):
+			if int(face) >= y:
+				successes += 1
+		var types_seen: Array = ctx.get("dice_types_seen", [])
+		if not (type_key in types_seen):
+			types_seen.append(type_key)
+			ctx["dice_types_seen"] = types_seen
+		return Dice.apply_compare(successes + maxi(gold, 0), x, op)
 	else:
 		# f: pure attribute compare against val.
 		return apply_compare(attr_val, int(val), op)

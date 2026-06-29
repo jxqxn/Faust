@@ -85,8 +85,27 @@ func _on_open_rite(rite_id: int) -> void:
 	var rv := RiteView.new()
 	rv.setup(state, db, rng, rite_id)
 	rv.closed.connect(_show_game)
+	rv.resolved.connect(_after_rite_resolution)
 	add_child(rv)
 	_current = rv
+
+
+func _after_rite_resolution() -> void:
+	var result := RoundLoop.start_round_if_no_sudan(state, db, rng)
+	if not result.get("new_round", false):
+		return
+	if _current and _current.has_method("set_log"):
+		_current.set_log(_round_result_log(result))
+
+
+func _round_result_log(result: Dictionary) -> String:
+	var log_text := "Round %d begins" % state.round_number
+	if int(result.get("drawn_sudan", -1)) >= 0:
+		var dec = SudanCards.decode(int(result.drawn_sudan))
+		log_text += "\nNew sudan card: %s%s" % [dec.rank, dec.action]
+	if not result.get("auto_rites", []).is_empty():
+		log_text += "\nAuto-begin rites: %d" % result.auto_rites.size()
+	return log_text
 
 
 func _on_advance() -> void:

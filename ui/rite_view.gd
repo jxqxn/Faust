@@ -9,11 +9,13 @@
 extends Control
 
 signal closed()
+signal resolved()
 
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
 const RiteResolver = preload("res://sim/rite_resolver.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
+const RoundLoop = preload("res://sim/round_loop.gd")
 
 var _state
 var _db
@@ -22,7 +24,9 @@ var _rite_id: int = 5000001
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> card_id
 var _gold_used_this_resolve: int = 0
+var _gold_dice_map: Dictionary = {}
 var _resolve_baseline: Dictionary = {}
+var _resolve_dice_cache: Dictionary = {}
 var _last_result = null  # last RiteResult
 
 var _slots_container: VBoxContainer
@@ -171,6 +175,13 @@ func _build_slots() -> void:
 			opt.add_item("%s" % nm, idx)
 			opt.set_item_metadata(idx, int(cid))
 			idx += 1
+		if _slot_accepts_sudan(slot_def):
+			for asc in _state.active_sudan_cards:
+				var sudan_card: Dictionary = _db.get_card(int(asc.card_id))
+				var sudan_name: String = sudan_card.get("name", str(asc.card_id))
+				opt.add_item("%s" % sudan_name, idx)
+				opt.set_item_metadata(idx, int(asc.card_id))
+				idx += 1
 		opt.item_selected.connect(_on_slot_selected.bind(slot_key, opt))
 		row.add_child(opt)
 		_slots_container.add_child(row)
@@ -185,6 +196,8 @@ func _on_slot_selected(slot_key: String, opt: OptionButton, index: int) -> void:
 	_resolve_baseline.clear()
 	_last_result = null
 	_gold_used_this_resolve = 0
+	_gold_dice_map.clear()
+	_resolve_dice_cache.clear()
 	_update_gold_button()
 	_refresh_gold_label()
 
@@ -195,6 +208,8 @@ func _resolve() -> void:
 	# applying results, matching the original Promise.Reject unwind path.
 	# [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 	_gold_used_this_resolve = 0
+	_gold_dice_map.clear()
+	_resolve_dice_cache.clear()
 	_prepare_table_from_placements()
 	_resolve_baseline = SaveSystem.serialize(_state)
 	_do_resolve()
@@ -210,15 +225,15 @@ func _do_resolve() -> void:
 		"db": _db, "state": _state, "rng": _rng,
 		"rite_state": _placed.duplicate(),
 		"attr_slots": ["s1", "s2"], "rite_id": _rite_id,
+		"dice_cache": _resolve_dice_cache,
 	}
-	var res = RiteResolver.resolve(_rite, ctx, _gold_used_this_resolve)
-	# Gold dice map is already set by the resolver from the scalar (backward
-	# compat). The scalar applies to both r1 and f types, which is correct for
-	# the current single-check-per-rite structure.
+	var res = RiteResolver.resolve(_rite, ctx, _gold_dice_map if not _gold_dice_map.is_empty() else _gold_used_this_resolve)
 	_last_result = res
+	_consume_placed_sudan_cards(res)
 	_display_result(res)
 	_update_gold_button()
 	_refresh_gold_label()
+	resolved.emit()
 
 
 func _display_result(res) -> void:
@@ -263,6 +278,8 @@ func _use_gold_dice_reactive() -> void:
 	if _state.gold_dice <= 0:
 		return
 	_gold_used_this_resolve += 1
+	var type_key := _gold_type_for_reactive_spend()
+	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + 1
 	_do_resolve()
 
 
@@ -282,3 +299,27 @@ func _prepare_table_from_placements() -> void:
 	for slot_key in _placed:
 		var slot_num: int = slot_key.substr(1).to_int()
 		_state.add_card_to_slot(int(_placed[slot_key]), slot_num, _db)
+
+
+func _slot_accepts_sudan(slot_def: Dictionary) -> bool:
+	var cond: Dictionary = slot_def.get("condition", {})
+	return str(cond.get("type", "")) == "sudan"
+
+
+func _consume_placed_sudan_cards(res) -> void:
+	if res == null:
+		return
+	var matched: bool = not res.normal_entry.is_empty() or not res.prior_log.is_empty() or not res.extre_log.is_empty()
+	if not matched:
+		return
+	for slot_key in _placed:
+		var cid := int(_placed[slot_key])
+		var card: Dictionary = _db.get_card(cid)
+		if str(card.get("type", "")) == "sudan":
+			RoundLoop.consume_sudan(_state, cid)
+
+
+func _gold_type_for_reactive_spend() -> String:
+	if _last_result != null and not _last_result.dice_types_seen.is_empty():
+		return str(_last_result.dice_types_seen[0])
+	return "r1"

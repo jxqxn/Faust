@@ -20,6 +20,7 @@ class RiteResult:
 	var deferred: Dictionary = {}  # merged deferred actions
 	var dice_rolls: Array = []     # the dice values rolled (for UI)
 	var successes: int = 0         # successes from the r1 check
+	var dice_types_seen: Array = []
 	func _init() -> void:
 		deferred = {"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "logs": []}
 
@@ -53,6 +54,11 @@ static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant =
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.extre_log.append(entry)
 			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db")))
+	res.dice_types_seen = ctx.get("dice_types_seen", []).duplicate()
+	var cache: Dictionary = ctx.get("dice_cache", {})
+	for type_key in cache:
+		for face in cache[type_key]:
+			res.dice_rolls.append(int(face))
 	return res
 
 
