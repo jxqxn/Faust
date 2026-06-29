@@ -38,6 +38,9 @@ var back_to_prev_left := 0    # back-to-prev-round uses left
 var active_sudan_cards: Array = []
 # Sudan deck (shuffled pool, consumed last-first per spec sec 10.6).
 var sudan_deck: Array[int] = []
+# Rites started/opened by auto-begin processing. Auto-begin is not the same as
+# auto-resolve; the original DoStartAutoBeginRite calls Rite.set_start.
+var started_rites: Array[int] = []
 
 
 func _init() -> void:
@@ -65,6 +68,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	day = 1
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
+	started_rites.clear()
 
 
 # ---- Counter access ----

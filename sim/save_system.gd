@@ -34,6 +34,7 @@ static func serialize(state) -> Dictionary:
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
 		"table_cards": table_cards_data,
+		"started_rites": state.started_rites.duplicate(),
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
 	}
@@ -68,6 +69,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for tc in data.get("table_cards", []):
 		if tc is Dictionary:
 			state.table_cards.append(tc.duplicate(true))
+	state.started_rites.clear()
+	for rid in data.get("started_rites", []):
+		state.started_rites.append(int(rid))
 	state.local_counters = data.get("local_counters", {}).duplicate(true)
 	state.global_counters = data.get("global_counters", {}).duplicate(true)
 

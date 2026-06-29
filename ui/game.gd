@@ -50,6 +50,7 @@ func _on_continue() -> void:
 func _on_difficulty_selected(index: int) -> void:
 	state = GameState.new()
 	state.setup_new_run(db, index, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	_show_game()
 
@@ -102,10 +103,8 @@ func _on_advance() -> void:
 		if int(result.get("drawn_sudan", -1)) >= 0:
 			var dec2 = SudanCards.decode(int(result.drawn_sudan))
 			log_text += "\n新苏丹卡: %s%s" % [dec2.rank, dec2.action]
-	for ar in result.auto_rites:
-		var rr = ar.result
-		if not rr.normal_entry.is_empty():
-			log_text += "\n治理家业: %s" % str(rr.normal_entry.get("result_text", ""))
+	if not result.auto_rites.is_empty():
+		log_text += "\n自动开启仪式: %d 个" % result.auto_rites.size()
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
 		_current.refresh()

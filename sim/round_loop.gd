@@ -1,12 +1,9 @@
-## Round/calendar loop. Advances days and rounds, manages sudan card deadlines,
-## triggers auto-rites (per-round), and processes the per-round sudan draw +
-## redraw recovery.
-## spec sec 8 + verified life-time: sudan_life_time 7/7/5 (easy/normal/hard) days.
+## Round/calendar loop. Advances visible days, manages sudan card deadlines,
+## redraws, and event-driven round starts.
 class_name RoundLoop
 extends RefCounted
 
 const SudanCards = preload("res://sim/sudan_cards.gd")
-const RiteResolver = preload("res://sim/rite_resolver.gd")
 
 
 ## A sudan card in play with a countdown.
@@ -20,13 +17,13 @@ class ActiveSudan:
 		drawn_round = rnd
 
 
-## Advance one day: decrement active sudan deadlines; expired cards = game over.
-## When the day count reaches the round length, start a new round.
-## Returns {game_over, expired, new_round, auto_rites, drawn_sudan}.
+## Advance one visible day and decrement active sudan deadlines.
+## New sudan cards are generated only when no sudan card is active, matching
+## TryGenSudanCard's HasSudanCard gate rather than a fixed day modulo.
+## [SRC: GameController.c @ TryGenSudanCard (0x559730)]
 static func advance_day(state, db, rng) -> Dictionary:
 	var result := {"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1}
 	state.day += 1
-	# Each day advances all active sudan deadlines.
 	var still_active: Array = []
 	for asc in state.active_sudan_cards:
 		asc.days_left -= 1
@@ -36,20 +33,12 @@ static func advance_day(state, db, rng) -> Dictionary:
 		else:
 			still_active.append(asc)
 	state.active_sudan_cards = still_active
-	# Round transition: a round spans `sudan_life_time` days (same as the sudan
-	# deadline). When the day count crosses a round boundary, start a new round:
-	# draw weekly sudan, recover redraws, fire auto-rites.
-	# [SRC: GameController.c @ OnBeginRound (0x5537b0) -> RoundBegin event]
-	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
-	if state.day % life == 0 and not result.game_over:
-		result.new_round = true
-		var drawn := start_round(state, db, rng)
-		result.drawn_sudan = drawn
-		result.auto_rites = run_auto_rites(state, db, rng)
+	if not result.game_over and state.active_sudan_cards.is_empty():
+		_begin_round(state, db, rng, result)
 	return result
 
 
-## Draw the weekly sudan card at the start of a new round.
+## Draw one sudan card into the active set.
 static func draw_weekly_sudan(state, db, rng) -> int:
 	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	var cid: int = SudanCards.draw(state.sudan_deck)
@@ -59,8 +48,7 @@ static func draw_weekly_sudan(state, db, rng) -> int:
 	return cid
 
 
-## Start a new round: increment round, recover redraws, draw weekly sudan.
-## Auto-rites are fired separately by advance_day (caller controls ordering).
+## Start a new round explicitly and draw a sudan card if the pool still has one.
 static func start_round(state, db, rng) -> int:
 	state.round_number += 1
 	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
@@ -69,45 +57,31 @@ static func start_round(state, db, rng) -> int:
 	return draw_weekly_sudan(state, db, rng)
 
 
-## Use a redraw: gate up front, generate new card, THEN consume a redraw charge.
-## [SRC: GameController.c @ RedrawSudanCard (0x5558b0):
-##   gate: GetSudanRedrawCount(player) <= redraw_used -> early return;
-##   success: GenSudanCard loop -> set_life(old,0) -> Insert(Random.Range(0,count),old);
-##   counter: redraw_used += 1 AFTER success, else UseSudanExtraRedraw]
-## The original generates fresh cards (GenSudanCard), not pops from a finite
-## deck. We approximate by re-inserting the discarded card and drawing from the
-## pool (finite deck is a [RUNTIME_OPEN] simplification until GenSudanCard is
-## reverse-engineered in full).
+## Original redraw order: draw the new card from the finite pool first, then
+## insert the discarded card back at Random.Range(0,count).
+## [SRC: GameController.c @ RedrawSudanCard (0x5558b0)]
 static func use_redraw(state, rng) -> int:
-	# Gate FIRST: no redraws left or no active card to discard -> fail before consuming.
 	if state.redraws_left <= 0:
 		return -1
 	if state.active_sudan_cards.is_empty():
 		return -1
 	if state.sudan_deck.is_empty():
 		return -1
-	# Remove the most recent active sudan card.
 	var discarded: int = state.active_sudan_cards.pop_back().card_id
-	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
-	# Original order: draw NEW card first (RemoveLast from pool), THEN insert
-	# the discarded card back at a random position. This prevents the redrawn
-	# card from being the discarded one if the pool is small.
-	# [SRC: GameController.c @ RedrawSudanCard: GenSudanCard(RemoveLast) THEN
-	#  set_life(old,0) THEN Insert(Random.Range(0,count), old)]
+	var carried_life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	var new_id: int = SudanCards.draw(state.sudan_deck)
-	# Now insert the discarded card back into the pool.
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
 	else:
 		state.sudan_deck.append(discarded)
 	if new_id >= 0:
-		state.active_sudan_cards.append(ActiveSudan.new(new_id, life, state.round_number))
-		# Consume the redraw charge ONLY after a successful generate+insert.
+		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number))
 		state.redraws_left -= 1
 	return new_id
 
 
-## Consume a sudan card (player satisfied its requirement). Returns true if found.
+## Consume a sudan card. The caller may then call start_round_if_no_sudan to
+## match TryGenSudanCard's "draw when none active" behavior.
 static func consume_sudan(state, card_id: int) -> bool:
 	for i in state.active_sudan_cards.size():
 		if state.active_sudan_cards[i].card_id == card_id:
@@ -116,22 +90,32 @@ static func consume_sudan(state, card_id: int) -> bool:
 	return false
 
 
-## Run all rites flagged auto_begin, once per round (NOT per day).
-## [SRC: GameController.c @ OnBeginRound (0x5537b0) -> RoundBegin event
-##  -> DoStartAutoBeginRite (0x54ebc0); 5000001 tips_text: "每回合自动进行"]
-static func run_auto_rites(state, db, rng) -> Array:
+## Start a new round only if the player currently has no active sudan card.
+static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
+	var result := {"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1}
+	if state.active_sudan_cards.is_empty():
+		_begin_round(state, db, rng, result)
+	return result
+
+
+static func _begin_round(state, db, rng, result: Dictionary) -> void:
+	result.new_round = true
+	result.auto_rites = start_auto_begin_rites(state, db)
+	result.drawn_sudan = start_round(state, db, rng)
+
+
+## Open/start auto-begin rites. Do not resolve them: the original
+## DoStartAutoBeginRite calls Rite.set_start, while auto-resolve is a separate
+## runtime state machine (Player.auto_result_rites / rite_auto_result).
+## [SRC: GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
+static func start_auto_begin_rites(state, db) -> Array:
 	var out: Array = []
 	for rid in db.rites:
 		var rite: Dictionary = db.rites[rid]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
-		# Only auto-resolve rites with auto_result=1. Many rites have auto_begin=1
-		# (404) but only 7 also have auto_result=1 — those are the ones that
-		# actually fire their settlement automatically. The rest are auto-opened
-		# but require player interaction.
-		if int(rite.get("auto_result", 0)) != 1:
-			continue
-		var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"], "rite_id": int(rid)}
-		var res := RiteResolver.resolve(rite, ctx, 0)
-		out.append({"id": int(rid), "result": res})
+		var id := int(rid)
+		if not (id in state.started_rites):
+			state.started_rites.append(id)
+		out.append({"id": id, "started": true})
 	return out
