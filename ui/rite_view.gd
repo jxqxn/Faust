@@ -1,19 +1,28 @@
-﻿extends Control
-
 ## Rite view: shows the rite's card slots, lets the player place cards from the
-## hand, rolls dice, resolves via RiteResolver, and shows the result text + gold.
+## hand, spend gold dice, resolve via RiteResolver, and shows the result + gold.
+## FIX: tracks gold dice spent THIS resolve separately from the state counter,
+## so RiteResolver.resolve() receives the correct gold_dice_used value.
+extends Control
+
 signal closed()
+
+const FaustTheme = preload("res://ui/theme.gd")
+const CardWidget = preload("res://ui/card_widget.gd")
+const RiteResolver = preload("res://sim/rite_resolver.gd")
 
 var _state
 var _db
 var _rng
 var _rite_id: int = 5000001
 var _rite: Dictionary = {}
-var _placed: Dictionary = {} # slot_key -> card_id
+var _placed: Dictionary = {}  # slot_key -> card_id
+var _gold_used_this_resolve: int = 0
 
 var _slots_container: VBoxContainer
-var _result_label: Label
+var _result_label: RichTextLabel
 var _gold_dice_label: Label
+var _resolve_btn: Button
+
 
 func setup(state, db, rng, rite_id: int) -> void:
 	_state = state
@@ -22,50 +31,101 @@ func setup(state, db, rng, rite_id: int) -> void:
 	_rite_id = rite_id
 	_rite = db.get_rite(rite_id)
 
+
 func _ready() -> void:
+	theme = FaustTheme.get_theme()
 	_build_ui()
 
+
 func _build_ui() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	var bg := ColorRect.new()
+	bg.color = FaustTheme.BG_DEEP
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	add_child(margin)
+	var root := VBoxContainer.new()
+	root.add_theme_constant_override("separation", 10)
+	margin.add_child(root)
+	# Title + description.
 	var title := Label.new()
 	title.text = "%s" % _rite.get("name", str(_rite_id))
-	title.add_theme_font_size_override("font_size", 28)
-	add_child(title)
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	root.add_child(title)
 	var desc := Label.new()
 	desc.text = "%s" % _rite.get("text", "")
 	desc.add_theme_font_size_override("font_size", 14)
+	desc.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(1200, 60)
-	add_child(desc)
-	# Slots.
+	desc.custom_minimum_size = Vector2(0, 0)
+	root.add_child(desc)
+	# Slot panel.
+	var slots_panel := _panel()
+	var slots_col := VBoxContainer.new()
+	slots_col.add_theme_constant_override("separation", 6)
+	var slots_head := Label.new()
+	slots_head.text = "入槽 · 选择卡牌"
+	slots_head.add_theme_font_size_override("font_size", 18)
+	slots_head.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	slots_col.add_child(slots_head)
+	slots_panel.add_child(slots_col)
 	_slots_container = VBoxContainer.new()
-	add_child(_slots_container)
+	_slots_container.add_theme_constant_override("separation", 8)
+	slots_col.add_child(_slots_container)
 	_build_slots()
-	# Gold dice control.
+	root.add_child(slots_panel)
+	# Gold dice + resolve bar.
+	var action_row := HBoxContainer.new()
+	action_row.add_theme_constant_override("separation", 12)
 	_gold_dice_label = Label.new()
-	_gold_dice_label.text = "金骰: %d" % _state.gold_dice
 	_gold_dice_label.add_theme_font_size_override("font_size", 18)
-	add_child(_gold_dice_label)
+	_gold_dice_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	action_row.add_child(_gold_dice_label)
 	var gold_btn := Button.new()
-	gold_btn.text = "使用金骰 +1成功"
+	gold_btn.text = "使用金骰 (+1成功)"
+	gold_btn.custom_minimum_size = Vector2(180, 44)
 	gold_btn.pressed.connect(_use_gold_dice)
-	add_child(gold_btn)
-	# Resolve button.
-	var resolve_btn := Button.new()
-	resolve_btn.text = "掷骰结算"
-	resolve_btn.custom_minimum_size = Vector2(200, 50)
-	resolve_btn.pressed.connect(_resolve)
-	add_child(resolve_btn)
+	action_row.add_child(gold_btn)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_row.add_child(spacer)
+	_resolve_btn = Button.new()
+	_resolve_btn.text = "掷骰结算"
+	_resolve_btn.custom_minimum_size = Vector2(180, 44)
+	_resolve_btn.pressed.connect(_resolve)
+	action_row.add_child(_resolve_btn)
+	root.add_child(action_row)
 	# Result.
-	_result_label = Label.new()
-	_result_label.add_theme_font_size_override("font_size", 16)
-	_result_label.custom_minimum_size = Vector2(1200, 120)
-	_result_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	add_child(_result_label)
+	var result_panel := _panel()
+	var rcol := VBoxContainer.new()
+	var rh := Label.new()
+	rh.text = "结算结果"
+	rh.add_theme_font_size_override("font_size", 18)
+	rh.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	rcol.add_child(rh)
+	result_panel.add_child(rcol)
+	_result_label = RichTextLabel.new()
+	_result_label.add_theme_font_size_override("normal_font_size", 15)
+	_result_label.custom_minimum_size = Vector2(0, 120)
+	_result_label.fit_content = true
+	_result_label.bbcode_enabled = true
+	rcol.add_child(_result_label)
+	root.add_child(result_panel)
 	# Close.
 	var close_btn := Button.new()
 	close_btn.text = "返回"
+	close_btn.custom_minimum_size = Vector2(120, 44)
 	close_btn.pressed.connect(func(): closed.emit())
-	add_child(close_btn)
+	root.add_child(close_btn)
+	_refresh_gold_label()
+
 
 func _build_slots() -> void:
 	for c in _slots_container.get_children():
@@ -75,26 +135,39 @@ func _build_slots() -> void:
 		if not slots.has(slot_key):
 			continue
 		var slot_def: Dictionary = slots[slot_key]
-		var cond: Dictionary = slot_def.get("condition", {})
 		var row := HBoxContainer.new()
-		var name_lbl := Label.new()
-		name_lbl.text = "%s: %s" % [slot_key, slot_def.get("text", "")]
-		name_lbl.custom_minimum_size = Vector2(400, 0)
-		name_lbl.add_theme_font_size_override("font_size", 14)
-		name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row.add_child(name_lbl)
-		# Card selection dropdown.
+		row.add_theme_constant_override("separation", 10)
+		# Slot label.
+		var info_col := VBoxContainer.new()
+		info_col.custom_minimum_size = Vector2(280, 0)
+		info_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var slot_name := Label.new()
+		slot_name.text = slot_key.to_upper()
+		slot_name.add_theme_font_size_override("font_size", 16)
+		slot_name.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+		info_col.add_child(slot_name)
+		var slot_desc := Label.new()
+		slot_desc.text = "%s" % slot_def.get("text", "")
+		slot_desc.add_theme_font_size_override("font_size", 13)
+		slot_desc.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
+		slot_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info_col.add_child(slot_desc)
+		row.add_child(info_col)
+		# Card dropdown.
 		var opt := OptionButton.new()
+		opt.custom_minimum_size = Vector2(360, 36)
 		opt.add_item("（空）", 0)
 		var idx := 1
 		for cid in _state.hand:
 			var card: Dictionary = _db.get_card(int(cid))
-			opt.add_item("%s (%d)" % [card.get("name", str(cid)), int(cid)], idx)
+			var nm: String = card.get("name", str(cid))
+			opt.add_item("%s" % nm, idx)
 			opt.set_item_metadata(idx, int(cid))
 			idx += 1
-		opt.item_selected.connect(func(i): _on_slot_selected(slot_key, opt, i))
+		opt.item_selected.connect(_on_slot_selected.bind(slot_key, opt))
 		row.add_child(opt)
 		_slots_container.add_child(row)
+
 
 func _on_slot_selected(slot_key: String, opt: OptionButton, index: int) -> void:
 	if index == 0:
@@ -103,11 +176,19 @@ func _on_slot_selected(slot_key: String, opt: OptionButton, index: int) -> void:
 		var cid: int = opt.get_item_metadata(index)
 		_placed[slot_key] = cid
 
+
 func _use_gold_dice() -> void:
 	if _state.gold_dice <= 0:
 		return
 	_state.gold_dice -= 1
-	_gold_dice_label.text = "金骰: %d (本检定 +1成功)" % _state.gold_dice
+	_gold_used_this_resolve += 1
+	_refresh_gold_label()
+
+
+func _refresh_gold_label() -> void:
+	if _gold_dice_label:
+		_gold_dice_label.text = "金骰: %d (本次 +%d)" % [_state.gold_dice, _gold_used_this_resolve]
+
 
 func _resolve() -> void:
 	# Place selected cards onto the table.
@@ -120,19 +201,29 @@ func _resolve() -> void:
 		"rite_state": _placed.duplicate(),
 		"attr_slots": ["s1", "s2"], "rite_id": _rite_id,
 	}
-	var gold_used: int = _state.gold_dice  # track gold dice used this resolve (simplified)
-	var res = preload("res://sim/rite_resolver.gd").resolve(_rite, ctx, 0)
+	# Pass the gold dice spent THIS resolve to the resolver (bug fix).
+	var res = RiteResolver.resolve(_rite, ctx, _gold_used_this_resolve)
 	var entry: Dictionary = res.normal_entry
 	var txt := ""
 	if entry.is_empty():
-		txt = "（没有匹配的结算分支）"
+		txt = "[color=#a89880]（没有匹配的结算分支）[/color]"
 	else:
 		var t1: String = entry.get("result_title", "")
 		var t2: String = entry.get("result_text", "")
 		if t1 != "":
-			txt += t1 + "\n"
-		txt += t2
-	txt += "\n\n[金币: %d]" % _state.coin_count
+			txt += "[color=#e0c486]" + t1 + "[/color]\n"
+		if t2 != "":
+			txt += t2 + "\n"
+	txt += "\n[color=#c9a96a]当前金币: %d[/color]" % _state.coin_count
 	if not res.extre_log.is_empty():
-		txt += "\n（附加结算 %d 条）" % res.extre_log.size()
+		txt += "\n[color=#a89880]（附加结算 %d 条已执行）[/color]" % res.extre_log.size()
 	_result_label.text = txt
+	# Reset per-resolve gold count after resolving.
+	_gold_used_this_resolve = 0
+	_refresh_gold_label()
+
+
+func _panel() -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", FaustTheme.card_style())
+	return p
