@@ -12,6 +12,7 @@ const SudanCards = preload("res://sim/sudan_cards.gd")
 const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
+const RiteSelector = preload("res://ui/rite_selector.gd")
 
 var db: ConfigDB
 var state: GameState
@@ -49,9 +50,20 @@ func _show_game() -> void:
 	gs.open_rite.connect(_on_open_rite)
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
+	gs.open_rite_selector.connect(_on_open_rite_selector)
 	add_child(gs)
 	_current = gs
 	gs.refresh()
+
+
+func _on_open_rite_selector() -> void:
+	_clear_current()
+	var sel := RiteSelector.new()
+	sel.setup(db)
+	sel.rite_chosen.connect(_on_open_rite)
+	sel.closed.connect(_show_game)
+	add_child(sel)
+	_current = sel
 
 
 func _on_open_rite(rite_id: int) -> void:
@@ -72,6 +84,11 @@ func _on_advance() -> void:
 		for cid in result.expired:
 			var dec = SudanCards.decode(int(cid))
 			log_text += "\n过期: %s%s" % [dec.rank, dec.action]
+	if result.get("new_round", false):
+		log_text += "\n—— 第 %d 回合开始 ——" % state.round_number
+		if int(result.get("drawn_sudan", -1)) >= 0:
+			var dec2 = SudanCards.decode(int(result.drawn_sudan))
+			log_text += "\n新苏丹卡: %s%s" % [dec2.rank, dec2.action]
 	for ar in result.auto_rites:
 		var rr = ar.result
 		if not rr.normal_entry.is_empty():
@@ -79,6 +96,17 @@ func _on_advance() -> void:
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
 		_current.refresh()
+	if result.game_over:
+		call_deferred("_show_game_over")
+
+
+func _show_game_over() -> void:
+	_clear_current()
+	var go := preload("res://ui/game_over.gd").new()
+	go.setup(state, db)
+	go.restart.connect(_show_menu)
+	add_child(go)
+	_current = go
 
 
 func _on_redraw() -> void:

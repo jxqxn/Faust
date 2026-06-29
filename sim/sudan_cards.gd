@@ -44,10 +44,13 @@ static func has_more(deck: Array) -> bool:
 	return deck.size() > 0
 
 
-## Redraw: re-insert the discarded card at a random position.
-## [SRC: GameController.c @ RedrawSudanCard (0x5558b0): Random.Range(0,count)]
+## Redraw: re-insert the discarded card at a random position in [0, count).
+## [SRC: GameController.c @ RedrawSudanCard (0x5558b0): UnityEngine_Random__Range(0, pool+0x18)]
+## Unity's Random.Range(int,int) is half-open [0,count); Godot randi_range is
+## inclusive. Using range_int_half_open so pos is in [0, count-1], never count
+## (which would insert at tail and pop_back would immediately re-draw it).
 static func redraw(rng, deck: Array, discarded_id: int) -> void:
-	var pos: int = rng.range_int(0, deck.size())
+	var pos: int = rng.range_int_half_open(0, deck.size())
 	deck.insert(pos, discarded_id)
 
 

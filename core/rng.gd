@@ -24,9 +24,19 @@ func get_seed() -> int:
 	return _gen.seed
 
 
-## Inclusive int range [from, to], matching Unity's Random.Range(int,int) semantics.
+## Inclusive int range [from, to], matching Godot randi_range semantics.
+## NOTE: this is NOT Unity-equivalent. Unity's Random.Range(int,int) is
+## half-open [a,b). Use range_int_half_open for those call sites.
 func range_int(from_n: int, to_n: int) -> int:
 	return _gen.randi_range(from_n, to_n)
+
+
+## Half-open int range [from, to), matching Unity's Random.Range(int,int).
+## [SRC: verified-conclusions #4 — Unity int Random.Range is half-open]
+func range_int_half_open(from_n: int, to_n: int) -> int:
+	if to_n <= from_n:
+		return from_n
+	return _gen.randi_range(from_n, to_n - 1)
 
 
 ## float in [0,1], matching Unity's Random.value.

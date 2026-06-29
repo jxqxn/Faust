@@ -7,6 +7,7 @@ extends Control
 signal open_rite(rite_id: int)
 signal advance_pressed()
 signal redraw_pressed()
+signal open_rite_selector()
 
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
@@ -88,6 +89,9 @@ func _build_ui() -> void:
 	var rite_btn := _action_button("治理家业", "打开仪式", 200)
 	rite_btn.pressed.connect(func(): open_rite.emit(5000001))
 	actions.add_child(rite_btn)
+	var rite_sel_btn := _action_button("选择仪式", "打开仪式列表", 150)
+	rite_sel_btn.pressed.connect(func(): open_rite_selector.emit())
+	actions.add_child(rite_sel_btn)
 	var redraw_btn := _action_button("重抽苏丹卡", "换一张", 150)
 	redraw_btn.pressed.connect(func(): redraw_pressed.emit())
 	actions.add_child(redraw_btn)
