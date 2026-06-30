@@ -7,6 +7,7 @@ signal open_rite(rite_id: int)
 signal advance_pressed()
 signal redraw_pressed()
 signal open_rite_selector()
+signal menu_pressed()
 
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
@@ -70,9 +71,14 @@ func _build_ui() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hud_row.add_child(spacer)
-	var menu_label := _stat_label()
-	menu_label.text = "菜单"
-	hud_row.add_child(menu_label)
+	var menu_button := Button.new()
+	menu_button.name = "MenuButton"
+	menu_button.text = "菜单"
+	menu_button.flat = true
+	menu_button.add_theme_font_size_override("font_size", 18)
+	menu_button.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	menu_button.pressed.connect(func(): menu_pressed.emit())
+	hud_row.add_child(menu_button)
 
 	_desk_map = _panel("DeskMap")
 	add_child(_desk_map)
@@ -81,8 +87,21 @@ func _build_ui() -> void:
 	_map_content.clip_contents = true
 	_desk_map.add_child(_map_content)
 
-	for site_name in ["治理家业", "商业区", "宫廷", "神殿区", "野外"]:
-		var site := _site_button(site_name)
+	var site_specs := [
+		{"name": "SiteHome", "label": "治理家业", "rite": 5000001},
+		{"name": "SiteMarket", "label": "商业区", "rite": -1},
+		{"name": "SitePalace", "label": "宫廷", "rite": -1},
+		{"name": "SiteTemple", "label": "神殿区", "rite": -1},
+		{"name": "SiteWild", "label": "野外", "rite": -1},
+	]
+	for spec in site_specs:
+		var site := _site_button(str(spec["label"]))
+		site.name = str(spec["name"])
+		var rite_id := int(spec["rite"])
+		if rite_id > 0:
+			site.pressed.connect(func(): open_rite.emit(rite_id))
+		else:
+			site.pressed.connect(func(): set_log("该地点尚未开放。"))
 		_site_buttons.append(site)
 		_map_content.add_child(site)
 
@@ -137,15 +156,10 @@ func _build_ui() -> void:
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
 
-	var small_actions := HBoxContainer.new()
-	small_actions.add_theme_constant_override("separation", 8)
-	_right_actions.add_child(small_actions)
-	var rite_sel_btn := _icon_button("仪")
-	rite_sel_btn.pressed.connect(func(): open_rite_selector.emit())
-	small_actions.add_child(rite_sel_btn)
 	var redraw_btn := _icon_button("抽")
+	redraw_btn.name = "RedrawSudanButton"
 	redraw_btn.pressed.connect(func(): redraw_pressed.emit())
-	small_actions.add_child(redraw_btn)
+	_right_actions.add_child(redraw_btn)
 
 
 func _apply_layout() -> void:
@@ -243,8 +257,8 @@ func _round_button_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
 func refresh() -> void:
 	if _state == null or _card_items == null:
 		return
-	_round_label.text = "第 %d 回合 · 第 %d 天" % [_state.round_number, _state.day]
-	_gold_label.text = "金币 %d    金骰 %d    重抽 %d" % [_state.coin_count, _state.gold_dice, _state.redraws_left]
+	_round_label.text = "第 %d 天" % _state.day
+	_gold_label.text = "金骰 %d    重抽 %d" % [_state.gold_dice, _state.redraws_left]
 	for child in _card_items.get_children():
 		child.queue_free()
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))

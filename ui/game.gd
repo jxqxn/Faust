@@ -63,6 +63,7 @@ func _show_game() -> void:
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
+	gs.menu_pressed.connect(_on_menu_pressed)
 	# Autosave on entering the game.
 	SaveSystem.save(state)
 	add_child(gs)
@@ -88,6 +89,11 @@ func _on_open_rite(rite_id: int) -> void:
 	rv.resolved.connect(_after_rite_resolution)
 	add_child(rv)
 	_current = rv
+
+
+func _on_menu_pressed() -> void:
+	if _current and _current.has_method("set_log"):
+		_current.set_log("菜单功能待实现：这里将打开暂停/保存/设置。")
 
 
 func _after_rite_resolution() -> void:

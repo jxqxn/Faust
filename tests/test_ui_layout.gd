@@ -66,6 +66,72 @@ func test_game_screen_uses_bottom_card_rail_for_sudan_and_hand():
 	assert_eq(_count_nodes_by_name(screen, "SultanPanel"), 0, "sudan cards should not live in a separate top panel")
 
 
+func test_game_screen_hud_uses_day_without_coin_or_round_labels():
+	var rng := RNG.new(5)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var hud_text := _collect_label_and_button_text(_find_node_by_name(screen, "Hud"))
+	assert_true(hud_text.find("第 1 天") >= 0, "HUD should show the visible day")
+	assert_eq(hud_text.find("回合"), -1, "HUD should not expose internal round wording")
+	assert_eq(hud_text.find("金币"), -1, "gold should be represented as cards instead of a HUD counter")
+
+
+func test_game_screen_home_site_and_menu_are_interactive():
+	var rng := RNG.new(6)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var opened: Array = []
+	var menu_count := [0]
+	screen.open_rite.connect(func(id: int): opened.append(id))
+	screen.menu_pressed.connect(func(): menu_count[0] += 1)
+
+	var home := _find_node_by_name(screen, "SiteHome") as Button
+	var menu := _find_node_by_name(screen, "MenuButton") as Button
+	assert_not_null(home, "home site should be an interactive button")
+	assert_not_null(menu, "menu should be an interactive button")
+	if home != null:
+		home.pressed.emit()
+	if menu != null:
+		menu.pressed.emit()
+	assert_eq(opened, [5000001], "clicking home site should open the estate rite")
+	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
+
+
+func test_game_screen_right_actions_do_not_duplicate_rite_entry():
+	var rng := RNG.new(7)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var right_actions := _find_node_by_name(screen, "RightActions")
+	assert_not_null(right_actions, "right action column should exist")
+	if right_actions == null:
+		return
+	assert_eq(_count_buttons(right_actions), 2, "right actions should only contain next-day and redraw controls")
+	assert_not_null(_find_node_by_name(right_actions, "AdvanceDayButton"), "next-day action remains in the right column")
+	assert_not_null(_find_node_by_name(right_actions, "RedrawSudanButton"), "redraw action remains in the right column")
+	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
+
+
 func test_game_screen_matches_mockup_spatial_layout():
 	var rng := RNG.new(4)
 	var state := GameState.new()
@@ -176,3 +242,25 @@ func _count_card_widgets(node: Node) -> int:
 	for child in node.get_children():
 		count += _count_card_widgets(child)
 	return count
+
+
+func _count_buttons(node: Node) -> int:
+	var count := 1 if node is Button else 0
+	for child in node.get_children():
+		count += _count_buttons(child)
+	return count
+
+
+func _collect_label_and_button_text(node: Node) -> String:
+	if node == null:
+		return ""
+	var parts: Array[String] = []
+	if node is Label:
+		parts.append((node as Label).text)
+	elif node is Button:
+		parts.append((node as Button).text)
+	for child in node.get_children():
+		var child_text := _collect_label_and_button_text(child)
+		if child_text != "":
+			parts.append(child_text)
+	return " ".join(parts)
