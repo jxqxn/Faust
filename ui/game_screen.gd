@@ -1,4 +1,4 @@
-## Main in-game desk screen.
+﻿## Main in-game desk screen.
 ## Layout mirrors docs/mockups/game-screen-layout.html: a top HUD, a broad
 ## desk/map area, and a bottom card rail beside the day/action controls.
 extends Control
@@ -26,6 +26,7 @@ var _log_label: Label
 var _hud: PanelContainer
 var _desk_map: PanelContainer
 var _map_content: Control
+var _overlay_layer: Control
 var _rail_label: VBoxContainer
 var _card_rail_view: ScrollContainer
 var _card_items: HBoxContainer
@@ -113,6 +114,11 @@ func _build_ui() -> void:
 	_log_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	_map_content.add_child(_log_label)
 
+	_overlay_layer = Control.new()
+	_overlay_layer.name = "OverlayLayer"
+	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_overlay_layer)
+
 	_rail_label = VBoxContainer.new()
 	_rail_label.name = "RailLabel"
 	_rail_label.add_theme_constant_override("separation", 8)
@@ -174,6 +180,7 @@ func _apply_layout() -> void:
 
 	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(view_size.x - 44 * s, 44 * s)))
 	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
+	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(_card_rail_view, Rect2(Vector2(180 * s, view_size.y - 222 * s), Vector2(view_size.x - 360 * s, 202 * s)))
 	_set_rect(_right_actions, Rect2(Vector2(view_size.x - 160 * s, view_size.y - 194 * s), Vector2(132 * s, 170 * s)))
@@ -268,6 +275,7 @@ func refresh() -> void:
 		var card: Dictionary = _db.get_card(int(cid))
 		if card.is_empty():
 			continue
+		card["id"] = int(cid)
 		var widget := CardWidget.make(card)
 		widget.custom_minimum_size = Vector2(116, 178)
 		_card_items.add_child(widget)
@@ -276,20 +284,24 @@ func refresh() -> void:
 func _make_sudan_card(asc, life: int) -> CardWidget:
 	var dec = SudanCards.decode(int(asc.card_id))
 	var card: Dictionary = _db.get_card(int(asc.card_id)).duplicate(true)
+	card["id"] = int(asc.card_id)
 	card["type"] = "sudan"
 	card["name"] = "%s%s" % [dec.rank, dec.action]
 	var widget := CardWidget.make(card)
 	widget.custom_minimum_size = Vector2(116, 178)
-	var bar := ProgressBar.new()
-	bar.min_value = 0
-	bar.max_value = life
-	bar.value = int(asc.days_left)
-	bar.custom_minimum_size = Vector2(0, 18)
-	widget.add_child(bar)
+	widget.clip_contents = false
 	var days := Label.new()
-	days.text = "剩余 %d 天" % int(asc.days_left)
-	days.add_theme_font_size_override("font_size", 12)
-	days.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
+	days.name = "SudanCountdown"
+	days.text = str(int(asc.days_left))
+	days.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	days.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	days.position = Vector2(78, -20)
+	days.size = Vector2(28, 24)
+	days.add_theme_font_size_override("font_size", 18)
+	days.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	days.add_theme_color_override("font_shadow_color", Color("#100c0a"))
+	days.add_theme_constant_override("shadow_offset_x", 1)
+	days.add_theme_constant_override("shadow_offset_y", 1)
 	widget.add_child(days)
 	return widget
 
@@ -297,3 +309,12 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 func set_log(text: String) -> void:
 	if _log_label:
 		_log_label.text = text
+
+
+func add_overlay(node: Control) -> void:
+	if _overlay_layer == null:
+		add_child(node)
+		return
+	_overlay_layer.add_child(node)
+	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
+

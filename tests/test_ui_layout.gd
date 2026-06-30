@@ -4,6 +4,7 @@ const ConfigDB = preload("res://data/db.gd")
 const GameState = preload("res://sim/game_state.gd")
 const RNG = preload("res://core/rng.gd")
 const MainMenu = preload("res://ui/main_menu.gd")
+const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
@@ -109,6 +110,40 @@ func test_game_screen_home_site_and_menu_are_interactive():
 		menu.pressed.emit()
 	assert_eq(opened, [5000001], "clicking home site should open the estate rite")
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
+
+
+func test_game_menu_button_opens_real_overlay():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+
+	game._on_difficulty_selected(0)
+	await wait_process_frames(2)
+
+	var menu := _find_node_by_name(game, "MenuButton") as Button
+	assert_not_null(menu, "menu button should exist in the in-game HUD")
+	if menu == null:
+		return
+	menu.pressed.emit()
+	await wait_process_frames(1)
+
+	assert_not_null(_find_node_by_name(game, "GameMenuOverlay"), "menu button should open an in-game menu overlay")
+	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
+	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
+	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+
+
+func test_card_widget_exports_drag_payload_with_card_id():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	var data = widget._get_drag_data(Vector2.ZERO)
+	assert_true(data is Dictionary, "dragging a card should produce a card payload")
+	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
 
 
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():

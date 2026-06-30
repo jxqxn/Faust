@@ -19,6 +19,9 @@ var db: ConfigDB
 var state: GameState
 var rng: GameRNG
 var _current: Control
+var _game_screen: Control
+var _rite_overlay: Control
+var _menu_overlay: Control
 
 
 func _ready() -> void:
@@ -29,8 +32,25 @@ func _ready() -> void:
 	_show_menu()
 
 
+func _mcp_capture_governance_rite() -> void:
+	state = GameState.new()
+	state.setup_new_run(db, 1, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	_on_open_rite(5000001)
+
+
+func _mcp_capture_main_desktop() -> void:
+	state = GameState.new()
+	state.setup_new_run(db, 1, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	_show_game()
+
+
 func _show_menu() -> void:
 	_clear_current()
+	_game_screen = null
 	var menu := MainMenu.new()
 	menu.difficulty_selected.connect(_on_difficulty_selected)
 	menu.continue_pressed.connect(_on_continue)
@@ -68,6 +88,7 @@ func _show_game() -> void:
 	SaveSystem.save(state)
 	add_child(gs)
 	_current = gs
+	_game_screen = gs
 	gs.refresh()
 
 
@@ -82,26 +103,111 @@ func _on_open_rite_selector() -> void:
 
 
 func _on_open_rite(rite_id: int) -> void:
-	_clear_current()
+	if _game_screen == null:
+		_show_game()
+	_close_rite_overlay()
 	var rv := RiteView.new()
 	rv.setup(state, db, rng, rite_id)
-	rv.closed.connect(_show_game)
+	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
-	add_child(rv)
-	_current = rv
+	if _game_screen != null and _game_screen.has_method("add_overlay"):
+		_game_screen.add_overlay(rv)
+	else:
+		add_child(rv)
+	_rite_overlay = rv
 
 
 func _on_menu_pressed() -> void:
+	if _menu_overlay != null:
+		_close_game_menu()
+		return
+	_show_game_menu()
+
+
+func _show_game_menu() -> void:
+	if _current == null:
+		return
+	_menu_overlay = Control.new()
+	_menu_overlay.name = "GameMenuOverlay"
+	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_menu_overlay)
+	move_child(_menu_overlay, get_child_count() - 1)
+
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.48)
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_menu_overlay.add_child(shade)
+
+	var panel := PanelContainer.new()
+	panel.name = "GameMenuPanel"
+	panel.custom_minimum_size = Vector2(260, 220)
+	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+	panel.anchor_left = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -130
+	panel.offset_top = -110
+	panel.offset_right = 130
+	panel.offset_bottom = 110
+	_menu_overlay.add_child(panel)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 12)
+	panel.add_child(box)
+
+	var title := Label.new()
+	title.text = "菜单"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	box.add_child(title)
+
+	var resume := _menu_button("继续")
+	resume.name = "ResumeGameButton"
+	resume.pressed.connect(_close_game_menu)
+	box.add_child(resume)
+
+	var save := _menu_button("保存")
+	save.name = "SaveGameButton"
+	save.pressed.connect(_on_save_from_menu)
+	box.add_child(save)
+
+	var title_screen := _menu_button("返回标题")
+	title_screen.name = "ReturnTitleButton"
+	title_screen.pressed.connect(_show_menu)
+	box.add_child(title_screen)
+
+
+func _menu_button(label: String) -> Button:
+	var button := Button.new()
+	button.text = label
+	button.custom_minimum_size = Vector2(220, 42)
+	return button
+
+
+func _on_save_from_menu() -> void:
+	var ok := SaveSystem.save(state)
+	_close_game_menu()
 	if _current and _current.has_method("set_log"):
-		_current.set_log("菜单功能待实现：这里将打开暂停/保存/设置。")
+		_current.set_log("已保存。" if ok else "保存失败。")
+
+
+func _close_game_menu() -> void:
+	if _menu_overlay == null:
+		return
+	_menu_overlay.queue_free()
+	_menu_overlay = null
 
 
 func _after_rite_resolution() -> void:
 	var result := RoundLoop.start_round_if_no_sudan(state, db, rng)
+	if _game_screen != null:
+		_game_screen.refresh()
 	if not result.get("new_round", false):
 		return
-	if _current and _current.has_method("set_log"):
-		_current.set_log(_round_result_log(result))
+	if _rite_overlay and _rite_overlay.has_method("set_log"):
+		_rite_overlay.set_log(_round_result_log(result))
 
 
 func _round_result_log(result: Dictionary) -> String:
@@ -161,6 +267,16 @@ func _on_redraw() -> void:
 
 
 func _clear_current() -> void:
+	_close_game_menu()
+	_close_rite_overlay()
 	if _current:
 		_current.queue_free()
 		_current = null
+
+
+func _close_rite_overlay() -> void:
+	if _rite_overlay:
+		_rite_overlay.queue_free()
+		_rite_overlay = null
+	if _game_screen:
+		_game_screen.refresh()
