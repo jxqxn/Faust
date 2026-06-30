@@ -16,10 +16,6 @@ run/main_scene="res://scenes/main.tscn"
 config/version="0.1.0"
 config/description="苏丹的游戏 Godot 克隆 — 忠实还原原作核心系统"
 
-[autoload]
-
-_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
-
 [display]
 
 window/size/viewport=Vector2i(1280, 800)
@@ -27,4 +23,4 @@ window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg", "res://addons/gut/plugin.cfg")
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
