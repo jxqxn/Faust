@@ -73,7 +73,7 @@ func _show_game() -> void:
 func _on_open_rite_selector() -> void:
 	_clear_current()
 	var sel := RiteSelector.new()
-	sel.setup(db)
+	sel.setup(db, state, rng)
 	sel.rite_chosen.connect(_on_open_rite)
 	sel.closed.connect(_show_game)
 	add_child(sel)

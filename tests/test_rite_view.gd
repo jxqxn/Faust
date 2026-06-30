@@ -88,3 +88,38 @@ func test_resolved_rite_consumes_placed_active_sudan_card():
 
 	view._resolve()
 	assert_eq(state.active_sudan_cards.size(), 0, "placed active sudan card is consumed after a matching rite settlement")
+
+func test_prepare_table_preserves_cards_outside_placed_slots():
+	var rng := RNG.new(99)
+	var state := GameState.new()
+	state.add_card_to_slot(2000006, 3, db)
+	state.add_card_to_slot(2000007, 1, db)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._placed = {"s1": 2000005}
+
+	view._prepare_table_from_placements()
+
+	assert_eq(state.cards_in_slot(3).size(), 1, "unrelated table cards remain")
+	if state.cards_in_slot(3).is_empty():
+		return
+	assert_eq(int(state.cards_in_slot(3)[0].get("id", 0)), 2000006)
+	assert_eq(state.cards_in_slot(1).size(), 1, "placed slot is replaced")
+	assert_eq(int(state.cards_in_slot(1)[0].get("id", 0)), 2000005)
+
+func test_prepare_table_clears_slots_cancelled_after_prior_placement():
+	var rng := RNG.new(100)
+	var state := GameState.new()
+	state.add_card_to_slot(2000006, 3, db)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._placed = {"s1": 2000005}
+
+	view._prepare_table_from_placements()
+	assert_eq(state.cards_in_slot(1).size(), 1, "initial placement exists")
+
+	view._placed.clear()
+	view._prepare_table_from_placements()
+
+	assert_eq(state.cards_in_slot(1).size(), 0, "cancelled placement slot is cleared")
+	assert_eq(state.cards_in_slot(3).size(), 1, "unrelated table card still remains")

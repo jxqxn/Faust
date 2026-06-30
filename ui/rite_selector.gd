@@ -9,15 +9,20 @@ signal rite_chosen(rite_id: int)
 signal closed()
 
 const FaustTheme = preload("res://ui/theme.gd")
+const ConditionEval = preload("res://sim/condition.gd")
 
 var _db
+var _state = null
+var _rng = null
 var _location_order := ["自宅", "商业区", "宫廷", "上城区", "黑街", "神殿区", "野外", "大敌", "奇珍", "结局"]
 
 var _list_container: VBoxContainer
 
 
-func setup(db) -> void:
+func setup(db, state = null, rng = null) -> void:
 	_db = db
+	_state = state
+	_rng = rng
 
 
 func _ready() -> void:
@@ -77,9 +82,7 @@ func _populate() -> void:
 		# Only interactive rites: has slots AND has settlement, not auto.
 		if auto == 1 or slots.is_empty() or settle_count == 0:
 			continue
-		# open_conditions gating: empty => open. (Full condition eval later.)
-		var oc = r.get("open_conditions", [])
-		if oc is Array and not oc.is_empty():
+		if not _is_rite_open(r):
 			continue
 		var loc_raw := str(r.get("location", "?"))
 		var loc_name := loc_raw.split(":")[0]
@@ -124,3 +127,18 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 
 func _on_rite(rid: int) -> void:
 	rite_chosen.emit(rid)
+
+
+func _is_rite_open(rite: Dictionary) -> bool:
+	var open_conditions = rite.get("open_conditions", [])
+	if not (open_conditions is Array) or open_conditions.is_empty():
+		return true
+	var ctx := {"db": _db, "state": _state, "rng": _rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+	for entry in open_conditions:
+		if entry is Dictionary:
+			var condition: Dictionary = entry.get("condition", {})
+			if _state == null and not condition.is_empty():
+				return false
+			if not ConditionEval.evaluate(condition, ctx):
+				return false
+	return true

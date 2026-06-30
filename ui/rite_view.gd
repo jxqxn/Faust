@@ -23,6 +23,7 @@ var _rng
 var _rite_id: int = 5000001
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> card_id
+var _managed_slots: Array[int] = []
 var _gold_used_this_resolve: int = 0
 var _gold_dice_map: Dictionary = {}
 var _resolve_baseline: Dictionary = {}
@@ -295,9 +296,17 @@ func _panel() -> PanelContainer:
 
 
 func _prepare_table_from_placements() -> void:
-	_state.table_cards.clear()
+	var slots_to_clear := _managed_slots.duplicate()
 	for slot_key in _placed:
 		var slot_num: int = slot_key.substr(1).to_int()
+		if slot_num not in slots_to_clear:
+			slots_to_clear.append(slot_num)
+	for slot_num in slots_to_clear:
+		_state.clear_slot(slot_num)
+	_managed_slots.clear()
+	for slot_key in _placed:
+		var slot_num: int = slot_key.substr(1).to_int()
+		_managed_slots.append(slot_num)
 		_state.add_card_to_slot(int(_placed[slot_key]), slot_num, _db)
 
 

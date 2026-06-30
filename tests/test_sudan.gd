@@ -25,15 +25,15 @@ func test_decode_sudan_card_ids():
 	assert_eq(d16.rank, "黄金")
 
 func test_can_target_rank_rules():
-	# 岩石 card can target any rank.
-	assert_true(SudanCards.can_target(0, 0))
-	assert_true(SudanCards.can_target(0, 3))
-	# 青铜 card cannot target 岩石 (rock) target.
-	assert_false(SudanCards.can_target(1, 0))
-	assert_true(SudanCards.can_target(1, 1))
-	# 黄金 card only targets 黄金.
-	assert_false(SudanCards.can_target(3, 2))
-	assert_true(SudanCards.can_target(3, 3))
+	# Higher-rank targets can satisfy lower-rank Sultan cards.
+	assert_true(SudanCards.can_target(0, 0), "rock target satisfies rock card")
+	assert_true(SudanCards.can_target(0, 3), "gold target satisfies rock card")
+	assert_true(SudanCards.can_target(1, 2), "silver target satisfies bronze card")
+	assert_true(SudanCards.can_target(2, 3), "gold target satisfies silver card")
+	# Lower-rank targets cannot satisfy higher-rank Sultan cards.
+	assert_false(SudanCards.can_target(1, 0), "rock target cannot satisfy bronze card")
+	assert_false(SudanCards.can_target(3, 2), "silver target cannot satisfy gold card")
+	assert_true(SudanCards.can_target(3, 3), "gold target satisfies gold card")
 
 func test_deck_build_and_draw_last_first():
 	var rng := RNG.new(42)

@@ -172,3 +172,61 @@ func test_settlement_normal_first_match_only():
 	assert_eq(res.extre_log.size(), 0)
 	# Only first match (1 gold), not 100.
 	assert_eq(st.coin_count, 1)
+
+func test_settlement_prior_executes_action_after_result():
+	var st := GameState.new()
+	var ctx := _make_ctx(st, RNG.new(1))
+	var fake := {
+		"settlement_prior": [
+			{"condition": {}, "result": {"金币": 1}, "action": {"event_on": 5300601}},
+		],
+		"settlement": [],
+		"settlement_extre": [],
+	}
+	var res := RiteResolver.resolve(fake, ctx, 0)
+	assert_eq(res.prior_log.size(), 1)
+	assert_eq(st.coin_count, 1)
+	assert_eq(res.deferred.events, [5300601])
+
+func test_settlement_normal_executes_action_after_result():
+	var st := GameState.new()
+	var ctx := _make_ctx(st, RNG.new(1))
+	var fake := {
+		"settlement": [
+			{"condition": {}, "result": {"金币": 1}, "action": {"rite": 5000001}},
+		],
+	}
+	var res := RiteResolver.resolve(fake, ctx, 0)
+	assert_false(res.normal_entry.is_empty())
+	assert_eq(st.coin_count, 1)
+	assert_eq(res.deferred.rite, 5000001)
+
+func test_settlement_action_can_defer_over():
+	var st := GameState.new()
+	var ctx := _make_ctx(st, RNG.new(1))
+	var fake := {
+		"settlement": [
+			{"condition": {}, "result": {}, "action": {"over": 1}},
+		],
+	}
+	var res := RiteResolver.resolve(fake, ctx, 0)
+	assert_true(res.deferred.over)
+
+func test_settlement_extre_executes_all_results_before_actions():
+	var st := GameState.new()
+	var ctx := _make_ctx(st, RNG.new(1))
+	var fake := {
+		"settlement_extre": [
+			{"condition": {}, "result": {"金币": 1}, "action": {"金币": 10}},
+			{"condition": {}, "result": {"金币": 2}, "action": {"金币": 20}},
+		],
+	}
+	var res := RiteResolver.resolve(fake, ctx, 0)
+	assert_eq(res.extre_log.size(), 2)
+	assert_eq(res.deferred.logs, [
+		"coin +1",
+		"coin +2",
+		"coin +10",
+		"coin +20",
+	])
+	assert_eq(st.coin_count, 33)
