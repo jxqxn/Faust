@@ -71,7 +71,7 @@ static func _build() -> Theme:
 	# ProgressBar (sudan deadline bar).
 	t.set_font_size("font_size", "ProgressBar", 13)
 	t.set_stylebox("background", "ProgressBar", _make_style(Color("#100c0a"), Color("#2a2218"), 1))
-	t.set_stylebox("fill", " ProgressBar", _make_style(DANGER, Color(0,0,0,0), 0))
+	t.set_stylebox("fill", "ProgressBar", _make_style(DANGER, Color(0,0,0,0), 0))
 	return t
 
 

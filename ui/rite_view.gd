@@ -17,6 +17,8 @@ const RiteResolver = preload("res://sim/rite_resolver.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
 const RoundLoop = preload("res://sim/round_loop.gd")
 
+const CONTENT_WIDTH := 960
+
 var _state
 var _db
 var _rng
@@ -65,6 +67,9 @@ func _build_ui() -> void:
 	add_child(margin)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 10)
+	root.custom_minimum_size = Vector2(CONTENT_WIDTH, 0)
+	root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	margin.add_child(root)
 	# Title + description.
 	var title := Label.new()
@@ -82,6 +87,7 @@ func _build_ui() -> void:
 	var slots_panel := _panel()
 	var slots_col := VBoxContainer.new()
 	slots_col.add_theme_constant_override("separation", 6)
+	slots_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var slots_head := Label.new()
 	slots_head.text = "入槽 · 选择卡牌"
 	slots_head.add_theme_font_size_override("font_size", 18)
@@ -90,12 +96,14 @@ func _build_ui() -> void:
 	slots_panel.add_child(slots_col)
 	_slots_container = VBoxContainer.new()
 	_slots_container.add_theme_constant_override("separation", 8)
+	_slots_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slots_col.add_child(_slots_container)
 	_build_slots()
 	root.add_child(slots_panel)
 	# Action bar: resolve + gold dice (reactive).
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 12)
+	action_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_gold_dice_label = Label.new()
 	_gold_dice_label.add_theme_font_size_override("font_size", 18)
 	_gold_dice_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
@@ -118,6 +126,7 @@ func _build_ui() -> void:
 	# Result.
 	var result_panel := _panel()
 	var rcol := VBoxContainer.new()
+	rcol.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var rh := Label.new()
 	rh.text = "结算结果"
 	rh.add_theme_font_size_override("font_size", 18)
@@ -135,6 +144,7 @@ func _build_ui() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "返回"
 	close_btn.custom_minimum_size = Vector2(120, 44)
+	close_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	close_btn.pressed.connect(func(): closed.emit())
 	root.add_child(close_btn)
 	_result_label.text = "[color=#a89880]放入卡牌后点击「掷骰结算」。[/color]"
@@ -151,6 +161,7 @@ func _build_slots() -> void:
 		var slot_def: Dictionary = slots[slot_key]
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var info_col := VBoxContainer.new()
 		info_col.custom_minimum_size = Vector2(280, 0)
 		info_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -167,7 +178,8 @@ func _build_slots() -> void:
 		info_col.add_child(slot_desc)
 		row.add_child(info_col)
 		var opt := OptionButton.new()
-		opt.custom_minimum_size = Vector2(360, 36)
+		opt.custom_minimum_size = Vector2(420, 36)
+		opt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		opt.add_item("（空）", 0)
 		var idx := 1
 		for cid in _state.hand:
@@ -292,6 +304,7 @@ func _refresh_gold_label() -> void:
 func _panel() -> PanelContainer:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", FaustTheme.card_style())
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return p
 
 

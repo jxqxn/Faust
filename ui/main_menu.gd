@@ -17,6 +17,9 @@ const DIFF_DESC := [
 	"以窥察你的苦痛为乐。骰子成功率 40%，无倒回，初始 1 枚金骰。",
 ]
 
+const CONTENT_WIDTH := 960
+
+
 func _ready() -> void:
 	theme = FaustTheme.get_theme()
 	_build_ui()
@@ -35,7 +38,7 @@ func _build_ui() -> void:
 	add_child(center)
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 18)
-	vbox.custom_minimum_size = Vector2(560, 0)
+	vbox.custom_minimum_size = Vector2(CONTENT_WIDTH, 0)
 	center.add_child(vbox)
 	# Title.
 	var title := Label.new()
@@ -56,7 +59,8 @@ func _build_ui() -> void:
 	if SaveSystem.has_save():
 		var cont := Button.new()
 		cont.text = "继续游戏"
-		cont.custom_minimum_size = Vector2(560, 50)
+		cont.custom_minimum_size = Vector2(0, 50)
+		cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cont.add_theme_font_size_override("font_size", 22)
 		cont.pressed.connect(func(): continue_pressed.emit())
 		vbox.add_child(cont)
@@ -77,8 +81,10 @@ func _build_ui() -> void:
 func _make_diff_card(index: int) -> Control:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 4)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var name_lbl := Label.new()
@@ -98,7 +104,7 @@ func _make_diff_card(index: int) -> Control:
 	desc.add_theme_font_size_override("font_size", 13)
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.custom_minimum_size = Vector2(540, 0)
+	desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	col.add_child(desc)
 	panel.add_child(col)
 	return panel
