@@ -135,6 +135,30 @@ func test_slot_accepts_card_rejects_wrong_type():
 	card["id"] = 2000005
 	assert_false(view._slot_accepts_card({"condition": {"type": "item"}}, card), "wrong card type is rejected")
 
+func test_drop_card_moves_between_hand_slot_and_back():
+	var rng := RNG.new(92)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var card_id := int(state.hand[0])
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._slot_buttons = {"s1": Button.new()}
+	view._slot_titles = {"s1": Label.new()}
+	view._slot_details = {"s1": Label.new()}
+	var initial_hand_size := state.hand.size()
+
+	view.drop_card_on_slot("s1", {"type": "card", "card_id": card_id, "source": "hand"})
+
+	assert_false(state.has_card_in_hand(card_id), "card leaves hand when placed in a slot")
+	assert_eq(state.cards_in_slot(1).size(), 1, "placed card enters the slot table state")
+	assert_eq(int(view._placed.get("s1", 0)), card_id)
+
+	view.return_card_to_hand(card_id, "s1")
+
+	assert_true(state.has_card_in_hand(card_id), "card returns to hand when dragged back")
+	assert_eq(state.hand.size(), initial_hand_size)
+	assert_eq(state.cards_in_slot(1).size(), 0)
+
 func test_prepare_table_preserves_cards_outside_placed_slots():
 	var rng := RNG.new(99)
 	var state := GameState.new()

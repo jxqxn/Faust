@@ -9,6 +9,18 @@ signal redraw_pressed()
 signal open_rite_selector()
 signal menu_pressed()
 
+class HandRailDrop:
+	extends ScrollContainer
+
+	var owner_screen: Control
+
+	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+		return owner_screen != null and owner_screen.has_method("can_drop_card_to_hand") and owner_screen.can_drop_card_to_hand(data)
+
+	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+		if owner_screen != null and owner_screen.has_method("drop_card_to_hand"):
+			owner_screen.drop_card_to_hand(data, get_local_mouse_position())
+
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
 const SudanCards = preload("res://sim/sudan_cards.gd")
@@ -138,8 +150,9 @@ func _build_ui() -> void:
 		tab.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 		_rail_label.add_child(tab)
 
-	_card_rail_view = ScrollContainer.new()
+	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
+	(_card_rail_view as HandRailDrop).owner_screen = self
 	_card_rail_view.clip_contents = true
 	add_child(_card_rail_view)
 	_card_items = HBoxContainer.new()
@@ -273,17 +286,29 @@ func refresh() -> void:
 	for child in _card_items.get_children():
 		child.queue_free()
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
-	for asc in _state.active_sudan_cards:
-		_card_items.add_child(_make_sudan_card(asc, life))
-	for cid in _state.hand:
-		var card: Dictionary = _db.get_card(int(cid))
+	_state.sync_rail_order()
+	for cid in _state.visible_rail_card_ids():
+		var id := int(cid)
+		if _state.is_active_sudan_card(id):
+			var asc = _active_sudan_for_card(id)
+			if asc != null:
+				_card_items.add_child(_make_sudan_card(asc, life))
+			continue
+		var card: Dictionary = _db.get_card(id)
 		if card.is_empty():
 			continue
-		card["id"] = int(cid)
-		var widget := CardWidget.make(card)
+		card["id"] = id
+		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		widget.clicked.connect(_show_card_detail)
 		_card_items.add_child(widget)
+
+
+func _active_sudan_for_card(card_id: int) -> Variant:
+	for asc in _state.active_sudan_cards:
+		if int(asc.card_id) == card_id:
+			return asc
+	return null
 
 
 func _make_sudan_card(asc, life: int) -> CardWidget:
@@ -292,7 +317,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	card["id"] = int(asc.card_id)
 	card["type"] = "sudan"
 	card["name"] = "%s%s" % [dec.rank, dec.action]
-	var widget := CardWidget.make(card)
+	var widget := CardWidget.make(card, "active_sudan")
 	widget.custom_minimum_size = CardWidget.CARD_SIZE
 	widget.clip_contents = false
 	widget.clicked.connect(_show_card_detail)
@@ -310,6 +335,68 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	days.add_theme_constant_override("shadow_offset_y", 1)
 	widget.add_child(days)
 	return widget
+
+
+func can_drop_card_to_hand(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	if str(data.get("type", "")) != "card":
+		return false
+	var source := str(data.get("source", ""))
+	return source == "slot" or source == "hand" or source == "active_sudan"
+
+
+func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> void:
+	if not can_drop_card_to_hand(data):
+		return
+	var card_id := int(data.get("card_id", 0))
+	var source := str(data.get("source", ""))
+	var source_slot := str(data.get("source_slot", ""))
+	var card: Dictionary = _db.get_card(card_id)
+	var is_sudan: bool = str(card.get("type", "")) == "sudan" or _state.is_active_sudan_card(card_id)
+	var insert_index := _rail_insert_index_at(rail_position, card_id)
+	if source == "slot":
+		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id))
+		_state.remove_card_from_slot(card_id, slot_num)
+		if is_sudan:
+			_state.insert_card_to_rail(card_id, insert_index)
+		else:
+			_state.add_card_to_hand_at_rail(card_id, insert_index)
+		_notify_card_returned_to_hand(card_id, source_slot)
+	elif source == "hand" or source == "active_sudan":
+		_state.reorder_rail_card(card_id, insert_index)
+	refresh()
+
+
+func _rail_insert_index_at(rail_position: Vector2, dragged_card_id: int = 0) -> int:
+	if _card_items == null:
+		return _state.rail_order.size()
+	if rail_position.x == INF:
+		return _state.rail_order.size()
+	var global_pos := _card_rail_view.get_global_transform() * rail_position
+	var local_x := (_card_items.get_global_transform().affine_inverse() * global_pos).x
+	var index := 0
+	for child in _card_items.get_children():
+		if not (child is CardWidget):
+			continue
+		var widget := child as CardWidget
+		if int(widget.card_id) == dragged_card_id:
+			continue
+		if not widget.visible:
+			continue
+		var center_x := widget.position.x + widget.size.x * 0.5
+		if local_x < center_x:
+			return index
+		index += 1
+	return index
+
+
+func _notify_card_returned_to_hand(card_id: int, source_slot: String) -> void:
+	if _overlay_layer == null:
+		return
+	for child in _overlay_layer.get_children():
+		if child.has_method("return_card_to_hand"):
+			child.return_card_to_hand(card_id, source_slot)
 
 
 func set_log(text: String) -> void:

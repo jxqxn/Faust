@@ -31,6 +31,7 @@ static func serialize(state) -> Dictionary:
 		"redraws_left": state.redraws_left,
 		"back_to_prev_left": state.back_to_prev_left,
 		"hand": state.hand.duplicate(),
+		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
 		"table_cards": table_cards_data,
@@ -67,6 +68,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 			int(asc_data.get("drawn_round", 0))
 		)
 		state.active_sudan_cards.append(asc)
+	state.rail_order.clear()
+	for cid in data.get("rail_order", []):
+		state.rail_order.append(int(cid))
 	state.table_cards.clear()
 	for tc in data.get("table_cards", []):
 		if tc is Dictionary:
@@ -80,6 +84,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
 	state.local_counters = data.get("local_counters", {}).duplicate(true)
 	state.global_counters = data.get("global_counters", {}).duplicate(true)
+	if state.has_method("sync_rail_order"):
+		state.sync_rail_order()
 
 
 ## Save to disk. Returns true on success.

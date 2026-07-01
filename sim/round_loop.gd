@@ -31,6 +31,8 @@ static func advance_day(state, db, rng) -> Dictionary:
 		if asc.days_left <= 0:
 			result.expired.append(asc.card_id)
 			result.game_over = true
+			if state.has_method("remove_card_from_rail"):
+				state.remove_card_from_rail(int(asc.card_id))
 		else:
 			still_active.append(asc)
 	state.active_sudan_cards = still_active
@@ -46,6 +48,8 @@ static func draw_weekly_sudan(state, db, rng) -> int:
 	if cid < 0:
 		return -1
 	state.active_sudan_cards.append(ActiveSudan.new(cid, life, state.round_number))
+	if state.has_method("insert_card_to_rail"):
+		state.insert_card_to_rail(cid, 0)
 	return cid
 
 
@@ -71,6 +75,7 @@ static func use_redraw(state, rng) -> int:
 	var old_card = state.active_sudan_cards.pop_back()
 	var discarded: int = old_card.card_id
 	var carried_life: int = old_card.days_left
+	var rail_index: int = state.rail_order.find(discarded) if state.has_method("replace_card_in_rail") else -1
 	var new_id: int = SudanCards.draw(state.sudan_deck)
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
@@ -78,6 +83,11 @@ static func use_redraw(state, rng) -> int:
 		state.sudan_deck.append(discarded)
 	if new_id >= 0:
 		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number))
+		if state.has_method("replace_card_in_rail"):
+			if rail_index >= 0:
+				state.replace_card_in_rail(discarded, new_id)
+			else:
+				state.insert_card_to_rail(new_id, state.rail_order.size())
 		state.redraws_left -= 1
 	return new_id
 
@@ -88,6 +98,8 @@ static func consume_sudan(state, card_id: int) -> bool:
 	for i in state.active_sudan_cards.size():
 		if state.active_sudan_cards[i].card_id == card_id:
 			state.active_sudan_cards.remove_at(i)
+			if state.has_method("remove_card_from_rail"):
+				state.remove_card_from_rail(card_id)
 			return true
 	return false
 

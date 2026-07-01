@@ -42,7 +42,10 @@ func test_game_screen_uses_wide_viewport_width():
 	await wait_process_frames(2)
 
 	assert_true(_widest_content(screen) >= MIN_CONTENT_WIDTH, "game screen content should use the wide viewport")
-	assert_true(_narrowest_direct_panel(screen) >= MIN_CONTENT_WIDTH, "game screen panels should not remain in a left-column layout")
+	var desk_map := _find_node_by_name(screen, "DeskMap") as Control
+	assert_not_null(desk_map, "game screen should keep the desktop map as the wide central panel")
+	if desk_map != null:
+		assert_true(desk_map.size.x >= MIN_CONTENT_WIDTH, "desktop map should not remain in a left-column layout")
 
 
 func test_game_screen_uses_bottom_card_rail_for_sudan_and_hand():
@@ -144,6 +147,185 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	var data = widget._get_drag_data(Vector2.ZERO)
 	assert_true(data is Dictionary, "dragging a card should produce a card payload")
 	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
+
+func test_card_widget_face_only_shows_name_and_art():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 3, "tag": {"智慧": 9, "主角": 1}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	assert_not_null(_find_node_by_name(widget, "CardArt"), "compact card should include a visual art area")
+	var text := _collect_label_and_button_text(widget)
+	assert_true(text.find("Test") >= 0, "compact card should show the card name")
+	assert_eq(text.find("智慧"), -1, "compact card should not show attributes")
+	assert_eq(text.find("主角"), -1, "compact card should not show tags")
+
+func test_card_widget_inner_art_does_not_block_dragging():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	var art := _find_node_by_name(widget, "CardArt") as Control
+	assert_not_null(art, "card art placeholder should exist")
+	if art != null:
+		assert_eq(art.mouse_filter, Control.MOUSE_FILTER_IGNORE, "card art should not eat drag events")
+
+func test_card_widget_hides_source_while_dragging_and_restores_on_failed_drop():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	widget._hide_source_for_drag()
+	assert_false(widget.visible, "source card should disappear from hand while dragging")
+
+	widget._restore_source_after_failed_drag()
+	assert_true(widget.visible, "source card should reappear if drop fails")
+
+
+func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var returned_id := int(state.hand[2])
+	var first_id := int(state.hand[0])
+	var second_id := int(state.hand[1])
+	state.remove_card_from_hand(returned_id)
+	state.add_card_to_slot(returned_id, 1, db)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var card_rail := _find_node_by_name(screen, "CardRail") as Control
+	assert_not_null(card_rail, "card rail should exist")
+	if card_rail == null:
+		return
+	var hand_widgets := _hand_card_widgets(screen)
+	assert_true(hand_widgets.size() >= 3, "hand rail should have enough cards to test insertion")
+	if hand_widgets.size() < 3:
+		return
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": returned_id, "source": "slot", "source_slot": "s1"},
+		_hand_drop_between(screen, 1, 2)
+	)
+
+	assert_eq(state.hand[0], first_id)
+	assert_eq(state.hand[1], second_id)
+	assert_eq(state.hand[2], returned_id, "returned card should insert at the drop position instead of appending blindly")
+
+
+func test_game_screen_reorders_hand_card_by_hand_drop_position():
+	var rng := RNG.new(11)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var moved_id := int(state.hand[2])
+	var first_id := int(state.hand[0])
+	var second_id := int(state.hand[1])
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": moved_id, "source": "hand"},
+		_hand_drop_between(screen, 0, 1)
+	)
+
+	assert_eq(state.hand[0], first_id)
+	assert_eq(state.hand[1], moved_id, "hand card should reorder to the drop position")
+	assert_eq(state.hand[2], second_id)
+
+
+func test_game_screen_reorders_hand_card_to_left_and_right_edges():
+	var rng := RNG.new(12)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var moved_left_id := int(state.hand[3])
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": moved_left_id, "source": "hand"},
+		_hand_drop_left_of(screen, 0)
+	)
+	assert_eq(state.hand[0], moved_left_id, "dropping left of the first card should insert at the front")
+
+	var moved_right_id := int(state.hand[0])
+	screen.refresh()
+	await wait_process_frames(1)
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": moved_right_id, "source": "hand"},
+		_hand_drop_right_of(screen, _hand_card_widgets(screen).size() - 1)
+	)
+	assert_eq(state.hand[state.hand.size() - 1], moved_right_id, "dropping right of the last card should append to the end")
+
+
+func test_game_screen_can_insert_hand_card_left_of_sudan_card():
+	var rng := RNG.new(13)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
+	var moved_id := int(state.hand[1])
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": moved_id, "source": "hand"},
+		_rail_drop_left_of_card(screen, sudan_id)
+	)
+
+	assert_eq(state.rail_order.find(moved_id), state.rail_order.find(sudan_id) - 1, "hand cards should be able to insert directly left of a sudan card")
+
+
+func test_game_screen_can_reorder_sudan_card_in_bottom_rail():
+	var rng := RNG.new(14)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
+	var first_hand_id := int(state.hand[0])
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.drop_card_to_hand(
+		{"type": "card", "card_id": sudan_id, "source": "active_sudan"},
+		_rail_drop_left_of_card(screen, first_hand_id)
+	)
+
+	assert_eq(state.rail_order[0], sudan_id, "active sudan cards should be reorderable in the same bottom rail")
+
+
+func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
+	var rng := RNG.new(15)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	assert_eq(state.rail_order[0], sudan_id, "newly drawn sudan cards should default to the first rail position")
+	var rail_widgets := _rail_card_widgets(screen)
+	assert_true(rail_widgets.size() > 0, "rail should render at least one card")
+	if rail_widgets.size() > 0:
+		assert_eq(int((rail_widgets[0] as CardWidget).card_id), sudan_id, "rendered rail should show the sudan card first")
 
 
 func test_game_screen_can_open_card_detail_overlay():
@@ -266,7 +448,14 @@ func test_rite_view_uses_wide_viewport_width():
 	stage.add_child(view)
 	await wait_process_frames(2)
 
-	assert_true(_widest_content(view) >= MIN_CONTENT_WIDTH, "rite view content should use the wide viewport")
+	var shade := _find_node_by_name(view, "RiteModalShade") as Control
+	var slot_layer := _find_node_by_name(view, "RiteSlotOverlay") as Control
+	assert_not_null(shade, "rite overlay should include a full-screen modal shade")
+	assert_not_null(slot_layer, "rite overlay should include a full-screen slot layer")
+	if shade != null:
+		assert_true(shade.size.x >= MIN_CONTENT_WIDTH, "rite modal shade should cover the wide viewport")
+	if slot_layer != null:
+		assert_true(slot_layer.size.x >= MIN_CONTENT_WIDTH, "rite slot layer should cover the wide viewport")
 
 
 func _stage() -> Control:
@@ -325,6 +514,58 @@ func _count_card_widgets(node: Node) -> int:
 	for child in node.get_children():
 		count += _count_card_widgets(child)
 	return count
+
+
+func _hand_card_widgets(node: Node) -> Array:
+	var out: Array = []
+	if node is CardWidget and (node as CardWidget).drag_source == "hand":
+		out.append(node)
+	for child in node.get_children():
+		out.append_array(_hand_card_widgets(child))
+	return out
+
+
+func _rail_card_widgets(node: Node) -> Array:
+	var out: Array = []
+	if node is CardWidget:
+		out.append(node)
+	for child in node.get_children():
+		out.append_array(_rail_card_widgets(child))
+	return out
+
+
+func _hand_drop_between(screen, left_index: int, right_index: int) -> Vector2:
+	var widgets := _hand_card_widgets(screen)
+	var left := widgets[left_index] as Control
+	var right := widgets[right_index] as Control
+	var x := (left.position.x + left.size.x * 0.5 + right.position.x + right.size.x * 0.5) * 0.5
+	return _rail_pos_for_card_items_local(screen, Vector2(x, 12))
+
+
+func _hand_drop_left_of(screen, index: int) -> Vector2:
+	var widgets := _hand_card_widgets(screen)
+	var card := widgets[index] as Control
+	return _rail_pos_for_card_items_local(screen, Vector2(card.position.x - 12, 12))
+
+
+func _hand_drop_right_of(screen, index: int) -> Vector2:
+	var widgets := _hand_card_widgets(screen)
+	var card := widgets[index] as Control
+	return _rail_pos_for_card_items_local(screen, Vector2(card.position.x + card.size.x + 12, 12))
+
+
+func _rail_drop_left_of_card(screen, card_id: int) -> Vector2:
+	for widget in _rail_card_widgets(screen):
+		if int((widget as CardWidget).card_id) == card_id:
+			var card := widget as Control
+			return _rail_pos_for_card_items_local(screen, Vector2(card.position.x - 12, 12))
+	return _rail_pos_for_card_items_local(screen, Vector2.ZERO)
+
+
+func _rail_pos_for_card_items_local(screen, local_pos: Vector2) -> Vector2:
+	var card_rail := _find_node_by_name(screen, "CardRail") as Control
+	var global_drop: Vector2 = screen._card_items.get_global_transform() * local_pos
+	return card_rail.get_global_transform().affine_inverse() * global_drop
 
 
 func _count_buttons(node: Node) -> int:

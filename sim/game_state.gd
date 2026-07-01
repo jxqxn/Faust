@@ -17,6 +17,9 @@ var global_counters := {}   # id(int) -> int
 
 # Hand: card ids the player holds.
 var hand: Array[int] = []
+# Visual order for the unified bottom card rail, including hand and active
+# sudan cards. Gameplay ownership still lives in hand/active_sudan_cards.
+var rail_order: Array[int] = []
 # Table: cards placed on the rite table, each {id, slot, tags, count, is_lost}.
 var table_cards: Array = []
 # Coin stack: the coin card (2000093) count. Gold = coin-card stack (spec 10.2).
@@ -53,6 +56,8 @@ func _init() -> void:
 
 
 func setup_new_run(db, diff_index: int, rng) -> void:
+	hand.clear()
+	rail_order.clear()
 	difficulty_index = diff_index
 	difficulty_config = db.get_difficulty(diff_index)
 	# Resources from difficulty.
@@ -64,6 +69,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	# Starting hand: default_cards.
 	for cid in db.get_default_cards():
 		hand.append(int(cid))
+		rail_order.append(int(cid))
 	# Sudan deck from pool (shuffled last-first).
 	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
 	# Day/round.
@@ -136,12 +142,156 @@ func has_card_in_hand(id: int) -> bool:
 
 func add_card_to_hand(id: int) -> void:
 	hand.append(id)
+	rail_order.append(id)
+	_sync_hand_order_from_rail()
+
+
+func insert_card_to_hand(id: int, index: int) -> void:
+	var existing := hand.find(id)
+	if existing >= 0:
+		hand.remove_at(existing)
+	index = clampi(index, 0, hand.size())
+	hand.insert(index, id)
+	insert_card_to_rail(id, _rail_index_for_hand_index(index))
 
 
 func remove_card_from_hand(id: int) -> bool:
 	var idx := hand.find(id)
 	if idx >= 0:
 		hand.remove_at(idx)
+		_erase_one_from_rail(id)
+		return true
+	return false
+
+
+func insert_card_to_rail(id: int, index: int) -> void:
+	_erase_one_from_rail(id)
+	index = clampi(index, 0, rail_order.size())
+	rail_order.insert(index, id)
+	_sync_hand_order_from_rail()
+
+
+func remove_card_from_rail(id: int) -> void:
+	_erase_one_from_rail(id)
+	_sync_hand_order_from_rail()
+
+
+func replace_card_in_rail(old_id: int, new_id: int) -> void:
+	var idx := rail_order.find(old_id)
+	if idx >= 0:
+		rail_order[idx] = new_id
+	elif new_id not in rail_order:
+		rail_order.append(new_id)
+	_sync_hand_order_from_rail()
+
+
+func active_sudan_card_ids() -> Array[int]:
+	var out: Array[int] = []
+	for asc in active_sudan_cards:
+		out.append(int(asc.card_id))
+	return out
+
+
+func is_active_sudan_card(id: int) -> bool:
+	for asc in active_sudan_cards:
+		if int(asc.card_id) == id:
+			return true
+	return false
+
+
+func sync_rail_order() -> void:
+	var valid_counts := {}
+	for cid in hand:
+		var id := int(cid)
+		valid_counts[id] = int(valid_counts.get(id, 0)) + 1
+	for cid in active_sudan_card_ids():
+		var id := int(cid)
+		valid_counts[id] = int(valid_counts.get(id, 0)) + 1
+
+	var next_order: Array[int] = []
+	var remaining: Dictionary = valid_counts.duplicate()
+	for cid in rail_order:
+		var id := int(cid)
+		if int(remaining.get(id, 0)) > 0:
+			next_order.append(id)
+			remaining[id] = int(remaining[id]) - 1
+	for cid in hand:
+		var id := int(cid)
+		if int(remaining.get(id, 0)) > 0:
+			next_order.append(id)
+			remaining[id] = int(remaining[id]) - 1
+	for cid in active_sudan_card_ids():
+		var id := int(cid)
+		if int(remaining.get(id, 0)) > 0:
+			next_order.append(id)
+			remaining[id] = int(remaining[id]) - 1
+	rail_order = next_order
+	_sync_hand_order_from_rail()
+
+
+func visible_rail_card_ids() -> Array[int]:
+	sync_rail_order()
+	var out: Array[int] = []
+	for cid in rail_order:
+		var id := int(cid)
+		if card_is_on_table(id):
+			continue
+		if id in hand or is_active_sudan_card(id):
+			out.append(id)
+	return out
+
+
+func reorder_rail_card(id: int, rail_index: int) -> void:
+	if not (id in hand or is_active_sudan_card(id)):
+		return
+	insert_card_to_rail(id, rail_index)
+
+
+func add_card_to_hand_at_rail(id: int, rail_index: int) -> void:
+	hand.append(id)
+	rail_index = clampi(rail_index, 0, rail_order.size())
+	rail_order.insert(rail_index, id)
+	_sync_hand_order_from_rail()
+
+
+func _sync_hand_order_from_rail() -> void:
+	if hand.is_empty():
+		return
+	var hand_counts := {}
+	for cid in hand:
+		var id := int(cid)
+		hand_counts[id] = int(hand_counts.get(id, 0)) + 1
+	var ordered: Array[int] = []
+	for cid in rail_order:
+		var id := int(cid)
+		if int(hand_counts.get(id, 0)) > 0:
+			ordered.append(id)
+			hand_counts[id] = int(hand_counts[id]) - 1
+	for cid in hand:
+		var id := int(cid)
+		if int(hand_counts.get(id, 0)) > 0:
+			ordered.append(id)
+			hand_counts[id] = int(hand_counts[id]) - 1
+	hand = ordered
+
+
+func _rail_index_for_hand_index(hand_index: int) -> int:
+	if hand_index <= 0:
+		return 0
+	var seen := 0
+	for i in rail_order.size():
+		var id := int(rail_order[i])
+		if id in hand:
+			if seen >= hand_index:
+				return i
+			seen += 1
+	return rail_order.size()
+
+
+func _erase_one_from_rail(id: int) -> bool:
+	var idx := rail_order.find(id)
+	if idx >= 0:
+		rail_order.remove_at(idx)
 		return true
 	return false
 
@@ -181,12 +331,38 @@ func clear_slot(slot: int) -> void:
 	table_cards = keep
 
 
+func remove_card_from_slot(card_id: int, slot: int = 0) -> bool:
+	for i in range(table_cards.size() - 1, -1, -1):
+		var tc: Dictionary = table_cards[i]
+		if int(tc.get("id", 0)) != card_id:
+			continue
+		if slot > 0 and int(tc.get("slot", 0)) != slot:
+			continue
+		table_cards.remove_at(i)
+		return true
+	return false
+
+
 func remove_table_card_id(card_id: int) -> void:
 	var keep: Array = []
 	for tc in table_cards:
 		if int(tc.get("id", 0)) != card_id:
 			keep.append(tc)
 	table_cards = keep
+
+
+func card_is_on_table(card_id: int) -> bool:
+	for tc in table_cards:
+		if int(tc.get("id", 0)) == card_id:
+			return true
+	return false
+
+
+func slot_for_table_card(card_id: int) -> int:
+	for tc in table_cards:
+		if int(tc.get("id", 0)) == card_id:
+			return int(tc.get("slot", 0))
+	return 0
 
 
 func add_card_to_slot(card_id: int, slot: int, db) -> void:
