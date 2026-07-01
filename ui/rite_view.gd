@@ -29,6 +29,7 @@ signal closed()
 signal resolved()
 
 const FaustTheme = preload("res://ui/theme.gd")
+const CardWidget = preload("res://ui/card_widget.gd")
 const RiteResolver = preload("res://sim/rite_resolver.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
 const RoundLoop = preload("res://sim/round_loop.gd")
@@ -85,9 +86,9 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	_shade = ColorRect.new()
-	_shade.name = "RiteLeftOpaqueBackdrop"
-	_shade.color = Color("#211a15")
-	_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_shade.name = "RiteModalShade"
+	_shade.color = Color(0, 0, 0, 0.48)
+	_shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_shade)
 
 	_slot_layer = Control.new()
@@ -269,18 +270,23 @@ func _apply_layout() -> void:
 			view_size = parent_control.size
 	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
 
-	_set_rect(_shade, Rect2(Vector2(34, 78) * s, Vector2(690, 404) * s))
+	_set_rect(_shade, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rite_panel, Rect2(Vector2(760, 78) * s, Vector2(376, 404) * s))
 	_set_rect(_log_label, Rect2(Vector2(386, 488) * s, Vector2(500, 26) * s))
 
+	var slot_size := CardWidget.CARD_SIZE * s
 	var slot_rects := {
-		"s1": Rect2(Vector2(286, 120) * s, Vector2(92, 118) * s),
-		"s2": Rect2(Vector2(426, 292) * s, Vector2(92, 118) * s),
-		"s3": Rect2(Vector2(548, 244) * s, Vector2(92, 118) * s),
-		"s4": Rect2(Vector2(668, 292) * s, Vector2(92, 118) * s),
+		"s1": _slot_rect_from_center(Vector2(332, 179) * s, slot_size),
+		"s2": _slot_rect_from_center(Vector2(472, 351) * s, slot_size),
+		"s3": _slot_rect_from_center(Vector2(594, 303) * s, slot_size),
+		"s4": _slot_rect_from_center(Vector2(714, 351) * s, slot_size),
 	}
 	for slot_key in _slot_buttons:
 		_set_rect(_slot_buttons[slot_key], slot_rects[slot_key])
+
+
+func _slot_rect_from_center(center: Vector2, slot_size: Vector2) -> Rect2:
+	return Rect2(center - slot_size * 0.5, slot_size)
 
 
 func _set_rect(node: Control, rect: Rect2) -> void:

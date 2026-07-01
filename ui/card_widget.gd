@@ -5,7 +5,7 @@ extends PanelContainer
 
 const FaustTheme = preload("res://ui/theme.gd")
 
-const CARD_SIZE := Vector2(116, 178)
+const CARD_SIZE := Vector2(104, 160)
 
 var _card: Dictionary = {}
 var card_id: int = 0

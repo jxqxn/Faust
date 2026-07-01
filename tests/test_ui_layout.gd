@@ -167,6 +167,28 @@ func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
 
 
+func test_game_screen_menu_is_separate_but_below_rite_overlay():
+	var rng := RNG.new(8)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var hud := _find_node_by_name(screen, "Hud") as Control
+	var menu := _find_node_by_name(screen, "MenuButton") as Control
+	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
+	assert_not_null(hud, "HUD should exist")
+	assert_not_null(menu, "menu should exist")
+	assert_not_null(overlay, "rite overlay layer should exist")
+	if hud == null or menu == null or overlay == null:
+		return
+	assert_eq(menu.get_parent(), screen, "menu button should be separate from the HUD info panel")
+	assert_true(menu.get_index() < overlay.get_index(), "rite overlays should disable the top-right menu")
+
+
 func test_game_screen_matches_mockup_spatial_layout():
 	var rng := RNG.new(4)
 	var state := GameState.new()
@@ -184,19 +206,23 @@ func test_game_screen_matches_mockup_spatial_layout():
 	var card_rail := _find_node_by_name(screen, "CardRail") as Control
 	var right_actions := _find_node_by_name(screen, "RightActions") as Control
 	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Control
+	var menu := _find_node_by_name(screen, "MenuButton") as Control
 
 	assert_not_null(hud, "mockup layout needs a named top Hud")
+	assert_not_null(menu, "mockup layout needs a separate menu button")
 	assert_not_null(desk_map, "mockup layout needs a named middle DeskMap")
 	assert_not_null(rail_label, "mockup layout needs a named bottom-left RailLabel")
 	assert_not_null(card_rail, "mockup layout needs a named bottom CardRail")
 	assert_not_null(right_actions, "mockup layout needs named bottom-right RightActions")
 	assert_not_null(advance, "mockup layout needs a named AdvanceDayButton")
-	if hud == null or desk_map == null or rail_label == null or card_rail == null or right_actions == null or advance == null:
+	if hud == null or menu == null or desk_map == null or rail_label == null or card_rail == null or right_actions == null or advance == null:
 		return
 
 	assert_almost_eq(hud.position.x, 20.0, 4.0, "Hud should follow the mockup left inset")
 	assert_almost_eq(hud.position.y, 16.0, 4.0, "Hud should follow the mockup top inset")
-	assert_almost_eq(hud.size.x, 1112.0, 8.0, "Hud should span almost the full wide viewport")
+	assert_true(hud.size.x < 360.0, "Hud should only frame the left status information")
+	assert_true(menu.position.x > 1060.0, "Menu button should be a separate top-right control")
+	assert_true(menu.get_parent() == screen, "Menu button should not live inside the Hud panel")
 	assert_true(desk_map.position.y > hud.position.y + hud.size.y, "DeskMap should sit below the Hud")
 	assert_true(desk_map.size.x > 1080.0, "DeskMap should use the broad middle area")
 	assert_true(desk_map.size.y > 330.0, "DeskMap should be the dominant middle area")

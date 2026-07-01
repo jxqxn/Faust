@@ -24,6 +24,7 @@ var _round_label: Label
 var _gold_label: Label
 var _log_label: Label
 var _hud: PanelContainer
+var _menu_button: Button
 var _desk_map: PanelContainer
 var _map_content: Control
 var _overlay_layer: Control
@@ -69,17 +70,15 @@ func _build_ui() -> void:
 	hud_row.add_child(_round_label)
 	_gold_label = _stat_label()
 	hud_row.add_child(_gold_label)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hud_row.add_child(spacer)
-	var menu_button := Button.new()
-	menu_button.name = "MenuButton"
-	menu_button.text = "菜单"
-	menu_button.flat = true
-	menu_button.add_theme_font_size_override("font_size", 18)
-	menu_button.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	menu_button.pressed.connect(func(): menu_pressed.emit())
-	hud_row.add_child(menu_button)
+
+	_menu_button = Button.new()
+	_menu_button.name = "MenuButton"
+	_menu_button.text = "菜单"
+	_menu_button.flat = true
+	_menu_button.add_theme_font_size_override("font_size", 18)
+	_menu_button.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_menu_button.pressed.connect(func(): menu_pressed.emit())
+	add_child(_menu_button)
 
 	_desk_map = _panel("DeskMap")
 	add_child(_desk_map)
@@ -178,14 +177,15 @@ func _apply_layout() -> void:
 			view_size = parent_control.size
 	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
 
-	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(view_size.x - 44 * s, 44 * s)))
+	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(340, 44) * s))
+	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
 	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(_card_rail_view, Rect2(Vector2(180 * s, view_size.y - 222 * s), Vector2(view_size.x - 360 * s, 202 * s)))
 	_set_rect(_right_actions, Rect2(Vector2(view_size.x - 160 * s, view_size.y - 194 * s), Vector2(132 * s, 170 * s)))
 
-	_card_items.custom_minimum_size = Vector2(_card_items.get_minimum_size().x, 178 * s)
+	_card_items.custom_minimum_size = Vector2(_card_items.get_minimum_size().x, CardWidget.CARD_SIZE.y * s)
 	_layout_map_content(s)
 
 
@@ -277,7 +277,7 @@ func refresh() -> void:
 			continue
 		card["id"] = int(cid)
 		var widget := CardWidget.make(card)
-		widget.custom_minimum_size = Vector2(116, 178)
+		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		_card_items.add_child(widget)
 
 
@@ -288,14 +288,14 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	card["type"] = "sudan"
 	card["name"] = "%s%s" % [dec.rank, dec.action]
 	var widget := CardWidget.make(card)
-	widget.custom_minimum_size = Vector2(116, 178)
+	widget.custom_minimum_size = CardWidget.CARD_SIZE
 	widget.clip_contents = false
 	var days := Label.new()
 	days.name = "SudanCountdown"
 	days.text = str(int(asc.days_left))
 	days.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	days.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	days.position = Vector2(78, -20)
+	days.position = Vector2(CardWidget.CARD_SIZE.x - 38, -20)
 	days.size = Vector2(28, 24)
 	days.add_theme_font_size_override("font_size", 18)
 	days.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
@@ -317,4 +317,3 @@ func add_overlay(node: Control) -> void:
 		return
 	_overlay_layer.add_child(node)
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
-
