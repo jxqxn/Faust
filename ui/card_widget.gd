@@ -3,12 +3,15 @@
 class_name CardWidget
 extends PanelContainer
 
+signal clicked(card_id: int, card: Dictionary)
+
 const FaustTheme = preload("res://ui/theme.gd")
 
 const CARD_SIZE := Vector2(104, 160)
 
 var _card: Dictionary = {}
 var card_id: int = 0
+var _press_position := Vector2.ZERO
 
 
 func set_card(card: Dictionary) -> void:
@@ -53,6 +56,14 @@ func _get_drag_data(_at_position: Vector2) -> Variant:
 		"card_id": card_id,
 		"card": _card.duplicate(true),
 	}
+
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_press_position = event.position
+		elif event.position.distance_to(_press_position) <= 8.0:
+			clicked.emit(card_id, _card.duplicate(true))
 
 
 func _rebuild() -> void:

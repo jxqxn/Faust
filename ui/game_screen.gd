@@ -34,6 +34,9 @@ var _card_items: HBoxContainer
 var _right_actions: VBoxContainer
 var _advance_button: Button
 var _site_buttons: Array[Button] = []
+var _card_detail_overlay: Control
+var _card_detail_panel: Panel
+var _card_detail_card_id := 0
 
 
 func setup(state, db, rng) -> void:
@@ -187,6 +190,7 @@ func _apply_layout() -> void:
 
 	_card_items.custom_minimum_size = Vector2(_card_items.get_minimum_size().x, CardWidget.CARD_SIZE.y * s)
 	_layout_map_content(s)
+	_layout_card_detail(s, view_size)
 
 
 func _layout_map_content(s: float) -> void:
@@ -278,6 +282,7 @@ func refresh() -> void:
 		card["id"] = int(cid)
 		var widget := CardWidget.make(card)
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
+		widget.clicked.connect(_show_card_detail)
 		_card_items.add_child(widget)
 
 
@@ -290,6 +295,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	var widget := CardWidget.make(card)
 	widget.custom_minimum_size = CardWidget.CARD_SIZE
 	widget.clip_contents = false
+	widget.clicked.connect(_show_card_detail)
 	var days := Label.new()
 	days.name = "SudanCountdown"
 	days.text = str(int(asc.days_left))
@@ -317,3 +323,229 @@ func add_overlay(node: Control) -> void:
 		return
 	_overlay_layer.add_child(node)
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
+
+
+func show_card_detail(card_id: int) -> void:
+	var card: Dictionary = _db.get_card(card_id).duplicate(true)
+	if card.is_empty():
+		return
+	card["id"] = card_id
+	_show_card_detail(card_id, card)
+
+
+func _show_card_detail(card_id: int, card: Dictionary) -> void:
+	if card_id <= 0 or card.is_empty():
+		return
+	if _card_detail_overlay != null and _card_detail_card_id == card_id:
+		close_card_detail()
+		return
+	close_card_detail()
+	_card_detail_card_id = card_id
+	_card_detail_overlay = Control.new()
+	_card_detail_overlay.name = "CardDetailOverlay"
+	_card_detail_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_card_detail_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_overlay(_card_detail_overlay)
+
+	_card_detail_panel = Panel.new()
+	_card_detail_panel.name = "CardDetailPanel"
+	_card_detail_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_card_detail_panel.clip_contents = true
+	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
+	_card_detail_overlay.add_child(_card_detail_panel)
+
+	var root := VBoxContainer.new()
+	root.name = "CardDetailContent"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 18
+	root.offset_top = 18
+	root.offset_right = -18
+	root.offset_bottom = -18
+	root.add_theme_constant_override("separation", 8)
+	_card_detail_panel.add_child(root)
+
+	var top_row := HBoxContainer.new()
+	top_row.add_theme_constant_override("separation", 12)
+	root.add_child(top_row)
+
+	var badge := Label.new()
+	badge.name = "CardDetailBadge"
+	badge.text = _rarity_badge(card)
+	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.custom_minimum_size = Vector2(64, 64)
+	badge.add_theme_font_size_override("font_size", 28)
+	badge.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	badge.add_theme_stylebox_override("normal", _badge_style())
+	top_row.add_child(badge)
+
+	var title_box := VBoxContainer.new()
+	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_box.add_theme_constant_override("separation", 6)
+	top_row.add_child(title_box)
+
+	var name_label := Label.new()
+	name_label.name = "CardDetailName"
+	name_label.text = str(card.get("name", "?"))
+	name_label.add_theme_font_size_override("font_size", 26)
+	name_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	title_box.add_child(name_label)
+
+	var subtitle := Label.new()
+	subtitle.name = "CardDetailSubtitle"
+	subtitle.text = "%s  %s" % [CardWidget._type_label(str(card.get("type", ""))), str(card.get("title", ""))]
+	subtitle.add_theme_font_size_override("font_size", 16)
+	subtitle.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
+	title_box.add_child(subtitle)
+
+	var text := Label.new()
+	text.name = "CardDetailDescription"
+	text.text = str(card.get("text", card.get("tips", "")))
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.clip_text = true
+	text.custom_minimum_size = Vector2(460, 46)
+	text.add_theme_font_size_override("font_size", 17)
+	text.add_theme_color_override("font_color", FaustTheme.TEXT)
+	title_box.add_child(text)
+
+	var close := Button.new()
+	close.name = "CloseCardDetailButton"
+	close.text = "×"
+	close.custom_minimum_size = Vector2(42, 42)
+	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	close.add_theme_font_size_override("font_size", 24)
+	close.add_theme_stylebox_override("normal", _round_close_style())
+	close.add_theme_stylebox_override("hover", _round_close_style(FaustTheme.GOLD_BRIGHT))
+	close.add_theme_stylebox_override("pressed", _round_close_style(FaustTheme.BORDER))
+	close.pressed.connect(close_card_detail)
+	top_row.add_child(close)
+
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 16)
+	root.add_child(body)
+
+	var info := VBoxContainer.new()
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_theme_constant_override("separation", 8)
+	body.add_child(info)
+	_add_detail_section(info, "属性", _attribute_lines(card))
+	_add_detail_section(info, "标签", _tag_lines(card))
+
+	var portrait := ColorRect.new()
+	portrait.name = "CardDetailPortraitPlaceholder"
+	portrait.color = Color("#101820")
+	portrait.custom_minimum_size = Vector2(140, 150)
+	body.add_child(portrait)
+
+	_apply_layout()
+
+
+func close_card_detail() -> void:
+	if _card_detail_overlay == null:
+		return
+	_card_detail_overlay.queue_free()
+	_card_detail_overlay = null
+	_card_detail_panel = null
+	_card_detail_card_id = 0
+
+
+func _layout_card_detail(s: float, view_size: Vector2) -> void:
+	if _card_detail_panel == null:
+		return
+	var panel_w: float = min(view_size.x - 360 * s, 690 * s)
+	var panel_h: float = 340 * s
+	var panel_x: float = (view_size.x - panel_w) * 0.5
+	var panel_y: float = 108 * s
+	_set_rect(_card_detail_panel, Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h)))
+
+
+func _add_detail_section(parent: VBoxContainer, title_text: String, lines: Array[String]) -> void:
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 17)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD)
+	parent.add_child(title)
+
+	var text := Label.new()
+	text.text = "\n".join(lines) if not lines.is_empty() else "无"
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.add_theme_font_size_override("font_size", 16)
+	text.add_theme_color_override("font_color", FaustTheme.TEXT)
+	parent.add_child(text)
+
+
+func _attribute_lines(card: Dictionary) -> Array[String]:
+	var tag: Dictionary = card.get("tag", {})
+	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
+	var lines: Array[String] = []
+	var row: Array[String] = []
+	for attr in attrs:
+		var value := int(tag.get(attr, 0))
+		if value == 0:
+			continue
+		row.append("%s  %d" % [attr, value])
+		if row.size() == 3:
+			lines.append("    ".join(row))
+			row.clear()
+	if not row.is_empty():
+		lines.append("    ".join(row))
+	return lines
+
+
+func _tag_lines(card: Dictionary) -> Array[String]:
+	var tag: Dictionary = card.get("tag", {})
+	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
+	var visible: Array[String] = []
+	for key in tag.keys():
+		if key in attrs:
+			continue
+		if int(tag[key]) != 0:
+			visible.append(str(key))
+	if visible.is_empty():
+		return []
+	return [" ".join(visible.slice(0, 10))]
+
+
+func _rarity_badge(card: Dictionary) -> String:
+	var rare := clampi(int(card.get("rare", 0)), 0, 5)
+	if rare <= 0:
+		return "铜"
+	if rare == 1:
+		return "铜"
+	if rare == 2:
+		return "银"
+	if rare == 3:
+		return "金"
+	return "星"
+
+
+func _detail_panel_style() -> StyleBoxFlat:
+	var style := FaustTheme.card_style(FaustTheme.GOLD)
+	style.bg_color = Color(0.05, 0.045, 0.035, 0.94)
+	style.set_content_margin_all(18)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	return style
+
+
+func _badge_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#e9edf1")
+	style.border_color = FaustTheme.GOLD
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(34)
+	style.set_content_margin_all(8)
+	return style
+
+
+func _round_close_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#17110d")
+	style.border_color = border
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(24)
+	style.set_content_margin_all(4)
+	return style

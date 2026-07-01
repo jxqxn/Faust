@@ -146,6 +146,28 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
 
 
+func test_game_screen_can_open_card_detail_overlay():
+	var rng := RNG.new(9)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.show_card_detail(int(state.hand[0]))
+	await wait_process_frames(1)
+
+	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a desktop card detail overlay")
+	assert_not_null(_find_node_by_name(screen, "CardDetailPanel"), "card detail should render as a floating panel, not a standalone screen")
+	assert_not_null(_find_node_by_name(screen, "CloseCardDetailButton"), "card detail overlay should be closable")
+
+	screen.show_card_detail(int(state.hand[0]))
+	await wait_process_frames(1)
+	assert_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking the same card again should close the detail overlay")
+
+
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	var rng := RNG.new(7)
 	var state := GameState.new()
