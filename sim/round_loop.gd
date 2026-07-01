@@ -4,6 +4,7 @@ class_name RoundLoop
 extends RefCounted
 
 const SudanCards = preload("res://sim/sudan_cards.gd")
+const RiteOpen = preload("res://sim/rite_open.gd")
 
 
 ## A sudan card in play with a countdown.
@@ -108,12 +109,16 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 ## Open/start auto-begin rites. Do not resolve them: the original
 ## DoStartAutoBeginRite calls Rite.set_start, while auto-resolve is a separate
 ## runtime state machine (Player.auto_result_rites / rite_auto_result).
-## [SRC: GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
+## The original iterates the player's current rite list, skips already-started
+## rites, then sets start only when the rite config has auto-begin enabled.
+## [SRC: GameController.c @ DoStartAutoBeginRite (RVA 0x54ebc0, dump.cs:320166)]
 static func start_auto_begin_rites(state, db) -> Array:
 	var out: Array = []
 	for rid in db.rites:
 		var rite: Dictionary = db.rites[rid]
 		if int(rite.get("auto_begin", 0)) != 1:
+			continue
+		if not RiteOpen.is_rite_open(rite, state, db, null):
 			continue
 		var id := int(rid)
 		if not (id in state.started_rites):

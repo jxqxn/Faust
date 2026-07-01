@@ -67,7 +67,7 @@ func test_gold_dice_reresolve_reuses_cached_dice():
 	view._use_gold_dice_reactive()
 	assert_eq(rng.get_state(), after_first, "gold-dice retry reuses the first resolve's dice cache")
 
-func test_resolved_rite_consumes_placed_active_sudan_card():
+func test_resolved_rite_does_not_consume_sudan_without_clean_result():
 	var rng := RNG.new(88)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
@@ -87,7 +87,53 @@ func test_resolved_rite_consumes_placed_active_sudan_card():
 	view._result_label = RichTextLabel.new()
 
 	view._resolve()
-	assert_eq(state.active_sudan_cards.size(), 0, "placed active sudan card is consumed after a matching rite settlement")
+	assert_eq(state.active_sudan_cards.size(), 1, "placing a sudan card does not consume it without an explicit clean result")
+
+func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
+	var rng := RNG.new(89)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000003)
+	view._rite = {
+		"settlement": [
+			{"condition": {"s1.type": "sudan"}, "result": {"clean.s1": 1}, "result_title": "", "result_text": ""}
+		],
+		"settlement_extre": [],
+		"settlement_prior": [],
+	}
+	view._placed = {"s1": sudan_id}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+
+	view._resolve()
+	assert_eq(state.active_sudan_cards.size(), 0, "cleaning the placed sudan slot consumes the active sudan card")
+
+func test_slot_accepts_card_requires_type_and_tag_conditions():
+	var rng := RNG.new(90)
+	var state := GameState.new()
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	var noble_card: Dictionary = db.get_card(2000005).duplicate(true)
+	noble_card["id"] = 2000005
+	var protagonist_card: Dictionary = db.get_card(2000001).duplicate(true)
+	protagonist_card["id"] = 2000001
+	var required_tag := _tag_on_first_not_second(noble_card, protagonist_card)
+	var slot_def := {"condition": {"type": "char", required_tag: 1}}
+
+	assert_true(view._slot_accepts_card(slot_def, noble_card), "card with required type and tag is accepted")
+	assert_false(view._slot_accepts_card(slot_def, protagonist_card), "card missing required tag is rejected")
+
+func test_slot_accepts_card_rejects_wrong_type():
+	var rng := RNG.new(91)
+	var state := GameState.new()
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	var card: Dictionary = db.get_card(2000005).duplicate(true)
+	card["id"] = 2000005
+	assert_false(view._slot_accepts_card({"condition": {"type": "item"}}, card), "wrong card type is rejected")
 
 func test_prepare_table_preserves_cards_outside_placed_slots():
 	var rng := RNG.new(99)
@@ -123,3 +169,12 @@ func test_prepare_table_clears_slots_cancelled_after_prior_placement():
 
 	assert_eq(state.cards_in_slot(1).size(), 0, "cancelled placement slot is cleared")
 	assert_eq(state.cards_in_slot(3).size(), 1, "unrelated table card still remains")
+
+
+func _tag_on_first_not_second(first: Dictionary, second: Dictionary) -> String:
+	var first_tags: Dictionary = first.get("tag", {})
+	var second_tags: Dictionary = second.get("tag", {})
+	for tag in first_tags:
+		if int(first_tags[tag]) != 0 and int(second_tags.get(tag, 0)) == 0:
+			return str(tag)
+	return str(first_tags.keys()[0])

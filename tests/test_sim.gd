@@ -5,6 +5,7 @@ const GameState = preload("res://sim/game_state.gd")
 const ConditionEval = preload("res://sim/condition.gd")
 const ResultExec = preload("res://sim/result.gd")
 const RiteResolver = preload("res://sim/rite_resolver.gd")
+const DslAudit = preload("res://sim/dsl_audit.gd")
 const RNG = preload("res://core/rng.gd")
 
 var db: ConfigDB
@@ -54,6 +55,29 @@ func test_any_all_logic():
 	# all{ s1, s2 } -> false (s2 absent).
 	assert_false(ConditionEval.eval_key("all", {"s1": 1, "s2": 1}, ctx))
 
+func test_table_and_sudan_pool_have_positive_and_negative_conditions():
+	var st := GameState.new()
+	st.add_card_to_slot(2000005, 1, db)
+	st.sudan_deck = [2010001]
+	var ctx := _make_ctx(st, RNG.new(1))
+	assert_true(ConditionEval.eval_key("table_have.2000005", 1, ctx))
+	assert_false(ConditionEval.eval_key("!table_have.2000005", 1, ctx))
+	assert_false(ConditionEval.eval_key("table_have.2000006", 1, ctx))
+	assert_true(ConditionEval.eval_key("!table_have.2000006", 1, ctx))
+	assert_true(ConditionEval.eval_key("sudan_pool_have.2010001", 1, ctx))
+	assert_false(ConditionEval.eval_key("!sudan_pool_have.2010001", 1, ctx))
+	assert_false(ConditionEval.eval_key("sudan_pool_have.2010002", 1, ctx))
+	assert_true(ConditionEval.eval_key("!sudan_pool_have.2010002", 1, ctx))
+
+func test_bare_tag_condition_checks_owned_cards_without_acting_card():
+	var st := GameState.new()
+	st.add_card_to_hand(2000001)
+	var protagonist: Dictionary = db.get_card(2000001)
+	var tag_name := str(protagonist.get("tag", {}).keys()[0])
+	var ctx := _make_ctx(st, RNG.new(2))
+	assert_true(ConditionEval.eval_key(tag_name, 1, ctx))
+	assert_false(ConditionEval.eval_key("!" + tag_name, 1, ctx))
+
 func test_result_counter_and_coin():
 	var st := GameState.new()
 	var d := ResultExec.execute({"金币": 5, "counter+7000001": 2}, st, db)
@@ -72,6 +96,15 @@ func test_result_clean_slot():
 	assert_eq(st.cards_in_slot(1).size(), 0)
 	assert_eq(st.cards_in_slot(2).size(), 1)
 
+func test_result_clean_card_id_records_and_removes_table_card():
+	var st := GameState.new()
+	st.add_card_to_slot(2000005, 1, db)
+	st.add_card_to_slot(2000006, 2, db)
+	var d := ResultExec.execute({"clean.2000005": 1}, st, db)
+	assert_eq(st.cards_in_slot(1).size(), 0)
+	assert_eq(st.cards_in_slot(2).size(), 1)
+	assert_eq(d.clean_card_ids, [2000005])
+
 func test_result_slot_tag_op():
 	var st := GameState.new()
 	st.add_card_to_slot(2000005, 4, db)
@@ -84,6 +117,11 @@ func test_result_deferred_events_and_choose():
 	var d := ResultExec.execute({"event_on": 5300601, "choose": {"a": "x"}}, st, db)
 	assert_eq(d.events, [5300601])
 	assert_eq(d.choose, {"a": "x"})
+
+func test_dsl_audit_exposes_unsupported_rite_keys():
+	var report := DslAudit.audit_rites(db.rites)
+	var unsupported_total: int = report.result.unsupported.size() + report.action.unsupported.size() + report.condition.unsupported.size()
+	assert_true(unsupported_total > 0, "audit should make unsupported DSL keys visible")
 
 func test_rite_5000001_resolves_with_empty_slots():
 	# 治理家业 with no cards slotted: the "no one sent" branch should match

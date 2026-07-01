@@ -19,11 +19,29 @@ const TagSystem = preload("res://core/tag.gd")
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db) -> Dictionary:
-	var deferred := {"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "logs": []}
+	var deferred := {
+		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
+	}
 	for key in result:
 		var val = result[key]
 		_apply_key(key, val, state, db, deferred)
 	return deferred
+
+
+static func is_supported_key(key: String) -> bool:
+	var k := key.strip_edges()
+	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm"]:
+		return true
+	if k.begins_with("counter") or k.begins_with("global_counter"):
+		return true
+	if k.begins_with("clean."):
+		return true
+	if _is_slot_tag_op(k):
+		return true
+	if (k.begins_with("table.") or k.begins_with("g.")) and _has_tag_op_after_dot(k):
+		return true
+	return false
 
 
 static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary) -> void:
@@ -48,13 +66,22 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# Clean slot / clean rite.
 	if k == "clean.rite":
 		state.table_cards.clear()
+		deferred.clean_rite = true
 		return
 	if k.begins_with("clean."):
-		var slot := _slot_from_key(k, "clean.")
+		var slot := _clean_slot_from_key(k)
 		if slot > 0:
 			state.clear_slot(slot)
-		elif slot == -1:
+			deferred.clean_slots.append(slot)
+			return
+		var card_id := _clean_card_id_from_key(k, db)
+		if card_id > 0:
+			if state.has_method("remove_table_card_id"):
+				state.remove_table_card_id(card_id)
+			deferred.clean_card_ids.append(card_id)
+		elif _clean_all_from_key(k):
 			state.table_cards.clear() # index<1 => all slots
+			deferred.clean_rite = true
 		return
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
 	if _is_slot_tag_op(k):
@@ -109,15 +136,28 @@ static func _apply_counter(k: String, val: Variant, state) -> void:
 			state.sub_counter(parsed.id, delta)
 
 
-static func _slot_from_key(k: String, prefix: String) -> int:
-	var rest := k.substr(prefix.length())
+static func _clean_slot_from_key(k: String) -> int:
+	var rest := k.substr("clean.".length())
 	# "s4" -> 4 ; bare (no s) -> -1 (all slots).
 	if rest.begins_with("s"):
 		return rest.substr(1).to_int()
-	if rest.is_valid_int():
-		var n := rest.to_int()
-		return n if n >= 1 else -1
 	return -1
+
+
+static func _clean_card_id_from_key(k: String, db) -> int:
+	var rest := k.substr("clean.".length())
+	if rest.begins_with("s") or rest == "rite":
+		return 0
+	if db != null and db.has_method("resolve_card_id"):
+		return int(db.resolve_card_id(rest))
+	if rest.is_valid_int():
+		return rest.to_int()
+	return 0
+
+
+static func _clean_all_from_key(k: String) -> bool:
+	var rest := k.substr("clean.".length())
+	return rest.is_empty() or rest == "0"
 
 
 static func _is_slot_tag_op(k: String) -> bool:
@@ -125,6 +165,14 @@ static func _is_slot_tag_op(k: String) -> bool:
 	if not k.begins_with("s"):
 		return false
 	return ("+" in k or "-" in k or "=" in k) and not k.begins_with("sudan")
+
+
+static func _has_tag_op_after_dot(k: String) -> bool:
+	var dot := k.find(".")
+	if dot < 0:
+		return false
+	var rest := k.substr(dot + 1)
+	return "+" in rest or "-" in rest or "=" in rest
 
 
 static func _apply_slot_tag(k: String, val: Variant, state) -> void:

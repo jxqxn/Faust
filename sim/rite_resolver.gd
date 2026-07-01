@@ -23,7 +23,10 @@ class RiteResult:
 	var successes: int = 0         # successes from the r1 check
 	var dice_types_seen: Array = []
 	func _init() -> void:
-		deferred = {"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "logs": []}
+		deferred = {
+			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+			"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
+		}
 
 
 ## Resolve a rite end-to-end.
@@ -83,3 +86,9 @@ static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
 		into["back_to_prev"] = true
 	if src.has("logs"):
 		into["logs"].append_array(src["logs"])
+	if src.has("clean_slots"):
+		into["clean_slots"].append_array(src["clean_slots"])
+	if src.has("clean_card_ids"):
+		into["clean_card_ids"].append_array(src["clean_card_ids"])
+	if src.has("clean_rite") and bool(src["clean_rite"]):
+		into["clean_rite"] = true

@@ -31,6 +31,7 @@ signal resolved()
 const FaustTheme = preload("res://ui/theme.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
 const RiteResolver = preload("res://sim/rite_resolver.gd")
+const ConditionEval = preload("res://sim/condition.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
 const RoundLoop = preload("res://sim/round_loop.gd")
 const SudanCards = preload("res://sim/sudan_cards.gd")
@@ -496,23 +497,36 @@ func _slot_accepts_sudan(slot_def: Dictionary) -> bool:
 func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 	if slot_def.is_empty():
 		return false
-	var wants_sudan := _slot_accepts_sudan(slot_def)
-	var is_sudan := str(card.get("type", "")) == "sudan"
-	if wants_sudan:
-		return is_sudan
-	return not is_sudan
+	var cond: Dictionary = slot_def.get("condition", {})
+	if cond.is_empty():
+		return true
+	var ctx := {
+		"db": _db,
+		"state": _state,
+		"rng": _rng,
+		"rite_state": {},
+		"attr_slots": ["s1", "s2"],
+		"acting_card": card,
+		"acting_card_id": int(card.get("id", 0)),
+		"acting_card_only": true,
+	}
+	return ConditionEval.evaluate(cond, ctx)
 
 
 func _consume_placed_sudan_cards(res) -> void:
 	if res == null:
 		return
-	var matched: bool = not res.normal_entry.is_empty() or not res.prior_log.is_empty() or not res.extre_log.is_empty()
-	if not matched:
-		return
+	var deferred: Dictionary = res.deferred
+	var clean_rite := bool(deferred.get("clean_rite", false))
+	var clean_slots: Array = deferred.get("clean_slots", [])
+	var clean_card_ids: Array = deferred.get("clean_card_ids", [])
 	for slot_key in _placed:
 		var cid := int(_placed[slot_key])
 		var card: Dictionary = _db.get_card(cid)
-		if str(card.get("type", "")) == "sudan":
+		if str(card.get("type", "")) != "sudan":
+			continue
+		var slot_num := str(slot_key).substr(1).to_int()
+		if clean_rite or slot_num in clean_slots or cid in clean_card_ids:
 			RoundLoop.consume_sudan(_state, cid)
 
 

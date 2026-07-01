@@ -9,7 +9,7 @@ signal rite_chosen(rite_id: int)
 signal closed()
 
 const FaustTheme = preload("res://ui/theme.gd")
-const ConditionEval = preload("res://sim/condition.gd")
+const RiteOpen = preload("res://sim/rite_open.gd")
 
 var _db
 var _state = null
@@ -130,15 +130,4 @@ func _on_rite(rid: int) -> void:
 
 
 func _is_rite_open(rite: Dictionary) -> bool:
-	var open_conditions = rite.get("open_conditions", [])
-	if not (open_conditions is Array) or open_conditions.is_empty():
-		return true
-	var ctx := {"db": _db, "state": _state, "rng": _rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
-	for entry in open_conditions:
-		if entry is Dictionary:
-			var condition: Dictionary = entry.get("condition", {})
-			if _state == null and not condition.is_empty():
-				return false
-			if not ConditionEval.evaluate(condition, ctx):
-				return false
-	return true
+	return RiteOpen.is_rite_open(rite, _state, _db, _rng)

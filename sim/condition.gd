@@ -72,6 +72,13 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return eval_is(val, ctx)
 	if k == "!is":
 		return not eval_is(val, ctx)
+	# Acting-card checks used by rite slot conditions and card pop conditions.
+	if k == "type":
+		return eval_type(val, ctx)
+	if k == "!type":
+		return not eval_type(val, ctx)
+	if k == "rare":
+		return eval_rare(val, ctx)
 	# round
 	if k == "round":
 		var st = ctx.get("state")
@@ -83,8 +90,37 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	# rite (current rite id)
 	if k == "rite" or k == "is_rite":
 		return int(ctx.get("rite_id", 0)) == int(val)
+	if _can_eval_acting_tag(k, ctx):
+		return eval_acting_tag(k, val, ctx)
+	if _can_eval_state_tag(k, ctx):
+		return eval_state_tag(k, val, ctx)
 	# Fallback: unknown key -> conservative false (log).
 	push_warning("ConditionEval: unhandled key '%s'" % k)
+	return false
+
+
+static func is_supported_key(key: String) -> bool:
+	var k := key.strip_edges()
+	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "is_rite"]:
+		return true
+	if k.match("r*:*") or k.match("f:*") or k.begins_with("r1:") or k.begins_with("f:"):
+		return true
+	if k.begins_with("counter.") or k.begins_with("global_counter."):
+		return true
+	if k.begins_with("s") and (k.length() > 1 and k[1].is_valid_int()):
+		return true
+	if (k.begins_with("!s") or k.begins_with("~s")) and (k.length() > 2 and k[2].is_valid_int()):
+		return true
+	if k.begins_with("have.") or k.begins_with("!have."):
+		return true
+	if k.begins_with("hand_have") or k.begins_with("!hand_have"):
+		return true
+	if k.begins_with("table_have.") or k.begins_with("!table_have."):
+		return true
+	if k.begins_with("sudan_pool_have") or k.begins_with("!sudan_pool_have"):
+		return true
+	if not ("." in k) and not (":" in k) and not k.is_empty():
+		return true
 	return false
 
 
@@ -218,6 +254,16 @@ static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
 			cur += ch
 	tokens.append(cur)
 	signs.append(sign)
+	if bool(ctx.get("acting_card_only", false)):
+		var acting_card: Dictionary = ctx.get("acting_card", {})
+		var acting_tags: Dictionary = acting_card.get("tag", {})
+		var acting_total := 0
+		for i in tokens.size():
+			var attr_name2: String = tokens[i].strip_edges()
+			if attr_name2.is_empty():
+				continue
+			acting_total += signs[i] * int(acting_tags.get(attr_name2, 0))
+		return acting_total
 	# Sum across acting slots (s1, s2 by default; ctx may specify slot list).
 	var slots: Array = ctx.get("attr_slots", ["s1", "s2"])
 	var total := 0
@@ -305,7 +351,8 @@ static func eval_hand_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 static func eval_table_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
 	var neg := k.begins_with("!")
-	var rest := k.substr("table_have.".length())
+	var kk := k.substr(1) if neg else k
+	var rest := kk.substr("table_have.".length())
 	var want_id := rest.to_int()
 	# Card on the table (any slot)?
 	var found := false
@@ -319,7 +366,8 @@ static func eval_table_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 static func eval_sudan_pool_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
 	var neg := k.begins_with("!")
-	var rest := k.substr("sudan_pool_have.".length() if "sudan_pool_have." in k else "sudan_pool_have".length())
+	var kk := k.substr(1) if neg else k
+	var rest := kk.substr("sudan_pool_have.".length() if "sudan_pool_have." in kk else "sudan_pool_have".length())
 	# Check sudan deck contains the card.
 	var want_id := rest.to_int() if rest.is_valid_int() else 0
 	if want_id == 0:
@@ -331,7 +379,61 @@ static func eval_sudan_pool_have(k: String, val: Variant, ctx: Dictionary) -> bo
 static func eval_is(val: Variant, ctx: Dictionary) -> bool:
 	# 'is' matches the acting card id (the card being placed/checked).
 	var acting := int(ctx.get("acting_card_id", 0))
+	if acting == 0 and ctx.has("acting_card"):
+		acting = int((ctx.get("acting_card", {}) as Dictionary).get("id", 0))
 	return acting == int(val)
+
+
+static func eval_type(val: Variant, ctx: Dictionary) -> bool:
+	var card: Dictionary = ctx.get("acting_card", {})
+	return str(card.get("type", "")) == str(val)
+
+
+static func eval_rare(val: Variant, ctx: Dictionary) -> bool:
+	var card: Dictionary = ctx.get("acting_card", {})
+	return int(card.get("rare", 0)) == int(val)
+
+
+static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:
+	if not ctx.has("acting_card"):
+		return false
+	var kk := k.lstrip("!~")
+	return not kk.is_empty() and not ("." in kk) and not (":" in kk)
+
+
+static func eval_acting_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
+	var neg := k.begins_with("!") or k.begins_with("~")
+	var tag_name := k.lstrip("!~")
+	var card: Dictionary = ctx.get("acting_card", {})
+	var tags: Dictionary = card.get("tag", {})
+	var ok := int(tags.get(tag_name, 0)) >= int(val)
+	return ok if not neg else not ok
+
+
+static func _can_eval_state_tag(k: String, ctx: Dictionary) -> bool:
+	var kk := k.lstrip("!~")
+	return ctx.has("state") and ctx.has("db") and not kk.is_empty() and not ("." in kk) and not (":" in kk)
+
+
+static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
+	var neg := k.begins_with("!") or k.begins_with("~")
+	var tag_name := k.lstrip("!~")
+	var st = ctx.get("state")
+	var db = ctx.get("db")
+	var need := int(val)
+	var ok := false
+	if st != null:
+		for cid in st.hand:
+			var card: Dictionary = db.get_card(int(cid))
+			if int(card.get("tag", {}).get(tag_name, 0)) >= need:
+				ok = true
+				break
+	if not ok and st != null:
+		for tc in st.table_cards:
+			if int(tc.get("tags", {}).get(tag_name, 0)) >= need:
+				ok = true
+				break
+	return ok if not neg else not ok
 
 
 static func apply_compare(a: int, b: int, op: String) -> bool:

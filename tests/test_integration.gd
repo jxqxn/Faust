@@ -40,10 +40,35 @@ func test_auto_begin_starts_rites_without_resolving_results():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var opened := RoundLoop.start_auto_begin_rites(state, db)
-	assert_true(opened.size() > 7, "all auto_begin rites are opened, not just auto_result rites")
+	assert_true(opened.size() > 0, "eligible auto_begin rites are opened")
 	assert_true(5000001 in state.started_rites, "治理家业 is marked started")
 	assert_eq(state.coin_count, 0, "auto-begin does not execute settlement rewards")
 	assert_eq(state.auto_result_rites.size(), 0, "auto-result runtime state is separate from auto-begin")
+
+func test_auto_begin_respects_open_conditions():
+	var fake_db := ConfigDB.new()
+	fake_db.rites = {
+		9001: {
+			"id": 9001,
+			"auto_begin": 1,
+			"round_number": 1,
+			"open_conditions": [{"condition": {"counter.7000001=": 1}}],
+		},
+		9002: {
+			"id": 9002,
+			"auto_begin": 1,
+			"round_number": 1,
+			"open_conditions": [{"condition": {}}],
+		},
+	}
+	var state := GameState.new()
+	state.round_number = 1
+
+	var opened := RoundLoop.start_auto_begin_rites(state, fake_db)
+
+	assert_false(9001 in state.started_rites, "closed auto_begin rite should not start")
+	assert_true(9002 in state.started_rites, "open auto_begin rite should start")
+	assert_eq(opened.size(), 1)
 
 func test_rite_resolution_with_placed_cards():
 	var rng := RNG.new(300)

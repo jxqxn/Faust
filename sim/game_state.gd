@@ -181,6 +181,14 @@ func clear_slot(slot: int) -> void:
 	table_cards = keep
 
 
+func remove_table_card_id(card_id: int) -> void:
+	var keep: Array = []
+	for tc in table_cards:
+		if int(tc.get("id", 0)) != card_id:
+			keep.append(tc)
+	table_cards = keep
+
+
 func add_card_to_slot(card_id: int, slot: int, db) -> void:
 	var c: Dictionary = db.get_card(card_id)
 	var entry := {
