@@ -1,8 +1,6 @@
-## Rite selector: a scrollable list of all player-openable rites grouped by
-## location, so the player can pick which rite to enter instead of only having
-## the single 治理家业 button. Reads rites from the ConfigDB; shows only rites
-## with card slots + a settlement (i.e. actual interactive rites, not pure
-## auto/data rites). Empty open_conditions => always open.
+## Rite selector: a scrollable list of currently generated rites grouped by
+## location. Every rite uses the same event surface; the estate rite is only the
+## first home rite in the player's runtime rite pool.
 extends Control
 
 signal rite_chosen(rite_id: int)
@@ -14,18 +12,21 @@ const RiteOpen = preload("res://sim/rite_open.gd")
 var _db
 var _state = null
 var _rng = null
+var _location_filter := ""
 var _location_order := ["自宅", "商业区", "宫廷", "上城区", "黑街", "神殿区", "野外", "大敌", "奇珍", "结局"]
 
 var _list_container: VBoxContainer
 
 
-func setup(db, state = null, rng = null) -> void:
+func setup(db, state = null, rng = null, location_filter: String = "") -> void:
 	_db = db
 	_state = state
 	_rng = rng
+	_location_filter = location_filter
 
 
 func _ready() -> void:
+	name = "RiteSelector"
 	theme = FaustTheme.get_theme()
 	_build_ui()
 
@@ -74,18 +75,9 @@ func _build_ui() -> void:
 func _populate() -> void:
 	# Group playable rites by location.
 	var by_location: Dictionary = {}
-	for rid in _db.rites:
-		var r: Dictionary = _db.rites[rid]
-		var auto := int(r.get("auto_begin", 0))
-		var slots: Dictionary = r.get("cards_slot", {})
-		var settle_count: int = (r.get("settlement", []) as Array).size()
-		# Only interactive rites: has slots AND has settlement, not auto.
-		if auto == 1 or slots.is_empty() or settle_count == 0:
-			continue
-		if not _is_rite_open(r):
-			continue
-		var loc_raw := str(r.get("location", "?"))
-		var loc_name := loc_raw.split(":")[0]
+	for rid in open_rite_ids():
+		var r: Dictionary = _db.rites[int(rid)]
+		var loc_name := _location_name(r)
 		if not by_location.has(loc_name):
 			by_location[loc_name] = []
 		by_location[loc_name].append(rid)
@@ -129,5 +121,49 @@ func _on_rite(rid: int) -> void:
 	rite_chosen.emit(rid)
 
 
+func open_rite_ids() -> Array[int]:
+	var out: Array[int] = []
+	for rid in _db.rites:
+		var r: Dictionary = _db.rites[rid]
+		var id := int(rid)
+		if not _is_interactive_rite(r):
+			continue
+		if _location_filter != "" and not _location_matches(_location_name(r), _location_filter):
+			continue
+		if _state != null and _state.get("available_rites") != null and not (id in _state.available_rites):
+			continue
+		if not _is_rite_open(r):
+			continue
+		out.append(id)
+	out.sort()
+	return out
+
+
+func _is_interactive_rite(rite: Dictionary) -> bool:
+	var slots: Dictionary = rite.get("cards_slot", {})
+	var settle_count: int = (rite.get("settlement", []) as Array).size()
+	return not slots.is_empty() and settle_count > 0
+
+
+func _location_name(rite: Dictionary) -> String:
+	return str(rite.get("location", "?")).split(":")[0]
+
+
+func _location_matches(config_location: String, requested_location: String) -> bool:
+	if config_location == requested_location:
+		return true
+	var aliases := {
+		"自宅": ["鑷畢"],
+		"商业区": ["鍟嗕笟鍖?"],
+		"宫廷": ["瀹环"],
+		"神殿区": ["绁炴鍖?"],
+		"野外": ["閲庡"],
+	}
+	return config_location in aliases.get(requested_location, [])
+
+
 func _is_rite_open(rite: Dictionary) -> bool:
+	var id := int(rite.get("id", 0))
+	if int(rite.get("auto_begin", 0)) == 1:
+		return _state != null and id in _state.started_rites
 	return RiteOpen.is_rite_open(rite, _state, _db, _rng)

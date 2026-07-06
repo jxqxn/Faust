@@ -45,6 +45,9 @@ var sudan_deck: Array[int] = []
 # Rites started/opened by auto-begin processing. Auto-begin is not the same as
 # auto-resolve; the original DoStartAutoBeginRite calls Rite.set_start.
 var started_rites: Array[int] = []
+# Rites that currently exist in the player's world. Original StartRite creates
+# rite instances before DoStartAutoBeginRite starts eligible ones.
+var available_rites: Array[int] = []
 # Runtime auto-resolution state. The original tracks auto_result_rites and a
 # rite_auto_result flag separately from auto_begin.
 var auto_result_rites: Array[int] = []
@@ -66,7 +69,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	# Redraws per round (sudan_redraw_times_per_round) recovered every
 	# sudan_redraw_times_recovery_round rounds.
 	redraws_left = _redraws_per_round(db)
-	# Starting hand: default_cards.
+	# Starting hand comes through ConfigDB so normal and test profiles stay split.
 	for cid in db.get_default_cards():
 		hand.append(int(cid))
 		rail_order.append(int(cid))
@@ -77,6 +80,11 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	day = 1
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
+	available_rites.clear()
+	for rid in db.get_default_rites():
+		var id := int(rid)
+		if not (id in available_rites):
+			available_rites.append(id)
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false

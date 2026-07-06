@@ -246,7 +246,7 @@ Replaced "faithful clone" and "full dispatch" language with first playable proto
 
 - [x] **Step 2: Update test command statement**
 
-Removed the obsolete 64/64 claim and documented the current `tools/run_gut.gd` headless command. README now reports the latest observed local run: 84/84 tests, with resource/RID leak warnings at process exit.
+Removed the obsolete fixed-count claim and documented the current `tools/run_gut.gd` headless command. README now points readers to `gut-test.log` for the latest pass/fail summary, with resource/RID leak warnings noted as possible process-exit noise.
 
 - [x] **Step 3: Verify documentation consistency**
 

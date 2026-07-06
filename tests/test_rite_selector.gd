@@ -79,6 +79,34 @@ func test_selector_fails_closed_without_state_for_non_empty_condition():
 	assert_eq(_count_buttons(selector._list_container), 0)
 
 
+func test_selector_filters_open_rites_by_location():
+	var db := ConfigDB.new()
+	db.rites = {
+		9005: _rite_with_location("Home"),
+		9006: _rite_with_location("Market"),
+	}
+	var selector := RiteSelector.new()
+	selector.setup(db, null, null, "Home")
+
+	assert_eq(selector.open_rite_ids(), [9005])
+
+
+func test_auto_begin_rite_is_available_only_after_it_is_started():
+	var db := ConfigDB.new()
+	db.rites = {
+		9007: _rite_with_location("Home", 1),
+	}
+	var state := GameState.new()
+	state.available_rites.append(9007)
+	var selector := RiteSelector.new()
+	selector.setup(db, state, null, "Home")
+
+	assert_eq(selector.open_rite_ids(), [], "auto-begin rites should not appear just because the config exists")
+
+	state.started_rites.append(9007)
+	assert_eq(selector.open_rite_ids(), [9007], "started auto-begin rites should be enterable at their location")
+
+
 func _count_buttons(node: Node) -> int:
 	var count := 0
 	if node is Button:
@@ -98,4 +126,20 @@ func _rite_with_open_conditions(open_conditions: Array) -> Dictionary:
 		"cards_slot": {"s1": {}},
 		"settlement": [{"condition": {}, "result": {}}],
 		"open_conditions": open_conditions,
+	}
+
+
+func _rite_with_location(location: String, auto_begin: int = 0) -> Dictionary:
+	var id := 9005 if location == "Home" else 9006
+	if auto_begin == 1:
+		id = 9007
+	return {
+		"id": id,
+		"name": "Located rite",
+		"text": "",
+		"location": "%s:1" % location,
+		"auto_begin": auto_begin,
+		"cards_slot": {"s1": {}},
+		"settlement": [{"condition": {}, "result": {}}],
+		"open_conditions": [],
 	}

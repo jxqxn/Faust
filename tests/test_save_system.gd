@@ -12,8 +12,15 @@ const SaveSystem = preload("res://sim/save_system.gd")
 var db: ConfigDB
 
 func before_all():
+	SaveSystem.use_save_path("user://test_save_system_save.json")
+	SaveSystem.delete_save()
 	db = ConfigDB.new()
 	db.load_all()
+
+
+func after_all():
+	SaveSystem.delete_save()
+	SaveSystem.use_default_save_path()
 
 func test_save_load_round_trip_preserves_state():
 	var rng := RNG.new(42)
@@ -26,6 +33,7 @@ func test_save_load_round_trip_preserves_state():
 	state.round_number = 2
 	state.add_card_to_slot(2000001, 1, db)
 	state.table_cards[0].tags["临时标记"] = 7
+	state.available_rites.append(5000003)
 	state.started_rites.append(5000001)
 	state.auto_result_rites.append(5000002)
 	state.rite_auto_result = true
@@ -49,6 +57,7 @@ func test_save_load_round_trip_preserves_state():
 		assert_eq(int(state2.table_cards[0].get("slot", 0)), 1, "table card slot preserved")
 		assert_eq(int(state2.table_cards[0].get("tags", {}).get("临时标记", 0)), 7, "table card tags preserved")
 	assert_true(5000001 in state2.started_rites, "started rites preserved")
+	assert_true(5000003 in state2.available_rites, "available rites preserved")
 	assert_true(5000002 in state2.auto_result_rites, "auto-result rites preserved")
 	assert_true(state2.rite_auto_result, "rite_auto_result flag preserved")
 	if state2.active_sudan_cards.size() > 0:

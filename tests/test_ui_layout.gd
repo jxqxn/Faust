@@ -9,6 +9,7 @@ const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const CardWidget = preload("res://ui/card_widget.gd")
 const RoundLoop = preload("res://sim/round_loop.gd")
+const SaveSystem = preload("res://sim/save_system.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -17,8 +18,15 @@ var db: ConfigDB
 
 
 func before_all():
+	SaveSystem.use_save_path("user://test_ui_layout_save.json")
+	SaveSystem.delete_save()
 	db = ConfigDB.new()
 	db.load_all()
+
+
+func after_all():
+	SaveSystem.delete_save()
+	SaveSystem.use_default_save_path()
 
 
 func test_main_menu_uses_wide_viewport_width():
@@ -28,6 +36,28 @@ func test_main_menu_uses_wide_viewport_width():
 	await wait_process_frames(2)
 
 	assert_true(_widest_content(menu) >= MIN_CONTENT_WIDTH, "main menu content should use the wide viewport")
+
+
+func test_main_menu_hides_continue_without_valid_save():
+	SaveSystem.delete_save()
+	var stage := _stage()
+	var menu = MainMenu.new()
+	menu.setup(db)
+	stage.add_child(menu)
+	await wait_process_frames(2)
+
+	assert_null(_find_node_by_name(menu, "ContinueGameButton"), "fresh launches should not show a continue button")
+
+
+func test_main_menu_exposes_debug_tools_in_debug_builds():
+	var stage := _stage()
+	var menu = MainMenu.new()
+	menu.setup(db)
+	stage.add_child(menu)
+	await wait_process_frames(2)
+
+	if OS.is_debug_build():
+		assert_not_null(_find_node_by_name(menu, "DebugToolsButton"), "debug builds should expose developer tools")
 
 
 func test_game_screen_uses_wide_viewport_width():
@@ -99,8 +129,10 @@ func test_game_screen_home_site_and_menu_are_interactive():
 	await wait_process_frames(2)
 
 	var opened: Array = []
+	var locations: Array = []
 	var menu_count := [0]
 	screen.open_rite.connect(func(id: int): opened.append(id))
+	screen.open_rite_selector.connect(func(location: String): locations.append(location))
 	screen.menu_pressed.connect(func(): menu_count[0] += 1)
 
 	var home := _find_node_by_name(screen, "SiteHome") as Button
@@ -111,7 +143,8 @@ func test_game_screen_home_site_and_menu_are_interactive():
 		home.pressed.emit()
 	if menu != null:
 		menu.pressed.emit()
-	assert_eq(opened, [5000001], "clicking home site should open the estate rite")
+	assert_eq(opened, [], "site buttons should not hard-code a specific rite id")
+	assert_eq(locations, ["自宅"], "clicking home site should request the home location rites")
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
 
 
@@ -135,6 +168,40 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+
+
+func test_debug_tools_can_start_test_card_profile():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+
+	game._on_debug_start_requested(1, true)
+	await wait_process_frames(2)
+
+	assert_true(game.state.hand.size() > 50, "debug test profile should use the full init/1 card list")
+	assert_false(game.db.use_test_starting_cards, "test-card flag should not leak into later normal starts")
+
+
+func test_game_home_location_uses_generic_rite_entry_flow():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+
+	game._on_difficulty_selected(0)
+	await wait_process_frames(2)
+
+	var home := _find_node_by_name(game, "SiteHome") as Button
+	assert_not_null(home, "home location should exist on the main desktop")
+	if home == null:
+		return
+	home.pressed.emit()
+	await wait_process_frames(2)
+
+	var overlay := _find_node_by_name(game, "RiteOverlayPanel")
+	var selector := _find_node_by_name(game, "RiteSelector")
+	assert_true(overlay != null or selector != null, "home location should enter the generic rite flow instead of hard-coding an estate rite")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():

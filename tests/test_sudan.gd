@@ -85,8 +85,9 @@ func test_full_new_run_setup():
 	var rng := RNG.new(1)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng) # normal difficulty
-	# Default hand populated.
-	assert_true(state.hand.size() > 50, "default hand populated")
+	# Normal runs use a curated starting hand; the huge init/1 list is a test profile.
+	assert_eq(state.hand, [2000001, 2000006, 2000523, 2000005])
+	assert_eq(state.available_rites, [5000001])
 	# Sudan deck built from pool and shuffled.
 	assert_true(state.sudan_deck.size() > 20)
 	# Normal difficulty: 2 gold dice, 5-day... wait 7-day life, 1 redraw.

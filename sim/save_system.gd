@@ -6,7 +6,20 @@
 class_name SaveSystem
 extends RefCounted
 
-const SAVE_PATH := "user://save.json"
+const DEFAULT_SAVE_PATH := "user://save.json"
+static var save_path_override := ""
+
+
+static func save_path() -> String:
+	return save_path_override if save_path_override != "" else DEFAULT_SAVE_PATH
+
+
+static func use_save_path(path: String) -> void:
+	save_path_override = path
+
+
+static func use_default_save_path() -> void:
+	save_path_override = ""
 
 
 ## Serialize the game state to a dictionary.
@@ -35,6 +48,7 @@ static func serialize(state) -> Dictionary:
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
 		"table_cards": table_cards_data,
+		"available_rites": state.available_rites.duplicate(),
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
@@ -75,6 +89,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for tc in data.get("table_cards", []):
 		if tc is Dictionary:
 			state.table_cards.append(tc.duplicate(true))
+	state.available_rites.clear()
+	for rid in data.get("available_rites", db.get_default_rites()):
+		state.available_rites.append(int(rid))
 	state.started_rites.clear()
 	for rid in data.get("started_rites", []):
 		state.started_rites.append(int(rid))
@@ -91,9 +108,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 ## Save to disk. Returns true on success.
 static func save(state) -> bool:
 	var data := serialize(state)
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var path := save_path()
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
-		push_warning("SaveSystem: cannot open %s" % SAVE_PATH)
+		push_warning("SaveSystem: cannot open %s" % path)
 		return false
 	file.store_string(JSON.stringify(data, "\t"))
 	file.close()
@@ -102,9 +120,9 @@ static func save(state) -> bool:
 
 ## Load from disk into a new GameState. Returns null if no save or corrupt.
 static func load(db) -> Variant:
-	if not FileAccess.file_exists(SAVE_PATH):
+	if not FileAccess.file_exists(save_path()):
 		return null
-	var text := FileAccess.get_file_as_string(SAVE_PATH)
+	var text := FileAccess.get_file_as_string(save_path())
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary):
 		return null
@@ -115,10 +133,14 @@ static func load(db) -> Variant:
 
 ## Check if a save exists.
 static func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return FileAccess.file_exists(save_path())
+
+
+static func has_valid_save(db) -> bool:
+	return SaveSystem.load(db) != null
 
 
 ## Delete the save file.
 static func delete_save() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
+	if FileAccess.file_exists(save_path()):
+		DirAccess.remove_absolute(save_path())

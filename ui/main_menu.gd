@@ -3,6 +3,7 @@
 extends Control
 
 signal difficulty_selected(index: int)
+signal debug_tools_pressed()
 
 const FaustTheme = preload("res://ui/theme.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
@@ -18,6 +19,12 @@ const DIFF_DESC := [
 ]
 
 const CONTENT_WIDTH := 960
+
+var _db = null
+
+
+func setup(db = null) -> void:
+	_db = db
 
 
 func _ready() -> void:
@@ -55,9 +62,10 @@ func _build_ui() -> void:
 	sub.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	vbox.add_child(sub)
 	vbox.add_child(_spacer(12))
-	# Continue button (only if a save exists).
-	if SaveSystem.has_save():
+	# Continue button (only if a valid save exists).
+	if _has_continue_save():
 		var cont := Button.new()
+		cont.name = "ContinueGameButton"
 		cont.text = "继续游戏"
 		cont.custom_minimum_size = Vector2(0, 50)
 		cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -65,6 +73,14 @@ func _build_ui() -> void:
 		cont.pressed.connect(func(): continue_pressed.emit())
 		vbox.add_child(cont)
 		vbox.add_child(_spacer(8))
+	if OS.is_debug_build():
+		var debug_btn := Button.new()
+		debug_btn.name = "DebugToolsButton"
+		debug_btn.text = "开发工具"
+		debug_btn.custom_minimum_size = Vector2(0, 42)
+		debug_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		debug_btn.pressed.connect(func(): debug_tools_pressed.emit())
+		vbox.add_child(debug_btn)
 	# Difficulty cards.
 	for i in 3:
 		vbox.add_child(_make_diff_card(i))
@@ -118,3 +134,9 @@ func _spacer(h: int) -> Control:
 
 func _on_difficulty(index: int) -> void:
 	difficulty_selected.emit(index)
+
+
+func _has_continue_save() -> bool:
+	if _db != null:
+		return SaveSystem.has_valid_save(_db)
+	return SaveSystem.has_save()

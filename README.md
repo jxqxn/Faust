@@ -24,7 +24,8 @@ coverage and some UI flows are still being expanded.
   executor, RiteResolver prior/normal/extre settlement paths, SultanCards,
   RoundLoop, and SaveSystem
 - **UI** (`ui/`): theme, card widget, main menu, game screen, rite selector,
-  rite view with reactive gold dice, and game-over screen
+  rite view with reactive gold dice, card detail overlay, debug tools, and
+  game-over screen
 
 ## Fidelity verification
 
@@ -44,7 +45,8 @@ Key verified facts:
 - Settlement entries execute `result` and `action`; extre runs all matched
   results before all matched actions.
 - Sultan pool is a shuffled deck with last-first draw.
-- Auto-begin rites start per round; they do not automatically resolve results.
+- Auto-begin rites start from the player's generated rite pool; they do not
+  scan all config rites or automatically resolve results.
 
 ## Running
 
@@ -62,8 +64,18 @@ godot
 
 Tests use GUT (Godot Unit Test). Current headless verification covers 9 test
 files across core systems, data loading, sim, Sultan cards, rite UI, selector,
-save system, and end-to-end integration. The latest local run reported 84/84
-tests passing, with Godot resource/RID leak warnings at process exit.
+save system, and end-to-end integration. Read `gut-test.log` for the current
+pass/fail summary; Godot may still report resource/RID leak warnings at process
+exit after a successful run.
+
+## Developer tools
+
+Debug builds expose a lightweight developer tools overlay from the title screen
+and the in-game menu. It can start a normal run, start the explicit `init/1`
+test-card profile, give a card by id, generate a rite by id, draw a Sultan card,
+or clear the hand. Normal difficulty selection always uses the curated normal
+starting hand; the large `init/1` `default_cards` list is only used when the
+developer tool explicitly requests the test profile.
 
 ## Tech stack
 

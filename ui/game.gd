@@ -13,6 +13,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
+const DebugTools = preload("res://ui/debug_tools.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
 
 var db: ConfigDB
@@ -22,6 +23,7 @@ var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
+var _debug_overlay: Control
 
 
 func _ready() -> void:
@@ -63,8 +65,10 @@ func _show_menu() -> void:
 	_clear_current()
 	_game_screen = null
 	var menu := MainMenu.new()
+	menu.setup(db)
 	menu.difficulty_selected.connect(_on_difficulty_selected)
 	menu.continue_pressed.connect(_on_continue)
+	menu.debug_tools_pressed.connect(_show_debug_tools)
 	add_child(menu)
 	_current = menu
 
@@ -79,8 +83,14 @@ func _on_continue() -> void:
 
 
 func _on_difficulty_selected(index: int) -> void:
+	_start_new_run(index, false)
+
+
+func _start_new_run(index: int, use_test_cards: bool) -> void:
+	db.set_test_starting_cards_enabled(use_test_cards)
 	state = GameState.new()
 	state.setup_new_run(db, index, rng)
+	db.set_test_starting_cards_enabled(false)
 	RoundLoop.start_auto_begin_rites(state, db)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	_show_game()
@@ -95,18 +105,26 @@ func _show_game() -> void:
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
-	# Autosave on entering the game.
-	SaveSystem.save(state)
 	add_child(gs)
 	_current = gs
 	_game_screen = gs
 	gs.refresh()
 
 
-func _on_open_rite_selector() -> void:
+func _on_open_rite_selector(location_filter: String = "") -> void:
+	var probe := RiteSelector.new()
+	probe.setup(db, state, rng, location_filter)
+	var open_ids := probe.open_rite_ids()
+	if open_ids.size() == 1:
+		_on_open_rite(int(open_ids[0]))
+		return
+	if open_ids.is_empty():
+		if _game_screen != null and _game_screen.has_method("set_log"):
+			_game_screen.set_log("该地点尚未开放。")
+		return
 	_clear_current()
 	var sel := RiteSelector.new()
-	sel.setup(db, state, rng)
+	sel.setup(db, state, rng, location_filter)
 	sel.rite_chosen.connect(_on_open_rite)
 	sel.closed.connect(_show_game)
 	add_child(sel)
@@ -151,16 +169,16 @@ func _show_game_menu() -> void:
 
 	var panel := PanelContainer.new()
 	panel.name = "GameMenuPanel"
-	panel.custom_minimum_size = Vector2(260, 220)
+	panel.custom_minimum_size = Vector2(260, 270)
 	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
 	panel.anchor_left = 0.5
 	panel.anchor_top = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_bottom = 0.5
 	panel.offset_left = -130
-	panel.offset_top = -110
+	panel.offset_top = -135
 	panel.offset_right = 130
-	panel.offset_bottom = 110
+	panel.offset_bottom = 135
 	_menu_overlay.add_child(panel)
 
 	var box := VBoxContainer.new()
@@ -183,6 +201,12 @@ func _show_game_menu() -> void:
 	save.name = "SaveGameButton"
 	save.pressed.connect(_on_save_from_menu)
 	box.add_child(save)
+
+	if OS.is_debug_build():
+		var debug := _menu_button("开发工具")
+		debug.name = "DebugToolsMenuButton"
+		debug.pressed.connect(_show_debug_tools)
+		box.add_child(debug)
 
 	var title_screen := _menu_button("返回标题")
 	title_screen.name = "ReturnTitleButton"
@@ -209,6 +233,80 @@ func _close_game_menu() -> void:
 		return
 	_menu_overlay.queue_free()
 	_menu_overlay = null
+
+
+func _show_debug_tools() -> void:
+	_close_game_menu()
+	_close_debug_tools()
+	var overlay := DebugTools.new()
+	overlay.setup(state, db)
+	overlay.closed.connect(_close_debug_tools)
+	overlay.start_requested.connect(_on_debug_start_requested)
+	overlay.give_card_requested.connect(_on_debug_give_card)
+	overlay.generate_rite_requested.connect(_on_debug_generate_rite)
+	overlay.draw_sudan_requested.connect(_on_debug_draw_sudan)
+	overlay.clear_hand_requested.connect(_on_debug_clear_hand)
+	add_child(overlay)
+	move_child(overlay, get_child_count() - 1)
+	_debug_overlay = overlay
+
+
+func _close_debug_tools() -> void:
+	if _debug_overlay == null:
+		return
+	_debug_overlay.queue_free()
+	_debug_overlay = null
+
+
+func _on_debug_start_requested(index: int, use_test_cards: bool) -> void:
+	_close_debug_tools()
+	_start_new_run(index, use_test_cards)
+
+
+func _on_debug_give_card(card_id: int) -> void:
+	if state == null or card_id <= 0 or db.get_card(card_id).is_empty():
+		return
+	state.add_card_to_hand(card_id)
+	_refresh_after_debug_action("已给卡 %d" % card_id)
+
+
+func _on_debug_generate_rite(rite_id: int) -> void:
+	if state == null or rite_id <= 0 or db.get_rite(rite_id).is_empty():
+		return
+	if not (rite_id in state.available_rites):
+		state.available_rites.append(rite_id)
+	RoundLoop.start_auto_begin_rites(state, db)
+	_refresh_after_debug_action("已生成仪式 %d" % rite_id)
+
+
+func _on_debug_draw_sudan(card_id: int) -> void:
+	if state == null:
+		return
+	var drawn := card_id
+	if drawn <= 0:
+		drawn = RoundLoop.draw_weekly_sudan(state, db, rng)
+	else:
+		var life := int(state.difficulty_config.get("sudan_life_time", 7))
+		state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(drawn, life, state.round_number))
+		state.insert_card_to_rail(drawn, 0)
+	if drawn >= 0:
+		_refresh_after_debug_action("已抽苏丹卡 %d" % drawn)
+
+
+func _on_debug_clear_hand() -> void:
+	if state == null:
+		return
+	for cid in state.hand.duplicate():
+		state.remove_card_from_hand(int(cid))
+	_refresh_after_debug_action("已清空手牌")
+
+
+func _refresh_after_debug_action(message: String) -> void:
+	if _game_screen != null:
+		_game_screen.set_log(message)
+		_game_screen.refresh()
+	if _debug_overlay != null and _debug_overlay.has_method("refresh_summary"):
+		_debug_overlay.refresh_summary(state, db)
 
 
 func _after_rite_resolution() -> void:
@@ -280,6 +378,7 @@ func _on_redraw() -> void:
 func _clear_current() -> void:
 	_close_game_menu()
 	_close_rite_overlay()
+	_close_debug_tools()
 	if _current:
 		_current.queue_free()
 		_current = null

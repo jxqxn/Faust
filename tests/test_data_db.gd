@@ -55,6 +55,13 @@ func test_sudan_pool_loaded():
 	# First entries are 2010001 (岩石杀戮) repeated.
 	assert_eq(int(pool[0]), 2010001)
 
+func test_normal_starting_cards_are_separate_from_test_init():
+	assert_eq(db.get_default_cards(), [2000001, 2000006, 2000523, 2000005])
+	assert_true(db.get_test_default_cards().size() > 50, "init/1 test card list is still available explicitly")
+
+func test_normal_starting_rites_seed_the_runtime_pool():
+	assert_eq(db.get_default_rites(), [5000001])
+
 func test_rite_loaded():
 	# 5000001 = 治理家业 (manage estate), the auto rite.
 	var r := db.get_rite(5000001)

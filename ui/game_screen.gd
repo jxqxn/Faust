@@ -6,7 +6,7 @@ extends Control
 signal open_rite(rite_id: int)
 signal advance_pressed()
 signal redraw_pressed()
-signal open_rite_selector()
+signal open_rite_selector(location_name: String)
 signal menu_pressed()
 
 class HandRailDrop:
@@ -103,20 +103,17 @@ func _build_ui() -> void:
 	_desk_map.add_child(_map_content)
 
 	var site_specs := [
-		{"name": "SiteHome", "label": "治理家业", "rite": 5000001},
-		{"name": "SiteMarket", "label": "商业区", "rite": -1},
-		{"name": "SitePalace", "label": "宫廷", "rite": -1},
-		{"name": "SiteTemple", "label": "神殿区", "rite": -1},
-		{"name": "SiteWild", "label": "野外", "rite": -1},
+		{"name": "SiteHome", "label": "自宅", "location": "自宅"},
+		{"name": "SiteMarket", "label": "商业区", "location": "商业区"},
+		{"name": "SitePalace", "label": "宫廷", "location": "宫廷"},
+		{"name": "SiteTemple", "label": "神殿区", "location": "神殿区"},
+		{"name": "SiteWild", "label": "野外", "location": "野外"},
 	]
 	for spec in site_specs:
 		var site := _site_button(str(spec["label"]))
 		site.name = str(spec["name"])
-		var rite_id := int(spec["rite"])
-		if rite_id > 0:
-			site.pressed.connect(func(): open_rite.emit(rite_id))
-		else:
-			site.pressed.connect(func(): set_log("该地点尚未开放。"))
+		var location_name := str(spec["location"])
+		site.pressed.connect(_on_site_pressed.bind(location_name))
 		_site_buttons.append(site)
 		_map_content.add_child(site)
 
@@ -253,6 +250,10 @@ func _site_button(label: String) -> Button:
 	button.text = label
 	button.custom_minimum_size = Vector2(98, 34)
 	return button
+
+
+func _on_site_pressed(location_name: String) -> void:
+	open_rite_selector.emit(location_name)
 
 
 func _icon_button(label: String) -> Button:

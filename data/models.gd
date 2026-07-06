@@ -45,7 +45,10 @@ static func rite_slots(rite_state: Dictionary) -> Array:
 
 
 # ---- Init / Difficulty ----
-# Raw shape (init/1.json): {difficulty[{name,title,desc,single_dice_face_weight[6],sudan_redraw_times_per_round,gold_dice_count,back_to_prev_round_count,sudan_life_time}], sudan_pool[], sudan_shuffle, default_cards[], sudan_redraw_times_per_round, sudan_redraw_times_recovery_round}
+# Raw shape (init/1.json): {difficulty[], sudan_pool[], sudan_shuffle,
+# default_cards[], sudan_redraw_times_per_round,
+# sudan_redraw_times_recovery_round}. In this clone, init/1 default_cards is
+# kept as an explicit test profile; normal runs use ConfigDB's curated start.
 
 ## Extract a difficulty's dice face weights as an Array.
 static func difficulty_weights(diff_entry: Dictionary) -> Array:

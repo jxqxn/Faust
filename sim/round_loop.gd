@@ -126,8 +126,15 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 ## [SRC: GameController.c @ DoStartAutoBeginRite (RVA 0x54ebc0, dump.cs:320166)]
 static func start_auto_begin_rites(state, db) -> Array:
 	var out: Array = []
-	for rid in db.rites:
-		var rite: Dictionary = db.rites[rid]
+	var candidate_rites: Array = []
+	if state != null and state.get("available_rites") != null:
+		candidate_rites = state.available_rites
+	else:
+		candidate_rites = db.rites.keys()
+	for rid in candidate_rites:
+		if not db.rites.has(int(rid)):
+			continue
+		var rite: Dictionary = db.rites[int(rid)]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
 		if not RiteOpen.is_rite_open(rite, state, db, null):
