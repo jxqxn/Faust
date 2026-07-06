@@ -24,8 +24,8 @@ coverage and some UI flows are still being expanded.
   executor, RiteResolver prior/normal/extre settlement paths, SultanCards,
   RoundLoop, and SaveSystem
 - **UI** (`ui/`): theme, card widget, main menu, game screen, rite selector,
-  rite view with reactive gold dice, card detail overlay, debug tools, and
-  game-over screen
+  rite view with reactive gold dice, card detail overlay, title-screen test
+  start entry, and game-over screen
 
 ## Fidelity verification
 
@@ -68,14 +68,16 @@ save system, and end-to-end integration. Read `gut-test.log` for the current
 pass/fail summary; Godot may still report resource/RID leak warnings at process
 exit after a successful run.
 
-## Developer tools
+## Developer test start
 
-Debug builds expose a lightweight developer tools overlay from the title screen
-and the in-game menu. It can start a normal run, start the explicit `init/1`
-test-card profile, give a card by id, generate a rite by id, draw a Sultan card,
-or clear the hand. Normal difficulty selection always uses the curated normal
-starting hand; the large `init/1` `default_cards` list is only used when the
-developer tool explicitly requests the test profile.
+Debug builds expose a single `Test Start` entry on the title screen. It starts
+the explicit `init/1` test-card profile for fast local verification. Normal
+difficulty selection always uses the curated normal starting hand; the large
+`init/1` `default_cards` list is only used by this explicit test entry.
+
+Continue is shown only for save files marked as valid player saves. Older raw
+JSON files and test data remain loadable for tests/migration, but they do not
+light up the player-facing continue button.
 
 ## Tech stack
 

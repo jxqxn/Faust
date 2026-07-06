@@ -39,6 +39,8 @@ func test_save_load_round_trip_preserves_state():
 	state.rite_auto_result = true
 	# Serialize.
 	var data := SaveSystem.serialize(state)
+	assert_true(SaveSystem.is_valid_player_save_data(data), "serialized player saves should be marked as continue-eligible")
+	assert_eq(data.get("save_kind", ""), SaveSystem.SAVE_KIND_PLAYER, "save kind should identify player saves")
 	# Deserialize into a fresh state.
 	var state2 := GameState.new()
 	SaveSystem.deserialize(data, state2, db)
@@ -69,3 +71,14 @@ func test_load_missing_save_returns_null():
 	SaveSystem.delete_save()
 	var result = SaveSystem.load(db)
 	assert_eq(result, null, "no save -> null")
+
+
+func test_continue_load_rejects_unmarked_legacy_save():
+	SaveSystem.delete_save()
+	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"version": 1, "difficulty_index": 1, "hand": [2000001]}, "\t"))
+	file.close()
+
+	assert_false(SaveSystem.has_valid_save(db), "legacy or test data should not count as a player continue save")
+	assert_eq(SaveSystem.load_continue(db), null, "continue loading should require a player save marker")
+	assert_ne(SaveSystem.load(db), null, "raw load remains backward compatible for tests and migration")

@@ -3,7 +3,7 @@
 extends Control
 
 signal difficulty_selected(index: int)
-signal debug_tools_pressed()
+signal test_start_requested(index: int)
 
 const FaustTheme = preload("res://ui/theme.gd")
 const SaveSystem = preload("res://sim/save_system.gd")
@@ -74,13 +74,13 @@ func _build_ui() -> void:
 		vbox.add_child(cont)
 		vbox.add_child(_spacer(8))
 	if OS.is_debug_build():
-		var debug_btn := Button.new()
-		debug_btn.name = "DebugToolsButton"
-		debug_btn.text = "开发工具"
-		debug_btn.custom_minimum_size = Vector2(0, 42)
-		debug_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		debug_btn.pressed.connect(func(): debug_tools_pressed.emit())
-		vbox.add_child(debug_btn)
+		var test_btn := Button.new()
+		test_btn.name = "TestStartButton"
+		test_btn.text = "Test Start"
+		test_btn.custom_minimum_size = Vector2(0, 42)
+		test_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		test_btn.pressed.connect(func(): test_start_requested.emit(1))
+		vbox.add_child(test_btn)
 	# Difficulty cards.
 	for i in 3:
 		vbox.add_child(_make_diff_card(i))
@@ -139,4 +139,4 @@ func _on_difficulty(index: int) -> void:
 func _has_continue_save() -> bool:
 	if _db != null:
 		return SaveSystem.has_valid_save(_db)
-	return SaveSystem.has_save()
+	return false

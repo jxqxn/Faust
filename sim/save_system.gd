@@ -7,6 +7,9 @@ class_name SaveSystem
 extends RefCounted
 
 const DEFAULT_SAVE_PATH := "user://save.json"
+const SAVE_VERSION := 2
+const SAVE_KIND_PLAYER := "player"
+
 static var save_path_override := ""
 
 
@@ -35,7 +38,9 @@ static func serialize(state) -> Dictionary:
 	for tc in state.table_cards:
 		table_cards_data.append(tc.duplicate(true))
 	return {
-		"version": 1,
+		"version": SAVE_VERSION,
+		"save_kind": SAVE_KIND_PLAYER,
+		"player_save": true,
 		"difficulty_index": state.difficulty_index,
 		"round_number": state.round_number,
 		"day": state.day,
@@ -118,17 +123,30 @@ static func save(state) -> bool:
 	return true
 
 
-## Load from disk into a new GameState. Returns null if no save or corrupt.
-static func load(db) -> Variant:
+static func read_save_data() -> Variant:
 	if not FileAccess.file_exists(save_path()):
 		return null
 	var text := FileAccess.get_file_as_string(save_path())
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary):
 		return null
+	return parsed
+
+
+## Load from disk into a new GameState. Returns null if no save or corrupt.
+static func load(db, require_player_save := false) -> Variant:
+	var parsed = SaveSystem.read_save_data()
+	if parsed == null:
+		return null
+	if require_player_save and not SaveSystem.is_valid_player_save_data(parsed):
+		return null
 	var state = preload("res://sim/game_state.gd").new()
 	deserialize(parsed, state, db)
 	return state
+
+
+static func load_continue(db) -> Variant:
+	return SaveSystem.load(db, true)
 
 
 ## Check if a save exists.
@@ -137,7 +155,13 @@ static func has_save() -> bool:
 
 
 static func has_valid_save(db) -> bool:
-	return SaveSystem.load(db) != null
+	return SaveSystem.load_continue(db) != null
+
+
+static func is_valid_player_save_data(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	return bool(data.get("player_save", false)) and str(data.get("save_kind", "")) == SAVE_KIND_PLAYER
 
 
 ## Delete the save file.

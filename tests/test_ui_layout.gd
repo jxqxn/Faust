@@ -38,18 +38,36 @@ func test_main_menu_uses_wide_viewport_width():
 	assert_true(_widest_content(menu) >= MIN_CONTENT_WIDTH, "main menu content should use the wide viewport")
 
 
-func test_main_menu_hides_continue_without_valid_save():
+func test_main_menu_hides_continue_without_valid_player_save():
 	SaveSystem.delete_save()
+	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"version": 1, "hand": [2000001]}, "\t"))
+	file.close()
 	var stage := _stage()
 	var menu = MainMenu.new()
 	menu.setup(db)
 	stage.add_child(menu)
 	await wait_process_frames(2)
 
-	assert_null(_find_node_by_name(menu, "ContinueGameButton"), "fresh launches should not show a continue button")
+	assert_null(_find_node_by_name(menu, "ContinueGameButton"), "old or test save files should not show a continue button")
 
 
-func test_main_menu_exposes_debug_tools_in_debug_builds():
+func test_main_menu_shows_continue_for_valid_player_save():
+	SaveSystem.delete_save()
+	var rng := RNG.new(16)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	assert_true(SaveSystem.save(state), "test setup should create a player save")
+	var stage := _stage()
+	var menu = MainMenu.new()
+	menu.setup(db)
+	stage.add_child(menu)
+	await wait_process_frames(2)
+
+	assert_not_null(_find_node_by_name(menu, "ContinueGameButton"), "valid player saves should show a continue button")
+
+
+func test_main_menu_exposes_test_start_in_debug_builds():
 	var stage := _stage()
 	var menu = MainMenu.new()
 	menu.setup(db)
@@ -57,7 +75,7 @@ func test_main_menu_exposes_debug_tools_in_debug_builds():
 	await wait_process_frames(2)
 
 	if OS.is_debug_build():
-		assert_not_null(_find_node_by_name(menu, "DebugToolsButton"), "debug builds should expose developer tools")
+		assert_not_null(_find_node_by_name(menu, "TestStartButton"), "debug builds should expose a simple test start entry")
 
 
 func test_game_screen_uses_wide_viewport_width():
@@ -170,16 +188,16 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
 
 
-func test_debug_tools_can_start_test_card_profile():
+func test_test_start_entry_uses_test_card_profile():
 	var stage := _stage()
 	var game = Game.new()
 	stage.add_child(game)
 	await wait_process_frames(2)
 
-	game._on_debug_start_requested(1, true)
+	game._on_test_start_requested(1)
 	await wait_process_frames(2)
 
-	assert_true(game.state.hand.size() > 50, "debug test profile should use the full init/1 card list")
+	assert_true(game.state.hand.size() > 50, "test start profile should use the full init/1 card list")
 	assert_false(game.db.use_test_starting_cards, "test-card flag should not leak into later normal starts")
 
 
