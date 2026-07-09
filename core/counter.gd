@@ -13,25 +13,18 @@ enum Op { NONE = 0, ADD = 1, SUB = 2, SET = 3 }
 ## [SRC: PlayerExtensions.c @ SetCounter (0x38f2d0): id 0x6c5667 always clamped]
 const SPECIAL_NONNEG_ID := 0x6c5667
 
-## Config-gated counter ids that clamp to non-negative. Populated from config
-## at runtime (PlayerExtensions.SetCounter predicate over a counter-id set).
-static var nonneg_counter_ids: Dictionary = {SPECIAL_NONNEG_ID: true}
-
-
-## Register a counter id as non-negative-clamped (config-gated set).
-static func register_nonneg(id: int) -> void:
-	nonneg_counter_ids[id] = true
-
 
 ## Whether a counter id is gated to non-negative (special id OR registered set).
-static func is_nonneg_gated(id: int) -> bool:
-	return id == SPECIAL_NONNEG_ID or nonneg_counter_ids.has(id)
+## `registered` is the per-run nonneg registry owned by GameState.
+static func is_nonneg_gated(id: int, registered: Dictionary) -> bool:
+	return id == SPECIAL_NONNEG_ID or registered.has(id)
 
 
 ## Clamp a value to non-negative for gated counters.
 ## [SRC: PlayerExtensions.c @ SetCounter: max(value,0) for gated ids]
-static func clamp_nonneg(id: int, value: int) -> int:
-	if is_nonneg_gated(id) and value < 0:
+## `registered` is the per-run nonneg registry owned by GameState.
+static func clamp_nonneg(id: int, value: int, registered: Dictionary) -> int:
+	if is_nonneg_gated(id, registered) and value < 0:
 		return 0
 	return value
 

@@ -119,48 +119,38 @@ func _on_rite(rid: int) -> void:
 
 
 func open_rite_ids() -> Array[int]:
+	return filter_open_rite_ids(_db, _state, _rng, _location_filter)
+
+
+## Static filter so callers can count/query open rites without instantiating a
+## RiteSelector node (which would leak, since Nodes are not GC'd). The instance
+## open_rite_ids() delegates here.
+static func filter_open_rite_ids(db, state, rng, location_filter: String) -> Array[int]:
 	var out: Array[int] = []
-	for rid in _db.rites:
-		var r: Dictionary = _db.rites[rid]
+	if db == null:
+		return out
+	for rid in db.rites:
+		var r: Dictionary = db.rites[rid]
 		var id := int(rid)
-		if not _is_interactive_rite(r):
+		if not RiteOpen.is_interactive(r):
 			continue
-		if _location_filter != "" and not _location_matches(_location_name(r), _location_filter):
+		if location_filter != "" and _location_name(r) != location_filter:
 			continue
-		if _state != null and _state.get("available_rites") != null and not (id in _state.available_rites):
+		if state != null and state.get("available_rites") != null and not (id in state.available_rites):
 			continue
-		if not _is_rite_open(r):
+		if not _is_rite_open(r, db, state, rng):
 			continue
 		out.append(id)
 	out.sort()
 	return out
 
 
-func _is_interactive_rite(rite: Dictionary) -> bool:
-	var slots: Dictionary = rite.get("cards_slot", {})
-	var settle_count: int = (rite.get("settlement", []) as Array).size()
-	return not slots.is_empty() and settle_count > 0
-
-
-func _location_name(rite: Dictionary) -> String:
+static func _location_name(rite: Dictionary) -> String:
 	return str(rite.get("location", "?")).split(":")[0]
 
 
-func _location_matches(config_location: String, requested_location: String) -> bool:
-	if config_location == requested_location:
-		return true
-	var aliases := {
-		"自宅": ["鑷畢"],
-		"商业区": ["鍟嗕笟鍖?"],
-		"宫廷": ["瀹环"],
-		"神殿区": ["绁炴鍖?"],
-		"野外": ["閲庡"],
-	}
-	return config_location in aliases.get(requested_location, [])
-
-
-func _is_rite_open(rite: Dictionary) -> bool:
+static func _is_rite_open(rite: Dictionary, db, state, rng) -> bool:
 	var id := int(rite.get("id", 0))
 	if int(rite.get("auto_begin", 0)) == 1:
-		return _state != null and id in _state.started_rites
-	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
+		return state != null and id in state.started_rites
+	return RiteOpen.is_rite_open(rite, state, db, rng)

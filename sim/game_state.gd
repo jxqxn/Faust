@@ -9,6 +9,10 @@ extends RefCounted
 # Counters. Local counters are per-run; global persist across runs (prestige etc).
 var local_counters := {}    # id(int) -> int
 var global_counters := {}   # id(int) -> int
+# Per-run registry of counter ids gated to non-negative. Seeded with the
+# special id (a hardcoded rule from the decompiled source); extend with
+# register_nonneg. Kept on the instance so runs/tests stay isolated.
+var _nonneg_ids := {CounterSystem.SPECIAL_NONNEG_ID: true}
 
 # Hand: card ids the player holds.
 var hand: Array[int] = []
@@ -97,6 +101,14 @@ func _redraws_per_round(db) -> int:
 
 
 # ---- Counter access ----
+func register_nonneg(id: int) -> void:
+	_nonneg_ids[id] = true
+
+
+func is_nonneg_gated(id: int) -> bool:
+	return CounterSystem.is_nonneg_gated(id, _nonneg_ids)
+
+
 func get_counter(id: int) -> int:
 	return int(local_counters.get(id, 0))
 
@@ -112,12 +124,12 @@ func add_counter(id: int, delta: int) -> void:
 func sub_counter(id: int, delta: int) -> void:
 	# Clamp non-negative for gated counters, matching set_counter. SUB can drive
 	# a gated counter negative otherwise, violating the documented invariant.
-	local_counters[id] = CounterSystem.clamp_nonneg(id, int(local_counters.get(id, 0)) - delta)
+	local_counters[id] = CounterSystem.clamp_nonneg(id, int(local_counters.get(id, 0)) - delta, _nonneg_ids)
 
 
 func set_counter(id: int, val: int) -> void:
 	# Clamp non-negative for gated counters (PlayerExtensions.SetCounter).
-	local_counters[id] = CounterSystem.clamp_nonneg(id, val)
+	local_counters[id] = CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
 
 
 func add_global_counter(id: int, delta: int) -> void:
@@ -125,11 +137,11 @@ func add_global_counter(id: int, delta: int) -> void:
 
 
 func sub_global_counter(id: int, delta: int) -> void:
-	global_counters[id] = CounterSystem.clamp_nonneg(id, int(global_counters.get(id, 0)) - delta)
+	global_counters[id] = CounterSystem.clamp_nonneg(id, int(global_counters.get(id, 0)) - delta, _nonneg_ids)
 
 
 func set_global_counter(id: int, val: int) -> void:
-	global_counters[id] = CounterSystem.clamp_nonneg(id, val)
+	global_counters[id] = CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
 
 
 # ---- Gold (coin-card stack) ----

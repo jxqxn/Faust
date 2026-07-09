@@ -35,16 +35,23 @@ func test_counter_real_change_value_card_tag():
 	assert_eq(CounterSystem.real_change_value(CounterSystem.Op.ADD, 7, 4), 7)
 
 func test_counter_clamp_nonneg_gated():
+	# The nonneg registry is now per-GameState instance, so clamping is tested
+	# against an instance-owned registry instead of a process-wide static.
 	# Special id 0x6c5667 always clamps to >= 0.
 	# [SRC: PlayerExtensions.c @ SetCounter]
-	assert_eq(CounterSystem.clamp_nonneg(0x6c5667, -5), 0)
-	assert_eq(CounterSystem.clamp_nonneg(0x6c5667, 5), 5)
-	# Ungated counter passes through.
-	assert_eq(CounterSystem.clamp_nonneg(7000001, -5), -5)
-	# Registered counter clamps.
-	CounterSystem.register_nonneg(7100006)
-	assert_eq(CounterSystem.clamp_nonneg(7100006, -3), 0)
-	assert_true(CounterSystem.is_nonneg_gated(7100006))
+	var st := GameState.new()
+	assert_true(st.is_nonneg_gated(0x6c5667), "special id is gated by default")
+	# Ungated counter passes through (via the counter mutators).
+	st.set_counter(7000001, -5)
+	assert_eq(st.get_counter(7000001), -5, "ungated counter may go negative")
+	# Registered counter clamps (instance-scoped, no global leakage).
+	st.register_nonneg(7100006)
+	st.set_counter(7100006, -3)
+	assert_eq(st.get_counter(7100006), 0, "gated counter clamps to 0 on set")
+	assert_true(st.is_nonneg_gated(7100006))
+	# A fresh instance is unaffected by the previous instance's registration.
+	var st2 := GameState.new()
+	assert_false(st2.is_nonneg_gated(7100006), "registry does not leak across instances")
 
 # ---- Tag (vc#15, pitfall#5: no clamp) ----
 func test_tag_add_sub_set():

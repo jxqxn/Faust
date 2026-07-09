@@ -111,9 +111,9 @@ func _show_game() -> void:
 
 
 func _on_open_rite_selector(location_filter: String = "") -> void:
-	var probe := RiteSelector.new()
-	probe.setup(db, state, rng, location_filter)
-	var open_ids := probe.open_rite_ids()
+	# Count via the static filter to avoid instantiating a RiteSelector node
+	# just to probe (Nodes are not GC'd, so a probe instance would leak).
+	var open_ids := RiteSelector.filter_open_rite_ids(db, state, rng, location_filter)
 	if open_ids.size() == 1:
 		_on_open_rite(int(open_ids[0]))
 		return

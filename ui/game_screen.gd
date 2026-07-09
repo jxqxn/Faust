@@ -405,17 +405,13 @@ func _open_map_rite_ids() -> Array[int]:
 
 
 func _is_map_rite_interactive(rite: Dictionary) -> bool:
-	var slots: Dictionary = rite.get("cards_slot", {})
-	var settle_count := 0
-	for key in ["settlement_prior", "settlement", "settlement_extre"]:
-		settle_count += (rite.get(key, []) as Array).size()
-	return not slots.is_empty() and settle_count > 0
+	return RiteOpen.is_interactive(rite)
 
 
 func _is_map_rite_open(rite: Dictionary) -> bool:
 	var id := int(rite.get("id", 0))
 	if int(rite.get("auto_begin", 0)) == 1:
-		return id in _state.started_rites
+		return _state != null and id in _state.started_rites
 	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
 
 

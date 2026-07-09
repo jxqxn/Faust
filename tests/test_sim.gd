@@ -343,7 +343,7 @@ func test_sub_counter_clamps_registered_nonneg_to_zero():
 	# set_counter's contract. Ungated counters pass through negative.
 	var st := GameState.new()
 	st.set_counter(7100006, 3)
-	CounterSystem.register_nonneg(7100006)
+	st.register_nonneg(7100006)
 	st.sub_counter(7100006, 10)
 	assert_eq(st.get_counter(7100006), 0, "gated counter clamps to 0 on sub")
 	# Ungated counter goes negative (no clamp).

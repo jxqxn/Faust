@@ -105,6 +105,48 @@ func test_auto_begin_rite_is_available_only_after_it_is_started():
 	assert_eq(selector.open_rite_ids(), [9007], "started auto-begin rites should be enterable at their location")
 
 
+func test_rite_with_only_prior_settlement_is_interactive():
+	# A rite whose only settlement branch is in settlement_prior (no `settlement`
+	# entries) must still count as interactive. Previously the selector counted
+	# only `settlement`, hiding such rites while the map showed them.
+	var db := ConfigDB.new()
+	db.rites = {
+		9008: {
+			"id": 9008,
+			"name": "Prior-only rite",
+			"text": "",
+			"location": "Home:1",
+			"auto_begin": 0,
+			"cards_slot": {"s1": {}},
+			"settlement_prior": [{"condition": {}, "result": {}}],
+			"settlement": [],
+			"settlement_extre": [],
+			"open_conditions": [],
+		},
+	}
+	var state := GameState.new()
+	state.available_rites.append(9008)
+	var selector := RiteSelector.new()
+	selector.setup(db, state, null, "Home")
+	assert_eq(selector.open_rite_ids(), [9008], "prior-only rite should appear in the selector")
+	# The shared predicate is the single source of truth now.
+	assert_true(RiteOpen.is_interactive(db.rites[9008]), "is_interactive treats prior as interactive")
+
+
+func test_static_filter_counts_open_rites_without_instantiating():
+	# filter_open_rite_ids lets callers count open rites without creating a
+	# RiteSelector node (which would leak). It must agree with open_rite_ids().
+	var db := ConfigDB.new()
+	db.rites = {
+		9005: _rite_with_location("Home"),
+		9006: _rite_with_location("Market"),
+	}
+	var state := GameState.new()
+	var selector := RiteSelector.new()
+	selector.setup(db, state, null, "Home")
+	assert_eq(RiteSelector.filter_open_rite_ids(db, state, null, "Home"), selector.open_rite_ids(), "static filter matches instance filter")
+
+
 func _count_buttons(node: Node) -> int:
 	var count := 0
 	if node is Button:

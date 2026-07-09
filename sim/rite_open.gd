@@ -2,6 +2,18 @@
 class_name RiteOpen
 extends RefCounted
 
+## Whether a rite offers any player interaction: it has at least one card slot
+## and at least one settlement branch (prior, normal, or extre). Single source
+## of truth for both the map-pin filter and the selector filter so they agree.
+static func is_interactive(rite: Dictionary) -> bool:
+	if rite.get("cards_slot", {}).is_empty():
+		return false
+	for key in ["settlement_prior", "settlement", "settlement_extre"]:
+		if (rite.get(key, []) as Array).size() > 0:
+			return true
+	return false
+
+
 static func is_rite_open(rite: Dictionary, state, db, rng = null) -> bool:
 	if state == null:
 		var fallback_open_conditions = rite.get("open_conditions", [])
