@@ -1,0 +1,1503 @@
+# Original Rite Events
+
+Source: Faust-local-source/_unpack/data/config/rite/*.json. This is the card-slot rite/event surface used by entries like 5000001.
+
+Total: 1495
+
+| ID | Name | Location | AutoBegin | AutoResult | RoundNumber | WaitingRound | SlotConditions | OriginalConfigPath |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 5000001 | 治理家业 | 自宅:1 | 1 | 1 | 1 | 0 | s1: type=char, 贵族=1<br>s2: type=char<br>s3: type=item, 装潢=1<br>s4: type=item, !金币=1, any={"cost.消耗品=":1,"is":2001303,"空屋":1} | data/config/rite/5000001.json |
+| 5000002 | 俺寻思 | 自宅:2 | 0 | 0 | 0 | 0 | s1: any | data/config/rite/5000002.json |
+| 5000003 | 在家行淫 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 纵欲=1<br>s2: 主角=1, type=char<br>s3: type=char, any={"!怪物":1,"is":2000433,"荆棘戒指":1}, !主角=1<br>s4: type=item, 激情=1, !is=2001138 | data/config/rite/5000003.json |
+| 5000004 | 残忍的牺牲 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 杀戮=1<br>s2: 主角=1, type=char<br>s3: 追随者=1, f:rare-s1.rare>==0, type=char, any={"!怪物":1,"荆棘戒指":1}, !主角=1 | data/config/rite/5000004.json |
+| 5000005 | 稍加整修 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 奢靡=1, rare==1<br>s2: type=item, cost.金币=3 | data/config/rite/5000005.json |
+| 5000006 | 全面整修 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 奢靡=1, rare==2<br>s2: type=item, cost.金币=5 | data/config/rite/5000006.json |
+| 5000007 | 扩建 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 奢靡=1, rare==3<br>s2: type=item, cost.金币=10 | data/config/rite/5000007.json |
+| 5000008 | 大兴土木 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, 奢靡=1, rare==4<br>s2: type=item, cost.金币=20 | data/config/rite/5000008.json |
+| 5000009 | 消除妻子的不满 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, 妻子=1<br>s2: any={"all":{"is":2000689,"cost.可堆叠=":1},"is":2001292}<br>s3: 主角=1, type=char<br>s4: is=2000083 | data/config/rite/5000009.json |
+| 5000010 | 看书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000010.json |
+| 5000011 | 特殊的餐点 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, 正在进食=1, 食物=1<br>s2: type=char | data/config/rite/5000011.json |
+| 5000012 | 匕首与弯刀 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000203, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000012.json |
+| 5000013 | 古典摔跤 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000204, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000013.json |
+| 5000014 | 军用长矛指南 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000205, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000014.json |
+| 5000015 | 马上竞技 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000206, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000015.json |
+| 5000016 | 夜间的战斗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000207, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000016.json |
+| 5000017 | 以弱胜强 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000208, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":4,"is":2000123} | data/config/rite/5000017.json |
+| 5000018 | 体面 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000209, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000018.json |
+| 5000019 | 圣训六十篇 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000210, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000019.json |
+| 5000020 | 宫廷礼仪指南 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000211, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000020.json |
+| 5000021 | 文书的工作 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000212, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000021.json |
+| 5000022 | 艾娃日记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000213, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000022.json |
+| 5000023 | 相面术 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000214, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000023.json |
+| 5000024 | 猎人故事集 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000215, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000024.json |
+| 5000025 | 大盗传奇 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000216, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000025.json |
+| 5000026 | 斥候训练手册 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000217, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000026.json |
+| 5000027 | 捉贼人回忆录 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000218, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000027.json |
+| 5000028 | 狗皮 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000219, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000028.json |
+| 5000029 | 歌声与寂静 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000220, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000029.json |
+| 5000030 | 草药学入门 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000221, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000030.json |
+| 5000031 | 地图与边疆 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000222, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000031.json |
+| 5000032 | 游牧民的生活 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000223, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000032.json |
+| 5000033 | 动物与植物图鉴 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000224, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000033.json |
+| 5000034 | 西行记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000225, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000034.json |
+| 5000035 | 沙漠之书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000226, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000035.json |
+| 5000036 | 健身手册 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000227, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000036.json |
+| 5000037 | 士兵的训练 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000228, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000037.json |
+| 5000038 | 勇武故事集 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000229, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":2,"is":2000123} | data/config/rite/5000038.json |
+| 5000039 | 古代人的呼吸 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000230, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000039.json |
+| 5000040 | 水银之血 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000231, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000040.json |
+| 5000041 | 贤者的话语 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000232, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000041.json |
+| 5000042 | 思辨集 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000233, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000042.json |
+| 5000043 | 方圆运算 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000234, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000043.json |
+| 5000044 | 洞开的思想 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000235, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000044.json |
+| 5000045 | 如何取悦你的爱人 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000236, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000045.json |
+| 5000046 | 四十七种优雅姿态 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000237, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000046.json |
+| 5000047 | 神秘的精油 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000238, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000047.json |
+| 5000048 | 面具的秘密 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000239, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000048.json |
+| 5000049 | 密教的修行 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000240, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":4,"is":2000123} | data/config/rite/5000049.json |
+| 5000050 | 第五元素 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000241, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":4,"is":2000123} | data/config/rite/5000050.json |
+| 5000051 | 耳语之书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000242, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000051.json |
+| 5000052 | 蠕虫密卷 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000243, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000052.json |
+| 5000053 | 星空学徒 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000244, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"魔力>=":1,"is":2000123} | data/config/rite/5000053.json |
+| 5000054 | 奥义书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000245, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"all":{"智慧>=":5,"魔力>=":3},"is":2000123} | data/config/rite/5000054.json |
+| 5000055 | 房屋出租 | 自宅:[2,12] | 0 | 0 | 0 | 7 | s1: is=2000005<br>s2: type=item, 空屋=1 | data/config/rite/5000055.json |
+| 5000056 | 异国商人 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, 部落遗物=1, !已拥有=1, rare==2<br>s2: type=item, 部落遗物=1, !已拥有=1, rare==3<br>s3: type=item, 部落遗物=1, !已拥有=1, rare==4<br>s4: 租赁协议=1 | data/config/rite/5000056.json |
+| 5000057 | 扩建挂毯长廊 | 奇珍:1 | 0 | 0 | 1 | 1 | s1: is=2000302<br>s2: type=item, cost.金币=7<br>s3: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5000057.json |
+| 5000058 | 扩建鳄鱼池 | 奇珍:4 | 0 | 0 | 1 | 1 | s1: is=2000304<br>s2: type=item, cost.金币=5<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5000058.json |
+| 5000059 | 扩建黄金猫爬架 | 奇珍:3 | 0 | 0 | 1 | 1 | s1: is=2000402<br>s2: type=item, cost.金币=9<br>s3: type=sudan, 奢靡=1, rare<==4 | data/config/rite/5000059.json |
+| 5000060 | 扩建热气球升降场 | 奇珍:6 | 0 | 0 | 1 | 1 | s1: is=2000388<br>s2: type=item, cost.金币=9<br>s3: type=sudan, 奢靡=1, rare<==4 | data/config/rite/5000060.json |
+| 5000061 | 扩建天文台 | 奇珍:8 | 0 | 0 | 1 | 1 | s1: is=2000380<br>s2: type=item, cost.金币=5<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5000061.json |
+| 5000062 | 珍奇之家 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 纳入收藏=1, is=2000302<br>s2: 纳入收藏=1, is=2000304<br>s3: 纳入收藏=1, is=2000402<br>s4: 纳入收藏=1, is=2000388 | data/config/rite/5000062.json |
+| 5000063 | 召唤龙卷风 | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: type=item, is=2000318<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.金币=7 | data/config/rite/5000063.json |
+| 5000064 | 打碎提灯 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000320<br>s2: type=char, 主角=1 | data/config/rite/5000064.json |
+| 5000065 | 学术专著 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000538, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000065.json |
+| 5000066 | 否认现实 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001209, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, !is=2000460<br>s3: type=item, is=2001208 | data/config/rite/5000066.json |
+| 5000067 | 闯入后台 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, is=2001209, 正在阅读=1<br>s2: type=char, is=2000460<br>s3: type=char, is=2000001<br>s4: type=item, is=2001208 | data/config/rite/5000067.json |
+| 5000100 | 珠宝设计 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000019<br>s2: type=item, cost.金币=5<br>s3: type=item, any={"!可堆叠":1,"cost.可堆叠":1}, !部队=1 | data/config/rite/5000100.json |
+| 5000101 | 裁缝店 | 自宅:[2,12] | 0 | 0 | 2 | 1 | s1: type=char, is=2000459<br>s2: type=char, any={"!动物":1,"is":2000461}, !怪物=1, !妆扮=1<br>s3: type=item, !金币=1, any={"all":{"s2.主角":1,"is":2000680},"is":2001306}<br>s4: type=item, cost.金币=5 | data/config/rite/5000101.json |
+| 5000102 | 舞乐之宴 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000129<br>s2: type=sudan, 奢靡=1, f:rare-s1.rare<==0<br>s3: type=item, any={"all":{"s1.rare=":4,"cost.金币":15}} | data/config/rite/5000102.json |
+| 5000103 | 阿图娜尔的请求 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=item, 装备=1, rare==3<br>s3: type=item, 装备=1, rare==2<br>s4: type=item, cost.金币=10 | data/config/rite/5000103.json |
+| 5000104 | 阿图娜尔的请求 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=item, 装备=1, rare==4<br>s3: type=item, 装备=1, rare==4<br>s4: type=item, cost.金币=15 | data/config/rite/5000104.json |
+| 5000105 | 爱情诗 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000105.json |
+| 5000106 | 史诗 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000106.json |
+| 5000107 | 讽刺诗 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000107.json |
+| 5000108 | 预言诗 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000108.json |
+| 5000109 | 赃物商人 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: type=item, is=2000162<br>s2: type=item, cost.金币=5 | data/config/rite/5000109.json |
+| 5000110 | 有趣的情诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000467<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000110.json |
+| 5000111 | 很棒的情诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000468<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000111.json |
+| 5000112 | 不灭的情诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000470<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000112.json |
+| 5000113 | 伟大的爱情 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000472<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000113.json |
+| 5000114 | 有趣的史诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000473<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000114.json |
+| 5000115 | 不凡的史诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000474<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000115.json |
+| 5000116 | 追忆过去荣光 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000475<br>s2: type=char, !贵族=1, !动物=1, !怪物=1 | data/config/rite/5000116.json |
+| 5000117 | 伟大的史诗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000476<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000117.json |
+| 5000118 | 历史洪流 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000478<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000118.json |
+| 5000119 | 谐音谩骂 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000479<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000119.json |
+| 5000120 | 精巧的讽刺 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000480<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000120.json |
+| 5000121 | 挑战歌 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000481<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000121.json |
+| 5000122 | 惊人的嘲讽 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000483<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000122.json |
+| 5000123 | 魔幻诗歌 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000484<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000123.json |
+| 5000124 | 诡异的幻听 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000485<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000124.json |
+| 5000125 | 恐怖的回音 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000486<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000125.json |
+| 5000126 | 黑暗根源 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000487<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000126.json |
+| 5000127 | 伟大的黑暗 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000488<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000127.json |
+| 5000128 | 小圆的日记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2000576<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000128.json |
+| 5000129 | 做好准备 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, 已装备=1, !is=2000461 | data/config/rite/5000129.json |
+| 5000130 | 蠢妓女和活恶棍 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000547, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000130.json |
+| 5000131 | 天文台 | 奇珍:8 | 1 | 0 | 7 | 0 | s1: is=2000380 | data/config/rite/5000131.json |
+| 5000132 | 黄金鸟屋 | 奇珍:2 | 0 | 0 | 1 | 1 | s1: is=2000540<br>s2: type=item, cost.金币=5 | data/config/rite/5000132.json |
+| 5000133 | 黄金鸟屋 | 奇珍:2 | 1 | 0 | 7 | 0 | s1: is=2000540<br>s2: type=char | data/config/rite/5000133.json |
+| 5000134 | 鳄鱼池 | 奇珍:4 | 0 | 0 | 7 | 0 | s1: is=2000304<br>s2: type=item, cost.罪证==1 | data/config/rite/5000134.json |
+| 5000135 | 热气球升降场 | 奇珍:6 | 0 | 0 | 7 | 0 | s1: is=2000388<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000135.json |
+| 5000136 | 黄金猫爬架 | 奇珍:3 | 0 | 0 | 7 | 0 | s1: is=2000402<br>s2: any={"all":{"type":"item","cost.金币":3},"is":2000461} | data/config/rite/5000136.json |
+| 5000137 | 挂毯长廊 | 奇珍:1 | 1 | 0 | 7 | 0 | s1: is=2000302 | data/config/rite/5000137.json |
+| 5000138 | 被供奉的木雕 | 奇珍:7 | 0 | 0 | 1 | 1 | s1: is=2000601<br>s2: type=item, cost.金币=7<br>s3: type=sudan, 奢靡=1, f:rare-s1.rare<==0 | data/config/rite/5000138.json |
+| 5000139 | 被供奉的木雕 | 奇珍:7 | 1 | 0 | 7 | 0 | s1: is=2000601 | data/config/rite/5000139.json |
+| 5000140 | 群星的研究 | 神殿区:[2,10] | 0 | 0 | 3 | 1 | s1: 天象=1, 正在阅读=1<br>s2: type=char, 智慧>==5<br>s3: type=char, 智慧>==5 | data/config/rite/5000140.json |
+| 5000141 | 承阳武士 | 奇珍:5 | 1 | 0 | 7 | 0 | s1: type=item, is=2000959 | data/config/rite/5000141.json |
+| 5000142 | 老花园 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000797, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":3,"is":2000123} | data/config/rite/5000142.json |
+| 5000143 | 列王纪 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000798, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000143.json |
+| 5000144 | 等待太久 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000799, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000144.json |
+| 5000145 | 不朽者之吻 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000800, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":4,"is":2000123} | data/config/rite/5000145.json |
+| 5000146 | 雨林！雨林！ | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000801, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000146.json |
+| 5000147 | 女主人的金拖鞋 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000802, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000147.json |
+| 5000148 | 荒野集 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000803, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000148.json |
+| 5000149 | 白鼬的宫廷 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000804, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000149.json |
+| 5000150 | 弹球游戏 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000805, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000150.json |
+| 5000151 | 哲百集 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000806, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":5,"is":2000123} | data/config/rite/5000151.json |
+| 5000152 | 不要凝视群星 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000807, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000152.json |
+| 5000153 | 蜘蛛的网 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000808, 正在阅读=1<br>s2: type=char, is=2000123 | data/config/rite/5000153.json |
+| 5000154 | 维持家业 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000850, cost.信誉=[1,3]<br>s2: type=item, cost.金币=5 | data/config/rite/5000154.json |
+| 5000155 | 石中火 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000856, 正在阅读=1<br>s2: type=char, is=2000123 | data/config/rite/5000155.json |
+| 5000156 | 曲直迷思 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000857, 正在阅读=1<br>s2: type=char, is=2000123 | data/config/rite/5000156.json |
+| 5000157 | 黄沙之战 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000855, 正在阅读=1<br>s2: type=char, is=2000123 | data/config/rite/5000157.json |
+| 5000158 | 逆转时光 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, is=2000319<br>s2: type=sudan | data/config/rite/5000158.json |
+| 5000159 | 梦中世界 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001060, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"智慧>=":5,"is":2000123} | data/config/rite/5000159.json |
+| 5000160 | 君王的胸襟 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001146<br>s2: type=char, !is=2000461 | data/config/rite/5000160.json |
+| 5000161 | 学会藏书室 | 自宅:[2,12] | 0 | 0 | 5 | 1 | s1: type=item, 馆藏=1<br>s2: type=item, 馆藏=1<br>s3: type=item, 馆藏=1<br>s4: type=item, cost.金币=3, s1=1 | data/config/rite/5000161.json |
+| 5000162 | 贝姬夫人不见了 | 自宅:[2,12] | 1 | 0 | 3 | 0 | s1: is=2000461 | data/config/rite/5000162.json |
+| 5000163 | 哲学の力量 | 自宅:[2,12] | 1 | 0 | 0 | 0 | s1: 主角=1, 黑暗幻想=1 | data/config/rite/5000163.json |
+| 5000164 | 天牛之血 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2001170<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000164.json |
+| 5000165 | 群山深处 | 野外:[9,14] | 0 | 0 | 7 | 7 | s1: type=char, 生存=5<br>s2: type=char, 体魄=5<br>s3: type=char, 智慧=5<br>s4: type=char, 魔力=5, 主角=1 | data/config/rite/5000165.json |
+| 5000166 | 石之天平的研究 | 上城区:[1,6] | 0 | 0 | 5 | 1 | s1: is=2001154<br>s2: any={"is":2000022}, !s3=1<br>s3: any={"is":2000022}, !s2=1<br>s4: type=item, is=2000986, cost.可堆叠==1 | data/config/rite/5000166.json |
+| 5000167 | 复活死者 | 野外:[1,14] | 0 | 0 | 1 | 1 | s1: 墓碑=1<br>s2: is=2001155<br>s3: is=2000001, 主角=1 | data/config/rite/5000167.json |
+| 5000168 | 永生的允诺 | 野外:[1,14] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: is=2001156 | data/config/rite/5000168.json |
+| 5000201 | 驯服仪式 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001149<br>s2: type=char | data/config/rite/5000201.json |
+| 5000202 | 诅咒解除 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 被驯服的人=1 | data/config/rite/5000202.json |
+| 5000203 | 以凡人的方式 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2000281<br>s2: type=char, is=2000352<br>s3: type=item, is=2000986, cost.可堆叠==1<br>s4: type=char, 主角=1 | data/config/rite/5000203.json |
+| 5000204 | 忠贞不渝 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2001150<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000204.json |
+| 5000205 | 荆棘与塔 | 野外:[9,14] | 0 | 0 | 3 | 1 | s1: type=char, any={"生存>=":4,"智慧>=":4}<br>s2: type=char, any={"隐匿>=":4,"体魄>=":4}<br>s3: type=char, any={"智慧>=":4,"魔力>=":4}<br>s4: type=char, any={"魅力>=":4,"社交>=":4} | data/config/rite/5000205.json |
+| 5000206 | 异色花园 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, !追随者=1, !is=2000024, !食客=1, !主角=1<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, is=2001151 | data/config/rite/5000206.json |
+| 5000301 | 诡异的镜子 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !主角=1, any={"男性":1,"女性":1} | data/config/rite/5000301.json |
+| 5000302 | 映像 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, 小筹=1, 锁定小筹=1<br>s2: type=char | data/config/rite/5000302.json |
+| 5000303 | 你的名字 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1, 锁定小筹=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000303.json |
+| 5000304 | 见男人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, 男性=1, 激情=1 | data/config/rite/5000304.json |
+| 5000305 | 见女人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, 女性=1, 激情=1 | data/config/rite/5000305.json |
+| 5000306 | 见贵族 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, 贵族=1, 激情=1, any={"妻子":1,"is":2000352,"法拉杰":1} | data/config/rite/5000306.json |
+| 5000307 | 欲望与爱情 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"妻子":1,"is":2000772,"法拉杰":1} | data/config/rite/5000307.json |
+| 5000308 | 见……？ | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"is":2000767,"type":"sudan"} | data/config/rite/5000308.json |
+| 5000309 | 欲望与子嗣 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"妻子":1,"is":2000082,"all":{"法拉杰":1,"rare":4}} | data/config/rite/5000309.json |
+| 5000310 | 欲望与代价 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000772} | data/config/rite/5000310.json |
+| 5000311 | 弃用 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000311.json |
+| 5000312 | 见贤者 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"type":"char","all":{"type":"item","any":{"is":2000761}}} | data/config/rite/5000312.json |
+| 5000313 | 一次纵欲的尝试 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1, !食客=1, !is=2001182 | data/config/rite/5000313.json |
+| 5000314 | 见聪明人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000314.json |
+| 5000315 | 见坏人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000315.json |
+| 5000316 | 见蠢人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000316.json |
+| 5000317 | 囤积之乐 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, all={"!is":2000022,"!法拉杰":1}, !动物=1, !怪物=1 | data/config/rite/5000317.json |
+| 5000318 | 花费之乐 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000318.json |
+| 5000319 | 见讨厌钱的人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000319.json |
+| 5000320 | 体验品位 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000019,"妻子":1,"主角":1} | data/config/rite/5000320.json |
+| 5000321 | 见证得利 | 自宅:[2,12] | 0 | 0 | 5 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000014,"主角":1}<br>s3: type=item, cost.金币==5 | data/config/rite/5000321.json |
+| 5000322 | 浪费与浪漫 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"all":{"is":2000021,"!密教徒":1},"is":2000352,"主角":1}<br>s3: type=item, cost.金币==5 | data/config/rite/5000322.json |
+| 5000323 | 天降横财 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, 命运的羁绊=1<br>s3: type=item, cost.金币=[10,50] | data/config/rite/5000323.json |
+| 5000324 | 见勇士 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000292,"战斗>=":6}, !怪物=1, !动物=1 | data/config/rite/5000324.json |
+| 5000325 | 见战利品 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000369,"主角":1} | data/config/rite/5000325.json |
+| 5000326 | 见证荣誉 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"is":2000065,"火焰大王":1,"主角":1}, type=char, !怪物=1, !动物=1 | data/config/rite/5000326.json |
+| 5000327 | 有理想的人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"法拉杰":1,"is":2000350,"all":{"主角":1,"!is":2000861}} | data/config/rite/5000327.json |
+| 5000328 | 见奴隶 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000114,"主角":1} | data/config/rite/5000328.json |
+| 5000329 | 谋逆的思想 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"is":2010016} | data/config/rite/5000329.json |
+| 5000330 | 见幸存者 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000013,"主角":1} | data/config/rite/5000330.json |
+| 5000331 | 承担责任 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"is":2000195,"主角":1} | data/config/rite/5000331.json |
+| 5000332 | 一次征服的行为 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, 小筹=1<br>s2: is=2001186, 小筹征服=1<br>s3: is=2001187, 小筹征服=1<br>s4: is=2001188, 小筹征服=1 | data/config/rite/5000332.json |
+| 5000333 | 见得利者 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"妻子":1,"is":2000056,"法拉杰":1} | data/config/rite/5000333.json |
+| 5000334 | 见无形之刃 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000460} | data/config/rite/5000334.json |
+| 5000335 | 杀戮的诀窍 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000292} | data/config/rite/5000335.json |
+| 5000336 | 死如微尘 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"is":2000197} | data/config/rite/5000336.json |
+| 5000337 | 生命与期盼 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"妻子":1,"is":2000005} | data/config/rite/5000337.json |
+| 5000338 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000338.json |
+| 5000339 | 生命的本能 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, any={"all":{"is":2000371,"!侧室":1},"is":2000369,"法拉杰":1} | data/config/rite/5000339.json |
+| 5000340 | 生死之惧 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000340.json |
+| 5000341 | 如果有来生 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"火焰大王":1,"is":2000461,"!动物":1}, type=char, !怪物=1 | data/config/rite/5000341.json |
+| 5000342 | 死亡轮回 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 小筹=1<br>s2: any={"type":"char"}, !is=2000461 | data/config/rite/5000342.json |
+| 5000343 | 金币巡回 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000343.json |
+| 5000344 | 心胜于物 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000344.json |
+| 5000345 | 有趣的人类 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000345.json |
+| 5000346 | 书库辖员 | 奇珍:13 | 1 | 0 | 7 | 0 | s1: type=char, 小筹=1, 锁定小筹=1 | data/config/rite/5000346.json |
+| 5000347 | 远方的歌 | 奇珍:14 | 1 | 0 | 7 | 0 | s1: type=char, 小筹=1, 锁定小筹=1 | data/config/rite/5000347.json |
+| 5000348 | 万和之弦 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000348.json |
+| 5000349 | 镜之冠冕 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000349.json |
+| 5000350 | 以人为镜 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000350.json |
+| 5000351 | 废弃 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 小筹=1 | data/config/rite/5000351.json |
+| 5000352 | 镜子的援军 | 野外:[1,6] | 0 | 0 | 0 | 1 | s1: type=char, 小筹=1, 锁定小筹=1<br>s2: type=item, 部队=1<br>s3: type=char, 主角=1 | data/config/rite/5000352.json |
+| 5000353 | 此岸彼岸 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001189, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"is":2000123,"智慧<":3} | data/config/rite/5000353.json |
+| 5000501 | 阴森的宅邸 | 野外:9 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char<br>s3: any={"all":{"type":"sudan","杀戮":1}}<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000501.json |
+| 5000502 | 未解的凶案 | 野外:8 | 0 | 0 | 1 | 0 | s1: type=char, any={"追随者":1,"主角":1}<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000502.json |
+| 5000503 | 如何安息 | 野外:9 | 0 | 0 | 1 | 0 | s1: type=char<br>s2: any={"is":2000187} | data/config/rite/5000503.json |
+| 5000504 | 幕后真凶 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: is=2000164<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: is=2000137 | data/config/rite/5000504.json |
+| 5000505 | 宫廷处刑 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000164<br>s2: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5000505.json |
+| 5000506 | 以神的名义 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: any={"is":2000384,"type":"char"}, !主角=1, !怪物=1, !动物=1<br>s2: any={"type":"char","is":2000728}, !动物=1, !怪物=1 | data/config/rite/5000506.json |
+| 5000507 | 夜的栖身地 | 黑街:[1,5] | 0 | 0 | 1 | 0 | s1: is=2000022<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, any={"cost.消耗品=":1,"!金币":1,"is":2000187} | data/config/rite/5000507.json |
+| 5000508 | 神圣的襄助 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: any={"all":{"is":2001071,"锁定祭司":1}}<br>s2: is=2000185<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000508.json |
+| 5000509 | 邪恶的线索 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: is=2000185<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000509.json |
+| 5000511 | 无法追溯的罪行 | 黑街:[1,5] | 0 | 0 | 1 | 0 | s1: is=2000137 | data/config/rite/5000511.json |
+| 5000512 | 为她们复仇 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: 决斗标记=1, is=2000164<br>s2: type=char, 决斗标记=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000512.json |
+| 5000513 | 黑暗的召唤 | 黑街:[1,5] | 1 | 0 | 1 | 0 | s1: is=2000185<br>s2: type=char, 主角=1<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000513.json |
+| 5000514 | 拜铃耶 | 黑街:[1,5] | 1 | 0 | 1 | 0 | s1: is=2000022<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"杀戮":1,"纵欲":1}, f:rare-s1.rare<==0 | data/config/rite/5000514.json |
+| 5000515 | 白蜜琥珀宝珠 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000187<br>s2: type=char, 诅咒=1 | data/config/rite/5000515.json |
+| 5000520 | 失落的珍宝 | 宫廷:[2,6] | 0 | 0 | 0 | 14 | s1: is=2000280 | data/config/rite/5000520.json |
+| 5000521 | 安苏亚妃来访 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000008<br>s2: type=char, any={"主角":1,"妻子":1}, !s3=1<br>s3: type=char, any={"主角":1,"妻子":1}, !s2=1<br>s4: type=item, 思潮=1, any={"is":2000541} | data/config/rite/5000521.json |
+| 5000522 | 安苏亚的请求I | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000008<br>s2: is=2000287<br>s3: type=item, cost.金币=10<br>s4: type=char | data/config/rite/5000522.json |
+| 5000523 | 安苏亚的请求 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000008<br>s2: is=2000287<br>s3: type=item, cost.情报>==3, rare>==2<br>s4: type=char | data/config/rite/5000523.json |
+| 5000524 | 安苏亚的请求 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000008<br>s2: is=2000287<br>s3: type=char<br>s4: any={"is":2000283,"cost.金币":10} | data/config/rite/5000524.json |
+| 5000525 | 静待时机 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000288<br>s2: is=2000287<br>s3: any={"is":2000913}<br>s4: type=char | data/config/rite/5000525.json |
+| 5000526 | 复仇的伊始 | 宫廷:[2,6] | 1 | 0 | 3 | 0 | s1: is=2000008<br>s2: is=2000024 | data/config/rite/5000526.json |
+| 5000527 | 玉碎珠沉 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000008 | data/config/rite/5000527.json |
+| 5000528 | 弑君（废弃） | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000024<br>s2: is=2000012, !追随者=1<br>s3: type=char, 反对>==1, !追随者=1<br>s4: type=char, 反对>==1, !追随者=1 | data/config/rite/5000528.json |
+| 5000529 | 弑君计划（废弃） | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000289, 开启=1<br>s2: type=item, is=2000281<br>s3: 主角=1, type=char<br>s4: type=char | data/config/rite/5000529.json |
+| 5000531 | 搜寻提尔亚遗物 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000005<br>s2: type=item, cost.金币=10<br>s3: type=char<br>s4: type=item, 思潮=1 | data/config/rite/5000531.json |
+| 5000532 | 弑君计划（废弃） | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000289, 开启=1<br>s2: type=item, is=2000281<br>s3: 主角=1, type=char<br>s4: type=char | data/config/rite/5000532.json |
+| 5000550 | 爱的伪证 | 宫廷:[2,6] | 0 | 0 | 0 | 7 | s1: is=2000290 | data/config/rite/5000550.json |
+| 5000551 | 勇武的证明 | 野外:[9,14] | 0 | 0 | 0 | 7 | s1: 主角=1, type=char<br>s2: type=item, cost.消耗品==1 | data/config/rite/5000551.json |
+| 5000552 | 萨达尔尼来访 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000009<br>s2: type=char, any={"主角":1,"妻子":1}, !s3=1<br>s3: type=char, any={"主角":1,"妻子":1}, !s2=1 | data/config/rite/5000552.json |
+| 5000553 | 欢愉的代价 | 宫廷:[2,6] | 0 | 0 | 1 | 1 | s1: is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, rare==4 | data/config/rite/5000553.json |
+| 5000554 | 无名的暗杀 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000342<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000554.json |
+| 5000555 | 无名的暗杀 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000342<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000555.json |
+| 5000556 | 无名的暗杀 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000342<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000556.json |
+| 5000557 | 无名的暗杀 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000342<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000557.json |
+| 5000558 | 保守秘密 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000176<br>s2: is=2000174, !s3=1<br>s3: is=2000174, !s2=1 | data/config/rite/5000558.json |
+| 5000559 | 潜入篡改 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: type=char, any={"主角":1,"追随者":1}<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000559.json |
+| 5000560 | 贿赂主管 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000291<br>s2: type=item, cost.金币=15 | data/config/rite/5000560.json |
+| 5000561 | 消除隐患 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000176<br>s2: is=2000285 | data/config/rite/5000561.json |
+| 5000562 | 真正的报偿 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000009<br>s2: type=char, any={"主角":1,"is":2000019}<br>s3: any={"is":2000283,"cost.金币":10}<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000562.json |
+| 5000563 | 貌合神离 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000009<br>s2: type=char, 主角=1 | data/config/rite/5000563.json |
+| 5000564 | 私情与背叛（废弃） | 野外:[9,14] | 0 | 0 | 0 | 0 | s1: is=2000012<br>s2: type=char, 主角=1 | data/config/rite/5000564.json |
+| 5000565 | 不留后患 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: is=2000012<br>s2: type=char<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5000565.json |
+| 5000566 | 一线生机 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: is=2000012<br>s2: type=char<br>s3: any={"is":2000412}<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000566.json |
+| 5000567 | 最后的疯狂 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000176<br>s2: any={"is":2000177} | data/config/rite/5000567.json |
+| 5000568 | 欢愉的代价 | 宫廷:[2,6] | 0 | 0 | 1 | 1 | s1: is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, rare==4 | data/config/rite/5000568.json |
+| 5000569 | 金子般的女人 | 宫廷:[2,6] | 0 | 0 | 1 | 7 | s1: is=2000010<br>s2: type=item, cost.金币=30<br>s3: type=item, 装备=1, 魅力=3<br>s4: type=item, 奇珍=1 | data/config/rite/5000569.json |
+| 5000570 | 迎接莎姬 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000010<br>s2: type=char | data/config/rite/5000570.json |
+| 5000571 | 欲望或野心 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000010<br>s2: type=char, 主角=1, !s3=1<br>s3: type=char, 主角=1, !s2=1<br>s4: any={"is":2000848} | data/config/rite/5000571.json |
+| 5000572 | 黄金体验 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000010<br>s2: type=char, 主角=1<br>s3: type=item, is=2000326, cost.疯狂=1 | data/config/rite/5000572.json |
+| 5000573 | 净事阉奴 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, any={"is":2000019,"隐匿":5}<br>s2: type=item, cost.金币=8<br>s3: type=char, !贵族=1, 社交=5<br>s4: type=item, is=2000416, cost.情报=1 | data/config/rite/5000573.json |
+| 5000574 | 苏丹的私生活 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, any={"is":2000019,"隐匿":5}<br>s2: type=item, cost.金币=8<br>s3: type=char, !贵族=1, 社交=5<br>s4: type=item, is=2000416, cost.情报=1 | data/config/rite/5000574.json |
+| 5000575 | 书店偶遇 | 商业区:[4,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2001020<br>s2: type=char<br>s3: type=item, cost.金币=5<br>s4: type=item, cost.消耗品=1, !金币=1 | data/config/rite/5000575.json |
+| 5000576 | 莎姬的噩梦 | 宫廷:[7,10] | 0 | 0 | 1 | 1 | s1: is=2001019<br>s2: any={"is":2000172,"all":{"is":2000913,"rare<":4}}<br>s3: any={"is":2000021,"all":{"is":2000913,"rare=":4}} | data/config/rite/5000576.json |
+| 5000577 | 苏丹的套子 | 商业区:[10,19] | 0 | 0 | 3 | 0 | s1: type=char, 生存>==5<br>s2: type=char, 智慧>==5<br>s3: type=char, 社交>==5<br>s4: type=item, cost.金币=5 | data/config/rite/5000577.json |
+| 5000578 | 狂乱的圣主 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: is=2001023<br>s2: type=char, any={"追随者":1,"主角":1}<br>s3: type=char, !is=2000024, 贵族=1<br>s4: is=2000545 | data/config/rite/5000578.json |
+| 5000579 | 星神的契约 | 宫廷:[7,10] | 0 | 0 | 1 | 1 | s1: is=2001019<br>s2: is=2001021<br>s3: type=char, !食客=1<br>s4: type=char | data/config/rite/5000579.json |
+| 5000580 | 向星星许愿 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, 你的圣主=1<br>s2: any={"is":2000848,"type":"sudan"} | data/config/rite/5000580.json |
+| 5000581 | 猎神 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: is=2001019<br>s2: any={"type":"char","is":2001021}<br>s3: type=char<br>s4: type=char | data/config/rite/5000581.json |
+| 5000582 | 焚星 | 神殿区:[2,10] | 0 | 0 | 5 | 3 | s1: is=2001019<br>s2: any={"天象":1,"all":{"type":"char","智慧>=":5}}<br>s3: any={"天象":1,"all":{"type":"char","智慧>=":5}}<br>s4: any={"天象":1,"all":{"type":"char","智慧>=":5}} | data/config/rite/5000582.json |
+| 5000583 | 星之衰 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2001031 | data/config/rite/5000583.json |
+| 5000584 | 黄金体验 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000010<br>s2: type=char, 主角=1<br>s3: type=item, is=2000326, cost.疯狂=1 | data/config/rite/5000584.json |
+| 5000600 | 城外的骚乱 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: is=2000062<br>s2: 主角=1, type=char<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000600.json |
+| 5000601 | 袭击者的巢穴 | 野外:[9,14] | 0 | 0 | 1 | 7 | s1: is=2000062<br>s2: type=char, 主角=1<br>s3: !主角=1, type=char<br>s4: !主角=1, type=char | data/config/rite/5000601.json |
+| 5000602 | 酒庄的归属 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000314<br>s2: type=char | data/config/rite/5000602.json |
+| 5000603 | 致命的邀约 | 上城区:[7,12] | 0 | 0 | 1 | 1 | s1: is=2000062<br>s2: 主角=1, type=char<br>s3: is=2000316, type=item | data/config/rite/5000603.json |
+| 5000604 | 刺杀 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000604.json |
+| 5000605 | 弑兄 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: is=2000314<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5000605.json |
+| 5000606 | 刺杀 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000606.json |
+| 5000607 | 酒庄主人再次造访 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000314<br>s2: type=char<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5000607.json |
+| 5000608 | 刺杀 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000608.json |
+| 5000610 | 少年的请求 | 自宅:[2,12] | 0 | 0 | 0 | 3 | s1: is=2000063<br>s2: type=char | data/config/rite/5000610.json |
+| 5000611 | 武术指导 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000611.json |
+| 5000612 | 唆使犯罪 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000612.json |
+| 5000613 | 狩猎实战 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000613.json |
+| 5000614 | 扎齐伊的请求 | 自宅:[2,12] | 0 | 0 | 0 | 3 | s1: is=2000063<br>s2: type=char, !is=2000063 | data/config/rite/5000614.json |
+| 5000615 | 社交教习 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000615.json |
+| 5000616 | 社交教习 | 上城区:[1,6] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000616.json |
+| 5000617 | 社交教习 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000617.json |
+| 5000618 | 扎齐伊的请求 | 自宅:[2,12] | 0 | 0 | 0 | 3 | s1: is=2000063<br>s2: type=char, !is=2000063 | data/config/rite/5000618.json |
+| 5000619 | 最后的解惑 | 商业区:[4,5] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063 | data/config/rite/5000619.json |
+| 5000620 | 最后的解惑 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063 | data/config/rite/5000620.json |
+| 5000621 | 最后的解惑 | 黑街:[2,5] | 0 | 0 | 1 | 0 | s1: is=2000063<br>s2: type=char, !is=2000063 | data/config/rite/5000621.json |
+| 5000622 | 未亡人的造访 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000062<br>s2: type=char, 主角=1 | data/config/rite/5000622.json |
+| 5000623 | 年轻望族的仰慕 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: is=2000063<br>s2: type=item, 思潮=1 | data/config/rite/5000623.json |
+| 5000624 | 寡妇的友谊 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: is=2000062<br>s2: type=item, 思潮=1 | data/config/rite/5000624.json |
+| 5000630 | 受伤的白犀牛 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: is=2000328<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000630.json |
+| 5000631 | 阿迪莱的战书 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: is=2000061<br>s2: type=char | data/config/rite/5000631.json |
+| 5000632 | 王狮猎场 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000061<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: any={"is":2001139,"all":{"type":"item","cost.金币":10}} | data/config/rite/5000632.json |
+| 5000633 | 处置阿迪莱 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: is=2000061<br>s2: any={"all":{"type":"sudan","纵欲":1,"f:rare-s1.rare<=":0},"is":2001139} | data/config/rite/5000633.json |
+| 5000634 | 一件礼物，一个诅咒 | 上城区:[7,12] | 0 | 0 | 0 | 0 | s1: type=char, 主角=1 | data/config/rite/5000634.json |
+| 5000635 | 少女审视自己 | 上城区:[7,12] | 1 | 0 | 0 | 0 | s1: is=2000061 | data/config/rite/5000635.json |
+| 5000636 | 少女审视自己 | 上城区:[7,12] | 1 | 0 | 0 | 0 | s1: is=2000061 | data/config/rite/5000636.json |
+| 5000637 | 勇行 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: is=2000332<br>s2: is=2000061<br>s3: type=char<br>s4: type=char | data/config/rite/5000637.json |
+| 5000638 | 女战士的挑战 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: is=2000061<br>s2: type=char<br>s3: type=item, cost.消耗品==1 | data/config/rite/5000638.json |
+| 5000639 | 处置阿迪莱 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000061<br>s2: any={"all":{"type":"sudan","纵欲":1,"f:rare-s1.rare<=":0}} | data/config/rite/5000639.json |
+| 5000640 | 探访奈费勒 | 上城区:[7,12] | 0 | 0 | 0 | 14 | s1: is=2000312<br>s2: type=char, 主角=1<br>s3: type=item, 读物=1, rare>==2 | data/config/rite/5000640.json |
+| 5000641 | 密会 | 上城区:[7,12] | 0 | 0 | 1 | 14 | s1: 主角=1, type=char<br>s2: type=item, is=2000753<br>s3: is=2000312<br>s4: type=sudan, f:rare-s3.rare<==0, any={"杀戮":1,"纵欲":1} | data/config/rite/5000641.json |
+| 5000650 | 虚荣作祟 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000055<br>s2: 主角=1, type=char<br>s3: type=sudan, f:rare-s1.rare<==0, any={"纵欲":1,"杀戮":1} | data/config/rite/5000650.json |
+| 5000651 | 血的妆造 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000055<br>s2: is=2000115<br>s3: 主角=1, type=char<br>s4: type=sudan, rare<==3, 杀戮=1 | data/config/rite/5000651.json |
+| 5000652 | 黄金的赠礼 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000055<br>s2: 主角=1, type=char<br>s3: type=item, rare==4, any={"奇珍":1,"饰品":1}, !is=2001022<br>s4: any={"all":{"rare=":3,"type":"sudan","杀戮":1}} | data/config/rite/5000652.json |
+| 5000653 | 迫不及待 | 上城区:[7,12] | 0 | 0 | 0 | 3 | s1: is=2000055<br>s2: 主角=1, type=char<br>s3: type=item, 思潮=1 | data/config/rite/5000653.json |
+| 5000654 | 她的丈夫 | 上城区:[7,12] | 0 | 0 | 1 | 1 | s1: is=2000055<br>s2: is=2000327<br>s3: 主角=1, type=char<br>s4: type=sudan, f:rare-s1.rare<==0, 杀戮=1 | data/config/rite/5000654.json |
+| 5000660 | 探索未知绿洲 | 野外:[1,6] | 0 | 0 | 3 | 3 | s1: is=2000069<br>s2: type=item, cost.金币=3<br>s3: type=char<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000660.json |
+| 5000661 | 暗潮涌动 | 野外:[9,14] | 1 | 0 | 3 | 0 | s1: is=2000364<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0 | data/config/rite/5000661.json |
+| 5000662 | 一个人的绝地探索 | 野外:[9,14] | 1 | 0 | 3 | 0 | s1: is=2000069 | data/config/rite/5000662.json |
+| 5000663 | 绝地探索 | 野外:[1,6] | 1 | 0 | 5 | 0 | s1: is=2000069<br>s2: type=char<br>s3: type=item, cost.消耗品==1 | data/config/rite/5000663.json |
+| 5000664 | 暗潮涌动 | 野外:[9,14] | 1 | 0 | 3 | 0 | s1: is=2000365<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0 | data/config/rite/5000664.json |
+| 5000665 | 麦娜尔的道别 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000069<br>s2: type=item, cost.金币=5 | data/config/rite/5000665.json |
+| 5000666 | 远方的乐土 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=item, cost.金币==1 | data/config/rite/5000666.json |
+| 5000667 | 苏丹的捉弄 | 宫廷:[2,6] | 0 | 0 | 1 | 7 | s1: type=char, 质子=1, is=2000350<br>s2: type=char, 主角=1<br>s3: type=sudan, f:rare-s1.rare<==0 | data/config/rite/5000667.json |
+| 5000668 | 修建暗渠 | 野外:[9,14] | 0 | 0 | 7 | 0 | s1: type=char<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.金币=8 | data/config/rite/5000668.json |
+| 5000669 | 祈雨献祭 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 黑暗知识=1<br>s2: type=char<br>s3: any={"type":"char","任意处置":1}, !主角=1, !怪物=1, !动物=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000669.json |
+| 5000670 | 兴修宫殿 | 上城区:[7,12] | 0 | 0 | 3 | 7 | s1: type=item, cost.金币=10 | data/config/rite/5000670.json |
+| 5000672 | 严厉刑罚 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 智慧=5<br>s2: type=char, 体魄=5 | data/config/rite/5000672.json |
+| 5000673 | 仁慈的许诺 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 魅力=5<br>s2: type=item, cost.金币=5 | data/config/rite/5000673.json |
+| 5000674 | 促成谈判 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 社交=6<br>s2: type=item, cost.金币=6 | data/config/rite/5000674.json |
+| 5000675 | 强硬驱逐 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 战斗=6<br>s2: type=char, 战斗=6 | data/config/rite/5000675.json |
+| 5000676 | 核查漏洞 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, 智慧=8<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000676.json |
+| 5000677 | 神圣审判 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, any={"魔力":8,"正教的信徒":1} | data/config/rite/5000677.json |
+| 5000678 | 苏丹的质询 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, cost.金币=8 | data/config/rite/5000678.json |
+| 5000679 | 诸地暴乱 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: type=item, is=2000377<br>s2: any={"all":{"type":"item","is":2000172}}<br>s3: type=char<br>s4: type=char | data/config/rite/5000679.json |
+| 5000680 | 法尔达克的友谊 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000350, 质子=1<br>s2: type=item, 思潮=1 | data/config/rite/5000680.json |
+| 5000681 | 修建暗渠 | 野外:[9,14] | 0 | 0 | 7 | 0 | s1: type=char<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.金币=8 | data/config/rite/5000681.json |
+| 5000682 | 祈雨献祭 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, 黑暗知识=1<br>s2: type=char<br>s3: any={"type":"char","任意处置":1}, !主角=1, !怪物=1, !动物=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000682.json |
+| 5000683 | 悄无声息的离去 | 野外:[9,14] | 1 | 0 | 3 | 0 | s1: is=2000069 | data/config/rite/5000683.json |
+| 5000684 | 以身试刃 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000056<br>s2: type=sudan, 杀戮=1, rare<==3 | data/config/rite/5000684.json |
+| 5000685 | 实地走访 | 上城区:[1,6] | 0 | 0 | 7 | 3 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000685.json |
+| 5000686 | 初步调查 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.金币=3<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000686.json |
+| 5000687 | 深入调查 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: type=char, is=2000056<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000687.json |
+| 5000688 | 收服盖斯 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000056<br>s2: type=item, any={"is":2000412} | data/config/rite/5000688.json |
+| 5000701 | 冒险的冲动（废弃） | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000054<br>s2: type=char, !s3=1, !s4=1<br>s3: type=char, !s2=1, !s4=1<br>s4: type=char, !s2=1, !s3=1 | data/config/rite/5000701.json |
+| 5000702 | 无尽黄沙 | 野外:[9,14] | 0 | 0 | 7 | 2 | s1: is=2000054, counter.7000228>==1<br>s2: type=char, 生存>==4<br>s3: type=char, 战斗>==4<br>s4: type=char, 智慧>==4 | data/config/rite/5000702.json |
+| 5000703 | 狂风峡谷 | 野外:[9,14] | 0 | 0 | 3 | 2 | s1: is=2000054, counter.7000228>==1<br>s2: type=char, 魔力>==5<br>s3: type=char, 弓箭=1<br>s4: type=char, 生存>==4 | data/config/rite/5000703.json |
+| 5000704 | 暗影神殿 | 野外:[9,14] | 0 | 0 | 3 | 2 | s1: is=2000054, counter.7000228>==1<br>s2: any={"type":"char","任意处置":1}, !怪物=1, !动物=1<br>s3: type=char<br>s4: type=char | data/config/rite/5000704.json |
+| 5000705 | 妖精森林 | 野外:[9,14] | 0 | 0 | 3 | 2 | s1: is=2000054, counter.7000228>==1<br>s2: type=char, 生存>==4<br>s3: type=char, 战斗>==4<br>s4: type=char, 智慧>==4 | data/config/rite/5000705.json |
+| 5000706 | 哲巴尔的友谊 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000054<br>s2: type=item, 思潮=1 | data/config/rite/5000706.json |
+| 5000707 | 末日火山（废弃） | 野外:[9,14] | 0 | 0 | 0 | 0 | s1: is=2000317<br>s2: is=2000318<br>s3: is=2000319<br>s4: is=2000320 | data/config/rite/5000707.json |
+| 5000708 | 火山魔龙 | 野外:[9,14] | 0 | 0 | 0 | 10 | s1: type=char<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5000708.json |
+| 5000709 | 刀剑问答 | 自宅:[2,6] | 0 | 0 | 1 | 2 | s1: is=2000054<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000709.json |
+| 5000710 | 护花使者 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 贵族=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000710.json |
+| 5000711 | 足以传世的画像 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000064<br>s2: is=2000333 | data/config/rite/5000711.json |
+| 5000712 | 一桩趣事 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, any={"主角":1,"妻子":1} | data/config/rite/5000712.json |
+| 5000713 | 靠不住的盟友 | 上城区:[1,6] | 1 | 1 | 1 | 0 | s1: is=2000064<br>s2: any={"all":{"type":"item","is":2000767}}<br>s3: type=sudan, f:rare-s1.rare<==0 | data/config/rite/5000713.json |
+| 5000714 | 花花公子的收服（废弃） | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000064<br>s2: type=item, 思潮=1 | data/config/rite/5000714.json |
+| 5000715 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5000715.json |
+| 5000716 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5000716.json |
+| 5000717 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5000717.json |
+| 5000718 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5000718.json |
+| 5000719 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5000719.json |
+| 5000720 | 宰相的召见 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000349<br>s2: type=char, 主角=1 | data/config/rite/5000720.json |
+| 5000721 | 无故缺勤的臣子 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000356, 锁定穆尔台兹=1<br>s2: type=char<br>s3: type=item, cost.金币=3 | data/config/rite/5000721.json |
+| 5000722 | 回报宰相 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, is=2000373 | data/config/rite/5000722.json |
+| 5000723 | 宰相的召见 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000349<br>s2: type=char, 主角=1 | data/config/rite/5000723.json |
+| 5000724 | 虫豸怎敢 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000356, 锁定穆尔台兹=1<br>s2: type=char | data/config/rite/5000724.json |
+| 5000725 | 终结苦痛 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000356, 锁定穆尔台兹=1<br>s2: type=char<br>s3: type=sudan, rare<==2, 杀戮=1 | data/config/rite/5000725.json |
+| 5000726 | 回报宰相 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, any={"is":2000375} | data/config/rite/5000726.json |
+| 5000727 | 放过他 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000356, 锁定穆尔台兹=1<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000727.json |
+| 5000728 | 宰相的召见 | 宫廷:[2,6] | 1 | 0 | 0 | 0 | s1: is=2000349<br>s2: type=char | data/config/rite/5000728.json |
+| 5000729 | 散尽家财 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000062<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000729.json |
+| 5000730 | 回报宰相 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=10 | data/config/rite/5000730.json |
+| 5000731 | 项目投资 | 上城区:[1,6] | 0 | 0 | 4 | 4 | s1: is=2000352<br>s2: type=char<br>s3: type=item, cost.金币=[5,10], 金币>==5<br>s4: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5000731.json |
+| 5000732 | 项目投资·二 | 上城区:[1,6] | 0 | 0 | 4 | 4 | s1: is=2000352<br>s2: type=char<br>s3: type=item, cost.金币=[5,10], 金币>==5<br>s4: type=sudan, rare<==2, any={"奢靡":1,"杀戮":1} | data/config/rite/5000732.json |
+| 5000733 | 收服玛希尔 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000352 | data/config/rite/5000733.json |
+| 5000734 | 长期研究 | 上城区:[1,6] | 0 | 0 | 7 | 1 | s1: is=2000352<br>s2: type=char<br>s3: type=item, cost.金币=[5,20]<br>s4: any={"all":{"type":"item","is":2001024}} | data/config/rite/5000734.json |
+| 5000735 | 火山魔龙-决战 | 野外:[9,14] | 1 | 0 | 1 | 0 | s1: is=2000332<br>s2: type=char, 屠龙者=1<br>s3: type=char, 屠龙者=1<br>s4: type=char, 屠龙者=1 | data/config/rite/5000735.json |
+| 5000736 | 踏入黑夜（废弃） | 黑街:[1,9] | 0 | 0 | 1 | 7 | s1: is=2000022<br>s2: type=char, 主角=1<br>s3: any={"type":"char","任意处置":1}, !怪物=1, !动物=1<br>s4: type=sudan, any={"杀戮":1,"纵欲":1}, f:rare-s3.rare<==0 | data/config/rite/5000736.json |
+| 5000737 | 活人献祭 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000462<br>s2: type=char, any={"密教徒":1,"黑暗知识":1}<br>s3: any={"!怪物":1,"妖精":1,"荆棘戒指":1}, !主角=1, !食客=1, !动物=1<br>s4: type=sudan, any={"杀戮":1,"all":{"纵欲":1,"counter.7000083<":1}}, f:rare-s3.rare<==0 | data/config/rite/5000737.json |
+| 5000738 | 召唤邪物 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000489<br>s2: type=char, 黑暗知识=1<br>s3: type=char, 密教徒=1<br>s4: type=char, 密教徒=1 | data/config/rite/5000738.json |
+| 5000739 | 看书-怪诞的书（废弃） | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000464<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000739.json |
+| 5000740 | 血炼熔炉 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000490<br>s2: type=char, 黑暗知识=1<br>s3: type=item, 武器=1, !血肉附魔=1<br>s4: any={"type":"char","任意处置":1}, !主角=1 | data/config/rite/5000740.json |
+| 5000741 | 获得禁忌的古书 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000741.json |
+| 5000742 | 魔力增长仪式 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000491<br>s2: type=char, 黑暗知识=1<br>s3: type=item, cost.2000463=1<br>s4: any={"type":"char","任意处置":1}, !主角=1 | data/config/rite/5000742.json |
+| 5000743 | 黑暗火锅仪式 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000466<br>s2: type=char, any={"黑暗知识":1,"密教徒":1}<br>s3: type=char, any={"黑暗知识":1,"密教徒":1}<br>s4: type=char, any={"黑暗知识":1,"密教徒":1} | data/config/rite/5000743.json |
+| 5000744 | 看书-禁忌的古书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000465<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000744.json |
+| 5000745 | 研究神秘的锅 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000466<br>s2: type=char | data/config/rite/5000745.json |
+| 5000746 | 传播密教理念 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=char, !密教徒=1, any={"!动物":1,"is":2000461}, !怪物=1, !已安利=1<br>s3: type=item, 思潮=1, any={"is":2000412}<br>s4: type=item, 空屋=1, any={"s3.is":2000412} | data/config/rite/5000746.json |
+| 5000747 | 处置女邪术师 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000190<br>s2: type=char, 主角=1<br>s3: type=sudan, !s4=1, 纵欲=1, rare<==3<br>s4: type=sudan, !s3=1, 杀戮=1, rare<==3 | data/config/rite/5000747.json |
+| 5000748 | 奈布哈尼决斗（废弃） | 上城区:[1,6] | 1 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 贵族=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000748.json |
+| 5000749 | 一起玩个够 | 上城区:[1,6] | 1 | 0 | 1 | 1 | s1: is=2000064<br>s2: type=char, 主角=1<br>s3: type=sudan, 奢靡=1, f:rare-s1.rare<==0<br>s4: type=item, cost.金币==10 | data/config/rite/5000749.json |
+| 5000750 | 黄沙的背后 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2000707<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000750.json |
+| 5000751 | 呼啸的山风 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2000708<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000751.json |
+| 5000752 | 夺宝奇兵 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2000709<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000752.json |
+| 5000753 | 妖精国游记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2000710<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000753.json |
+| 5000754 | 将军夜猎 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000054<br>s2: type=item, is=2000712<br>s3: type=char, 主角=1<br>s4: type=sudan, 征服=1, rare<==2 | data/config/rite/5000754.json |
+| 5000755 | 一件残酷的礼物 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000711<br>s2: type=char, 追随者=1, !主角=1, !动物=1 | data/config/rite/5000755.json |
+| 5000756 | 狰狞美味 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: type=char, !怪物=1, !动物=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000756.json |
+| 5000757 | 一件残酷的礼物 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000711<br>s2: type=char, is=2000054 | data/config/rite/5000757.json |
+| 5000758 | 一件凶煞的商品 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000711 | data/config/rite/5000758.json |
+| 5000759 | 意料中的买家 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000054 | data/config/rite/5000759.json |
+| 5000760 | 黑街的拳斗士？ | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: is=2000730 | data/config/rite/5000760.json |
+| 5000761 | 您也不想别人知道吧 | 上城区:[1,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000054<br>s2: type=item, !s3=1, !s4=1, is=2000731<br>s3: type=item, !s2=1, !s4=1, is=2000731<br>s4: type=item, !s2=1, !s3=1, is=2000731 | data/config/rite/5000761.json |
+| 5000762 | 公开的拳斗 | 商业区:[10,19] | 0 | 0 | 1 | 4 | s1: type=char, is=2000054<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1, 情报=1 | data/config/rite/5000762.json |
+| 5000763 | 黑街扬名 | 黑街:[2,5] | 0 | 0 | 1 | 1 | s1: type=item, is=2000731 | data/config/rite/5000763.json |
+| 5000764 | 有人准备挑战你 | 自宅:[2,12] | 1 | 0 | 5 | 0 | s1: is=2000064<br>s2: type=item, is=2000751 | data/config/rite/5000764.json |
+| 5000765 | 护花使者 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 贵族=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000765.json |
+| 5000766 | 避避风头 | 野外:[1,14] | 1 | 0 | 3 | 0 | s1: is=2000064 | data/config/rite/5000766.json |
+| 5000767 | 肉体展览 | 上城区:[1,6] | 0 | 0 | 1 | 2 | s1: is=2000770<br>s2: is=2000851<br>s3: is=2000852<br>s4: is=2000064 | data/config/rite/5000767.json |
+| 5000768 | 奴隶交易（废弃） | 上城区:[1,6] | 1 | 0 | 1 | 2 | s1: is=2000772<br>s2: type=item, cost.金币=[3,6]<br>s3: type=sudan, 奢靡=1, f:rare-s1.rare<==0 | data/config/rite/5000768.json |
+| 5000769 | 奴隶交易(废弃) | 上城区:[1,6] | 1 | 0 | 1 | 2 | s1: is=2000772<br>s2: type=item, cost.金币=[3,6]<br>s3: type=sudan, 奢靡=1, f:rare-s1.rare<==0 | data/config/rite/5000769.json |
+| 5000770 | 深夜访客 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000771, 芮尔=1<br>s2: any={"is":2010005,"all":{"is":2000382,"cost.可堆叠=":1},"cost.金币=":1} | data/config/rite/5000770.json |
+| 5000771 | 浪子的思绪 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000064<br>s2: type=char, 主角=1 | data/config/rite/5000771.json |
+| 5000772 | 那个女人 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000772<br>s2: is=2000064 | data/config/rite/5000772.json |
+| 5000773 | 酩酊一醉 | 商业区:[10,19] | 0 | 0 | 1 | 6 | s1: is=2000064<br>s2: type=item, cost.金币=10 | data/config/rite/5000773.json |
+| 5000774 | 欢愉之馆的新人 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000772 | data/config/rite/5000774.json |
+| 5000775 | 浪子的思绪 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000064<br>s2: type=char, 主角=1 | data/config/rite/5000775.json |
+| 5000776 | 不是故意 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000083, cost.不满=1 | data/config/rite/5000776.json |
+| 5000777 | 奢侈的欢欣 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000772<br>s2: type=item, cost.金币=15 | data/config/rite/5000777.json |
+| 5000778 | 久违的清净 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000083, cost.不满=1 | data/config/rite/5000778.json |
+| 5000779 | 未被满足的渴求 | 自宅:[2,12] | 0 | 0 | 1 | 10 | s1: type=char, is=2000772<br>s2: type=item, 空屋=1<br>s3: type=sudan, f:rare-s2.rare<==0, 奢靡=1 | data/config/rite/5000779.json |
+| 5000780 | 另谋出路 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: type=char, is=2000772 | data/config/rite/5000780.json |
+| 5000781 | 懂的都懂 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000775<br>s2: type=char, any={"男性":1,"女性":1}, !怪物=1 | data/config/rite/5000781.json |
+| 5000782 | 决裂 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 贵族=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5000782.json |
+| 5000783 | 金屋藏娇 | 奇珍:12 | 1 | 0 | 5 | 0 | s1: is=2000772, 纳入收藏=1<br>s2: type=item, 金屋藏娇=1<br>s3: type=item, cost.金币=3 | data/config/rite/5000783.json |
+| 5000784 | 微小的麻烦 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000773<br>s2: type=char, any={"追随者":1,"主角":1}<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000784.json |
+| 5000785 | 精致的礼物 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000778<br>s2: type=char, any={"追随者":1,"主角":1}, !怪物=1, !动物=1 | data/config/rite/5000785.json |
+| 5000786 | 火中的自由 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: is=2000773<br>s2: type=char, any={"追随者":1,"主角":1}<br>s3: type=char, any={"追随者":1,"all":{"s2":1,"any":{"怪物":1,"动物":1}}}<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000786.json |
+| 5000787 | 探访 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000773<br>s2: type=char, is=2000064<br>s3: type=char, 主角=1<br>s4: type=item, 思潮=1 | data/config/rite/5000787.json |
+| 5000788 | 你所能做到的 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000773<br>s2: type=char, any={"女性":1,"is":2000064}<br>s3: type=char, any={"女性":1,"is":2000064}<br>s4: type=char, any={"女性":1,"is":2000064} | data/config/rite/5000788.json |
+| 5000789 | 纺织教室 | 上城区:[7,12] | 0 | 0 | 5 | 0 | s1: is=2000773<br>s2: type=char, 智慧>==4 | data/config/rite/5000789.json |
+| 5000790 | 蓝巾 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000773<br>s2: type=char, 主角=1<br>s3: type=item, any={"is":2000541} | data/config/rite/5000790.json |
+| 5000791 | 黑街勇士讨伐战 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000784<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000791.json |
+| 5000792 | 都城武馆征伐战 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000785<br>s2: type=char, 主角=1, !已装备=1<br>s3: type=item, cost.消耗品==1, !金币=1, 情报=1 | data/config/rite/5000792.json |
+| 5000793 | 天下武学验证战 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000786<br>s2: is=2000787<br>s3: type=char, 主角=1<br>s4: type=char, is=2000064 | data/config/rite/5000793.json |
+| 5000794 | 天下武学验证战？ | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: is=2000789<br>s2: type=char, is=2000064<br>s3: type=char, 主角=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000794.json |
+| 5000795 | 最受欢迎的男人 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: is=2000791, 蒙面苏丹=1<br>s2: type=char, is=2000064<br>s3: type=char, 主角=1, 魅力>==5<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000795.json |
+| 5000796 | 苏丹的游戏 | 商业区:[10,19] | 0 | 0 | 3 | 5 | s1: is=2000024<br>s2: type=char, 妓女=1, !is=2000792<br>s3: type=char, 妓女=1, !is=2000792<br>s4: type=char, 贵族=1, 男性=1, !主角=1, !银趴绝缘者=1 | data/config/rite/5000796.json |
+| 5000797 | 游戏的准备 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: is=2000792<br>s2: type=item, cost.金币==30<br>s3: type=item, cost.金币==10 | data/config/rite/5000797.json |
+| 5000798 | 你的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000024<br>s2: type=char, any={"is":2000082}<br>s3: type=char, 贵族=1, 男性=1, !主角=1, !银趴绝缘者=1<br>s4: type=char, !贵族=1, 男性=1, !主角=1, !银趴绝缘者=1 | data/config/rite/5000798.json |
+| 5000799 | 寻欢作乐的高手 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 主角=1 | data/config/rite/5000799.json |
+| 5000800 | 你的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000024<br>s2: type=char, any={"is":2000082}<br>s3: type=char, 贵族=1, 男性=1, !主角=1, !银趴绝缘者=1<br>s4: type=char, !贵族=1, 男性=1, !主角=1, !银趴绝缘者=1 | data/config/rite/5000800.json |
+| 5000801 | 朱娜的游戏 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: is=2000080<br>s2: any={"all":{"type":"sudan","!s5.苏丹卡":1,"!s8.苏丹卡":1,"!s11.苏丹卡":1,"!s12.苏丹卡":1}}<br>s3: type=char, 被覆者=1<br>s4: type=char, !银趴绝缘者=1, !怪物=1, !动物=1, !主角=1, !is=2000024 | data/config/rite/5000801.json |
+| 5000802 | 贾丽拉的游戏 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: is=2000081<br>s2: type=char, 主角=1<br>s3: type=sudan, rare<==3<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000802.json |
+| 5000803 | 夏玛的游戏 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: any={"all":{"type":"sudan","!s3.苏丹卡":1,"!s5.苏丹卡":1,"!s7.苏丹卡":1,"!s9.苏丹卡":1}}<br>s2: type=char, is=2000082<br>s3: any={"all":{"type":"sudan","!s1.苏丹卡":1,"!s5.苏丹卡":1,"!s7.苏丹卡":1,"!s9.苏丹卡":1}}<br>s4: type=char, is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000803.json |
+| 5000804 | 索拉薇儿的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 3 | s1: is=2000080<br>s2: type=char, 索拉薇儿的客人=1, !银趴绝缘者=1<br>s3: type=char, 索拉薇儿的客人=1, !银趴绝缘者=1<br>s4: type=char, 索拉薇儿的客人=1, !银趴绝缘者=1 | data/config/rite/5000804.json |
+| 5000805 | 浪子的悲哀 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000064<br>s2: type=char, 主角=1<br>s3: type=item, 思潮=1, !is=2000728 | data/config/rite/5000805.json |
+| 5000806 | 朱娜的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 3 | s1: is=2000080<br>s2: type=char, is=2000064<br>s3: type=char, 朱娜的客人=1, !银趴绝缘者=1<br>s4: type=char, 朱娜的客人=1, !银趴绝缘者=1 | data/config/rite/5000806.json |
+| 5000807 | 贾丽拉的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 3 | s1: is=2000080<br>s2: type=char, is=2000064<br>s3: type=char, 贾丽拉的客人=1, !银趴绝缘者=1<br>s4: type=char, 贾丽拉的客人=1, !银趴绝缘者=1 | data/config/rite/5000807.json |
+| 5000808 | 夏玛的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 3 | s1: is=2000080<br>s2: type=char, is=2000064<br>s3: type=char, 夏玛的客人=1, !银趴绝缘者=1<br>s4: type=char, 夏玛的客人=1, !银趴绝缘者=1 | data/config/rite/5000808.json |
+| 5000809 | 索拉薇儿的游戏 | 商业区:[10,19] | 1 | 0 | 1 | 3 | s1: is=2000080<br>s2: type=char, is=2000064<br>s3: type=char, 索拉薇儿的客人=1, !银趴绝缘者=1<br>s4: type=char, 索拉薇儿的客人=1, !银趴绝缘者=1 | data/config/rite/5000809.json |
+| 5000810 | 帮派斗争 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: is=2000771, 芮尔=1<br>s2: type=item, is=2000965<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币==5 | data/config/rite/5000810.json |
+| 5000811 | 与豺狼帮合作 | 奇珍:10 | 1 | 0 | 7 | 0 | s1: is=2001057, 纳入收藏=1 | data/config/rite/5000811.json |
+| 5000812 | 芮尔的匪帮 | 奇珍:11 | 0 | 0 | 1 | 0 | s1: type=item, 芮尔手下=1, is=2000965, counter.7000465<=1<br>s2: type=item, 芮尔手下=1, is=2000966, counter.7000465<=1<br>s3: type=item, 芮尔手下=1, is=2000967, counter.7000465<=1<br>s4: type=item, 芮尔手下=1, is=2000968, counter.7000465<=1 | data/config/rite/5000812.json |
+| 5000813 | 追猎豺狼 | 黑街:[2,5] | 0 | 0 | 2 | 7 | s1: type=char, 芮尔=1, is=2000771<br>s2: type=item, 芮尔手下=1, is=2000965<br>s3: type=char<br>s4: type=item, cost.金币==5 | data/config/rite/5000813.json |
+| 5000814 | 肝胆相照 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=char, 芮尔=1, is=2000771<br>s2: type=char, 主角=1<br>s3: type=char, !主角=1 | data/config/rite/5000814.json |
+| 5000815 | 我要去妓院！ | 黑街:[2,5] | 0 | 0 | 1 | 7 | s1: type=char, 芮尔=1, is=2000771<br>s2: type=item, 芮尔手下=1<br>s3: type=char, any={"主角":1,"is":2000064}<br>s4: type=item, cost.金币==20 | data/config/rite/5000815.json |
+| 5000816 | 惊天大姐案 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, 芮尔=1, is=2000771<br>s2: type=item, 芮尔手下=1<br>s3: type=char<br>s4: type=char | data/config/rite/5000816.json |
+| 5000817 | 我，白嫖 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000792<br>s2: type=char<br>s3: type=item, cost.金币==20<br>s4: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5000817.json |
+| 5000818 | 追查猎奴人 | 黑街:[2,5] | 0 | 0 | 1 | 7 | s1: type=char, is=2000771, 芮尔=1<br>s2: type=char<br>s3: type=item, cost.金币==20<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000818.json |
+| 5000819 | 赤裸的茶会 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=char, is=2000771, 芮尔=1<br>s2: type=char, 主角=1<br>s3: type=char, !动物=1<br>s4: type=char, !主角=1, !动物=1 | data/config/rite/5000819.json |
+| 5000820 | 从实招来 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2000771, 芮尔=1<br>s2: type=char, is=2000971<br>s3: type=item, is=2000973<br>s4: type=item, is=2000974 | data/config/rite/5000820.json |
+| 5000821 | 宰相的暗示 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=item, is=2000977<br>s2: type=char, is=2000349 | data/config/rite/5000821.json |
+| 5000822 | 猎团余党 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2000978<br>s2: type=item, is=2000978<br>s3: type=char, 芮尔=1, is=2000771<br>s4: type=item, 芮尔手下=1 | data/config/rite/5000822.json |
+| 5000823 | 猎团余党 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2000978<br>s2: type=item, is=2000978<br>s3: type=char, 芮尔=1, is=2000771<br>s4: type=item, 芮尔手下=1 | data/config/rite/5000823.json |
+| 5000824 | 猎团余党 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2000978<br>s2: type=item, is=2000978<br>s3: type=char, 芮尔=1, is=2000771<br>s4: type=item, 芮尔手下=1 | data/config/rite/5000824.json |
+| 5000825 | 乱军 | 野外:[1,14] | 0 | 0 | 1 | 7 | s1: type=item, is=2000979<br>s2: type=item, is=2000980<br>s3: type=item, is=2000981<br>s4: type=item, is=2000968 | data/config/rite/5000825.json |
+| 5000826 | 白银马鞍 | 自宅:[2,14] | 0 | 0 | 1 | 1 | s1: type=item, is=2000983<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5000826.json |
+| 5000827 | 蛮野之心 | 自宅:[2,14] | 0 | 0 | 1 | 1 | s1: type=item, is=2000982<br>s2: type=char, 芮尔=1, is=2000771 | data/config/rite/5000827.json |
+| 5000828 | 纠纷的任务 | 黑街:[1,5] | 0 | 0 | 1 | 7 | s1: type=char, is=2000013<br>s2: type=char, is=2000991<br>s3: type=sudan, !征服=1, any={"all":{"s7":1,"rare<=":3}}<br>s4: type=item, cost.金币=[10,20] | data/config/rite/5000828.json |
+| 5000829 | 故国的复仇 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: type=char, is=2000013<br>s2: type=char, is=2000992<br>s3: type=item, is=2000993<br>s4: type=item, cost.剑客蓄势=[1,10] | data/config/rite/5000829.json |
+| 5000830 | 讨伐无道 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: type=char, is=2000013<br>s2: type=char, is=2000992<br>s3: type=item, is=2000993<br>s4: type=item, cost.剑客蓄势=[1,10] | data/config/rite/5000830.json |
+| 5000831 | 烂纸头 | 野外:[1,14] | 0 | 0 | 1 | 3 | s1: type=item, is=2000998<br>s2: type=item, is=2000999<br>s3: type=item, is=2001000<br>s4: any={"all":{"type":"item","cost.金币":3},"is":2000123}, s1=1 | data/config/rite/5000831.json |
+| 5000832 | 建造图录 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000998<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000832.json |
+| 5000833 | 花园景观残本 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000999<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000833.json |
+| 5000834 | 寝食单 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001000<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5000834.json |
+| 5000835 | 锐草之原 | 野外:[1,14] | 0 | 0 | 3 | 0 | s1: type=char, 生存>==4<br>s2: type=char, 魔力>==5<br>s3: type=char, 智慧>==5<br>s4: type=item, cost.金币=10 | data/config/rite/5000835.json |
+| 5000836 | 六尺之下 | 野外:[1,14] | 1 | 0 | 4 | 0 | s1: type=char, is=2000013 | data/config/rite/5000836.json |
+| 5000837 | 迷失于灰烬中 | 野外:[1,14] | 1 | 0 | 4 | 0 | s1: type=char, is=2000013 | data/config/rite/5000837.json |
+| 5000838 | 儿子的索要 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000013<br>s2: type=item, is=2001001 | data/config/rite/5000838.json |
+| 5000839 | 你最重要的 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=char, is=2000013<br>s2: any={"type":"sudan","all":{"type":"item","any":{"is":2000689,"cost.金币=":1}}} | data/config/rite/5000839.json |
+| 5000840 | 剑之名 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000013<br>s2: type=char, 主角=1 | data/config/rite/5000840.json |
+| 5000841 | 刀剑问答 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000013<br>s2: type=item, is=2001002<br>s3: type=item, any={"is":2000997}<br>s4: type=char, 主角=1 | data/config/rite/5000841.json |
+| 5000842 | 誓言的呼唤 | 黑街:[2,5] | 0 | 0 | 1 | 0 | s1: type=char, is=2000992<br>s2: type=char, 金血之证=1 | data/config/rite/5000842.json |
+| 5000843 | 暗杀 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000013<br>s2: type=char, any={"剑客暗杀目标":1,"all":{"counter.7000527>=":1,"妻子":1}} | data/config/rite/5000843.json |
+| 5000844 | 趋炎附势之徒 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, any={"贵族":1,"is":2000013}, !动物=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, is=2000913 | data/config/rite/5000844.json |
+| 5000845 | 忠贞正义之徒 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, any={"贵族":1,"is":2000013}, !动物=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, is=2000913 | data/config/rite/5000845.json |
+| 5000846 | 迷信盲从之徒 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, any={"贵族":1,"is":2000013}, !动物=1<br>s2: type=item, is=2000913 | data/config/rite/5000846.json |
+| 5000847 | 欺软怕硬之徒 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, any={"贵族":1,"is":2000013}, !动物=1<br>s2: any={"type":"char"}, 部队=1<br>s3: any={"type":"char"}, 部队=1<br>s4: any={"type":"char"}, 部队=1 | data/config/rite/5000847.json |
+| 5000848 | 视财如命之徒 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, any={"贵族":1,"is":2000013}, !动物=1<br>s2: type=item, cost.金币==15<br>s3: type=item, is=2000913 | data/config/rite/5000848.json |
+| 5000849 | 故国的旗帜 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000913<br>s2: type=item, any={"is":2001024} | data/config/rite/5000849.json |
+| 5000850 | 敦请圣像 | 野外:[2,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2001024<br>s2: any={"all":{"type":"item","any":{"is":2000848}}}<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000850.json |
+| 5000851 | 回收金血之证 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000013<br>s2: 金血之证=1 | data/config/rite/5000851.json |
+| 5000852 | 侍奉君主 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan, rare<==3, 纵欲=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5000852.json |
+| 5000853 | 以一敌百 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: 苏丹的精兵=1, 部队=1<br>s3: type=char, 主角=1<br>s4: type=sudan, rare<==3, 征服=1 | data/config/rite/5000853.json |
+| 5000854 | 无妄之灾 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: is=2000896, 被覆者=1<br>s3: type=char, !动物=1, !怪物=1, 贵族=1<br>s4: type=char, 主角=1 | data/config/rite/5000854.json |
+| 5000855 | 共襄盛举 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: type=item, cost.金币==10<br>s2: type=item, is=2001058, cost.倒计时=[1,5] | data/config/rite/5000855.json |
+| 5000856 | 终极羞辱 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000856.json |
+| 5000857 | 夜间工作 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000857.json |
+| 5000858 | 夜间工作 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000858.json |
+| 5000859 | 夜间工作 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000859.json |
+| 5000860 | 夜间工作 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000860.json |
+| 5000861 | 夜间工作 | 商业区:[10,19] | 1 | 0 | 0 | 0 | s1: type=char, is=2001059<br>s2: type=char, 主角=1<br>s3: is=2000081<br>s4: is=2000064, 奈布哈尼准备银趴=1 | data/config/rite/5000861.json |
+| 5000862 | 寻欢作乐的高手 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000064<br>s2: type=char, 主角=1 | data/config/rite/5000862.json |
+| 5000863 | 偷窃圣血 | 神殿区:[2,10] | 0 | 0 | 1 | 14 | s1: type=char, is=2000352<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5000863.json |
+| 5001001 | 权力的游戏 | 宫廷:1 | 1 | 1 | 1 | 0 | s1: type=item, cost.谗言=[1,999]<br>s2: is=2000024, 上朝=1<br>s3: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}}, !选妃标记=1<br>s4: type=char, 贵族=1, !决斗标记=1, !主角=1, !妻子=1, !变身公主=1, !is=2000762 | data/config/rite/5001001.json |
+| 5001002 | 苏丹的戏弄 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, cost.金币=13<br>s2: type=item, is=2000170, cost.耐心=[1,3] | data/config/rite/5001002.json |
+| 5001003 | 苏丹的戏弄（废弃） | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, cost.影响力=1<br>s2: type=item, 耐心=1<br>s3: type=item, 耐心=1 | data/config/rite/5001003.json |
+| 5001004 | 群龙无首 | 宫廷:1 | 1 | 1 | 1 | 0 | s1: type=item, 思潮=1, 主旋律=1, !rite=5001001<br>s2: type=item, rare<==3, cost.情报=3<br>s3: type=item, rare<==3, cost.思潮=3, !is=2000913<br>s4: type=item, any={"is":2000913} | data/config/rite/5001004.json |
+| 5001005 | 宫廷决斗 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, 决斗标记=1<br>s2: type=char, 贵族=1<br>s3: type=item, cost.消耗品==1 | data/config/rite/5001005.json |
+| 5001006 | 探访监狱 | 宫廷:[7,10] | 0 | 0 | 0 | 0 | s1: type=item, 关闭=1, is=2000310<br>s2: type=item, cost.金币=2 | data/config/rite/5001006.json |
+| 5001007 | 卑贱囚牢 | 宫廷:[7,10] | 0 | 0 | 1 | 1 | s1: type=char, 囚徒=1, !贵族=1<br>s2: type=char, 囚徒=1, !贵族=1<br>s3: type=char, 囚徒=1, !贵族=1<br>s4: type=char, 囚徒=1, !贵族=1 | data/config/rite/5001007.json |
+| 5001008 | 囚牢 | 宫廷:[7,10] | 0 | 0 | 1 | 1 | s1: type=char, 囚徒=1, is=2000346<br>s2: type=char, 囚徒=1, is=2000347<br>s3: type=char, 囚徒=1, is=2000546<br>s4: type=char, 囚徒=1 | data/config/rite/5001008.json |
+| 5001009 | 黑牢深处（废弃） | 宫廷:[7,10] | 0 | 0 | 1 | 1 | s1: type=char, 囚徒=1<br>s2: type=char, 囚徒=1<br>s3: type=char, 囚徒=1<br>s4: type=char, 囚徒=1 | data/config/rite/5001009.json |
+| 5001010 | 黑街线人 | 黑街:[2,5] | 0 | 0 | 3 | 0 | s1: cost.金币=5, type=item | data/config/rite/5001010.json |
+| 5001011 | 无名的暗杀 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000360<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1 | data/config/rite/5001011.json |
+| 5001012 | 哲瓦德来访 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000057<br>s2: type=char<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5001012.json |
+| 5001013 | 藏宝地 | 上城区:[1,6] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5001013.json |
+| 5001014 | 脱罪的希望 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=item, cost.金币=10 | data/config/rite/5001014.json |
+| 5001015 | 盖斯家的协助 | 上城区:[1,6] | 1 | 0 | 1 | 0 | s1: type=item, is=2000092, 恶名==1 | data/config/rite/5001015.json |
+| 5001016 | 苏丹的戏弄 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, any={"all":{"女性":1,"小筹":1,"counter.7000837<":1}}<br>s2: type=item, is=2001051, cost.耐心=[1,4] | data/config/rite/5001016.json |
+| 5001017 | 苏丹的欢愉 | 宫廷:[2,6] | 1 | 0 | 7 | 0 | s1: type=char, 侍奉苏丹=1 | data/config/rite/5001017.json |
+| 5001018 | 苏丹的戏弄 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, 战斗>==4<br>s2: type=item, is=2001052, cost.耐心=[1,5] | data/config/rite/5001018.json |
+| 5001019 | 和野狗对决 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, is=2000424<br>s2: type=char, 侍奉苏丹2=1<br>s3: type=item, cost.消耗品==1 | data/config/rite/5001019.json |
+| 5001020 | 和囚犯对决 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000425<br>s2: type=char, 侍奉苏丹2=1<br>s3: type=item, cost.消耗品==1 | data/config/rite/5001020.json |
+| 5001021 | 和狮子对决 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, is=2000426<br>s2: type=char, 侍奉苏丹2=1<br>s3: type=item, !金币=1, cost.消耗品==1 | data/config/rite/5001021.json |
+| 5001022 | 和巨人对决 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000427<br>s2: type=char, 侍奉苏丹2=1<br>s3: type=item, cost.消耗品==1 | data/config/rite/5001022.json |
+| 5001023 | 改朝换代 | 结局:1 | 0 | 0 | 1 | 0 | s1: type=item, is=2000901, 苏丹的精兵=1<br>s2: type=item, is=2000902, 苏丹的精兵=1<br>s3: type=item, is=2000903, 苏丹的精兵=1<br>s4: type=item, is=2000904, 苏丹的精兵=1 | data/config/rite/5001023.json |
+| 5001024 | 调查罪证 | 上城区:[1,12] | 0 | 0 | 3 | 5 | s1: type=char, is=2000067<br>s2: type=item, is=2000558<br>s3: type=char<br>s4: type=char | data/config/rite/5001024.json |
+| 5001025 | 破坏证据 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, cost.罪证==1<br>s2: type=char<br>s3: type=char | data/config/rite/5001025.json |
+| 5001026 | 论罪与辩护 | 宫廷:[2,10] | 0 | 0 | 1 | 3 | s1: type=item, cost.罪证=[1,99]<br>s2: type=char, 贵族=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币==[1,50] | data/config/rite/5001026.json |
+| 5001027 | 交钱赎罪 | 宫廷:[2,10] | 0 | 0 | 1 | 5 | s1: type=item, cost.金币=40 | data/config/rite/5001027.json |
+| 5001028 | 进献妻妾 | 宫廷:[2,10] | 0 | 0 | 1 | 5 | s1: type=char, any={"妻子":1,"侧室":1,"新妻":1} | data/config/rite/5001028.json |
+| 5001029 | 宫廷决斗 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, 决斗标记=1<br>s2: type=char, is=2000897<br>s3: type=char, is=2000898<br>s4: type=char | data/config/rite/5001029.json |
+| 5001100 | 宫中传信 | 宫廷:[2,6] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=char, 主角=1<br>s3: type=item, any={"cost.金币":10,"is":2000283}<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5001100.json |
+| 5001101 | 遍体鳞伤的尸体 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000129 | data/config/rite/5001101.json |
+| 5001102 | 阿图娜尔的约定 | 宫廷:[2,6] | 0 | 0 | 1 | 1 | s1: type=char, is=2000129<br>s2: type=char, 主角=1<br>s3: type=item, any={"cost.金币":10,"is":2000283}<br>s4: type=item, any={"is":2000172,"未被苏丹所知":1,"破除封锁":1} | data/config/rite/5001102.json |
+| 5001103 | 不归之路 | 宫廷:[2,6] | 1 | 0 | 3 | 0 | s1: is=2000129<br>s2: is=2000024 | data/config/rite/5001103.json |
+| 5001104 | 香消玉殒 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129 | data/config/rite/5001104.json |
+| 5001501 | 浴场里的消息 | 上城区:[1,6] | 0 | 1 | 1 | 0 | s1: type=char, any={"贵族":1,"all":{"!贵族":1,"s2.is":2000524}}<br>s2: type=item, any={"cost.金币":1,"is":2000524}<br>s3: type=item, any={"all":{"cost.消耗品=":1,"!金币":1},"is":2000680} | data/config/rite/5001501.json |
+| 5001502 | 蒸汽社交 | 上城区:[1,6] | 0 | 0 | 1 | 0 | s1: type=char, 贵族=1, !主角=1, !妻子=1, !is=2000024<br>s2: type=char, 贵族=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, any={"杀戮":1,"纵欲":1}, f:rare-s1.rare<==0 | data/config/rite/5001502.json |
+| 5001503 | 浴场约会 | 上城区:[1,6] | 0 | 0 | 1 | 1 | s1: type=char, 妻子=1, 激情=1<br>s2: 主角=1, type=char<br>s3: type=sudan, f:rare-s1.rare<==0, any={"纵欲":1,"杀戮":1}<br>s4: is=2000192 | data/config/rite/5001503.json |
+| 5001504 | 解释 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=sudan, rare<==3, 杀戮=1 | data/config/rite/5001504.json |
+| 5002001 | 医馆 | 商业区:1 | 0 | 0 | 1 | 0 | s1: type=char, any={"受伤":1,"生病":1}, !怪物=1<br>s2: type=item, cost.金币=1 | data/config/rite/5002001.json |
+| 5002002 | 疾病发作 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, any={"受伤":1,"生病":1}, !怪物=1, !is=2000699<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002002.json |
+| 5002003 | 欢愉之馆 | 商业区:2 | 0 | 0 | 1 | 1 | s1: is=2000080, 妓女=1, !追随者=1<br>s2: type=item, cost.金币=[2,4]<br>s3: 主角=1, type=char<br>s4: type=sudan, any={"纵欲":1,"杀戮":1,"奢靡":1}, f:rare-s1.rare<==0 | data/config/rite/5002003.json |
+| 5002004 | 欢愉之馆 | 商业区:2 | 0 | 0 | 1 | 1 | s1: is=2000081, 妓女=1, !追随者=1<br>s2: type=item, cost.金币=[4,8]<br>s3: 主角=1, type=char<br>s4: type=sudan, any={"纵欲":1,"杀戮":1,"奢靡":1}, f:rare-s1.rare<==0 | data/config/rite/5002004.json |
+| 5002005 | 欢愉之馆 | 商业区:2 | 0 | 0 | 1 | 1 | s1: is=2000082, 妓女=1, !追随者=1<br>s2: type=item, cost.金币=[8,16]<br>s3: 主角=1, type=char<br>s4: type=sudan, any={"纵欲":1,"杀戮":1,"奢靡":1}, f:rare-s1.rare<==0 | data/config/rite/5002005.json |
+| 5002006 | 书店营业 | 商业区:3 | 0 | 1 | 1 | 0 | s1: type=char<br>s2: type=char, !主角=1, !追随者=1, 爱书人=1<br>s3: type=item, any={"cost.金币":1,"is":2000525}<br>s4: type=item, any={"all":{"cost.消耗品=":1,"!金币":1},"is":2000680} | data/config/rite/5002006.json |
+| 5002007 | 书店密会 | 商业区:[4,5] | 0 | 0 | 1 | 1 | s1: type=char, 激情=1, 妻子=1<br>s2: 主角=1, type=char<br>s3: type=sudan, 纵欲=1, f:rare-s1.rare<==0<br>s4: is=2000200 | data/config/rite/5002007.json |
+| 5002008 | 书店门口的乞丐 | 商业区:[4,5] | 0 | 0 | 0 | 2 | s1: is=2000161<br>s2: type=item, 读物=1 | data/config/rite/5002008.json |
+| 5002009 | 还书的少女 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: is=2000161<br>s2: type=item, 读物=1, 赠予少女=1<br>s3: type=sudan, f:rare-s1.rare<==0, any={"杀戮":1,"纵欲":1,"奢靡":1}<br>s4: type=item, cost.金币=5 | data/config/rite/5002009.json |
+| 5002010 | 装备商人 | 商业区:6 | 0 | 0 | 0 | 0 | s1: type=item, any={"装备":1,"淫具":1}, rare==1, 装备商人=1, !已拥有=1, !部落遗物=1<br>s2: type=item, any={"装备":1,"淫具":1}, rare==2, 装备商人=1, !已拥有=1, !部落遗物=1<br>s3: type=item, any={"装备":1,"淫具":1}, rare==2, 装备商人=1, !已拥有=1, !部落遗物=1<br>s4: type=item, any={"装备":1,"淫具":1}, rare==3, 装备商人=1, !已拥有=1, !部落遗物=1 | data/config/rite/5002010.json |
+| 5002011 | 装备商人 | 商业区:6 | 0 | 0 | 0 | 0 | s1: type=item, any={"装备":1,"淫具":1}, rare==1, !已拥有=1, 武器存货=1, !部落遗物=1<br>s2: type=item, any={"装备":1,"淫具":1}, rare==2, !已拥有=1, 武器存货=1, !部落遗物=1<br>s3: type=item, any={"装备":1,"淫具":1}, rare==2, !已拥有=1, 武器存货=1, !部落遗物=1<br>s4: type=item, any={"装备":1,"淫具":1}, rare==3, !已拥有=1, 武器存货=1, !部落遗物=1 | data/config/rite/5002011.json |
+| 5002012 | 服装商人 | 商业区:7 | 0 | 0 | 0 | 0 | s1: type=item, 服装=1, rare==1, !已拥有=1, !部落遗物=1<br>s2: type=item, 服装=1, rare==2, !已拥有=1, !部落遗物=1<br>s3: type=item, 服装=1, rare==2, !已拥有=1, !部落遗物=1<br>s4: type=item, 服装=1, rare==3, !已拥有=1, !部落遗物=1 | data/config/rite/5002012.json |
+| 5002013 | 服装商人 | 商业区:7 | 0 | 0 | 0 | 0 | s1: type=item, 服装=1, rare==1, !已拥有=1, 服装存货=1, !部落遗物=1<br>s2: type=item, 服装=1, rare==2, !已拥有=1, 服装存货=1, !部落遗物=1<br>s3: type=item, 服装=1, rare==2, !已拥有=1, 服装存货=1, !部落遗物=1<br>s4: type=item, 服装=1, rare==3, !已拥有=1, 服装存货=1, !部落遗物=1 | data/config/rite/5002013.json |
+| 5002014 | 饰品商人 | 商业区:8 | 0 | 0 | 0 | 0 | s1: type=item, 饰品=1, rare==1, !已拥有=1, !部落遗物=1<br>s2: type=item, 饰品=1, rare==2, !已拥有=1, !部落遗物=1<br>s3: type=item, 饰品=1, rare==2, !已拥有=1, !部落遗物=1<br>s4: type=item, 饰品=1, rare==3, !已拥有=1, !部落遗物=1 | data/config/rite/5002014.json |
+| 5002015 | 饰品商人 | 商业区:8 | 0 | 0 | 0 | 0 | s1: type=item, 饰品=1, rare==1, !已拥有=1, 饰品存货=1, !部落遗物=1<br>s2: type=item, 饰品=1, rare==2, !已拥有=1, 饰品存货=1, !部落遗物=1<br>s3: type=item, 饰品=1, rare==2, !已拥有=1, 饰品存货=1, !部落遗物=1<br>s4: type=item, 饰品=1, rare==3, !已拥有=1, 饰品存货=1, !部落遗物=1 | data/config/rite/5002015.json |
+| 5002016 | 神秘商人 | 商业区:9 | 0 | 0 | 0 | 1 | s1: type=item, 淫具=1, rare==1, !已拥有=1, !部落遗物=1<br>s2: type=item, 淫具=1, rare==2, !已拥有=1, !部落遗物=1<br>s3: type=item, 淫具=1, rare==2, !已拥有=1, !部落遗物=1<br>s4: type=item, 淫具=1, rare==3, !已拥有=1, !部落遗物=1 | data/config/rite/5002016.json |
+| 5002017 | 甜蜜皮鞭 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: is=2000081, 激情=1<br>s2: type=item, cost.金币=4<br>s3: 主角=1, type=char<br>s4: type=sudan, 纵欲=1, rare<==2 | data/config/rite/5002017.json |
+| 5002018 | 边缘行者 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: is=2000080, 激情=1<br>s2: 主角=1, type=char<br>s3: type=sudan, 纵欲=1, rare<==3<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002018.json |
+| 5002019 | 天体聚会 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: is=2000082, 激情=1<br>s2: 主角=1, type=char<br>s3: type=char, 魅力>==5<br>s4: type=char, 魅力>==5 | data/config/rite/5002019.json |
+| 5002020 | 奇淫巧技-苏丹的欢愉 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: is=2000024<br>s2: is=2000082, 激情=1<br>s3: is=2000081, 激情=1<br>s4: is=2000080, 激情=1 | data/config/rite/5002020.json |
+| 5002021 | 奇淫巧技-刺杀苏丹（废弃） | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: is=2000024, 刺杀事件=1<br>s2: is=2000012, !追随者=1<br>s3: 刺杀事件=1, !主角=1<br>s4: 刺杀事件=1, !主角=1 | data/config/rite/5002021.json |
+| 5002022 | 为朱娜赎身 | 商业区:[10,19] | 0 | 0 | 1 | 10 | s1: is=2000080, 激情=3<br>s2: 主角=1, type=char<br>s3: type=item, cost.金币=10<br>s4: type=sudan, any={"奢靡":1,"杀戮":1}, f:rare-s1.rare<==0 | data/config/rite/5002022.json |
+| 5002023 | 畸情的呼唤 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: is=2000080<br>s2: 主角=1, type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002023.json |
+| 5002024 | 处理尸体 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000081<br>s2: type=item, is=2000378<br>s3: type=char<br>s4: type=char | data/config/rite/5002024.json |
+| 5002025 | 决斗 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, is=2000379<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002025.json |
+| 5002026 | 女王做妾 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: is=2000081, 锁定妓女2=1<br>s2: 主角=1, type=char<br>s3: type=item, cost.金币=20<br>s4: type=sudan, any={"奢靡":1,"杀戮":1}, f:rare-s1.rare<==0 | data/config/rite/5002026.json |
+| 5002027 | 女王的朋友 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000081<br>s2: any={"all":{"is":2000024,"魔力戒指":1}}<br>s3: any={"all":{"type":"sudan","杀戮":1,"f:rare-s2.rare<=":0}}<br>s4: type=item, 思潮=1, any={"is":2000412}, !s1.密教徒=1 | data/config/rite/5002027.json |
+| 5002028 | 孤注一掷 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: is=2000082, 锁定妓女1=1 | data/config/rite/5002028.json |
+| 5002029 | 夏玛的葬礼 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=item, any={"all":{"rare=":4,"装备":1},"is":2000266} | data/config/rite/5002029.json |
+| 5002030 | 紧急结婚 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: is=2000082, 锁定妓女1=1<br>s2: 主角=1, type=char<br>s3: type=item, cost.金币=30<br>s4: type=sudan, 奢靡=1, f:rare-s1.rare<==0 | data/config/rite/5002030.json |
+| 5002031 | 师出有名 | 野外:[1,6] | 0 | 0 | 3 | 20 | s1: type=char, is=2000397<br>s2: type=item, is=2000398<br>s3: 部队=1, any={"type":"char","is":"2000554"}<br>s4: type=char | data/config/rite/5002031.json |
+| 5002032 | 怒火蔓延 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000082<br>s2: cost.金币=[1,20] | data/config/rite/5002032.json |
+| 5002033 | 我的主人 | 宫廷:[2,6] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char, is=2000082 | data/config/rite/5002033.json |
+| 5002034 | 升华 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000082 | data/config/rite/5002034.json |
+| 5002035 | 欢愉之馆 | 商业区:2 | 0 | 0 | 1 | 1 | s1: is=2000772, 妓女=1, !追随者=1<br>s2: type=item, cost.金币=[4,8]<br>s3: 主角=1, type=char<br>s4: type=sudan, any={"纵欲":1,"杀戮":1,"奢靡":1}, f:rare-s1.rare<==0 | data/config/rite/5002035.json |
+| 5002036 | 淘书 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: is=2000199<br>s2: type=char<br>s3: type=item, cost.金币=3<br>s4: type=item, any={"all":{"cost.消耗品=":1,"!金币":1}} | data/config/rite/5002036.json |
+| 5002037 | 淘书 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: is=2000199<br>s2: type=char<br>s3: type=item, cost.金币=3<br>s4: type=item, any={"all":{"cost.消耗品=":1,"!金币":1}} | data/config/rite/5002037.json |
+| 5002038 | 淘书 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: is=2000199<br>s2: type=char<br>s3: type=item, cost.金币=3<br>s4: type=item, any={"all":{"cost.消耗品=":1,"!金币":1}} | data/config/rite/5002038.json |
+| 5002501 | 食人的野狗 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: is=2000279<br>s2: any={"type":"char","all":{"type":"item","cost.金币":8}}<br>s3: type=char<br>s4: type=char | data/config/rite/5002501.json |
+| 5002502 | 被流民侵占的宅邸 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: is=2000195<br>s2: type=char<br>s3: type=char<br>s4: type=item, any={"all":{"cost.消耗品=":1,"!金币":1},"cost.金币":8} | data/config/rite/5002502.json |
+| 5002503 | 远近闻名的哈马尔兄弟 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: is=2000196<br>s2: is=2000197<br>s3: type=char<br>s4: type=char | data/config/rite/5002503.json |
+| 5002504 | 神赐骏马 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002504.json |
+| 5002505 | 袭杀凶狮 | 野外:[1,6] | 0 | 0 | 1 | 2 | s1: is=2000202<br>s2: type=char<br>s3: type=char<br>s4: type=item, any={"cost.消耗品=":1,"cost.金币":1} | data/config/rite/5002505.json |
+| 5002506 | 商人的遗物 | 野外:[1,6] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002506.json |
+| 5002507 | 凶狮肆虐 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, !主角=1, 追随者=1 | data/config/rite/5002507.json |
+| 5002508 | 狼王的踪迹 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002508.json |
+| 5002509 | 狼穴恶战 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 征服=1, rare<==2 | data/config/rite/5002509.json |
+| 5002510 | 下水道的鳄鱼 | 野外:[1,6] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002510.json |
+| 5002511 | 毒蛇山谷 | 野外:[1,6] | 0 | 0 | 2 | 0 | s1: type=char<br>s2: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5002511.json |
+| 5002512 | 赌马 | 野外:[1,6] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, 坐骑=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币=[1,2] | data/config/rite/5002512.json |
+| 5002513 | 赌马 | 野外:[1,6] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, 坐骑=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币=[1,4] | data/config/rite/5002513.json |
+| 5002514 | 赌马 | 野外:[1,6] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, 坐骑=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币=[1,6] | data/config/rite/5002514.json |
+| 5002515 | 赌马 | 野外:[1,6] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, 坐骑=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.金币=[1,8] | data/config/rite/5002515.json |
+| 5002516 | 喂养凶狮 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: is=2000202<br>s2: type=item, cost.金币=1 | data/config/rite/5002516.json |
+| 5002517 | 山狮最后的索求 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: is=2000202<br>s2: type=char<br>s3: type=char<br>s4: type=item, any={"cost.消耗品=":1} | data/config/rite/5002517.json |
+| 5003001 | 不谐之音 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: cost.不满=[1,3], is=2000083<br>s2: 妻子=1, type=char<br>s3: 主角=1, type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003001.json |
+| 5003002 | 远行访友 | 自宅:[2,12] | 1 | 0 | 5 | 0 | s1: 妻子=1, type=char | data/config/rite/5003002.json |
+| 5003003 | 纾解压力 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: 妻子=1, type=char<br>s2: cost.金币=[1,5], type=item | data/config/rite/5003003.json |
+| 5003004 | 风暴预兆 | 自宅:[2,12] | 1 | 0 | 3 | 0 | s1: 妻子=1, type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003004.json |
+| 5003005 | 积郁成疾 | 自宅:[2,12] | 1 | 0 | 3 | 0 | s1: 妻子=1, type=char | data/config/rite/5003005.json |
+| 5003006 | 沉入梦中 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char<br>s2: 妻子=1, type=char | data/config/rite/5003006.json |
+| 5003007 | 放你自由 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: 妻子=1, type=char<br>s2: is=2000014<br>s3: type=item, cost.金币=[1,9999] | data/config/rite/5003007.json |
+| 5003008 | 面对现实 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: 妻子=1, type=char<br>s2: is=2000014<br>s3: 主角=1, type=char, !s4=1<br>s4: 主角=1, type=char, !s3=1 | data/config/rite/5003008.json |
+| 5003009 | 处刑 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: 妻子=1, type=char<br>s2: is=2000014<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0 | data/config/rite/5003009.json |
+| 5003010 | 酝酿中的阴谋 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: cost.恶名=[1,3], is=2000092<br>s2: type=char<br>s3: type=char<br>s4: type=item | data/config/rite/5003010.json |
+| 5003011 | 风向变化 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, 贵族=1, !追随者=1, 支持>==1, !主角=1<br>s2: type=char, 贵族=1, !追随者=1, 支持>==1, !主角=1<br>s3: type=char, 贵族=1, !追随者=1, 支持>==1, !主角=1<br>s4: type=char, 贵族=1, !追随者=1, 支持>==1, !主角=1 | data/config/rite/5003011.json |
+| 5003012 | 流言四起 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.影响力=[1,2] | data/config/rite/5003012.json |
+| 5003013 | 正义的挑战 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 贵族=1, !追随者=1, rare>==2, !主角=1<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5003013.json |
+| 5003014 | 闷棍 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char<br>s2: type=char, 追随者=1<br>s3: type=char, 追随者=1 | data/config/rite/5003014.json |
+| 5003015 | 复仇的利刃 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 主角=1, type=char | data/config/rite/5003015.json |
+| 5003016 | 饥不择食 | 上城区:[1,6] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=sudan, 纵欲=1, rare<==2 | data/config/rite/5003016.json |
+| 5003017 | 超级大撒币 | 黑街:[2,5] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=sudan, 奢靡=1, rare<==2<br>s4: type=item, cost.金币=10 | data/config/rite/5003017.json |
+| 5003018 | 荣誉杀戮 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=sudan, 杀戮=1, rare<==2 | data/config/rite/5003018.json |
+| 5003019 | 孤高之人 | 野外:[1,6] | 0 | 0 | 2 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=sudan, 征服=1, rare<==2 | data/config/rite/5003019.json |
+| 5003020 | 宫廷事务 | 宫廷:[2,6] | 0 | 1 | 1 | 1 | s1: type=char, 贵族=1<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003020.json |
+| 5003021 | 皇家图书馆 | 自宅:[2,12] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003021.json |
+| 5003022 | 出卖苦力 | 商业区:[10,19] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003022.json |
+| 5003023 | 在宴会上演出 | 上城区:[1,6] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003023.json |
+| 5003024 | 黑吃黑 | 黑街:[2,5] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003024.json |
+| 5003025 | 酒馆拳斗 | 商业区:[10,19] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003025.json |
+| 5003026 | 狩猎游戏 | 野外:[1,6] | 0 | 1 | 1 | 1 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5003026.json |
+| 5003027 | 逃离苏丹的游戏 | 结局:2 | 0 | 0 | 1 | 0 | s1: type=item, 未被苏丹所知=1<br>s2: type=item, any={"破除封锁":1} | data/config/rite/5003027.json |
+| 5004001 | 探索黑街 | 黑街:1 | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: any={"is":2000191} | data/config/rite/5004001.json |
+| 5004002 | 黑街的居民 | 黑街:[2,5] | 0 | 0 | 0 | 1 | s1: type=char, 黑街居民=1, !追随者=1<br>s2: type=item, cost.金币>==1 | data/config/rite/5004002.json |
+| 5004003 | 丢失的钱财 | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: type=item, cost.金币=[1,2] | data/config/rite/5004003.json |
+| 5004004 | 捉贼人的调查 | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: is=2000067<br>s2: type=item, cost.黑街声望=[1,3]<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5004004.json |
+| 5004005 | 轻罪 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: !s2=1, !s3=1, !s4=1, type=sudan, 征服=1, rare==1<br>s2: type=item, !s1=1, !s3=1, !s4=1, cost.金币=2<br>s3: type=item, !s1=1, !s2=1, !s4=1, cost.影响力=1<br>s4: !s1=1, !s2=1, !s3=1, type=char, rare=1 | data/config/rite/5004005.json |
+| 5004006 | 中罪 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: !s2=1, !s3=1, !s4=1, type=sudan, 征服=1, rare<==2<br>s2: type=item, !s1=1, !s3=1, !s4=1, cost.金币=5<br>s3: type=item, !s1=1, !s2=1, !s4=1, cost.影响力=2<br>s4: !s1=1, !s2=1, !s3=1, type=char, rare=2 | data/config/rite/5004006.json |
+| 5004007 | 重罪 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: !s2=1, !s3=1, !s4=1, type=sudan, 征服=1, rare<==3<br>s2: type=item, !s1=1, !s3=1, !s4=1, cost.金币=10<br>s3: type=item, !s1=1, !s2=1, !s4=1, cost.影响力=3<br>s4: !s1=1, !s2=1, !s3=1, type=char, rare=3 | data/config/rite/5004007.json |
+| 5004010 | 扒手团体（废弃） | 黑街:[2,5] | 0 | 0 | 1 | 0 | s1: is=2000303<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5004010.json |
+| 5004012 | 你不再被黑街信任 | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: is=2000191 | data/config/rite/5004012.json |
+| 5004013 | 组织犯罪 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=item, 犯罪计划=1, !已拥有=1<br>s2: type=item, 犯罪计划=1, !已拥有=1<br>s3: type=item, s1=1, 黑街声望=1, f:s1.犯罪号召-黑街声望<==0<br>s4: type=item, s2=1, 黑街声望=1, f:s2.犯罪号召-黑街声望<==0 | data/config/rite/5004013.json |
+| 5004014 | 盗窃范例 | 上城区:[7,12] | 0 | 0 | 1 | 10 | s1: is=2000307<br>s2: type=char, 魅力=4, 男性=1<br>s3: type=char, 贵族=1<br>s4: 体魄=3, type=char | data/config/rite/5004014.json |
+| 5004015 | 恐吓范例 | 上城区:[7,12] | 0 | 0 | 1 | 1 | s1: is=2000308<br>s2: type=char, 贵族=1, 反对=1, !追随者=1<br>s3: 隐匿=2, type=char<br>s4: 生存=3, type=char | data/config/rite/5004015.json |
+| 5004501 | 向教会求助 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, is=2000021<br>s2: type=char, any={"主角":1,"妻子":1} | data/config/rite/5004501.json |
+| 5004502 | 虔信的审视 | 神殿区:[2,10] | 0 | 0 | 1 | 1 | s1: type=item, any={"is":2000725}<br>s2: type=char, 主角=1<br>s3: type=char | data/config/rite/5004502.json |
+| 5004503 | 忏悔 | 神殿区:[2,10] | 0 | 0 | 1 | 2 | s1: any={"all":{"is":2001167}}<br>s2: type=item, any={"is":2000725}<br>s3: type=item, cost.金币=3 | data/config/rite/5004503.json |
+| 5004504 | 仪式的助手 | 神殿区:[2,10] | 0 | 0 | 3 | 3 | s1: type=char, !怪物=1, !动物=1, 魅力>==5<br>s2: type=char, !怪物=1, !动物=1, 魅力>==5<br>s3: type=char, !怪物=1, !动物=1, 魅力>==5 | data/config/rite/5004504.json |
+| 5004505 | 整理智库 | 神殿区:[2,10] | 0 | 0 | 3 | 3 | s1: type=char, !怪物=1, !动物=1, 智慧>==5<br>s2: type=char, !怪物=1, !动物=1, 智慧>==5<br>s3: type=char, !怪物=1, !动物=1, 智慧>==5 | data/config/rite/5004505.json |
+| 5004506 | 招募信徒 | 神殿区:[2,10] | 0 | 0 | 3 | 3 | s1: type=char, !怪物=1, !动物=1, 社交>==5<br>s2: type=char, !怪物=1, !动物=1, 社交>==5<br>s3: type=char, !怪物=1, !动物=1, 社交>==5 | data/config/rite/5004506.json |
+| 5004507 | 神像游行 | 神殿区:[2,10] | 0 | 0 | 3 | 3 | s1: type=char, !怪物=1, !动物=1, 体魄>==5<br>s2: type=char, !怪物=1, !动物=1, 体魄>==5<br>s3: type=char, !怪物=1, !动物=1, 体魄>==5 | data/config/rite/5004507.json |
+| 5004508 | 监守自盗 | 神殿区:[2,10] | 0 | 0 | 3 | 3 | s1: type=char, !怪物=1, !动物=1, 魅力>==5, 战斗>==5<br>s2: type=char, !怪物=1, !动物=1, 魅力>==5, 战斗>==5<br>s3: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5004508.json |
+| 5004509 | 不再被认可的信仰 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5004509.json |
+| 5004510 | 温和拘禁 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=char, 追随者=1, !怪物=1, !动物=1<br>s2: type=char, 追随者=1, !怪物=1, !动物=1 | data/config/rite/5004510.json |
+| 5004511 | 念念不忘 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1 | data/config/rite/5004511.json |
+| 5004512 | 全民公敌 | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, !怪物=1, !动物=1<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5004512.json |
+| 5004513 | 领受神恩 | 神殿区:[2,10] | 0 | 0 | 1 | 1 | s1: type=char, any={"all":{"is":2001071,"!追随者":1,"锁定祭司":1}}<br>s2: type=char, !怪物=1, !动物=1<br>s3: type=item, cost.金币=[5,10]<br>s4: any={"all":{"s2.主角":1,"s1.is":2000021,"type":"sudan","rare<=":3,"any":{"奢靡":1,"纵欲":1,"杀戮":1}}} | data/config/rite/5004513.json |
+| 5004514 | 神啊，为什么 | 神殿区:[2,10] | 0 | 0 | 1 | 7 | s1: type=char, is=2000021<br>s2: type=char, 主角=1<br>s3: type=item, any={"正神的面容":1,"邪神的面容":1}<br>s4: type=item, 思潮=1, any={"is":2000412} | data/config/rite/5004514.json |
+| 5004515 | 密室中的祈祷 | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000021<br>s2: type=char, 主角=1<br>s3: type=sudan, 纵欲=1, rare<==3 | data/config/rite/5004515.json |
+| 5004516 | 秘密幽会 | 神殿区:[2,10] | 0 | 0 | 1 | 2 | s1: type=char, is=2000021<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, any={"is":2000844} | data/config/rite/5004516.json |
+| 5004517 | 炎日天平 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=char, 被抓=1, any={"is":2000021,"主角":1}<br>s2: any={"all":{"counter.7000593<":1,"type":"item","is":2001078,"cost.可堆叠":[1,4]}}<br>s3: type=item, is=2001079, cost.倒计时=[1,3]<br>s4: type=char | data/config/rite/5004517.json |
+| 5004518 | 在茉莉花香中…… | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000021<br>s2: type=char, 主角=1 | data/config/rite/5004518.json |
+| 5004519 | 揣测神意 | 神殿区:[2,10] | 0 | 0 | 1 | 2 | s1: type=char, is=2000021<br>s2: type=char, 主角=1<br>s3: type=item, is=2000847<br>s4: type=sudan, 杀戮=1, rare<==3 | data/config/rite/5004519.json |
+| 5004520 | 接管教会 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=item, 思潮=1, is=2000728 | data/config/rite/5004520.json |
+| 5004521 | 异端之战 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, is=2000021, !命运的羁绊=1<br>s2: type=item, is=2001092<br>s3: type=char, 主角=1<br>s4: type=char | data/config/rite/5004521.json |
+| 5004522 | 人前显圣 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.金币==20 | data/config/rite/5004522.json |
+| 5004523 | 神的仆人 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5004523.json |
+| 5004524 | 神圣哗变 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=item, 思潮=1, any={"is":2000728}<br>s3: type=char, is=2000021 | data/config/rite/5004524.json |
+| 5004525 | 灵光之试 | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5004525.json |
+| 5004526 | 选光者 | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2001097<br>s2: type=item, is=2001096, cost.已拥有==1<br>s3: type=char, is=2001098<br>s4: type=item, is=2001096, cost.已拥有==1 | data/config/rite/5004526.json |
+| 5004527 | 神之硕鼠 | 神殿区:[2,10] | 0 | 0 | 1 | 2 | s1: cost.正教的乙太=1<br>s2: type=item, cost.金币==10<br>s3: type=item, cost.金币==10, counter.7100004<=13 | data/config/rite/5004527.json |
+| 5004801 | 初梦 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1 | data/config/rite/5004801.json |
+| 5004802 | 地底的呼唤 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000841 | data/config/rite/5004802.json |
+| 5004803 | 心中之神 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000842 | data/config/rite/5004803.json |
+| 5004804 | 神的真容 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000843 | data/config/rite/5004804.json |
+| 5004805 | 光之训诫 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000845 | data/config/rite/5004805.json |
+| 5004806 | 神的启示 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000846 | data/config/rite/5004806.json |
+| 5004807 | 神的面容 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000847 | data/config/rite/5004807.json |
+| 5004808 | 神圣的会晤 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: any={"is":2000844}<br>s2: any={"is":2000848} | data/config/rite/5004808.json |
+| 5004809 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004809.json |
+| 5004810 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004810.json |
+| 5004811 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004811.json |
+| 5004812 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004812.json |
+| 5004813 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004813.json |
+| 5004814 | 疯癫与幻觉 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: type=item, any={"is":2000844}<br>s4: type=item, any={"is":2000848} | data/config/rite/5004814.json |
+| 5004815 | 墙垣之外 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: is=2000326, cost.疯狂=[1,99]<br>s3: any={"is":2000844}<br>s4: any={"is":2000848} | data/config/rite/5004815.json |
+| 5004816 | 狂信者之油 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001056<br>s2: type=char, !主角=1 | data/config/rite/5004816.json |
+| 5004817 | 消解疯狂 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000326<br>s2: type=char, 主角=1<br>s3: any={"all":{"counter.7000642<":1,"is":2000391},"is":2001308} | data/config/rite/5004817.json |
+| 5004818 | 心灵之战Ⅰ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1 | data/config/rite/5004818.json |
+| 5004819 | 心灵之战Ⅱ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1 | data/config/rite/5004819.json |
+| 5004820 | 心灵之战Ⅲ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1 | data/config/rite/5004820.json |
+| 5004821 | 心灵之战Ⅳ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1 | data/config/rite/5004821.json |
+| 5004822 | 心灵之战Ⅴ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1 | data/config/rite/5004822.json |
+| 5004823 | 心灵之战Ⅵ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1 | data/config/rite/5004823.json |
+| 5004824 | 心灵之战Ⅶ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1 | data/config/rite/5004824.json |
+| 5004825 | 心灵之战Ⅷ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1 | data/config/rite/5004825.json |
+| 5004826 | 心灵之战Ⅸ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1, !s8=1 | data/config/rite/5004826.json |
+| 5004827 | 心灵之战Ⅹ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, is=2000723, cost.消耗品=1, !s5=1, !s6=1, !s7=1, !s8=1 | data/config/rite/5004827.json |
+| 5004828 | 心灵之战Ⅺ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, any={"all":{"is":2000723,"cost.消耗品":1},"is":2001287}, !s5=1, !s6=1, !s7=1 | data/config/rite/5004828.json |
+| 5004829 | 心灵之战Ⅻ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, any={"all":{"is":2000723,"cost.消耗品":1},"is":2001287}, !s5=1, !s6=1 | data/config/rite/5004829.json |
+| 5004830 | 心灵之战ⅩⅢ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, any={"all":{"is":2000723,"cost.消耗品":1},"is":2001287}, !s5=1, !s6=1, !s7=1 | data/config/rite/5004830.json |
+| 5004831 | 心灵之战ⅩⅣ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, any={"all":{"is":2000723,"cost.消耗品":1},"is":2001287}, !s5=1, !s6=1, !s7=1, !s8=1 | data/config/rite/5004831.json |
+| 5004832 | 心灵之战ⅩⅤ | 大敌:6 | 0 | 0 | 1 | 3 | s1: any={"is":2000844}<br>s2: any={"is":2000848}<br>s3: type=char, 主角=1<br>s4: type=item, any={"all":{"is":2000723,"cost.消耗品":1},"is":2001287}, !s5=1, !s6=1, !s7=1, !s8=1 | data/config/rite/5004832.json |
+| 5004833 | 造物主的影子 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2001062<br>s2: any={"is":2000723} | data/config/rite/5004833.json |
+| 5004834 | 心灵之战ⅩⅥ | 大敌:6 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: any={"is":2001287} | data/config/rite/5004834.json |
+| 5004835 | 遁世秘法 | 结局:8 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: is=2000317<br>s3: type=char, 命运的羁绊=1<br>s4: type=char, 命运的羁绊=1 | data/config/rite/5004835.json |
+| 5004901 | 梅姬不再不满 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000083, cost.不满=[1,99] | data/config/rite/5004901.json |
+| 5004902 | 除魔卫道 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: is=2000054<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=item, cost.消耗品==1 | data/config/rite/5004902.json |
+| 5004903 | 魅魔之力 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000680 | data/config/rite/5004903.json |
+| 5004904 | 父亲的肉 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: is=2000055<br>s2: is=2000986<br>s3: type=char, 黑暗知识=1 | data/config/rite/5004904.json |
+| 5004905 | 浴血玫瑰 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: cost.不满=[1,3], is=2000083<br>s2: 妻子=1, type=char<br>s3: type=char, any={"主角":1,"密教徒":1} | data/config/rite/5004905.json |
+| 5004906 | 月牙，我心爱的月牙 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: is=2000065<br>s2: is=2000989<br>s3: is=2001119 | data/config/rite/5004906.json |
+| 5004907 | 神的秘密 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: is=2000113, 逃跑=1<br>s2: any={"is":2000844} | data/config/rite/5004907.json |
+| 5004908 | 信与理的战争 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000022<br>s2: is=2000123 | data/config/rite/5004908.json |
+| 5004909 | 拥抱那力量 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000022<br>s2: type=char, is=2000371<br>s3: any={"type":"char","任意处置":1}, !主角=1<br>s4: type=item, cost.金币==5 | data/config/rite/5004909.json |
+| 5004910 | 黑暗集会 | 野外:[1,14] | 0 | 0 | 7 | 0 | s1: type=char, 密教徒=1<br>s2: type=char, 密教徒=1<br>s3: type=char, 黑暗知识=1<br>s4: type=item, cost.消耗品==1, 魔力>==1 | data/config/rite/5004910.json |
+| 5005101 | 白银纵欲卡 | 宫廷:1 | 0 | 0 | 1 | 0 | s1: type=char, is=2000024<br>s2: type=char, !is=2000024<br>s3: type=sudan, 纵欲=1, rare==3 | data/config/rite/5005101.json |
+| 5005102 | 黄金杀戮卡 | 宫廷:1 | 0 | 0 | 1 | 0 | s1: type=char, is=2000024<br>s2: type=char, !is=2000024<br>s3: type=sudan, 杀戮=1, rare==4 | data/config/rite/5005102.json |
+| 5005103 | 岩石奢靡卡 | 宫廷:1 | 0 | 0 | 1 | 0 | s1: type=char, is=2000024<br>s2: type=char, is=2000516<br>s3: any={"all":{"type":"char","!is":"2000024"}}<br>s4: type=sudan, 奢靡=1, rare==1 | data/config/rite/5005103.json |
+| 5005104 | 青铜征服卡 | 宫廷:1 | 0 | 0 | 1 | 0 | s1: type=char, !is=2000024<br>s2: type=item, is=2000517<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, is=2000518 | data/config/rite/5005104.json |
+| 5006001 | 处置背叛的朋友 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000535<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"纵欲":1,"杀戮":1}, rare<==1 | data/config/rite/5006001.json |
+| 5006002 | 如你所愿 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000536<br>s2: type=char, 主角=1<br>s3: type=sudan, 纵欲=1, rare<==1 | data/config/rite/5006002.json |
+| 5006003 | 我全都要 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char<br>s2: type=item, cost.金币=10<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006003.json |
+| 5006004 | 我只要最好的 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char<br>s2: type=item, cost.金币=3 | data/config/rite/5006004.json |
+| 5006005 | 一日好梦 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: type=item, is=2000083, cost.不满==1 | data/config/rite/5006005.json |
+| 5006006 | 慷慨解囊 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, cost.金币=10<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006006.json |
+| 5006007 | 破财消灾 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, cost.金币=3 | data/config/rite/5006007.json |
+| 5006008 | 投注资金 | 自宅:[2,12] | 0 | 0 | 7 | 7 | s1: type=item, cost.金币=20<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: is=2000539 | data/config/rite/5006008.json |
+| 5006009 | 黄金鸟 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char<br>s2: type=item, cost.金币=30<br>s3: type=sudan, 奢靡=1, rare<==4<br>s4: is=2000540 | data/config/rite/5006009.json |
+| 5006010 | 处置等死的奴隶 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000534<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"纵欲":1,"杀戮":1}, rare<==1 | data/config/rite/5006010.json |
+| 5006011 | 不洁的原料 | 自宅:[4,12] | 0 | 0 | 3 | 10 | s1: any={"all":{"!怪物":1,"!动物":1,"any":{"type":"char","任意处置":1}},"cost.金币":10}<br>s2: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s3: type=char, is=2000352 | data/config/rite/5006011.json |
+| 5006012 | 苏丹的诘问 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006012.json |
+| 5006013 | 一笔罚款 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=8 | data/config/rite/5006013.json |
+| 5006014 | 见证奇迹的时刻 | 自宅:[4,12] | 0 | 0 | 1 | 0 | s1: is=2000554<br>s2: is=2000352<br>s3: type=char, 主角=1 | data/config/rite/5006014.json |
+| 5006015 | 行尸动力工坊 | 自宅:[4,12] | 0 | 0 | 3 | 0 | s1: is=2000554<br>s2: is=2000352<br>s3: type=item, is=2000555 | data/config/rite/5006015.json |
+| 5006016 | 逐渐完美的造物 | 自宅:[4,12] | 0 | 0 | 3 | 0 | s1: is=2000554<br>s2: any={"type":"char","任意处置":1}, !怪物=1<br>s3: type=sudan, 杀戮=1, f:rare-s2.rare<==0<br>s4: type=item, 装备=1 | data/config/rite/5006016.json |
+| 5006017 | 行尸动力工坊 | 自宅:[4,12] | 0 | 0 | 3 | 0 | s1: is=2000554<br>s2: is=2000352<br>s3: type=item, is=2000555 | data/config/rite/5006017.json |
+| 5006018 | 苏丹的索要 | 宫廷:[7,10] | 0 | 0 | 1 | 5 | s1: is=2000554 | data/config/rite/5006018.json |
+| 5006019 | 苏丹的报复 | 宫廷:[7,10] | 0 | 0 | 1 | 5 | s1: is=2000352 | data/config/rite/5006019.json |
+| 5006020 | 创造正强者 | 自宅:[4,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: is=2000556<br>s3: is=2000352 | data/config/rite/5006020.json |
+| 5006021 | 强者待遇 | 自宅:[4,12] | 1 | 0 | 1 | 0 | s1: type=char, 生命权杖=1<br>s2: 主角=1<br>s3: type=sudan, 纵欲=1, f:rare-s1.rare<==0 | data/config/rite/5006021.json |
+| 5006022 | 合金装备·幻痛 | 自宅:[4,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1, 生命权杖=1 | data/config/rite/5006022.json |
+| 5006023 | 自然新生 | 自宅:[4,12] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1, 生命权杖=1<br>s2: type=char, is=2000352<br>s3: type=item, cost.消耗品==1, !金币=1, is=2000382<br>s4: type=item, cost.金币=5 | data/config/rite/5006023.json |
+| 5006024 | 扩建生命权杖雕塑 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000556, 已拥有=1<br>s2: type=item, cost.金币=20<br>s3: type=sudan, 奢靡=1, rare<==4 | data/config/rite/5006024.json |
+| 5006025 | 将权杖送给他人 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000556<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5006025.json |
+| 5006026 | 快乐使我旋转 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=char, 主角=1, 生命权杖=1<br>s2: 妓女=1, !追随者=1, !is=2000772<br>s3: type=sudan, 纵欲=1, f:rare-s2.rare<==0 | data/config/rite/5006026.json |
+| 5006027 | 御前试合 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: any={"all":{"type":"char","生命权杖":1}}<br>s3: type=sudan, 纵欲=1, rare<==4 | data/config/rite/5006027.json |
+| 5006028 | 浴场的焦点 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, is=2000061<br>s2: type=char, 妻子=1<br>s3: type=item, 饰品=1, rare>==3, !is=2001022<br>s4: type=item, cost.不满==1 | data/config/rite/5006028.json |
+| 5006029 | 酒与肉 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, is=2000061<br>s2: type=char, 妻子=1<br>s3: type=char, 主角=1 | data/config/rite/5006029.json |
+| 5006030 | 巨龙的传说 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000664<br>s2: type=char | data/config/rite/5006030.json |
+| 5006031 | 与龙相关的会面 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000054<br>s2: type=char, is=2000061 | data/config/rite/5006031.json |
+| 5006032 | 战士不需要的东西 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000061<br>s2: type=char, any={"男性":1,"妻子":1} | data/config/rite/5006032.json |
+| 5006033 | 独自前行 | 野外:[1,14] | 0 | 0 | 3 | 5 | s1: type=char, is=2000061<br>s2: type=item, cost.金币=8 | data/config/rite/5006033.json |
+| 5006034 | 艰难前行 | 野外:[1,14] | 1 | 0 | 5 | 0 | s1: type=char, is=2000061 | data/config/rite/5006034.json |
+| 5006035 | 龙巢探查 | 野外:[1,14] | 0 | 0 | 5 | 0 | s1: type=char, is=2000061<br>s2: type=char, 隐匿>==4<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006035.json |
+| 5006036 | 最后的准备 | 商业区:[10,19] | 0 | 0 | 2 | 3 | s1: type=char, is=2000061<br>s2: type=item, cost.金币=20<br>s3: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5006036.json |
+| 5006037 | 最后的准备 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000061<br>s2: type=char, 主角=1<br>s3: type=item, cost.金币=15 | data/config/rite/5006037.json |
+| 5006038 | 屠龙的勇行 | 野外:[12,14] | 1 | 0 | 3 | 0 | s1: type=char, is=2000061<br>s2: is=2000332<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006038.json |
+| 5006039 | 盛大恩赐 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=sudan | data/config/rite/5006039.json |
+| 5006040 | 举世无双的赠礼 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, !动物=1, !怪物=1<br>s2: type=item, is=2000668 | data/config/rite/5006040.json |
+| 5006041 | 举世无双的爱 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=item, cost.不满=1 | data/config/rite/5006041.json |
+| 5006042 | 上门教学 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=char, is=2000061 | data/config/rite/5006042.json |
+| 5006043 | 梅姬的秘方 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, is=2000670 | data/config/rite/5006043.json |
+| 5006044 | 休憩的方法 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1<br>s2: type=char, is=2000061 | data/config/rite/5006044.json |
+| 5006045 | 战斗的目的 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=char, is=2000061 | data/config/rite/5006045.json |
+| 5006046 | 屠龙之书 | 自宅:[2,12] | 0 | 0 | 2 | 1 | s1: type=item, is=2000671<br>s2: type=char, 妻子=1<br>s3: type=char, 主角=1 | data/config/rite/5006046.json |
+| 5006047 | 必要的准备 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=item, cost.金币=20<br>s3: type=char, 主角=1<br>s4: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5006047.json |
+| 5006048 | 阿迪莱正在寻龙 | 野外:[1,14] | 1 | 0 | 5 | 0 | s1: type=char, is=2000061 | data/config/rite/5006048.json |
+| 5006049 | 临行之前 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=item, is=2000666 | data/config/rite/5006049.json |
+| 5006050 | 夫妻正应如此 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000083 | data/config/rite/5006050.json |
+| 5006051 | 阿迪莱正在冒险 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061 | data/config/rite/5006051.json |
+| 5006052 | 祈福仪式 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=item, cost.金币=[10,20]<br>s2: type=sudan, 奢靡=1, rare<==3<br>s3: type=item, any={"is":2000728} | data/config/rite/5006052.json |
+| 5006053 | 梅姬，我问你…… | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1 | data/config/rite/5006053.json |
+| 5006054 | 屠龙的勇行 | 野外:[1,14] | 1 | 0 | 7 | 0 | s1: type=char, is=2000061 | data/config/rite/5006054.json |
+| 5006055 | 于夕色中蔓延…… | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=char, 妻子=1<br>s3: type=item, cost.不满=[1,99] | data/config/rite/5006055.json |
+| 5006056 | 婚礼献歌 | 上城区:[1,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000061<br>s2: type=char, is=2000054<br>s3: type=char, any={"主角":1,"妻子":1} | data/config/rite/5006056.json |
+| 5006057 | 战士的结合 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=char, is=2000054 | data/config/rite/5006057.json |
+| 5006058 | 屠龙之书 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000671<br>s2: type=char, 主角=1, any={"魔力>=":3,"counter.7100005>=":6} | data/config/rite/5006058.json |
+| 5006059 | 梦中的考验 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000671<br>s2: type=char, 主角=1, 入梦=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006059.json |
+| 5006060 | 梦中的考验 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000671<br>s2: type=char, 主角=1, 入梦=1<br>s3: type=item, 服装=1, rare>==3<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006060.json |
+| 5006061 | 梦中的考验 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000671<br>s2: type=char, 主角=1, 入梦=1<br>s3: type=char, 追随者=1 | data/config/rite/5006061.json |
+| 5006062 | 梦中的考验 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000671<br>s2: type=char, 主角=1, 入梦=1<br>s3: type=item, cost.金币==30 | data/config/rite/5006062.json |
+| 5006063 | 研读结果 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=char, is=2000054<br>s3: type=item, is=2000692 | data/config/rite/5006063.json |
+| 5006064 | 探访踪迹 | 野外:[9,14] | 0 | 0 | 3 | 0 | s1: type=char, is=2000061<br>s2: type=char, is=2000054 | data/config/rite/5006064.json |
+| 5006065 | 最后的准备 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char, is=2000352<br>s3: type=item, cost.金币=40<br>s4: type=sudan, 奢靡=1, rare<==4 | data/config/rite/5006065.json |
+| 5006066 | 龙巢设伏 | 野外:[9,14] | 0 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=char, is=2000054<br>s3: type=char, 隐匿>==4<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006066.json |
+| 5006067 | 屠龙的勇行 | 野外:[12,14] | 0 | 0 | 2 | 0 | s1: type=char, any={"is":2000054,"all":{"主角":1,"!s2.主角":1,"!s3.主角":1,"!s4.主角":1},"命运的羁绊":1}<br>s2: type=char, any={"is":2000054,"all":{"主角":1,"!s1.主角":1,"!s3.主角":1,"!s4.主角":1},"命运的羁绊":1}<br>s3: type=char, any={"is":2000054,"all":{"主角":1,"!s2.主角":1,"!s1.主角":1,"!s4.主角":1},"命运的羁绊":1}<br>s4: type=char, any={"is":2000054,"all":{"主角":1,"!s2.主角":1,"!s3.主角":1,"!s1.主角":1},"命运的羁绊":1} | data/config/rite/5006067.json |
+| 5006068 | 致命一击 | 野外:[9,14] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061, 屠龙者=1<br>s2: type=char, is=2000054, 屠龙者=1<br>s3: type=char, 主角=1, 屠龙者=1<br>s4: type=char, 屠龙者=1 | data/config/rite/5006068.json |
+| 5006069 | 解脱 | 野外:[9,14] | 1 | 0 | 1 | 0 | s1: is=2000332<br>s2: type=sudan<br>s3: type=char, 主角=1 | data/config/rite/5006069.json |
+| 5006070 | 你需要多少钱 | 自宅:[2,12] | 0 | 0 | 3 | 3 | s1: type=item, cost.金币=3<br>s2: type=char | data/config/rite/5006070.json |
+| 5006071 | 血的渴求 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char<br>s2: any={"is":2000412}<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006071.json |
+| 5006072 | 处置被俘的异教徒 | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: is=2000840<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"纵欲":1,"杀戮":1}, f:rare-s1.rare<==0 | data/config/rite/5006072.json |
+| 5006073 | 与神沟通 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: 正神的面容=1<br>s2: 邪神的面容=1<br>s3: type=char, 魔力>==5, !s4=1<br>s4: type=char, 魔力>==5, !s3=1 | data/config/rite/5006073.json |
+| 5006074 | 让我剖开你胸膛 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, any={"is":2000767}<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006074.json |
+| 5006075 | 被魔鬼蛊惑之人 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000849<br>s2: type=char<br>s3: type=sudan, 杀戮=1, rare<==3 | data/config/rite/5006075.json |
+| 5006076 | 搜寻亡骸 | 野外:[1,6] | 0 | 0 | 7 | 3 | s1: type=char | data/config/rite/5006076.json |
+| 5006077 | 愿你安息 | 野外:[1,6] | 0 | 0 | 1 | 7 | s1: type=char, 魔力=5<br>s2: type=item, any={"is":2000728} | data/config/rite/5006077.json |
+| 5006078 | 锻造龙鳞装备 | 自宅:[2,12] | 0 | 0 | 4 | 1 | s1: type=item, is=2000949<br>s2: type=item, is=2000949<br>s3: type=item, is=2000949<br>s4: type=item, is=2000949 | data/config/rite/5006078.json |
+| 5006079 | 龙头的归属 | 宫廷:1 | 0 | 0 | 0 | 0 | s1: type=item, is=2000954, 正当性=1<br>s2: type=char, is=2000024<br>s3: type=item, is=2000954, 正当性=1<br>s4: type=char, 屠龙苏丹=1, 主角=1 | data/config/rite/5006079.json |
+| 5006080 | 直面苏丹 | 结局:7 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: type=item, is=2000915<br>s3: type=item, is=2000916<br>s4: type=item, is=2000917 | data/config/rite/5006080.json |
+| 5006081 | 试刃之锋 | 结局:7 | 1 | 0 | 0 | 0 | s1: type=char, is=2000024<br>s2: type=char, 主角=1, 屠龙苏丹=1<br>s3: 正当性=1, is=2000954<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006081.json |
+| 5006082 | 战败者的挽歌 | 结局:7 | 1 | 0 | 0 | 0 | s1: type=char, is=2000024<br>s2: type=char, 主角=1, 屠龙苏丹=1<br>s3: 正当性=1, is=2000954<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006082.json |
+| 5006101 | 走廊上的花影 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, is=2000011<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5006101.json |
+| 5006102 | 金子、水晶与污泥 | 上城区:[1,6] | 0 | 0 | 1 | 1 | s1: type=item, is=2001200<br>s2: type=char, !怪物=1, !动物=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006102.json |
+| 5006103 | 小小守护者 | 黑街:[2,5] | 0 | 0 | 1 | 0 | s1: type=char, !怪物=1, !动物=1<br>s2: type=item, cost.金币=[5,10]<br>s3: s2=1, type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006103.json |
+| 5006104 | 故国的遗孤 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2001193<br>s2: any={"主角":1,"妻子":1,"is":2000057} | data/config/rite/5006104.json |
+| 5006105 | 萨米尔的失望 | 上城区:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000011, any={"医典锁定":1,"!医典锁定":1}<br>s2: type=item, is=2001200 | data/config/rite/5006105.json |
+| 5006106 | 意外的客人 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2001193<br>s2: type=char, is=2000011, any={"医典锁定":1,"!医典锁定":1}<br>s3: type=item, is=2001200 | data/config/rite/5006106.json |
+| 5006107 | 萨米尔的感谢 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000011, any={"医典锁定":1,"!医典锁定":1}<br>s2: type=item, is=2001200 | data/config/rite/5006107.json |
+| 5006108 | 意外的到访 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2001194<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006108.json |
+| 5006109 | 处决 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000011, 医典锁定=1<br>s2: type=char, is=2001194, 医典锁定=1 | data/config/rite/5006109.json |
+| 5006110 | 死婴案件调查 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, is=2001211, cost.倒计时=[1,10]<br>s2: type=char, 主角=1<br>s3: type=item, any={"is":2001212} | data/config/rite/5006110.json |
+| 5006111 | 后宫质询 | 宫廷:[2,6] | 0 | 0 | 1 | 1 | s1: any={"is":2000173}<br>s2: type=char, !动物=1, !怪物=1, 主角=1 | data/config/rite/5006111.json |
+| 5006112 | 萨米尔的请求 | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: is=2000011, 医典锁定=1<br>s2: type=char, 隐匿>==5 | data/config/rite/5006112.json |
+| 5006113 | 御医之死 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000011, any={"医典锁定":1,"!医典锁定":1}<br>s2: type=char, is=2001194, 医典锁定=1 | data/config/rite/5006113.json |
+| 5006114 | 不愿面对的真相 | 黑街:[2,5] | 1 | 0 | 3 | 0 | s1: is=2000011, 医典锁定=1<br>s2: type=char, !is=2001194, 医典锁定=1 | data/config/rite/5006114.json |
+| 5006115 | 不愿面对的真相 | 黑街:[2,5] | 1 | 0 | 5 | 0 | s1: is=2000011, 医典锁定=1 | data/config/rite/5006115.json |
+| 5006116 | 医典第一篇 | 上城区:[1,12] | 1 | 0 | 1 | 0 | s1: is=2000011, 医典锁定=1<br>s2: any={"cost.金币=":10,"all":{"type":"char","any":{"生存>=":5,"智慧>=":5}},"is":2000803} | data/config/rite/5006116.json |
+| 5006117 | 医典第二篇 | 上城区:[1,12] | 1 | 0 | 1 | 0 | s1: is=2000011, 医典锁定=1<br>s2: any={"is":2000014,"cost.金币=":10,"all":{"type":"char","any":{"战斗>=":5,"隐匿>=":5}}} | data/config/rite/5006117.json |
+| 5006118 | 医典编修中 | 上城区:[1,12] | 1 | 0 | 1 | 0 | s1: is=2000011, 医典锁定=1 | data/config/rite/5006118.json |
+| 5006119 | 最后篇章 | 上城区:[1,12] | 1 | 0 | 2 | 0 | s1: is=2000011, 医典锁定=1<br>s2: type=char, any={"贵族":1,"all":{"!贵族":1,"智慧>=":5},"is":2000082}, !怪物=1, !动物=1<br>s3: type=char, any={"贵族":1,"all":{"!贵族":1,"智慧>=":5},"is":2000082}, !怪物=1, !动物=1<br>s4: type=char, any={"贵族":1,"all":{"!贵族":1,"智慧>=":5},"is":2000082}, !怪物=1, !动物=1 | data/config/rite/5006119.json |
+| 5006120 | 医典编修中 | 上城区:[1,12] | 1 | 0 | 1 | 0 | s1: is=2000011, 医典锁定=1 | data/config/rite/5006120.json |
+| 5006121 | 最最最后篇章 | 上城区:[1,12] | 1 | 0 | 2 | 0 | s1: is=2000011, 医典锁定=1 | data/config/rite/5006121.json |
+| 5006122 | 僻静之地 | 野外:[1,14] | 0 | 0 | 2 | 0 | s1: type=item, cost.金币==8<br>s2: type=item, cost.金币==8<br>s3: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5006122.json |
+| 5006123 | 僻静之地 | 野外:[1,14] | 0 | 0 | 2 | 0 | s1: type=item, cost.金币==8<br>s2: type=item, cost.金币==8<br>s3: type=sudan, 奢靡=1, rare<==3 | data/config/rite/5006123.json |
+| 5006124 | 强身之药 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char<br>s2: type=item, is=2001219, cost.可堆叠==1 | data/config/rite/5006124.json |
+| 5006125 | 珍贵的样品 | 自宅:[2,12] | 0 | 0 | 5 | 0 | s1: type=item, is=2000382, cost.可堆叠==1 | data/config/rite/5006125.json |
+| 5006126 | 治愈伤痛？ | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, 受伤=1<br>s2: type=item, is=2001196 | data/config/rite/5006126.json |
+| 5006127 | 不可忽视的痛苦 | 上城区:[1,12] | 0 | 0 | 1 | 0 | s1: any={"cost.金币=":5,"is":2000021}<br>s2: any={"cost.金币=":5,"is":2000021}<br>s3: any={"cost.金币=":5,"is":2000021} | data/config/rite/5006127.json |
+| 5006128 | 新药研发 | 上城区:[1,12] | 0 | 0 | 3 | 5 | s1: is=2000011<br>s2: type=char, any={"is":2000352,"智慧>":5}, !动物=1, !怪物=1 | data/config/rite/5006128.json |
+| 5006129 | 救命 | 上城区:[1,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000011<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006129.json |
+| 5006130 | 诡异的订单 | 上城区:[1,12] | 0 | 0 | 3 | 5 | s1: type=char, is=2000011<br>s2: type=char, any={"is":2000352,"魔力>":5} | data/config/rite/5006130.json |
+| 5006131 | 并非为人类准备的 | 上城区:[1,12] | 0 | 0 | 1 | 3 | s1: type=char, !动物=1, !怪物=1<br>s2: type=item, is=2001197<br>s3: type=item, is=2001197<br>s4: type=item, is=2001197 | data/config/rite/5006131.json |
+| 5006132 | 失约的惩罚 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006132.json |
+| 5006133 | 纹身图样 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001198, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006133.json |
+| 5006134 | 夜晚的馈赠 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001218<br>s2: type=item, is=2001199 | data/config/rite/5006134.json |
+| 5006135 | 暗夜之饮 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001221<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006135.json |
+| 5006136 | 宝石原石 | 商业区:[10,19] | 0 | 0 | 2 | 0 | s1: type=char<br>s2: type=item, cost.金币==2<br>s3: type=item, cost.金币==4<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006136.json |
+| 5006137 | 宝石镶嵌 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 装备=1, !动物=1, !怪物=1<br>s2: type=item, 宝石=1, cost.可堆叠==1<br>s3: type=item, cost.金币==2 | data/config/rite/5006137.json |
+| 5006138 | 不妥当的珍宝 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=item, is=2001267, !已拥有=1, cost.可堆叠==1<br>s2: type=item, is=2001267, !已拥有=1, cost.可堆叠==1<br>s3: type=item, is=2001267, !已拥有=1, cost.可堆叠==1<br>s4: type=item, is=2001276 | data/config/rite/5006138.json |
+| 5006139 | 染血的钻石坑 | 野外:[2,14] | 0 | 0 | 1 | 7 | s1: type=char, is=2001279<br>s2: type=item, is=2001280<br>s3: type=item, is=2001281<br>s4: type=char | data/config/rite/5006139.json |
+| 5006140 | 染血的财富 | 野外:[2,14] | 0 | 0 | 3 | 0 | s1: type=char<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.挖矿奴隶=[1,99] | data/config/rite/5006140.json |
+| 5006141 | 希望之钻 | 野外:[2,14] | 0 | 0 | 1 | 0 | s1: type=char, any={"is":2000022,"all":{"is":2000369,"命运的羁绊":1}}<br>s2: type=item, is=2001278 | data/config/rite/5006141.json |
+| 5006142 | 香烤肥鸽 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001284<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006142.json |
+| 5006143 | 宝石之宴 | 上城区:[1,6] | 0 | 0 | 1 | 0 | s1: type=char, any={"妻子":1,"新妻":1}<br>s2: type=item, 已镶嵌=1<br>s3: type=item, 已镶嵌=1<br>s4: type=item, 已镶嵌=1 | data/config/rite/5006143.json |
+| 5006144 | 治愈伤痛 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, 受伤=1<br>s2: type=item, is=2001196 | data/config/rite/5006144.json |
+| 5006145 | 贵公子的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==5<br>s3: type=item, 宝石=1, 大颗=1, cost.可堆叠==1 | data/config/rite/5006145.json |
+| 5006146 | 贵妇人的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==5<br>s3: type=item, 宝石=1, 大颗=1, cost.可堆叠==1<br>s4: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006146.json |
+| 5006147 | 小狗的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==5<br>s3: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006147.json |
+| 5006148 | 宝石的底板 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, any={"all":{"is":2001275,"any":{"all":{"s2.is":2000771}}}}, cost.可堆叠==1<br>s2: any={"all":{"have.2001275":1,"any":{"all":{"is":2000771,"芮尔":1,"!宝石宣传":1}}}} | data/config/rite/5006148.json |
+| 5006149 | 宠妃的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==5<br>s3: type=item, 宝石=1, 大颗=1, cost.可堆叠==1 | data/config/rite/5006149.json |
+| 5006150 | 女奴的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==3<br>s3: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006150.json |
+| 5006151 | 献给苏丹的珍宝 | 自宅:[2,12] | 0 | 0 | 2 | 7 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==10<br>s3: type=item, 钻石=1, cost.可堆叠==1<br>s4: type=item, 宝石=1, any={"祖母绿":1,"红宝石":1,"蓝宝石":1,"钻石":1} | data/config/rite/5006151.json |
+| 5006152 | 苏丹的征召 | 宫廷:[2,6] | 1 | 0 | 3 | 0 | s1: type=char, is=2000019 | data/config/rite/5006152.json |
+| 5006153 | 品鉴王冠 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000019<br>s2: type=char, any={"is":2000460}<br>s3: type=char, any={"is":2000065}<br>s4: type=char, any={"is":2000062,"妻子":1,"all":{"is":2000195,"变身公主":1}} | data/config/rite/5006153.json |
+| 5006154 | 帝国最好的珠宝匠 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000019 | data/config/rite/5006154.json |
+| 5006155 | 年轻人的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==1<br>s3: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006155.json |
+| 5006156 | 恋人的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==1<br>s3: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006156.json |
+| 5006157 | 母亲的珠宝订单 | 自宅:[2,12] | 0 | 0 | 2 | 0 | s1: type=char, is=2000019<br>s2: type=item, cost.金币==1<br>s3: type=item, 宝石=1, cost.可堆叠==1 | data/config/rite/5006157.json |
+| 5006158 | 不一样的宝石 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=char, !怪物=1, !动物=1, any={"妻子":1,"is":2000005,"all":{"is":2000123,"贵族":1},"法拉杰":1}<br>s2: type=char, !怪物=1, !动物=1, any={"妻子":1,"is":2000005,"all":{"is":2000123,"贵族":1},"法拉杰":1}<br>s3: type=char, !怪物=1, !动物=1, any={"妻子":1,"is":2000005,"all":{"is":2000123,"贵族":1},"法拉杰":1} | data/config/rite/5006158.json |
+| 5006159 | 牛骨大狂热 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000019<br>s2: type=char | data/config/rite/5006159.json |
+| 5006165 | 流光溢彩的丝绸 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000697<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006165.json |
+| 5006166 | 杀人检查 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000432 | data/config/rite/5006166.json |
+| 5006167 | 身体检查 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000433<br>s2: type=char, 和小安纵欲=1 | data/config/rite/5006167.json |
+| 5006168 | 人类魔法 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000434 | data/config/rite/5006168.json |
+| 5006169 | 人类魔法 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000434<br>s2: type=item, cost.金币=[1,5] | data/config/rite/5006169.json |
+| 5006170 | 留的故事 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000434 | data/config/rite/5006170.json |
+| 5006171 | 妖精的笼子 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=char, !贵族=1<br>s2: type=item, cost.金币==5<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006171.json |
+| 5006172 | 三岔路口 | 野外:[1,14] | 0 | 0 | 1 | 0 | s1: type=item, is=2001320<br>s2: type=item, is=2001321<br>s3: type=item, is=2001322<br>s4: type=char, 主角=1, !is=2000861 | data/config/rite/5006172.json |
+| 5006173 | 恳求女王 | 野外:[1,14] | 0 | 0 | 1 | 3 | s1: type=char, 魔力>==5, !s9=1<br>s2: type=char, 魔力>==5, !s9=1<br>s3: type=char, 魔力>==5, !s9=1<br>s4: type=char, 魔力>==5, !s9=1 | data/config/rite/5006173.json |
+| 5006174 | 泉水牛肉 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001328<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006174.json |
+| 5006175 | 辣子鸡丁 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001329<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006175.json |
+| 5006176 | 驴肉火烧 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001330<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006176.json |
+| 5006177 | 女王的祝福 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, is=2001327<br>s2: type=char, any={"!怪物":1,"is":2000434}, !动物=1, !女王的祝福=1 | data/config/rite/5006177.json |
+| 5006178 | 女王的逃亡 | 野外:[1,14] | 1 | 0 | 1 | 0 | s1: type=item, is=2001327<br>s2: type=char, 女王的祝福=1, !主角=1<br>s3: type=char, 女王的祝福=1, !主角=1<br>s4: type=char, 女王的祝福=1, !主角=1 | data/config/rite/5006178.json |
+| 5006179 | 眼球花馕 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001335<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006179.json |
+| 5006180 | 杀人汽水 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001336<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006180.json |
+| 5006181 | 麻辣蛇脖 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001337<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006181.json |
+| 5006182 | 空壳酿肉 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001338<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006182.json |
+| 5006183 | 咬人馍 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001339<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006183.json |
+| 5006184 | 骷髅泡酒 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001340<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006184.json |
+| 5006185 | 魅魔奶茶 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001341<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006185.json |
+| 5006186 | 八宝犀牛 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001342<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006186.json |
+| 5006501 | 讨伐氏族 | 宫廷:1 | 0 | 0 | 1 | 3 | s1: type=sudan, 征服=1, rare<==2 | data/config/rite/5006501.json |
+| 5006502 | 强夺凋零之花 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000062<br>s2: type=char, 主角=1<br>s3: type=sudan, 纵欲=1, f:rare-s1.rare<==0 | data/config/rite/5006502.json |
+| 5006503 | 那剧毒的果实 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=char, is=2000062<br>s4: type=char, is=2000063 | data/config/rite/5006503.json |
+| 5006504 | 我们应该分享一切 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=char, is=2000062 | data/config/rite/5006504.json |
+| 5006505 | 这或许不是最好的主意…… | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=item, cost.不满=1, is=2000083 | data/config/rite/5006505.json |
+| 5006506 | 双姝 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=char, is=2000062<br>s3: type=char, 妻子=1<br>s4: type=char, is=2000063 | data/config/rite/5006506.json |
+| 5006507 | 花园里唯一的花 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1<br>s2: type=item, is=2000083 | data/config/rite/5006507.json |
+| 5006508 | 沉默的恳谈 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000063<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1<br>s4: type=char, is=2000062 | data/config/rite/5006508.json |
+| 5006509 | 何为正义 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000063<br>s2: type=char, is=2000062<br>s3: any={"all":{"type":"char","妻子":1}} | data/config/rite/5006509.json |
+| 5006510 | 轻易获得快乐 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000063<br>s2: type=char, any={"妻子":1,"主角":1} | data/config/rite/5006510.json |
+| 5006511 | 毁尸灭迹 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000063<br>s2: type=char, 主角=1 | data/config/rite/5006511.json |
+| 5006512 | 谈判 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000063<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"杀戮":1,"奢靡":1}, rare<==2<br>s4: type=item, cost.金币=[5,10] | data/config/rite/5006512.json |
+| 5006513 | 家破人亡 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000063<br>s2: type=char, is=2000062 | data/config/rite/5006513.json |
+| 5006514 | 浴池里的波澜 | 上城区:[1,6] | 0 | 0 | 1 | 7 | s1: type=char, 主角=1<br>s2: type=char, is=2000063<br>s3: type=sudan, 纵欲=1, f:rare-s2.rare<==0 | data/config/rite/5006514.json |
+| 5006515 | 丑闻缠身 | 野外:[9,10] | 1 | 0 | 1 | 0 | s1: type=char, is=2000063<br>s2: type=char, is=2000062 | data/config/rite/5006515.json |
+| 5006516 | 我们也许不该这样 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000063<br>s2: type=char, 主角=1<br>s3: type=char, is=2000062<br>s4: type=sudan, 纵欲=1, rare<==4 | data/config/rite/5006516.json |
+| 5006517 | 古语教学 | 自宅:[2,12] | 0 | 0 | 3 | 5 | s1: type=char, is=2000123<br>s2: type=char, 主角=1<br>s3: type=item, cost.金币=[5,10]<br>s4: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006517.json |
+| 5006518 | 编修之苦 | 宫廷:[7,10] | 0 | 0 | 1 | 0 | s1: type=char, is=2000123 | data/config/rite/5006518.json |
+| 5006519 | 星灵咒文残卷 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, is=2000544<br>s2: type=char, is=2000123<br>s3: type=char, 主角=1 | data/config/rite/5006519.json |
+| 5006520 | 星灵之夜 | 自宅:[2,12] | 1 | 0 | 3 | 0 | s1: type=char, is=2000123 | data/config/rite/5006520.json |
+| 5006521 | 星灵之夜 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000123 | data/config/rite/5006521.json |
+| 5006522 | 复仇 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: type=char, is=2000546<br>s2: type=char, is=2000123<br>s3: type=char, 主角=1<br>s4: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5006522.json |
+| 5006523 | 孤女复仇记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000548<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006523.json |
+| 5006524 | 受赏 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, is=2000083, cost.不满=1 | data/config/rite/5006524.json |
+| 5006525 | 受赏 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=item, is=2000083, cost.不满=1 | data/config/rite/5006525.json |
+| 5006526 | 在阴影中 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000123<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006526.json |
+| 5006527 | 为她买书 | 商业区:[4,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2000123<br>s2: type=item, cost.金币=[5,10]<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006527.json |
+| 5006528 | 在阴影中 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000123<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, any={"杀戮":1,"征服":1}, rare<==2 | data/config/rite/5006528.json |
+| 5006529 | 复仇的滋味 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000549<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006529.json |
+| 5006530 | 复仇的滋味 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000550<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006530.json |
+| 5006531 | 复仇的滋味 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000551<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006531.json |
+| 5006532 | 在阴影中 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000123<br>s2: type=char<br>s3: type=item, cost.金币=5<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006532.json |
+| 5006533 | 血之墙 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000552<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006533.json |
+| 5006534 | 蠢妓女和活恶棍 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000547<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006534.json |
+| 5006535 | 正义必须…… | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000063<br>s2: type=char, is=2000062 | data/config/rite/5006535.json |
+| 5006536 | 从不缺席的挑战 | 上城区:[1,6] | 0 | 0 | 1 | 5 | s1: type=char, 恶名挑战者=1<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5006536.json |
+| 5006537 | 弑父 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000578, 恶名谋杀者=1<br>s2: is=2000579, 恶名谋杀者=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0, !s4=1<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0, !s3=1 | data/config/rite/5006537.json |
+| 5006538 | 清流与浊流 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000580, 恶名谋杀者=1<br>s2: is=2000581, 恶名谋杀者=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0, !s4=1<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0, !s3=1 | data/config/rite/5006538.json |
+| 5006539 | 三角漩涡 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000582, 恶名谋杀者=1<br>s2: is=2000583, 恶名谋杀者=1<br>s3: is=2000584, 恶名谋杀者=1<br>s4: type=sudan, 杀戮=1, f:rare-s1.rare<==0, !s5=1, !s6=1 | data/config/rite/5006539.json |
+| 5006540 | 致命主妇 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000585, 恶名谋杀者=1<br>s2: is=2000586, 恶名谋杀者=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0, !s4=1<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0, !s3=1 | data/config/rite/5006540.json |
+| 5006541 | 弑君者 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: is=2000587, 恶名谋杀者=1<br>s2: type=sudan, 杀戮=1, any={"rare=":4} | data/config/rite/5006541.json |
+| 5006542 | 杀妻求荣 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000589, 恶名谋杀者=1<br>s2: is=2000590, 恶名谋杀者=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0, !s4=1<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0, !s3=1 | data/config/rite/5006542.json |
+| 5006543 | 殉情的请求 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: is=2000591, 恶名谋杀者=1<br>s2: is=2000592, 恶名谋杀者=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0<br>s4: type=sudan, 杀戮=1, f:rare-s2.rare<==0 | data/config/rite/5006543.json |
+| 5006544 | 刺杀的阴影 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.蓄谋=[1,999]<br>s2: type=char, 大敌=1<br>s3: type=char, 大敌=1<br>s4: type=char, 大敌=1 | data/config/rite/5006544.json |
+| 5006545 | 刺杀的阴影 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.蓄谋=[1,999]<br>s2: type=char, 大敌=1<br>s3: type=char, 大敌=1<br>s4: type=char, 大敌=1 | data/config/rite/5006545.json |
+| 5006546 | 刺杀的阴影 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.蓄谋=[1,999]<br>s2: type=char, 大敌=1<br>s3: type=char, 大敌=1<br>s4: type=char, 大敌=1 | data/config/rite/5006546.json |
+| 5006547 | 暗巷袭击 | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: type=char, 追随者=1, 恶名锁定=1<br>s2: type=char, 追随者=1, 恶名锁定=1 | data/config/rite/5006547.json |
+| 5006548 | 刺杀的阴影 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.蓄谋=[1,999]<br>s2: type=char, 大敌=1<br>s3: type=char, 大敌=1<br>s4: type=char, 大敌=1 | data/config/rite/5006548.json |
+| 5006549 | 他们的复仇 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.蓄谋=[1,999]<br>s2: type=char, is=2000360<br>s3: type=char, 大敌=1<br>s4: type=char, 大敌=1 | data/config/rite/5006549.json |
+| 5006550 | 血色绿洲 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000595<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0<br>s3: type=char<br>s4: 部队=1, any={"type":"char","is":"2000554"} | data/config/rite/5006550.json |
+| 5006551 | 玩泥巴的异族 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000596<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0<br>s3: type=char<br>s4: 部队=1, any={"type":"char","is":"2000554"} | data/config/rite/5006551.json |
+| 5006552 | 劫掠商队 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000597<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0<br>s3: type=char<br>s4: 部队=1, any={"type":"char","is":"2000554"} | data/config/rite/5006552.json |
+| 5006553 | 傲慢之罪 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000598<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0<br>s3: type=char<br>s4: 部队=1, any={"type":"char","is":"2000554"} | data/config/rite/5006553.json |
+| 5006554 | 富有的巨魔 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000599<br>s2: type=sudan, 征服=1, f:rare-s1.rare<==0<br>s3: type=char<br>s4: 部队=1, any={"type":"char","is":"2000554"} | data/config/rite/5006554.json |
+| 5006555 | 邪恶化身 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1 | data/config/rite/5006555.json |
+| 5006556 | 连你也…… | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, 追随者=1, !怪物=1<br>s2: type=char, 追随者=1, !怪物=1<br>s3: type=char, 追随者=1, !怪物=1<br>s4: type=char, 大敌=1 | data/config/rite/5006556.json |
+| 5006557 | 神秘的援助 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: any={"type":"sudan"}, !秘宝=1, !is=2001327 | data/config/rite/5006557.json |
+| 5006558 | 复原的神迹 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=sudan | data/config/rite/5006558.json |
+| 5006559 | 净化之火 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=sudan | data/config/rite/5006559.json |
+| 5006560 | 修建舍馆 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=item, 空屋=1<br>s2: type=item, cost.金币=10<br>s3: type=sudan, 奢靡=1, rare==1 | data/config/rite/5006560.json |
+| 5006561 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s2: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s3: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s4: type=char, s1=1, !有跟班=1 | data/config/rite/5006561.json |
+| 5006562 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, 暂留的食客1=1<br>s2: type=char, 食客=1, !追随者=1, 暂留的食客2=1<br>s3: type=char, 食客=1, !追随者=1, 暂留的食客3=1<br>s4: type=char, s1=1, !有跟班=1 | data/config/rite/5006562.json |
+| 5006563 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s2: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s3: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s4: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1 | data/config/rite/5006563.json |
+| 5006564 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, 暂留的食客1=1<br>s2: type=char, 食客=1, !追随者=1, 暂留的食客2=1<br>s3: type=char, 食客=1, !追随者=1, 暂留的食客3=1<br>s4: type=char, 食客=1, !追随者=1, 暂留的食客4=1 | data/config/rite/5006564.json |
+| 5006565 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s2: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s3: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s4: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1 | data/config/rite/5006565.json |
+| 5006566 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, 暂留的食客1=1<br>s2: type=char, 食客=1, !追随者=1, 暂留的食客2=1<br>s3: type=char, 食客=1, !追随者=1, 暂留的食客3=1<br>s4: type=char, 食客=1, !追随者=1, 暂留的食客4=1 | data/config/rite/5006566.json |
+| 5006567 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s2: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s3: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1<br>s4: type=char, 食客=1, !追随者=1, !暂留的食客1=1, !暂留的食客2=1, !暂留的食客3=1, !暂留的食客4=1, !暂留的食客5=1, !暂留的食客6=1 | data/config/rite/5006567.json |
+| 5006568 | 舍馆 | 商业区:[10,19] | 0 | 0 | 0 | 0 | s1: type=char, 食客=1, !追随者=1, 暂留的食客1=1<br>s2: type=char, 食客=1, !追随者=1, 暂留的食客2=1<br>s3: type=char, 食客=1, !追随者=1, 暂留的食客3=1<br>s4: type=char, 食客=1, !追随者=1, 暂留的食客4=1 | data/config/rite/5006568.json |
+| 5006569 | 隐匿小屋 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=item, 空屋=1<br>s2: type=item, cost.金币=8<br>s3: type=item, is=2000558 | data/config/rite/5006569.json |
+| 5006570 | 隐匿小屋 | 黑街:[2,5] | 0 | 0 | 7 | 0 | s1: type=item, is=2000558, cost.罪证=[1,3]<br>s2: type=item, cost.金币=[1,3] | data/config/rite/5006570.json |
+| 5006571 | 罪犯的投奔 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: any={"type":"item"}, 罪犯投奔=1<br>s2: any={"type":"char","all":{"type":"sudan","杀戮":"1","f:rare-s1.rare<=":0}} | data/config/rite/5006571.json |
+| 5006572 | 老兵不死 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006572.json |
+| 5006573 | 军事行动 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006573.json |
+| 5006574 | 邪恶徽记 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006574.json |
+| 5006575 | 军中霸凌 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006575.json |
+| 5006576 | 血肉之税 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006576.json |
+| 5006577 | 民间集资 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006577.json |
+| 5006578 | 包税人之死 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006578.json |
+| 5006579 | 苏丹的索求 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006579.json |
+| 5006580 | 先王的后宫 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=sudan, 杀戮=1, rare==4 | data/config/rite/5006580.json |
+| 5006581 | 打击腐败 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006581.json |
+| 5006582 | 监督官吏 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006582.json |
+| 5006583 | 损坏的器皿 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006583.json |
+| 5006584 | 血统调查 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000349<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1<br>s4: type=item, cost.消耗品==1 | data/config/rite/5006584.json |
+| 5006585 | 赤字滔天 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, cost.赤字=[1,999]<br>s2: type=item, cost.金币=15<br>s3: type=char<br>s4: type=char | data/config/rite/5006585.json |
+| 5006586 | 民众的代表 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=item, cost.国民的好感=[1,3]<br>s2: type=char, 主角=1, 宰相=1 | data/config/rite/5006586.json |
+| 5006587 | 休沐日 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, cost.官吏的好感=[1,3]<br>s2: type=char, 主角=1, 宰相=1 | data/config/rite/5006587.json |
+| 5006588 | 战争迷雾 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, cost.军队的好感=[1,3]<br>s2: type=char, 主角=1, 宰相=1 | data/config/rite/5006588.json |
+| 5006589 | 民意之盾 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: is=2000678 | data/config/rite/5006589.json |
+| 5006590 | 权势之盾 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: is=2000679 | data/config/rite/5006590.json |
+| 5006591 | 苏丹的猜忌 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: is=2000672 | data/config/rite/5006591.json |
+| 5006592 | 焚书 | 商业区:3 | 1 | 0 | 0 | 1 | s1: is=2000199, 书店老板=1<br>s2: any={"is":2000161}<br>s3: type=sudan, rare<==3, any={"杀戮":1,"征服":1,"奢靡":1}<br>s4: is=2001152 | data/config/rite/5006592.json |
+| 5006593 | 管不住的老婆 | 自宅:[2,12] | 1 | 0 | 7 | 1 | s1: 妻子=1, type=char | data/config/rite/5006593.json |
+| 5006594 | 如你所愿 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000684<br>s2: type=char, 主角=1<br>s3: type=sudan, 纵欲=1, rare<==1 | data/config/rite/5006594.json |
+| 5006595 | 未归人 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: 妻子=1, type=char<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品=1, !金币=1 | data/config/rite/5006595.json |
+| 5006596 | 心有余悸 | 自宅:[2,12] | 1 | 0 | 3 | 1 | s1: 妻子=1, type=char | data/config/rite/5006596.json |
+| 5006597 | 再进一步 | 自宅:[2,12] | 1 | 0 | 3 | 1 | s1: is=2000055 | data/config/rite/5006597.json |
+| 5006598 | 更进一步 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000055 | data/config/rite/5006598.json |
+| 5006599 | 恶毒的花嫁 | 自宅:[2,12] | 0 | 0 | 1 | 14 | s1: is=2000055<br>s2: type=char, 主角=1<br>s3: type=item, any={"奇珍":1,"饰品":1}, rare==4, !is=2001022<br>s4: type=sudan, any={"奢靡":1,"杀戮":1,"征服":1,"纵欲":1} | data/config/rite/5006599.json |
+| 5006600 | 娜依拉需要你的钱 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: is=2000055<br>s2: type=item, cost.金币=10 | data/config/rite/5006600.json |
+| 5006601 | 娜依拉需要你 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: is=2000055<br>s2: type=char, 主角=1 | data/config/rite/5006601.json |
+| 5006602 | 娜依拉的不满 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000055<br>s2: cost.金币=[1,9999]<br>s3: is=2000698, cost.娜依拉的不满=[1,99] | data/config/rite/5006602.json |
+| 5006603 | 除非…… | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: is=2000055<br>s2: type=item, cost.金币=30<br>s3: type=char, 主角=1<br>s4: type=item, cost.消耗品=1, !金币=1 | data/config/rite/5006603.json |
+| 5006604 | 你最好是真的 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000055<br>s2: type=char, 主角=1, !s3=1<br>s3: type=char, 主角=1, !s2=1 | data/config/rite/5006604.json |
+| 5006605 | 病弱的老女奴 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000699<br>s2: type=item, cost.金币=[1,5] | data/config/rite/5006605.json |
+| 5006606 | 难以治愈的疾病 | 商业区:[4,5] | 0 | 0 | 3 | 3 | s1: is=2000699<br>s2: type=item, cost.金币=3<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006606.json |
+| 5006607 | 无法治愈的疾病 | 商业区:[4,5] | 0 | 0 | 3 | 3 | s1: is=2000699<br>s2: type=item, cost.金币=5 | data/config/rite/5006607.json |
+| 5006608 | 不可阻挡的死亡 | 商业区:[4,5] | 1 | 0 | 1 | 0 | s1: is=2000699 | data/config/rite/5006608.json |
+| 5006609 | 促成交欢 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: is=2000055<br>s2: type=char, any={"主角":1,"is":2000054} | data/config/rite/5006609.json |
+| 5006610 | 移除诅咒（已弃用） | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: is=2000703<br>s2: type=char, 诅咒=1 | data/config/rite/5006610.json |
+| 5006611 | 帝国的勇士 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000055<br>s2: type=char, 主角=1 | data/config/rite/5006611.json |
+| 5006612 | 帝国的勇士 | 上城区:[7,12] | 0 | 0 | 1 | 7 | s1: is=2000055<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006612.json |
+| 5006613 | 帝国勇士排行榜 | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: is=2000704<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006613.json |
+| 5006614 | 帝国勇士排行榜 | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: is=2000705<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006614.json |
+| 5006615 | 帝国勇士排行榜 | 自宅:[2,12] | 0 | 0 | 3 | 1 | s1: is=2000706<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006615.json |
+| 5006616 | 救济日 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=5<br>s2: type=sudan, rare==1, any={"杀戮":1,"纵欲":1}<br>s3: type=item, any={"is":2000728} | data/config/rite/5006616.json |
+| 5006617 | 美味的救济日 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=5<br>s2: type=char, is=2000371<br>s3: type=char, is=2000369 | data/config/rite/5006617.json |
+| 5006618 | 赏赐 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=1 | data/config/rite/5006618.json |
+| 5006619 | 让我尝尝 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000371<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1<br>s4: type=char, is=2000369 | data/config/rite/5006619.json |
+| 5006620 | 背叛和逃亡 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000369<br>s2: type=char, is=2000371 | data/config/rite/5006620.json |
+| 5006621 | 巨大的玩具 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000369<br>s2: type=char, any={"is":2000055}<br>s3: type=char, 主角=1<br>s4: type=sudan, 纵欲=1, rare<==3 | data/config/rite/5006621.json |
+| 5006622 | 石餐盒 | 自宅:[2,12] | 0 | 1 | 2 | 2 | s1: type=char, is=2000369 | data/config/rite/5006622.json |
+| 5006623 | 大量石餐盒 | 自宅:[2,12] | 0 | 0 | 8 | 3 | s1: type=char, is=2000369 | data/config/rite/5006623.json |
+| 5006624 | 餐盒收购 | 自宅:[2,12] | 0 | 0 | 1 | 14 | s1: type=item, is=2000732<br>s2: type=item, is=2000732<br>s3: type=item, is=2000732 | data/config/rite/5006624.json |
+| 5006625 | 沙尘往事 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000369<br>s2: type=item, 思潮=1, any={"is":2000172} | data/config/rite/5006625.json |
+| 5006626 | 主人的宴会 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000369 | data/config/rite/5006626.json |
+| 5006627 | 所有人的宴会 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char, is=2000369<br>s3: type=char, !is=2000369, !主角=1<br>s4: type=char, !is=2000369, !主角=1 | data/config/rite/5006627.json |
+| 5006628 | 吹响骨笛 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=item, is=2000734<br>s2: type=item, cost.金币=8 | data/config/rite/5006628.json |
+| 5006629 | 无法拒绝的安慰 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000371<br>s2: type=char, 主角=1<br>s3: type=sudan, 纵欲=1, f:rare-s1.rare<==0 | data/config/rite/5006629.json |
+| 5006630 | 成婚 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000371<br>s2: type=char, 主角=1<br>s3: type=item, cost.金币=5<br>s4: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006630.json |
+| 5006631 | 彻夜狂奔 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000371<br>s2: type=char, is=2000369<br>s3: type=char, !妻子=1<br>s4: type=char, !妻子=1 | data/config/rite/5006631.json |
+| 5006632 | 寸步不离 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000371<br>s2: type=char, !贵族=1 | data/config/rite/5006632.json |
+| 5006633 | 息事宁人 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000738<br>s2: type=item, cost.金币=10 | data/config/rite/5006633.json |
+| 5006634 | 处置奴隶 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000738<br>s2: type=char, is=2000371 | data/config/rite/5006634.json |
+| 5006635 | 私下调查 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, 贵族=1 | data/config/rite/5006635.json |
+| 5006636 | 下次还敢吗？ | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000738<br>s2: type=char, 主角=1<br>s3: type=sudan, f:rare-s1.rare<==0, any={"杀戮":1,"纵欲":1,"征服":1}<br>s4: any={"部队":1,"all":{"type":"item","cost.消耗品=":1,"!金币":1}} | data/config/rite/5006636.json |
+| 5006637 | 强取 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000371 | data/config/rite/5006637.json |
+| 5006638 | 郁郁寡欢 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000369<br>s2: type=item, any={"is":2000541} | data/config/rite/5006638.json |
+| 5006639 | 进贡 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=item, cost.金币=20, !s4=1, !s5=1<br>s4: type=item, rare==4, 装备=1, !s3=1, !s5=1 | data/config/rite/5006639.json |
+| 5006640 | 强取 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000371 | data/config/rite/5006640.json |
+| 5006641 | 当堂对峙 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000738<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006641.json |
+| 5006642 | 自由之人 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000371<br>s2: type=item, 饰品=1, !is=2001022 | data/config/rite/5006642.json |
+| 5006643 | 冗长的问询 | 宫廷:[7,10] | 0 | 0 | 1 | 2 | s1: type=char<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006643.json |
+| 5006644 | 宫门募捐 | 宫廷:[7,10] | 0 | 0 | 1 | 2 | s1: type=item, cost.金币=3 | data/config/rite/5006644.json |
+| 5006645 | 被弃的丑态 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, !主角=1, 贵族=1<br>s2: type=item, is=2000680 | data/config/rite/5006645.json |
+| 5006646 | 穷人到底需要什么？ | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1, !s2=1, !s3=1, !s4=1<br>s2: type=item, cost.金币=5, !s1=1, !s3=1, !s4=1<br>s3: type=item, any={"is":2000728}, !s1=1, !s2=1, !s4=1<br>s4: type=char, !s1=1, !s2=1, !s3=1 | data/config/rite/5006646.json |
+| 5006647 | 母亲的水滴 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6 | data/config/rite/5006647.json |
+| 5006648 | 奈费勒的行动 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6 | data/config/rite/5006648.json |
+| 5006649 | 带来的改变 | 上城区:[7,12] | 0 | 0 | 1 | 14 | s1: type=char, is=2000312<br>s2: type=char, 主角=1 | data/config/rite/5006649.json |
+| 5006650 | 神之恩 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6<br>s2: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5006650.json |
+| 5006651 | 奈费勒的行动 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6<br>s2: type=item, 思潮=1, any={"is":2000728} | data/config/rite/5006651.json |
+| 5006652 | 未能改变的 | 上城区:[7,12] | 0 | 0 | 1 | 14 | s1: type=char, is=2000312<br>s2: type=char, 主角=1 | data/config/rite/5006652.json |
+| 5006653 | 黄金的工具 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6<br>s2: type=char, 智慧>==4 | data/config/rite/5006653.json |
+| 5006654 | 奈费勒的行动 | 野外:[9,14] | 0 | 0 | 3 | 5 | s1: type=item, cost.金币=6 | data/config/rite/5006654.json |
+| 5006655 | 带来希望的 | 上城区:[7,12] | 0 | 0 | 1 | 14 | s1: type=char, is=2000312<br>s2: type=char, 主角=1 | data/config/rite/5006655.json |
+| 5006656 | 惩罚之火 | 野外:[9,14] | 0 | 0 | 1 | 14 | s1: type=char, 隐匿>==5, 已装备<=1, !主角=1<br>s2: type=item, cost.金币=10<br>s3: type=char, 火焰大王=1, is=2000762 | data/config/rite/5006656.json |
+| 5006657 | 劫富济贫 | 商业区:[10,19] | 0 | 0 | 3 | 5 | s1: type=char, is=2000762, 火焰大王=1<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006657.json |
+| 5006658 | 正义复仇 | 商业区:[10,19] | 0 | 0 | 3 | 5 | s1: type=char, is=2000762, 火焰大王=1<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006658.json |
+| 5006659 | 恐怖庄园 | 野外:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000762, 火焰大王=1 | data/config/rite/5006659.json |
+| 5006660 | 勇气与团结 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000762, 火焰大王=1<br>s2: type=char, 主角=1<br>s3: type=char, is=2000312 | data/config/rite/5006660.json |
+| 5006661 | 烈焰呼唤 | 自宅:14 | 0 | 0 | 1 | 14 | s1: type=char, 已装备<=1<br>s2: type=char, 火焰大王=1, is=2000762 | data/config/rite/5006661.json |
+| 5006662 | 清流交汇 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000312<br>s2: type=char, is=2000764<br>s3: type=char, is=2000765<br>s4: type=char, is=2000766 | data/config/rite/5006662.json |
+| 5006663 | 干净的队伍 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000312<br>s2: type=char, is=2000764<br>s3: type=char, 主角=1 | data/config/rite/5006663.json |
+| 5006664 | 享用美酒 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=char, !主角=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5006664.json |
+| 5006665 | 被独自关押的奈费勒 | 宫廷:[7,10] | 0 | 0 | 1 | 10 | s1: type=char, is=2000312, 囚徒奈费勒=1<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, f:rare-s1.rare<==0 | data/config/rite/5006665.json |
+| 5006666 | 干净的队伍 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000312<br>s2: type=char, is=2000764<br>s3: type=char, is=2000765<br>s4: type=char, is=2000766 | data/config/rite/5006666.json |
+| 5006667 | 忠心可鉴 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=6 | data/config/rite/5006667.json |
+| 5006668 | 沉重的代价 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=item, 奇珍=1, rare>==3 | data/config/rite/5006668.json |
+| 5006669 | 恶意的捉弄 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=6 | data/config/rite/5006669.json |
+| 5006670 | 恶意的玩笑 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: any={"all":{"type":"item","cost.金币":6}}<br>s2: s1.主角=1, type=sudan, 纵欲=1, rare<==2 | data/config/rite/5006670.json |
+| 5006671 | 流浊之地 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000312<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006671.json |
+| 5006672 | 囚犯与绑匪 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: type=char, is=2000349, 等死吧阿卜德=1<br>s2: type=char, is=2000312<br>s3: type=char<br>s4: type=item, is=2000768 | data/config/rite/5006672.json |
+| 5006673 | 一则蹊跷的新闻 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000312 | data/config/rite/5006673.json |
+| 5006674 | 无用的施舍 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币==3<br>s2: type=sudan, 奢靡=1, rare==1 | data/config/rite/5006674.json |
+| 5006675 | 异想天开的构思 | 上城区:[7,12] | 0 | 0 | 3 | 7 | s1: type=char, is=2000312<br>s2: type=item, cost.金币=[10,20]<br>s3: type=sudan, 奢靡=1, rare<==2, s2.金币=20 | data/config/rite/5006675.json |
+| 5006676 | 苗圃 | 奇珍:9 | 1 | 0 | 1 | 0 | s1: type=char, is=2000312<br>s2: type=item, 爱=1<br>s3: type=item, 智=1<br>s4: type=item, 信=1 | data/config/rite/5006676.json |
+| 5006677 | 苗圃 | 奇珍:9 | 0 | 0 | 1 | 0 | s1: !已收容=1, any={"孤儿":1,"妻子":1,"is":2000989,"all":{"any":{"is":2000728}}}<br>s2: type=item, cost.金币=5<br>s3: type=item, 爱=1<br>s4: type=item, 智=1 | data/config/rite/5006677.json |
+| 5006678 | 最后的愿望 | 商业区:1 | 0 | 0 | 1 | 5 | s1: type=char, is=2000899<br>s2: type=char<br>s3: 火焰大王=1<br>s4: type=item, is=2000382 | data/config/rite/5006678.json |
+| 5006679 | 可疑的金币 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2001190<br>s2: type=char, !怪物=1, !动物=1 | data/config/rite/5006679.json |
+| 5006680 | 吐露真相 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000005<br>s2: type=char, 主角=1, !s3=1, !s4=1<br>s3: type=char, 主角=1, !s2=1, !s4=1<br>s4: type=char, 主角=1, !s2=1, !s3=1 | data/config/rite/5006680.json |
+| 5006681 | 审问 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: is=2000005<br>s2: type=char, !怪物=1, !动物=1<br>s3: type=char, !怪物=1, !动物=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006681.json |
+| 5006682 | 搜刮 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006682.json |
+| 5006683 | 苏丹的质询 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, is=2000029, cost.金币=10<br>s3: type=item, is=2001190, cost.金币=10<br>s4: type=item, is=2001191 | data/config/rite/5006683.json |
+| 5006684 | 满足苏丹 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: type=item, is=2000029, cost.金币=10<br>s3: type=item, is=2001190, cost.金币=10<br>s4: type=item, is=2001191 | data/config/rite/5006684.json |
+| 5006685 | 造币 | 自宅:[2,12] | 0 | 0 | 3 | 0 | s1: type=char, !怪物=1, !动物=1<br>s2: type=char<br>s3: type=item, is=2000029, cost.金币=10<br>s4: type=char | data/config/rite/5006685.json |
+| 5006686 | 一道名菜 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=item, any={"情诗":1,"史诗":1,"讽刺诗":1,"预言诗":1}<br>s2: type=char, is=2000460<br>s3: type=char, 主角=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006686.json |
+| 5006687 | 报菜名 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001192<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006687.json |
+| 5006688 | 当我们谈论爱情的时候 | 上城区:[1,6] | 0 | 0 | 1 | 0 | s1: type=char, is=2000460<br>s2: type=char, 女性=1 | data/config/rite/5006688.json |
+| 5006689 | 作祟 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006689.json |
+| 5006690 | 哈桑的苦役 | 上城区:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000001<br>s2: type=char, is=2000001<br>s3: type=char, is=2000001<br>s4: type=char, is=2000001 | data/config/rite/5006690.json |
+| 5006691 | 欢愉之诗 | 商业区:[10,19] | 1 | 0 | 3 | 0 | s1: type=char, is=2000460 | data/config/rite/5006691.json |
+| 5006692 | 苗圃的学习 | 商业区:[10,19] | 1 | 0 | 3 | 0 | s1: type=char, is=2000460 | data/config/rite/5006692.json |
+| 5006693 | 艺术顾问 | 商业区:[7,10] | 1 | 0 | 3 | 0 | s1: type=char, is=2000460 | data/config/rite/5006693.json |
+| 5006694 | 宫廷诗人 | 宫廷:[2,6] | 1 | 0 | 3 | 0 | s1: type=char, is=2000460 | data/config/rite/5006694.json |
+| 5006695 | 诗人的名望 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000460<br>s2: type=item, any={"情诗":1,"讽刺诗":1,"史诗":1,"预言诗":1}<br>s3: type=char, 贵族=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006695.json |
+| 5006696 | 诗人的羊 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000460<br>s2: type=char, 主角=1, is=2000001<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=char, any={"is":2000861} | data/config/rite/5006696.json |
+| 5006697 | 奇怪的攻击 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000460<br>s2: type=char, is=2000001<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: is=2001201 | data/config/rite/5006697.json |
+| 5006698 | 一桩怪谈 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001208<br>s2: type=char, any={"is":2000861} | data/config/rite/5006698.json |
+| 5006699 | 你怎么敢咩！ | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000460<br>s2: type=char, is=2000001<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: is=2001204 | data/config/rite/5006699.json |
+| 5006700 | 命运的书店 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=char, is=2000001<br>s2: type=char, any={"is":2000861}<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006700.json |
+| 5006701 | 诗人来访 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000460<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006701.json |
+| 5006702 | 珠宝匠来访 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000019<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006702.json |
+| 5006703 | 舞姬的拜访 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000129<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006703.json |
+| 5006704 | 喵，喵喵 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000461<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006704.json |
+| 5006705 | 妆娘造访 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000459<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006705.json |
+| 5006706 | 同命鸟 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, is=2000861<br>s2: any={"all":{"type":"char","诅咒":1},"is":2000326} | data/config/rite/5006706.json |
+| 5006710 | 书店老板上门 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000199<br>s2: is=2001230<br>s3: type=item, cost.金币=5 | data/config/rite/5006710.json |
+| 5006711 | 难解之意 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001230, 正在阅读=1<br>s2: type=char, 主角=1 | data/config/rite/5006711.json |
+| 5006712 | 奇怪的流言 | 黑街:[2,9] | 0 | 0 | 1 | 3 | s1: type=char, !主角=1<br>s2: type=item, any={"all":{"!金币":1,"cost.消耗品=":1},"cost.金币":3} | data/config/rite/5006712.json |
+| 5006713 | 午夜欢宴 | 黑街:[2,9] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1, 欢宴之主=1 | data/config/rite/5006713.json |
+| 5006714 | 更加奇怪的流言 | 黑街:[2,9] | 0 | 0 | 1 | 3 | s1: type=char, !主角=1<br>s2: type=item, any={"all":{"!金币":1,"cost.消耗品=":1},"cost.金币":5} | data/config/rite/5006714.json |
+| 5006715 | 凡人的研究 | 商业区:[10,19] | 0 | 0 | 3 | 2 | s1: type=char, is=2000199, 锁定阿萨尔=1<br>s2: type=char, f:智慧+魔力+0>==10 | data/config/rite/5006715.json |
+| 5006716 | 午夜欢宴 | 黑街:[2,9] | 1 | 0 | 1 | 0 | s1: type=char, is=2000199, 锁定阿萨尔=1<br>s2: type=item, is=2001232<br>s3: type=char, 主角=1, 欢宴之主=1<br>s4: type=char | data/config/rite/5006716.json |
+| 5006717 | 来龙去脉 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000199<br>s2: type=sudan, 杀戮=1, f:s2.rare-s1.rare<==0 | data/config/rite/5006717.json |
+| 5006718 | 百科全书 | 奇珍:15 | 0 | 0 | 1 | 0 | s1: type=item, is=2001235<br>s2: type=item, is=2001236<br>s3: type=item, is=2001237<br>s4: type=item, is=2001238 | data/config/rite/5006718.json |
+| 5006719 | 敲门砖 | 上城区:[7,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000199<br>s2: type=item, is=2001247<br>s3: type=char, 主角=1<br>s4: type=item, 读物=1, rare>==3 | data/config/rite/5006719.json |
+| 5006720 | 书窖 | 上城区:[7,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000199<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006720.json |
+| 5006721 | 抄书人 | 上城区:[7,12] | 1 | 0 | 5 | 0 | s1: type=char, is=2000199 | data/config/rite/5006721.json |
+| 5006722 | 归木于林 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000199<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006722.json |
+| 5006723 | 因笔墨获罪者 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000199<br>s2: type=item, is=2000172, cost.思潮=[1,99]<br>s3: type=item, is=2000171, cost.思潮=[1,99]<br>s4: type=item, is=2000541, cost.思潮=[1,99] | data/config/rite/5006723.json |
+| 5006724 | 不合时宜的思想 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001248, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006724.json |
+| 5006725 | 一本书的诞生 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=[5,10]<br>s2: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5006725.json |
+| 5006726 | 印刷方略 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001249, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006726.json |
+| 5006727 | 请支持正版 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, !怪物=1, !动物=1<br>s2: type=item, cost.消耗品==1, !金币=1<br>s3: type=sudan, 杀戮=1, rare<==2 | data/config/rite/5006727.json |
+| 5006728 | 也许应该分享给她 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币=[1,3]<br>s2: type=char, is=2000123 | data/config/rite/5006728.json |
+| 5006729 | 故事的赞助人 | 商业区:[10,19] | 0 | 0 | 3 | 2 | s1: type=item, cost.金币=3<br>s2: type=char, is=2000123 | data/config/rite/5006729.json |
+| 5006730 | 碎肉与骨粉 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001251, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006730.json |
+| 5006731 | 迷宫之心 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001252, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006731.json |
+| 5006732 | 无人知晓的地方 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001253, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006732.json |
+| 5006733 | 小星星 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001254, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006733.json |
+| 5006734 | 批评他人的尺度 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001255, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006734.json |
+| 5006735 | 伊萨尔远征记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001256, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006735.json |
+| 5006736 | 山居往事 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001257, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006736.json |
+| 5006737 | 垂钓者与我 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001258, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006737.json |
+| 5006738 | 印刷详解 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001259, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006738.json |
+| 5006739 | 宇宙之弦 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001260, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006739.json |
+| 5006740 | 赠人玫瑰油 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, is=2001292<br>s2: type=char | data/config/rite/5006740.json |
+| 5006741 | 绳索的锤炼 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001234, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006741.json |
+| 5006742 | 妆娘的拜访 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000459<br>s2: type=char | data/config/rite/5006742.json |
+| 5006743 | 善之形 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000459<br>s2: any={"all":{"主角":1,"counter.7100001":8}} | data/config/rite/5006743.json |
+| 5006744 | 恶之形 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000459<br>s2: any={"all":{"主角":1,"counter.7100002":8}} | data/config/rite/5006744.json |
+| 5006745 | 权之形 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000459<br>s2: type=char, 主角=1, !s3=1, !s4=1, !s5=1<br>s3: type=char, 主角=1, !s2=1, !s4=1, !s5=1<br>s4: type=char, 主角=1, !s2=1, !s3=1, !s5=1 | data/config/rite/5006745.json |
+| 5006746 | 侠之形 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000459<br>s2: any={"all":{"主角":1,"counter.7100004":8}} | data/config/rite/5006746.json |
+| 5006747 | 藏木于林 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001247, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5006747.json |
+| 5006748 | 神的侍从 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, any={"妻子":1,"all":{"命运的羁绊":1,"is":2000019}} | data/config/rite/5006748.json |
+| 5006749 | 初试神威 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, 主角=1, 入圣=1<br>s2: type=char, 神的侍从=1<br>s3: type=sudan<br>s4: type=item, cost.消耗品=1, !金币=1 | data/config/rite/5006749.json |
+| 5006800 | 游猎会 | 野外:[1,6] | 0 | 0 | 2 | 0 | s1: type=char, 主角=1<br>s2: type=char, is=2000064<br>s3: type=char, is=2000065<br>s4: type=char, is=2000054 | data/config/rite/5006800.json |
+| 5006801 | 奴隶与主人 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1, 被向导=1<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006801.json |
+| 5006802 | 战士之间 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000064<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006802.json |
+| 5006803 | 沼泽之王 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000292<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006803.json |
+| 5006804 | 捉捕大岩羊 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000054<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006804.json |
+| 5006805 | 鹰身女妖 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000061<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006805.json |
+| 5006806 | 猎人的陷阱 | 野外:[1,6] | 1 | 0 | 1 | 0 | s1: type=char, is=2000063<br>s2: type=char, is=2000114<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006806.json |
+| 5006807 | 游猎沙威玛 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001302<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006807.json |
+| 5006808 | 涓滴希望 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001308<br>s2: type=char, 女性=1 | data/config/rite/5006808.json |
+| 5006809 | 社会化训练 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=char, is=2000114<br>s2: type=char, any={"is":2000113,"法拉杰":1,"all":{"is":2000082,"奴隶":1}}<br>s3: type=item, cost.金币=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5006809.json |
+| 5006810 | 油炸河鲜 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001312<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006810.json |
+| 5006811 | 盐烤牛心 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001313<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5006811.json |
+| 5007001 | 决战奈费勒 | 大敌:1 | 0 | 0 | 1 | 3 | s1: is=2000312<br>s2: is=2000567<br>s3: is=2000568<br>s4: is=2000569 | data/config/rite/5007001.json |
+| 5007002 | 积累优势 | 大敌:1 | 1 | 0 | 1 | 0 | s1: is=2000312<br>s2: is=2000567<br>s3: is=2000568<br>s4: is=2000569 | data/config/rite/5007002.json |
+| 5007003 | 破坏名声 | 大敌:1 | 1 | 0 | 1 | 0 | s1: is=2000312<br>s2: is=2000567<br>s3: is=2000568<br>s4: is=2000569 | data/config/rite/5007003.json |
+| 5007004 | 宫廷暗流 | 大敌:1 | 1 | 0 | 1 | 0 | s1: type=char, 支持>==1, !追随者=1, !主角=1 | data/config/rite/5007004.json |
+| 5007005 | 散布谣言 | 大敌:1 | 1 | 0 | 1 | 0 | s1: is=2000312<br>s2: is=2000567<br>s3: is=2000568<br>s4: is=2000569 | data/config/rite/5007005.json |
+| 5007006 | 离间计划 | 大敌:1 | 1 | 0 | 1 | 0 | s1: is=2000312<br>s2: is=2000567<br>s3: is=2000568<br>s4: is=2000569 | data/config/rite/5007006.json |
+| 5007007 | 离间计 | 大敌:1 | 1 | 0 | 1 | 0 | s1: type=char, 贵族=1, 追随者=1 | data/config/rite/5007007.json |
+| 5007008 | 突袭贫民窟 | 大敌:2 | 0 | 0 | 1 | 3 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007008.json |
+| 5007009 | 窥视财物 | 大敌:2 | 1 | 0 | 1 | 0 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007009.json |
+| 5007010 | 这不算偷 | 大敌:2 | 1 | 0 | 1 | 0 | s1: type=item, 已拥有=1, any={"装备":1,"读物":1}<br>s2: type=item, cost.金币=[1,3]<br>s3: type=char, is=2000369<br>s4: type=char, is=2000371 | data/config/rite/5007010.json |
+| 5007011 | 招募手下 | 大敌:2 | 1 | 0 | 1 | 0 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007011.json |
+| 5007012 | 伺机伤人 | 大敌:2 | 1 | 0 | 1 | 0 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007012.json |
+| 5007013 | 受害者 | 大敌:2 | 1 | 0 | 1 | 0 | s1: type=char, 追随者=1 | data/config/rite/5007013.json |
+| 5007014 | 暗中破坏 | 大敌:2 | 1 | 0 | 1 | 0 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007014.json |
+| 5007015 | 无谋的复仇 | 大敌:2 | 1 | 0 | 1 | 0 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007015.json |
+| 5007016 | 孤注一掷 | 大敌:2 | 0 | 0 | 1 | 3 | s1: is=2000369<br>s2: is=2000573<br>s3: is=2000574<br>s4: is=2000371 | data/config/rite/5007016.json |
+| 5008001 | 妻子的忧虑 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008001.json |
+| 5008002 | 武装娇妻 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008002.json |
+| 5008003 | 特殊的枕头 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=sudan, 纵欲=1, f:rare-s3.rare<==0<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1 | data/config/rite/5008003.json |
+| 5008004 | 为你辩解 | 自宅:[2,12] | 0 | 0 | 0 | 3 | s1: 妻子=1<br>s2: is=2000083 | data/config/rite/5008004.json |
+| 5008005 | 妻子的茶会 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: 妻子=1, type=char<br>s2: type=char, any={"主角":1,"all":{"is":2000062,"密教徒":1,"侧室":1}}<br>s3: all={"type":"sudan","any":{"纵欲":1,"奢靡":1},"s2.主角":1,"rare<=":3,"counter.7000234<":1}<br>s4: type=item, any={"all":{"s3.奢靡":1,"s3.rare=":3,"cost.金币>=":15,"s2.主角":1}} | data/config/rite/5008005.json |
+| 5008006 | 鼓励 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: 法拉杰=1<br>s2: type=char, any={"妻子":1,"主角":1}<br>s3: type=char, any={"妻子":1,"主角":1}<br>s4: type=char, any={"妻子":1,"主角":1} | data/config/rite/5008006.json |
+| 5008007 | 激励 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: 法拉杰=1<br>s2: type=char, any={"妻子":1,"主角":1}<br>s3: type=char, any={"妻子":1,"主角":1}<br>s4: type=char, any={"妻子":1,"主角":1} | data/config/rite/5008007.json |
+| 5008008 | 欲望与幸福 | 自宅:[2,12] | 0 | 0 | 1 | 15 | s1: type=char, 法拉杰=1<br>s2: type=sudan, 纵欲=1, f:rare-s1.rare<==0<br>s3: type=char, 主角=1<br>s4: type=char, 妻子=1 | data/config/rite/5008008.json |
+| 5008009 | 背叛 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 法拉杰=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, any={"纵欲":1,"杀戮":1}, f:rare-s1.rare<==0 | data/config/rite/5008009.json |
+| 5008010 | 青年的帷幕 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: 法拉杰=1, type=char<br>s2: is=2000735<br>s3: 主角=1, type=char<br>s4: type=item, any={"cost.金币":[1,15],"is":2000172} | data/config/rite/5008010.json |
+| 5008011 | 危险的聚会 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: 法拉杰=1, type=char<br>s2: is=2000736<br>s3: 主角=1, type=char<br>s4: type=item, any={"cost.金币":[1,15],"is":2000172} | data/config/rite/5008011.json |
+| 5008012 | 革命的沙龙 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: 法拉杰=1, type=char<br>s2: is=2000748<br>s3: 主角=1, type=char<br>s4: type=item, cost.金币=[1,15] | data/config/rite/5008012.json |
+| 5008013 | 收买头衔 | 上城区:[2,10] | 0 | 0 | 1 | 7 | s1: type=item, cost.金币=10<br>s2: type=char<br>s3: is=2000743<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008013.json |
+| 5008014 | 荣耀回归 | 上城区:[3,12] | 0 | 0 | 1 | 0 | s1: is=2000056<br>s2: type=item, is=2000741 | data/config/rite/5008014.json |
+| 5008015 | 购买头衔 | 上城区:[2,10] | 0 | 0 | 1 | 5 | s1: type=item, cost.金币=10<br>s2: type=char | data/config/rite/5008015.json |
+| 5008016 | 最后的道别 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000056 | data/config/rite/5008016.json |
+| 5008017 | 恰当的价码 | 黑街:[1,5] | 0 | 0 | 1 | 5 | s1: type=item, cost.金币=10 | data/config/rite/5008017.json |
+| 5008018 | 过时不候 | 自宅:[3,12] | 1 | 0 | 1 | 1 | s1: is=2000056 | data/config/rite/5008018.json |
+| 5008019 | 荣耀回归 | 上城区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000056<br>s2: is=2000741 | data/config/rite/5008019.json |
+| 5008020 | 永世流传之物 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=item, is=2000742<br>s2: is=2000056 | data/config/rite/5008020.json |
+| 5008021 | 废弃 | 自宅:[2,10] | 0 | 0 | 1 | 5 | s1: any | data/config/rite/5008021.json |
+| 5008022 | 废弃 | 自宅:[2,10] | 0 | 0 | 1 | 0 | s1: is=2000756 | data/config/rite/5008022.json |
+| 5008023 | 丰产的仪式 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=sudan, f:rare-s3.rare<==0, 杀戮=1<br>s2: 主角=1, type=char<br>s3: is=2000056, type=char<br>s4: is=2000757 | data/config/rite/5008023.json |
+| 5008024 | 销毁图纸 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000757 | data/config/rite/5008024.json |
+| 5008025 | 内宅的仪式 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=sudan, f:rare-s3.rare<==0, 纵欲=1<br>s2: 主角=1, type=char<br>s3: all={"type":"char","any":{"is":2000056,"妻子":1,"激情>=":1}}<br>s4: is=2000758 | data/config/rite/5008025.json |
+| 5008026 | 挽回的余地 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=item, 饰品=1, rare>==3, !is=2001022 | data/config/rite/5008026.json |
+| 5008027 | 挽回的余地 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, 饰品=1, rare>==3, !is=2001022<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008027.json |
+| 5008028 | 我都知道了！ | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008028.json |
+| 5008029 | 剑盾的仪式 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: is=2000759<br>s2: 部队=1, any={"type":"char","is":"2000554"}<br>s3: type=char<br>s4: type=item, cost.金币=[10,20] | data/config/rite/5008029.json |
+| 5008030 | 气急败坏 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000057<br>s2: !s3=1, type=char<br>s3: !s2=1, type=char<br>s4: type=item, is=2000776 | data/config/rite/5008030.json |
+| 5008031 | 决斗 | 上城区:[1,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000057<br>s2: type=char, is=2000774<br>s3: type=char, is=2000777<br>s4: type=char | data/config/rite/5008031.json |
+| 5008032 | 末路 | 上城区:[1,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000057<br>s2: type=char, is=2000774 | data/config/rite/5008032.json |
+| 5008033 | 别人的女儿 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000774<br>s2: 主角=1, type=char<br>s3: type=sudan, !s4=1, 纵欲=1, rare<==2 | data/config/rite/5008033.json |
+| 5008034 | 积累优势 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000781<br>s4: is=2000774 | data/config/rite/5008034.json |
+| 5008035 | 隐身幕后 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000781<br>s4: is=2000774 | data/config/rite/5008035.json |
+| 5008036 | 策划袭击 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000781<br>s4: is=2000774 | data/config/rite/5008036.json |
+| 5008037 | 突袭 | 大敌:3 | 1 | 0 | 1 | 0 | s1: type=char, 追随者=1 | data/config/rite/5008037.json |
+| 5008038 | 干扰生意 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000781<br>s4: is=2000774 | data/config/rite/5008038.json |
+| 5008039 | 破坏名声 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000774<br>s4: is=2000781 | data/config/rite/5008039.json |
+| 5008040 | 进谗言 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000774<br>s4: is=2000781 | data/config/rite/5008040.json |
+| 5008041 | 策划诉讼 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000774<br>s4: is=2000781 | data/config/rite/5008041.json |
+| 5008042 | 策划暗杀 | 大敌:3 | 1 | 0 | 1 | 0 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000774<br>s4: is=2000781 | data/config/rite/5008042.json |
+| 5008043 | 一次暗杀 | 大敌:3 | 1 | 0 | 5 | 1 | s1: is=2000057<br>s2: is=2000781<br>s3: is=2000774<br>s4: type=char, 主角=1 | data/config/rite/5008043.json |
+| 5008044 | 牢狱之灾 | 大敌:3 | 1 | 0 | 5 | 1 | s1: type=char, 追随者=1, !主角=1 | data/config/rite/5008044.json |
+| 5008045 | 突袭贪官宅邸 | 大敌:3 | 0 | 0 | 1 | 3 | s1: is=2000057<br>s2: is=2000782<br>s3: is=2000781<br>s4: is=2000774 | data/config/rite/5008045.json |
+| 5008046 | 还来？ | 自宅:[1,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000774<br>s2: type=char, 妻子=1, !s3=1, !s4=1<br>s3: type=char, !s2=1, !s4=1<br>s4: type=char, 主角=1, !s2=1, !s3=1 | data/config/rite/5008046.json |
+| 5008047 | 欢宴 | 上城区:[7,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000774<br>s2: type=char, 主角=1<br>s3: type=char, !奴隶=1, !主角=1<br>s4: type=char, 奴隶=1 | data/config/rite/5008047.json |
+| 5008048 | 一次愉快的回忆 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=item, cost.不满=[1,99] | data/config/rite/5008048.json |
+| 5008049 | 快脚的约会 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000370 | data/config/rite/5008049.json |
+| 5008050 | 赘婿的金币 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000057<br>s2: type=char, is=2000774<br>s3: type=char, is=2000370<br>s4: cost.2000813=[1,20], !已拥有=1 | data/config/rite/5008050.json |
+| 5008051 | 欢快的访客 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000794<br>s2: type=char | data/config/rite/5008051.json |
+| 5008052 | 快脚的安家费 | 自宅:[2,12] | 0 | 0 | 7 | 7 | s1: type=char, is=2000370<br>s2: type=item, cost.金币=5 | data/config/rite/5008052.json |
+| 5008053 | 失踪的快脚 | 自宅:[2,12] | 1 | 0 | 3 | 1 | s1: type=char, is=2000370 | data/config/rite/5008053.json |
+| 5008054 | 快脚的安家费 | 自宅:[2,12] | 0 | 0 | 3 | 7 | s1: type=char, is=2000370<br>s2: type=item, cost.金币=3 | data/config/rite/5008054.json |
+| 5008055 | 归乡之径（作废） | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: is=2000350<br>s2: is=2000069<br>s3: type=char, !s4=1<br>s4: type=char, !s3=1 | data/config/rite/5008055.json |
+| 5008056 | 应许时刻 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000350<br>s2: type=char, 主角=1, !s3=1, !s4=1<br>s3: type=char, 主角=1, !s2=1, !s4=1<br>s4: type=char, 主角=1, !s2=1, !s3=1 | data/config/rite/5008056.json |
+| 5008057 | 同一场风暴 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000350<br>s2: 主角=1, type=char<br>s3: type=sudan, !s4=1, 纵欲=1, rare<==3 | data/config/rite/5008057.json |
+| 5008058 | 让我成为你的盾 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000350<br>s2: any={"部队":1,"is":2000172} | data/config/rite/5008058.json |
+| 5008059 | 老鼠一样的逃亡 | 野外:[1,6] | 0 | 0 | 1 | 5 | s1: is=2000853<br>s2: type=char, is=2000350<br>s3: type=item, cost.金币=10<br>s4: any={"is":2000772,"部队":1} | data/config/rite/5008059.json |
+| 5008060 | 证婚人 | 自宅:[4,12] | 0 | 0 | 1 | 5 | s1: type=char, 女性=1 | data/config/rite/5008060.json |
+| 5008061 | 过时不候 | 自宅:[3,12] | 1 | 0 | 1 | 1 | s1: is=2000056 | data/config/rite/5008061.json |
+| 5008062 | 第一眼 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000350<br>s2: type=char, is=2000123<br>s3: 主角=1, type=char<br>s4: type=item, cost.金币=18 | data/config/rite/5008062.json |
+| 5008063 | 年轻人的婚礼 | 上城区:[1,6] | 0 | 0 | 1 | 10 | s1: type=char, is=2000350<br>s2: type=char, is=2000123<br>s3: type=char, any={"主角":1,"妻子":1}<br>s4: type=char, any={"主角":1,"妻子":1} | data/config/rite/5008063.json |
+| 5008064 | 归乡之路 | 野外:[9,14] | 1 | 0 | 7 | 1 | s1: type=char, is=2000350<br>s2: type=char, is=2000123 | data/config/rite/5008064.json |
+| 5008065 | 老乡见老乡 | 商业区:[10,19] | 1 | 0 | 3 | 1 | s1: type=char, is=2000350 | data/config/rite/5008065.json |
+| 5008066 | 为您效劳 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000350<br>s2: type=char, is=2000860<br>s3: type=item, any={"cost.金币":18,"is":2000172,"部队":1} | data/config/rite/5008066.json |
+| 5008067 | 抓贼 | 黑街:[2,5] | 1 | 0 | 1 | 1 | s1: type=item, is=2000885<br>s2: type=item, 已拥有=1, cost.金币=[1,2]<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008067.json |
+| 5008068 | 一手拿货 | 黑街:[2,5] | 0 | 0 | 0 | 3 | s1: type=char, is=2000113<br>s2: type=item, is=2000987<br>s3: type=item, any={"cost.金币":5,"is":2000885}<br>s4: type=char | data/config/rite/5008068.json |
+| 5008069 | 先钱后货 | 黑街:[2,5] | 0 | 0 | 0 | 3 | s1: type=char, is=2000113<br>s2: type=item, is=2000987<br>s3: type=item, cost.金币=[1,5]<br>s4: type=char | data/config/rite/5008069.json |
+| 5008070 | 小贼的命运 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2000885<br>s2: type=char, 主角=1<br>s3: type=sudan, 杀戮=1, rare<==1 | data/config/rite/5008070.json |
+| 5008071 | 夜盗 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000113<br>s2: type=item, is=2000885<br>s3: type=item, cost.金币=[1,10]<br>s4: type=char | data/config/rite/5008071.json |
+| 5008072 | 腐烂之巢 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2000886<br>s2: type=item, is=2000892<br>s3: type=char, is=2000113<br>s4: type=char | data/config/rite/5008072.json |
+| 5008073 | 乞儿们 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: is=2000887<br>s2: type=item, cost.金币=3 | data/config/rite/5008073.json |
+| 5008074 | 白肚皮 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2000113<br>s2: type=char, is=2000886<br>s3: is=2000893, !s5=1<br>s4: type=char, 主角=1 | data/config/rite/5008074.json |
+| 5008075 | 拉磨 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=item, is=2000885<br>s2: type=char<br>s3: type=item, cost.金币=1 | data/config/rite/5008075.json |
+| 5008076 | 贼的志愿生 | 黑街:[2,5] | 0 | 0 | 1 | 5 | s1: type=char, is=2000113<br>s2: type=item, is=2000885<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008076.json |
+| 5008077 | 阿里木的大餐 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: type=char, is=2000113<br>s2: type=char, !主角=1<br>s3: type=char, !主角=1<br>s4: type=char, 主角=1 | data/config/rite/5008077.json |
+| 5008078 | 饥饿的嘴 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000887<br>s2: type=item, cost.金币=3 | data/config/rite/5008078.json |
+| 5008079 | 做鸡 | 黑街:[1,5] | 1 | 0 | 1 | 1 | s1: is=2000887 | data/config/rite/5008079.json |
+| 5008080 | 做牛马 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000887<br>s2: type=item, cost.金币=5 | data/config/rite/5008080.json |
+| 5008081 | 做羔羊 | 神殿区:[2,10] | 1 | 0 | 1 | 0 | s1: is=2000887<br>s2: type=item, cost.金币=[10,20]<br>s3: type=sudan, 奢靡=1, f:rare-s1.rare<==0<br>s4: type=item, any={"is":2000728} | data/config/rite/5008081.json |
+| 5008082 | 做狗 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000887<br>s2: type=item, cost.金币=10 | data/config/rite/5008082.json |
+| 5008083 | 做羔羊？ | 黑街:[2,5] | 1 | 0 | 1 | 0 | s1: is=2000887<br>s2: type=item, 思潮=1, any={"is":2000412} | data/config/rite/5008083.json |
+| 5008084 | 做老鼠 | 黑街:[1,5] | 1 | 0 | 1 | 0 | s1: is=2000887<br>s2: type=item, cost.金币=8 | data/config/rite/5008084.json |
+| 5008085 | 做人 | 上城区:[7,12] | 1 | 0 | 1 | 0 | s1: type=char, is=2000113<br>s2: type=item, cost.金币=[10,20]<br>s3: type=sudan, 奢靡=1, rare<==2, s2.金币=20<br>s4: is=2000887 | data/config/rite/5008085.json |
+| 5008086 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char | data/config/rite/5008086.json |
+| 5008087 | 狗窝 | 黑街:[2,5] | 0 | 0 | 1 | 7 | s1: type=item, is=2000888<br>s2: type=char, is=2000113<br>s3: type=char<br>s4: type=item, any={"cost.金币":10,"大餐":1} | data/config/rite/5008087.json |
+| 5008088 | 合宜的一餐 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=char, is=2000014<br>s2: type=item, cost.金币=[1,10]<br>s3: type=sudan, s2.金币==10, 奢靡=1, rare==1 | data/config/rite/5008088.json |
+| 5008089 | 她不开心 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000083<br>s2: type=char, is=2000014<br>s3: type=char, any={"主角":1,"is":2000371}<br>s4: type=char, 主角=1 | data/config/rite/5008089.json |
+| 5008090 | 大家一起来！ | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000932<br>s2: 主角=1, type=char<br>s3: 妻子=1, type=char<br>s4: !贵族=1, !主角=1, type=char | data/config/rite/5008090.json |
+| 5008091 | 有人没吃到 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: type=char, is=2000931<br>s2: type=item, any={"cost.金币":3,"大餐":1}<br>s3: type=char, !主角=1 | data/config/rite/5008091.json |
+| 5008092 | 贵族也想吃 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2001004<br>s2: type=item, any={"cost.金币":5,"大餐":1}<br>s3: any={"is":2000014,"主角":1}, type=char | data/config/rite/5008092.json |
+| 5008093 | 开饭咯 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: type=item, is=2000939<br>s2: type=char<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5008093.json |
+| 5008094 | 疗愈的食物 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: is=2000083<br>s2: type=char, 妻子=1<br>s3: type=char, 主角=1 | data/config/rite/5008094.json |
+| 5008095 | 一罐蜜饯 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, is=2000941<br>s2: type=char, 主角=1<br>s3: type=char, 追随者=1, !主角=1<br>s4: type=char, 追随者=1, !主角=1 | data/config/rite/5008095.json |
+| 5008096 | 免费的盛宴 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000940<br>s2: is=2000932<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5008096.json |
+| 5008097 | 闹事的老鼠 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: is=2000933<br>s2: type=char<br>s3: type=item, cost.金币=10 | data/config/rite/5008097.json |
+| 5008098 | 硕鼠 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: is=2000934<br>s2: type=char, any={"贵族":1,"主角":1}<br>s3: type=sudan, !s3.奢靡=1, s2.主角=1, rare<==2 | data/config/rite/5008098.json |
+| 5008099 | 全家福 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: is=2000964<br>s2: type=char<br>s3: !消耗品=1, !思潮=1, !情报=1, !大餐=1, !装备=1, !金币=1, any={"type":"item","部队":1,"追随者":1}<br>s4: !消耗品=1, !思潮=1, !情报=1, !大餐=1, !装备=1, !金币=1, any={"type":"item","部队":1,"追随者":1} | data/config/rite/5008099.json |
+| 5008100 | 等待一餐 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=char, is=2000935<br>s2: type=item, 大餐=1 | data/config/rite/5008100.json |
+| 5008101 | 冷淡的消遣 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2000083<br>s2: type=char, 妻子=1 | data/config/rite/5008101.json |
+| 5008102 | 热辣欢宴 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000014<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008102.json |
+| 5008103 | 勇士欢宴 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000014<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008103.json |
+| 5008104 | 宫廷华宴 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000014<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008104.json |
+| 5008105 | 颂神会 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000014<br>s2: type=item, cost.金币=10<br>s3: type=char<br>s4: type=char | data/config/rite/5008105.json |
+| 5008106 | 谢肉祭 | 商业区:[10,19] | 0 | 0 | 3 | 3 | s1: type=char, is=2000014<br>s2: type=char, is=2000022<br>s3: any={"type":"char","任意处置":1}, !主角=1, !怪物=1, !动物=1<br>s4: type=char, any={"密教徒":1,"黑暗知识":1} | data/config/rite/5008106.json |
+| 5008107 | 阁楼里的笑声 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: type=char, any={"is":2000789,"妓女":1} | data/config/rite/5008107.json |
+| 5008108 | 合伙金 | 商业区:[10,19] | 0 | 0 | 1 | 0 | s1: type=item, cost.金币=10 | data/config/rite/5008108.json |
+| 5008109 | 阁楼里熟悉的笑声 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, any={"is":2000500,"all":{"counter.7000251>=":1,"is":2000369}} | data/config/rite/5008109.json |
+| 5008110 | 阁楼里熟悉的笑声 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, any={"is":2000500,"all":{"counter.7000251>=":1,"is":2000369}} | data/config/rite/5008110.json |
+| 5008111 | 阁楼里偶尔的笑声 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: type=char, any={"is":2000789,"妓女":1} | data/config/rite/5008111.json |
+| 5008112 | 阁楼里的笑声 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: type=char, any={"is":2000789,"妓女":1} | data/config/rite/5008112.json |
+| 5008113 | 腐败的玫瑰 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: is=2000937<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008113.json |
+| 5008114 | 黑暗之主的雕琢 | 野外:[9,14] | 0 | 0 | 7 | 7 | s1: type=char, is=2000022<br>s2: type=char, is=2000937<br>s3: type=item, is=2000986 | data/config/rite/5008114.json |
+| 5008115 | 恶臭的阁楼 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: type=char, !主角=1, 追随者=1, 男性=1, !银趴绝缘者=1, !is=2000054<br>s2: type=char, !主角=1, 追随者=1, 男性=1, !银趴绝缘者=1, !is=2000054 | data/config/rite/5008115.json |
+| 5008116 | 丝绒暗室 | 商业区:[10,19] | 1 | 0 | 1 | 0 | s1: type=char, !苏丹=1, !主角=1, 贵族=1<br>s2: type=char, !苏丹=1, !主角=1, 贵族=1 | data/config/rite/5008116.json |
+| 5008117 | 过于尊贵的客人 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2001005<br>s2: type=char, 贵族=1<br>s3: type=char, 贵族=1<br>s4: type=char, 贵族=1 | data/config/rite/5008117.json |
+| 5008118 | 如何款待尊贵的客人 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: type=char, is=2000024<br>s2: type=char, any={"all":{"魅力>=":5,"女性":1},"主角":1}<br>s3: type=item, 大餐=1<br>s4: type=item, any={"is":2000412} | data/config/rite/5008118.json |
+| 5008119 | 御厨 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: is=2000014<br>s2: type=char, 贵族=1<br>s3: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008119.json |
+| 5008120 | 苏丹的戏弄 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: type=item, 大餐=1<br>s2: type=item, is=2001053, cost.耐心=[1,3] | data/config/rite/5008120.json |
+| 5008121 | 哈比卜逃亡 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: is=2000014<br>s2: type=char<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, f:rare-s1.rare<==0, 杀戮=1, s2.主角=1 | data/config/rite/5008121.json |
+| 5008122 | 苏丹的偏爱 | 上城区:[7,12] | 0 | 0 | 2 | 5 | s1: type=char, 苏丹的猎物=1 | data/config/rite/5008122.json |
+| 5008123 | 冒险者酒吧 | 黑街:10 | 0 | 0 | 7 | 0 | s1: type=char, is=2000948<br>s2: type=item, any={"情报":1,"cost.金币":[1,10],"all":{"counter.7000516<":1,"any":{"is":2000412}},"is":2001195} | data/config/rite/5008123.json |
+| 5008125 | 午夜利刃 | 黑街:[2,5] | 1 | 0 | 1 | 1 | s1: type=item, cost.冤魂=[1,8]<br>s2: type=char<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008125.json |
+| 5008126 | 收手吧 | 黑街:[2,5] | 0 | 0 | 1 | 3 | s1: is=2000013<br>s2: is=2000947<br>s3: type=char<br>s4: type=char | data/config/rite/5008126.json |
+| 5008127 | 你是最后一个 | 黑街:[2,5] | 0 | 0 | 1 | 1 | s1: is=2000013<br>s2: type=char, 主角=1<br>s3: type=item, cost.消耗品==1, !金币=1<br>s4: type=sudan, 杀戮=1 | data/config/rite/5008127.json |
+| 5008128 | 如露散 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000014 | data/config/rite/5008128.json |
+| 5008129 | 食物中毒 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: is=2000014 | data/config/rite/5008129.json |
+| 5008130 | 持刀的绵羊 | 商业区:[10,19] | 1 | 0 | 1 | 1 | s1: is=2000014 | data/config/rite/5008130.json |
+| 5008131 | 火！火！火！ | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008131.json |
+| 5008132 | 能吃吗？好吃吗？怎么吃？ | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=char, is=2000014<br>s2: any={"is":2001138,"all":{"have.2000014.魔厨":1,"any":{"is":2001111}},"any":{"is":2001326,"all":{"is":2000434,"驯兽":1}}}<br>s3: type=item, cost.金币=10 | data/config/rite/5008132.json |
+| 5008133 | 手抓鳄鱼饭 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001006<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008133.json |
+| 5008134 | 熏狮子全餐 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001007<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008134.json |
+| 5008135 | 生命布丁 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001008<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008135.json |
+| 5008136 | 荒野一锅炖 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001009<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008136.json |
+| 5008137 | 草药炖大雁 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001010<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008137.json |
+| 5008138 | 烤全驼 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001011<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008138.json |
+| 5008139 | 精力套餐 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001012<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008139.json |
+| 5008140 | 仙人掌蛋糕 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001013<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008140.json |
+| 5008141 | 圣餐饼 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001014<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008141.json |
+| 5008142 | 国王烤肉 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001015<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008142.json |
+| 5008143 | 饼夹一切 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001016<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008143.json |
+| 5008144 | 蜂蜜蛋饼 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001017<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008144.json |
+| 5008145 | 冒险者们的报恩 | 黑街:10 | 0 | 0 | 0 | 0 | s1: type=char | data/config/rite/5008145.json |
+| 5008146 | 黑街赛狗 | 黑街:[2,5] | 1 | 0 | 1 | 1 | s1: is=2000990<br>s2: is=2001027<br>s3: is=2001028<br>s4: is=2001029 | data/config/rite/5008146.json |
+| 5008147 | 比嘬嘬嘬更有用 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: is=2001032<br>s2: type=char | data/config/rite/5008147.json |
+| 5008148 | 超高校级黑街赛狗 | 黑街:[2,5] | 1 | 0 | 1 | 1 | s1: is=2000990<br>s2: is=2001027<br>s3: is=2001028<br>s4: is=2001029 | data/config/rite/5008148.json |
+| 5008149 | 复仇的请求 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: is=2000065<br>s2: type=char, !s3=1<br>s3: type=char, !s2=1 | data/config/rite/5008149.json |
+| 5008150 | 拼凑真相 | 黑街:[2,5] | 0 | 0 | 3 | 0 | s1: type=char<br>s2: any={"all":{"cost.消耗品=":1,"type":"item","情报":1}}<br>s3: type=char<br>s4: any={"all":{"cost.消耗品=":1,"type":"item","情报":1}} | data/config/rite/5008150.json |
+| 5008151 | 唯一的答案 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000065<br>s2: type=char, 主角=1<br>s3: any={"is":2000412,"all":{"type":"sudan","s2":1,"杀戮":1,"f:rare-s1.rare<=":0}}<br>s4: type=item, is=2001043 | data/config/rite/5008151.json |
+| 5008152 | 稀有的肉干 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=item, is=2000942<br>s2: type=char, 主角=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5008152.json |
+| 5008153 | 比最好更好的 | 宫廷:[2,6] | 0 | 0 | 1 | 7 | s1: any={"all":{"type":"char","any":{"is":2000022}}} | data/config/rite/5008153.json |
+| 5008154 | 法德耶来访 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000173<br>s2: type=char, !s3=1, !s4=1, 主角=1<br>s3: type=char, !s2=1, !s4=1, any={"主角":1,"妻子":1}<br>s4: type=char, !s2=1, !s3=1, any={"all":{"counter.7000592>=":1,"is":2000065},"主角":1} | data/config/rite/5008154.json |
+| 5008155 | 苏丹的特使？ | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: is=2000173<br>s2: type=char, any={"主角":1,"妻子":1}<br>s3: type=sudan, s2.主角=1, 纵欲=1, f:rare-s1.rare<==0 | data/config/rite/5008155.json |
+| 5008156 | 绝望中的救赎 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: is=2000173<br>s2: type=item, any={"is":2000412} | data/config/rite/5008156.json |
+| 5008157 | 法德耶的帮助 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000173<br>s2: type=item, is=2000680 | data/config/rite/5008157.json |
+| 5008158 | 老派花园大餐 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001049<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008158.json |
+| 5008159 | 禽肉炒蘑菇 | 商业区:[10,19] | 0 | 0 | 1 | 1 | s1: type=item, is=2001050<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008159.json |
+| 5008160 | 古怪的邀请 | 黑街:[1,9] | 0 | 0 | 1 | 5 | s1: is=2000065<br>s2: 主角=1, type=char | data/config/rite/5008160.json |
+| 5008161 | 新月想出去玩 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: is=2000989<br>s2: any={"type":"char","is":2001305} | data/config/rite/5008161.json |
+| 5008162 | 小狗和月亮之歌 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, is=2001054<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5008162.json |
+| 5008163 | 新月升起 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000989 | data/config/rite/5008163.json |
+| 5008164 | 破除洁净 | 神殿区:[2,10] | 0 | 0 | 1 | 5 | s1: is=2000022<br>s2: is=2000726<br>s3: type=char, !s4=1, !s5=1<br>s4: type=char, !s3=1, !s5=1 | data/config/rite/5008164.json |
+| 5008165 | 废弃 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: is=2000022<br>s2: type=char, any={"主角":1,"妻子":1}<br>s3: type=char, !s2.妻子=1, any={"邪神的面容":1,"is":2000185}<br>s4: type=sudan, s2.主角=1, !s2.妻子=1, !s3=1, f:rare-s1.rare<==0, any={"纵欲":1,"杀戮":1} | data/config/rite/5008165.json |
+| 5008166 | 不洁的代言人 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: is=2000022<br>s2: type=char, any={"主角":1,"妻子":1} | data/config/rite/5008166.json |
+| 5008167 | 不洁的援助 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=sudan | data/config/rite/5008167.json |
+| 5008168 | 命运之死 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=sudan, 不洁的援助=1<br>s2: type=char, !苏丹=1, !主角=1, !怪物=1, f:rare-s1.rare>==0 | data/config/rite/5008168.json |
+| 5008169 | 后宫的空缺 | 宫廷:[2,6] | 0 | 0 | 1 | 5 | s1: type=char, 魅力>==5, 女性=1 | data/config/rite/5008169.json |
+| 5008170 | 废弃 | 自宅:[2,12] | 1 | 0 | 1 | 0 |  | data/config/rite/5008170.json |
+| 5008171 | 荒诞之欢 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: 援助怪物=1<br>s3: type=sudan, 不洁的援助=1 | data/config/rite/5008171.json |
+| 5008172 | 饕餮之欲 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: any={"all":{"type":"char","追随者":1}}<br>s2: any={"all":{"type":"char","追随者":1}}<br>s3: any={"all":{"type":"char","追随者":1}}<br>s4: any={"all":{"type":"char","追随者":1}} | data/config/rite/5008172.json |
+| 5008173 | 饕餮之欲 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: any={"all":{"type":"char","追随者":1}}<br>s2: any={"all":{"type":"char","追随者":1}}<br>s3: any={"all":{"type":"char","追随者":1}}<br>s4: type=sudan, 不洁的援助=1 | data/config/rite/5008173.json |
+| 5008174 | 饕餮之欲 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: any={"all":{"type":"char","追随者":1}}<br>s2: any={"all":{"type":"char","追随者":1}}<br>s3: type=sudan, 不洁的援助=1 | data/config/rite/5008174.json |
+| 5008175 | 饕餮之欲 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: any={"all":{"type":"char","追随者":1}}<br>s2: type=sudan, 不洁的援助=1 | data/config/rite/5008175.json |
+| 5008176 | 暴食者雕像 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: any={"is":2001075}<br>s2: type=item, is=2000986 | data/config/rite/5008176.json |
+| 5008177 | 无妄之灾 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: 援助怪物=1<br>s2: type=char, 追随者=1<br>s3: type=sudan, 不洁的援助=1<br>s4: type=char, 主角=1 | data/config/rite/5008177.json |
+| 5008178 | 刺肉者 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2000022<br>s2: type=char, any={"追随者":1,"主角":1}, !刺青=1<br>s3: type=item, cost.金币=5 | data/config/rite/5008178.json |
+| 5008179 | 清洗异端 | 黑街:[2,5] | 0 | 0 | 1 | 5 | s1: is=2001092<br>s2: is=2001093<br>s3: type=char, 追随者=1, !密教徒=1, !s7=1, !s4=1, !s8=1<br>s4: any={"all":{"type":"item","cost.金币":10},"is":2000728} | data/config/rite/5008179.json |
+| 5008180 | 处置俘虏 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: is=2001101<br>s2: type=char, 主角=1<br>s3: type=sudan, any={"征服":1,"杀戮":1}, rare<==3 | data/config/rite/5008180.json |
+| 5008181 | 神啊，降临吧！ | 黑街:[1,9] | 0 | 0 | 1 | 7 | s1: type=char, is=2000022<br>s2: type=char, 主角=1<br>s3: type=item, any={"正神的面容":1,"邪神的面容":1}<br>s4: type=item, 思潮=1, any={"is":2000412} | data/config/rite/5008181.json |
+| 5008182 | 降神仪式 | 黑街:[1,9] | 0 | 0 | 1 | 7 | s1: type=char, is=2000022<br>s2: is=2001104<br>s3: type=sudan, !奢靡=1, rare<==3, !s4=1<br>s4: type=sudan, !奢靡=1, rare<==3, !s3=1 | data/config/rite/5008182.json |
+| 5008183 | 怪异的降临 | 上城区:[1,6] | 1 | 0 | 1 | 1 | s1: is=2001121<br>s2: type=char, any={"主角":1,"追随者":1}<br>s3: type=char, !苏丹=1, 贵族=1<br>s4: any={"邪神的面容":1,"正神的面容":1,"is":2000728} | data/config/rite/5008183.json |
+| 5008184 | 怨恨诅咒 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: is=2001105 | data/config/rite/5008184.json |
+| 5008185 | 废弃 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: any | data/config/rite/5008185.json |
+| 5008186 | 降神仪式 | 黑街:[1,9] | 0 | 0 | 1 | 3 | s1: type=char, is=2000022<br>s2: type=char, 主角=1<br>s3: is=2001094 | data/config/rite/5008186.json |
+| 5008187 | 密室中 | 黑街:[1,9] | 1 | 0 | 1 | 1 | s1: is=2001121<br>s2: any={"邪神的面容":1,"正神的面容":1,"is":2000723}<br>s3: type=char, is=2000022<br>s4: type=char, any={"is":2000021,"妻子":1} | data/config/rite/5008187.json |
+| 5008188 | 密神的诅咒 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2001121<br>s2: any={"邪神的面容":1,"正神的面容":1,"is":2000393} | data/config/rite/5008188.json |
+| 5008189 | 自由之花 | 野外:[9,14] | 0 | 0 | 1 | 15 | s1: is=2000022<br>s2: 主角=1, type=char<br>s3: type=item, 邪神的面容=1<br>s4: type=item, 正神的面容=1 | data/config/rite/5008189.json |
+| 5008190 | 堕神的呼唤 | 黑街:[1,9] | 0 | 0 | 1 | 3 | s1: type=item, is=2001161<br>s2: type=char, 追随者=1, !is=2000461<br>s3: type=char, 追随者=1, !is=2000461<br>s4: type=char, 追随者=1, !is=2000461 | data/config/rite/5008190.json |
+| 5008191 | 蛇之国 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, 正在阅读=1, 读物=1, is=2001165<br>s2: type=char, !动物=1, !怪物=1 | data/config/rite/5008191.json |
+| 5008192 | 毒蛇神殿 | 野外:[9,14] | 0 | 0 | 3 | 7 | s1: any={"all":{"type":"char","体魄>=":7},"is":2000461}<br>s2: any={"all":{"type":"char","智慧>=":7},"is":2000461}<br>s3: any={"all":{"type":"char","魅力>=":7},"is":2000461}<br>s4: any={"all":{"type":"char","魔力>=":7},"is":2000461} | data/config/rite/5008192.json |
+| 5008193 | 欲望之蛇 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=sudan, rare<==3, 纵欲=1<br>s2: 主角=1, type=char<br>s3: type=char, 追随者=1, !动物=1, !怪物=1, 毒蛇之链=1 | data/config/rite/5008193.json |
+| 5008194 | 蛇之净化 | 神殿区:[2,10] | 0 | 0 | 1 | 7 | s1: type=item, is=2001167 | data/config/rite/5008194.json |
+| 5008195 | 佣兵的笔记 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2000945, 正在阅读=1<br>s2: type=char, !动物=1, !怪物=1, any={"生存>=":1,"is":2000123} | data/config/rite/5008195.json |
+| 5008196 | 流民的索要 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: type=char, is=2000195<br>s2: type=item, is=2001223<br>s3: type=item, any={"大餐":1,"cost.金币":[8,16]}<br>s4: type=sudan, any={"all":{"!s3":1,"杀戮":1}}, rare<==2 | data/config/rite/5008196.json |
+| 5008197 | 流民的帮闲 | 自宅:[2,12] | 1 | 0 | 3 | 1 | s1: type=item, is=2001229 | data/config/rite/5008197.json |
+| 5008198 | 流民的索要 | 商业区:[10,19] | 0 | 0 | 1 | 5 | s1: type=char, is=2000195<br>s2: type=item, is=2001223<br>s3: type=item, is=2001229<br>s4: type=item, any={"空屋":1,"cost.金币":20} | data/config/rite/5008198.json |
+| 5008199 | 无赖租客 | 商业区:[10,19] | 0 | 0 | 1 | 7 | s1: type=item, is=2001223<br>s2: type=item, 空屋=1<br>s3: any={"all":{"type":"item","cost.金币":20}}<br>s4: any={"type":"char"}, 部队=1, !is=2000431 | data/config/rite/5008199.json |
+| 5008200 | 流民的帮闲 | 自宅:[2,12] | 1 | 0 | 3 | 1 | s1: type=item, is=2001233 | data/config/rite/5008200.json |
+| 5008201 | [player.name]堡 | 商业区:20 | 0 | 0 | 1 | 5 | s1: type=char, is=2000195<br>s2: type=item, is=2001233<br>s3: any={"all":{"type":"sudan","any":{"征服":1,"杀戮":1},"rare<=":2}} | data/config/rite/5008201.json |
+| 5008202 | [player.name]堡 | 商业区:20 | 0 | 0 | 3 | 0 | s1: type=item, is=2001233<br>s2: any={"all":{"type":"item","any":{"all":{"counter.7000847<":1,"is":2000884},"情报":1,"天象":1}}} | data/config/rite/5008202.json |
+| 5008203 | 困顿的堡垒 | 商业区:20 | 0 | 0 | 1 | 7 | s1: type=char, is=2000195<br>s2: type=item, any={"cost.金币":40,"is":2001246} | data/config/rite/5008203.json |
+| 5008204 | 忙碌的拉伊德 | 黑街:[1,5] | 1 | 0 | 3 | 0 | s1: type=char, is=2000195 | data/config/rite/5008204.json |
+| 5008205 | 伪造公主 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000195<br>s2: type=char, 贵族=1, 隐匿>==5, 社交>==5<br>s3: type=char, any={"all":{"!is":2000064,"贵族":1,"社交>=":6},"is":2000057}<br>s4: type=char, any={"all":{"!is":2000064,"贵族":1,"社交>=":6},"is":2000057} | data/config/rite/5008205.json |
+| 5008206 | 长袖善舞 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000195<br>s2: type=char, 贵族=1, !苏丹=1, !主角=1, !is=2000195<br>s3: type=char, 贵族=1, !苏丹=1, !主角=1, !is=2000195<br>s4: type=item, any={"is":2001226} | data/config/rite/5008206.json |
+| 5008207 | 闪闪发光 | 上城区:[7,12] | 0 | 0 | 1 | 0 | s1: type=char, is=2000195<br>s2: type=char, !is=2000195, !大敌=1, !主角=1, any={"贵族":1,"is":2000022}<br>s3: type=char, !is=2000195, !大敌=1, !主角=1, any={"贵族":1,"is":2000022}<br>s4: type=item, any={"is":2001291} | data/config/rite/5008207.json |
+| 5008208 | 哲瓦德的笑容 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000057<br>s2: type=item, 情报=1, rare>==3, cost.消耗品==1<br>s3: type=item, 情报=1, rare>==3, cost.消耗品==1<br>s4: type=item, 情报=1, rare>==3, cost.消耗品==1 | data/config/rite/5008208.json |
+| 5008209 | 御医的诊治 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000011<br>s2: type=item, cost.金币=[8,16]<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5008209.json |
+| 5008210 | 密神的恩惠 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000022<br>s2: type=item, cost.金币=[8,16]<br>s3: type=sudan, 奢靡=1, rare<==2 | data/config/rite/5008210.json |
+| 5008211 | 正神的恩惠 | 神殿区:[2,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000021<br>s2: type=item, cost.金币=[8,16]<br>s3: type=sudan, 奢靡=1, rare<==2<br>s4: type=item, any={"is":2000728} | data/config/rite/5008211.json |
+| 5008212 | 机灵的仆役 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, 妻子=1<br>s2: type=item, 情报=1, rare>==3, cost.消耗品==1<br>s3: type=item, 情报=1, rare>==3, cost.消耗品==1<br>s4: type=item, 情报=1, rare>==3, cost.消耗品==1 | data/config/rite/5008212.json |
+| 5008213 | 逆向工程 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000352<br>s2: type=item, any={"is":2000388}<br>s3: type=item, cost.金币=10 | data/config/rite/5008213.json |
+| 5008214 | 花与剑 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000064<br>s2: type=char, 追随者=1, 魅力>==5<br>s3: type=char, 追随者=1, 魅力>==5 | data/config/rite/5008214.json |
+| 5008215 | 苏丹的召见 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=char, is=2000195<br>s2: type=char, any={"is":2000019,"妻子":1}<br>s3: type=char, !主角=1, 贵族=1<br>s4: type=char, 主角=1 | data/config/rite/5008215.json |
+| 5008216 | 她是谁？ | 自宅:[2,12] | 0 | 0 | 3 | 7 | s1: type=item, is=2001228<br>s2: type=char, 追随者=1, 贵族=1, !is=2000195, counter.7100003>==15<br>s3: type=char, 追随者=1, !贵族=1, !is=2000195, counter.7100004>==8<br>s4: any={"all":{"type":"item","cost.金币":5},"妓女":1} | data/config/rite/5008216.json |
+| 5008217 | 女儿的故事 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=item, is=2001246<br>s2: type=char, any={"is":2000013} | data/config/rite/5008217.json |
+| 5008218 | 死斗 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000195<br>s2: type=char, is=2000013 | data/config/rite/5008218.json |
+| 5008219 | 杀戮与激情 | 自宅:[2,12] | 0 | 0 | 1 | 2 | s1: type=char, is=2000195<br>s2: type=char, 主角=1 | data/config/rite/5008219.json |
+| 5008220 | 血亲之乐 | 宫廷:[7,10] | 1 | 0 | 1 | 1 | s1: type=char, is=2000195 | data/config/rite/5008220.json |
+| 5008221 | 流落的血脉 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000129, !have.2000129.贬斥=1<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1 | data/config/rite/5008221.json |
+| 5008222 | 石榴树的畸枝 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=char, is=2000129 | data/config/rite/5008222.json |
+| 5008223 | 更适合的差事 | 野外:[9,14] | 1 | 0 | 3 | 0 | s1: type=char, is=2000129 | data/config/rite/5008223.json |
+| 5008224 | 兄妹之间 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char, is=2000129<br>s3: type=item, 疯狂=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008224.json |
+| 5008225 | 突然的坦白 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000129<br>s2: type=char, 妻子=1<br>s3: type=char, 主角=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008225.json |
+| 5008226 | 愧疚与宝石 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, 妻子=1<br>s2: type=char, 主角=1<br>s3: type=item, cost.金币=[20,40]<br>s4: type=sudan, 奢靡=1, rare<==3, s3.金币=40 | data/config/rite/5008226.json |
+| 5008227 | 兴师问罪 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=char, 主角=1 | data/config/rite/5008227.json |
+| 5008228 | 落幕之舞 | 自宅:[2,12] | 1 | 0 | 1 | 1 | s1: type=char, is=2000129<br>s2: type=item, is=2001307<br>s3: type=char, 主角=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5008228.json |
+| 5008229 | 最后的谈话 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=char, 妻子=1 | data/config/rite/5008229.json |
+| 5008230 | 舞乐之宴 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=char, 主角=1<br>s3: type=char, 追随者=1<br>s4: type=char, 追随者=1 | data/config/rite/5008230.json |
+| 5008231 | 贵族的邀请 | 自宅:[2,12] | 0 | 0 | 1 | 7 | s1: type=char, is=2000129<br>s2: type=char, 女性=1, 追随者=1, 贵族=1<br>s3: type=char, 追随者=1, !贵族=1, !is=2000129, !动物=1, !怪物=1<br>s4: type=item, cost.金币=3 | data/config/rite/5008231.json |
+| 5008232 | 遍野流言 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, 追随者=1<br>s2: type=item, 情报=1, rare>==3<br>s3: type=item, 情报=1, rare>==3<br>s4: type=item, 情报=1, rare>==3 | data/config/rite/5008232.json |
+| 5008233 | 沟渠的邀请 | 商业区:[10,19] | 0 | 0 | 1 | 3 | s1: type=char, is=2000129<br>s2: type=char, 追随者=1, !贵族=1<br>s3: type=char, 追随者=1, !贵族=1<br>s4: type=item, cost.金币=2 | data/config/rite/5008233.json |
+| 5008234 | 欢愉之女的自由日 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, is=2000129<br>s2: type=char, 追随者=1, !妻子=1<br>s3: type=char, 追随者=1, !妻子=1<br>s4: type=char, 追随者=1, !妻子=1 | data/config/rite/5008234.json |
+| 5008235 | 苏丹的兴致 | 宫廷:[2,6] | 0 | 0 | 1 | 3 | s1: type=char, is=2000129<br>s2: any={"all":{"type":"item","cost.金币":30}} | data/config/rite/5008235.json |
+| 5008236 | 一支奇怪的舞蹈 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=char, is=2000129<br>s2: type=char, 主角=1 | data/config/rite/5008236.json |
+| 5008237 | 失踪的舞姬 | 黑街:[2,5] | 0 | 0 | 1 | 2 | s1: type=char, is=2000129<br>s2: type=char, 追随者=1 | data/config/rite/5008237.json |
+| 5008238 | 坟墓前的恳谈 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=char, is=2000129<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1<br>s4: type=sudan, rare<==3, 纵欲=1 | data/config/rite/5008238.json |
+| 5008239 | 流浪的果实 | 野外:[9,14] | 0 | 0 | 1 | 3 | s1: type=char, is=2000129<br>s2: type=item, cost.金币=10<br>s3: type=char, !贵族=1, 追随者=1<br>s4: type=char, 主角=1 | data/config/rite/5008239.json |
+| 5008240 | 太阳之舞 | 自宅:[2,12] | 0 | 0 | 1 | 5 | s1: type=char, 主角=1<br>s2: type=char, 追随者=1<br>s3: type=char, 追随者=1<br>s4: type=char, 追随者=1 | data/config/rite/5008240.json |
+| 5008241 | 细鳞鱼干 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, is=2001316<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5008241.json |
+| 5008242 | 美人的武装 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: is=2000129<br>s2: type=item, cost.金币=10<br>s3: type=item, 饰品=1, 魅力>==4<br>s4: type=char, 贵族=1, 女性=1 | data/config/rite/5008242.json |
+| 5008243 | 散落的果实 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: is=2000129 | data/config/rite/5008243.json |
+| 5008244 | 女奴的撕扯 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129<br>s2: type=char, 贵族=1<br>s3: type=item, cost.金币=5 | data/config/rite/5008244.json |
+| 5008245 | 有毒的花丛 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129<br>s2: type=item, any={"is":2000391} | data/config/rite/5008245.json |
+| 5008246 | 花朵的战争 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129, 苏丹的妃子=1<br>s2: type=item, 情报=1, rare==4, cost.消耗品==1<br>s3: type=item, 情报=1, rare==4, cost.消耗品==1<br>s4: type=item, 情报=1, rare==4, cost.消耗品==1 | data/config/rite/5008246.json |
+| 5008247 | 好茶 | 自宅:[2,12] | 0 | 0 | 1 | 3 | s1: type=item, is=2001333<br>s2: type=char, 主角=1<br>s3: type=char, any={"妻子":1,"侧室":1,"新妻":1,"is":2000082}<br>s4: any={"all":{"s3.新妻":1,"is":2000698}} | data/config/rite/5008247.json |
+| 5008248 | 夜晚的权利 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129, 苏丹的妃子=1<br>s2: type=char, 贵族=1, 魅力>==5, 魔力>==5<br>s3: type=item, 天象=1 | data/config/rite/5008248.json |
+| 5008249 | 更贵的美 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129, 苏丹的妃子=1<br>s2: type=item, 大颗=1, 饰品=1<br>s3: type=item, 大颗=1, 饰品=1 | data/config/rite/5008249.json |
+| 5008250 | 寝技的比拼 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129, 苏丹的妃子=1<br>s2: type=char, 追随者=1, any={"is":2000082}<br>s3: type=item, cost.金币=20 | data/config/rite/5008250.json |
+| 5008251 | 拥挤的王座 | 宫廷:[2,6] | 0 | 0 | 1 | 1 | s1: is=2000129, 苏丹的妃子=1<br>s2: is=2000010<br>s3: type=char, 主角=1<br>s4: type=char, 主角=1 | data/config/rite/5008251.json |
+| 5008252 | 我想要她美丽的头颅 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: type=char, is=2000129 | data/config/rite/5008252.json |
+| 5008253 | 无头之舞 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: type=char, is=2000129 | data/config/rite/5008253.json |
+| 5008254 | 宠妃的心愿 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: type=char, is=2000129 | data/config/rite/5008254.json |
+| 5008255 | 玫瑰的刺 | 宫廷:[2,6] | 1 | 0 | 1 | 0 | s1: is=2000129<br>s2: is=2000010<br>s3: !s4=1, any={"all":{"type":"item","情报":1}}<br>s4: any={"all":{"type":"item","情报":1}} | data/config/rite/5008255.json |
+| 5008256 | 唯一的宠妃 | 宫廷:[2,6] | 1 | 0 | 1 | 1 | s1: type=char, is=2000129 | data/config/rite/5008256.json |
+| 5008257 | 臣服 | 结局:5 | 1 | 0 | 0 | 1 | s1: any={"all":{"type":"char","妻子":1},"侧室":1,"新妻":1} | data/config/rite/5008257.json |
+| 5008258 | 期待 | 结局:5 | 1 | 0 | 0 | 1 | s1: any={"all":{"type":"char","is":2000123},"孤儿":1,"is":2000989} | data/config/rite/5008258.json |
+| 5008259 | 敌人 | 结局:5 | 1 | 0 | 0 | 1 | s1: type=item, any={"is":2000694} | data/config/rite/5008259.json |
+| 5008260 | 蓝图 | 结局:5 | 1 | 0 | 0 | 1 | s1: type=item, any={"is":2000706} | data/config/rite/5008260.json |
+| 5010000 | 逃亡倒计时 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, cost.权势的遮掩=[1,5]<br>s2: type=item, cost.善名的遮掩=[1,5]<br>s3: type=item, cost.侠名的遮掩=[1,5]<br>s4: type=item, cost.灵视的遮掩=[1,5] | data/config/rite/5010000.json |
+| 5010001 | 出发！ | 结局:2 | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: 目的地=1<br>s3: type=item, cost.打包的财物=[1,999]<br>s4: type=char, 追随的人=1 | data/config/rite/5010001.json |
+| 5010002 | 裂魂之夜 | 结局:2 | 1 | 0 | 0 | 0 | s1: type=char, 主角=1, 追随的人=1 | data/config/rite/5010002.json |
+| 5010003 | 最后的纵欲卡 | 结局:2 | 1 | 0 | 1 | 0 | s1: type=char, 追随的人=1<br>s2: type=sudan, 纵欲=1<br>s3: is=2000545 | data/config/rite/5010003.json |
+| 5010004 | 最后的杀戮卡 | 结局:2 | 1 | 0 | 1 | 0 | s1: type=char, 追随的人=1<br>s2: type=sudan, 杀戮=1<br>s3: is=2000545 | data/config/rite/5010004.json |
+| 5010005 | 最后的征服卡 | 结局:2 | 1 | 0 | 1 | 0 | s1: type=char, 追随的人=1<br>s2: type=sudan, 征服=1<br>s3: is=2000545 | data/config/rite/5010005.json |
+| 5010006 | 最后的奢靡卡 | 结局:2 | 1 | 0 | 1 | 0 | s1: type=item, cost.打包的财物=[1,999]<br>s2: type=sudan, 奢靡=1<br>s3: is=2000545 | data/config/rite/5010006.json |
+| 5010007 | 于黎明前 | 结局:1 | 0 | 0 | 1 | 3 | s1: type=char, 主角=1<br>s2: any={"type":"sudan"}, 正当性=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5010007.json |
+| 5010008 | 集结部队 | 结局:1 | 1 | 1 | 1 | 0 | s1: type=item, is=2000914, cost.倒计时=[1,5]<br>s2: any={"type":"sudan"}, 正当性=1 | data/config/rite/5010008.json |
+| 5010009 | 誓师 | 结局:3 | 0 | 0 | 1 | 1 | s1: type=char, 主角=1<br>s2: any={"type":"sudan"}, 正当性=1<br>s3: any={"type":"char"}, 部队=1, !is=2000431<br>s4: any={"type":"char"}, 部队=1, !is=2000431 | data/config/rite/5010009.json |
+| 5010010 | 苏丹的近卫们 | 宫廷:7 | 0 | 0 | 0 | 1 | s1: type=char, is=2000064, 追随者=1<br>s2: type=char, is=2000065, 追随者=1<br>s3: type=char, is=2000054, 追随者=1<br>s4: type=char, is=2000292, 追随者=1 | data/config/rite/5010010.json |
+| 5010011 | 苏丹的城墙 | 结局:3 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char<br>s3: any={"all":{"any":{"type":"char"},"部队":1},"type":"char","is":2000477}<br>s4: 苏丹的精兵=1 | data/config/rite/5010011.json |
+| 5010012 | 燃烧的城市 | 结局:4 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char, !失去战力=1<br>s3: any={"all":{"any":{"type":"char"},"部队":1},"type":"char","is":2000477}, !失去战力=1<br>s4: 苏丹的精兵=1 | data/config/rite/5010012.json |
+| 5010013 | 皇宫 | 结局:5 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char, !失去战力=1<br>s3: any={"all":{"any":{"type":"char"},"部队":1},"type":"char","is":2000385}, !失去战力=1<br>s4: 苏丹的精兵=1 | data/config/rite/5010013.json |
+| 5010014 | 直面苏丹 | 结局:6 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: type=item, is=2000915<br>s3: type=item, is=2000916<br>s4: type=item, is=2000917 | data/config/rite/5010014.json |
+| 5010015 | 近卫的承诺 | 结局:6 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: is=2000064<br>s3: is=2000054<br>s4: is=2000292 | data/config/rite/5010015.json |
+| 5010016 | 为所欲为 | 结局:6 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: type=char, 主角=1, !s3=1, !s4=1, !s5=1<br>s3: any={"all":{"type":"item","is":2000959}}, !s2=1, !s4=1, !s5=1<br>s4: type=char, 主角=1, !s2=1, !s3=1, !s5=1 | data/config/rite/5010016.json |
+| 5010017 | 光之舞 | 结局:6 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: any={"is":2000281,"变革戒":1,"群星戒":1}<br>s3: type=item, is=2000545<br>s4: type=char | data/config/rite/5010017.json |
+| 5010018 | 剑之舞 | 结局:6 | 1 | 0 | 0 | 0 | s1: type=char, 苏丹的近卫=1<br>s2: type=char, 苏丹的近卫=1<br>s3: type=char, 苏丹的近卫=1<br>s4: type=char, 苏丹的近卫=1 | data/config/rite/5010018.json |
+| 5010019 | 王之舞 | 结局:6 | 1 | 0 | 0 | 0 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: 正当性=1<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5010019.json |
+| 5010020 | 奈费勒的毒箭 | 上城区:3 | 0 | 0 | 0 | 1 | s1: type=char, is=2000312<br>s2: type=char, 主角=1 | data/config/rite/5010020.json |
+| 5010021 | 娜依拉的索求 | 自宅:10 | 0 | 0 | 1 | 3 | s1: type=char, is=2000055<br>s2: type=item, cost.金币=40<br>s3: type=char<br>s4: type=item, cost.消耗品==1, !金币=1 | data/config/rite/5010021.json |
+| 5010022 | 帷幕之后 | 结局:6 | 1 | 0 | 1 | 0 | s1: any={"type":"sudan"}, 正当性=1<br>s2: type=item, any={"is":2001107}<br>s3: type=char, 主角=1 | data/config/rite/5010022.json |
+| 5010023 | 阶梯 | 结局:6 | 0 | 0 | 1 | 0 | s1: any={"all":{"type":"char","妖精":1,"!s6.妖精":1,"!s7.妖精":1,"!s8.妖精":1,"!s9.妖精":1,"!s10.妖精":1}}<br>s2: any={"all":{"type":"char","妖精":1,"!s6.妖精":1,"!s7.妖精":1,"!s8.妖精":1,"!s9.妖精":1,"!s10.妖精":1}}<br>s3: any={"all":{"type":"char","妖精":1,"!s6.妖精":1,"!s7.妖精":1,"!s8.妖精":1,"!s9.妖精":1,"!s10.妖精":1}}<br>s4: any={"all":{"type":"char","妖精":1,"!s6.妖精":1,"!s7.妖精":1,"!s8.妖精":1,"!s9.妖精":1,"!s10.妖精":1}} | data/config/rite/5010023.json |
+| 5010024 | 果实 | 结局:6 | 0 | 0 | 1 | 0 | s1: any={"type":"sudan"}, 正当性=1<br>s2: type=char, any={"主角":1,"all":{"s1.is":2000913,"is":2000013}}<br>s3: any={"all":{"s4.is":2000412,"is":2000022}}<br>s4: type=item, any={"all":{"s2.主角":1,"is":2001296}} | data/config/rite/5010024.json |
+| 5010025 | 集结部队 | 结局:1 | 1 | 0 | 1 | 0 | s1: type=item, is=2000914, cost.倒计时=[1,5]<br>s2: any={"type":"sudan"}, 正当性=1 | data/config/rite/5010025.json |
+| 5010026 | 最后的纵欲卡 | 宫廷:1 | 0 | 0 | 1 | 1 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan<br>s4: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}} | data/config/rite/5010026.json |
+| 5010027 | 最后的杀戮卡 | 宫廷:1 | 0 | 0 | 1 | 1 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan<br>s4: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}} | data/config/rite/5010027.json |
+| 5010028 | 最后的奢靡卡 | 宫廷:1 | 0 | 0 | 1 | 1 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan<br>s4: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}} | data/config/rite/5010028.json |
+| 5010029 | 最后的征服卡 | 宫廷:1 | 0 | 0 | 1 | 1 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: type=sudan<br>s4: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}} | data/config/rite/5010029.json |
+| 5010030 | 深渊的邀请 | 自宅:[2,12] | 0 | 0 | 0 | 0 | s1: type=char, 主角=1<br>s2: type=sudan<br>s3: any={"妻子":1,"all":{"type":"char","命运的羁绊":1}}<br>s4: any={"妻子":1,"all":{"type":"char","命运的羁绊":1}} | data/config/rite/5010030.json |
+| 5010031 | 女术士的邀请 | 宫廷:2 | 0 | 0 | 0 | 0 | s1: type=char, 主角=1 | data/config/rite/5010031.json |
+| 5010032 | 苏丹的奖赏 | 宫廷:1 | 0 | 0 | 1 | 1 | s1: type=char, is=2000024<br>s2: type=char, 主角=1<br>s3: any={"is":2000173,"all":{"被覆者":1,"苏丹的玩偶":1}}<br>s4: type=char, 贵族=1, !主角=1 | data/config/rite/5010032.json |
+| 5010033 | 古老的道路 | 上城区:3 | 0 | 0 | 1 | 1 | s1: type=item, is=2001033<br>s2: type=char, 主角=1 | data/config/rite/5010033.json |
+| 5010034 | 神圣的烙印 | 神殿区:[2,10] | 1 | 1 | 1 | 0 | s1: type=item, is=2001076, cost.耐心=[1,99]<br>s2: type=item, is=2001077<br>s3: type=item, is=2001036, 塔=1<br>s4: type=item, is=2001037, 塔=1 | data/config/rite/5010034.json |
+| 5010035 | 废弃 | 上城区:3 | 0 | 0 | 1 | 1 | s1: type=item, is=2001033<br>s2: type=char, 主角=1 | data/config/rite/5010035.json |
+| 5010036 | 觐见苏丹 | 宫廷:[7,10] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: type=char, !主角=1, !密教徒=1<br>s3: type=item, cost.金币=20 | data/config/rite/5010036.json |
+| 5010037 | 立柱 | 神殿区:11 | 0 | 0 | 5 | 0 | s1: type=char, 智慧>==8<br>s2: type=char, 体魄>==5, 社交>==5<br>s3: type=char, 贵族=1, 智慧>==5, 隐匿>==5<br>s4: type=item, cost.金币=15 | data/config/rite/5010037.json |
+| 5010038 | 镀金 | 神殿区:11 | 0 | 0 | 3 | 0 | s1: !s3=1, type=char<br>s2: !s3=1, type=item, cost.金币=15<br>s3: type=item, is=2001035<br>s4: !s3=1, type=sudan, 奢靡=1 | data/config/rite/5010038.json |
+| 5010039 | 引火物 | 神殿区:11 | 0 | 0 | 0 | 0 | s1: !s2=1, type=sudan, 征服=1<br>s2: type=item, is=2001036 | data/config/rite/5010039.json |
+| 5010040 | 审判烈焰 | 神殿区:11 | 0 | 0 | 0 | 0 | s1: type=sudan, 征服=1, 塔=1<br>s2: type=char, any={"all":{"s1.rare=":4,"any":{"is":2001089,"all":{"is":2000082,"rare=":4}}}} | data/config/rite/5010040.json |
+| 5010041 | 最后的诱惑 | 神殿区:11 | 0 | 0 | 1 | 0 | s1: !s3=1, type=char, 主角=1<br>s2: !s3=1, type=char, any={"激情":1,"is":2000021}<br>s3: type=item, is=2001037<br>s4: !s3=1, type=sudan, 纵欲=1 | data/config/rite/5010041.json |
+| 5010042 | 神临仪式 | 神殿区:11 | 0 | 0 | 0 | 3 | s1: type=char, any={"主角":1,"is":2000021}<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5010042.json |
+| 5010043 | 弑神（废弃） | 神殿区:11 | 1 | 0 | 0 | 3 | s1: type=char, any={"主角":1,"is":2000021}<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5010043.json |
+| 5010044 | 教领的特权 | 神殿区:[2,10] | 0 | 1 | 1 | 0 | s1: type=item, cost.正教的乙太=1<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5010044.json |
+| 5010045 | 世界之眼 | 神殿区:11 | 1 | 0 | 0 | 0 | s1: cost.正教的乙太=[1,2]<br>s2: is=2000545<br>s3: type=char, any={"主角":1,"is":2001023}<br>s4: type=char | data/config/rite/5010045.json |
+| 5010046 | 大猎捕 | 神殿区:11 | 1 | 0 | 0 | 0 | s1: type=item, cost.正教的乙太=[1,2]<br>s2: is=2001102<br>s3: is=2000844<br>s4: type=char | data/config/rite/5010046.json |
+| 5010047 | 匕首之路 | 神殿区:11 | 1 | 0 | 0 | 0 | s1: type=item, cost.正教的乙太=[1,2]<br>s2: type=char, !失去战力=1<br>s3: type=char, !失去战力=1<br>s4: type=char, !失去战力=1 | data/config/rite/5010047.json |
+| 5010048 | 天空之火 | 神殿区:11 | 1 | 0 | 0 | 0 | s1: type=item, cost.正教的乙太=[1,2]<br>s2: type=char, !失去战力=1<br>s3: type=char, !失去战力=1<br>s4: type=char, !失去战力=1 | data/config/rite/5010048.json |
+| 5010049 | 转生的真神 | 神殿区:11 | 1 | 0 | 0 | 0 | s1: type=item, cost.正教的乙太=[1,99]<br>s2: is=2000848<br>s3: type=char, 主角=1<br>s4: type=char, is=2000024 | data/config/rite/5010049.json |
+| 5010050 | 恶之华 | 黑街:[1,9] | 1 | 1 | 1 | 0 | s1: type=item, is=2001122, cost.耐心=[1,99]<br>s2: type=item, is=2001123<br>s3: type=item, is=2001126<br>s4: type=item, is=2001039, 诞生=1 | data/config/rite/5010050.json |
+| 5010051 | 受孕 | 自宅:[2,12] | 0 | 0 | 1 | 0 | s1: type=item, is=2000412<br>s2: type=char, any={"主角":1,"妻子":1,"all":{"is":2000022,"密教徒":1}}<br>s3: type=char, 黑暗知识=1, 魔力>==6<br>s4: type=char, 密教徒=1 | data/config/rite/5010051.json |
+| 5010052 | 喂食 | 自宅:[2,12] | 0 | 0 | 1 | 1 | s1: type=item, is=2001123<br>s2: any={"type":"char","任意处置":1,"all":{"type":"item","动物":1}}, !怪物=1<br>s3: type=item, is=2001040<br>s4: !s3=1, type=sudan, 奢靡=1 | data/config/rite/5010052.json |
+| 5010053 | 饥渴 | 自宅:[2,12] | 1 | 0 | 1 | 0 | s1: type=item, is=2001123<br>s2: any={"all":{"type":"char","追随者":1},"任意处置":1}, !怪物=1 | data/config/rite/5010053.json |
+| 5010054 | 救赎的机会 | 神殿区:[2,10] | 0 | 0 | 1 | 0 | s1: type=char, is=2000021<br>s2: type=char, 主角=1<br>s3: type=item, is=2001123 | data/config/rite/5010054.json |
+| 5010055 | 子宫 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: type=item, is=2001125<br>s2: any={"type":"char"}, 部队=1<br>s3: type=item, is=2001042<br>s4: !s3=1, type=sudan, 征服=1 | data/config/rite/5010055.json |
+| 5010056 | 献祭 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: type=item, is=2001126<br>s2: type=char, 密教徒=1<br>s3: type=char, 密教徒=1<br>s4: type=char, 密教徒=1 | data/config/rite/5010056.json |
+| 5010057 | 苏丹的诘问 | 宫廷:[7,10] | 0 | 0 | 1 | 3 | s1: type=item, cost.金币==20<br>s2: type=char, 怪物=1, 体魄>==5, 战斗>==5<br>s3: type=char, any={"密教徒":1,"怪物":1}, 魅力>==10<br>s4: type=item, is=2001126 | data/config/rite/5010057.json |
+| 5010058 | 讨伐 | 自宅:[2,12] | 0 | 0 | 3 | 0 | s1: any={"all":{"type":"char","追随者":1,"!密教徒":1,"!命运的羁绊":1,"!怪物":1}}, !主角=1<br>s2: any={"all":{"type":"char","追随者":1,"!密教徒":1,"!命运的羁绊":1,"!怪物":1}}, !主角=1<br>s3: any={"all":{"type":"char","追随者":1,"!密教徒":1,"!命运的羁绊":1,"!怪物":1}}, !主角=1<br>s4: any={"all":{"is":2000021,"!密教徒":1,"!命运的羁绊":1},"is":2001093} | data/config/rite/5010058.json |
+| 5010059 | 神的诞生 | 黑街:[1,9] | 0 | 0 | 0 | 3 | s1: type=item, is=2001123<br>s2: type=item, is=2001126<br>s3: any={"all":{"黑暗知识":1,"type":"char"},"孤儿":1,"is":2001124}<br>s4: type=item, is=2001039, 诞生=1 | data/config/rite/5010059.json |
+| 5010060 | 暗影渐起 | 黑街:[1,9] | 1 | 0 | 0 | 0 | s1: type=char, 主角=1<br>s2: any={"type":"char","all":{"type":"item","部队":1}}<br>s3: any={"type":"char","all":{"type":"item","部队":1}}<br>s4: any={"type":"char","all":{"type":"item","部队":1}} | data/config/rite/5010060.json |
+| 5010061 | 末日风暴 | 黑街:[1,9] | 1 | 0 | 0 | 0 | s1: any={"type":"char","all":{"type":"item","部队":1}}<br>s2: any={"type":"char","all":{"type":"item","部队":1}}<br>s3: any={"type":"char","all":{"type":"item","部队":1}}<br>s4: any={"type":"char","all":{"type":"item","部队":1}} | data/config/rite/5010061.json |
+| 5010062 | 迷梦之刃 | 黑街:[1,9] | 1 | 0 | 0 | 0 | s1: type=char<br>s2: type=char<br>s3: type=char<br>s4: type=char | data/config/rite/5010062.json |
+| 5010063 | 造化歧路 | 黑街:[1,9] | 1 | 0 | 0 | 0 | s1: is=2001128<br>s2: type=char<br>s3: is=2001129<br>s4: type=char | data/config/rite/5010063.json |
+| 5010064 | 混沌之王 | 黑街:[1,9] | 1 | 0 | 0 | 0 | s1: is=2000844<br>s2: 吸收天使=1<br>s3: 吸收念珠=1<br>s4: 吸收信徒=1 | data/config/rite/5010064.json |
+| 5010065 | 龙眼的研究 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: is=2000668<br>s2: any={"type":"char","all":{"type":"item","any":{"is":2000848}}} | data/config/rite/5010065.json |
+| 5010066 | 魔力熔炉 | 黑街:[1,9] | 0 | 0 | 3 | 0 | s1: is=2000668<br>s2: is=2000352<br>s3: is=2000986, cost.可堆叠==1<br>s4: any={"type":"item"}, 魔力>==1 | data/config/rite/5010066.json |
+| 5010067 | 龙眼的雕琢 | 黑街:[1,9] | 0 | 0 | 3 | 0 | s1: is=2000668<br>s2: is=2000352<br>s3: is=2000986, cost.可堆叠==1<br>s4: type=item, 武器=1, rare==4 | data/config/rite/5010067.json |
+| 5010068 | 最后的打磨 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: is=2001300<br>s2: any={"is":2000352,"主角":1}<br>s3: is=2000986, cost.可堆叠==1<br>s4: any={"cost.金币":60,"all":{"is":2001267,"cost.钻石":3}} | data/config/rite/5010068.json |
+| 5010069 | 趁生命气息逗留 | 黑街:[1,9] | 1 | 0 | 1 | 0 | s1: is=2001300<br>s2: type=char, 主角=1<br>s3: type=char, 妻子=1<br>s4: is=2001299 | data/config/rite/5010069.json |
+| 5010070 | 成神 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1, 入圣=1<br>s2: type=char, 主角=1, !入圣=1 | data/config/rite/5010070.json |
+| 5010071 | 疏离感 | 黑街:[1,9] | 0 | 0 | 1 | 0 | s1: type=char, 主角=1, 入圣=1<br>s2: type=char, 主角=1, !入圣=1 | data/config/rite/5010071.json |
+| 5010072 | 你的代言人 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: type=char, any={"all":{"counter.7000922":1,"is":2000352},"妻子":1} | data/config/rite/5010072.json |
+| 5010073 | 布道 | 黑街:[1,9] | 0 | 0 | 1 | 3 | s1: 神的代言人=1<br>s2: type=item, 神性=1<br>s3: type=char, !妻子=1, !动物=1, !怪物=1<br>s4: type=char, !妻子=1, !动物=1, !怪物=1 | data/config/rite/5010073.json |
+| 5010074 | 近卫的职责 | 结局:6 | 1 | 0 | 0 | 0 | s1: any={"is":2000923}<br>s2: any={"is":2000925}<br>s3: any={"is":2000292}<br>s4: any={"is":2000926} | data/config/rite/5010074.json |
+| 5010075 | 蚁群 | 黑街:[1,9] | 0 | 0 | 1 | 1 | s1: type=char, 神的代言人=1<br>s2: 神性=1<br>s3: type=char, !妻子=1, !动物=1, !怪物=1<br>s4: any={"动物":1,"怪物":1} | data/config/rite/5010075.json |
+| 5010076 | 土丘 | 结局:3 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char, !神选冠军=1<br>s3: any={"type":"char"}, 部队=1, !is=2000431<br>s4: 苏丹的精兵=1 | data/config/rite/5010076.json |
+| 5010077 | 蚁穴 | 结局:4 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char, !神选冠军=1<br>s3: any={"type":"char"}, 部队=1, !is=2000431<br>s4: 苏丹的精兵=1 | data/config/rite/5010077.json |
+| 5010078 | 宝盒 | 结局:5 | 1 | 0 | 0 | 0 | s1: 苏丹的精兵=1<br>s2: type=char, !神选冠军=1<br>s3: any={"type":"char"}, 部队=1, !is=2000431<br>s4: 苏丹的精兵=1 | data/config/rite/5010078.json |
+| 5010079 | 火焰大王 | 自宅:[2,12] | 0 | 0 | 0 | 1 | s1: type=item, 神性=1<br>s2: is=2000762 | data/config/rite/5010079.json |
+| 5010080 | 倾覆之塔 | 结局:6 | 1 | 0 | 0 | 0 | s1: is=2000024<br>s2: is=2000064, 苏丹的近卫=1<br>s3: is=2000054, 苏丹的近卫=1<br>s4: any={"is":2000292}, 苏丹的近卫=1 | data/config/rite/5010080.json |
+| 5010081 | 废墟之上（废弃） | 结局:6 | 1 | 0 | 1 | 0 | s1: 神性=1<br>s2: type=item, any={"is":2001031} | data/config/rite/5010081.json |
+| 5010082 | 神之天平（废弃） | 结局:6 | 0 | 0 | 1 | 0 | s1: type=char, !主角=1<br>s2: type=char, !主角=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5010082.json |
+| 5010083 | 神之天平（废弃） | 结局:6 | 0 | 0 | 1 | 0 | s1: type=char, !主角=1<br>s2: type=char, !主角=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5010083.json |
+| 5010084 | 神之天平（废弃） | 结局:6 | 0 | 0 | 1 | 0 | s1: type=char, !主角=1<br>s2: type=char, !主角=1<br>s3: type=char, !主角=1<br>s4: type=char, !主角=1 | data/config/rite/5010084.json |
+| 5010085 | 新纪元（废弃） | 结局:6 | 0 | 0 | 1 | 0 | s1: 神性=1<br>s2: type=char, !主角=1, !妻子=1<br>s3: type=char, !主角=1, !妻子=1<br>s4: any={"is":2001332} | data/config/rite/5010085.json |
+| 5010086 | 神座 | 奇珍:6 | 1 | 0 | 1 | 0 | s1: 主角=1, 神明=1 | data/config/rite/5010086.json |
+| 5010087 | 神与人 | 结局:6 | 0 | 0 | 1 | 0 | s1: 神的代言人=1<br>s2: any={"火焰大王2":1,"all":{"type":"char","!主角":1}}<br>s3: any={"火焰大王2":1,"all":{"type":"char","!主角":1}}<br>s4: any={"火焰大王2":1,"all":{"type":"char","!主角":1}} | data/config/rite/5010087.json |
+| 5010088 | 沐浴龙血 | 野外:[9,14] | 0 | 0 | 0 | 0 | s1: is=2000954<br>s2: any={"type":"char","all":{"type":"item","部队":1}}<br>s3: any={"type":"char","all":{"type":"item","部队":1}}<br>s4: any={"type":"char","all":{"type":"item","部队":1}} | data/config/rite/5010088.json |
+| 5010201 | 往新世界 | 结局:9 | 1 | 0 | 0 | 0 | s1: 主角=1<br>s2: type=item, is=2001299 | data/config/rite/5010201.json |
+| 5010202 | 羊肉炉的飞升 | 结局:14 | 1 | 0 | 1 | 0 | s1: type=item, is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010202.json |
+| 5010203 | 尘世墨水 | 结局:10 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: any={"!消耗品":1,"is":2001185}<br>s3: any={"!消耗品":1,"is":2001185}, !s5=1<br>s4: any={"!消耗品":1,"is":2001185}, !s6=1 | data/config/rite/5010203.json |
+| 5010204 | 自我认同 | 结局:11 | 1 | 0 | 0 | 0 | s1: type=char, 主角=1<br>s2: any={"is":2000461,"主角":1}<br>s3: is=2001345 | data/config/rite/5010204.json |
+| 5010205 | 虚空之火 | 结局:11 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: any={"!消耗品":1,"is":2001185}<br>s3: any={"!消耗品":1,"is":2001185}, !s5=1<br>s4: any={"!消耗品":1,"is":2001185}, !s6=1 | data/config/rite/5010205.json |
+| 5010206 | 造化之风 | 结局:12 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: any={"!消耗品":1,"is":2001185}<br>s3: any={"!消耗品":1,"is":2001185}, !s5=1<br>s4: any={"!消耗品":1,"is":2001185}, !s6=1 | data/config/rite/5010206.json |
+| 5010207 | 陶土之门 | 结局:13 | 0 | 0 | 1 | 0 | s1: type=char, 主角=1<br>s2: any={"!消耗品":1,"is":2001185}<br>s3: any={"!消耗品":1,"is":2001185}, !s5=1<br>s4: any={"!消耗品":1,"is":2001185}, !s6=1 | data/config/rite/5010207.json |
+| 5010208 | 终极问题 | 结局:13 | 0 | 0 | 0 | 0 | s1: any={"主角":1,"妻子":1,"is":2000689} | data/config/rite/5010208.json |
+| 5010209 | 羊肉炉的飞升 | 结局:15 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010209.json |
+| 5010210 | 羊肉炉的飞升 | 结局:16 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010210.json |
+| 5010211 | 羊肉炉的飞升 | 结局:17 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010211.json |
+| 5010212 | 羊肉炉的飞升 | 结局:18 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010212.json |
+| 5010213 | 羊肉炉的飞升 | 结局:19 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010213.json |
+| 5010214 | 羊肉炉的飞升 | 结局:20 | 1 | 0 | 1 | 0 | s1: is=2001344, cost.羊肉炉飞升进度=[1,7] | data/config/rite/5010214.json |
