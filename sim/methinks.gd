@@ -31,15 +31,27 @@ static func process_card(card_id: int, source: String, state, db, rng) -> Dictio
 
 	var consumes_card: bool = bool(deferred.get("clean_rite", false)) or (1 in deferred.get("clean_slots", [])) or (card_id in deferred.get("clean_card_ids", []))
 	state.remove_card_from_slot(card_id, 1)
+	var sudan_consumed := false
 	if state.is_active_sudan_card(card_id):
 		if consumes_card:
-			RoundLoop.consume_sudan(state, card_id)
+			sudan_consumed = RoundLoop.consume_sudan(state, card_id)
 	elif removed_from_hand and not consumes_card:
 		state.add_card_to_hand(card_id)
 
 	result.accepted = true
 	result.deferred = deferred
 	result.message = _message_from_result(resolved, deferred)
+	# Consuming the last sudan card must trigger the round-start check, mirroring
+	# consume_sudan's contract and advance_day's event-driven round start.
+	# Otherwise the player is left with no active sudan and no new round.
+	if sudan_consumed:
+		var round_result := RoundLoop.start_round_if_no_sudan(state, db, rng)
+		if round_result.get("new_round", false):
+			result.new_round = true
+			result.drawn_sudan = int(round_result.get("drawn_sudan", -1))
+			if result.drawn_sudan >= 0:
+				var dec = SudanCards.decode(result.drawn_sudan)
+				result.message += "\n—— 第 %d 回合开始 ——\n新苏丹卡: %s%s" % [state.round_number, dec.rank, dec.action]
 	return result
 
 

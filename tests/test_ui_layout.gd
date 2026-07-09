@@ -287,6 +287,68 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 	assert_true(state.event_queue.is_empty(), "continue should consume the event queue")
 
 
+func test_game_screen_event_queue_executes_event_result_when_consumed():
+	# A queued event with a result payload must apply its effects when the
+	# player dismisses it, instead of being a no-op.
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[990002] = {
+		"id": 990002,
+		"name": "奖励事件",
+		"text": "你获得了一些金币。",
+		"result": {"金币": 7, "counter+7000001": 3},
+	}
+	var rng := RNG.new(21)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, rng)
+	state.queue_event(990002)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, local_db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	assert_not_null(cont, "event with no choices renders a continue button")
+	if cont == null:
+		return
+	cont.pressed.emit()
+	await wait_process_frames(2)
+
+	assert_true(state.event_queue.is_empty(), "event consumed from the queue")
+	assert_eq(state.coin_count, 7, "event result coin applied on consume")
+	assert_eq(state.get_counter(7000001), 3, "event result counter applied on consume")
+
+
+func test_game_screen_event_with_over_result_signals_game_over():
+	# An event whose result carries `over` must signal game-over to the
+	# controller when consumed.
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[990003] = {
+		"id": 990003,
+		"name": "结局事件",
+		"text": "一切都结束了。",
+		"result": {"over": 1},
+	}
+	var rng := RNG.new(22)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, rng)
+	state.queue_event(990003)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, local_db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	watch_signals(screen)
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	if cont != null:
+		cont.pressed.emit()
+		await wait_process_frames(2)
+	assert_signal_emitted(screen, "game_over_requested", "event over result should signal game-over")
+
+
 func test_game_menu_button_opens_real_overlay():
 	var stage := _stage()
 	var game = Game.new()

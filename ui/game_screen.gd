@@ -8,6 +8,7 @@ signal advance_pressed()
 signal redraw_pressed()
 signal open_rite_selector(location_name: String)
 signal menu_pressed()
+signal game_over_requested()
 
 class HandRailDrop:
 	extends ScrollContainer
@@ -550,6 +551,9 @@ func drop_card_on_methinks(data: Variant) -> void:
 	var result: Dictionary = MethinksEngine.process_card(card_id, source, _state, _db, _rng)
 	set_log(str(result.get("message", "")))
 	refresh()
+	var deferred: Dictionary = result.get("deferred", {})
+	if bool(deferred.get("over", false)):
+		game_over_requested.emit()
 
 
 func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> void:
@@ -648,7 +652,7 @@ func _next_event_display() -> Dictionary:
 			"id": event_id,
 			"title": str(event.get("name", event.get("title", "事件 %d" % event_id))),
 			"text": _event_body_text(event, event_id),
-			"choices": {},
+			"choices": event.get("choose", {}),
 		}
 	return {}
 
@@ -734,7 +738,18 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
 	elif not _state.event_queue.is_empty():
+		var event_id := int(_state.event_queue[0])
 		_state.event_queue.remove_at(0)
+		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
+		var merged: Dictionary = {}
+		if choice_key != "":
+			# A chosen branch overrides the event's default result/action.
+			set_log("选择：%s" % str(choice_value))
+			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
+		else:
+			merged = DeferredEffects.execute_event(event, _state, _db, _rng)
+			if bool(merged.get("over", false)):
+				game_over_requested.emit()
 	refresh()
 
 

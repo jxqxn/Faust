@@ -110,7 +110,9 @@ func add_counter(id: int, delta: int) -> void:
 
 
 func sub_counter(id: int, delta: int) -> void:
-	local_counters[id] = int(local_counters.get(id, 0)) - delta
+	# Clamp non-negative for gated counters, matching set_counter. SUB can drive
+	# a gated counter negative otherwise, violating the documented invariant.
+	local_counters[id] = CounterSystem.clamp_nonneg(id, int(local_counters.get(id, 0)) - delta)
 
 
 func set_counter(id: int, val: int) -> void:
@@ -123,7 +125,7 @@ func add_global_counter(id: int, delta: int) -> void:
 
 
 func sub_global_counter(id: int, delta: int) -> void:
-	global_counters[id] = int(global_counters.get(id, 0)) - delta
+	global_counters[id] = CounterSystem.clamp_nonneg(id, int(global_counters.get(id, 0)) - delta)
 
 
 func set_global_counter(id: int, val: int) -> void:

@@ -322,3 +322,76 @@ func test_settlement_extre_executes_all_results_before_actions():
 		"coin +20",
 	])
 	assert_eq(st.coin_count, 33)
+
+
+# ---- Game-loop integrity fixes ----
+
+func test_r1_funccompare_tolerates_malformed_scalar_value():
+	# A malformed r1 config (scalar value instead of [X, Y]) must fail the
+	# condition gracefully instead of crashing resolution.
+	var st := GameState.new()
+	st.difficulty_config = db.get_difficulty(1)
+	var ctx := _make_ctx(st, RNG.new(1))
+	assert_false(ConditionEval.eval_key("r1:智慧>=", 3, ctx), "scalar r1 value fails instead of crashing")
+	assert_false(ConditionEval.eval_key("r1:智慧>=", [3], ctx), "single-element r1 array fails instead of crashing")
+	# A well-formed array still evaluates normally. Need 0 successes with
+	# empty slots so the comparison holds without slotted cards.
+	assert_true(ConditionEval.eval_key("r1:智慧>=", [0, 5], ctx), "well-formed r1 still works")
+
+func test_sub_counter_clamps_registered_nonneg_to_zero():
+	# SUB on a registered non-negative counter must clamp to 0, matching
+	# set_counter's contract. Ungated counters pass through negative.
+	var st := GameState.new()
+	st.set_counter(7100006, 3)
+	CounterSystem.register_nonneg(7100006)
+	st.sub_counter(7100006, 10)
+	assert_eq(st.get_counter(7100006), 0, "gated counter clamps to 0 on sub")
+	# Ungated counter goes negative (no clamp).
+	st.set_counter(7000999, 5)
+	st.sub_counter(7000999, 10)
+	assert_eq(st.get_counter(7000999), -5, "ungated counter may go negative")
+
+func test_methinks_consume_last_sudan_triggers_new_round():
+	# Consuming the last active sudan via methinks must start a new round and
+	# draw a fresh sudan, instead of leaving the player stuck.
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.init_config["think_id"] = 999001
+	# A think rite that consumes the slotted card (clean.rite).
+	local_db.rites[999001] = {
+		"id": 999001,
+		"cards_slot": {"s1": {"condition": {}}},
+		"settlement_prior": [],
+		"settlement": [{"condition": {}, "result": {"clean.rite": 1}}],
+		"settlement_extre": [],
+	}
+	var rng := RNG.new(7)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	# Ensure exactly one active sudan and a non-empty deck for the next draw.
+	state.active_sudan_cards.clear()
+	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 7, 1))
+	state.sudan_deck = [2010002, 2010003]
+	var round_before := state.round_number
+	var result := MethinksEngine.process_card(2010001, "active_sudan", state, local_db, rng)
+	assert_true(result.get("accepted", false), "methinks accepts the sudan card")
+	assert_true(result.get("new_round", false), "consuming the last sudan starts a new round")
+	assert_true(result.drawn_sudan >= 0, "a new sudan is drawn")
+	assert_eq(state.round_number, round_before + 1, "round number incremented")
+	assert_false(state.active_sudan_cards.is_empty(), "a new sudan is now active")
+
+func test_deferred_effects_execute_event_applies_result_and_action():
+	# execute_event runs an event's result and action payloads through
+	# ResultExec and applies the deferred effects, mirroring rite resolution.
+	var st := GameState.new()
+	st.setup_new_run(db, 0, RNG.new(1))
+	var event := {
+		"id": 990001,
+		"name": "测试事件",
+		"result": {"金币": 5, "counter+7000001": 2},
+		"action": {"over": 1},
+	}
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	assert_eq(st.coin_count, 5, "event result coin applied")
+	assert_eq(st.get_counter(7000001), 2, "event result counter applied")
+	assert_true(bool(merged.get("over", false)), "event action over flag merged into result")

@@ -103,6 +103,7 @@ func _show_game() -> void:
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
+	gs.game_over_requested.connect(_show_game_over)
 	add_child(gs)
 	_current = gs
 	_game_screen = gs
@@ -137,6 +138,7 @@ func _on_open_rite(rite_id: int) -> void:
 	rv.setup(state, db, rng, rite_id)
 	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
+	rv.game_over_requested.connect(_show_game_over)
 	if _game_screen != null and _game_screen.has_method("add_overlay"):
 		_game_screen.add_overlay(rv)
 	else:

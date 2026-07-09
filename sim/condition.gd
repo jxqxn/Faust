@@ -195,6 +195,11 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var attr_val := eval_attr_expr(expr, ctx)
 	if is_r:
 		# val is [X, Y]: X=needed successes, Y=success line.
+		# Defensive: a malformed r1 config may supply a scalar instead of a
+		# 2-element array. Fail the condition rather than crashing resolution.
+		if not (val is Array) or val.size() < 2:
+			push_warning("ConditionEval: r1 condition '%s' expects a 2-element array value" % k)
+			return false
 		var arr: Array = val
 		var x: int = int(arr[0])
 		var y: int = int(arr[1])

@@ -32,6 +32,7 @@ class RiteSlotButton:
 
 signal closed()
 signal resolved()
+signal game_over_requested()
 
 const MOCKUP_SIZE := Vector2(1280, 720)
 
@@ -427,6 +428,10 @@ func _do_resolve() -> void:
 	_update_gold_button()
 	_refresh_gold_label()
 	resolved.emit()
+	# A rite-driven game over fires after the normal resolve/round-check path
+	# completes, so the resolved signal handlers run on a still-valid state.
+	if bool(res.deferred.get("over", false)):
+		game_over_requested.emit()
 
 
 func _display_result(res) -> void:

@@ -29,6 +29,53 @@ static func execute_choice(choice_key: String, choice_value: Variant, state, db,
 	apply(deferred, state, db, rng)
 
 
+## Execute an event's result and action payloads and apply their deferred
+## effects. Mirrors RiteResolver's per-entry pattern (execute result, then
+## action). Returns the merged deferred dict so callers can inspect flags like
+## `over`. If the event has no result/action, returns an empty dict.
+static func execute_event(event: Dictionary, state, db, rng) -> Dictionary:
+	if event.is_empty():
+		return {}
+	var merged := {
+		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
+		"prompts": [], "loots": [],
+	}
+	for key in ["result", "action"]:
+		var payload: Dictionary = event.get(key, {})
+		if payload.is_empty():
+			continue
+		var deferred := ResultExec.execute(payload, state, db)
+		_merge(merged, deferred)
+	apply(merged, state, db, rng)
+	return merged
+
+
+static func _merge(into: Dictionary, src: Dictionary) -> void:
+	if src.has("events"):
+		into["events"].append_array(src["events"])
+	if src.has("choose") and not src["choose"].is_empty():
+		into["choose"] = src["choose"]
+	if src.has("rite") and int(src["rite"]) != 0:
+		into["rite"] = src["rite"]
+	if src.has("over") and bool(src["over"]):
+		into["over"] = true
+	if src.has("back_to_prev") and bool(src["back_to_prev"]):
+		into["back_to_prev"] = true
+	if src.has("logs"):
+		into["logs"].append_array(src["logs"])
+	if src.has("clean_slots"):
+		into["clean_slots"].append_array(src["clean_slots"])
+	if src.has("clean_card_ids"):
+		into["clean_card_ids"].append_array(src["clean_card_ids"])
+	if src.has("clean_rite") and bool(src["clean_rite"]):
+		into["clean_rite"] = true
+	if src.has("prompts"):
+		into["prompts"].append_array(src["prompts"])
+	if src.has("loots"):
+		into["loots"].append_array(src["loots"])
+
+
 static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 	if loot_ref is Array:
 		for nested in loot_ref:

@@ -256,6 +256,53 @@ func test_prepare_table_clears_slots_cancelled_after_prior_placement():
 	assert_eq(state.cards_in_slot(3).size(), 1, "unrelated table card still remains")
 
 
+func test_rite_over_result_emits_game_over_requested():
+	# A rite settlement carrying an `over` result must signal game-over to the
+	# controller, so rite-driven endings actually fire.
+	var rng := RNG.new(91)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000003)
+	view._rite = {
+		"settlement": [
+			{"condition": {}, "result": {"over": 1}, "result_title": "", "result_text": ""}
+		],
+		"settlement_extre": [],
+		"settlement_prior": [],
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+	watch_signals(view)
+
+	view._resolve()
+	assert_signal_emitted(view, "game_over_requested", "rite over result should emit game_over_requested")
+
+
+func test_rite_without_over_does_not_emit_game_over():
+	# A normal rite (no over) must not emit game_over_requested.
+	var rng := RNG.new(92)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000003)
+	view._rite = {
+		"settlement": [
+			{"condition": {}, "result": {"coin": 1}, "result_title": "", "result_text": ""}
+		],
+		"settlement_extre": [],
+		"settlement_prior": [],
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+	watch_signals(view)
+
+	view._resolve()
+	assert_signal_not_emitted(view, "game_over_requested", "normal rite should not emit game_over_requested")
+
+
 func _tag_on_first_not_second(first: Dictionary, second: Dictionary) -> String:
 	var first_tags: Dictionary = first.get("tag", {})
 	var second_tags: Dictionary = second.get("tag", {})
