@@ -21,10 +21,6 @@ config/features=PackedStringArray("4.6")
 window/stretch/mode="canvas_items"
 window/size/viewport=Vector2i(1280, 800)
 
-[dotnet]
-
-project/assembly_name="Faust"
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")

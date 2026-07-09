@@ -10,8 +10,6 @@
 class_name LootSystem
 extends RefCounted
 
-const RNG = preload("res://core/rng.gd")
-
 
 # A LootNode item: {num, id, type, weight}
 # items: Array of item dicts.

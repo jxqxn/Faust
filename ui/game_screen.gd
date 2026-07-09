@@ -35,7 +35,6 @@ class MethinksDrop:
 		if owner_screen != null and owner_screen.has_method("drop_card_on_methinks"):
 			owner_screen.drop_card_on_methinks(data)
 
-const CONTENT_WIDTH := 960
 const MOCKUP_SIZE := Vector2(1280, 720)
 
 var _state

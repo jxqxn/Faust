@@ -48,11 +48,6 @@ func value() -> float:
 	return _gen.randf()
 
 
-## float in [from,to), matching Unity's Random.Range(float,float).
-func range_float(from_n: float, to_n: float) -> float:
-	return _gen.randf_range(from_n, to_n)
-
-
 ## Fisher-Yates shuffle of a copy; returns the shuffled array.
 func shuffle(arr: Array) -> Array:
 	var out := arr.duplicate()

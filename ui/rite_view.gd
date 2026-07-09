@@ -63,7 +63,6 @@ var _slot_buttons: Dictionary = {}
 var _slot_titles: Dictionary = {}
 var _slot_details: Dictionary = {}
 
-# Kept for compatibility with older tests/tools that inspect the old view.
 var _slots_container: VBoxContainer
 
 

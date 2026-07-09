@@ -26,33 +26,6 @@ func _ready() -> void:
 	_show_menu()
 
 
-func _mcp_capture_governance_rite() -> void:
-	state = GameState.new()
-	state.setup_new_run(db, 1, rng)
-	RoundLoop.start_auto_begin_rites(state, db)
-	RoundLoop.draw_weekly_sudan(state, db, rng)
-	_on_open_rite(5000001)
-
-
-func _mcp_capture_main_desktop() -> void:
-	state = GameState.new()
-	state.setup_new_run(db, 1, rng)
-	RoundLoop.start_auto_begin_rites(state, db)
-	RoundLoop.draw_weekly_sudan(state, db, rng)
-	_show_game()
-
-
-func _mcp_capture_card_detail() -> void:
-	state = GameState.new()
-	state.setup_new_run(db, 1, rng)
-	RoundLoop.start_auto_begin_rites(state, db)
-	RoundLoop.draw_weekly_sudan(state, db, rng)
-	_show_game()
-	await get_tree().process_frame
-	if _game_screen != null and _game_screen.has_method("show_card_detail") and not state.hand.is_empty():
-		_game_screen.show_card_detail(int(state.hand[0]))
-
-
 func _show_menu() -> void:
 	_clear_current()
 	_game_screen = null

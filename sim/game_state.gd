@@ -354,7 +354,7 @@ func hand_has_tag(db, tag_name: String) -> bool:
 	return false
 
 
-func hand_has_card_id(db, card_id: int) -> bool:
+func hand_has_card_id(card_id: int) -> bool:
 	return card_id in hand
 
 

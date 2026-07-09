@@ -372,7 +372,7 @@ static func eval_have(k: String, val: Variant, ctx: Dictionary, _is_hand: bool) 
 				return int(card.get("tag", {}).get(tag_name, 0)) >= int(val)
 			return false
 	if rest.is_valid_int():
-		return st.hand_has_card_id(db, rest.to_int())
+		return st.hand_has_card_id(rest.to_int())
 	return st.hand_has_tag(db, rest)
 
 

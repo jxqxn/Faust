@@ -73,7 +73,7 @@ func _build_ui() -> void:
 	if OS.is_debug_build():
 		var test_btn := Button.new()
 		test_btn.name = "TestStartButton"
-		test_btn.text = "Test Start"
+		test_btn.text = "测试开始"
 		test_btn.custom_minimum_size = Vector2(0, 42)
 		test_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		test_btn.pressed.connect(func(): test_start_requested.emit(1))
