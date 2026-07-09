@@ -21,9 +21,18 @@ class HandRailDrop:
 		if owner_screen != null and owner_screen.has_method("drop_card_to_hand"):
 			owner_screen.drop_card_to_hand(data, get_local_mouse_position())
 
-const FaustTheme = preload("res://ui/theme.gd")
-const CardWidget = preload("res://ui/card_widget.gd")
-const SudanCards = preload("res://sim/sudan_cards.gd")
+
+class MethinksDrop:
+	extends PanelContainer
+
+	var owner_screen: Control
+
+	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+		return owner_screen != null and owner_screen.has_method("can_drop_card_on_methinks") and owner_screen.can_drop_card_on_methinks(data)
+
+	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+		if owner_screen != null and owner_screen.has_method("drop_card_on_methinks"):
+			owner_screen.drop_card_on_methinks(data)
 
 const CONTENT_WIDTH := 960
 const MOCKUP_SIZE := Vector2(1280, 720)
@@ -40,15 +49,20 @@ var _menu_button: Button
 var _desk_map: PanelContainer
 var _map_content: Control
 var _overlay_layer: Control
+var _methinks_target: PanelContainer
 var _rail_label: VBoxContainer
 var _card_rail_view: ScrollContainer
 var _card_items: HBoxContainer
 var _right_actions: VBoxContainer
 var _advance_button: Button
 var _site_buttons: Array[Button] = []
+var _rite_pin_buttons: Array[Button] = []
+var _rite_pin_ids: Dictionary = {}
 var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
+var _event_overlay: Control
+var _event_panel: Panel
 
 
 func setup(state, db, rng) -> void:
@@ -98,9 +112,9 @@ func _build_ui() -> void:
 	_desk_map = _panel("DeskMap")
 	add_child(_desk_map)
 	_map_content = Control.new()
-	_map_content.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_map_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_map_content.clip_contents = true
-	_desk_map.add_child(_map_content)
+	add_child(_map_content)
 
 	var site_specs := [
 		{"name": "SiteHome", "label": "自宅", "location": "自宅"},
@@ -116,6 +130,22 @@ func _build_ui() -> void:
 		site.pressed.connect(_on_site_pressed.bind(location_name))
 		_site_buttons.append(site)
 		_map_content.add_child(site)
+
+	_methinks_target = MethinksDrop.new()
+	_methinks_target.name = "MethinksDropTarget"
+	(_methinks_target as MethinksDrop).owner_screen = self
+	_methinks_target.add_theme_stylebox_override("panel", _methinks_style())
+	_map_content.add_child(_methinks_target)
+	var methinks_label := Label.new()
+	methinks_label.name = "MethinksLabel"
+	methinks_label.text = "俺寻思"
+	methinks_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	methinks_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	methinks_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	methinks_label.add_theme_font_size_override("font_size", 18)
+	methinks_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	methinks_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_methinks_target.add_child(methinks_label)
 
 	_log_label = Label.new()
 	_log_label.name = "EventToast"
@@ -183,16 +213,13 @@ func _build_ui() -> void:
 func _apply_layout() -> void:
 	if _hud == null:
 		return
-	var view_size := size
-	if view_size.x <= 0.0 or view_size.y <= 0.0:
-		var parent_control := get_parent() as Control
-		if parent_control != null:
-			view_size = parent_control.size
+	var view_size := _effective_view_size()
 	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
 
 	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(340, 44) * s))
 	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
 	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
+	_set_rect(_map_content, Rect2(_desk_map.position, _desk_map.size))
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(_card_rail_view, Rect2(Vector2(180 * s, view_size.y - 222 * s), Vector2(view_size.x - 360 * s, 202 * s)))
@@ -201,14 +228,29 @@ func _apply_layout() -> void:
 	_card_items.custom_minimum_size = Vector2(_card_items.get_minimum_size().x, CardWidget.CARD_SIZE.y * s)
 	_layout_map_content(s)
 	_layout_card_detail(s, view_size)
+	_layout_event_prompt(s, view_size)
+
+
+func _effective_view_size() -> Vector2:
+	if size.x > 0.0 and size.y > 0.0:
+		return size
+	var node := get_parent()
+	while node != null:
+		if node is Control:
+			var control := node as Control
+			if control.size.x > 0.0 and control.size.y > 0.0:
+				return control.size
+		node = node.get_parent()
+	var viewport := get_viewport()
+	if viewport != null:
+		return viewport.get_visible_rect().size
+	return MOCKUP_SIZE
 
 
 func _layout_map_content(s: float) -> void:
 	if _map_content == null:
 		return
-	_map_content.position = Vector2.ZERO
-	_map_content.size = _desk_map.size
-	var map_size := _desk_map.size
+	var map_size := _map_content.size
 	var site_size := Vector2(112, 34) * s
 	var site_positions := [
 		Vector2(0.11, 0.42),
@@ -221,6 +263,10 @@ func _layout_map_content(s: float) -> void:
 		var site := _site_buttons[i]
 		site.size = site_size
 		site.position = Vector2(map_size.x * site_positions[i].x, map_size.y * site_positions[i].y)
+	_layout_rite_pins(s, map_size)
+	if _methinks_target != null:
+		_methinks_target.size = Vector2(126, 72) * s
+		_methinks_target.position = Vector2(24, map_size.y - 104 * s)
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
 		_log_label.position = Vector2((map_size.x - _log_label.size.x) * 0.5, map_size.y - 58 * s)
@@ -279,6 +325,144 @@ func _round_button_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
 	return style
 
 
+func _methinks_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
+	var style := FaustTheme.card_style(border)
+	style.bg_color = Color("#15100c")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	return style
+
+
+func _rite_pin_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
+	var style := FaustTheme.card_style(border)
+	style.bg_color = Color(0.08, 0.055, 0.04, 0.96)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(8)
+	return style
+
+
+func _rite_pin_hover_style() -> StyleBoxFlat:
+	var style := _rite_pin_style(FaustTheme.GOLD_BRIGHT)
+	style.bg_color = Color(0.13, 0.085, 0.045, 0.98)
+	return style
+
+
+func _refresh_rite_pins() -> void:
+	if _map_content == null:
+		return
+	_clear_rite_pins()
+	for rid in _open_map_rite_ids():
+		var rite: Dictionary = _db.rites[int(rid)]
+		var pin := Button.new()
+		pin.name = "RitePin_%d" % int(rid)
+		pin.text = str(rite.get("name", str(rid)))
+		pin.tooltip_text = str(rite.get("text", ""))
+		pin.custom_minimum_size = Vector2(118, 34)
+		pin.add_theme_font_size_override("font_size", 15)
+		pin.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+		pin.add_theme_stylebox_override("normal", _rite_pin_style())
+		pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
+		pin.add_theme_stylebox_override("pressed", _rite_pin_style(FaustTheme.BORDER))
+		pin.pressed.connect(func(): call_deferred("_emit_open_rite", int(rid)))
+		_rite_pin_buttons.append(pin)
+		_rite_pin_ids[pin] = int(rid)
+		_map_content.add_child(pin)
+	_apply_layout()
+
+
+func _emit_open_rite(rite_id: int) -> void:
+	open_rite.emit(rite_id)
+
+
+func _clear_rite_pins() -> void:
+	for pin in _rite_pin_buttons:
+		if is_instance_valid(pin):
+			if pin.get_parent() != null:
+				pin.get_parent().remove_child(pin)
+			pin.free()
+	_rite_pin_buttons.clear()
+	_rite_pin_ids.clear()
+
+
+func _open_map_rite_ids() -> Array[int]:
+	var out: Array[int] = []
+	if _db == null or _state == null:
+		return out
+	for rid in _db.rites:
+		var rite: Dictionary = _db.rites[rid]
+		var id := int(rid)
+		if not _is_map_rite_interactive(rite):
+			continue
+		if _state.get("available_rites") != null and not (id in _state.available_rites):
+			continue
+		if not _is_map_rite_open(rite):
+			continue
+		out.append(id)
+	out.sort()
+	return out
+
+
+func _is_map_rite_interactive(rite: Dictionary) -> bool:
+	var slots: Dictionary = rite.get("cards_slot", {})
+	var settle_count := 0
+	for key in ["settlement_prior", "settlement", "settlement_extre"]:
+		settle_count += (rite.get(key, []) as Array).size()
+	return not slots.is_empty() and settle_count > 0
+
+
+func _is_map_rite_open(rite: Dictionary) -> bool:
+	var id := int(rite.get("id", 0))
+	if int(rite.get("auto_begin", 0)) == 1:
+		return id in _state.started_rites
+	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
+
+
+func _layout_rite_pins(s: float, map_size: Vector2) -> void:
+	var by_location: Dictionary = {}
+	for pin in _rite_pin_buttons:
+		if not is_instance_valid(pin):
+			continue
+		var rid := int(_rite_pin_ids.get(pin, 0))
+		var rite: Dictionary = _db.rites.get(rid, {})
+		var loc := _rite_location_name(rite)
+		if not by_location.has(loc):
+			by_location[loc] = []
+		by_location[loc].append(pin)
+	for loc in by_location.keys():
+		var pins: Array = by_location[loc]
+		for i in pins.size():
+			var pin := pins[i] as Button
+			var anchor := _map_location_anchor(loc)
+			var col := i % 2
+			var row := floori(float(i) / 2.0)
+			var pin_size := Vector2(120, 34) * s
+			pin.size = pin_size
+			var raw := Vector2(
+				map_size.x * anchor.x + (col * 128 + 6) * s,
+				map_size.y * anchor.y + (46 + row * 40) * s
+			)
+			pin.position = Vector2(
+				clamp(raw.x, 8.0 * s, max(8.0 * s, map_size.x - pin_size.x - 8.0 * s)),
+				clamp(raw.y, 8.0 * s, max(8.0 * s, map_size.y - pin_size.y - 8.0 * s))
+			)
+
+
+func _rite_location_name(rite: Dictionary) -> String:
+	return str(rite.get("location", "?")).split(":")[0]
+
+
+func _map_location_anchor(location_name: String) -> Vector2:
+	var anchors := {
+		"自宅": Vector2(0.11, 0.42),
+		"商业区": Vector2(0.33, 0.27),
+		"宫廷": Vector2(0.48, 0.41),
+		"神殿区": Vector2(0.63, 0.24),
+		"野外": Vector2(0.73, 0.63),
+	}
+	return anchors.get(location_name, Vector2(0.48, 0.48))
+
+
 func refresh() -> void:
 	if _state == null or _card_items == null:
 		return
@@ -303,6 +487,8 @@ func refresh() -> void:
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		widget.clicked.connect(_show_card_detail)
 		_card_items.add_child(widget)
+	_refresh_rite_pins()
+	_refresh_event_overlay()
 
 
 func _active_sudan_for_card(card_id: int) -> Variant:
@@ -345,6 +531,25 @@ func can_drop_card_to_hand(data: Variant) -> bool:
 		return false
 	var source := str(data.get("source", ""))
 	return source == "slot" or source == "hand" or source == "active_sudan"
+
+
+func can_drop_card_on_methinks(data: Variant) -> bool:
+	if not (data is Dictionary):
+		return false
+	if str(data.get("type", "")) != "card":
+		return false
+	var source := str(data.get("source", ""))
+	return source == "hand" or source == "active_sudan"
+
+
+func drop_card_on_methinks(data: Variant) -> void:
+	if not can_drop_card_on_methinks(data):
+		return
+	var card_id := int(data.get("card_id", 0))
+	var source := str(data.get("source", ""))
+	var result: Dictionary = MethinksEngine.process_card(card_id, source, _state, _db, _rng)
+	set_log(str(result.get("message", "")))
+	refresh()
 
 
 func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> void:
@@ -411,6 +616,161 @@ func add_overlay(node: Control) -> void:
 		return
 	_overlay_layer.add_child(node)
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
+
+
+func _refresh_event_overlay() -> void:
+	if _state == null:
+		_clear_event_overlay()
+		return
+	var display := _next_event_display()
+	if display.is_empty():
+		_clear_event_overlay()
+		return
+	_show_event_overlay(display)
+
+
+func _next_event_display() -> Dictionary:
+	if _state == null:
+		return {}
+	if not _state.event_prompts.is_empty():
+		var prompt: Dictionary = _state.event_prompts[0]
+		return {
+			"kind": "prompt",
+			"title": str(prompt.get("title", prompt.get("id", "提示"))),
+			"text": str(prompt.get("text", prompt.get("desc", ""))),
+			"choices": prompt.get("choices", {}),
+		}
+	if not _state.event_queue.is_empty():
+		var event_id := int(_state.event_queue[0])
+		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
+		return {
+			"kind": "event",
+			"id": event_id,
+			"title": str(event.get("name", event.get("title", "事件 %d" % event_id))),
+			"text": _event_body_text(event, event_id),
+			"choices": {},
+		}
+	return {}
+
+
+func _show_event_overlay(display: Dictionary) -> void:
+	_clear_event_overlay()
+	_event_overlay = Control.new()
+	_event_overlay.name = "EventPromptOverlay"
+	_event_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_event_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_overlay(_event_overlay)
+
+	_event_panel = Panel.new()
+	_event_panel.name = "EventPromptPanel"
+	_event_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_event_panel.clip_contents = true
+	_event_panel.add_theme_stylebox_override("panel", _event_panel_style())
+	_event_overlay.add_child(_event_panel)
+
+	var root := VBoxContainer.new()
+	root.name = "EventPromptContent"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.offset_left = 18
+	root.offset_top = 16
+	root.offset_right = -18
+	root.offset_bottom = -16
+	root.add_theme_constant_override("separation", 10)
+	_event_panel.add_child(root)
+
+	var title := Label.new()
+	title.name = "EventPromptTitle"
+	title.text = str(display.get("title", "事件"))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	root.add_child(title)
+
+	var body := Label.new()
+	body.name = "EventPromptBody"
+	body.text = str(display.get("text", ""))
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.clip_text = true
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_font_size_override("font_size", 16)
+	body.add_theme_color_override("font_color", FaustTheme.TEXT)
+	root.add_child(body)
+
+	var buttons := HBoxContainer.new()
+	buttons.name = "EventPromptActions"
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 10)
+	root.add_child(buttons)
+
+	var choices: Dictionary = display.get("choices", {})
+	if choices.is_empty():
+		var cont := _event_button("继续")
+		cont.name = "EventPromptContinueButton"
+		cont.pressed.connect(_consume_event_display)
+		buttons.add_child(cont)
+	else:
+		for key in choices.keys():
+			var choice := _event_button(str(choices[key]))
+			choice.name = "EventPromptChoiceButton"
+			choice.pressed.connect(_consume_event_display.bind(str(key), choices[key]))
+			buttons.add_child(choice)
+	_apply_layout()
+
+
+func _clear_event_overlay() -> void:
+	if _event_overlay == null:
+		return
+	_event_overlay.queue_free()
+	_event_overlay = null
+	_event_panel = null
+
+
+func _consume_event_display(choice_key: String = "", choice_value: Variant = "") -> void:
+	if _state == null:
+		return
+	if not _state.event_prompts.is_empty():
+		_state.event_prompts.remove_at(0)
+		if choice_key != "":
+			set_log("选择：%s" % str(choice_value))
+			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
+	elif not _state.event_queue.is_empty():
+		_state.event_queue.remove_at(0)
+	refresh()
+
+
+func _event_body_text(event: Dictionary, event_id: int) -> String:
+	for key in ["text", "desc", "description", "content"]:
+		if str(event.get(key, "")) != "":
+			return str(event[key])
+	if event.is_empty():
+		return "事件 %d 已触发，后续会接入原版事件文本与结果。" % event_id
+	return "事件 %d" % event_id
+
+
+func _layout_event_prompt(s: float, view_size: Vector2) -> void:
+	if _event_panel == null:
+		return
+	var panel_w: float = min(view_size.x - 360 * s, 610 * s)
+	var panel_h: float = 236 * s
+	var panel_x: float = (view_size.x - panel_w) * 0.5
+	var panel_y: float = 112 * s
+	_set_rect(_event_panel, Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h)))
+
+
+func _event_button(label: String) -> Button:
+	var button := Button.new()
+	button.text = label
+	button.custom_minimum_size = Vector2(96, 36)
+	return button
+
+
+func _event_panel_style() -> StyleBoxFlat:
+	var style := FaustTheme.card_style(FaustTheme.GOLD)
+	style.bg_color = Color(0.05, 0.045, 0.035, 0.94)
+	style.set_content_margin_all(16)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	return style
 
 
 func show_card_detail(card_id: int) -> void:
@@ -584,15 +944,15 @@ func _attribute_lines(card: Dictionary) -> Array[String]:
 func _tag_lines(card: Dictionary) -> Array[String]:
 	var tag: Dictionary = card.get("tag", {})
 	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
-	var visible: Array[String] = []
+	var visible_tags: Array[String] = []
 	for key in tag.keys():
 		if key in attrs:
 			continue
 		if int(tag[key]) != 0:
-			visible.append(str(key))
-	if visible.is_empty():
+			visible_tags.append(str(key))
+	if visible_tags.is_empty():
 		return []
-	return [" ".join(visible.slice(0, 10))]
+	return [" ".join(visible_tags.slice(0, 10))]
 
 
 func _rarity_badge(card: Dictionary) -> String:

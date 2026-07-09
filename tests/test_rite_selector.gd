@@ -1,7 +1,5 @@
 extends GutTest
 
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
 
 

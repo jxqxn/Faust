@@ -1,9 +1,5 @@
 extends GutTest
 
-const SudanCards = preload("res://sim/sudan_cards.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
 const RNG = preload("res://core/rng.gd")
 
 var db: ConfigDB
@@ -87,7 +83,8 @@ func test_full_new_run_setup():
 	state.setup_new_run(db, 1, rng) # normal difficulty
 	# Normal runs use a curated starting hand; the huge init/1 list is a test profile.
 	assert_eq(state.hand, [2000001, 2000006, 2000523, 2000005])
-	assert_eq(state.available_rites, [5000001])
+	assert_true(5000001 in state.available_rites)
+	assert_true(state.available_rites.size() < db.rites.size(), "normal start should not expose every configured rite")
 	# Sudan deck built from pool and shuffled.
 	assert_true(state.sudan_deck.size() > 20)
 	# Normal difficulty: 2 gold dice, 5-day... wait 7-day life, 1 redraw.

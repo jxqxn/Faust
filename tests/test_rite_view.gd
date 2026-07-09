@@ -1,10 +1,7 @@
 extends GutTest
 
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
 const RNG = preload("res://core/rng.gd")
 const RiteView = preload("res://ui/rite_view.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
 
 var db: ConfigDB
 
@@ -134,6 +131,70 @@ func test_slot_accepts_card_rejects_wrong_type():
 	var card: Dictionary = db.get_card(2000005).duplicate(true)
 	card["id"] = 2000005
 	assert_false(view._slot_accepts_card({"condition": {"type": "item"}}, card), "wrong card type is rejected")
+
+func test_rite_view_builds_dynamic_slots_from_config():
+	var rng := RNG.new(93)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5001001)
+	view._rite = {
+		"cards_slot": {
+			"s1": {}, "s2": {}, "s3": {}, "s4": {}, "s5": {}, "s6": {}, "s7": {},
+		}
+	}
+	view._slot_layer = Control.new()
+	view._build_slot_placeholders()
+
+	assert_eq(view._slot_buttons.size(), 7, "rite UI should render every configured slot")
+	assert_true(view._slot_buttons.has("s7"), "slot generation should not stop at s4")
+
+func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
+	var rng := RNG.new(94)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._rite = {
+		"settlement": [
+			{"condition": {}, "result": {"event_on": 5310008}, "action": {"rite": 5001001, "prompt": {"id": "p1"}}}
+		],
+		"settlement_extre": [],
+		"settlement_prior": [],
+		"cards_slot": {},
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+
+	view._resolve()
+
+	assert_true(5310008 in state.event_queue, "event_on should enter the runtime event queue")
+	assert_true(5001001 in state.available_rites, "rite result should generate a runtime rite entry")
+	assert_eq(str(state.event_prompts[0].get("id", "")), "p1", "prompt should enter the runtime prompt queue")
+
+func test_rite_resolution_deferred_choose_reaches_prompt_queue():
+	var rng := RNG.new(95)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._rite = {
+		"settlement": [
+			{"condition": {}, "result": {"choose": {"pop.test": "hello"}}}
+		],
+		"settlement_extre": [],
+		"settlement_prior": [],
+		"cards_slot": {},
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+
+	view._resolve()
+
+	assert_eq(str(state.event_prompts[0].get("id", "")), "choose", "choose results should become a visible prompt")
+	assert_eq(str(state.event_prompts[0].get("choices", {}).get("pop.test", "")), "hello")
 
 func test_drop_card_moves_between_hand_slot_and_back():
 	var rng := RNG.new(92)

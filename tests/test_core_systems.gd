@@ -1,10 +1,5 @@
 extends GutTest
 
-const CounterSystem = preload("res://core/counter.gd")
-const TagSystem = preload("res://core/tag.gd")
-const LootSystem = preload("res://core/loot.gd")
-const ScopeFilter = preload("res://core/scope_filter.gd")
-const BranchSystem = preload("res://core/branch.gd")
 const RNG = preload("res://core/rng.gd")
 
 # ---- Counter (vc#8) ----

@@ -3,17 +3,10 @@ extends Control
 ## Top-level game controller. Manages menu -> game -> rite flow, owns the
 ## GameState/ConfigDB/RNG, and wires signals between screens.
 
-const FaustTheme = preload("res://ui/theme.gd")
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
-const GameRNG = preload("res://core/rng.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
-const SudanCards = preload("res://sim/sudan_cards.gd")
 const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
-const SaveSystem = preload("res://sim/save_system.gd")
 
 var db: ConfigDB
 var state: GameState
@@ -25,6 +18,7 @@ var _menu_overlay: Control
 
 
 func _ready() -> void:
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = FaustTheme.get_theme()
 	db = ConfigDB.new()
 	db.load_all()
@@ -100,6 +94,8 @@ func _start_new_run(index: int, use_test_cards: bool) -> void:
 
 func _show_game() -> void:
 	_clear_current()
+	if state != null and db != null:
+		RoundLoop.start_auto_begin_rites(state, db)
 	var gs := GameScreen.new()
 	gs.setup(state, db, rng)
 	gs.open_rite.connect(_on_open_rite)
@@ -122,7 +118,7 @@ func _on_open_rite_selector(location_filter: String = "") -> void:
 		return
 	if open_ids.is_empty():
 		if _game_screen != null and _game_screen.has_method("set_log"):
-			_game_screen.set_log("该地点尚未开放。")
+			_game_screen.set_log("Location is not open yet.")
 		return
 	_clear_current()
 	var sel := RiteSelector.new()
@@ -188,23 +184,23 @@ func _show_game_menu() -> void:
 	panel.add_child(box)
 
 	var title := Label.new()
-	title.text = "菜单"
+	title.text = "Menu"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	box.add_child(title)
 
-	var resume := _menu_button("继续")
+	var resume := _menu_button("Resume")
 	resume.name = "ResumeGameButton"
 	resume.pressed.connect(_close_game_menu)
 	box.add_child(resume)
 
-	var save := _menu_button("保存")
+	var save := _menu_button("Save")
 	save.name = "SaveGameButton"
 	save.pressed.connect(_on_save_from_menu)
 	box.add_child(save)
 
-	var title_screen := _menu_button("返回标题")
+	var title_screen := _menu_button("Return to Title")
 	title_screen.name = "ReturnTitleButton"
 	title_screen.pressed.connect(_show_menu)
 	box.add_child(title_screen)
@@ -221,7 +217,7 @@ func _on_save_from_menu() -> void:
 	var ok := SaveSystem.save(state)
 	_close_game_menu()
 	if _current and _current.has_method("set_log"):
-		_current.set_log("已保存。" if ok else "保存失败。")
+		_current.set_log("Saved." if ok else "Save failed.")
 
 
 func _close_game_menu() -> void:
@@ -253,20 +249,20 @@ func _round_result_log(result: Dictionary) -> String:
 
 func _on_advance() -> void:
 	var result := RoundLoop.advance_day(state, db, rng)
-	var log_text := "第 %d 天。" % state.day
+	var log_text := "Day %d" % state.day
 	if result.game_over:
-		log_text += "\n☠ 一张苏丹卡到期未完成！游戏结束。"
+		log_text += "\nA sudan card expired before it was resolved."
 	if not result.expired.is_empty():
 		for cid in result.expired:
 			var dec = SudanCards.decode(int(cid))
-			log_text += "\n过期: %s%s" % [dec.rank, dec.action]
+			log_text += "\nExpired: %s%s" % [dec.rank, dec.action]
 	if result.get("new_round", false):
-		log_text += "\n—— 第 %d 回合开始 ——" % state.round_number
+		log_text += "\n-- Round %d begins --" % state.round_number
 		if int(result.get("drawn_sudan", -1)) >= 0:
 			var dec2 = SudanCards.decode(int(result.drawn_sudan))
-			log_text += "\n新苏丹卡: %s%s" % [dec2.rank, dec2.action]
+			log_text += "\nNew sudan card: %s%s" % [dec2.rank, dec2.action]
 	if not result.auto_rites.is_empty():
-		log_text += "\n自动开启仪式: %d 个" % result.auto_rites.size()
+		log_text += "\nAuto-begin rites: %d" % result.auto_rites.size()
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
 		_current.refresh()
@@ -288,10 +284,10 @@ func _on_redraw() -> void:
 	var new_id := RoundLoop.use_redraw(state, rng)
 	var log_text := ""
 	if new_id < 0:
-		log_text = "无法重抽（重抽次数耗尽或牌堆为空）。"
+		log_text = "Cannot redraw."
 	else:
 		var dec = SudanCards.decode(new_id)
-		log_text = "重抽苏丹卡: %s%s" % [dec.rank, dec.action]
+		log_text = "Redrew sudan card: %s%s" % [dec.rank, dec.action]
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
 		_current.refresh()
@@ -306,8 +302,7 @@ func _clear_current() -> void:
 
 
 func _close_rite_overlay() -> void:
-	if _rite_overlay:
-		_rite_overlay.queue_free()
-		_rite_overlay = null
-	if _game_screen:
-		_game_screen.refresh()
+	if _rite_overlay == null:
+		return
+	_rite_overlay.queue_free()
+	_rite_overlay = null

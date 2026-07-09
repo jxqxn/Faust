@@ -12,16 +12,13 @@
 class_name ResultExec
 extends RefCounted
 
-const CounterSystem = preload("res://core/counter.gd")
-const TagSystem = preload("res://core/tag.gd")
-
-
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db) -> Dictionary:
 	var deferred := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
+		"prompts": [], "loots": [],
 	}
 	for key in result:
 		var val = result[key]
@@ -31,7 +28,11 @@ static func execute(result: Dictionary, state, db) -> Dictionary:
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm"]:
+	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show"]:
+		return true
+	if k.begins_with("loot."):
+		return true
+	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
 		return true
 	if k.begins_with("counter") or k.begins_with("global_counter"):
 		return true
@@ -57,7 +58,11 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Card grant.
 	if k == "card":
-		state.add_card_to_hand(int(val))
+		if val is Array:
+			if not val.is_empty():
+				state.add_card_to_hand(int(val[0]))
+		else:
+			state.add_card_to_hand(int(val))
 		return
 	# Choose (pop options).
 	if k == "choose" and val is Dictionary:
@@ -109,6 +114,20 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.back_to_prev = true
 		return
 	if k == "confirm":
+		return
+	if k == "prompt" and val is Dictionary:
+		deferred.prompts.append(val.duplicate(true))
+		return
+	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
+		deferred.prompts.append({"id": k, "text": str(val)})
+		return
+	if k == "loot":
+		deferred.loots.append(val)
+		return
+	if k.begins_with("loot."):
+		deferred.loots.append(val)
+		return
+	if k == "no_show":
 		return
 	# Unhandled: log, don't crash.
 	deferred.logs.append("UNHANDLED result key: %s=%v" % [k, val])

@@ -10,8 +10,9 @@ the game ends.
 
 Core slices have been verified against the reverse-engineered `.c` source:
 dice, counter, tag, loot, scope-filter, branch, settlement ordering, Sultan
-card loop, and round/calendar. This is still a prototype: condition/result DSL
-coverage and some UI flows are still being expanded.
+card loop, round/calendar, and the shared desktop event/prompt surface. This is
+still a prototype: condition/result DSL coverage is visible through tests and
+keeps expanding with each newly enabled content batch.
 
 ## Systems implemented
 
@@ -21,11 +22,12 @@ coverage and some UI flows are still being expanded.
 - **Data layer** (`data/`): loads real game data from JSON config copied from
   the reverse-engineering corpus
 - **Simulation** (`sim/`): GameState, covered Condition DSL subset, Result DSL
-  executor, RiteResolver prior/normal/extre settlement paths, SultanCards,
-  RoundLoop, and SaveSystem
+  executor, deferred event/choice/loot effect application, RiteResolver
+  prior/normal/extre settlement paths, SultanCards, RoundLoop, and SaveSystem
 - **UI** (`ui/`): theme, card widget, main menu, game screen, rite selector,
-  rite view with reactive gold dice, card detail overlay, title-screen test
-  start entry, and game-over screen
+  rite view with reactive gold dice, desktop I-think drop target, event/prompt
+  overlay, card detail overlay, title-screen test start entry, and game-over
+  screen
 
 ## Fidelity verification
 
@@ -62,7 +64,7 @@ godot
 
 ## Testing
 
-Tests use GUT (Godot Unit Test). Current headless verification covers 9 test
+Tests use GUT (Godot Unit Test). Current headless verification covers 10 test
 files across core systems, data loading, sim, Sultan cards, rite UI, selector,
 save system, and end-to-end integration. Read `gut-test.log` for the current
 pass/fail summary; Godot may still report resource/RID leak warnings at process

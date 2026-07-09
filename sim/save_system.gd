@@ -57,6 +57,8 @@ static func serialize(state) -> Dictionary:
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
+		"event_queue": state.event_queue.duplicate(),
+		"event_prompts": state.event_prompts.duplicate(true),
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
 	}
@@ -104,6 +106,13 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rid in data.get("auto_result_rites", []):
 		state.auto_result_rites.append(int(rid))
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
+	state.event_queue.clear()
+	for eid in data.get("event_queue", []):
+		state.event_queue.append(int(eid))
+	state.event_prompts.clear()
+	for prompt in data.get("event_prompts", []):
+		if prompt is Dictionary:
+			state.event_prompts.append(prompt.duplicate(true))
 	state.local_counters = data.get("local_counters", {}).duplicate(true)
 	state.global_counters = data.get("global_counters", {}).duplicate(true)
 	if state.has_method("sync_rail_order"):

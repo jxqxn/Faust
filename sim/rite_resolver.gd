@@ -9,10 +9,6 @@
 class_name RiteResolver
 extends RefCounted
 
-const ConditionEval = preload("res://sim/condition.gd")
-const ResultExec = preload("res://sim/result.gd")
-
-
 ## Result of resolving a rite.
 class RiteResult:
 	var prior_log: Array = []      # executed prior entries
@@ -26,6 +22,7 @@ class RiteResult:
 		deferred = {
 			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 			"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
+			"prompts": [], "loots": [],
 		}
 
 
@@ -92,3 +89,7 @@ static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
 		into["clean_card_ids"].append_array(src["clean_card_ids"])
 	if src.has("clean_rite") and bool(src["clean_rite"]):
 		into["clean_rite"] = true
+	if src.has("prompts"):
+		into["prompts"].append_array(src["prompts"])
+	if src.has("loots"):
+		into["loots"].append_array(src["loots"])

@@ -33,14 +33,6 @@ class RiteSlotButton:
 signal closed()
 signal resolved()
 
-const FaustTheme = preload("res://ui/theme.gd")
-const CardWidget = preload("res://ui/card_widget.gd")
-const RiteResolver = preload("res://sim/rite_resolver.gd")
-const ConditionEval = preload("res://sim/condition.gd")
-const SaveSystem = preload("res://sim/save_system.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
-const SudanCards = preload("res://sim/sudan_cards.gd")
-
 const MOCKUP_SIZE := Vector2(1280, 720)
 
 var _state
@@ -58,7 +50,7 @@ var _last_result = null  # last RiteResult
 
 var _shade: ColorRect
 var _slot_layer: Control
-var _rite_panel: PanelContainer
+var _rite_panel: Panel
 var _gold_dice_label: Label
 var _gold_dice_btn: Button
 var _resolve_btn: Button
@@ -102,6 +94,7 @@ func _build_ui() -> void:
 	_slot_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_slot_layer)
 	_build_slot_placeholders()
+	_auto_adsorb_slots()
 
 	_rite_panel = _panel("RiteOverlayPanel")
 	_rite_panel.clip_contents = true
@@ -120,7 +113,7 @@ func _build_ui() -> void:
 
 
 func _build_slot_placeholders() -> void:
-	for slot_key in ["s1", "s2", "s3", "s4"]:
+	for slot_key in _slot_keys():
 		var btn := RiteSlotButton.new()
 		btn.name = "OverlaySlot_%s" % slot_key.to_upper()
 		btn.owner_view = self
@@ -278,18 +271,21 @@ func _apply_layout() -> void:
 
 	_set_rect(_shade, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_slot_layer, Rect2(Vector2.ZERO, view_size))
-	_set_rect(_rite_panel, Rect2(Vector2(760, 78) * s, Vector2(376, 404) * s))
+	var hand_top := view_size.y - 222 * s
+	var panel_pos := Vector2(760, 62) * s
+	var panel_height: float = clampf(hand_top - panel_pos.y - 18 * s, 260 * s, 404 * s)
+	_set_rect(_rite_panel, Rect2(panel_pos, Vector2(376 * s, panel_height)))
 	_set_rect(_log_label, Rect2(Vector2(386, 488) * s, Vector2(500, 26) * s))
 
 	var slot_size := CardWidget.CARD_SIZE * s
-	var slot_rects := {
-		"s1": _slot_rect_from_center(Vector2(332, 179) * s, slot_size),
-		"s2": _slot_rect_from_center(Vector2(472, 351) * s, slot_size),
-		"s3": _slot_rect_from_center(Vector2(594, 303) * s, slot_size),
-		"s4": _slot_rect_from_center(Vector2(714, 351) * s, slot_size),
-	}
+	var safe_slot_bottom := hand_top - 12 * s
+	var slot_rects := _slot_rects_for_keys(_slot_keys(), s, slot_size)
 	for slot_key in _slot_buttons:
-		_set_rect(_slot_buttons[slot_key], slot_rects[slot_key])
+		if slot_rects.has(slot_key):
+			var slot_rect: Rect2 = slot_rects[slot_key]
+			if slot_rect.position.y + slot_rect.size.y > safe_slot_bottom:
+				slot_rect.position.y = safe_slot_bottom - slot_rect.size.y
+			_set_rect(_slot_buttons[slot_key], slot_rect)
 
 
 func _slot_rect_from_center(center: Vector2, slot_size: Vector2) -> Rect2:
@@ -372,7 +368,7 @@ func _after_placement_changed() -> void:
 
 func _refresh_slot_visuals() -> void:
 	var slots: Dictionary = _rite.get("cards_slot", {})
-	for slot_key in ["s1", "s2", "s3", "s4"]:
+	for slot_key in _slot_keys():
 		if not _slot_buttons.has(slot_key):
 			continue
 		var btn: Button = _slot_buttons[slot_key]
@@ -390,7 +386,7 @@ func _refresh_slot_visuals() -> void:
 			_render_slot_card(btn, slot_key, card_id, card)
 		else:
 			title.text = slot_key.to_upper()
-			detail.text = "空卡槽"
+			detail.text = _slot_brief(slot_def)
 			btn.add_theme_stylebox_override("normal", _slot_style())
 			_clear_slot_card(btn)
 
@@ -417,7 +413,7 @@ func _do_resolve() -> void:
 	var ctx := {
 		"db": _db, "state": _state, "rng": _rng,
 		"rite_state": _placed.duplicate(),
-		"attr_slots": ["s1", "s2"], "rite_id": _rite_id,
+		"attr_slots": _slot_keys(), "rite_id": _rite_id,
 		"dice_cache": _resolve_dice_cache,
 	}
 	var gold_dice_bonus = _gold_used_this_resolve
@@ -426,6 +422,7 @@ func _do_resolve() -> void:
 	var res = RiteResolver.resolve(_rite, ctx, gold_dice_bonus)
 	_last_result = res
 	_consume_placed_sudan_cards(res)
+	_apply_deferred_to_world(res.deferred)
 	_display_result(res)
 	_update_gold_button()
 	_refresh_gold_label()
@@ -591,12 +588,31 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 		"state": _state,
 		"rng": _rng,
 		"rite_state": {},
-		"attr_slots": ["s1", "s2"],
+		"attr_slots": _slot_keys(),
 		"acting_card": card,
 		"acting_card_id": int(card.get("id", 0)),
 		"acting_card_only": true,
 	}
 	return ConditionEval.evaluate(cond, ctx)
+
+
+func _auto_adsorb_slots() -> void:
+	if _state == null or _db == null:
+		return
+	for slot_key in _slot_keys():
+		if _placed.has(slot_key):
+			continue
+		var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
+		if int(slot_def.get("open_adsorb", 0)) != 1:
+			continue
+		for card_id in _state.visible_rail_card_ids():
+			var id := int(card_id)
+			var card: Dictionary = _db.get_card(id)
+			if not _slot_accepts_card(slot_def, card):
+				continue
+			var source := "active_sudan" if _state.is_active_sudan_card(id) else "hand"
+			_place_card_in_slot(slot_key, id, source, "")
+			break
 
 
 func _consume_placed_sudan_cards(res) -> void:
@@ -616,6 +632,10 @@ func _consume_placed_sudan_cards(res) -> void:
 			RoundLoop.consume_sudan(_state, cid)
 
 
+func _apply_deferred_to_world(deferred: Dictionary) -> void:
+	DeferredEffects.apply(deferred, _state, _db, _rng)
+
+
 func _gold_type_for_reactive_spend() -> String:
 	if _last_result != null and not _last_result.dice_types_seen.is_empty():
 		return str(_last_result.dice_types_seen[0])
@@ -627,8 +647,8 @@ func set_log(text: String) -> void:
 		_log_label.text = text
 
 
-func _panel(node_name: String) -> PanelContainer:
-	var panel := PanelContainer.new()
+func _panel(node_name: String) -> Panel:
+	var panel := Panel.new()
 	panel.name = node_name
 	panel.add_theme_stylebox_override("panel", FaustTheme.card_style())
 	return panel
@@ -670,3 +690,53 @@ func _card_display_name(card: Dictionary, card_id: int) -> String:
 		if str(dec.rank) != "" or str(dec.action) != "":
 			return "%s%s" % [dec.rank, dec.action]
 	return str(card.get("name", card_id))
+
+
+func _slot_keys() -> Array[String]:
+	var keys: Array[String] = []
+	var slots: Dictionary = _rite.get("cards_slot", {})
+	for key in slots.keys():
+		keys.append(str(key))
+	keys.sort_custom(func(a: String, b: String) -> bool:
+		return a.substr(1).to_int() < b.substr(1).to_int()
+	)
+	return keys
+
+
+func _slot_rects_for_keys(keys: Array[String], s: float, slot_size: Vector2) -> Dictionary:
+	var rects := {}
+	if keys.is_empty():
+		return rects
+	if keys.size() <= 4:
+		var centers := [
+			Vector2(332, 179),
+			Vector2(472, 351),
+			Vector2(594, 303),
+			Vector2(714, 351),
+		]
+		for i in keys.size():
+			rects[keys[i]] = _slot_rect_from_center(centers[i] * s, slot_size)
+		return rects
+	var cols := mini(4, keys.size())
+	var rows := ceili(float(keys.size()) / float(cols))
+	var start := Vector2(300, 146) * s
+	var gap := Vector2(126, 170) * s
+	for i in keys.size():
+		var col := i % cols
+		var row := floori(float(i) / float(cols))
+		var center := start + Vector2(float(col) * gap.x, float(row) * gap.y)
+		if rows > 1 and row == rows - 1 and keys.size() % cols != 0:
+			var last_count := keys.size() % cols
+			center.x += float(cols - last_count) * gap.x * 0.5
+		rects[keys[i]] = _slot_rect_from_center(center, slot_size)
+	return rects
+
+
+func _slot_brief(slot_def: Dictionary) -> String:
+	var text := str(slot_def.get("text", ""))
+	if text != "":
+		return text
+	var cond: Dictionary = slot_def.get("condition", {})
+	if cond.is_empty():
+		return "任意"
+	return " / ".join(cond.keys())

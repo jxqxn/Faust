@@ -4,9 +4,6 @@ extends Control
 
 signal restart()
 
-const FaustTheme = preload("res://ui/theme.gd")
-const SudanCards = preload("res://sim/sudan_cards.gd")
-
 var _state
 var _db
 

@@ -6,8 +6,6 @@ extends PanelContainer
 
 signal clicked(card_id: int, card: Dictionary)
 
-const FaustTheme = preload("res://ui/theme.gd")
-
 const CARD_SIZE := Vector2(104, 160)
 
 var _card: Dictionary = {}

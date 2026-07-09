@@ -5,9 +5,6 @@ extends Control
 signal difficulty_selected(index: int)
 signal test_start_requested(index: int)
 
-const FaustTheme = preload("res://ui/theme.gd")
-const SaveSystem = preload("res://sim/save_system.gd")
-
 signal continue_pressed()
 
 

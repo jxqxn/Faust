@@ -1,15 +1,10 @@
 extends GutTest
 
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
 const RNG = preload("res://core/rng.gd")
 const MainMenu = preload("res://ui/main_menu.gd")
 const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
-const CardWidget = preload("res://ui/card_widget.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
-const SaveSystem = preload("res://sim/save_system.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -166,6 +161,132 @@ func test_game_screen_home_site_and_menu_are_interactive():
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
 
 
+func test_game_screen_renders_open_rites_as_clickable_map_pins():
+	var rng := RNG.new(21)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var opened: Array = []
+	screen.open_rite.connect(func(id: int): opened.append(id))
+	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
+	assert_not_null(pin, "open playable rites should appear as clickable map pins")
+	if pin == null:
+		return
+	assert_eq(pin.text, "治理家业", "map pins should show the rite name players recognize")
+	pin.pressed.emit()
+	await wait_process_frames(1)
+
+	assert_eq(opened, [5000001], "clicking a map pin should open that rite directly")
+
+
+func test_game_screen_exposes_methinks_as_desktop_drop_target():
+	var rng := RNG.new(17)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var target := _find_node_by_name(screen, "MethinksDropTarget") as Control
+	assert_not_null(target, "main desktop should expose I-think as a drop target, not a rite selector button")
+	if target != null:
+		assert_true(target.position.y < (_find_node_by_name(screen, "CardRail") as Control).position.y, "I-think should live on the desktop above the hand rail")
+
+
+func test_methinks_drop_generates_rite_without_opening_rite_overlay():
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.init_config["think_id"] = 999000
+	local_db.rites[999000] = {
+		"id": 999000,
+		"cards_slot": {"s1": {"condition": {}}},
+		"settlement_prior": [],
+		"settlement": [
+			{"condition": {"s1.is": 2000001}, "result": {}, "action": {"rite": 5001001, "prompt": {"id": "think.test"}}}
+		],
+		"settlement_extre": [],
+	}
+	var rng := RNG.new(18)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, rng)
+	state.available_rites.erase(5001001)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, local_db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.drop_card_on_methinks({"type": "card", "card_id": 2000001, "source": "hand"})
+
+	assert_true(5001001 in state.available_rites, "I-think should generate rites through desktop processing")
+	assert_true(2000001 in state.hand, "cards return to hand unless the result explicitly cleans them")
+	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
+	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "I-think results should use the desktop event prompt layer")
+	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "I-think should not open the rite overlay")
+
+
+func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
+	var rng := RNG.new(19)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.queue_choice_prompt({"pop.test": "hello"})
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "queued choices should render as a desktop overlay")
+	var choice := _find_node_by_name(screen, "EventPromptChoiceButton") as Button
+	assert_not_null(choice, "choice prompts should render clickable option buttons")
+	if choice == null:
+		return
+	choice.pressed.emit()
+	await wait_process_frames(2)
+
+	assert_eq(str(state.event_prompts[0].get("id", "")), "pop.test", "clicking a choice should execute the selected operation")
+	var text := _collect_label_and_button_text(_find_node_by_name(screen, "EventPromptPanel"))
+	assert_true(text.find("hello") >= 0, "choice follow-up prompt should be visible")
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	assert_not_null(cont, "follow-up prompt should be consumable")
+	if cont != null:
+		cont.pressed.emit()
+		await wait_process_frames(2)
+	assert_true(state.event_prompts.is_empty(), "continue should consume the prompt queue")
+
+
+func test_game_screen_event_overlay_displays_missing_event_placeholder():
+	var rng := RNG.new(20)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.queue_event(5310008)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var panel := _find_node_by_name(screen, "EventPromptPanel")
+	assert_not_null(panel, "queued events should render as a desktop overlay even before event configs are imported")
+	var text := _collect_label_and_button_text(panel)
+	assert_true(text.find("5310008") >= 0, "missing event configs should fall back to a visible event id")
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	if cont != null:
+		cont.pressed.emit()
+		await wait_process_frames(2)
+	assert_true(state.event_queue.is_empty(), "continue should consume the event queue")
+
+
 func test_game_menu_button_opens_real_overlay():
 	var stage := _stage()
 	var game = Game.new()
@@ -210,16 +331,17 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	game._on_difficulty_selected(0)
 	await wait_process_frames(2)
 
-	var home := _find_node_by_name(game, "SiteHome") as Button
-	assert_not_null(home, "home location should exist on the main desktop")
-	if home == null:
+	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
+	assert_not_null(pin, "triggered rites should appear as clickable map pins on the main desktop")
+	if pin == null:
 		return
-	home.pressed.emit()
+	pin.pressed.emit()
 	await wait_process_frames(2)
 
 	var overlay := _find_node_by_name(game, "RiteOverlayPanel")
 	var selector := _find_node_by_name(game, "RiteSelector")
-	assert_true(overlay != null or selector != null, "home location should enter the generic rite flow instead of hard-coding an estate rite")
+	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
+	assert_null(selector, "map rite pins should not route through the separate rite selector page")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():

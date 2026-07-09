@@ -3,11 +3,7 @@ extends GutTest
 ## Tests for the save/load system: serialize -> deserialize round-trip must
 ## preserve all gameplay-relevant GameState fields.
 
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
 const RNG = preload("res://core/rng.gd")
-const RoundLoop = preload("res://sim/round_loop.gd")
-const SaveSystem = preload("res://sim/save_system.gd")
 
 var db: ConfigDB
 
@@ -37,6 +33,8 @@ func test_save_load_round_trip_preserves_state():
 	state.started_rites.append(5000001)
 	state.auto_result_rites.append(5000002)
 	state.rite_auto_result = true
+	state.queue_event(5310008)
+	state.queue_prompt({"id": "prompt.test", "text": "hello"})
 	# Serialize.
 	var data := SaveSystem.serialize(state)
 	assert_true(SaveSystem.is_valid_player_save_data(data), "serialized player saves should be marked as continue-eligible")
@@ -62,6 +60,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_true(5000003 in state2.available_rites, "available rites preserved")
 	assert_true(5000002 in state2.auto_result_rites, "auto-result rites preserved")
 	assert_true(state2.rite_auto_result, "rite_auto_result flag preserved")
+	assert_true(5310008 in state2.event_queue, "queued events preserved")
+	assert_eq(str(state2.event_prompts[0].get("id", "")), "prompt.test", "queued prompts preserved")
 	if state2.active_sudan_cards.size() > 0:
 		var asc = state2.active_sudan_cards[0]
 		assert_eq(asc.card_id, state.active_sudan_cards[0].card_id, "sudan card_id preserved")

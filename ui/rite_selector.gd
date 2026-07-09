@@ -6,9 +6,6 @@ extends Control
 signal rite_chosen(rite_id: int)
 signal closed()
 
-const FaustTheme = preload("res://ui/theme.gd")
-const RiteOpen = preload("res://sim/rite_open.gd")
-
 var _db
 var _state = null
 var _rng = null

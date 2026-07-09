@@ -59,7 +59,7 @@ static func decode(id: int) -> Dictionary:
 	var base := id - 2010001
 	if base < 0 or base > 15:
 		return {}
-	var action_idx := base / 4
+	var action_idx := floori(float(base) / 4.0)
 	var rank_idx := base % 4
 	return {
 		"action": ACTIONS[action_idx],

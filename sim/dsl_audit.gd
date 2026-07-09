@@ -2,10 +2,6 @@
 class_name DslAudit
 extends RefCounted
 
-const ConditionEval = preload("res://sim/condition.gd")
-const ResultExec = preload("res://sim/result.gd")
-
-
 static func audit_rites(rites: Dictionary) -> Dictionary:
 	var out := {
 		"condition": {"supported": {}, "unsupported": {}},
@@ -30,6 +26,25 @@ static func audit_rites(rites: Dictionary) -> Dictionary:
 					_scan_condition_dict(pop.get("condition", {}), out.condition)
 					_scan_result_dict(pop.get("action", {}), out.action)
 	return out
+
+
+static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dictionary = {}) -> Dictionary:
+	var out := audit_rites(rites)
+	for eid in events:
+		var event: Dictionary = events[eid]
+		_scan_condition_dict(event.get("condition", {}), out.condition)
+		_scan_result_dict(event.get("result", {}), out.result)
+		_scan_result_dict(event.get("action", {}), out.action)
+	_scan_loots(loots, out)
+	return out
+
+
+static func audit_rite_ids(rites: Dictionary, ids: Array[int]) -> Dictionary:
+	var subset := {}
+	for id in ids:
+		if rites.has(id):
+			subset[id] = rites[id]
+	return audit_rites(subset)
 
 
 static func _scan_open_conditions(open_conditions: Variant, bucket: Dictionary) -> void:
@@ -58,7 +73,17 @@ static func _scan_result_dict(result: Variant, bucket: Dictionary) -> void:
 		_count(bucket, k, ResultExec.is_supported_key(k))
 		if k == "choose" and result[key] is Dictionary:
 			for choose_key in result[key]:
-				_count(bucket, str(choose_key), false)
+				var choose_op := str(choose_key)
+				_count(bucket, choose_op, ResultExec.is_supported_key(choose_op))
+
+
+static func _scan_loots(loots: Dictionary, out: Dictionary) -> void:
+	for loot_id in loots:
+		var loot: Dictionary = loots[loot_id]
+		_scan_condition_dict(loot.get("condition", {}), out.condition)
+		for item in loot.get("item", []):
+			if item is Dictionary:
+				_scan_condition_dict(item.get("condition", {}), out.condition)
 
 
 static func _count(bucket: Dictionary, key: String, supported: bool) -> void:

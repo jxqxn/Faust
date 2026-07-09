@@ -2,15 +2,12 @@
 class_name RiteOpen
 extends RefCounted
 
-const ConditionEval = preload("res://sim/condition.gd")
-
-
 static func is_rite_open(rite: Dictionary, state, db, rng = null) -> bool:
 	if state == null:
-		var open_conditions = rite.get("open_conditions", [])
-		if not (open_conditions is Array) or open_conditions.is_empty():
+		var fallback_open_conditions = rite.get("open_conditions", [])
+		if not (fallback_open_conditions is Array) or fallback_open_conditions.is_empty():
 			return true
-		for entry in open_conditions:
+		for entry in fallback_open_conditions:
 			if entry is Dictionary and not (entry.get("condition", {}) as Dictionary).is_empty():
 				return false
 		return true

@@ -3,9 +3,6 @@
 class_name RoundLoop
 extends RefCounted
 
-const SudanCards = preload("res://sim/sudan_cards.gd")
-const RiteOpen = preload("res://sim/rite_open.gd")
-
 
 ## A sudan card in play with a countdown.
 class ActiveSudan:
@@ -42,7 +39,7 @@ static func advance_day(state, db, rng) -> Dictionary:
 
 
 ## Draw one sudan card into the active set.
-static func draw_weekly_sudan(state, db, rng) -> int:
+static func draw_weekly_sudan(state, _db, _rng) -> int:
 	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	var cid: int = SudanCards.draw(state.sudan_deck)
 	if cid < 0:

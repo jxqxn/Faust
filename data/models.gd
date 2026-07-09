@@ -36,10 +36,10 @@ const GOLD_DICE_COUNTER_ID := 7100006
 
 
 # ---- Rite ----
-# Raw shape (rite/<id>.json): {id,name,text,cards_slot{s1..s4},settlement_prior[],settlement[],settlement_extre[],open_conditions[],random_text{},auto_begin,auto_result,round_number,waiting_round,location,icon,tag_tips[]}
+# Raw shape (rite/<id>.json): {id,name,text,cards_slot{s1..sN},settlement_prior[],settlement[],settlement_extre[],open_conditions[],random_text{},auto_begin,auto_result,round_number,waiting_round,location,icon,tag_tips[]}
 # Each settlement entry: {guid,condition{},result_title,result_text,result{},action{}}
 
-## Get the slotted card ids for a rite instance {s1..s4 -> card_id or null}.
+## Get the first four slotted card ids for legacy code paths.
 static func rite_slots(rite_state: Dictionary) -> Array:
 	return [rite_state.get("s1"), rite_state.get("s2"), rite_state.get("s3"), rite_state.get("s4")]
 

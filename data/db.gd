@@ -4,7 +4,17 @@ class_name ConfigDB
 extends RefCounted
 
 const NORMAL_DEFAULT_CARDS: Array[int] = [2000001, 2000006, 2000523, 2000005]
-const NORMAL_DEFAULT_RITES: Array[int] = [5000001]
+const NORMAL_DEFAULT_RITES: Array[int] = [
+	5000001, # 治理家业
+	5001001, # 权力的游戏
+	5001501, # 浴场里的消息
+	5002006, # 书店营业
+	5001006, # 探访监狱
+	5001008, # 囚牢
+	5002001, # 医馆
+	5002036, 5002037, 5002038, # 淘书 variants
+	5002003, 5002004, 5002005, 5002035, # 欢愉之馆 variants
+]
 
 var cards := {}            # id(int) -> card dict
 var cards_by_str := {}     # id(str) -> card dict (config uses string keys)
@@ -23,6 +33,7 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_tags(content_dir + "/tag.json")
 	_load_cards(content_dir + "/cards.json")
 	_load_dir(content_dir + "/rite", rites)
+	_load_dir(content_dir + "/event", events)
 	_load_dir(content_dir + "/loot", loots)
 	_load_init(content_dir + "/init/1.json")
 
@@ -125,8 +136,39 @@ func get_test_default_cards() -> Array:
 func get_default_rites() -> Array:
 	var configured: Array = init_config.get("default_rite", [])
 	if not configured.is_empty():
-		return configured
-	return NORMAL_DEFAULT_RITES.duplicate()
+		return _filter_generated_rites(configured)
+	return _filter_generated_rites(NORMAL_DEFAULT_RITES)
+
+
+func get_generated_rite_ids() -> Array[int]:
+	var generated: Dictionary = {}
+	for loot in loots.values():
+		var items: Array = (loot as Dictionary).get("item", [])
+		for item in items:
+			if str((item as Dictionary).get("type", "")) == "rite":
+				generated[int((item as Dictionary).get("id", 0))] = true
+	for card in cards.values():
+		var rite_id := int((card as Dictionary).get("is_rite", 0))
+		if rite_id > 0:
+			generated[rite_id] = true
+	var out: Array[int] = []
+	for rid in generated.keys():
+		out.append(int(rid))
+	out.sort()
+	return out
+
+
+func _filter_generated_rites(rite_ids: Array) -> Array[int]:
+	var generated: Dictionary = {}
+	for rid in get_generated_rite_ids():
+		generated[int(rid)] = true
+	var out: Array[int] = []
+	for rid in rite_ids:
+		var id := int(rid)
+		if generated.has(id):
+			continue
+		out.append(id)
+	return out
 
 
 func set_test_starting_cards_enabled(enabled: bool) -> void:

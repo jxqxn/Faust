@@ -4,7 +4,6 @@ extends GutTest
 # All numeric assertions are the "oracle" signal; the .c loop structure is the
 # second signal (see spec section 10).
 
-const Dice = preload("res://core/dice.gd")
 const RNG = preload("res://core/rng.gd")
 
 func test_weighted_single_roll_respects_weights():

@@ -12,10 +12,6 @@
 class_name ConditionEval
 extends RefCounted
 
-const Dice = preload("res://core/dice.gd")
-const GameModels = preload("res://data/models.gd")
-
-
 # Op set used across counter/slot/attribute conditions.
 const OPS := [">=", "<=", "<>", "!=", "=", "<", ">"]
 
@@ -79,6 +75,10 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return not eval_type(val, ctx)
 	if k == "rare":
 		return eval_rare(val, ctx)
+	if k.begins_with("rare"):
+		var card_rare: Dictionary = ctx.get("acting_card", {})
+		var parsed_rare := _split_name_op(k)
+		return apply_compare(int(card_rare.get("rare", 0)), int(val), parsed_rare.op)
 	# round
 	if k == "round":
 		var st = ctx.get("state")
@@ -87,6 +87,11 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	if k == "difficulty":
 		var st2 = ctx.get("state")
 		return st2.difficulty_index == int(val)
+	if k == "金币" or k == "coin" or k == "g.coin":
+		var st_coin = ctx.get("state")
+		return st_coin != null and int(st_coin.coin_count) >= int(val)
+	if k.begins_with("cost."):
+		return eval_cost(k, val, ctx)
 	# rite (current rite id)
 	if k == "rite" or k == "is_rite":
 		return int(ctx.get("rite_id", 0)) == int(val)
@@ -101,7 +106,11 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "is_rite"]:
+	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "is_rite", "金币", "coin", "g.coin"]:
+		return true
+	if k.begins_with("rare"):
+		return true
+	if k.begins_with("cost."):
 		return true
 	if k.match("r*:*") or k.match("f:*") or k.begins_with("r1:") or k.begins_with("f:"):
 		return true
@@ -227,33 +236,32 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 ## (Full infix parser is a future refinement; rite configs use name+name sums.)
 static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
 	var st = ctx.get("state")
-	var db = ctx.get("db")
 	# Collect attribute names split on +/-/*.
 	var tokens: Array = []
 	var signs: Array = []
 	var cur := ""
-	var sign := 1
+	var current_sign := 1
 	for ch in expr:
 		if ch == "+":
 			tokens.append(cur)
-			signs.append(sign)
+			signs.append(current_sign)
 			cur = ""
-			sign = 1
+			current_sign = 1
 		elif ch == "-":
 			tokens.append(cur)
-			signs.append(sign)
+			signs.append(current_sign)
 			cur = ""
-			sign = -1
+			current_sign = -1
 		elif ch == "*":
 			# Multiplication not common in rite configs; treat separator.
 			tokens.append(cur)
-			signs.append(sign)
+			signs.append(current_sign)
 			cur = ""
-			sign = 1
+			current_sign = 1
 		else:
 			cur += ch
 	tokens.append(cur)
-	signs.append(sign)
+	signs.append(current_sign)
 	if bool(ctx.get("acting_card_only", false)):
 		var acting_card: Dictionary = ctx.get("acting_card", {})
 		var acting_tags: Dictionary = acting_card.get("tag", {})
@@ -312,12 +320,24 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 					f2 = true
 					break
 			return f2 if not negate else not f2
+		if rest.begins_with("rare"):
+			var parsed_rare := _split_name_op(rest)
+			var want_rare := int(val)
+			var f_rare := false
+			var db_rare = ctx.get("db")
+			for tc in cards:
+				var card_rare: Dictionary = db_rare.get_card(int(tc.get("id", 0)))
+				if apply_compare(int(card_rare.get("rare", 0)), want_rare, parsed_rare.op):
+					f_rare = true
+					break
+			return f_rare if not negate else not f_rare
 		# rest is a tag name: check the slot card has that tag >= val.
-		var tag_name := rest
+		var tag_query := _split_name_op(rest)
+		var tag_name := str(tag_query.name)
 		var need := int(val)
 		var ok := false
 		for tc in cards:
-			if int(tc.get("tags", {}).get(tag_name, 0)) >= need:
+			if apply_compare(int(tc.get("tags", {}).get(tag_name, 0)), need, tag_query.op):
 				ok = true
 				break
 		return ok if not negate else not ok
@@ -327,7 +347,7 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 	return present if not negate else not present
 
 
-static func eval_have(k: String, val: Variant, ctx: Dictionary, is_hand: bool) -> bool:
+static func eval_have(k: String, val: Variant, ctx: Dictionary, _is_hand: bool) -> bool:
 	var st = ctx.get("state")
 	var db = ctx.get("db")
 	# "have.妻子" -> hand has a card with tag 妻子.
@@ -335,6 +355,17 @@ static func eval_have(k: String, val: Variant, ctx: Dictionary, is_hand: bool) -
 	var rest := k.substr("have.".length() if k.begins_with("have.") else "have".length())
 	if rest.is_empty():
 		return st.hand.size() > 0
+	if "." in rest:
+		var parts := rest.split(".", false, 1)
+		if parts.size() == 2 and str(parts[0]).is_valid_int():
+			var want_id := str(parts[0]).to_int()
+			var tag_name := str(parts[1])
+			for cid in st.hand:
+				if int(cid) != want_id:
+					continue
+				var card: Dictionary = db.get_card(int(cid))
+				return int(card.get("tag", {}).get(tag_name, 0)) >= int(val)
+			return false
 	if rest.is_valid_int():
 		return st.hand_has_card_id(db, rest.to_int())
 	return st.hand_has_tag(db, rest)
@@ -348,7 +379,7 @@ static func eval_hand_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	return r if not neg else not r
 
 
-static func eval_table_have(k: String, val: Variant, ctx: Dictionary) -> bool:
+static func eval_table_have(k: String, _val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
 	var neg := k.begins_with("!")
 	var kk := k.substr(1) if neg else k
@@ -363,7 +394,7 @@ static func eval_table_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	return found if not neg else not found
 
 
-static func eval_sudan_pool_have(k: String, val: Variant, ctx: Dictionary) -> bool:
+static func eval_sudan_pool_have(k: String, _val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
 	var neg := k.begins_with("!")
 	var kk := k.substr(1) if neg else k
@@ -394,6 +425,17 @@ static func eval_rare(val: Variant, ctx: Dictionary) -> bool:
 	return int(card.get("rare", 0)) == int(val)
 
 
+static func eval_cost(k: String, val: Variant, ctx: Dictionary) -> bool:
+	# In slot prechecks, cost.* means the dragged card/resource must be able to
+	# satisfy that resource tag; exact consumption is handled by result/action.
+	var card: Dictionary = ctx.get("acting_card", {})
+	var tag_name := k.substr("cost.".length())
+	var tags: Dictionary = card.get("tag", {})
+	if val is Array:
+		return int(tags.get(tag_name, 0)) >= int(val[0])
+	return int(tags.get(tag_name, 0)) >= int(val)
+
+
 static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:
 	if not ctx.has("acting_card"):
 		return false
@@ -403,10 +445,11 @@ static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:
 
 static func eval_acting_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var neg := k.begins_with("!") or k.begins_with("~")
-	var tag_name := k.lstrip("!~")
+	var parsed := _split_name_op(k.lstrip("!~"))
+	var tag_name := str(parsed.name)
 	var card: Dictionary = ctx.get("acting_card", {})
 	var tags: Dictionary = card.get("tag", {})
-	var ok := int(tags.get(tag_name, 0)) >= int(val)
+	var ok := apply_compare(int(tags.get(tag_name, 0)), int(val), parsed.op)
 	return ok if not neg else not ok
 
 
@@ -417,7 +460,8 @@ static func _can_eval_state_tag(k: String, ctx: Dictionary) -> bool:
 
 static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var neg := k.begins_with("!") or k.begins_with("~")
-	var tag_name := k.lstrip("!~")
+	var parsed := _split_name_op(k.lstrip("!~"))
+	var tag_name := str(parsed.name)
 	var st = ctx.get("state")
 	var db = ctx.get("db")
 	var need := int(val)
@@ -425,15 +469,23 @@ static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	if st != null:
 		for cid in st.hand:
 			var card: Dictionary = db.get_card(int(cid))
-			if int(card.get("tag", {}).get(tag_name, 0)) >= need:
+			if apply_compare(int(card.get("tag", {}).get(tag_name, 0)), need, parsed.op):
 				ok = true
 				break
 	if not ok and st != null:
 		for tc in st.table_cards:
-			if int(tc.get("tags", {}).get(tag_name, 0)) >= need:
+			if apply_compare(int(tc.get("tags", {}).get(tag_name, 0)), need, parsed.op):
 				ok = true
 				break
 	return ok if not neg else not ok
+
+
+static func _split_name_op(k: String) -> Dictionary:
+	for op in OPS:
+		var idx := k.find(op)
+		if idx > 0:
+			return {"name": k.substr(0, idx), "op": op}
+	return {"name": k, "op": ">="}
 
 
 static func apply_compare(a: int, b: int, op: String) -> bool:

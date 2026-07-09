@@ -5,12 +5,7 @@
 class_name GameState
 extends RefCounted
 
-const GameModels = preload("res://data/models.gd")
-
 # Counter system for non-negative clamping on gated counters.
-const CounterSystem = preload("res://core/counter.gd")
-const SudanCards = preload("res://sim/sudan_cards.gd")
-
 # Counters. Local counters are per-run; global persist across runs (prestige etc).
 var local_counters := {}    # id(int) -> int
 var global_counters := {}   # id(int) -> int
@@ -52,6 +47,8 @@ var available_rites: Array[int] = []
 # rite_auto_result flag separately from auto_begin.
 var auto_result_rites: Array[int] = []
 var rite_auto_result := false
+var event_queue: Array[int] = []
+var event_prompts: Array[Dictionary] = []
 
 
 func _init() -> void:
@@ -88,6 +85,8 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false
+	event_queue.clear()
+	event_prompts.clear()
 
 
 func _redraws_per_round(db) -> int:
@@ -247,6 +246,34 @@ func visible_rail_card_ids() -> Array[int]:
 		if id in hand or is_active_sudan_card(id):
 			out.append(id)
 	return out
+
+
+func add_available_rite(id: int) -> void:
+	if id <= 0:
+		return
+	if not (id in available_rites):
+		available_rites.append(id)
+
+
+func queue_event(id: int) -> void:
+	if id > 0:
+		event_queue.append(id)
+
+
+func queue_prompt(prompt: Dictionary) -> void:
+	if not prompt.is_empty():
+		event_prompts.append(prompt.duplicate(true))
+
+
+func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: String = "请选择回应。") -> void:
+	if choices.is_empty():
+		return
+	queue_prompt({
+		"id": "choose",
+		"title": title,
+		"text": text,
+		"choices": choices.duplicate(true),
+	})
 
 
 func reorder_rail_card(id: int, rail_index: int) -> void:

@@ -1,11 +1,5 @@
 extends GutTest
 
-const ConfigDB = preload("res://data/db.gd")
-const GameState = preload("res://sim/game_state.gd")
-const ConditionEval = preload("res://sim/condition.gd")
-const ResultExec = preload("res://sim/result.gd")
-const RiteResolver = preload("res://sim/rite_resolver.gd")
-const DslAudit = preload("res://sim/dsl_audit.gd")
 const RNG = preload("res://core/rng.gd")
 
 var db: ConfigDB
@@ -69,6 +63,24 @@ func test_table_and_sudan_pool_have_positive_and_negative_conditions():
 	assert_false(ConditionEval.eval_key("sudan_pool_have.2010002", 1, ctx))
 	assert_true(ConditionEval.eval_key("!sudan_pool_have.2010002", 1, ctx))
 
+func test_condition_supports_rite_batch_tag_rare_cost_and_coin_keys():
+	var st := GameState.new()
+	st.setup_new_run(db, 1, RNG.new(48))
+	st.coin_count = 3
+	var card: Dictionary = db.get_card(2000005).duplicate(true)
+	card["id"] = 2000005
+	var ctx := {"db": db, "state": st, "rng": RNG.new(48), "acting_card": card, "acting_card_id": 2000005, "acting_card_only": true}
+	var first_tag := ""
+	for tag in card.get("tag", {}).keys():
+		if int(card.tag[tag]) > 0:
+			first_tag = str(tag)
+			break
+
+	assert_true(ConditionEval.eval_key("金币", 3, ctx), "coin condition checks current coin count")
+	assert_true(ConditionEval.eval_key(first_tag + ">=", 1, ctx), "acting-card tag conditions support explicit compare ops")
+	assert_true(ConditionEval.eval_key("rare=", int(card.get("rare", 0)), ctx), "acting-card rare compare supports explicit op")
+	assert_true(ConditionEval.eval_key("cost." + first_tag, 1, ctx), "slot cost precheck can be evaluated against the dragged card")
+
 func test_bare_tag_condition_checks_owned_cards_without_acting_card():
 	var st := GameState.new()
 	st.add_card_to_hand(2000001)
@@ -118,10 +130,52 @@ func test_result_deferred_events_and_choose():
 	assert_eq(d.events, [5300601])
 	assert_eq(d.choose, {"a": "x"})
 
+func test_result_deferred_prompts_and_rite_generation_keys():
+	var st := GameState.new()
+	var d := ResultExec.execute({"think_pop.5000002_result_20": "stop", "prompt": {"id": "p1"}, "rite": 5001001}, st, db)
+	assert_eq(d.prompts.size(), 2)
+	assert_eq(str(d.prompts[0].get("text", "")), "stop")
+	assert_eq(int(d.rite), 5001001)
+
+func test_result_deferred_loot_keys():
+	var st := GameState.new()
+	var d := ResultExec.execute({"loot": 6000005, "loot.已拥有+1": 6000011}, st, db)
+	assert_eq(d.loots, [6000005, 6000011])
+
+func test_deferred_effects_apply_choice_and_loot_to_world():
+	var st := GameState.new()
+	st.setup_new_run(db, 1, RNG.new(51))
+	var initial_hand := st.hand.size()
+	DeferredEffects.execute_choice("pop.test", "hello", st, db, RNG.new(51))
+	assert_eq(str(st.event_prompts[0].get("text", "")), "hello", "choice operation should enqueue its resulting prompt")
+
+	DeferredEffects.apply({"loots": [6000005]}, st, db, RNG.new(52))
+	assert_gt(st.hand.size(), initial_hand, "loot results should grant generated cards into hand")
+	assert_gt(st.event_prompts.size(), 1, "loot grants should be visible to the player")
+
 func test_dsl_audit_exposes_unsupported_rite_keys():
 	var report := DslAudit.audit_rites(db.rites)
 	var unsupported_total: int = report.result.unsupported.size() + report.action.unsupported.size() + report.condition.unsupported.size()
 	assert_true(unsupported_total > 0, "audit should make unsupported DSL keys visible")
+
+func test_dsl_audit_scans_loot_conditions_and_choose_operations():
+	var report := DslAudit.audit_configs(db.rites, db.events, db.loots)
+	assert_true(report.result.supported.has("choose"), "choose container should be counted")
+	assert_true(report.result.supported.has("pop.5000001_result_01_11.2000523"), "choose child operations should be classified by support")
+	assert_true(report.condition.supported.has("!have.2000707"), "loot item conditions should be scanned")
+
+func test_dsl_audit_can_focus_first_daily_batch():
+	var first_batch: Array[int] = [
+		5000001, 5001001, 5001501, 5002006, 5000154, 5001006, 5001008,
+		5002002, 5002001, 5000163, 5001004, 5006591, 5002036, 5002037,
+		5002038, 5002003, 5002004, 5002005, 5002035, 5004809, 5004810,
+		5004811, 5004812, 5004813, 5004814, 5001002, 5001016, 5001018,
+		5008120,
+	]
+	var report := DslAudit.audit_rite_ids(db.rites, first_batch)
+	var seen_supported: int = report.condition.supported.size() + report.result.supported.size() + report.action.supported.size()
+	assert_true(seen_supported > 0, "focused audit should scan the first daily batch")
+	assert_not_null(report.result.unsupported, "focused audit should make unsupported result keys test-visible")
 
 func test_rite_5000001_resolves_with_empty_slots():
 	# 治理家业 with no cards slotted: the "no one sent" branch should match
