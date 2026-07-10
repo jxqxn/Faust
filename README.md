@@ -70,6 +70,18 @@ save system, and end-to-end integration. Read `gut-test.log` for the current
 pass/fail summary; Godot may still report resource/RID leak warnings at process
 exit after a successful run.
 
+Export the current condition/result/action coverage report when deciding which
+content batch to implement next. The report records every unsupported key with
+its config type, ID, JSON path, and field location:
+
+```powershell
+godot --headless --path . --script tools/export_dsl_audit.gd
+```
+
+It writes `dsl_audit.json` and `dsl_audit.md` under `user://dsl_audit` by
+default. Pass `-- --out user://another_folder` to choose a different user-data
+folder without modifying tracked content.
+
 ## Developer test start
 
 Debug builds expose a single `Test Start` entry on the title screen. It starts

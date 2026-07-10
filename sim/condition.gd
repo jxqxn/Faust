@@ -104,7 +104,11 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	return false
 
 
-static func is_supported_key(key: String) -> bool:
+## Return whether the audit can point at a concrete evaluator branch for `key`.
+## Bare keys are generic tag checks at runtime, but only count as supported
+## when the caller can prove the tag exists in loaded data. This keeps typos
+## such as an unimplemented control key out of the supported bucket.
+static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	var k := key.strip_edges()
 	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "is_rite", "金币", "coin", "g.coin"]:
 		return true
@@ -128,9 +132,17 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k.begins_with("sudan_pool_have") or k.begins_with("!sudan_pool_have"):
 		return true
-	if not ("." in k) and not (":" in k) and not k.is_empty():
-		return true
-	return false
+	return _is_known_generic_tag_condition(k, known_tags)
+
+
+static func _is_known_generic_tag_condition(key: String, known_tags: Dictionary) -> bool:
+	if known_tags.is_empty():
+		return false
+	var bare := key.lstrip("!~")
+	if bare.is_empty() or "." in bare or ":" in bare:
+		return false
+	var parsed := _split_name_op(bare)
+	return known_tags.has(str(parsed.name))
 
 
 static func eval_any(group: Dictionary, ctx: Dictionary) -> bool:

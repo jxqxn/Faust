@@ -154,12 +154,12 @@ func test_deferred_effects_apply_choice_and_loot_to_world():
 	assert_gt(st.event_prompts.size(), 1, "loot grants should be visible to the player")
 
 func test_dsl_audit_exposes_unsupported_rite_keys():
-	var report := DslAudit.audit_rites(db.rites)
+	var report := DslAudit.audit_rites(db.rites, db)
 	var unsupported_total: int = report.result.unsupported.size() + report.action.unsupported.size() + report.condition.unsupported.size()
 	assert_true(unsupported_total > 0, "audit should make unsupported DSL keys visible")
 
 func test_dsl_audit_scans_loot_conditions_and_choose_operations():
-	var report := DslAudit.audit_configs(db.rites, db.events, db.loots)
+	var report := DslAudit.audit_configs(db.rites, db.events, db.loots, db)
 	assert_true(report.result.supported.has("choose"), "choose container should be counted")
 	assert_true(report.result.supported.has("pop.5000001_result_01_11.2000523"), "choose child operations should be classified by support")
 	assert_true(report.condition.supported.has("!have.2000707"), "loot item conditions should be scanned")
@@ -172,10 +172,48 @@ func test_dsl_audit_can_focus_first_daily_batch():
 		5004811, 5004812, 5004813, 5004814, 5001002, 5001016, 5001018,
 		5008120,
 	]
-	var report := DslAudit.audit_rite_ids(db.rites, first_batch)
+	var report := DslAudit.audit_rite_ids(db.rites, first_batch, db)
 	var seen_supported: int = report.condition.supported.size() + report.result.supported.size() + report.action.supported.size()
 	assert_true(seen_supported > 0, "focused audit should scan the first daily batch")
 	assert_not_null(report.result.unsupported, "focused audit should make unsupported result keys test-visible")
+
+func test_dsl_audit_records_config_source_for_unsupported_keys():
+	var report := DslAudit.audit_rites({9000001: {
+		"id": 9000001,
+		"settlement": [{"result": {"missing_result": 1}}],
+	}}, db)
+	var refs: Array = report.result.references["missing_result"]
+	assert_eq(refs.size(), 1)
+	assert_eq(refs[0].kind, "rite")
+	assert_eq(refs[0].id, 9000001)
+	assert_eq(refs[0].path, "rite/9000001.json")
+	assert_eq(refs[0].field, "settlement[0].result")
+
+func test_dsl_audit_scans_event_settlement_actions():
+	var report := DslAudit.audit_configs({}, {9100001: {
+		"id": 9100001,
+		"settlement": [{"action": {"missing_event_action": 1}}],
+	}}, {}, db)
+	assert_true(report.action.unsupported.has("missing_event_action"))
+	assert_eq(report.action.references["missing_event_action"][0].field, "settlement[0].action")
+
+func test_dsl_audit_does_not_treat_unknown_bare_key_as_supported():
+	var report := DslAudit.audit_rites({9200001: {
+		"id": 9200001,
+		"settlement": [{"condition": {"unknown_control_key": 1}}],
+	}}, db)
+	assert_true(report.condition.unsupported.has("unknown_control_key"))
+
+func test_dsl_audit_accepts_known_bare_card_tag_and_flags_new_baseline_gap():
+	var report := DslAudit.audit_rites({9300001: {
+		"id": 9300001,
+		"settlement": [{"condition": {"智慧>=": 1}, "result": {"missing_result": 1}}],
+	}}, db)
+	assert_true(report.condition.supported.has("智慧>="))
+	var unexpected := DslAudit.unexpected_unsupported(report, {"condition": {}, "result": {}, "action": {}})
+	assert_true(unexpected.result.has("missing_result"))
+	assert_false(unexpected.condition.has("智慧>="))
+	assert_string_contains(DslAudit.to_markdown(report), "rite/9300001.json")
 
 func test_rite_5000001_resolves_with_empty_slots():
 	# 治理家业 with no cards slotted: the "no one sent" branch should match
