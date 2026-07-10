@@ -81,4 +81,17 @@ func test_continue_load_rejects_unmarked_legacy_save():
 
 	assert_false(SaveSystem.has_valid_save(db), "legacy or test data should not count as a player continue save")
 	assert_eq(SaveSystem.load_continue(db), null, "continue loading should require a player save marker")
-	assert_ne(SaveSystem.load(db), null, "raw load remains backward compatible for tests and migration")
+
+
+func test_load_rejects_version_mismatch():
+	# A save whose schema version doesn't match SAVE_VERSION is rejected,
+	# not silently loaded with potentially-wrong state.
+	# [SRC: original CorrectPlayerData reconciles configVersion; clone uses
+	# a save-schema version gate]
+	SaveSystem.delete_save()
+	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"version": 999, "player_save": true, "save_kind": "player", "difficulty_index": 1}, "\t"))
+	file.close()
+
+	assert_eq(SaveSystem.load(db), null, "version-mismatched save is refused")
+	assert_eq(SaveSystem.load_continue(db), null, "continue also refuses version mismatch")

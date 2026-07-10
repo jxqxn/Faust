@@ -626,3 +626,18 @@ func test_real_event_5300258_option_branch_executes():
 	DeferredEffects.execute_choice("case:op2", choices["case:op2"], st, db, RNG.new(1))
 	assert_true(5001027 in st.available_rites, "op2 opened rite 5001027")
 	assert_true(st.event_runtime._disabled.has(5300258), "event_off disabled 5300258")
+
+
+func test_option_def_wildcard_surfaced_as_choice():
+	# A case:def fallback branch is surfaced as an extra choice alongside the
+	# tagged options, mirroring the original's def-wildcard match.
+	# [SRC: CaseOperations.c @ Do: 'def' tag matches when last_op_status - 2 >= 3]
+	var action := {
+		"option": {"text": "选", "items": [{"text": "A", "tag": "op1"}]},
+		"case:op1": {"rite": 5001001},
+		"case:def": {"over": 1},
+	}
+	var deferred := ResultExec.execute(action, GameState.new(), db)
+	var choices: Dictionary = deferred.choose.get("choices", {})
+	assert_true(choices.has("case:def"), "def fallback is surfaced as a choice")
+	assert_eq(choices["case:def"], {"over": 1}, "def choice value is its subtree")

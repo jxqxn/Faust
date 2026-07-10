@@ -47,6 +47,7 @@ static func serialize(state) -> Dictionary:
 		"coin_count": state.coin_count,
 		"gold_dice": state.gold_dice,
 		"redraws_left": state.redraws_left,
+		"sudan_redraw_count": state.sudan_redraw_count,
 		"back_to_prev_left": state.back_to_prev_left,
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
@@ -73,6 +74,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.coin_count = int(data.get("coin_count", 0))
 	state.gold_dice = int(data.get("gold_dice", 0))
 	state.redraws_left = int(data.get("redraws_left", 0))
+	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
 	state.back_to_prev_left = int(data.get("back_to_prev_left", 0))
 	state.hand.clear()
 	for cid in data.get("hand", []):
@@ -142,12 +144,21 @@ static func read_save_data() -> Variant:
 	return parsed
 
 
-## Load from disk into a new GameState. Returns null if no save or corrupt.
+## Load from disk into a new GameState. Returns null if no save, corrupt, or
+## version-mismatched. A version mismatch (older/newer save schema) is rejected
+## rather than silently loading wrong state.
 static func load(db, require_player_save := false) -> Variant:
 	var parsed = SaveSystem.read_save_data()
 	if parsed == null:
 		return null
 	if require_player_save and not SaveSystem.is_valid_player_save_data(parsed):
+		return null
+	# Version gate: reject saves whose schema version doesn't match.
+	# [SRC: original CorrectPlayerData reconciles configVersion; clone uses a
+	# simpler save-schema version check]
+	var v := int(parsed.get("version", 0))
+	if v != SAVE_VERSION:
+		push_warning("SaveSystem: save version %d != expected %d; refusing to load" % [v, SAVE_VERSION])
 		return null
 	var state = preload("res://sim/game_state.gd").new()
 	deserialize(parsed, state, db)

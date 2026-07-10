@@ -17,36 +17,52 @@ extends RefCounted
 
 ## Generate loot for a node definition {type, repeat, item[]}.
 ## `owned_ids`: set of already-owned card ids (for ExcludeAlreadyHave).
-## `condition_ok`: optional Callable(item) -> bool for type-99 gating.
+## `condition_ok`: optional Callable(item) -> bool; items failing the check
+## are excluded BEFORE weighting in all types (SimpleWeightLoot,
+## WeightedNChooseM, and type-99 per-item gating).
+## [SRC: GenLoot.c @ Generate: SimpleWeightLoot (line 1000) and
+##  WeightedNChooseM (line 1124) both apply a Where condition filter before
+##  weighting; type-99 (line 849) gates each item on its condition]
 ## Returns Array of chosen ids (may contain duplicates).
 static func generate(rng: GameRNG, node: Dictionary, owned_ids: Array = [], condition_ok: Callable = Callable()) -> Array:
 	var loot_type := int(node.get("type", 2))
 	var repeat := int(node.get("repeat", 1))
 	var items: Array = node.get("item", [])
+	# Pre-filter items by condition for all types (original applies Where before weighting).
+	var filtered := _filter_conditions(items, condition_ok)
 	var out: Array = []
 	match loot_type:
 		3:
 			for _i in repeat:
-				var picked: Variant = _simple_weight(rng, _exclude(items, owned_ids))
+				var picked: Variant = _simple_weight(rng, _exclude(filtered, owned_ids))
 				if picked != null:
 					out.append(picked)
 				# Empty filtered set => returns nothing for that iteration.
 		4:
 			# M = the node's repeat/count field (node+0x20 in .c), NOT sum(num).
 			# [SRC: GenLoot.c @ Generate (0x511990) type-4: passes node+0x20 as M]
-			out = _weighted_n_choose_m(rng, items, repeat)
+			out = _weighted_n_choose_m(rng, filtered, repeat)
 		99:
 			for _i in repeat:
-				for it in items:
-					if condition_ok.is_valid() and not condition_ok.call(it):
-						continue
+				for it in filtered:
 					out.append(int(it.get("id", 0)))
 		_:
 			# default (incl type 2): SimpleWeightLoot per repeat.
 			for _i in repeat:
-				var picked: Variant = _simple_weight(rng, items)
+				var picked: Variant = _simple_weight(rng, filtered)
 				if picked != null:
 					out.append(picked)
+	return out
+
+
+## Filter items by the condition_ok callable. Items with no condition pass through.
+static func _filter_conditions(items: Array, condition_ok: Callable) -> Array:
+	if not condition_ok.is_valid():
+		return items
+	var out: Array = []
+	for it in items:
+		if condition_ok.call(it):
+			out.append(it)
 	return out
 
 

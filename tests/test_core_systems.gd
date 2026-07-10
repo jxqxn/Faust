@@ -53,21 +53,31 @@ func test_counter_clamp_nonneg_gated():
 	var st2 := GameState.new()
 	assert_false(st2.is_nonneg_gated(7100006), "registry does not leak across instances")
 
-# ---- Tag (vc#15, pitfall#5: no clamp) ----
+# ---- Tag (CardExtensions.c: RemoveTag decrements, no clamp; can_add gates ADD) ----
 func test_tag_add_sub_set():
 	var tags := {"智慧": 3}
 	TagSystem.apply(tags, "智慧", TagSystem.Op.ADD, 2)
 	assert_eq(TagSystem.get_value(tags, "智慧"), 5)
 	TagSystem.apply(tags, "智慧", TagSystem.Op.SUB, 1)
 	assert_eq(TagSystem.get_value(tags, "智慧"), 4)
-	# Sub to zero removes the tag entirely (no clamp-to-zero kept).
+	# SUB decrements and PERSISTS negative values — no clamp, no erase.
+	# [SRC: CardExtensions.c @ RemoveTag lines 2166-2191: tagGroup[code] += (-amount)]
 	TagSystem.apply(tags, "智慧", TagSystem.Op.SUB, 10)
-	assert_false(tags.has("智慧"), "sub to <=0 removes tag")
+	assert_true(tags.has("智慧"), "sub below zero keeps the tag")
+	assert_eq(TagSystem.get_value(tags, "智慧"), -6, "tag value persists negative")
 	# Set on a fresh tag.
 	TagSystem.apply(tags, "体魄", TagSystem.Op.SET, 4)
 	assert_eq(TagSystem.get_value(tags, "体魄"), 4)
-	# Tags can go negative? No — SUB removes at <=0 (GetTag>0 guard). But ADD on
-	# a tag whose source value is negative is allowed (no global clamp). Verify
+	# can_add=false: ADD on an already-present tag is a no-op (idempotent).
+	# [SRC: CardExtensions.c @ ConvertToAddOrSub '+': can_add==false and GetTag>0 → zero delta]
+	TagSystem.apply(tags, "已拥有", TagSystem.Op.ADD, 1, false)
+	assert_eq(TagSystem.get_value(tags, "已拥有"), 1, "can_add=false adds when absent")
+	TagSystem.apply(tags, "已拥有", TagSystem.Op.ADD, 1, false)
+	assert_eq(TagSystem.get_value(tags, "已拥有"), 1, "can_add=false no-op when present")
+	# can_add=true (default): stacking increments.
+	TagSystem.apply(tags, "堆叠", TagSystem.Op.ADD, 3, true)
+	TagSystem.apply(tags, "堆叠", TagSystem.Op.ADD, 2, true)
+	assert_eq(TagSystem.get_value(tags, "堆叠"), 5, "can_add=true stacks")
 	# get_value defaults to 0 for missing tags.
 	assert_eq(TagSystem.get_value(tags, "不存在"), 0)
 
@@ -229,3 +239,43 @@ func test_random_operations_counts_exact_hits():
 	# Hits exceed list size -> whole list.
 	var big := BranchSystem.random_operations(rng, ops, [5,5,5,5,5,5], 5)
 	assert_eq(big.size(), 5)
+
+
+func test_loot_simple_weight_filters_by_condition():
+	# SimpleWeightLoot (type 2/default) must exclude condition-failing items
+	# BEFORE weighting, matching the original's Where filter.
+	# [SRC: GenLoot.c:1000 SimpleWeightLoot applies Where before weighting]
+	var rng := RNG.new(20)
+	var node := {
+		"type": 2,
+		"repeat": 10,
+		"item": [
+			{"id": 2001, "weight": 100},
+			{"id": 2002, "weight": 100},
+		]
+	}
+	# Exclude id 2002 entirely.
+	var cond := Callable(func(it): return int(it.get("id")) != 2002)
+	var out := LootSystem.generate(rng, node, [], cond)
+	for id in out:
+		assert_ne(int(id), 2002, "condition-failing item never drawn")
+	assert_true(out.all(func(id): return int(id) == 2001), "only condition-passing item drawn")
+
+
+func test_loot_weighted_n_choose_m_filters_by_condition():
+	# WeightedNChooseM (type 4) must also exclude condition-failing items.
+	# [SRC: GenLoot.c:1124 WeightedNChooseM applies Where before weighting]
+	var rng := RNG.new(21)
+	var node := {
+		"type": 4,
+		"repeat": 2,
+		"item": [
+			{"id": 3001, "weight": 100},
+			{"id": 3002, "weight": 100},
+			{"id": 3003, "weight": 100},
+		]
+	}
+	var cond := Callable(func(it): return int(it.get("id")) != 3003)
+	var out := LootSystem.generate(rng, node, [], cond)
+	for id in out:
+		assert_ne(int(id), 3003, "condition-failing item excluded from type-4")

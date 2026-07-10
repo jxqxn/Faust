@@ -99,11 +99,11 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
 	if _is_slot_tag_op(k):
-		_apply_slot_tag(k, val, state)
+		_apply_slot_tag(k, val, state, db)
 		return
 	# Table/g tag ops: table.<x>+/-<tag>, g.<x>+/-<tag>.
 	if k.begins_with("table.") or k.begins_with("g."):
-		_apply_table_tag(k, val, state)
+		_apply_table_tag(k, val, state, db)
 		return
 	# Events.
 	if k == "event_on":
@@ -192,8 +192,11 @@ static func _merge_case(into: Dictionary, src: Dictionary) -> void:
 ## choices keyed by their case tag (op1/op2/...), and each case:opN sibling in
 ## the same action dict becomes the choice's executable value (a result dict
 ## run via execute_choice when the player picks it).
+## A `case:def` sibling (if present) is a fallback/default branch added as an
+## extra choice, mirroring the original's def-wildcard match.
 ## [SRC: Option.c @ Do (shows UI, resolves with tag);
-##       CaseOperations.c @ Do (matches last_op_tag, runs case subtree)]
+##       CaseOperations.c @ Do (matches last_op_tag, or 'def' wildcard
+##       when last_op_status - 2 >= 3, runs case subtree, resets state)]
 static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
 	var opt: Dictionary = action.get("option", {})
 	if opt.is_empty():
@@ -209,6 +212,10 @@ static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
 		# The case subtree (if present) is the executable payload for this choice.
 		var case_key := "case:" + tag
 		choices[case_key] = action.get(case_key, {})
+	# def wildcard: a fallback branch the original matches when no case tag
+	# applies (last_op_status - 2 >= 3). Surfaced as an extra choice.
+	if action.has("case:def"):
+		choices["case:def"] = action["case:def"]
 	# Stash as a choose prompt; DeferredEffects.apply routes it to the UI via
 	# queue_choice_prompt. The option text becomes the prompt body.
 	deferred.choose = {
@@ -279,7 +286,7 @@ static func _has_tag_op_after_dot(k: String) -> bool:
 	return "+" in rest or "-" in rest or "=" in rest
 
 
-static func _apply_slot_tag(k: String, val: Variant, state) -> void:
+static func _apply_slot_tag(k: String, val: Variant, state, db) -> void:
 	# Parse "s4+回收" -> slot=4, op=+, tag=回收.
 	var op_idx := -1
 	var op_char := ""
@@ -296,13 +303,14 @@ static func _apply_slot_tag(k: String, val: Variant, state) -> void:
 	var amount := int(val)
 	if amount == 0:
 		amount = 1
+	var can_add := _tag_can_add(db, tag_name)
 	for tc in state.cards_in_slot(slot_num):
 		var tags: Dictionary = tc.get("tags", {})
-		TagSystem.apply(tags, tag_name, op, amount)
+		TagSystem.apply(tags, tag_name, op, amount, can_add)
 		tc.tags = tags
 
 
-static func _apply_table_tag(k: String, val: Variant, state) -> void:
+static func _apply_table_tag(k: String, val: Variant, state, db) -> void:
 	# table.<x>+/-<tag> or g.<x>+/-<tag> -> apply to all table cards.
 	var rest := k.substr(k.find(".") + 1)
 	var op_idx := -1
@@ -319,7 +327,19 @@ static func _apply_table_tag(k: String, val: Variant, state) -> void:
 	var amount := int(val)
 	if amount == 0:
 		amount = 1
+	var can_add := _tag_can_add(db, tag_name)
 	for tc in state.table_cards:
 		var tags: Dictionary = tc.get("tags", {})
-		TagSystem.apply(tags, tag_name, op, amount)
+		TagSystem.apply(tags, tag_name, op, amount, can_add)
 		tc.tags = tags
+
+
+## Look up a tag's can_add flag from config (default true if not found).
+## [SRC: CardExtensions.c ConvertToAddOrSub reads tag config offset 0x40]
+static func _tag_can_add(db, tag_name: String) -> bool:
+	if db == null:
+		return true
+	var code: String = db.tag_name_to_code.get(tag_name, "") if db.get("tag_name_to_code") != null else ""
+	if code != "" and db.get("tags_by_code") != null and db.tags_by_code.has(code):
+		return int(db.tags_by_code[code].get("can_add", 1)) != 0
+	return true

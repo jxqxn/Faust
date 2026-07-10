@@ -163,3 +163,38 @@ func test_consume_sudan_removes_card():
 	var cid := RoundLoop.start_round(state, db, rng)
 	assert_true(RoundLoop.consume_sudan(state, cid))
 	assert_eq(state.active_sudan_cards.size(), 0)
+
+
+func test_redraw_draws_sudan_redraw_count_cards():
+	# Redraw draws sudan_redraw_count new cards (each inheriting the discarded
+	# card's life), not just one.
+	# [SRC: GameController.c @ RedrawSudanCard: loops player+0x68 times]
+	var rng := RNG.new(40)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	state.active_sudan_cards.clear()
+	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1))
+	state.sudan_redraw_count = 2
+	state.sudan_deck = [2010002, 2010003, 2010004, 2010005]
+	var new_id := RoundLoop.use_redraw(state, rng)
+	assert_true(new_id >= 0, "redraw succeeds")
+	assert_eq(state.active_sudan_cards.size(), 2, "redraw draws 2 cards for count=2")
+	# Each new card inherits the discarded card's life (5 days).
+	for asc in state.active_sudan_cards:
+		assert_eq(asc.days_left, 5, "new card inherits discarded life")
+
+
+func test_redraw_rejects_when_deck_below_count():
+	# Pre-loop gate: pool must hold at least sudan_redraw_count cards.
+	# [SRC: GameController.c:3814 if pool.count < sudan_redraw_count → reject]
+	var rng := RNG.new(41)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	state.active_sudan_cards.clear()
+	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1))
+	state.sudan_redraw_count = 3
+	state.sudan_deck = [2010002, 2010003]  # only 2 cards, need 3
+	var initial_redraws := state.redraws_left
+	var new_id := RoundLoop.use_redraw(state, rng)
+	assert_eq(new_id, -1, "redraw fails when deck < count")
+	assert_eq(state.redraws_left, initial_redraws, "no redraw consumed on gate failure")

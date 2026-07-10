@@ -36,6 +36,9 @@ var difficulty_config := {}   # {single_dice_face_weight, sudan_life_time, gold_
 var gold_dice := 0            # remaining gold dice this run
 var redraws_left := 0         # sudan card redraws left this round
 var back_to_prev_left := 0    # back-to-prev-round uses left
+# How many new sudan cards a redraw draws (original player+0x68).
+# [SRC: GameController.c @ RedrawSudanCard: loop bound = sudan_redraw_count]
+var sudan_redraw_count := 1
 
 # Sudan cards in play (drawn, not yet consumed): each {id, days_left, ...}.
 var active_sudan_cards: Array = []
@@ -73,6 +76,9 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	# Redraws per round (sudan_redraw_times_per_round) recovered every
 	# sudan_redraw_times_recovery_round rounds.
 	redraws_left = _redraws_per_round(db)
+	# How many new sudan cards each redraw produces (init_config sudan_redraw_count).
+	# [SRC: GameController.c @ RedrawSudanCard: loops sudan_redraw_count times]
+	sudan_redraw_count = int(db.init_config.get("sudan_redraw_count", 1))
 	# Starting hand comes through ConfigDB so normal and test profiles stay split.
 	for cid in db.get_default_cards():
 		hand.append(int(cid))

@@ -112,7 +112,17 @@ static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 			state.queue_prompt({"id": "loot.%d" % loot_id, "text": "获得掉落 %d" % loot_id})
 		return
 	var owned := _owned_ids(state)
-	var generated: Array = LootSystem.generate(rng, loot, owned)
+	# condition_ok: gate items by their condition field before weighting.
+	# [SRC: GenLoot.c: items filtered by Where condition before weighting]
+	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+	var condition_ok := Callable(func(item):
+		if not (item is Dictionary):
+			return true
+		var cond: Dictionary = item.get("condition", {})
+		if cond.is_empty():
+			return true
+		return ConditionEval.evaluate(cond, ctx))
+	var generated: Array = LootSystem.generate(rng, loot, owned, condition_ok)
 	for id in generated:
 		_apply_loot_item(int(id), state, db, rng)
 

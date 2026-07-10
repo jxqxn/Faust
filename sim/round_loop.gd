@@ -59,34 +59,50 @@ static func start_round(state, db, rng) -> int:
 	return draw_weekly_sudan(state, db, rng)
 
 
-## Original redraw order: draw the new card from the finite pool first, then
-## insert the discarded card back at Random.Range(0,count).
-## [SRC: GameController.c @ RedrawSudanCard (0x5558b0)]
+## Original redraw: draw sudan_redraw_count new cards from the finite pool
+## (each inheriting the discarded card's remaining life), then insert the
+## discarded card back at Random.Range(0,count). Gate: pool must have at least
+## sudan_redraw_count cards. Returns the first new card id (or -1 on failure).
+## [SRC: GameController.c @ RedrawSudanCard (0x5558b0): loops sudan_redraw_count
+##  times (player+0x68), each inheriting discarded life; pre-loop pool gate]
 static func use_redraw(state, rng) -> int:
 	if state.redraws_left <= 0:
 		return -1
 	if state.active_sudan_cards.is_empty():
 		return -1
-	if state.sudan_deck.is_empty():
+	var draw_count := maxi(state.sudan_redraw_count, 1)
+	# Pre-loop gate: pool must hold at least draw_count cards.
+	# [SRC: GameController.c:3814 if pool.count < sudan_redraw_count → reject]
+	if state.sudan_deck.size() < draw_count:
 		return -1
 	var old_card = state.active_sudan_cards.pop_back()
 	var discarded: int = old_card.card_id
 	var carried_life: int = old_card.days_left
+	var first_new := -1
 	var rail_index: int = state.rail_order.find(discarded) if state.has_method("replace_card_in_rail") else -1
-	var new_id: int = SudanCards.draw(state.sudan_deck)
+	for i in draw_count:
+		var new_id: int = SudanCards.draw(state.sudan_deck)
+		if new_id < 0:
+			break
+		if i == 0:
+			first_new = new_id
+		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number))
+		if state.has_method("replace_card_in_rail"):
+			if i == 0:
+				if rail_index >= 0:
+					state.replace_card_in_rail(discarded, new_id)
+				else:
+					state.insert_card_to_rail(new_id, state.rail_order.size())
+			else:
+				state.insert_card_to_rail(new_id, state.rail_order.size())
+	# Insert the discarded card back into the pool.
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
 	else:
 		state.sudan_deck.append(discarded)
-	if new_id >= 0:
-		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number))
-		if state.has_method("replace_card_in_rail"):
-			if rail_index >= 0:
-				state.replace_card_in_rail(discarded, new_id)
-			else:
-				state.insert_card_to_rail(new_id, state.rail_order.size())
+	if first_new >= 0:
 		state.redraws_left -= 1
-	return new_id
+	return first_new
 
 
 ## Consume a sudan card. The caller may then call start_round_if_no_sudan to
