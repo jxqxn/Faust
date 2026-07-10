@@ -1,0 +1,28 @@
+{
+  "id": 5300002,
+  "text": "向神殿求助",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "all": {
+        "!have.2001071": 1,
+        "table_have.2000021": 1
+      },
+      "table_have.2001071": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000508
+      }
+    }
+  ]
+}

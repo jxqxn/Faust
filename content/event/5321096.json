@@ -1,0 +1,30 @@
+{
+  "id": 5321096,
+  "text": "疗愈的食物",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "hand_have.妻子": 1,
+    "counter.7000441>=": 1,
+    "counter.7000442>=": 1
+  },
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008094,
+        "success": {
+          "event_off": 5321096
+        }
+      }
+    }
+  ]
+}

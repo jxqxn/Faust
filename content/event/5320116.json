@@ -1,0 +1,20 @@
+{
+  "id": 5320116,
+  "text": "娜依拉声望事件--夏玛死亡的回应1",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": 2000082
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5320117
+      }
+    }
+  ]
+}

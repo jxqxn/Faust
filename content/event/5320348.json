@@ -1,0 +1,27 @@
+{
+  "id": 5320348,
+  "text": "不合时宜的思想",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "have.2000199": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000541,
+        "prompt": {
+          "id": "5320348_prompt_01",
+          "text": "最近，你发现《不合时宜的思想》被改了个名字、换了些内容，摆在垂钓者书店里贩售。\n你翻开还弥漫着油墨味道的新书，注意到你身边来往的人都在看着你手中的纸页……人们的视线交织在一起，加上这书中的内容，让你心有所感……",
+          "icon": "pic/2000001"
+        }
+      }
+    }
+  ]
+}

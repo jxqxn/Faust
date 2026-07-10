@@ -1,0 +1,23 @@
+{
+  "id": 5300353,
+  "text": "等待",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "table_have.2000129": 1,
+    "!have.2000129.新剧情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001102
+      }
+    }
+  ]
+}

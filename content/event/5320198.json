@@ -1,0 +1,22 @@
+{
+  "id": 5320198,
+  "text": "奈费勒声望事件--宫门募捐",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000312": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006644
+      }
+    }
+  ]
+}

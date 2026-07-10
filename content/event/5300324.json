@@ -1,0 +1,35 @@
+{
+  "id": 5300324,
+  "text": "升级舞姬",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      10,
+      15
+    ]
+  },
+  "condition": {
+    "hand_have.2000129": 1,
+    "!have.2000129.新剧情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000103,
+        "prompt": {
+          "id": "prompt_5300324_01",
+          "text": "阿图娜尔先向你款款行礼，接着才微微低着头说明来意——她希望……而且有自信能帮到你更多。"
+        },
+        "success": {
+          "event_off": 5300324
+        }
+      }
+    }
+  ]
+}

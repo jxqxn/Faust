@@ -1,0 +1,28 @@
+{
+  "id": 5320577,
+  "text": "热娜收集珠宝启动",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "all": {
+        "have.热娜": 1,
+        "!have.2000019": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006136,
+        "event_off": 5320577
+      }
+    }
+  ]
+}

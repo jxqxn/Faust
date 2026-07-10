@@ -1,0 +1,27 @@
+{
+  "id": 5310490,
+  "text": "结局-星剑的遗言",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "rite_end": 5010024
+  },
+  "condition": {
+    "counter.7000447>=": 1,
+    "any": {
+      "counter.7100004<": 30,
+      "!have.2000013.晋升": 1
+    },
+    "counter.7001069<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "over": 224
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": 5321296,
+  "text": "羊肉炉臣服线结局",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "global_counter=7200303": 1,
+        "over": 102,
+        "success": {
+          "event_off": 5321296
+        }
+      }
+    }
+  ]
+}

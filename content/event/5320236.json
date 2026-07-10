@@ -1,0 +1,27 @@
+{
+  "id": 5320236,
+  "text": "奈费勒声望事件--恶意的捉弄",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000312": 1,
+    "have.2000349": 1,
+    "counter.7000302>=": 1,
+    "counter.7100003>=": 15
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006669
+      }
+    }
+  ]
+}

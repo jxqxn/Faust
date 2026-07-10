@@ -29,24 +29,43 @@ static func execute_choice(choice_key: String, choice_value: Variant, state, db,
 	apply(deferred, state, db, rng)
 
 
-## Execute an event's result and action payloads and apply their deferred
-## effects. Mirrors RiteResolver's per-entry pattern (execute result, then
-## action). Returns the merged deferred dict so callers can inspect flags like
-## `over`. If the event has no result/action, returns an empty dict.
+## Execute an event's settlement payloads and apply their deferred effects.
+## Real events nest their payload at `settlement[].action` (no result/condition
+## per entry — the condition is top-level). Mirrors RiteResolver's per-entry
+## pattern. Returns the merged deferred dict so callers can inspect flags like
+## `over`. Falls back to top-level result/action for synthetic/test events.
 static func execute_event(event: Dictionary, state, db, rng) -> Dictionary:
 	if event.is_empty():
 		return {}
+	# Gate on the event's top-level condition (events have no per-entry conditions).
+	var cond: Dictionary = event.get("condition", {})
+	if not cond.is_empty():
+		var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+		if not ConditionEval.evaluate(cond, ctx):
+			return {}
 	var merged := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 		"prompts": [], "loots": [],
 	}
-	for key in ["result", "action"]:
-		var payload: Dictionary = event.get(key, {})
-		if payload.is_empty():
-			continue
-		var deferred := ResultExec.execute(payload, state, db)
-		_merge(merged, deferred)
+	var settlements: Array = event.get("settlement", [])
+	if not settlements.is_empty():
+		for entry in settlements:
+			if not (entry is Dictionary):
+				continue
+			var payload: Dictionary = entry.get("action", {})
+			if payload.is_empty():
+				continue
+			var deferred := ResultExec.execute(payload, state, db)
+			_merge(merged, deferred)
+	else:
+		# Fallback for synthetic/test events using top-level result/action.
+		for key in ["result", "action"]:
+			var payload_alt: Dictionary = event.get(key, {})
+			if payload_alt.is_empty():
+				continue
+			var deferred := ResultExec.execute(payload_alt, state, db)
+			_merge(merged, deferred)
 	apply(merged, state, db, rng)
 	return merged
 

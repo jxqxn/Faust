@@ -1,0 +1,29 @@
+{
+  "id": 5300538,
+  "text": "深夜访客",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      1,
+      3
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "no_prompt": {
+          "card": 2000771
+        },
+        "rite": 5000770,
+        "success": {
+          "event_off": 5300538
+        }
+      }
+    }
+  ]
+}

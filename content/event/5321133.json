@@ -1,0 +1,28 @@
+{
+  "id": 5321133,
+  "text": "妻子死亡后哈比卜事件",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.妻子": 1,
+    "!have.梅姬离开": 1,
+    "hand_have.2000014": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "success": {
+          "loot": 6001067
+        }
+      }
+    }
+  ]
+}

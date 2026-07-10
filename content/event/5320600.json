@@ -1,0 +1,27 @@
+{
+  "id": 5320600,
+  "text": "放心吧",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "prompt": {
+          "id": "5320600_prompt_1",
+          "text": "你朝她点点头，应下了她的请求，表示这三个方案都会稍微尽力去帮她宣传的。热娜一个劲向你道谢，笑得无比灿烂。",
+          "icon": "cards/2000019"
+        },
+        "counter=7000828": 1,
+        "event_on": 5320606,
+        "event_off": 5320600
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": 5320356,
+  "text": "盗版横行",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "have.2000199": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "coin": 2,
+        "prompt": {
+          "id": "5320356_prompt_01",
+          "text": "盗版横行，后续版费就不用想了。",
+          "icon": "cards/2000199"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": 5320358,
+  "text": "也许该分享给她",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000123": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006728
+      }
+    }
+  ]
+}

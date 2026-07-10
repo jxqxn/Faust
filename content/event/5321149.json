@@ -1,0 +1,26 @@
+{
+  "id": 5321149,
+  "text": "第四次帮助",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000680": 1,
+    "have.2000173": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008157,
+        "success": {
+          "event_off": 5321149
+        }
+      }
+    }
+  ]
+}

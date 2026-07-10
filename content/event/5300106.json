@@ -1,0 +1,26 @@
+{
+  "id": 5300106,
+  "text": "刺杀",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "!rite": 5000606,
+    "table_have.主角": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000606,
+        "success": {
+          "event_off": 5300106
+        }
+      }
+    }
+  ]
+}

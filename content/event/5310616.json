@@ -1,0 +1,30 @@
+{
+  "id": 5310616,
+  "text": "没有决裂伊曼存活",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "all": {
+      "!rite": 5004518,
+      "counter.7000572<": 1,
+      "have.2000021": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5004516,
+        "rite": 5004519,
+        "success": {
+          "event_off": 5310619
+        }
+      }
+    }
+  ]
+}

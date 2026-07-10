@@ -1,0 +1,31 @@
+{
+  "id": 5321292,
+  "text": "莎姬死了",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.2000010": 1,
+    "counter.7000910>=": 1,
+    "table_have.2000129.rare=": 4,
+    "counter.7000912<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5008251,
+        "rite": 5008256,
+        "success": {
+          "event_off": 5321292
+        }
+      }
+    }
+  ]
+}

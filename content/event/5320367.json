@@ -1,0 +1,58 @@
+{
+  "id": 5320367,
+  "text": "更深的塑造",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "option": {
+          "id": "5320367_option_1",
+          "text": "你已经有了想法，便叫来马尔基娜",
+          "icon": [
+            "pic/2000001",
+            "",
+            "cards/2000459"
+          ],
+          "items": [
+            {
+              "text": "给她看善人的样子",
+              "tag": "op1"
+            },
+            {
+              "text": "给她看恶人的样子",
+              "tag": "op2"
+            },
+            {
+              "text": "给她看权贵的样子",
+              "tag": "op3"
+            },
+            {
+              "text": "给她看侠义之士的样子",
+              "tag": "op4"
+            }
+          ]
+        },
+        "case:op1": {
+          "loot": 6000301
+        },
+        "case:op2": {
+          "loot": 6000204
+        },
+        "case:op3": {
+          "loot": 6000205
+        },
+        "case:op4": {
+          "loot": 6000206
+        }
+      }
+    }
+  ]
+}

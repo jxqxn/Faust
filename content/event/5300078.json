@@ -1,0 +1,27 @@
+{
+  "id": 5300078,
+  "text": "狼王的踪迹",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!rite": 5002509,
+    "counter.7000034<": 1,
+    "counter.7000035<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002508,
+        "success": {
+          "event_off": 5300078
+        }
+      }
+    }
+  ]
+}

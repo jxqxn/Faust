@@ -1,0 +1,26 @@
+{
+  "id": 5300074,
+  "text": "黑街居民",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "!rite": 5004002
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004002,
+        "event_off": 5300074
+      }
+    }
+  ]
+}

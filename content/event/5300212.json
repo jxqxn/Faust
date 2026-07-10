@@ -1,0 +1,27 @@
+{
+  "id": 5300212,
+  "text": "不可靠的盟友延迟一回合",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000064": 1,
+    "!rite": 5000767,
+    "have.2000064.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000713,
+        "success": {
+          "event_off": 5300212
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": 5300532,
+  "text": "妻子远行的前置",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.妻子": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003002,
+        "success": {
+          "event_off": 5300532
+        }
+      }
+    }
+  ]
+}

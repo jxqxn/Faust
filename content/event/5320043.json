@@ -1,0 +1,35 @@
+{
+  "id": 5320043,
+  "text": "法图娜声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000062": 1,
+    "any": {
+      "all": {
+        "counter.7100004>=": 3,
+        "counter.7100005>=": 3,
+        "counter.7000119<": 1,
+        "counter.7000128<": 1,
+        "!have.2000062.纵欲的痕迹": 1,
+        "have.妻子": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320043_01.2000062": "她似乎有事，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000062+事件提示": 1
+      }
+    }
+  ]
+}

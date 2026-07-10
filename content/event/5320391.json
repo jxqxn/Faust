@@ -1,0 +1,22 @@
+{
+  "id": 5320391,
+  "text": "用来关闭游猎会",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.2000114.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5006800
+      }
+    }
+  ]
+}

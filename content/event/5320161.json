@@ -1,0 +1,33 @@
+{
+  "id": 5320161,
+  "text": "小圆声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000371": 1,
+    "any": {
+      "all": {
+        "counter.7100001>=": 20,
+        "counter.7000258>=": 1,
+        "counter.7000261>=": 1,
+        "counter.7000262<": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320161_01.2000371": "她似乎有事，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000371+事件提示": 1
+      }
+    }
+  ]
+}

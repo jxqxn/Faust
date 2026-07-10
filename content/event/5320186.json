@@ -1,0 +1,25 @@
+{
+  "id": 5320186,
+  "text": "小圆声望事件--悲伤的铁头",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000243<": 1,
+    "table_have.2000369.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000738": 1,
+        "counter+7000243": 1,
+        "rite": 5006638
+      }
+    }
+  ]
+}

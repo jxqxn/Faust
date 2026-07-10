@@ -1,0 +1,26 @@
+{
+  "id": 5320361,
+  "text": "故事的赞助人",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000199": 1,
+    "have.2000123": 1,
+    "counter.7000771>=": 1,
+    "counter.7000772<": 10,
+    "!rite": 5006729
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006729
+      }
+    }
+  ]
+}

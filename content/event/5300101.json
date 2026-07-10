@@ -1,0 +1,26 @@
+{
+  "id": 5300101,
+  "text": "酒庄主人造访",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "!rite": 5000602,
+    "table_have.2000314": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000602,
+        "success": {
+          "event_off": 5300101
+        }
+      }
+    }
+  ]
+}

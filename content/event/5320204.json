@@ -1,0 +1,25 @@
+{
+  "id": 5320204,
+  "text": "奈费勒声望事件--无用的施舍",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000312": 1,
+    "!have.2000312.大敌": 1,
+    "counter.7100001>=": 6,
+    "counter.7100004>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006674
+      }
+    }
+  ]
+}

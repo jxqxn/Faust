@@ -1,0 +1,24 @@
+{
+  "id": 5300536,
+  "text": "监听奈布哈尼追随者tag，移除时关闭不可靠的盟友系列",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000064": 1,
+    "!have.2000064.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5000712,
+        "event_off": 5300536
+      }
+    }
+  ]
+}

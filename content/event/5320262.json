@@ -1,0 +1,26 @@
+{
+  "id": 5320262,
+  "text": "宫廷-索要妃子-调查苏丹的奴隶",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5001001
+  },
+  "condition": {
+    "counter.7100003>=": 15,
+    "have.2001019": 1,
+    "!have.2001021": 1,
+    "counter.7001079<": 1,
+    "counter.7000530<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000573
+      }
+    }
+  ]
+}

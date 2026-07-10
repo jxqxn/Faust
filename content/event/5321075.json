@@ -1,0 +1,38 @@
+{
+  "id": 5321075,
+  "text": "失落小径",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000403>=": 7
+  },
+  "settlement": [
+    {
+      "action": {
+        "table.clean.2000853": 1,
+        "card": [
+          2000680,
+          "已拥有+1"
+        ],
+        "prompt": {
+          "id": "5321075_prompt_01",
+          "text": "你在险峻小径上搞的小动作被苏丹的税官觉察，这条消息隔天就呈上苏丹的桌案。你——甚至还有法尔达克——要倒大霉了。",
+          "icon": [
+            "",
+            "cards/sudan",
+            ""
+          ]
+        },
+        "success": {
+          "event_off": 5321075
+        }
+      }
+    }
+  ]
+}

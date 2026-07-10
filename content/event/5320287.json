@@ -1,0 +1,27 @@
+{
+  "id": 5320287,
+  "text": "苏丹的追问",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000717<": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006684,
+        "prompt": {
+          "id": "5320287_prompt_1",
+          "text": "你之前所报告的，所献上的东西没有让苏丹满足……他再次召见了你。",
+          "icon": "cards/sudan"
+        }
+      }
+    }
+  ]
+}

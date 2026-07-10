@@ -1,0 +1,32 @@
+{
+  "id": 5300570,
+  "text": "誓言之证2升3",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000913": 1,
+    "hand_have.2000913.rare=": 2,
+    "any": {
+      "hand_have.2000913.回应誓言=": 5
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.2000913.uprare": 1,
+        "prompt": {
+          "id": "5300570_prompt_01",
+          "text": "誓言之证有了新的变化",
+          "icon": "cards/2000913"
+        },
+        "event_off": 5300570
+      }
+    }
+  ]
+}

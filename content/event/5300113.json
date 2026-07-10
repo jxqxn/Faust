@@ -1,0 +1,27 @@
+{
+  "id": 5300113,
+  "text": "贵妇的邀请",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "card_clean": [
+      2010005,
+      2010006,
+      2010007,
+      2010008
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300114
+      }
+    }
+  ]
+}

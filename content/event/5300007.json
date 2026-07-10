@@ -1,0 +1,27 @@
+{
+  "id": 5300007,
+  "text": "邪术师的藏匿点A",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": [
+      2,
+      5
+    ]
+  },
+  "condition": {
+    "table_have.2000022": 1,
+    "counter.7000011<": 1,
+    "!rite": 5000507
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000507
+      }
+    }
+  ]
+}

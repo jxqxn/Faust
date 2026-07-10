@@ -1,0 +1,22 @@
+{
+  "id": 5360001,
+  "text": "完成X局游戏次数（死亡也计数）",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "game_end": -1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "global_counter+7220001": 1
+      }
+    }
+  ]
+}

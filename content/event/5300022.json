@@ -1,0 +1,24 @@
+{
+  "id": 5300022,
+  "text": "死于睡梦中",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.主角": 1,
+    "hand_have.妻子": 1,
+    "!rite": 5003007
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003006
+      }
+    }
+  ]
+}

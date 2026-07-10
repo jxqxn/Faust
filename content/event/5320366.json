@@ -1,0 +1,30 @@
+{
+  "id": 5320366,
+  "text": "马尔基娜事件提示",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000808>=": 1,
+    "have.2000459": 1,
+    "table_have.2001298": 1,
+    "any": {
+      "all": {
+        "counter.7000812<": 1,
+        "counter.7100004>=": 8
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.2001298+事件提示": 1
+      }
+    }
+  ]
+}

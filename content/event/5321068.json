@@ -1,0 +1,29 @@
+{
+  "id": 5321068,
+  "text": "一次暗杀",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5008042
+  },
+  "condition": {
+    "all": {
+      "table_have.2000057": 1,
+      "table_have.2000774": 1,
+      "table_have.主角": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008043,
+        "success": {
+          "event_off": 5321068
+        }
+      }
+    }
+  ]
+}

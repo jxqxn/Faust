@@ -1,0 +1,26 @@
+{
+  "id": 5300038,
+  "text": "神秘商人",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "counter.7000026<": 6
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5002016,
+        "rite": 5002016
+      }
+    }
+  ]
+}

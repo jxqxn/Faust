@@ -1,0 +1,29 @@
+{
+  "id": 5321054,
+  "text": "快脚的约会",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "card_clean": 1
+  },
+  "condition": {
+    "type": "sudan",
+    "counter.7000333>=": 1,
+    "have.2000057": 1,
+    "hand_have.2000370": 1,
+    "have.2000774": 1,
+    "counter.7000339<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008049
+      }
+    }
+  ]
+}

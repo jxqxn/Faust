@@ -1,0 +1,24 @@
+{
+  "id": 5300023,
+  "text": "妻子正在酝酿不满",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "!rite": 5003001
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003001
+      }
+    }
+  ]
+}

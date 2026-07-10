@@ -1,0 +1,23 @@
+{
+  "id": 5320519,
+  "text": "白嫖",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006027,
+        "success": {
+          "event_off": 5320519
+        }
+      }
+    }
+  ]
+}

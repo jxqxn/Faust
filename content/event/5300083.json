@@ -1,0 +1,31 @@
+{
+  "id": 5300083,
+  "text": "组织犯罪",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {
+    "!rite": 5004013,
+    "have.2000191": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004013,
+        "success": {
+          "event_off": 5300083,
+          "prompt": {
+            "id": "5300083_prompt_01",
+            "text": "思考：借助在黑街的声望，也许可以找机会赚个外快。",
+            "icon": "cards/2_item_0"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": 5300827,
+  "text": "金币的归返1",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!hand_have.小筹的金币": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300828,
+        "event_off": 5300827
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": 5320582,
+  "text": "收集红宝石计数器",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000019": 1,
+    "have.2000019.追随者": 1,
+    "any": {
+      "have.2001265": 1,
+      "have.2001272": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000790": 1,
+        "event_off": 5320582
+      }
+    }
+  ]
+}

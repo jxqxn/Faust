@@ -1,0 +1,22 @@
+{
+  "id": 5300009,
+  "text": "蒸汽社交",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {
+    "!rite": 5001503
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001502
+      }
+    }
+  ]
+}

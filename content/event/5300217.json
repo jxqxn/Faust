@@ -1,0 +1,18 @@
+{
+  "id": 5300217,
+  "text": "废弃",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {}
+    }
+  ]
+}

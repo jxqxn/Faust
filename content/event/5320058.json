@@ -1,0 +1,25 @@
+{
+  "id": 5320058,
+  "text": "铁头大敌事件再起",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": 1
+  },
+  "condition": {
+    "type": "sudan",
+    "counter.7000191<": 1,
+    "table_have.2000369": 1,
+    "have.2000369.大敌": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000091
+      }
+    }
+  ]
+}

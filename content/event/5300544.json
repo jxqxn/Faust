@@ -1,0 +1,26 @@
+{
+  "id": 5300544,
+  "text": "我白嫖前置",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000466>=": 1,
+    "table_have.2000792": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000817,
+        "success": {
+          "event_off": 5300544
+        }
+      }
+    }
+  ]
+}

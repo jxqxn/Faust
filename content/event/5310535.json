@@ -1,0 +1,23 @@
+{
+  "id": 5310535,
+  "text": "结局-加个冻结的保险",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "total.2001019+冻结": 1,
+        "total.sudan+冻结": 1,
+        "total.2000680+冻结": 1,
+        "sudan_pool.sudan+冻结": 1
+      }
+    }
+  ]
+}

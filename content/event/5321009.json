@@ -1,0 +1,34 @@
+{
+  "id": 5321009,
+  "text": "法拉杰声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.法拉杰": 1,
+    "any": {
+      "all": {
+        "counter.7000250<": 1,
+        "counter.7100002<": 9,
+        "counter.7000249": 1,
+        "counter.7100004>=": 18,
+        "hand_have.法拉杰": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5321009_01.法拉杰": "法拉杰似乎有话想对你说，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.法拉杰+事件提示": 1
+      }
+    }
+  ]
+}

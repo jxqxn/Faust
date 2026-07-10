@@ -1,0 +1,29 @@
+{
+  "id": 5300076,
+  "text": "扒手团体（废弃）",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      5,
+      7
+    ]
+  },
+  "condition": {
+    "!rite": 5004010,
+    "table_have.2000303": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004010,
+        "success": {
+          "event_off": 5300076
+        }
+      }
+    }
+  ]
+}

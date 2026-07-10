@@ -1,0 +1,29 @@
+{
+  "id": 5321154,
+  "text": "新月长大了",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000989": 1,
+    "have.2000065.追随者": 1,
+    "counter.7000556>=": 5
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008163,
+        "success": {
+          "event_off": 5321154
+        }
+      }
+    }
+  ]
+}

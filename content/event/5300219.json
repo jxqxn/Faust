@@ -1,0 +1,27 @@
+{
+  "id": 5300219,
+  "text": "不可靠的盟友初次触发延后三回合",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "counter.7000270<": 1,
+    "hand_have.2000064": 1,
+    "have.2000064.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000713,
+        "success": {
+          "event_off": 5300219
+        }
+      }
+    }
+  ]
+}

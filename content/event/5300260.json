@@ -1,0 +1,29 @@
+{
+  "id": 5300260,
+  "text": "监听妻子死亡的幕后",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "card_clean": [
+      2000006,
+      2000457,
+      2000458
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000199": 1,
+        "success": {
+          "event_off": 5300260
+        }
+      }
+    }
+  ]
+}

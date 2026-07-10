@@ -1,0 +1,29 @@
+{
+  "id": 5320296,
+  "text": "诗人与美食",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000722>=": 3,
+    "!have.2000460": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_off": 5320297,
+        "clean.rite": 5006686,
+        "prompt": {
+          "id": "5320296_prompt_1",
+          "text": "因为哈桑死亡，苏丹取消了宴会。",
+          "icon": "cards/2000460"
+        }
+      }
+    }
+  ]
+}

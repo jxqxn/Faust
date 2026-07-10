@@ -1,0 +1,23 @@
+{
+  "id": 5300029,
+  "text": "书店营业",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!rite": 5002006,
+    "counter.7000017<=": 43
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002006
+      }
+    }
+  ]
+}

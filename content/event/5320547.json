@@ -1,0 +1,23 @@
+{
+  "id": 5320547,
+  "text": "启动婚礼献歌的幕后",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5320548,
+        "success": {
+          "event_off": 5320547
+        }
+      }
+    }
+  ]
+}

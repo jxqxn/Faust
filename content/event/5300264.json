@@ -1,0 +1,30 @@
+{
+  "id": 5300264,
+  "text": "认识异国商人",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000038>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000758,
+        "prompt": {
+          "id": "5300264_prompt_1",
+          "text": "你打算委托相熟的商人卖掉这个玩意儿。",
+          "icon": "cards/2000001"
+        },
+        "success": {
+          "event_off": 5300265
+        }
+      }
+    }
+  ]
+}

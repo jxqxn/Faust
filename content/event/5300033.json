@@ -1,0 +1,26 @@
+{
+  "id": 5300033,
+  "text": "商人的遗物",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!rite": 5002506,
+    "counter.7000021<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002506,
+        "success": {
+          "event_off": 5300033
+        }
+      }
+    }
+  ]
+}

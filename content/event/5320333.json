@@ -1,0 +1,20 @@
+{
+  "id": 5320333,
+  "text": "百科全书已集齐的页",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5320384
+      }
+    }
+  ]
+}

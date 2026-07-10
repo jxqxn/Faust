@@ -1,0 +1,27 @@
+{
+  "id": 5300127,
+  "text": "贵妇的邀请的提示",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000057>=": 1,
+    "rite": 5000650
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "prompt": {
+          "id": "5300127_prompt_01",
+          "text": "你近期的活跃引起了一位美丽贵妇的兴趣，她邀请你务必去她家一趟，有要事相商。",
+          "icon": "cards/2000055"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": 5300017,
+  "text": "普通妓院（石银美人死了）",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": [
+      1,
+      2
+    ]
+  },
+  "condition": {
+    "!rite": 5002005,
+    "!table_have.2000080": 1,
+    "table_have.2000081": 1,
+    "!table_have.2000082": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002004
+      }
+    }
+  ]
+}

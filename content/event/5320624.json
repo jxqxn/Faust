@@ -1,0 +1,29 @@
+{
+  "id": 5320624,
+  "text": "帝国最好的珠宝匠",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000019": 1,
+    "have.2000019.追随者": 1,
+    "table_have.2000019": 1,
+    "counter.7000832>=": 1,
+    "counter.7000820>=": 3,
+    "counter.7000821>=": 3,
+    "counter.7000822>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006154,
+        "event_off": 5320624
+      }
+    }
+  ]
+}

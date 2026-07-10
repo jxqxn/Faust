@@ -1,0 +1,28 @@
+{
+  "id": 5320360,
+  "text": "后续版税",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "have.2000199": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "coin": 3,
+        "event_on": 5320361,
+        "prompt": {
+          "id": "5320360_prompt_01",
+          "text": "阿萨尔为你带来了鲁梅拉写的那本小书的版税。",
+          "icon": "cards/2000199"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": 5320282,
+  "text": "可疑的房租",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5000056
+  },
+  "condition": {
+    "counter.7000711>=": 3,
+    "!have.2000005.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000029": 1,
+        "card": 2001190,
+        "prompt": {
+          "id": "5320282_prompt_1",
+          "text": "这个来自异国的商人，在将金币交给你的时候，神色似乎有点不对劲。是那些金币的问题么？细心的你发现有一枚金币似乎有点不一样，这是错觉吗？",
+          "icon": "cards/2000029"
+        }
+      }
+    }
+  ]
+}

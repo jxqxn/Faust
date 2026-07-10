@@ -1,0 +1,39 @@
+{
+  "id": 5320044,
+  "text": "扎齐伊声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000063": 1,
+    "any": {
+      "all": {
+        "counter.7000130<": 1,
+        "counter.7100003>=": 10,
+        "counter.7100002>=": 3,
+        "counter.7100004>=": 10,
+        "have.2000062.激情": 1,
+        "have.2000062.命运的羁绊": 1,
+        "have.2000063.激情": 1,
+        "have.2000063.命运的羁绊": 1,
+        "have.主角": 1,
+        "counter.7000127>=": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320044_01.2000063": "他似乎有事，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000063+事件提示": 1
+      }
+    }
+  ]
+}

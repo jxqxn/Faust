@@ -1,0 +1,22 @@
+{
+  "id": 5300332,
+  "text": "出逃被追回的提示",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "!have.2000129.新剧情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "over": 17
+      }
+    }
+  ]
+}

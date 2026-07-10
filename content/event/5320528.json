@@ -1,0 +1,50 @@
+{
+  "id": 5320528,
+  "text": "处置龙眼宝石",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "option": {
+          "id": "5320528_option_1",
+          "text": "这颗举世无双的宝石，这份举世无双的荣耀，你打算把它赠给什么人呢？或者，把它留下？",
+          "icon": "cards/2000668",
+          "items": [
+            {
+              "text": "这将是一件非凡的礼物",
+              "tag": "op1"
+            },
+            {
+              "text": "研究一下它能做什么",
+              "tag": "op2"
+            }
+          ]
+        },
+        "case:op1": {
+          "rite": 5006040,
+          "prompt": {
+            "id": "5320528_prompt_1",
+            "text": "这充满魔法的礼物将把你们的命运永远连接在一起。",
+            "icon": "pic/2000001"
+          }
+        },
+        "case:op2": {
+          "rite": 5010065,
+          "prompt": {
+            "id": "5320528_prompt_2",
+            "text": "也许我们能从中找到一些关于龙的，关于其他世界的秘密。",
+            "icon": "cards/2000001"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": 5320365,
+  "text": "马尔基娜来找你",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "table_have.2000459": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006742,
+        "prompt": {
+          "id": "5320365_prompt_01",
+          "text": "马尔基娜在家里等你，似乎找你有一些事情。",
+          "icon": "cards/2000459"
+        },
+        "event_on": 5320381
+      }
+    }
+  ]
+}

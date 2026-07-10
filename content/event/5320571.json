@@ -1,0 +1,24 @@
+{
+  "id": 5320571,
+  "text": "新药研发",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000011": 1,
+    "counter.7000744<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006128,
+        "event_off": 5320571
+      }
+    }
+  ]
+}

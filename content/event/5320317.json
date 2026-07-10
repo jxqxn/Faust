@@ -1,0 +1,27 @@
+{
+  "id": 5320317,
+  "text": "命运的诗集",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5006698
+  },
+  "condition": {
+    "counter.7000733>=": 2
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2001209,
+        "prompt": {
+          "id": "5320317_prompt_01",
+          "text": "你意识到，这些词句可能意味非凡，于是你把它们都抄录了下来……（如果收集更多词句，可能会让这份抄本拥有更大的价值。）",
+          "icon": "cards/2001209"
+        }
+      }
+    }
+  ]
+}

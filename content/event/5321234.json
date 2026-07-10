@@ -1,0 +1,32 @@
+{
+  "id": 5321234,
+  "text": "突然的坦白",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.2000129.贬斥": 1,
+    "!have.2000129.入宫": 1,
+    "table_have.妻子": 1,
+    "table_have.2000129.追随者": 1,
+    "have.2000129.纵欲的痕迹": 1,
+    "counter.7000849<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008225,
+        "success": {
+          "event_off": 5321234
+        }
+      }
+    }
+  ]
+}

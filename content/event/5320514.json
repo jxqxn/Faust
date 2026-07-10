@@ -1,0 +1,27 @@
+{
+  "id": 5320514,
+  "text": "合金装备幻痛",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "counter.7100005>=": 5,
+    "hand_have.主角": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006022,
+        "event_on": 5320515,
+        "success": {
+          "event_off": 5320514
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": 5300025,
+  "text": "死于睡梦中(源自妻子出轨的累积)",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "hand_have.主角": 1,
+    "hand_have.妻子": 1,
+    "!rite": 5003006,
+    "counter.7000402>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003006
+      }
+    }
+  ]
+}

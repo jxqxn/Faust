@@ -1,0 +1,31 @@
+{
+  "id": 5310611,
+  "text": "秘密幽会",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "counter.7000572<": 1,
+    "any": {
+      "table_have.2000021": 1,
+      "rite": 5004513
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5004513,
+        "counter+7000586": 1,
+        "rite": 5004516,
+        "success": {
+          "event_off": 5310611
+        }
+      }
+    }
+  ]
+}

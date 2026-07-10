@@ -1,0 +1,24 @@
+{
+  "id": 5300175,
+  "text": "淘书仪式",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "f:counter.7000017+counter.7000330+counter.7000331+counter.7000332<": 59,
+    "table_have.2000199": 1,
+    "!rite": 5002038
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000101
+      }
+    }
+  ]
+}

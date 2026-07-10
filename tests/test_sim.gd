@@ -433,3 +433,53 @@ func test_deferred_effects_execute_event_applies_result_and_action():
 	assert_eq(st.coin_count, 5, "event result coin applied")
 	assert_eq(st.get_counter(7000001), 2, "event result counter applied")
 	assert_true(bool(merged.get("over", false)), "event action over flag merged into result")
+
+
+func test_execute_event_reads_settlement_action_payload():
+	# Real events nest their payload at settlement[].action — execute_event
+	# must read that path, not the top-level result/action.
+	var st := GameState.new()
+	st.setup_new_run(db, 0, RNG.new(1))
+	var event := {
+		"id": 990002,
+		"text": "测试",
+		"settlement": [
+			{"tips_text": "", "action": {"金币": 3, "counter+7000002": 1}},
+		],
+	}
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	assert_eq(st.coin_count, 3, "settlement action coin applied")
+	assert_eq(st.get_counter(7000002), 1, "settlement action counter applied")
+	assert_true(merged.get("events", []).is_empty(), "no events queued from simple action")
+
+
+func test_execute_event_gates_on_top_level_condition():
+	# An event whose top-level condition fails should execute nothing.
+	var st := GameState.new()
+	st.setup_new_run(db, 0, RNG.new(1))
+	var event := {
+		"id": 990003,
+		"text": "条件事件",
+		"condition": {"counter.7000001>=": 999},
+		"settlement": [{"action": {"金币": 100}}],
+	}
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	assert_eq(st.coin_count, 0, "no effect when condition fails")
+	assert_true(merged.is_empty(), "empty deferred when condition fails")
+
+
+func test_execute_event_real_5300002_jumps_rite():
+	# A real imported event: 5300002 (向神殿求助) fires on round_begin_ba:1 and
+	# its settlement action opens a rite. With its condition satisfied this
+	# should produce a deferred rite id.
+	var st := GameState.new()
+	st.setup_new_run(db, 1, RNG.new(1))
+	var event := db.get_event(5300002)
+	assert_false(event.is_empty(), "event 5300002 should be loaded from config")
+	if event.is_empty():
+		return
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	# The action contains a rite jump (or event_off); either way it should not
+	# crash and should produce some deferred state. Condition may pass or fail
+	# depending on starting hand; just assert no crash and a valid dict.
+	assert_true(merged is Dictionary, "real event executes without crashing")

@@ -1,0 +1,27 @@
+{
+  "id": 5300337,
+  "text": "书店不营业了",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000017>": 42
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "prompt": {
+          "id": "5300337_prompt_01",
+          "text": "阿萨尔打算专心辅佐你，书店不再开门了。"
+        }
+      }
+    }
+  ]
+}

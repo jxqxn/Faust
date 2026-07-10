@@ -1,0 +1,28 @@
+{
+  "id": 5300050,
+  "text": "东窗事发",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": 1
+  },
+  "condition": {
+    "type": "sudan",
+    "table_have.2000008": 1,
+    "have.2000024": 1,
+    "!rite": 5000527
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000527,
+        "success": {
+          "event_off": 5300050
+        }
+      }
+    }
+  ]
+}

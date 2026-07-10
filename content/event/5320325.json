@@ -1,0 +1,29 @@
+{
+  "id": 5320325,
+  "text": "难解之意",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7100005>=": 5,
+    "table_have.2000199": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": [
+          2001230,
+          "已拥有-1"
+        ],
+        "rite": 5006710
+      }
+    }
+  ]
+}

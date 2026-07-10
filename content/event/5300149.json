@@ -1,0 +1,26 @@
+{
+  "id": 5300149,
+  "text": "用来重新激活-赞助请求的幕后机制",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      2,
+      3
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300148,
+        "success": {
+          "event_off": 5300149
+        }
+      }
+    }
+  ]
+}

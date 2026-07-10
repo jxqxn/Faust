@@ -1,0 +1,26 @@
+{
+  "id": 5300254,
+  "text": "法律的底线的第一次开启",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000558": 1,
+    "table_have.2000067": 1,
+    "counter.7000193<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300255
+      }
+    }
+  ]
+}

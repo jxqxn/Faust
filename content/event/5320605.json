@@ -1,0 +1,25 @@
+{
+  "id": 5320605,
+  "text": "贵族珠宝订单的开始",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000019": 1,
+    "have.2000019.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000817": 1,
+        "event_on": 5320610,
+        "event_off": 5320605
+      }
+    }
+  ]
+}

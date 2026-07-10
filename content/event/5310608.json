@@ -1,0 +1,28 @@
+{
+  "id": 5310608,
+  "text": "正教的干扰",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      4,
+      8
+    ]
+  },
+  "condition": {
+    "counter.7000572>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000114,
+        "success": {
+          "event_off": 5310608
+        }
+      }
+    }
+  ]
+}

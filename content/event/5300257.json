@@ -1,0 +1,27 @@
+{
+  "id": 5300257,
+  "text": "论罪与辩护",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000558": 1,
+    "counter.7000160<": 1,
+    "counter.7000161<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001026,
+        "success": {
+          "event_off": 5300257
+        }
+      }
+    }
+  ]
+}

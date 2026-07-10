@@ -1,0 +1,31 @@
+{
+  "id": 5321070,
+  "text": "质子声望事件为您效劳",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000378>=": 1,
+    "hand_have.2000350": 1,
+    "counter.7100003>=": 5,
+    "counter.7100004>=": 5
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000860,
+        "rite": 5008066,
+        "success": {
+          "event_off": 5321070
+        }
+      }
+    }
+  ]
+}

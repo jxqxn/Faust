@@ -1,0 +1,28 @@
+{
+  "id": 5320055,
+  "text": "奈费勒大敌事件",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "counter.7000191<": 1,
+    "table_have.2000312": 1,
+    "have.2000312.大敌": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000569,
+        "loot": 6000090
+      }
+    }
+  ]
+}

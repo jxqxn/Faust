@@ -1,0 +1,30 @@
+{
+  "id": 5300578,
+  "text": "月牙女王",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000065": 1,
+    "table_have.2000989": 1,
+    "table_have.2000065.密教徒": 1,
+    "counter.7000556>=": 1,
+    "counter.7000559>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "no_prompt": {
+          "card": 2001119
+        },
+        "rite": 5004906,
+        "event_off": 5300578
+      }
+    }
+  ]
+}

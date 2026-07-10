@@ -1,0 +1,34 @@
+{
+  "id": 5320284,
+  "text": "被捕的异国商人",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {
+    "table_have.2000005": 1,
+    "counter.7000038<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000005": 1,
+        "card": [
+          2000280,
+          "已拥有+1"
+        ],
+        "coin": 5,
+        "counter+7000716": 1,
+        "prompt": {
+          "id": "5320284_prompt_1",
+          "text": "顺着钱币流通的线索，你抓住了一名造假的异国商人——他的身份纸和路引都是假冒，肯定是一个惯犯了……\n当苏丹的刽子手砍下他的脑袋后，你得到了他剩下的“金币”，反正，都能和真币一样花掉，也算是苏丹的赏赐了吧？",
+          "icon": "cards/2000005"
+        }
+      }
+    }
+  ]
+}

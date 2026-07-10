@@ -1,0 +1,22 @@
+{
+  "id": 5320115,
+  "text": "娜依拉声望事件--拜铃耶死亡的回应2",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000055": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006597
+      }
+    }
+  ]
+}

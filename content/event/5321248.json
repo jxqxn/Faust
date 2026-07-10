@@ -1,0 +1,31 @@
+{
+  "id": 5321248,
+  "text": "一个奇怪的请求",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.2000129.入宫": 1,
+    "table_have.2000129.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008238,
+        "prompt": {
+          "id": "prompt_5321248_01",
+          "text": "阿图娜尔来见你，她依旧嘴角挂着娴熟的微笑，神态却有些严肃。\n她郑重地冲你行了礼，而后，她问你，可否陪她去一个地方？\n“一个可能会让您有些不快的地方，一个可能会让您生气的地方，一个我自己都不想去的地方……总之，您会陪我去吗？”",
+          "icon": "pic/2000129"
+        },
+        "success": {
+          "event_off": 5321248
+        }
+      }
+    }
+  ]
+}

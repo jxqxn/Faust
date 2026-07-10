@@ -1,0 +1,26 @@
+{
+  "id": 5300559,
+  "text": "讨伐无道",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.主角": 1,
+    "table_have.2000013": 1,
+    "table_have.2000992": 1,
+    "table_have.2000993": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000830,
+        "event_off": 5300559
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": 5320549,
+  "text": "战士的结合幕后",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5000002
+  },
+  "condition": {
+    "have.2000061": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000204": 1,
+        "table.2000061-事件提示": 1,
+        "rite": 5006057,
+        "success": {
+          "event_off": 5320549
+        }
+      }
+    }
+  ]
+}

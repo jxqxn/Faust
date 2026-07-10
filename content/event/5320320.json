@@ -1,0 +1,31 @@
+{
+  "id": 5320320,
+  "text": "羊肉炉的恶意",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5006700
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "choose": {
+          "card": [
+            2000680,
+            "已拥有+1"
+          ],
+          "table.2000001+equip": 2000163
+        },
+        "prompt": {
+          "id": "5320320_prompt_01",
+          "text": "在离开这环境的最后一瞬间，你仿佛被排山倒海的力量所淹没——就仿佛一团无力，无用的草纸，被放在什么东西里咀嚼，搅拌……最后它释放够了不满和恶意，才把你吐回现实之中。",
+          "icon": "cards/yrl"
+        }
+      }
+    }
+  ]
+}

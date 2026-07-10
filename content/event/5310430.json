@@ -1,0 +1,34 @@
+{
+  "id": 5310430,
+  "text": "结局-逃跑-冻结苏丹卡和猜忌卡",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "rite_start": 5010001
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000659": 1,
+        "no_prompt": {
+          "total.2001019+冻结": 1,
+          "total.sudan+冻结": 1,
+          "total.2000680+冻结": 1,
+          "sudan_pool.sudan+冻结": 1,
+          "enable_auto_gen_sudan_card": false
+        },
+        "prompt": {
+          "id": "5310430_prompt_01",
+          "text": "悬在头上的处刑日已经毫无意义。",
+          "icon": "cards/2000001"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": 5320292,
+  "text": "可疑的收入",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5000001
+  },
+  "condition": {
+    "counter.7000718>=": 1,
+    "counter.7000719>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000029": 1,
+        "card": 2001190,
+        "counter=7000719": 0,
+        "prompt": {
+          "id": "5320292_prompt_1",
+          "text": "诶，不是，怎么还回到自己手上了？",
+          "icon": "cards/2000029"
+        }
+      }
+    }
+  ]
+}

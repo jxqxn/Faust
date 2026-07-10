@@ -1,0 +1,31 @@
+{
+  "id": 5321039,
+  "text": "哲瓦德声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000057": 1,
+    "any": {
+      "all": {
+        "counter.7000319<": 1,
+        "counter.7100003>=": 13
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5321039.2000057": "哲瓦德似乎有话想对你说，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000057+事件提示": 1
+      }
+    }
+  ]
+}

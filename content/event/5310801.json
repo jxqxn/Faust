@@ -1,0 +1,26 @@
+{
+  "id": 5310801,
+  "text": "神的面容",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000658>=": 1,
+    "counter.7100005>=": 1,
+    "table_have.主角": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004801
+      }
+    }
+  ]
+}

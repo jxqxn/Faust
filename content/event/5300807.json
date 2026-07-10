@@ -1,0 +1,25 @@
+{
+  "id": 5300807,
+  "text": "监听奢靡卡",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": [
+      2010009,
+      2010010,
+      2010011,
+      2010012
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000689": 1
+      }
+    }
+  ]
+}

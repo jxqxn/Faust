@@ -1,0 +1,27 @@
+{
+  "id": 5310477,
+  "text": "结局-征服者的牢笼",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "rite_end": 5010024
+  },
+  "condition": {
+    "counter.7000448>=": 1,
+    "any": {
+      "counter.7100003<": 20,
+      "!have.2001299": 1
+    },
+    "counter.7001069<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "over": 211
+      }
+    }
+  ]
+}

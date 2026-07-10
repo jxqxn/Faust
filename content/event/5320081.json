@@ -1,0 +1,28 @@
+{
+  "id": 5320081,
+  "text": "安全屋的俺寻思提示",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.空屋": 1,
+    "hand_have.罪证": 1,
+    "counter.7100004>=": 5
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320081_01.罪证": "随着自己侠名的增长，你想到一个更安全的遮掩自己罪证的办法。放入<color=white><size=172%>俺寻思</size></color>。",
+        "counter+7000165": 1,
+        "table.罪证+事件提示": 1
+      }
+    }
+  ]
+}

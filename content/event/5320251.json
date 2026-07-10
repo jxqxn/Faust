@@ -1,0 +1,22 @@
+{
+  "id": 5320251,
+  "text": "苏丹猜忌的检定",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "card_clean": 2000680
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter=7000196": 1
+      }
+    }
+  ]
+}

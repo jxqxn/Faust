@@ -1,0 +1,35 @@
+{
+  "id": 5321104,
+  "text": "出轨的开端",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.妻子": 1,
+    "have.2000014.追随者": 1,
+    "counter.7000474<": 1,
+    "counter.7000509<": 1,
+    "counter.7000443>=": 1,
+    "any": {
+      "all": {
+        "hand_have.2000083>=": 3,
+        "counter.7000441>=": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008101,
+        "success": {
+          "event_off": 5321104
+        }
+      }
+    }
+  ]
+}

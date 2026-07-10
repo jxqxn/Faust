@@ -1,0 +1,23 @@
+{
+  "id": 5300040,
+  "text": "奇淫巧技-窒息",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!rite": 5002018,
+    "have.2000080.激情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002018
+      }
+    }
+  ]
+}

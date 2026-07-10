@@ -1,0 +1,23 @@
+{
+  "id": 5300242,
+  "text": "政敌初见（废弃）",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!rite": 5000720,
+    "counter.7000073>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300112
+      }
+    }
+  ]
+}

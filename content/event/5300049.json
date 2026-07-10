@@ -1,0 +1,27 @@
+{
+  "id": 5300049,
+  "text": "偷戒指",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000008": 1,
+    "table_have.2000024": 1,
+    "!rite": 5000526
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000526,
+        "success": {
+          "event_off": 5300049
+        }
+      }
+    }
+  ]
+}

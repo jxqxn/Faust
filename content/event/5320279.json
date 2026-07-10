@@ -1,0 +1,20 @@
+{
+  "id": 5320279,
+  "text": "星之衰",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "rite_end": 5000579
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000583
+      }
+    }
+  ]
+}

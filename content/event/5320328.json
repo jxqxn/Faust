@@ -1,0 +1,20 @@
+{
+  "id": 5320328,
+  "text": "奇怪的流言",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5006713
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006714
+      }
+    }
+  ]
+}

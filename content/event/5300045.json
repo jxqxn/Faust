@@ -1,0 +1,26 @@
+{
+  "id": 5300045,
+  "text": "妃子A来访",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000008": 1,
+    "!rite": 5000521
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000521,
+        "success": {
+          "event_off": 5300045
+        }
+      }
+    }
+  ]
+}

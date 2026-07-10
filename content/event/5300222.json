@@ -1,0 +1,25 @@
+{
+  "id": 5300222,
+  "text": "常规奢靡苏丹卡",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "!rite": 5003017
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003017,
+        "success": {
+          "event_off": 5300222
+        }
+      }
+    }
+  ]
+}

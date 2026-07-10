@@ -1,0 +1,23 @@
+{
+  "id": 5300583,
+  "text": "密教基地启动",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004910,
+        "success": {
+          "event_off": 5300583
+        }
+      }
+    }
+  ]
+}

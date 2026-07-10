@@ -1,0 +1,24 @@
+{
+  "id": 5321139,
+  "text": "赛狗循环",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000542>=": 1,
+    "counter.7000540<": 1,
+    "!rite": 5008146
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008146
+      }
+    }
+  ]
+}

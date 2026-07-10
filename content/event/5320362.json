@@ -1,0 +1,31 @@
+{
+  "id": 5320362,
+  "text": "命运的书店不处理的诅咒",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "choose": {
+          "card": [
+            2000680,
+            "已拥有+1"
+          ],
+          "table.2000001+equip": 2000163
+        },
+        "prompt": {
+          "id": "5320362_prompt_01",
+          "text": "你错过了这次机会……\n哈桑担忧地望着你。而你环顾四周，完全不记得刚刚发生过什么事……你只感觉似乎自己的生活变糟糕了一点……",
+          "icon": "cards/2000001"
+        }
+      }
+    }
+  ]
+}

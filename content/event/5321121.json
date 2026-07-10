@@ -1,0 +1,19 @@
+{
+  "id": 5321121,
+  "text": "丝绒暗室",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008116,
+        "counter+7000493": 1
+      }
+    }
+  ]
+}

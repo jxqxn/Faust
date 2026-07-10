@@ -1,0 +1,23 @@
+{
+  "id": 5300057,
+  "text": "合作",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000561,
+        "success": {
+          "event_off": 5300057
+        }
+      }
+    }
+  ]
+}

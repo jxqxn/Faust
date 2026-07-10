@@ -1,0 +1,30 @@
+{
+  "id": 5320097,
+  "text": "法图娜离去，扎齐伊也离去",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.法图娜": 1,
+    "table_have.2000063": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000063": 1,
+        "prompt": {
+          "id": "5320097_prompt_01",
+          "text": "扎齐伊无法接受母亲的离去，独自离开了这个城市。",
+          "icon": "cards/2000063"
+        }
+      }
+    }
+  ]
+}

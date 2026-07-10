@@ -1,0 +1,28 @@
+{
+  "id": 5321152,
+  "text": "新月升起",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000553>=": 1,
+    "counter.7000554<": 1,
+    "have.2000173": 1,
+    "hand_have.2000065": 1
+  },
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008160,
+        "success": {
+          "event_off": 5321152
+        }
+      }
+    }
+  ]
+}

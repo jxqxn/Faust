@@ -1,0 +1,32 @@
+{
+  "id": 5320289,
+  "text": "诺言",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7100003>=": 15,
+    "counter.7100004>=": 10,
+    "have.2000005.追随者": 1,
+    "counter.7000718<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_off": 5320290,
+        "rite": 5006685,
+        "counter+7000718": 1,
+        "prompt": {
+          "id": "5320289_prompt_1",
+          "text": "你已经做好了万全准备，巴拉特兴致勃勃地准备狠狠地开始造苏丹的假币了。",
+          "icon": "cards/2000005"
+        }
+      }
+    }
+  ]
+}

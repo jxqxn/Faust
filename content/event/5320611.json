@@ -1,0 +1,37 @@
+{
+  "id": 5320611,
+  "text": "热娜的宝石宣传串",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "have.2000019": 1,
+    "have.2000019.追随者": 1,
+    "any": {
+      "all": {
+        "table_have.2001275": 1,
+        "any": {
+          "all": {
+            "table_have.2000771": 1,
+            "!table_have.2000771.宝石宣传": 1
+          }
+        }
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006148
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": 5320521,
+  "text": "阿迪莱声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000061": 1,
+    "any": {
+      "all": {
+        "counter.7000203>=": 1,
+        "counter.7000204<": 1,
+        "hand_have.2000061": 1,
+        "hand_have.2000054": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320521_01.2000061": "阿迪莱似乎有事找你，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000061+事件提示": 1
+      }
+    }
+  ]
+}

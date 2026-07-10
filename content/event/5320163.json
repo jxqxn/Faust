@@ -1,0 +1,26 @@
+{
+  "id": 5320163,
+  "text": "铁头声望事件-巨大的玩具",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.2000369": 1,
+    "any": {
+      "table_have.2000081": 1,
+      "table_have.2000055": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006621
+      }
+    }
+  ]
+}

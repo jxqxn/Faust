@@ -1,0 +1,23 @@
+{
+  "id": 5310485,
+  "text": "结局-金血之末",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "rite_end": 5010024
+  },
+  "condition": {
+    "counter.7000447>=": 1,
+    "have.主角.邪恶化身=": 0
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "over": 219
+      }
+    }
+  ]
+}

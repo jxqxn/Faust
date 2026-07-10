@@ -1,0 +1,23 @@
+{
+  "id": 5321086,
+  "text": "孩子们的胃口-循环",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "counter.7000416>=": 1,
+    "hand_have.2000887": 1
+  },
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008078
+      }
+    }
+  ]
+}

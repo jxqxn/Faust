@@ -1,0 +1,23 @@
+{
+  "id": 5320029,
+  "text": "激活廊下的故事",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000140": 1
+      }
+    }
+  ]
+}

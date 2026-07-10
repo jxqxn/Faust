@@ -1,0 +1,26 @@
+{
+  "id": 5300021,
+  "text": "私奔",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!hand_have.主角": 1,
+    "hand_have.妻子": 1,
+    "table_have.2000014": 1,
+    "counter.7000402>=": 1,
+    "!rite": 5003007
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5003007
+      }
+    }
+  ]
+}

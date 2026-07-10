@@ -1,0 +1,30 @@
+{
+  "id": 5300048,
+  "text": "索要物资3",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      2,
+      5
+    ]
+  },
+  "condition": {
+    "counter.7000029<=": 3,
+    "table_have.2000008": 1,
+    "!rite": 5000524
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000524,
+        "success": {
+          "event_off": 5300048
+        }
+      }
+    }
+  ]
+}

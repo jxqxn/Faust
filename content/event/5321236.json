@@ -1,0 +1,33 @@
+{
+  "id": 5321236,
+  "text": "深沉的失望",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.妻子": 1,
+    "counter.7000853>=": 2
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000083,
+        "prompt": {
+          "id": "prompt_5321236_01",
+          "text": "你难道以为自己和阿图娜尔做的事能瞒得住梅姬么？她对你非常失望！",
+          "icon": "cards/2000006"
+        },
+        "success": {
+          "event_off": 5321236
+        }
+      }
+    }
+  ]
+}

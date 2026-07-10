@@ -1,0 +1,30 @@
+{
+  "id": 5300059,
+  "text": "真正的报偿",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      2,
+      3
+    ]
+  },
+  "condition": {
+    "!rite": 5000562,
+    "counter.7000031<=": 3,
+    "counter.7000032<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000562,
+        "success": {
+          "event_off": 5300060
+        }
+      }
+    }
+  ]
+}

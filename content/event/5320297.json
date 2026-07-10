@@ -1,0 +1,29 @@
+{
+  "id": 5320297,
+  "text": "诗人与美食",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000722>=": 3,
+    "!have.2000010": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_off": 5320296,
+        "clean.rite": 5006686,
+        "prompt": {
+          "id": "5320297_prompt_1",
+          "text": "莎姬的死亡似乎打消了苏丹宴会的兴致。",
+          "icon": "cards/2000010"
+        }
+      }
+    }
+  ]
+}

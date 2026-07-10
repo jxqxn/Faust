@@ -1,0 +1,28 @@
+{
+  "id": 5320390,
+  "text": "游猎会",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "counter.7100004": 10,
+    "have.2000114.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006800,
+        "prompt": {
+          "id": "5320390_prompt_1",
+          "text": "古利斯平时总喜欢仰头望着天空，当有鸟群飞过时，他的神情就会变得有些雀跃。\n你的一位仆从告诉你，古利斯经常给他们讲狩猎的故事；他似乎是位相当了得的猎手……你在想，也许可以办一次游猎会，说不定古利斯可以给你带来惊喜。",
+          "icon": "pic/2000114"
+        }
+      }
+    }
+  ]
+}

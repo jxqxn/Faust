@@ -1,0 +1,42 @@
+{
+  "id": 5310607,
+  "text": "与正教决裂",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000572>=": 1,
+    "any": {
+      "table_have.2000725": 1,
+      "table_have.2000726": 1,
+      "table_have.2000727": 1,
+      "table_have.2000728": 1
+    },
+    "counter.7000591<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004509,
+        "no_prompt": {
+          "clean.rite": 5000508
+        },
+        "prompt": {
+          "id": "5310607_prompt_01",
+          "text": "由于你此前的种种恶行，纯净者教会与你彻底决裂。",
+          "icon": "common/position_shenmiao_1"
+        },
+        "success": {
+          "event_off": 5310607
+        }
+      }
+    }
+  ]
+}

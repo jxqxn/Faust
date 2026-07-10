@@ -1,0 +1,22 @@
+{
+  "id": 5300225,
+  "text": "常规数值检定仪式随机生成幕后",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 3
+  },
+  "condition": {
+    "!rite": 5003026
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000034
+      }
+    }
+  ]
+}

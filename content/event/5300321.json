@@ -1,0 +1,24 @@
+{
+  "id": 5300321,
+  "text": "和囚犯对决",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000425,
+        "rite": 5001020,
+        "success": {
+          "event_off": 5300321
+        }
+      }
+    }
+  ]
+}

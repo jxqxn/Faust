@@ -1,0 +1,32 @@
+{
+  "id": 5300250,
+  "text": "获得禁忌的古书的幕后（废弃）",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      8,
+      10
+    ]
+  },
+  "condition": {
+    "hand_have.2000022": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000741,
+        "success": {
+          "prompt": {
+            "id": "prompt_5300250_01",
+            "text": "又是一个夜晚，拜铃耶告诉你，书店老板收藏有一本禁忌的古书，希望你可以获得它。"
+          },
+          "event_off": 5300250
+        }
+      }
+    }
+  ]
+}

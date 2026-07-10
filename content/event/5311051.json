@@ -1,0 +1,28 @@
+{
+  "id": 5311051,
+  "text": "飞升线镜灵成功",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "rite_end.5000313": 1,
+      "rite_end.5000342": 1,
+      "rite_end.5000323": 1,
+      "rite_end.5000332": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.2001182+飞升特殊成功": 1,
+        "table.2001185+飞升特殊成功": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": 5300209,
+  "text": "足以传世的画像（废弃）",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000064": 1,
+    "hand_have.2000333": 1,
+    "!rite": 5000711
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000711,
+        "success": {
+          "event_off": 5300209
+        }
+      }
+    }
+  ]
+}

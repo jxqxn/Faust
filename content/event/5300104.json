@@ -1,0 +1,27 @@
+{
+  "id": 5300104,
+  "text": "弑兄",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "!rite": 5000605,
+    "table_have.2000314": 1,
+    "table_have.2000062": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000605,
+        "success": {
+          "event_off": 5300104
+        }
+      }
+    }
+  ]
+}

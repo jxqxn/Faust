@@ -1,0 +1,29 @@
+{
+  "id": 5300330,
+  "text": "和舞姬密会-常例",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "!have.2000129.新剧情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001102,
+        "success": {
+          "event_off": 5300326
+        },
+        "failed": {
+          "event_off": 5300326,
+          "event_on": 5300331
+        }
+      }
+    }
+  ]
+}

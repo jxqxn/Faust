@@ -1,0 +1,25 @@
+{
+  "id": 5300802,
+  "text": "监听纵欲卡",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": [
+      2010005,
+      2010006,
+      2010007,
+      2010008
+    ]
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter+7000688": 1
+      }
+    }
+  ]
+}

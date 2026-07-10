@@ -1,0 +1,20 @@
+{
+  "id": 5320118,
+  "text": "娜依拉声望事件--贾丽拉死亡的回应1",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": 2000081
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5320119
+      }
+    }
+  ]
+}

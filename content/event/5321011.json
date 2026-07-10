@@ -1,0 +1,29 @@
+{
+  "id": 5321011,
+  "text": "法拉杰声望事件-激励2",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5000002
+  },
+  "condition": {
+    "all": {
+      "table_have.法拉杰": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.法拉杰-事件提示": 1,
+        "counter+7000230": 1,
+        "rite": 5008007,
+        "success": {
+          "event_off": 5321011
+        }
+      }
+    }
+  ]
+}

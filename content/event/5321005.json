@@ -1,0 +1,27 @@
+{
+  "id": 5321005,
+  "text": "妻子的武装声望事件",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5000002
+  },
+  "condition": {
+    "table_have.妻子": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.妻子-事件提示": 1,
+        "rite": 5008002,
+        "counter+7000217": 1,
+        "success": {
+          "event_off": 5321005
+        }
+      }
+    }
+  ]
+}

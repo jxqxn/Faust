@@ -1,0 +1,34 @@
+{
+  "id": 5300539,
+  "text": "帮派斗争",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000771": 1,
+    "any": {
+      "counter.7000306>=": 1,
+      "counter.7000463>=": 1
+    },
+    "counter.7100004>=": 6
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "no_prompt": {
+          "card": 2001057,
+          "table.clean.2000770": 1
+        },
+        "rite": 5000810,
+        "success": {
+          "event_off": 5300539
+        }
+      }
+    }
+  ]
+}

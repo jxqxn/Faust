@@ -1,0 +1,25 @@
+{
+  "id": 5300026,
+  "text": "书店约会",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      4,
+      7
+    ]
+  },
+  "condition": {
+    "!rite": 5001503
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300181
+      }
+    }
+  ]
+}

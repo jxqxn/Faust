@@ -1,0 +1,23 @@
+{
+  "id": 5300085,
+  "text": "探访监狱",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001006,
+        "success": {
+          "event_off": 5300085
+        }
+      }
+    }
+  ]
+}

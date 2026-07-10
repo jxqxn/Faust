@@ -1,0 +1,22 @@
+{
+  "id": 5300107,
+  "text": "绑架年轻望族",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "table_have.2000063": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000063": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": 5300037,
+  "text": "饰品商人",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "counter.7000025<": 9
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5002015,
+        "rite": 5002014,
+        "table.饰品存货-饰品存货": 1
+      }
+    }
+  ]
+}

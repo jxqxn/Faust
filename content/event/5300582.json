@@ -1,0 +1,37 @@
+{
+  "id": 5300582,
+  "text": "拜铃耶的训练",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      5
+    ]
+  },
+  "condition": {
+    "table_have.2000371": 1,
+    "have.2000371.追随者": 1,
+    "table_have.2000022": 1,
+    "have.2000022.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5004909,
+        "prompt": {
+          "id": "5300582_prompt_01",
+          "text": "“还不够，还不够。”拜铃耶又来找小圆了，“她要学的还多着呢。”",
+          "icon": [
+            "cards/2000022",
+            null,
+            "cards/2000371"
+          ]
+        },
+        "event_off": 5300582
+      }
+    }
+  ]
+}

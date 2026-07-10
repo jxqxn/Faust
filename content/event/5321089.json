@@ -1,0 +1,15 @@
+{
+  "id": 5321089,
+  "text": "废弃",
+  "is_replay": 0,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "action": {}
+    }
+  ]
+}

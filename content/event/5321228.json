@@ -1,0 +1,28 @@
+{
+  "id": 5321228,
+  "text": "拉伊德查无此人",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000086,
+        "prompt": {
+          "id": "prompt_5321228_01",
+          "text": "你把一个吸引人的玩具告诉了苏丹，而他却不能得到这个玩具！没有了拉伊德，苏丹只能把他的失望与怒火发泄在你身上——庆幸吧，这已经算轻了的呢！",
+          "icon": "cards/sudan"
+        },
+        "success": {
+          "event_off": 5321228
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "id": 5300086,
+  "text": "搜寻提尔亚遗物",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "rite": 5000520,
+    "counter.7000038>=": 1,
+    "table_have.2000005": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000531,
+        "success": {
+          "event_off": 5300086
+        }
+      }
+    }
+  ]
+}

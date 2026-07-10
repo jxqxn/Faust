@@ -1,0 +1,27 @@
+{
+  "id": 5300574,
+  "text": "无可回收的金血之证",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "all": {
+        "table_have.2000013.金血之证": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300567,
+        "event_off": 5300574
+      }
+    }
+  ]
+}

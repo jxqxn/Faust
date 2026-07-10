@@ -1,0 +1,25 @@
+{
+  "id": 5310503,
+  "text": "结局-逃跑-牺牲结局妻子死亡弹框",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "rite_end": 5006069
+  },
+  "condition": {
+    "!have.妻子": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "steam_achievement": "ACHIEVEMENT_005",
+        "global_counter=7200201": 1,
+        "counter+7000552": 1,
+        "over": 303
+      }
+    }
+  ]
+}

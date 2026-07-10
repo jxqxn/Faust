@@ -1,0 +1,25 @@
+{
+  "id": 5321178,
+  "text": "拜铃耶的诅咒",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "counter.7000607>=": 1,
+      "have.主角.刺青=": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008184
+      }
+    }
+  ]
+}

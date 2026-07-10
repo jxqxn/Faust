@@ -1,0 +1,30 @@
+{
+  "id": 5300548,
+  "text": "微妙的感谢",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 10
+  },
+  "condition": {
+    "table_have.2000971": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "coin": 5,
+        "prompt": {
+          "id": "5300548_prompt_1",
+          "text": "有匿名人士偷偷给你送来一袋金子……没有说是因为什么。",
+          "icon": "cards/2000001"
+        },
+        "success": {
+          "event_off": 5300548
+        }
+      }
+    }
+  ]
+}

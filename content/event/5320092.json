@@ -1,0 +1,27 @@
+{
+  "id": 5320092,
+  "text": "权势3的事件--赤字滔天",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000676": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006585,
+        "prompt": {
+          "id": "5320092_prompt_01",
+          "text": "有人说一人之下万人之上的权势令人迷醉，至少他们呈递上来的账本是够让人头晕的。",
+          "icon": "cards/2000001"
+        }
+      }
+    }
+  ]
+}

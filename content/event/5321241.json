@@ -1,0 +1,25 @@
+{
+  "id": 5321241,
+  "text": "关闭愧疚与宝石",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "rite_have.5008226.主角=": 0
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5008226,
+        "success": {
+          "event_off": 5321241
+        }
+      }
+    }
+  ]
+}

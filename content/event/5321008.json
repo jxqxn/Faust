@@ -1,0 +1,26 @@
+{
+  "id": 5321008,
+  "text": "妻子的茶会",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "hand_have.妻子": 1,
+    "counter.7100003>=": 10,
+    "counter.7000233<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008005
+      }
+    }
+  ]
+}

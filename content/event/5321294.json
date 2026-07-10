@@ -1,0 +1,37 @@
+{
+  "id": 5321294,
+  "text": "发放孩子们",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "have.2001115": 1,
+      "have.2000889 ": 1,
+      "have.2000867 ": 1,
+      "have.2000887": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "prompt": {
+          "id": "5321294_prompt_01",
+          "text": "曾受你恩惠的孩子们的身影浮现在了你的脑海中。也许……可以以这些孩子们为范本？",
+          "icon": [
+            "pic/2000887"
+          ]
+        },
+        "loot.已拥有+1": 6001115,
+        "success": {
+          "event_off": 5321294
+        }
+      }
+    }
+  ]
+}

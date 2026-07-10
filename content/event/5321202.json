@@ -1,0 +1,28 @@
+{
+  "id": 5321202,
+  "text": "拉伊德声望激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000195.追随者": 1,
+    "table_have.2000195": 1,
+    "counter.7000743<": 1,
+    "counter.7000742>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5321202.2000195": "拉伊德似乎有话想对你说，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000195+事件提示": 1
+      }
+    }
+  ]
+}

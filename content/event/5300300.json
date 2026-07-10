@@ -1,0 +1,20 @@
+{
+  "id": 5300300,
+  "text": "PPT式新手引导测试",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "slide": "slide/1-1"
+      }
+    }
+  ]
+}

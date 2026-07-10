@@ -1,0 +1,29 @@
+{
+  "id": 5320327,
+  "text": "午夜欢宴",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000199": 1,
+    "table_have.欢宴之主": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.2000199+锁定阿萨尔": 1,
+        "rite": 5006713,
+        "prompt": {
+          "id": "5320327_prompt_01",
+          "text": "你又一次在陌生的地方醒来",
+          "icon": "pic/2000001"
+        }
+      }
+    }
+  ]
+}

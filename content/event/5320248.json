@@ -1,0 +1,31 @@
+{
+  "id": 5320248,
+  "text": "奈费勒声望事件-为希望而战",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "any": {
+      "counter.7000393": 1,
+      "counter.7000394": 1,
+      "counter.7000395": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000104,
+        "prompt": {
+          "id": "5320248_prompt_01",
+          "text": "一支军队加入了进来",
+          "icon": "cards/1_char_0"
+        }
+      }
+    }
+  ]
+}

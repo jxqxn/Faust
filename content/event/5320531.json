@@ -1,0 +1,33 @@
+{
+  "id": 5320531,
+  "text": "妻子声望事件激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "hand_have.妻子": 1,
+    "any": {
+      "all": {
+        "counter.7100004>=": 5,
+        "have.妻子.激情": 1,
+        "have.妻子": 1,
+        "counter.7000218<": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5320531_01.妻子": "梅姬似乎有话想对你说，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.妻子+事件提示": 1
+      }
+    }
+  ]
+}

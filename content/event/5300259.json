@@ -1,0 +1,26 @@
+{
+  "id": 5300259,
+  "text": "调查施加压力归0",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 4
+  },
+  "condition": {
+    "have.2000067": 1,
+    "counter.7000161>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "counter-7000161": 1,
+        "success": {
+          "event_off": 5300259
+        }
+      }
+    }
+  ]
+}

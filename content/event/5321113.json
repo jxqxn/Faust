@@ -1,0 +1,22 @@
+{
+  "id": 5321113,
+  "text": "阁楼里的笑声",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {
+    "counter.7000478<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5008107
+      }
+    }
+  ]
+}

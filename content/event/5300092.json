@@ -1,0 +1,27 @@
+{
+  "id": 5300092,
+  "text": "赌马",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 5
+  },
+  "condition": {
+    "hand_have.坐骑": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000030,
+        "success": {
+          "event_off": 5300092
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": 5321119,
+  "text": "陌生的妓女来访",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000491>=": 2
+  },
+  "settlement": [
+    {
+      "action": {
+        "card": 2000937,
+        "rite": 5008113,
+        "prompt": {
+          "id": "5321119_prompt_01",
+          "text": "最近，一个陌生的妓女来到了你的阁楼找生意。",
+          "icon": "cards/2000937"
+        },
+        "success": {
+          "event_off": 5321119
+        }
+      }
+    }
+  ]
+}

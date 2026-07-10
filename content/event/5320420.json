@@ -1,0 +1,31 @@
+{
+  "id": 5320420,
+  "text": "移除誓言之证的情况",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "rite_end": 1,
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "!have.2000013": 1,
+    "table_have.2000913": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.clean.2000913": 1,
+        "prompt": {
+          "id": "5320420_prompt_1",
+          "text": "高原之国最后的合法继承人，被群星所眷顾的王子已经不在了，那些写满誓言神圣契约现在不过是一些被掌纹涂污的废纸。\n你失去了用故国的名义推翻苏丹的正当性。",
+          "icon": "cards/2000913"
+        }
+      }
+    }
+  ]
+}

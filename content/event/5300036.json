@@ -1,0 +1,24 @@
+{
+  "id": 5300036,
+  "text": "服装商人",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "counter.7000024<": 7
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5002013,
+        "rite": 5002012,
+        "table.服装存货-服装存货": 1
+      }
+    }
+  ]
+}

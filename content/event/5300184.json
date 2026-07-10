@@ -1,0 +1,31 @@
+{
+  "id": 5300184,
+  "text": "浴场小鳄鱼事件2",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5001501
+  },
+  "condition": {
+    "!hand_have.杀戮.rare<=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": [
+          2000558,
+          "已拥有+1"
+        ],
+        "counter+7100002": 1,
+        "prompt": {
+          "id": "5300184_prompt_01",
+          "text": "关于你的罪行，人们还在激烈的争吵，但苏丹显然被故事的细节吸引了——某些宫廷侍卫一脸大难临头的样子",
+          "icon": "cards/2000001"
+        }
+      }
+    }
+  ]
+}

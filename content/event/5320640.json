@@ -1,0 +1,25 @@
+{
+  "id": 5320640,
+  "text": "小安的倒计时自然消失时的触发幕后",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000433": 1,
+    "table_have.2000433.追随者": 1,
+    "table_have.和小安纵欲": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006167,
+        "event_off": 5320640
+      }
+    }
+  ]
+}

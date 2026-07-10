@@ -1,0 +1,30 @@
+{
+  "id": 5300327,
+  "text": "虐待致死",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 10
+  },
+  "condition": {
+    "counter.7000080<": 1,
+    "!have.2000129.新剧情": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5001101,
+        "success": {
+          "event_off": 5300327
+        },
+        "failed": {
+          "event_off": 5300327,
+          "event_on": 5300328
+        }
+      }
+    }
+  ]
+}

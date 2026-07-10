@@ -1,0 +1,32 @@
+{
+  "id": 5321171,
+  "text": "拜铃耶的技术精进了",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000595>=": 3,
+    "have.2000022.追随者": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "total.2000022+魔力": 1,
+        "total.2000022+魅力": 1,
+        "counter-7000595": 3,
+        "prompt": {
+          "id": "5321171_prompt_1",
+          "text": "拜铃耶的技术精进了。似乎因为频繁地蘸取那种草汁，密神赐予她的力量也愈加冲盈。",
+          "icon": "cards/2000022"
+        }
+      }
+    }
+  ]
+}

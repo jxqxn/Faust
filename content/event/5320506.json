@@ -1,0 +1,43 @@
+{
+  "id": 5320506,
+  "text": "对行尸的处理",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000352": 1,
+    "have.2000554": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "option": {
+          "id": "5320506_option_1",
+          "text": "玛希尔来问：对这个行尸有什么意见么？",
+          "icon": "cards/2000001",
+          "items": [
+            {
+              "text": "想用它赚钱",
+              "tag": "op1"
+            },
+            {
+              "text": "想给它升级",
+              "tag": "op2"
+            }
+          ]
+        },
+        "case:op1": {
+          "rite": 5006017
+        },
+        "case:op2": {
+          "rite": 5006016
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": 5300312,
+  "text": "孤注一掷",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.2000082": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5002028,
+        "success": {
+          "event_off": 5300312
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": 5320275,
+  "text": "宫廷-索要妃子-仿制",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2001019": 1,
+    "!have.2001021": 1,
+    "counter.7001079<": 1,
+    "counter.7000530<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000577
+      }
+    }
+  ]
+}

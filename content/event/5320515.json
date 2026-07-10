@@ -1,0 +1,23 @@
+{
+  "id": 5320515,
+  "text": "合金装备幻痛",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "card_clean": 1
+  },
+  "condition": {
+    "type": "sudan",
+    "hand_have.主角": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006022
+      }
+    }
+  ]
+}

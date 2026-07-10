@@ -1,0 +1,28 @@
+{
+  "id": 5320059,
+  "text": "铁头的暗杀",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5007015
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5007016,
+        "failed": {
+          "event_on": 5320062,
+          "prompt": {
+            "id": "5320059_prompt_01",
+            "text": "你的运气不错，铁头没有逮到你让你躲过了一劫。",
+            "icon": "cards/2000369"
+          }
+        }
+      }
+    }
+  ]
+}

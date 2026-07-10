@@ -1,0 +1,22 @@
+{
+  "id": 5320048,
+  "text": "鲁梅拉在阴影中再触发",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "hand_have.2000123": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006532
+      }
+    }
+  ]
+}

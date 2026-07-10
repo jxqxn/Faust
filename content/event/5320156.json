@@ -1,0 +1,22 @@
+{
+  "id": 5320156,
+  "text": "铁头-善1-救济日重复触发",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 14
+  },
+  "condition": {
+    "counter.7100001>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006616
+      }
+    }
+  ]
+}

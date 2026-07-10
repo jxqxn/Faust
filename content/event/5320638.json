@@ -1,0 +1,30 @@
+{
+  "id": 5320638,
+  "text": "小薇的战斗判定",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 6
+  },
+  "condition": {
+    "any": {
+      "all": {
+        "table_have.2000432": 1,
+        "have.2000432.追随者": 1
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "table.小薇~equip": [
+          "小薇"
+        ],
+        "rite": 5006166
+      }
+    }
+  ]
+}

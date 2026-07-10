@@ -1,0 +1,31 @@
+{
+  "id": 5320250,
+  "text": "奈费勒声望事件-最后的愿望",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000421>=": 3,
+    "counter.7000299>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "card": 2000899,
+        "rite": 5006678,
+        "prompt": {
+          "id": "5320250_prompt_01",
+          "text": "在你的教育事业蒸蒸日上的时候，一个坏消息传了过来，一个孩子病了。",
+          "icon": "cards/2000001"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": 5300035,
+  "text": "装备商人",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 7
+  },
+  "condition": {
+    "counter.7000023<": 28
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5002011,
+        "rite": 5002010,
+        "table.武器存货-武器存货": 1
+      }
+    }
+  ]
+}

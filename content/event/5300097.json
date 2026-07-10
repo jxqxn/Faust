@@ -1,0 +1,31 @@
+{
+  "id": 5300097,
+  "text": "第3天生成妓院",
+  "is_replay": 0,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000060>=": 3
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5300012,
+        "success": {
+          "prompt": {
+            "id": "5300097_prompt_01",
+            "text": "传单：我们这里有最好的姑娘，欢迎来玩啊！----欢愉之馆",
+            "icon": "cards/2000792"
+          }
+        }
+      }
+    }
+  ]
+}

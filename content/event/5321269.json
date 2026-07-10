@@ -1,0 +1,28 @@
+{
+  "id": 5321269,
+  "text": "宫斗的妹妹",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 4
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": [
+          6001106,
+          6001107,
+          6001108,
+          6001109
+        ],
+        "failed": {
+          "event_off": 5321269
+        }
+      }
+    }
+  ]
+}

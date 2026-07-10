@@ -1,0 +1,30 @@
+{
+  "id": 5320606,
+  "text": "接到订单",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000019": 1,
+    "have.2000019.追随者": 1,
+    "any": {
+      "all": {
+        "counter.7000819>=": 1,
+        "counter.7000822<": 3
+      }
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000203,
+        "event_off": 5320606
+      }
+    }
+  ]
+}

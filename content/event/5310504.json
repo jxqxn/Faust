@@ -1,0 +1,26 @@
+{
+  "id": 5310504,
+  "text": "结局-逃跑-冻结苏丹卡和猜忌卡",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "rite_end": 5006068
+  },
+  "condition": {},
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "total.2001019+冻结": 1,
+        "total.sudan+冻结": 1,
+        "total.2000680+冻结": 1,
+        "sudan_pool.sudan+冻结": 1,
+        "enable_auto_gen_sudan_card": true
+      }
+    }
+  ]
+}

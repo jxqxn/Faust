@@ -1,0 +1,27 @@
+{
+  "id": 5320085,
+  "text": "权势2的事件--公文处理-重复刷新",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      3,
+      5
+    ]
+  },
+  "condition": {
+    "!have.2000312.宰相": 1,
+    "counter.7100003>=": 10
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "loot": 6000096,
+        "event_off": 5320085
+      }
+    }
+  ]
+}

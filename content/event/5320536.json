@@ -1,0 +1,27 @@
+{
+  "id": 5320536,
+  "text": "唯一的人选？幕后",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "table_have.妻子": 1,
+    "table_have.2000061": 1,
+    "counter.7000171<": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_on": 5320537,
+        "success": {
+          "event_off": 5320536
+        }
+      }
+    }
+  ]
+}

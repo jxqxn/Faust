@@ -1,0 +1,27 @@
+{
+  "id": 5300573,
+  "text": "回收金血之证",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "all": {
+      "table_have.2000013": 1,
+      "hand_have.金血之证": 1,
+      "!table_have.2000013.金血之证": 1
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5000851,
+        "event_off": 5300574
+      }
+    }
+  ]
+}

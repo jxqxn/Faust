@@ -1,0 +1,23 @@
+{
+  "id": 5320165,
+  "text": "铁头声望事件-石餐盒",
+  "is_replay": 0,
+  "auto_start": false,
+  "start_trigger": true,
+  "on": {
+    "round_begin_ba": 2
+  },
+  "condition": {
+    "have.2000369.追随者": 1,
+    "have.2000005": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "rite": 5006622
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "id": 5321127,
+  "text": "苏丹的欢愉",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      5,
+      20
+    ]
+  },
+  "condition": {
+    "have.苏丹的猎物": 1,
+    "counter.7000510>=": 1
+  },
+  "settlement": [
+    {
+      "action": {
+        "rite": 5008122
+      }
+    }
+  ]
+}

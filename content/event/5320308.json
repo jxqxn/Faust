@@ -1,0 +1,34 @@
+{
+  "id": 5320308,
+  "text": "时机成熟了",
+  "is_replay": 1,
+  "auto_start": false,
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": [
+      2,
+      3
+    ]
+  },
+  "condition": {
+    "counter.7000726<": 3,
+    "any": {
+      "counter.7100004>=": 10,
+      "all": {
+        "counter.7100003>=": 10,
+        "have.2000349": 1
+      },
+      "counter.7100002>=": 10
+    }
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "event_off": 5320308,
+        "loot": 6000201
+      }
+    }
+  ]
+}

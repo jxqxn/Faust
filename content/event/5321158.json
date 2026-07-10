@@ -1,0 +1,29 @@
+{
+  "id": 5321158,
+  "text": "拜铃耶声望激活提示",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "have.2000022.追随者": 1,
+    "hand_have.2000022": 1,
+    "counter.7000576<": 1,
+    "counter.7100005>=": 5,
+    "counter.7000575>=": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "hand_pop.5321158.2000022": "拜铃耶似乎有话想对你说，将其放入<color=white><size=172%>俺寻思</size></color>。",
+        "table.2000022+事件提示": 1
+      }
+    }
+  ]
+}

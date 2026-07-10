@@ -1,0 +1,30 @@
+{
+  "id": 5321212,
+  "text": "困顿的堡垒",
+  "is_replay": 1,
+  "auto_start_init": [
+    1
+  ],
+  "start_trigger": false,
+  "on": {
+    "round_begin_ba": 1
+  },
+  "condition": {
+    "counter.7000768>=": 3,
+    "have.2000195.追随者": 1,
+    "table_have.2000195": 1
+  },
+  "settlement": [
+    {
+      "tips_resource": "",
+      "tips_text": "",
+      "action": {
+        "clean.rite": 5008202,
+        "rite": 5008203,
+        "success": {
+          "event_off": 5321212
+        }
+      }
+    }
+  ]
+}
