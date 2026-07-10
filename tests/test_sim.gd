@@ -483,3 +483,52 @@ func test_execute_event_real_5300002_jumps_rite():
 	# crash and should produce some deferred state. Condition may pass or fail
 	# depending on starting hand; just assert no crash and a valid dict.
 	assert_true(merged is Dictionary, "real event executes without crashing")
+
+
+# ---- EventRuntime trigger tests ----
+
+func test_event_runtime_matches_round_begin_by_round_number():
+	# Events with on.round_begin_ba match only when the context round equals
+	# the trigger value. Use an isolated ConfigDB (no real data) for precision.
+	var local_db := ConfigDB.new()
+	local_db.events[990010] = {"id": 990010, "on": {"round_begin_ba": 2}, "condition": {}}
+	local_db.events[990011] = {"id": 990011, "on": {"round_begin_ba": 5}, "condition": {}}
+	var rt := EventRuntime.new()
+	rt.build(local_db, null)
+	assert_eq(rt.fire("round_begin_ba", {"round": 2}), [990010], "only round-2 event fires on round 2")
+	assert_eq(rt.fire("round_begin_ba", {"round": 5}), [990011], "only round-5 event fires on round 5")
+	assert_eq(rt.fire("round_begin_ba", {"round": 3}), [], "no event fires on round 3")
+
+
+func test_event_runtime_matches_rite_end_by_rite_id():
+	var local_db := ConfigDB.new()
+	local_db.events[990020] = {"id": 990020, "on": {"rite_end": 5000001}, "condition": {}}
+	var rt := EventRuntime.new()
+	rt.build(local_db, null)
+	assert_eq(rt.fire("rite_end", {"rite": 5000001}), [990020], "rite_end event fires for matching rite")
+	assert_eq(rt.fire("rite_end", {"rite": 5000002}), [], "rite_end event does not fire for wrong rite")
+
+
+func test_event_runtime_gates_on_condition():
+	var local_db := ConfigDB.new()
+	local_db.events[990030] = {"id": 990030, "on": {"round_begin_ba": 1}, "condition": {"counter.7000001>=": 999}}
+	var st := GameState.new()
+	# Condition requires a counter the state doesn't have (==0, so >=5 fails).
+	var rt := EventRuntime.new()
+	rt.build(local_db, st)
+	assert_eq(rt.fire("round_begin_ba", {"round": 1}), [], "event with failing condition does not fire")
+	st.set_counter(7000001, 1000)
+	assert_eq(rt.fire("round_begin_ba", {"round": 1}), [990030], "event fires once condition holds")
+
+
+func test_state_trigger_events_queues_matched_ids():
+	# trigger_events is the convenience wrapper that fires + queues.
+	var local_db := ConfigDB.new()
+	local_db.events[990040] = {"id": 990040, "on": {"game_end": -1}, "condition": {}}
+	var st := GameState.new()
+	# Build EventRuntime directly (setup_new_run needs full config).
+	st.event_runtime = EventRuntime.new()
+	st.event_runtime.build(local_db, st)
+	var matched := st.trigger_events("game_end", {})
+	assert_eq(matched, [990040], "game_end trigger fires the registered event")
+	assert_eq(st.event_queue, [990040], "matched event is queued for display")

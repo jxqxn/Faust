@@ -97,6 +97,9 @@ static func consume_sudan(state, card_id: int) -> bool:
 			state.active_sudan_cards.remove_at(i)
 			if state.has_method("remove_card_from_rail"):
 				state.remove_card_from_rail(card_id)
+			# Fire card-clean event triggers for the consumed card.
+			# [SRC: DesktopCleanCard/RiteResultPanelController -> OnCardClean]
+			state.trigger_events("card_clean", {"card": card_id})
 			return true
 	return false
 
@@ -113,6 +116,9 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
 	result.auto_rites = start_auto_begin_rites(state, db)
 	result.drawn_sudan = start_round(state, db, rng)
+	# Fire round-begin event triggers after settlement (round_begin_ba).
+	# [SRC: GameController.__c__DisplayClass141_0.c:138 -> OnRoundBeginBa]
+	state.trigger_events("round_begin_ba", {"round": state.round_number})
 
 
 ## Open/start auto-begin rites. Do not resolve them: the original

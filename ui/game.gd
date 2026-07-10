@@ -15,6 +15,7 @@ var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
+var _current_rite_id := 0
 
 
 func _ready() -> void:
@@ -107,6 +108,7 @@ func _on_open_rite(rite_id: int) -> void:
 	if _game_screen == null:
 		_show_game()
 	_close_rite_overlay()
+	_current_rite_id = rite_id
 	var rv := RiteView.new()
 	rv.setup(state, db, rng, rite_id)
 	rv.closed.connect(_close_rite_overlay)
@@ -203,6 +205,10 @@ func _close_game_menu() -> void:
 
 
 func _after_rite_resolution() -> void:
+	# Fire rite-end event triggers for the just-resolved rite.
+	# [SRC: RiteResultPanelController.c:1289 -> OnRiteEnd]
+	if state != null and _current_rite_id != 0:
+		state.trigger_events("rite_end", {"rite": _current_rite_id})
 	var result := RoundLoop.start_round_if_no_sudan(state, db, rng)
 	if _game_screen != null:
 		_game_screen.refresh()

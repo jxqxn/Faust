@@ -53,6 +53,9 @@ var auto_result_rites: Array[int] = []
 var rite_auto_result := false
 var event_queue: Array[int] = []
 var event_prompts: Array[Dictionary] = []
+# Event trigger dispatcher: rebuilt from db on each run (config is static; the
+# match state derives from round/rite/card counters at fire time).
+var event_runtime = null
 
 
 func _init() -> void:
@@ -91,6 +94,9 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	rite_auto_result = false
 	event_queue.clear()
 	event_prompts.clear()
+	# Build the event trigger registry from config.
+	event_runtime = EventRuntime.new()
+	event_runtime.build(db, self)
 
 
 func _redraws_per_round(db) -> int:
@@ -272,6 +278,17 @@ func add_available_rite(id: int) -> void:
 func queue_event(id: int) -> void:
 	if id > 0:
 		event_queue.append(id)
+
+
+## Fire the event trigger for `timing` and queue any matched events. A thin
+## convenience over EventRuntime.fire so callers don't loop the result set.
+func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
+	if event_runtime == null:
+		return []
+	var matched: Array[int] = event_runtime.fire(timing, ctx)
+	for eid in matched:
+		queue_event(int(eid))
+	return matched
 
 
 func queue_prompt(prompt: Dictionary) -> void:
