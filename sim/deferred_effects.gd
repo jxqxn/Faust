@@ -11,9 +11,14 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 	for prompt in deferred.get("prompts", []):
 		if prompt is Dictionary and state.has_method("queue_prompt"):
 			state.queue_prompt(prompt)
-	var choices: Dictionary = deferred.get("choose", {})
-	if not choices.is_empty() and state.has_method("queue_choice_prompt"):
-		state.queue_choice_prompt(choices)
+	var choose: Dictionary = deferred.get("choose", {})
+	if not choose.is_empty() and state.has_method("queue_choice_prompt"):
+		# Two formats: a plain {key: value} choices dict (legacy choose), or a
+		# wrapped {choices: {...}, title, text} from an option payload.
+		if choose.has("choices"):
+			state.queue_choice_prompt(choose["choices"], str(choose.get("title", "选择")), str(choose.get("text", "")))
+		else:
+			state.queue_choice_prompt(choose)
 	var next_rite := int(deferred.get("rite", 0))
 	if next_rite > 0 and state.has_method("add_available_rite"):
 		state.add_available_rite(next_rite)

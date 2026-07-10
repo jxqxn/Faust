@@ -20,6 +20,13 @@ static func execute(result: Dictionary, state, db) -> Dictionary:
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 		"prompts": [], "loots": [],
 	}
+	# Option branching: if the payload has an `option` key, convert it to a
+	# choose prompt and stash the case:opN subtrees as choices. The remaining
+	# keys are skipped — only the player's chosen case executes (via
+	# execute_choice), matching the original's last_op_tag state machine.
+	if result.has("option"):
+		_apply_option(result, deferred)
+		return deferred
 	for key in result:
 		var val = result[key]
 		_apply_key(key, val, state, db, deferred)
@@ -28,7 +35,9 @@ static func execute(result: Dictionary, state, db) -> Dictionary:
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show"]:
+	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed"]:
+		return true
+	if k.begins_with("case:"):
 		return true
 	if k.begins_with("loot."):
 		return true
@@ -101,6 +110,14 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.events.append(int(val))
 		return
 	if k == "event_off":
+		# Disable the event from future triggering (event_off).
+		# [SRC: EventOff.c @ Do -> EventTrigger.Remove]
+		if state != null and state.get("event_runtime") != null:
+			if val is Array:
+				for off_id in val:
+					state.event_runtime.disable_event(int(off_id))
+			else:
+				state.event_runtime.disable_event(int(val))
 		return
 	# Rite jump.
 	if k == "rite":
@@ -129,8 +146,76 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	if k == "no_show":
 		return
+	# case:opN reached via execute_choice: run the matched case subtree as a
+	# nested result dict. This is the player's chosen branch from an option.
+	if k.begins_with("case:") and val is Dictionary:
+		var case_deferred := execute(val, state, db)
+		# Merge the case's effects into the current deferred (in-place).
+		_merge_case(deferred, case_deferred)
+		return
+	# success/failed: terminal branch markers (usually carry event_off).
+	# Execute their subtree like a case; for confirm both branches are treated
+	# the same initially (the tutorial's success/failed converge).
+	if (k == "success" or k == "failed") and val is Dictionary:
+		var branch_deferred := execute(val, state, db)
+		_merge_case(deferred, branch_deferred)
+		return
 	# Unhandled: log, don't crash.
 	deferred.logs.append("UNHANDLED result key: %s=%v" % [k, val])
+
+
+## Merge a case/branch subtree's deferred into the parent deferred.
+static func _merge_case(into: Dictionary, src: Dictionary) -> void:
+	if src.has("events"):
+		into["events"].append_array(src["events"])
+	if src.has("choose") and not src["choose"].is_empty():
+		into["choose"] = src["choose"]
+	if src.has("rite") and int(src["rite"]) != 0:
+		into["rite"] = src["rite"]
+	if src.has("over") and bool(src["over"]):
+		into["over"] = true
+	if src.has("prompts"):
+		into["prompts"].append_array(src["prompts"])
+	if src.has("loots"):
+		into["loots"].append_array(src["loots"])
+	if src.has("clean_slots"):
+		into["clean_slots"].append_array(src["clean_slots"])
+	if src.has("clean_card_ids"):
+		into["clean_card_ids"].append_array(src["clean_card_ids"])
+	if src.has("clean_rite") and bool(src["clean_rite"]):
+		into["clean_rite"] = true
+	if src.has("logs"):
+		into["logs"].append_array(src["logs"])
+
+
+## Convert an `option` payload into a choose prompt. The option's items become
+## choices keyed by their case tag (op1/op2/...), and each case:opN sibling in
+## the same action dict becomes the choice's executable value (a result dict
+## run via execute_choice when the player picks it).
+## [SRC: Option.c @ Do (shows UI, resolves with tag);
+##       CaseOperations.c @ Do (matches last_op_tag, runs case subtree)]
+static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
+	var opt: Dictionary = action.get("option", {})
+	if opt.is_empty():
+		return
+	var items: Array = opt.get("items", [])
+	var choices: Dictionary = {}
+	for item in items:
+		if not (item is Dictionary):
+			continue
+		var tag := str(item.get("tag", ""))
+		if tag == "":
+			continue
+		# The case subtree (if present) is the executable payload for this choice.
+		var case_key := "case:" + tag
+		choices[case_key] = action.get(case_key, {})
+	# Stash as a choose prompt; DeferredEffects.apply routes it to the UI via
+	# queue_choice_prompt. The option text becomes the prompt body.
+	deferred.choose = {
+		"choices": choices,
+		"title": str(opt.get("text", "")),
+		"text": str(opt.get("text", "")),
+	}
 
 
 static func _apply_counter(k: String, val: Variant, state) -> void:

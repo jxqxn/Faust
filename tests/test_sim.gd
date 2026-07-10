@@ -532,3 +532,97 @@ func test_state_trigger_events_queues_matched_ids():
 	var matched := st.trigger_events("game_end", {})
 	assert_eq(matched, [990040], "game_end trigger fires the registered event")
 	assert_eq(st.event_queue, [990040], "matched event is queued for display")
+
+
+# ---- option/case:opN branching ----
+
+func test_option_payload_becomes_choose_prompt_with_case_choices():
+	# An action with an `option` key converts to a choose prompt whose choices
+	# are keyed by case:opN, each mapping to the case's executable subtree.
+	var action := {
+		"option": {"text": "选择命运", "items": [{"text": "生", "tag": "op1"}, {"text": "死", "tag": "op2"}]},
+		"case:op1": {"rite": 5001001},
+		"case:op2": {"over": 1},
+	}
+	var deferred := ResultExec.execute(action, GameState.new(), db)
+	var choose: Dictionary = deferred.choose
+	assert_false(choose.is_empty(), "option produces a choose prompt")
+	var choices: Dictionary = choose.get("choices", {})
+	assert_true(choices.has("case:op1"), "choice keyed by case tag op1")
+	assert_true(choices.has("case:op2"), "choice keyed by case tag op2")
+	# The case subtrees are the choice values (executable later).
+	assert_eq(choices["case:op1"], {"rite": 5001001}, "op1 choice value is its case subtree")
+	assert_eq(choices["case:op2"], {"over": 1}, "op2 choice value is its case subtree")
+
+
+func test_case_op_executes_matched_subtree_only():
+	# When the player picks op1, execute_choice runs only case:op1's subtree.
+	# op2's subtree (over:true) must NOT execute.
+	var st := GameState.new()
+	st.setup_new_run(db, 0, RNG.new(1))
+	# Simulate the player choosing op1: execute_choice("case:op1", <subtree>).
+	var op1_subtree := {"金币": 10, "event_off": 990050}
+	DeferredEffects.execute_choice("case:op1", op1_subtree, st, db, RNG.new(1))
+	assert_eq(st.coin_count, 10, "chosen case subtree applied its effects")
+	# event_off disabled the event in the runtime.
+	assert_true(st.event_runtime._disabled.has(990050), "event_off disabled the event")
+
+
+func test_option_event_end_to_end_through_execute_event():
+	# Full flow: execute_event on an event with option+cases produces a choose
+	# prompt; picking a choice runs its case subtree.
+	var st := GameState.new()
+	st.setup_new_run(db, 0, RNG.new(1))
+	var event := {
+		"id": 990060,
+		"text": "抉择",
+		"condition": {},
+		"settlement": [{"action": {
+			"option": {"text": "怎么办？", "items": [{"text": "给钱", "tag": "op1"}, {"text": "跑路", "tag": "op2"}]},
+			"case:op1": {"金币": -5},
+			"case:op2": {"over": 1},
+		}}],
+	}
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	# The choose prompt should be queued.
+	assert_false(merged.get("choose", {}).is_empty(), "event option produced a choose")
+	assert_false(st.event_prompts.is_empty(), "choose prompt queued for display")
+	# Simulate player picking "给钱" (op1).
+	st.event_prompts.clear()
+	var choices: Dictionary = merged.choose.get("choices", {})
+	DeferredEffects.execute_choice("case:op1", choices["case:op1"], st, db, RNG.new(1))
+	assert_eq(st.coin_count, -5, "picking op1 applied its case subtree (coin -5)")
+
+
+func test_event_off_disables_future_triggering():
+	# An event that fires event_off should not fire again on subsequent triggers.
+	var local_db := ConfigDB.new()
+	local_db.events[990070] = {"id": 990070, "on": {"round_begin_ba": 1}, "condition": {}}
+	var st := GameState.new()
+	st.event_runtime = EventRuntime.new()
+	st.event_runtime.build(local_db, st)
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990070], "event fires before event_off")
+	st.event_runtime.disable_event(990070)
+	st.event_queue.clear()
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "event does not fire after event_off")
+
+
+func test_real_event_5300258_option_branch_executes():
+	# Real event 5300258 (审判): a 3-option event. Verify it produces a choose
+	# prompt and that picking op2 (交钱赎罪) opens its rite without crashing.
+	var st := GameState.new()
+	st.setup_new_run(db, 1, RNG.new(1))
+	var event := db.get_event(5300258)
+	assert_false(event.is_empty(), "event 5300258 loaded")
+	if event.is_empty():
+		return
+	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
+	var choose: Dictionary = merged.get("choose", {})
+	if choose.is_empty():
+		return  # condition gated it; acceptable for some starting states
+	var choices: Dictionary = choose.get("choices", {})
+	assert_true(choices.has("case:op1") and choices.has("case:op2") and choices.has("case:op3"), "all 3 options present")
+	# Pick op2: should add rite 5001027 and disable event 5300258.
+	DeferredEffects.execute_choice("case:op2", choices["case:op2"], st, db, RNG.new(1))
+	assert_true(5001027 in st.available_rites, "op2 opened rite 5001027")
+	assert_true(st.event_runtime._disabled.has(5300258), "event_off disabled 5300258")

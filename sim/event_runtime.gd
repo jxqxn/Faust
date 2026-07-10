@@ -13,6 +13,8 @@ extends RefCounted
 
 # timing string -> { event_id(int): trigger_value(int|Array) }
 var _by_timing := {}
+# Disabled event ids (event_off removes an event from future triggering).
+var _disabled: Dictionary = {}
 # Config + state refs for condition evaluation.
 var _db = null
 var _state = null
@@ -22,6 +24,7 @@ func build(db, state) -> void:
 	_db = db
 	_state = state
 	_by_timing.clear()
+	_disabled.clear()
 	if db == null:
 		return
 	for eid in db.events:
@@ -48,6 +51,8 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 		return out
 	for eid in bucket:
 		var trigger_value = bucket[eid]
+		if _disabled.has(eid):
+			continue
 		if not _value_matches(timing, trigger_value, ctx):
 			continue
 		if not _condition_holds(eid):
@@ -55,6 +60,13 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 		out.append(int(eid))
 	out.sort()
 	return out
+
+
+## Disable an event from future triggering (event_off). Matches the original
+## EventTrigger.Remove + PlayerExtensions.SetEventStatus(id, 0).
+## [SRC: EventOff.c @ Do (0x...); EventTrigger.c @ Remove]
+func disable_event(event_id: int) -> void:
+	_disabled[event_id] = true
 
 
 ## Whether the event's `on` value matches the firing context for this timing.
