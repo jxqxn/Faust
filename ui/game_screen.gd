@@ -685,14 +685,16 @@ func _show_event_overlay(display: Dictionary) -> void:
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	root.add_child(title)
 
-	var body := Label.new()
+	var body := RichTextLabel.new()
 	body.name = "EventPromptBody"
 	body.text = str(display.get("text", ""))
+	body.bbcode_enabled = true
+	body.fit_content = true
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.clip_text = true
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_font_size_override("font_size", 16)
-	body.add_theme_color_override("font_color", FaustTheme.TEXT)
+	body.add_theme_color_override("default_color", FaustTheme.TEXT)
+	body.scroll_active = true
 	root.add_child(body)
 
 	var buttons := HBoxContainer.new()
@@ -766,10 +768,11 @@ func _event_body_text(event: Dictionary, event_id: int) -> String:
 func _layout_event_prompt(s: float, view_size: Vector2) -> void:
 	if _event_panel == null:
 		return
-	var panel_w: float = min(view_size.x - 360 * s, 610 * s)
-	var panel_h: float = 236 * s
+	var panel_w: float = min(view_size.x - 200 * s, 720 * s)
+	# Panel occupies most of the vertical space so long narration text is visible.
+	var panel_h: float = min(view_size.y * 0.62, 520 * s)
 	var panel_x: float = (view_size.x - panel_w) * 0.5
-	var panel_y: float = 112 * s
+	var panel_y: float = (view_size.y - panel_h) * 0.5
 	_set_rect(_event_panel, Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h)))
 
 

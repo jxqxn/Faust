@@ -880,6 +880,8 @@ func _collect_label_and_button_text(node: Node) -> String:
 		parts.append((node as Label).text)
 	elif node is Button:
 		parts.append((node as Button).text)
+	elif node is RichTextLabel:
+		parts.append((node as RichTextLabel).text)
 	for child in node.get_children():
 		var child_text := _collect_label_and_button_text(child)
 		if child_text != "":

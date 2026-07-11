@@ -217,10 +217,11 @@ static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
 	if action.has("case:def"):
 		choices["case:def"] = action["case:def"]
 	# Stash as a choose prompt; DeferredEffects.apply routes it to the UI via
-	# queue_choice_prompt. The option text becomes the prompt body.
+	# queue_choice_prompt. The option text is the body narration; the title is
+	# a short label (the prompt id or "选择").
 	deferred.choose = {
 		"choices": choices,
-		"title": str(opt.get("text", "")),
+		"title": str(opt.get("id", "选择")),
 		"text": str(opt.get("text", "")),
 	}
 
