@@ -349,6 +349,34 @@ func test_game_screen_event_with_over_result_signals_game_over():
 	assert_signal_emitted(screen, "game_over_requested", "event over result should signal game-over")
 
 
+func test_game_screen_event_with_rite_auto_opens_rite():
+	# An event whose action opens a rite should auto-open it (so the player sees
+	# the rite's narration), not silently park it in available_rites.
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[990004] = {
+		"id": 990004,
+		"text": "求助",
+		"settlement": [{"action": {"rite": 5001001}}],
+	}
+	var rng := RNG.new(23)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, rng)
+	state.queue_event(990004)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, local_db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	watch_signals(screen)
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	if cont != null:
+		cont.pressed.emit()
+		await wait_process_frames(2)
+	assert_signal_emitted_with_parameters(screen, "open_rite", [5001001], "event rite handoff auto-opens the rite")
+
+
 func test_game_menu_button_opens_real_overlay():
 	var stage := _stage()
 	var game = Game.new()

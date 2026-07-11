@@ -109,6 +109,10 @@ func _on_open_rite(rite_id: int) -> void:
 		_show_game()
 	_close_rite_overlay()
 	_current_rite_id = rite_id
+	# Fire rite-start event triggers for the opening rite.
+	# [SRC: RitePanelController.__c__DisplayClass34_0.c:16 -> OnRiteStart]
+	if state != null:
+		state.trigger_events("rite_start", {"rite": rite_id})
 	var rv := RiteView.new()
 	rv.setup(state, db, rng, rite_id)
 	rv.closed.connect(_close_rite_overlay)

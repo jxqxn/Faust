@@ -727,6 +727,7 @@ func _clear_event_overlay() -> void:
 func _consume_event_display(choice_key: String = "", choice_value: Variant = "") -> void:
 	if _state == null:
 		return
+	var merged: Dictionary = {}
 	if not _state.event_prompts.is_empty():
 		_state.event_prompts.remove_at(0)
 		if choice_key != "":
@@ -736,7 +737,6 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		var event_id := int(_state.event_queue[0])
 		_state.event_queue.remove_at(0)
 		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
-		var merged: Dictionary = {}
 		if choice_key != "":
 			# A chosen branch overrides the event's default result/action.
 			set_log("选择：%s" % str(choice_value))
@@ -745,7 +745,13 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 			merged = DeferredEffects.execute_event(event, _state, _db, _rng)
 			if bool(merged.get("over", false)):
 				game_over_requested.emit()
+	# An event whose action opens a rite should surface that rite to the player
+	# immediately (showing the rite's narration text), not silently park it.
+	# The original opens the rite as a UI surface when an event fires it.
 	refresh()
+	var opened_rite := int(merged.get("rite", 0))
+	if opened_rite > 0:
+		open_rite.emit(opened_rite)
 
 
 func _event_body_text(event: Dictionary, event_id: int) -> String:
