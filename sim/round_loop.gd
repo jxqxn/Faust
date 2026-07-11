@@ -21,6 +21,12 @@ class ActiveSudan:
 ## [SRC: GameController.c @ TryGenSudanCard (0x559730)]
 static func advance_day(state, db, rng) -> Dictionary:
 	var result := {"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1}
+	# Resolve auto-result rites at round end, before the sudan expiry check.
+	# Auto-result rites settle with whatever cards are currently slotted (empty
+	# unless the player manually placed some), then apply deferred effects.
+	# [SRC: GameController.c @ UpdateSingleRite: started rite with life >= round_number
+	# resolves via normal Settlement; auto_result hides the UI panel only]
+	resolve_auto_result_rites(state, db, rng)
 	state.day += 1
 	var still_active: Array = []
 	for asc in state.active_sudan_cards:
@@ -163,6 +169,42 @@ static func start_auto_begin_rites(state, db) -> Array:
 			state.started_rites.append(id)
 		out.append({"id": id, "started": true})
 	return out
+
+
+## Resolve auto-result rites: started rites with auto_result==1 settle with
+## their current (possibly empty) slots and apply deferred effects silently.
+## The original does NOT auto-slot cards; it evaluates settlement branches
+## against whatever is on the table. The auto_result flag hides the UI panel
+## and skips the dice/confirm interaction — settlement logic is identical.
+## [SRC: GameController.c @ UpdateSingleRite (5777): started rite with
+## life >= round_number settles normally; RiteResultPanelController.Settlement
+## hides panel when auto_result_rites.Contains or rite_auto_result is on]
+static func resolve_auto_result_rites(state, db, rng) -> void:
+	if state == null or db == null:
+		return
+	for rid in state.started_rites:
+		var id := int(rid)
+		if not db.rites.has(id):
+			continue
+		var rite: Dictionary = db.rites[id]
+		if int(rite.get("auto_result", 0)) != 1:
+			continue
+		# Build ctx from currently-slotted cards (empty if none placed).
+		var rite_state := {}
+		var attr_slots: Array = []
+		var slots: Dictionary = rite.get("cards_slot", {})
+		for sk in slots:
+			var sn := str(sk)
+			var cards: Array = state.cards_in_slot(sn.substr(1).to_int()) if state.has_method("cards_in_slot") else []
+			if not cards.is_empty():
+				rite_state[sn] = int(cards[0].get("id", 0))
+			attr_slots.append(sn)
+		var ctx := {
+			"db": db, "state": state, "rng": rng,
+			"rite_state": rite_state, "attr_slots": attr_slots, "rite_id": id,
+		}
+		var res = RiteResolver.resolve(rite, ctx, 0)
+		DeferredEffects.apply(res.deferred, state, db, rng)
 
 
 static func _redraws_per_round(state, db) -> int:

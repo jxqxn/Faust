@@ -96,3 +96,41 @@ func test_rite_resolution_with_placed_cards():
 	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {"s1": 2000001, "s2": 2000005}, "attr_slots": ["s1", "s2"], "rite_id": 5000001}
 	var res := RiteResolver.resolve(rite, ctx, 0)
 	assert_false(res.normal_entry.is_empty(), "settlement matched with placed cards")
+
+
+func test_auto_result_rite_settles_on_advance_day_with_empty_slots():
+	# An auto_begin+auto_result rite (治理家业) settles at round end (advance_day)
+	# with empty slots, landing on the "no one sent" branch (no income). The
+	# player should NOT need to manually resolve it.
+	# [SRC: GameController.c @ UpdateSingleRite: started rite settles normally]
+	var rng := RNG.new(300)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	# Draw a sudan so advance_day doesn't start a new round mid-test.
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	# Start the auto_begin rite.
+	RoundLoop.start_auto_begin_rites(state, db)
+	assert_true(5000001 in state.started_rites, "治理家业 started")
+	var coin_before := state.coin_count
+	# Advance a day: auto_result rites settle at round end.
+	RoundLoop.advance_day(state, db, rng)
+	# With empty slots, the "no one sent" branch matches → no income change.
+	# The key assertion: it settled without crashing and without player input.
+	assert_eq(state.coin_count, coin_before, "empty-slot auto_result grants no income")
+
+
+func test_auto_result_rite_with_slotted_card_grants_reward():
+	# If the player placed a 贵族 card before advance_day, the auto_result rite
+	# should settle using that card and grant income.
+	var rng := RNG.new(301)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
+	# Manually place a card with high 智慧+社交 into slot 1.
+	state.add_card_to_slot(2000005, 1, db)  # 异国商人 (贵族)
+	var coin_before := state.coin_count
+	RoundLoop.advance_day(state, db, rng)
+	# With a 贵族 slotted, the r1:智慧+社交 branches become reachable.
+	# At minimum, the rite should not grant 0 (some income branch matched).
+	assert_ne(state.coin_count, coin_before, "slotted-card auto_result grants income")
