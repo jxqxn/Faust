@@ -23,9 +23,10 @@ static func is_rite_open(rite: Dictionary, state, db, rng = null) -> bool:
 			if entry is Dictionary and not (entry.get("condition", {}) as Dictionary).is_empty():
 				return false
 		return true
-	var min_round := int(rite.get("round_number", 0))
-	if min_round > 0 and int(state.round_number) < min_round:
-		return false
+	# `round_number` is a lifetime threshold for an already-created rite
+	# instance, not a global-round gate for map visibility. The original checks
+	# Rite.life against RiteNode.round_number in UpdateSingleRite.
+	# [SRC: GameController.c @ UpdateSingleRite (RVA 0x55ab10), lines 5857-5882]
 	var open_conditions = rite.get("open_conditions", [])
 	if not (open_conditions is Array) or open_conditions.is_empty():
 		return true

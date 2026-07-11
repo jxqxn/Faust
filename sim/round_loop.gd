@@ -20,14 +20,12 @@ class ActiveSudan:
 ## TryGenSudanCard's HasSudanCard gate rather than a fixed day modulo.
 ## [SRC: GameController.c @ TryGenSudanCard (0x559730)]
 static func advance_day(state, db, rng) -> Dictionary:
-	var result := {"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1}
-	# Resolve auto-result rites at round end, before the sudan expiry check.
-	# Auto-result rites settle with whatever cards are currently slotted (empty
-	# unless the player manually placed some), then apply deferred effects.
-	# [SRC: GameController.c @ UpdateSingleRite: started rite with life >= round_number
-	# resolves via normal Settlement; auto_result hides the UI panel only]
-	resolve_auto_result_rites(state, db, rng)
+	var result := {
+		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
+		"settled_rites": [], "expired_rites": [],
+	}
 	state.day += 1
+	_update_rite_instances(state, db, rng, result)
 	var still_active: Array = []
 	for asc in state.active_sudan_cards:
 		asc.days_left -= 1
@@ -128,7 +126,10 @@ static func consume_sudan(state, card_id: int) -> bool:
 
 ## Start a new round only if the player currently has no active sudan card.
 static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
-	var result := {"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1}
+	var result := {
+		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
+		"settled_rites": [], "expired_rites": [],
+	}
 	if state.active_sudan_cards.is_empty():
 		_begin_round(state, db, rng, result)
 	return result
@@ -157,6 +158,8 @@ static func start_auto_begin_rites(state, db) -> Array:
 	for instance in candidate_rites:
 		if instance == null or not db.rites.has(instance.id):
 			continue
+		if instance.start:
+			continue
 		var rite: Dictionary = db.rites[instance.id]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
@@ -167,42 +170,128 @@ static func start_auto_begin_rites(state, db) -> Array:
 	return out
 
 
-## Resolve auto-result rites: started rites with auto_result==1 settle with
-## their current (possibly empty) slots and apply deferred effects silently.
-## The original does NOT auto-slot cards; it evaluates settlement branches
-## against whatever is on the table. The auto_result flag hides the UI panel
-## and skips the dice/confirm interaction — settlement logic is identical.
-## [SRC: GameController.c @ UpdateSingleRite (5777): started rite with
-## life >= round_number settles normally; RiteResultPanelController.Settlement
-## hides panel when auto_result_rites.Contains or rite_auto_result is on]
-static func resolve_auto_result_rites(state, db, rng) -> void:
-	if state == null or db == null:
+## Update every player-owned rite once per visible day. The original advances
+## Rite.life first; unstarted rites expire at waiting_round, while started
+## rites settle at round_number. `auto_result` changes presentation, not this
+## eligibility rule.
+## [SRC: GameController.c @ UpdateSingleRite (RVA 0x55ab10), lines 5853-5882]
+static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
+	if state == null or db == null or not state.has_method("available_rite_instances"):
 		return
-	var started_instances: Array = state.available_rite_instances() if state.has_method("available_rite_instances") else []
-	for instance in started_instances:
-		if instance == null or not instance.start or not db.rites.has(instance.id):
+	var instances: Array = state.available_rite_instances().duplicate()
+	for instance in instances:
+		if instance == null or not db.rites.has(instance.id):
 			continue
 		var rite: Dictionary = db.rites[instance.id]
-		if int(rite.get("auto_result", 0)) != 1:
+		instance.life += 1
+		if not instance.start:
+			var waiting_round := int(rite.get("waiting_round", 0))
+			if waiting_round > 0 and instance.life >= waiting_round:
+				# RiteExtensions.Dead dispatches OnRiteClean before it runs the
+				# configured timeout operations and returns cards.
+				# [SRC: RiteExtensions.c @ Dead (RVA 0x501460), lines 44-60]
+				state.trigger_events("rite_clean", {"rite": instance.id})
+				_execute_waiting_round_end(rite, instance, state, db, rng)
+				state.return_rite_cards(instance.uid, db)
+				state.remove_rite_instance(instance.uid)
+				result.expired_rites.append({"id": instance.id, "uid": instance.uid})
 			continue
-		# Build ctx from currently-slotted cards (empty if none placed).
-		var rite_state := {}
-		var attr_slots: Array = []
-		var slots: Dictionary = rite.get("cards_slot", {})
-		for sk in slots:
-			var sn := str(sk)
-			var cards: Array = state.cards_in_slot(sn.substr(1).to_int(), instance.uid) if state.has_method("cards_in_slot") else []
-			if not cards.is_empty():
-				rite_state[sn] = int(cards[0].get("id", 0))
-			attr_slots.append(sn)
-		var ctx := {
-			"db": db, "state": state, "rng": rng,
-			"rite_state": rite_state, "attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
-		}
-		state.active_rite_uid = instance.uid
-		var res = RiteResolver.resolve(rite, ctx, 0)
-		state.active_rite_uid = 0
+		if instance.life < int(rite.get("round_number", 0)):
+			continue
+		# A started rite is resolved by the normal settlement pipeline. In this
+		# headless path no gold-dice retry is possible, which is the role of
+		# auto_result in the original UI.
+		var res: Variant = _resolve_rite_instance(rite, instance, state, db, rng)
+		_finalize_rite_settlement(instance, res.deferred, state, db)
 		DeferredEffects.apply(res.deferred, state, db, rng)
+		state.trigger_events("rite_end", {"rite": instance.id})
+		result.settled_rites.append({"id": instance.id, "uid": instance.uid, "auto_result": int(rite.get("auto_result", 0)) == 1})
+
+
+static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
+	var rite_state := {}
+	var attr_slots: Array = []
+	for slot_key in rite.get("cards_slot", {}):
+		var key := str(slot_key)
+		var cards: Array = state.cards_in_slot(key.substr(1).to_int(), instance.uid)
+		if not cards.is_empty():
+			rite_state[key] = int(cards[0].get("id", 0))
+		attr_slots.append(key)
+	var ctx := {
+		"db": db, "state": state, "rng": rng, "rite_state": rite_state,
+		"attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
+	}
+	state.active_rite_uid = instance.uid
+	var res = RiteResolver.resolve(rite, ctx, 0)
+	state.active_rite_uid = 0
+	return res
+
+
+## Apply explicit clean instructions, return every remaining placed card, then
+## remove only this runtime instance. Rite result UI does the same removal
+## after its settlement pipeline completes.
+## [SRC: RiteResultPanelController.__c__DisplayClass56_0.c @ <Settlement>b__8
+##       (RVA 0x5b4850): RemoveRite after settlement; RiteExtensions.ReturnCards
+##       (RVA 0x5016d0) for the timeout path.]
+static func _finalize_rite_settlement(instance, deferred: Dictionary, state, db) -> void:
+	var clean_rite := bool(deferred.get("clean_rite", false))
+	var clean_slots: Array = deferred.get("clean_slots", [])
+	var clean_card_ids: Array = deferred.get("clean_card_ids", [])
+	var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
+	for table_card in table_entries:
+		var card_id := int(table_card.get("id", 0))
+		var slot_num := int(table_card.get("slot", 0))
+		var is_cleaned := clean_rite or slot_num in clean_slots or card_id in clean_card_ids
+		if is_cleaned:
+			if state.is_active_sudan_card(card_id):
+				consume_sudan(state, card_id)
+			else:
+				state.trigger_events("card_clean", {"card": card_id})
+		elif not state.is_active_sudan_card(card_id) and not state.has_card_in_hand(card_id):
+			state.add_card_to_hand(card_id)
+	state.remove_rite_instance(instance.uid)
+
+
+## waiting_round_end_action is a conditional sequence. It runs before cards
+## return and the rite is removed, matching RiteExtensions.Dead.
+static func _execute_waiting_round_end(rite: Dictionary, instance, state, db, rng) -> void:
+	var attr_slots: Array = []
+	var rite_state := {}
+	for slot_key in rite.get("cards_slot", {}):
+		var key := str(slot_key)
+		attr_slots.append(key)
+		var cards: Array = state.cards_in_slot(key.substr(1).to_int(), instance.uid)
+		if not cards.is_empty():
+			rite_state[key] = int(cards[0].get("id", 0))
+	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": rite_state, "attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid}
+	state.active_rite_uid = instance.uid
+	for entry in rite.get("waiting_round_end_action", []):
+		if not (entry is Dictionary) or not ConditionEval.evaluate(entry.get("condition", {}), ctx):
+			continue
+		var deferred := ResultExec.execute(entry.get("result", {}), state, db)
+		_merge_deferred(deferred, ResultExec.execute(entry.get("action", {}), state, db))
+		DeferredEffects.apply(deferred, state, db, rng)
+		var title := str(entry.get("result_title", ""))
+		var text := str(entry.get("result_text", ""))
+		if (title != "" or text != "") and state.has_method("queue_prompt"):
+			state.queue_prompt({"id": "rite_timeout.%d.%d" % [instance.uid, state.day], "title": title, "text": text})
+	state.active_rite_uid = 0
+
+
+static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
+	for key in ["events", "logs", "clean_slots", "clean_card_ids", "prompts", "loots"]:
+		if src.has(key):
+			if not into.has(key):
+				into[key] = []
+			into[key].append_array(src[key])
+	if src.has("choose") and not src["choose"].is_empty():
+		into["choose"] = src["choose"]
+	if src.has("rite") and int(src["rite"]) != 0:
+		into["rite"] = src["rite"]
+	if src.has("clean_rite") and bool(src["clean_rite"]):
+		into["clean_rite"] = true
+	if src.has("over") and bool(src["over"]):
+		into["over"] = true
 
 
 static func _redraws_per_round(state, db) -> int:

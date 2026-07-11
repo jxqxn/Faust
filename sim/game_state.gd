@@ -349,6 +349,38 @@ func start_rite_instance(rite_uid: int) -> bool:
 	return true
 
 
+## Return cards placed in one rite to the player's rail. This is the timeout
+## path used by RiteExtensions.Dead; active Sudan cards stay active and simply
+## become visible again once their table entries are removed.
+## [SRC: RiteExtensions.c @ ReturnCards (RVA 0x5016d0)]
+func return_rite_cards(rite_uid: int, _db) -> void:
+	if rite_uid <= 0:
+		return
+	var cards := cards_in_slot_entries_for_rite(rite_uid)
+	for table_card in cards:
+		var card_id := int(table_card.get("id", 0))
+		if card_id <= 0 or is_active_sudan_card(card_id):
+			continue
+		if not has_card_in_hand(card_id):
+			add_card_to_hand(card_id)
+	clear_rite_cards(rite_uid)
+
+
+## Remove a finished or expired rite instance after its cards have been
+## returned or consumed. PlayerExtensions.RemoveRite removes by runtime uid,
+## so duplicate config ids remain independent.
+## [SRC: PlayerExtensions.c @ RemoveRite (RVA 0x38f040)]
+func remove_rite_instance(rite_uid: int) -> bool:
+	if rite_uid <= 0 or not rite_instances.has(rite_uid):
+		return false
+	clear_rite_cards(rite_uid)
+	rite_instances.erase(rite_uid)
+	if active_rite_uid == rite_uid:
+		active_rite_uid = 0
+	_sync_rite_legacy_lists()
+	return true
+
+
 func _ensure_legacy_rite_instances() -> void:
 	# Existing test fixtures and older callers may still write the compatibility
 	# id arrays directly. Materialize missing instances once at this boundary.
@@ -556,6 +588,16 @@ func cards_in_slot(slot: int, rite_uid: int = 0) -> Array:
 	for tc in table_cards:
 		if int(tc.get("slot", 0)) == slot and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
 			out.append(tc)
+	return out
+
+
+func cards_in_slot_entries_for_rite(rite_uid: int) -> Array:
+	var out: Array = []
+	if rite_uid <= 0:
+		return out
+	for table_card in table_cards:
+		if int(table_card.get("rite_uid", 0)) == rite_uid:
+			out.append(table_card.duplicate(true))
 	return out
 
 
