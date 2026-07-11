@@ -106,7 +106,9 @@ func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
 	view._result_label = RichTextLabel.new()
 
 	view._resolve()
-	assert_eq(state.active_sudan_cards.size(), 0, "cleaning the placed sudan slot consumes the active sudan card")
+	assert_eq(state.active_sudan_cards.size(), 1, "preview must not consume a sudan card before result confirmation")
+	view._resolve()
+	assert_eq(state.active_sudan_cards.size(), 0, "confirming the result consumes the explicitly cleaned sudan card")
 
 func test_slot_accepts_card_requires_type_and_tag_conditions():
 	var rng := RNG.new(90)
@@ -278,6 +280,8 @@ func test_rite_over_result_emits_game_over_requested():
 	watch_signals(view)
 
 	view._resolve()
+	assert_signal_not_emitted(view, "game_over_requested", "preview must not end the game before confirmation")
+	view._resolve()
 	assert_signal_emitted(view, "game_over_requested", "rite over result should emit game_over_requested")
 
 
@@ -302,6 +306,66 @@ func test_rite_without_over_does_not_emit_game_over():
 
 	view._resolve()
 	assert_signal_not_emitted(view, "game_over_requested", "normal rite should not emit game_over_requested")
+
+
+func test_manual_rite_settlement_waits_for_confirmation_before_removing_instance():
+	var rng := RNG.new(96)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._rite = {
+		"id": 5000001,
+		"settlement": [{"condition": {}, "result": {"coin": 2}, "action": {}}],
+		"settlement_prior": [], "settlement_extre": [], "cards_slot": {},
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+	watch_signals(view)
+
+	view._resolve()
+	assert_not_null(state.get_rite_instance(view._rite_uid), "first confirmation opens a retryable result preview")
+	assert_signal_not_emitted(view, "resolved", "preview must not announce a completed rite")
+	assert_eq(state.coin_count, 2, "preview exposes the computed result")
+
+	view._resolve()
+	assert_null(state.get_rite_instance(view._rite_uid), "second confirmation commits and removes the rite instance")
+	assert_signal_emitted(view, "resolved", "only the committed settlement emits resolved")
+
+
+func test_rite_view_binds_to_existing_runtime_instance_when_no_uid_is_supplied():
+	var rng := RNG.new(98)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var instance = state.find_rite_instance_by_id(5000001)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	assert_not_null(instance)
+	if instance != null:
+		assert_eq(view._rite_uid, instance.uid, "existing rite view must bind to its runtime uid instead of using global slots")
+
+
+func test_closing_pending_result_restores_uncommitted_world_effects():
+	var rng := RNG.new(97)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := RiteView.new()
+	view.setup(state, db, rng, 5000001)
+	view._rite = {
+		"id": 5000001,
+		"settlement": [{"condition": {}, "result": {"coin": 4}, "action": {}}],
+		"settlement_prior": [], "settlement_extre": [], "cards_slot": {},
+	}
+	view._gold_dice_label = Label.new()
+	view._gold_dice_btn = Button.new()
+	view._result_label = RichTextLabel.new()
+
+	view._resolve()
+	assert_eq(state.coin_count, 4, "preview applies its result into the rollback transaction")
+	view._close_panel()
+	assert_eq(state.coin_count, 0, "closing the retryable preview restores the pre-result state")
+	assert_not_null(state.get_rite_instance(view._rite_uid), "cancelled preview leaves the rite open")
 
 
 func _tag_on_first_not_second(first: Dictionary, second: Dictionary) -> String:

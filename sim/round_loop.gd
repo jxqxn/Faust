@@ -201,8 +201,9 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 		# A started rite is resolved by the normal settlement pipeline. In this
 		# headless path no gold-dice retry is possible, which is the role of
 		# auto_result in the original UI.
+		var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
 		var res: Variant = _resolve_rite_instance(rite, instance, state, db, rng)
-		_finalize_rite_settlement(instance, res.deferred, state, db)
+		finalize_rite_settlement(instance, res.deferred, state, db, table_entries)
 		DeferredEffects.apply(res.deferred, state, db, rng)
 		state.trigger_events("rite_end", {"rite": instance.id})
 		result.settled_rites.append({"id": instance.id, "uid": instance.uid, "auto_result": int(rite.get("auto_result", 0)) == 1})
@@ -233,11 +234,14 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 ## [SRC: RiteResultPanelController.__c__DisplayClass56_0.c @ <Settlement>b__8
 ##       (RVA 0x5b4850): RemoveRite after settlement; RiteExtensions.ReturnCards
 ##       (RVA 0x5016d0) for the timeout path.]
-static func _finalize_rite_settlement(instance, deferred: Dictionary, state, db) -> void:
+static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, source_table_entries: Array = []) -> void:
 	var clean_rite := bool(deferred.get("clean_rite", false))
 	var clean_slots: Array = deferred.get("clean_slots", [])
 	var clean_card_ids: Array = deferred.get("clean_card_ids", [])
-	var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
+	# ResultExec applies clean.sN immediately to the table index. Keep the
+	# pre-resolution entries so a cleaned card still reaches its real cleanup
+	# path (especially active Sudan cards).
+	var table_entries: Array = source_table_entries if not source_table_entries.is_empty() else state.cards_in_slot_entries_for_rite(instance.uid)
 	for table_card in table_entries:
 		var card_id := int(table_card.get("id", 0))
 		var slot_num := int(table_card.get("slot", 0))

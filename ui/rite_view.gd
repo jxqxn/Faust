@@ -49,6 +49,9 @@ var _gold_dice_map: Dictionary = {}
 var _resolve_baseline: Dictionary = {}
 var _resolve_dice_cache: Dictionary = {}
 var _last_result = null  # last RiteResult
+var _pending_table_entries: Array = []
+var _resolution_pending := false
+var _resolution_committed := false
 
 var _shade: ColorRect
 var _slot_layer: Control
@@ -78,6 +81,8 @@ func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 		var instance = _state.get_rite_instance(_rite_uid) if _rite_uid > 0 else _state.find_rite_instance_by_id(rite_id)
 		if instance == null:
 			_rite_uid = int(_state.add_available_rite(rite_id))
+		else:
+			_rite_uid = int(instance.uid)
 		_load_placements_from_instance()
 
 
@@ -252,7 +257,7 @@ func _build_panel_content() -> void:
 	_close_btn.name = "CloseRiteButton"
 	_close_btn.tooltip_text = "关闭"
 	_close_btn.custom_minimum_size = Vector2(44, 42)
-	_close_btn.pressed.connect(func(): closed.emit())
+	_close_btn.pressed.connect(_close_panel)
 	bottom_row.add_child(_close_btn)
 
 	_resolve_btn = _round_button("✓")
@@ -320,6 +325,9 @@ func refresh() -> void:
 
 
 func _on_slot_pressed(slot_key: String) -> void:
+	if _resolution_pending or _resolution_committed:
+		set_log("请先确认结果或关闭仪式")
+		return
 	if _selected_card_id <= 0:
 		if _placed.has(slot_key):
 			_return_slot_to_hand(slot_key)
@@ -340,6 +348,8 @@ func _on_slot_pressed(slot_key: String) -> void:
 
 
 func can_drop_card_on_slot(slot_key: String, data: Variant) -> bool:
+	if _resolution_pending or _resolution_committed:
+		return false
 	var card_id := _dragged_card_id(data)
 	if card_id <= 0:
 		return false
@@ -349,6 +359,8 @@ func can_drop_card_on_slot(slot_key: String, data: Variant) -> bool:
 
 
 func drop_card_on_slot(slot_key: String, data: Variant) -> void:
+	if _resolution_pending or _resolution_committed:
+		return
 	var card_id := _dragged_card_id(data)
 	if card_id <= 0:
 		return
@@ -409,6 +421,11 @@ func _refresh_slot_visuals() -> void:
 
 
 func _resolve() -> void:
+	if _resolution_pending:
+		_commit_resolution()
+		return
+	if _resolution_committed:
+		return
 	# Fresh resolve: reset gold-dice-used, place cards, snapshot the pre-result
 	# state, then resolve. Gold-dice re-resolves restore this baseline before
 	# applying results, matching the original Promise.Reject unwind path.
@@ -418,6 +435,7 @@ func _resolve() -> void:
 	_resolve_dice_cache.clear()
 	_prepare_table_from_placements()
 	_resolve_baseline = SaveSystem.serialize(_state)
+	_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
 	_do_resolve()
 
 
@@ -440,16 +458,56 @@ func _do_resolve() -> void:
 	var res = RiteResolver.resolve(_rite, ctx, gold_dice_bonus)
 	_state.active_rite_uid = 0
 	_last_result = res
-	_consume_placed_sudan_cards(res)
 	_apply_deferred_to_world(res.deferred)
+	_resolution_pending = true
 	_display_result(res)
 	_update_gold_button()
 	_refresh_gold_label()
+	_update_resolve_button()
+
+
+## Commit the already-previewed settlement after any gold-dice retries are
+## finished. The original only removes the Rite after its settlement promise
+## chain completes; showing dice is an intermediate step in that chain.
+## [SRC: RiteResultPanelController.c @ Settlement (RVA 0x5a4800),
+##       RiteResultPanelController.__c__DisplayClass56_0.c @ <Settlement>b__8
+##       (RVA 0x5b4850), RiteResultDiceCountPromptController.c @ OnGoldConfirm
+##       (RVA 0x59d8b0)]
+func _commit_resolution() -> void:
+	if not _resolution_pending or _last_result == null:
+		return
+	var instance = _state.get_rite_instance(_rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
+	if instance != null:
+		RoundLoop.finalize_rite_settlement(instance, _last_result.deferred, _state, _db, _pending_table_entries)
+	_resolution_pending = false
+	_resolution_committed = true
+	_pending_table_entries.clear()
+	if _gold_dice_btn != null:
+		_gold_dice_btn.disabled = true
+	_update_resolve_button()
 	resolved.emit()
-	# A rite-driven game over fires after the normal resolve/round-check path
-	# completes, so the resolved signal handlers run on a still-valid state.
-	if bool(res.deferred.get("over", false)):
+	# A rite-driven game over fires only after the result is committed.
+	if bool(_last_result.deferred.get("over", false)):
 		game_over_requested.emit()
+
+
+## Closing while dice/result preview is open abandons the uncommitted result.
+## The baseline is taken after card placement, so the rite remains open with
+## the same placed cards, while coin/events/loot and spent gold dice roll back.
+func _close_panel() -> void:
+	if _resolution_pending and not _resolve_baseline.is_empty() and _state != null:
+		SaveSystem.deserialize(_resolve_baseline, _state, _db)
+		_resolution_pending = false
+		_last_result = null
+		_gold_used_this_resolve = 0
+		_gold_dice_map.clear()
+		_resolve_dice_cache.clear()
+		_pending_table_entries.clear()
+		_refresh_gold_label()
+		_update_gold_button()
+		_update_resolve_button()
+		_refresh_game_screen()
+	closed.emit()
 
 
 func _display_result(res) -> void:
@@ -479,7 +537,7 @@ func _display_result(res) -> void:
 
 
 func _update_gold_button() -> void:
-	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null
+	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null and _resolution_pending
 	if _gold_dice_btn == null:
 		return
 	_gold_dice_btn.disabled = not can_spend
@@ -490,12 +548,19 @@ func _update_gold_button() -> void:
 
 
 func _use_gold_dice_reactive() -> void:
-	if _state.gold_dice <= 0:
+	if not _resolution_pending or _state.gold_dice <= 0:
 		return
 	_gold_used_this_resolve += 1
 	var type_key := _gold_type_for_reactive_spend()
 	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + 1
 	_do_resolve()
+
+
+func _update_resolve_button() -> void:
+	if _resolve_btn == null:
+		return
+	_resolve_btn.disabled = _resolution_committed
+	_resolve_btn.tooltip_text = "确认结果" if _resolution_pending else "结算仪式"
 
 
 func _refresh_gold_label() -> void:
@@ -538,6 +603,8 @@ func _place_card_in_slot(slot_key: String, card_id: int, source: String, source_
 
 
 func _return_slot_to_hand(slot_key: String) -> void:
+	if _resolution_pending or _resolution_committed:
+		return
 	if not _placed.has(slot_key):
 		return
 	var card_id := int(_placed[slot_key])
@@ -549,6 +616,8 @@ func _return_slot_to_hand(slot_key: String) -> void:
 
 
 func return_card_to_hand(card_id: int, source_slot: String) -> void:
+	if _resolution_pending or _resolution_committed:
+		return
 	var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id, _rite_uid))
 	if source_slot != "" and _placed.has(source_slot) and int(_placed[source_slot]) == card_id:
 		_placed.erase(source_slot)
@@ -638,23 +707,6 @@ func _auto_adsorb_slots() -> void:
 			var source := "active_sudan" if _state.is_active_sudan_card(id) else "hand"
 			_place_card_in_slot(slot_key, id, source, "")
 			break
-
-
-func _consume_placed_sudan_cards(res) -> void:
-	if res == null:
-		return
-	var deferred: Dictionary = res.deferred
-	var clean_rite := bool(deferred.get("clean_rite", false))
-	var clean_slots: Array = deferred.get("clean_slots", [])
-	var clean_card_ids: Array = deferred.get("clean_card_ids", [])
-	for slot_key in _placed:
-		var cid := int(_placed[slot_key])
-		var card: Dictionary = _db.get_card(cid)
-		if str(card.get("type", "")) != "sudan":
-			continue
-		var slot_num := str(slot_key).substr(1).to_int()
-		if clean_rite or slot_num in clean_slots or cid in clean_card_ids:
-			RoundLoop.consume_sudan(_state, cid)
 
 
 func _apply_deferred_to_world(deferred: Dictionary) -> void:
