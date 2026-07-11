@@ -33,8 +33,16 @@ func test_save_load_round_trip_preserves_state():
 	state.started_rites.append(5000001)
 	state.auto_result_rites.append(5000002)
 	state.rite_auto_result = true
+	var first_instance = state.find_rite_instance_by_id(5000001)
+	var second_instance = state.create_rite_instance(5000003)
+	state.start_rite_instance(first_instance.uid)
+	second_instance.life = 2
+	state.add_card_to_slot(2000006, 1, db, second_instance.uid)
 	state.queue_event(5310008)
 	state.queue_prompt({"id": "prompt.test", "text": "hello"})
+	state.enable_event(5310008, db)
+	state.disable_event(5300601)
+	state.event_done[5310008] = true
 	# Serialize.
 	var data := SaveSystem.serialize(state)
 	assert_true(SaveSystem.is_valid_player_save_data(data), "serialized player saves should be marked as continue-eligible")
@@ -51,7 +59,7 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
 	assert_eq(state2.active_sudan_cards.size(), 1, "active sudan card preserved")
-	assert_eq(state2.table_cards.size(), 1, "table card preserved")
+	assert_eq(state2.table_cards.size(), 2, "global and instance-owned table cards preserved")
 	if state2.table_cards.size() > 0:
 		assert_eq(int(state2.table_cards[0].get("id", 0)), 2000001, "table card id preserved")
 		assert_eq(int(state2.table_cards[0].get("slot", 0)), 1, "table card slot preserved")
@@ -60,8 +68,22 @@ func test_save_load_round_trip_preserves_state():
 	assert_true(5000003 in state2.available_rites, "available rites preserved")
 	assert_true(5000002 in state2.auto_result_rites, "auto-result rites preserved")
 	assert_true(state2.rite_auto_result, "rite_auto_result flag preserved")
+	var loaded_first = state2.get_rite_instance(first_instance.uid)
+	var loaded_second = state2.get_rite_instance(second_instance.uid)
+	assert_not_null(loaded_first, "first rite instance uid preserved")
+	assert_not_null(loaded_second, "second rite instance uid preserved")
+	if loaded_first != null:
+		assert_true(loaded_first.start, "rite start state preserved per instance")
+	if loaded_second != null:
+		assert_eq(loaded_second.life, 2, "rite life preserved per instance")
+		assert_eq(state2.cards_in_slot(1, loaded_second.uid).size(), 1, "slotted card remains owned by its rite instance")
 	assert_true(5310008 in state2.event_queue, "queued events preserved")
 	assert_eq(str(state2.event_prompts[0].get("id", "")), "prompt.test", "queued prompts preserved")
+	assert_true(state2.is_event_enabled(5310008), "enabled event status preserved")
+	assert_false(state2.is_event_enabled(5300601), "disabled event status preserved")
+	assert_true(state2.event_done.has(5310008), "completed event history preserved")
+	assert_not_null(state2.event_runtime, "event runtime rebuilt after loading")
+	assert_true(5310008 in state2.trigger_events("round_begin_ba", {"round": 1}), "loaded active event remains registered")
 	if state2.active_sudan_cards.size() > 0:
 		var asc = state2.active_sudan_cards[0]
 		assert_eq(asc.card_id, state.active_sudan_cards[0].card_id, "sudan card_id preserved")

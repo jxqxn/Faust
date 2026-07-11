@@ -4,6 +4,7 @@
 extends Control
 
 signal open_rite(rite_id: int)
+signal open_rite_instance(rite_uid: int)
 signal advance_pressed()
 signal redraw_pressed()
 signal open_rite_selector(location_name: String)
@@ -352,11 +353,14 @@ func _refresh_rite_pins() -> void:
 	if _map_content == null:
 		return
 	_clear_rite_pins()
-	for rid in _open_map_rite_ids():
-		var rite: Dictionary = _db.rites[int(rid)]
+	var name_counts := {}
+	for instance in _open_map_rite_instances():
+		var rite: Dictionary = _db.rites.get(instance.id, {})
+		var count := int(name_counts.get(instance.id, 0)) + 1
+		name_counts[instance.id] = count
 		var pin := Button.new()
-		pin.name = "RitePin_%d" % int(rid)
-		pin.text = str(rite.get("name", str(rid)))
+		pin.name = "RitePin_%d" % instance.id if count == 1 else "RitePin_%d_%d" % [instance.id, instance.uid]
+		pin.text = str(rite.get("name", str(instance.id)))
 		pin.tooltip_text = str(rite.get("text", ""))
 		pin.custom_minimum_size = Vector2(118, 34)
 		pin.add_theme_font_size_override("font_size", 15)
@@ -364,15 +368,19 @@ func _refresh_rite_pins() -> void:
 		pin.add_theme_stylebox_override("normal", _rite_pin_style())
 		pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
 		pin.add_theme_stylebox_override("pressed", _rite_pin_style(FaustTheme.BORDER))
-		pin.pressed.connect(func(): call_deferred("_emit_open_rite", int(rid)))
+		pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
 		_rite_pin_buttons.append(pin)
-		_rite_pin_ids[pin] = int(rid)
+		_rite_pin_ids[pin] = instance.uid
 		_map_content.add_child(pin)
 	_apply_layout()
 
 
 func _emit_open_rite(rite_id: int) -> void:
 	open_rite.emit(rite_id)
+
+
+func _emit_open_rite_instance(rite_uid: int) -> void:
+	open_rite_instance.emit(rite_uid)
 
 
 func _clear_rite_pins() -> void:
@@ -385,21 +393,20 @@ func _clear_rite_pins() -> void:
 	_rite_pin_ids.clear()
 
 
-func _open_map_rite_ids() -> Array[int]:
-	var out: Array[int] = []
+func _open_map_rite_instances() -> Array:
+	var out: Array = []
 	if _db == null or _state == null:
 		return out
-	for rid in _db.rites:
-		var rite: Dictionary = _db.rites[rid]
-		var id := int(rid)
+	if not _state.has_method("available_rite_instances"):
+		return out
+	for instance in _state.available_rite_instances():
+		var rite: Dictionary = _db.rites.get(instance.id, {})
 		if not _is_map_rite_interactive(rite):
 			continue
-		if _state.get("available_rites") != null and not (id in _state.available_rites):
+		if not _is_map_rite_open(instance, rite):
 			continue
-		if not _is_map_rite_open(rite):
-			continue
-		out.append(id)
-	out.sort()
+		out.append(instance)
+	out.sort_custom(func(a, b) -> bool: return a.uid < b.uid)
 	return out
 
 
@@ -407,10 +414,9 @@ func _is_map_rite_interactive(rite: Dictionary) -> bool:
 	return RiteOpen.is_interactive(rite)
 
 
-func _is_map_rite_open(rite: Dictionary) -> bool:
-	var id := int(rite.get("id", 0))
+func _is_map_rite_open(instance, rite: Dictionary) -> bool:
 	if int(rite.get("auto_begin", 0)) == 1:
-		return _state != null and id in _state.started_rites
+		return bool(instance.start)
 	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
 
 
@@ -419,8 +425,9 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 	for pin in _rite_pin_buttons:
 		if not is_instance_valid(pin):
 			continue
-		var rid := int(_rite_pin_ids.get(pin, 0))
-		var rite: Dictionary = _db.rites.get(rid, {})
+		var rite_uid := int(_rite_pin_ids.get(pin, 0))
+		var instance = _state.get_rite_instance(rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
+		var rite: Dictionary = _db.rites.get(instance.id, {}) if instance != null else {}
 		var loc := _rite_location_name(rite)
 		if not by_location.has(loc):
 			by_location[loc] = []
@@ -557,12 +564,13 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 	var card_id := int(data.get("card_id", 0))
 	var source := str(data.get("source", ""))
 	var source_slot := str(data.get("source_slot", ""))
+	var source_rite_uid := int(data.get("source_rite_uid", 0))
 	var card: Dictionary = _db.get_card(card_id)
 	var is_sudan: bool = str(card.get("type", "")) == "sudan" or _state.is_active_sudan_card(card_id)
 	var insert_index := _rail_insert_index_at(rail_position, card_id)
 	if source == "slot":
-		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id))
-		_state.remove_card_from_slot(card_id, slot_num)
+		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id, source_rite_uid))
+		_state.remove_card_from_slot(card_id, slot_num, source_rite_uid)
 		if is_sudan:
 			_state.insert_card_to_rail(card_id, insert_index)
 		else:

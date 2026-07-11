@@ -12,6 +12,7 @@ var _card: Dictionary = {}
 var card_id: int = 0
 var drag_source := "hand"
 var drag_slot := ""
+var drag_rite_uid := 0
 var _press_position := Vector2.ZERO
 var _hidden_for_drag := false
 
@@ -36,7 +37,7 @@ func _style_for_card() -> StyleBoxFlat:
 func _get_drag_data(at_position: Vector2) -> Variant:
 	if card_id <= 0:
 		return null
-	var preview := CardWidget.make(_card.duplicate(true), drag_source, drag_slot)
+	var preview := CardWidget.make(_card.duplicate(true), drag_source, drag_slot, drag_rite_uid)
 	preview.card_id = card_id
 	preview.modulate = Color(1, 1, 1, 0.86)
 	var preview_root := Control.new()
@@ -47,12 +48,19 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	preview_root.add_child(preview)
 	set_drag_preview(preview_root)
 	_hide_source_for_drag()
+	return drag_payload()
+
+
+## Kept separate from the engine drag callback so tests can verify the game
+## contract without illegally creating a drag preview outside a GUI drag.
+func drag_payload() -> Dictionary:
 	return {
 		"type": "card",
 		"card_id": card_id,
 		"card": _card.duplicate(true),
 		"source": drag_source,
 		"source_slot": drag_slot,
+		"source_rite_uid": drag_rite_uid,
 	}
 
 
@@ -169,11 +177,12 @@ static func _rarity_color(rare: int, card_type: String = "") -> Color:
 
 
 ## Build a standalone card widget from a card dictionary.
-static func make(card: Dictionary, source: String = "hand", slot_key: String = "") -> CardWidget:
+static func make(card: Dictionary, source: String = "hand", slot_key: String = "", rite_uid: int = 0) -> CardWidget:
 	var w := CardWidget.new()
 	w.custom_minimum_size = CARD_SIZE
 	w.card_id = int(card.get("id", 0))
 	w.drag_source = source
 	w.drag_slot = slot_key
+	w.drag_rite_uid = rite_uid
 	w.set_card(card)
 	return w

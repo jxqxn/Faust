@@ -43,6 +43,27 @@ func test_selector_hides_rite_when_open_condition_is_unsatisfied():
 	assert_eq(_count_buttons(selector._list_container), 0)
 
 
+func test_selector_keeps_distinct_runtime_instances_of_one_rite():
+	var db := ConfigDB.new()
+	db.rites = {
+		9010: {
+			"id": 9010,
+			"name": "Repeatable",
+			"text": "",
+			"location": "Test",
+			"auto_begin": 0,
+			"cards_slot": {"s1": {}},
+			"settlement": [{"condition": {}, "result": {}}],
+			"open_conditions": [],
+		},
+	}
+	var state := GameState.new()
+	var first = state.create_rite_instance(9010)
+	var second = state.create_rite_instance(9010)
+	var uids := RiteSelector.filter_open_rite_instance_uids(db, state, null, "Test")
+	assert_eq(uids, [first.uid, second.uid], "selector preserves distinct rite instances with one config id")
+
+
 func test_selector_requires_all_open_conditions_current_assumption():
 	var db := ConfigDB.new()
 	db.rites = {

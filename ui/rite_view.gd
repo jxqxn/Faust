@@ -40,6 +40,7 @@ var _state
 var _db
 var _rng
 var _rite_id: int = 5000001
+var _rite_uid: int = 0
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> card_id
 var _managed_slots: Array[int] = []
@@ -66,12 +67,28 @@ var _slot_details: Dictionary = {}
 var _slots_container: VBoxContainer
 
 
-func setup(state, db, rng, rite_id: int) -> void:
+func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 	_state = state
 	_db = db
 	_rng = rng
 	_rite_id = rite_id
 	_rite = db.get_rite(rite_id)
+	if _state != null and _state.has_method("get_rite_instance"):
+		_rite_uid = rite_uid
+		var instance = _state.get_rite_instance(_rite_uid) if _rite_uid > 0 else _state.find_rite_instance_by_id(rite_id)
+		if instance == null:
+			_rite_uid = int(_state.add_available_rite(rite_id))
+		_load_placements_from_instance()
+
+
+func _load_placements_from_instance() -> void:
+	_placed.clear()
+	if _state == null or _rite_uid <= 0:
+		return
+	for slot_key in _slot_keys():
+		var cards: Array = _state.cards_in_slot(slot_key.substr(1).to_int(), _rite_uid)
+		if not cards.is_empty():
+			_placed[slot_key] = int(cards[0].get("id", 0))
 
 
 func _ready() -> void:
@@ -340,7 +357,7 @@ func drop_card_on_slot(slot_key: String, data: Variant) -> void:
 	if not _slot_accepts_card(slot_def, card):
 		set_log("这张牌不能放入 %s" % slot_key.to_upper())
 		return
-	_place_card_in_slot(slot_key, card_id, str(data.get("source", "")), str(data.get("source_slot", "")))
+	_place_card_in_slot(slot_key, card_id, str(data.get("source", "")), str(data.get("source_slot", "")), int(data.get("source_rite_uid", _rite_uid)))
 	set_log("%s 放入 %s" % [_card_display_name(card, card_id), slot_key.to_upper()])
 	_selected_card_id = 0
 	_after_placement_changed()
@@ -412,14 +429,16 @@ func _do_resolve() -> void:
 		_prepare_table_from_placements()
 	var ctx := {
 		"db": _db, "state": _state, "rng": _rng,
-		"rite_state": _placed.duplicate(),
+		"rite_state": _placed.duplicate(), "rite_uid": _rite_uid,
 		"attr_slots": _slot_keys(), "rite_id": _rite_id,
 		"dice_cache": _resolve_dice_cache,
 	}
 	var gold_dice_bonus = _gold_used_this_resolve
 	if not _gold_dice_map.is_empty():
 		gold_dice_bonus = _gold_dice_map
+	_state.active_rite_uid = _rite_uid
 	var res = RiteResolver.resolve(_rite, ctx, gold_dice_bonus)
+	_state.active_rite_uid = 0
 	_last_result = res
 	_consume_placed_sudan_cards(res)
 	_apply_deferred_to_world(res.deferred)
@@ -491,29 +510,31 @@ func _prepare_table_from_placements() -> void:
 		if slot_num not in slots_to_clear:
 			slots_to_clear.append(slot_num)
 	for slot_num in slots_to_clear:
-		_state.clear_slot(slot_num)
+		_state.clear_slot(slot_num, _rite_uid)
 	_managed_slots.clear()
 	for slot_key in _placed:
 		var slot_num: int = str(slot_key).substr(1).to_int()
 		_managed_slots.append(slot_num)
 		var card_id := int(_placed[slot_key])
-		_state.remove_card_from_slot(card_id)
-		_state.add_card_to_slot(card_id, slot_num, _db)
+		_state.remove_card_from_slot(card_id, 0, _rite_uid)
+		_state.add_card_to_slot(card_id, slot_num, _db, _rite_uid)
 
 
-func _place_card_in_slot(slot_key: String, card_id: int, source: String, source_slot: String) -> void:
+func _place_card_in_slot(slot_key: String, card_id: int, source: String, source_slot: String, source_rite_uid: int = 0) -> void:
 	if _placed.has(slot_key) and int(_placed[slot_key]) != card_id:
 		_return_slot_to_hand(slot_key)
+	var origin_rite_uid := source_rite_uid if source_rite_uid > 0 else _rite_uid
 	if source == "slot" and source_slot != "":
-		_placed.erase(source_slot)
-		_state.remove_card_from_slot(card_id, source_slot.substr(1).to_int())
+		if origin_rite_uid == _rite_uid:
+			_placed.erase(source_slot)
+		_state.remove_card_from_slot(card_id, source_slot.substr(1).to_int(), origin_rite_uid)
 	elif source == "hand":
 		_state.remove_card_from_hand(card_id)
-	var existing_slot: int = _state.slot_for_table_card(card_id)
+	var existing_slot: int = _state.slot_for_table_card(card_id, _rite_uid)
 	if existing_slot > 0:
-		_state.remove_card_from_slot(card_id, existing_slot)
+		_state.remove_card_from_slot(card_id, existing_slot, _rite_uid)
 	_placed[slot_key] = card_id
-	_state.add_card_to_slot(card_id, slot_key.substr(1).to_int(), _db)
+	_state.add_card_to_slot(card_id, slot_key.substr(1).to_int(), _db, _rite_uid)
 
 
 func _return_slot_to_hand(slot_key: String) -> void:
@@ -521,14 +542,14 @@ func _return_slot_to_hand(slot_key: String) -> void:
 		return
 	var card_id := int(_placed[slot_key])
 	_placed.erase(slot_key)
-	_state.remove_card_from_slot(card_id, slot_key.substr(1).to_int())
+	_state.remove_card_from_slot(card_id, slot_key.substr(1).to_int(), _rite_uid)
 	var card: Dictionary = _db.get_card(card_id)
 	if str(card.get("type", "")) != "sudan" and not _state.has_card_in_hand(card_id):
 		_state.add_card_to_hand(card_id)
 
 
 func return_card_to_hand(card_id: int, source_slot: String) -> void:
-	var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id))
+	var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id, _rite_uid))
 	if source_slot != "" and _placed.has(source_slot) and int(_placed[source_slot]) == card_id:
 		_placed.erase(source_slot)
 	else:
@@ -536,7 +557,7 @@ func return_card_to_hand(card_id: int, source_slot: String) -> void:
 			if int(_placed[slot_key]) == card_id:
 				_placed.erase(slot_key)
 				break
-	_state.remove_card_from_slot(card_id, slot_num)
+	_state.remove_card_from_slot(card_id, slot_num, _rite_uid)
 	var card: Dictionary = _db.get_card(card_id)
 	if str(card.get("type", "")) != "sudan" and not _state.has_card_in_hand(card_id):
 		_state.add_card_to_hand(card_id)
@@ -550,7 +571,7 @@ func _render_slot_card(btn: Button, slot_key: String, card_id: int, card: Dictio
 	if str(card_copy.get("type", "")) == "sudan":
 		var dec = SudanCards.decode(card_id)
 		card_copy["name"] = "%s%s" % [dec.rank, dec.action]
-	var widget := CardWidget.make(card_copy, "slot", slot_key)
+	var widget := CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
 	widget.name = "PlacedCard_%s" % slot_key.to_upper()
 	widget.set_anchors_preset(Control.PRESET_FULL_RECT)
 	widget.offset_left = 0

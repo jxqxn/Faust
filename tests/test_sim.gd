@@ -127,7 +127,9 @@ func test_result_slot_tag_op():
 func test_result_deferred_events_and_choose():
 	var st := GameState.new()
 	var d := ResultExec.execute({"event_on": 5300601, "choose": {"a": "x"}}, st, db)
-	assert_eq(d.events, [5300601])
+	assert_true(st.is_event_enabled(5300601), "event_on enables the target event")
+	assert_true(5300601 in st.event_queue, "start_trigger event queues its settlement")
+	assert_true(d.events.is_empty(), "event_on is registration, not a deferred display event")
 	assert_eq(d.choose, {"a": "x"})
 
 func test_result_deferred_prompts_and_rite_generation_keys():
@@ -316,7 +318,9 @@ func test_settlement_prior_executes_action_after_result():
 	var res := RiteResolver.resolve(fake, ctx, 0)
 	assert_eq(res.prior_log.size(), 1)
 	assert_eq(st.coin_count, 1)
-	assert_eq(res.deferred.events, [5300601])
+	assert_true(st.is_event_enabled(5300601), "rite event_on enables the target event")
+	assert_true(5300601 in st.event_queue, "start-trigger event is queued once enabled")
+	assert_true(res.deferred.events.is_empty(), "event_on does not masquerade as a display event")
 
 func test_settlement_normal_executes_action_after_result():
 	var st := GameState.new()
@@ -493,8 +497,11 @@ func test_event_runtime_matches_round_begin_by_round_number():
 	var local_db := ConfigDB.new()
 	local_db.events[990010] = {"id": 990010, "on": {"round_begin_ba": 2}, "condition": {}}
 	local_db.events[990011] = {"id": 990011, "on": {"round_begin_ba": 5}, "condition": {}}
+	var st := GameState.new()
+	st.event_status[990010] = true
+	st.event_status[990011] = true
 	var rt := EventRuntime.new()
-	rt.build(local_db, null)
+	rt.build(local_db, st)
 	assert_eq(rt.fire("round_begin_ba", {"round": 2}), [990010], "only round-2 event fires on round 2")
 	assert_eq(rt.fire("round_begin_ba", {"round": 5}), [990011], "only round-5 event fires on round 5")
 	assert_eq(rt.fire("round_begin_ba", {"round": 3}), [], "no event fires on round 3")
@@ -503,8 +510,10 @@ func test_event_runtime_matches_round_begin_by_round_number():
 func test_event_runtime_matches_rite_end_by_rite_id():
 	var local_db := ConfigDB.new()
 	local_db.events[990020] = {"id": 990020, "on": {"rite_end": 5000001}, "condition": {}}
+	var st := GameState.new()
+	st.event_status[990020] = true
 	var rt := EventRuntime.new()
-	rt.build(local_db, null)
+	rt.build(local_db, st)
 	assert_eq(rt.fire("rite_end", {"rite": 5000001}), [990020], "rite_end event fires for matching rite")
 	assert_eq(rt.fire("rite_end", {"rite": 5000002}), [], "rite_end event does not fire for wrong rite")
 
@@ -513,6 +522,7 @@ func test_event_runtime_gates_on_condition():
 	var local_db := ConfigDB.new()
 	local_db.events[990030] = {"id": 990030, "on": {"round_begin_ba": 1}, "condition": {"counter.7000001>=": 999}}
 	var st := GameState.new()
+	st.event_status[990030] = true
 	# Condition requires a counter the state doesn't have (==0, so >=5 fails).
 	var rt := EventRuntime.new()
 	rt.build(local_db, st)
@@ -526,9 +536,8 @@ func test_state_trigger_events_queues_matched_ids():
 	var local_db := ConfigDB.new()
 	local_db.events[990040] = {"id": 990040, "on": {"game_end": -1}, "condition": {}}
 	var st := GameState.new()
-	# Build EventRuntime directly (setup_new_run needs full config).
-	st.event_runtime = EventRuntime.new()
-	st.event_runtime.build(local_db, st)
+	st.event_status[990040] = true
+	st._rebuild_event_runtime(local_db)
 	var matched := st.trigger_events("game_end", {})
 	assert_eq(matched, [990040], "game_end trigger fires the registered event")
 	assert_eq(st.event_queue, [990040], "matched event is queued for display")
@@ -599,12 +608,77 @@ func test_event_off_disables_future_triggering():
 	var local_db := ConfigDB.new()
 	local_db.events[990070] = {"id": 990070, "on": {"round_begin_ba": 1}, "condition": {}}
 	var st := GameState.new()
-	st.event_runtime = EventRuntime.new()
-	st.event_runtime.build(local_db, st)
+	st.event_status[990070] = true
+	st._rebuild_event_runtime(local_db)
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990070], "event fires before event_off")
-	st.event_runtime.disable_event(990070)
+	st.disable_event(990070)
 	st.event_queue.clear()
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "event does not fire after event_off")
+
+
+func test_inactive_event_never_fires_until_event_on_enables_it():
+	var local_db := ConfigDB.new()
+	local_db.events[990080] = {"id": 990080, "on": {"round_begin_ba": 1}, "condition": {}, "start_trigger": true}
+	var st := GameState.new()
+	st._rebuild_event_runtime(local_db)
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "definitions are inactive by default")
+	ResultExec.execute({"event_on": 990080}, st, local_db)
+	assert_true(st.is_event_enabled(990080), "event_on sets persistent active status")
+	assert_eq(st.event_queue, [990080], "start_trigger queues an enabled event immediately")
+	st.event_queue.clear()
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990080], "enabled event now responds to its timing")
+
+
+func test_event_on_without_start_trigger_registers_without_displaying():
+	var local_db := ConfigDB.new()
+	local_db.events[990082] = {"id": 990082, "on": {"round_begin_ba": 1}, "condition": {}, "start_trigger": false}
+	var st := GameState.new()
+	ResultExec.execute({"event_on": 990082}, st, local_db)
+	assert_true(st.is_event_enabled(990082), "event_on enables events regardless of start_trigger")
+	assert_true(st.event_queue.is_empty(), "start_trigger=false does not display the event immediately")
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990082], "registered event waits for its configured timing")
+
+
+func test_new_run_activates_only_auto_start_init_events():
+	var st := GameState.new()
+	st.setup_new_run(db, 1, RNG.new(1))
+	assert_false(st.is_event_enabled(5310008), "a config definition without auto_start_init is not active at new run")
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}).has(5310008), false, "inactive round-one event cannot fire")
+	assert_gt(st.event_status.size(), 0, "auto_start_init contributes the normal opening event set")
+
+
+func test_rite_instances_keep_same_numbered_slots_isolated():
+	var st := GameState.new()
+	var first := st.create_rite_instance(900101)
+	var second := st.create_rite_instance(900102)
+	st.add_card_to_slot(2000001, 1, db, first.uid)
+	st.add_card_to_slot(2000005, 1, db, second.uid)
+	assert_eq(st.cards_in_slot(1, first.uid).size(), 1, "first rite owns its s1 card")
+	assert_eq(st.cards_in_slot(1, second.uid).size(), 1, "second rite owns its own s1 card")
+	assert_eq(int(st.cards_in_slot(1, first.uid)[0].get("id", 0)), 2000001, "first rite card is not replaced")
+	assert_eq(int(st.cards_in_slot(1, second.uid)[0].get("id", 0)), 2000005, "second rite card is not replaced")
+	st.clear_slot(1, first.uid)
+	assert_true(st.cards_in_slot(1, first.uid).is_empty(), "clearing first rite does not retain its card")
+	assert_eq(st.cards_in_slot(1, second.uid).size(), 1, "clearing first rite leaves second rite untouched")
+
+
+func test_non_replay_event_unregisters_after_settlement():
+	var local_db := ConfigDB.new()
+	local_db.events[990081] = {
+		"id": 990081,
+		"is_replay": false,
+		"on": {"round_begin_ba": 1},
+		"condition": {},
+		"settlement": [{"action": {"coin": 2}}],
+	}
+	var st := GameState.new()
+	st.enable_event(990081, local_db)
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990081], "enabled non-replay event fires")
+	DeferredEffects.execute_event(local_db.get_event(990081), st, local_db, RNG.new(1))
+	assert_false(st.is_event_enabled(990081), "non-replay event unregisters after settlement")
+	assert_true(st.event_done.has(990081), "completion history is recorded")
+	st.event_queue.clear()
+	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "completed non-replay event cannot fire again")
 
 
 func test_real_event_5300258_option_branch_executes():

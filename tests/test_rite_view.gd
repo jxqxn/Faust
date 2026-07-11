@@ -169,7 +169,8 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 
 	view._resolve()
 
-	assert_true(5310008 in state.event_queue, "event_on should enter the runtime event queue")
+	assert_true(state.is_event_enabled(5310008), "event_on should enable the runtime event")
+	assert_true(5310008 in state.event_queue, "start-trigger event should enter the runtime event queue")
 	assert_true(5001001 in state.available_rites, "rite result should generate a runtime rite entry")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "p1", "prompt should enter the runtime prompt queue")
 
@@ -235,8 +236,8 @@ func test_prepare_table_preserves_cards_outside_placed_slots():
 	if state.cards_in_slot(3).is_empty():
 		return
 	assert_eq(int(state.cards_in_slot(3)[0].get("id", 0)), 2000006)
-	assert_eq(state.cards_in_slot(1).size(), 1, "placed slot is replaced")
-	assert_eq(int(state.cards_in_slot(1)[0].get("id", 0)), 2000005)
+	assert_eq(state.cards_in_slot(1, view._rite_uid).size(), 1, "placed slot is replaced within this rite")
+	assert_eq(int(state.cards_in_slot(1, view._rite_uid)[0].get("id", 0)), 2000005)
 
 func test_prepare_table_clears_slots_cancelled_after_prior_placement():
 	var rng := RNG.new(100)
@@ -247,12 +248,12 @@ func test_prepare_table_clears_slots_cancelled_after_prior_placement():
 	view._placed = {"s1": 2000005}
 
 	view._prepare_table_from_placements()
-	assert_eq(state.cards_in_slot(1).size(), 1, "initial placement exists")
+	assert_eq(state.cards_in_slot(1, view._rite_uid).size(), 1, "initial placement exists")
 
 	view._placed.clear()
 	view._prepare_table_from_placements()
 
-	assert_eq(state.cards_in_slot(1).size(), 0, "cancelled placement slot is cleared")
+	assert_eq(state.cards_in_slot(1, view._rite_uid).size(), 0, "cancelled placement slot is cleared")
 	assert_eq(state.cards_in_slot(3).size(), 1, "unrelated table card still remains")
 
 

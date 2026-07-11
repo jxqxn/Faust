@@ -19,7 +19,9 @@ var hand: Array[int] = []
 # Visual order for the unified bottom card rail, including hand and active
 # sudan cards. Gameplay ownership still lives in hand/active_sudan_cards.
 var rail_order: Array[int] = []
-# Table: cards placed on the rite table, each {id, slot, tags, count, is_lost}.
+# Table index: cards placed in a rite slot, each
+# {id, slot, rite_uid, tags, count, is_lost}. RiteInstance.cards is the
+# per-instance view; this flat list remains for global table conditions.
 var table_cards: Array = []
 # Coin stack: the coin card (2000093) count. Gold = coin-card stack (spec 10.2).
 var coin_count := 0
@@ -44,6 +46,13 @@ var sudan_redraw_count := 1
 var active_sudan_cards: Array = []
 # Sudan deck (shuffled pool, consumed last-first per spec sec 10.6).
 var sudan_deck: Array[int] = []
+# Runtime rite instances are the authoritative player-owned ritual state.
+# Config ids below remain compatibility views for code not migrated yet.
+# [SRC: dump.cs:392391 Rite has uid/id/start/life/cards; StartRite.c @ Do
+#       (RVA 0x51bcf0) creates an instance before GameController.AddRite.]
+var rite_instances: Dictionary = {} # uid(int) -> RiteInstance
+var next_rite_uid := 1
+var active_rite_uid := 0
 # Rites started/opened by auto-begin processing. Auto-begin is not the same as
 # auto-resolve; the original DoStartAutoBeginRite calls Rite.set_start.
 var started_rites: Array[int] = []
@@ -56,8 +65,17 @@ var auto_result_rites: Array[int] = []
 var rite_auto_result := false
 var event_queue: Array[int] = []
 var event_prompts: Array[Dictionary] = []
-# Event trigger dispatcher: rebuilt from db on each run (config is static; the
-# match state derives from round/rite/card counters at fire time).
+# Event status mirrors the original Player event-status map. Definitions in
+# ConfigDB do not become live triggers until their status is enabled.
+# `event_done` is a clone-side history/audit record; status remains the rule
+# governing future trigger registration.
+var event_status: Dictionary = {}
+var event_done: Dictionary = {}
+# The original auto_start_init checks the current player/template id. The clone
+# currently has one normal opening template, id 1; keep it explicit so later
+# opening profiles can select a different set without registering all events.
+var event_init_profile_id := 1
+# Event trigger dispatcher: indexes enabled event definitions for this run.
 var event_runtime = null
 
 
@@ -90,19 +108,22 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	day = 1
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
+	rite_instances.clear()
+	next_rite_uid = 1
+	active_rite_uid = 0
 	available_rites.clear()
 	for rid in db.get_default_rites():
-		var id := int(rid)
-		if not (id in available_rites):
-			available_rites.append(id)
+		create_rite_instance(int(rid))
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false
 	event_queue.clear()
 	event_prompts.clear()
-	# Build the event trigger registry from config.
-	event_runtime = EventRuntime.new()
-	event_runtime.build(db, self)
+	event_status.clear()
+	event_done.clear()
+	event_init_profile_id = int(db.init_config.get("event_init_profile_id", 1))
+	_rebuild_event_runtime(db)
+	_enable_initial_events(db)
 
 
 func _redraws_per_round(db) -> int:
@@ -274,16 +295,162 @@ func visible_rail_card_ids() -> Array[int]:
 	return out
 
 
-func add_available_rite(id: int) -> void:
+func add_available_rite(id: int) -> int:
 	if id <= 0:
-		return
-	if not (id in available_rites):
-		available_rites.append(id)
+		return 0
+	var existing := find_rite_instance_by_id(id)
+	if existing != null:
+		return existing.uid
+	return create_rite_instance(id).uid
+
+
+## Create a distinct runtime rite. Callers that intentionally generate a
+## second copy must use this rather than assuming a config id is an instance.
+func create_rite_instance(rite_id: int) -> RiteInstance:
+	if rite_id <= 0:
+		return null
+	var instance := RiteInstance.new(next_rite_uid, rite_id)
+	next_rite_uid += 1
+	rite_instances[instance.uid] = instance
+	_sync_rite_legacy_lists()
+	return instance
+
+
+func get_rite_instance(rite_uid: int) -> RiteInstance:
+	return rite_instances.get(rite_uid, null)
+
+
+func find_rite_instance_by_id(rite_id: int) -> RiteInstance:
+	for rite_uid in rite_instances:
+		var instance: RiteInstance = rite_instances[rite_uid]
+		if instance.id == rite_id:
+			return instance
+	return null
+
+
+func available_rite_instances() -> Array[RiteInstance]:
+	_ensure_legacy_rite_instances()
+	var out: Array[RiteInstance] = []
+	for rite_uid in rite_instances:
+		out.append(rite_instances[rite_uid])
+	out.sort_custom(func(a: RiteInstance, b: RiteInstance) -> bool: return a.uid < b.uid)
+	return out
+
+
+func start_rite_instance(rite_uid: int) -> bool:
+	var instance := get_rite_instance(rite_uid)
+	if instance == null:
+		return false
+	if not instance.start:
+		instance.start = true
+		instance.start_round = round_number
+		instance.start_life = instance.life
+	_sync_rite_legacy_lists()
+	return true
+
+
+func _ensure_legacy_rite_instances() -> void:
+	# Existing test fixtures and older callers may still write the compatibility
+	# id arrays directly. Materialize missing instances once at this boundary.
+	for rite_id in available_rites:
+		if find_rite_instance_by_id(int(rite_id)) == null:
+			create_rite_instance(int(rite_id))
+	for rite_id in started_rites:
+		var instance := find_rite_instance_by_id(int(rite_id))
+		if instance == null:
+			instance = create_rite_instance(int(rite_id))
+		instance.start = true
+	_sync_rite_legacy_lists()
+
+
+func _sync_rite_legacy_lists() -> void:
+	var available: Array[int] = []
+	var started: Array[int] = []
+	for instance in rite_instances.values():
+		if not (instance.id in available):
+			available.append(instance.id)
+		if instance.start and not (instance.id in started):
+			started.append(instance.id)
+	available.sort()
+	started.sort()
+	available_rites = available
+	started_rites = started
 
 
 func queue_event(id: int) -> void:
-	if id > 0:
+	# A trigger can run again before the UI consumes its queued event. Keep one
+	# pending entry, matching the original's immediate operation dispatch.
+	if id > 0 and not (id in event_queue):
 		event_queue.append(id)
+
+
+## Enable and register an event. `event_on` requests start-trigger handling;
+## normal new-run registration does not.
+## [SRC: decompiled/EventOn.__c__DisplayClass2_0.c @ <Do>b__0 (RVA 0x51f1a0);
+##       decompiled/EventTrigger.c @ Add(EventNode) (RVA 0x4fa9d0)]
+func enable_event(id: int, db, fire_start_trigger: bool = false) -> bool:
+	if id <= 0 or db == null or db.get_event(id).is_empty():
+		return false
+	event_status[id] = true
+	if event_runtime == null:
+		_rebuild_event_runtime(db)
+	if not event_runtime.enable_event(id):
+		return false
+	var event: Dictionary = db.get_event(id)
+	if fire_start_trigger and bool(event.get("start_trigger", false)):
+		# The original starts this event's settlement immediately. The clone's
+		# event display is the settlement boundary, so queue it once here.
+		queue_event(id)
+	return true
+
+
+## Disable and unregister an event. This is the shared EventOff path.
+## [SRC: decompiled/EventOff.c @ Do (RVA 0x50ef60): SetEventStatus(id, false)
+##       followed by EventTrigger.Remove(id)]
+func disable_event(id: int) -> void:
+	if id <= 0:
+		return
+	event_status[id] = false
+	if event_runtime != null:
+		event_runtime.disable_event(id)
+
+
+## Complete the currently executing event. Non-replay events unregister only
+## after their settlement actually executes; replay events stay active.
+## [SRC: decompiled/EventTrigger.__c__DisplayClass4_0.c @ <Add>b__0
+##       (RVA 0x507360), EventNode.is_replay in dump.cs:385232]
+func complete_event(id: int, is_replay: bool) -> void:
+	if id <= 0:
+		return
+	event_done[id] = true
+	if not is_replay:
+		disable_event(id)
+
+
+func is_event_enabled(id: int) -> bool:
+	return bool(event_status.get(id, false))
+
+
+func _rebuild_event_runtime(db) -> void:
+	event_runtime = EventRuntime.new()
+	event_runtime.build(db, self)
+
+
+func _enable_initial_events(db) -> void:
+	if db == null:
+		return
+	for eid in db.events:
+		var event: Dictionary = db.events[eid]
+		var init_profiles: Array = event.get("auto_start_init", [])
+		if _int_list_contains(init_profiles, event_init_profile_id):
+			enable_event(int(eid), db, false)
+
+
+func _int_list_contains(values: Array, wanted: int) -> bool:
+	for value in values:
+		if int(value) == wanted:
+			return true
+	return false
 
 
 ## Fire the event trigger for `timing` and queue any matched events. A thin
@@ -382,45 +549,51 @@ func hand_has_card_id(card_id: int) -> bool:
 
 
 # ---- Table (slots) ----
-## Cards currently in a given slot index (1-based: s1..s4).
-func cards_in_slot(slot: int) -> Array:
+## Cards currently in a given slot index. Passing rite_uid scopes the query to
+## one RiteInstance; the default remains a global compatibility query.
+func cards_in_slot(slot: int, rite_uid: int = 0) -> Array:
 	var out: Array = []
 	for tc in table_cards:
-		if int(tc.get("slot", 0)) == slot:
+		if int(tc.get("slot", 0)) == slot and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
 			out.append(tc)
 	return out
 
 
-func slot_has_cards(slot: int) -> bool:
-	return cards_in_slot(slot).size() > 0
+func slot_has_cards(slot: int, rite_uid: int = 0) -> bool:
+	return cards_in_slot(slot, rite_uid).size() > 0
 
 
-func clear_slot(slot: int) -> void:
+func clear_slot(slot: int, rite_uid: int = 0) -> void:
 	var keep: Array = []
 	for tc in table_cards:
-		if int(tc.get("slot", 0)) != slot:
+		if int(tc.get("slot", 0)) != slot or (rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid):
 			keep.append(tc)
 	table_cards = keep
+	_sync_rite_instance_cards(rite_uid)
 
 
-func remove_card_from_slot(card_id: int, slot: int = 0) -> bool:
+func remove_card_from_slot(card_id: int, slot: int = 0, rite_uid: int = 0) -> bool:
 	for i in range(table_cards.size() - 1, -1, -1):
 		var tc: Dictionary = table_cards[i]
 		if int(tc.get("id", 0)) != card_id:
 			continue
 		if slot > 0 and int(tc.get("slot", 0)) != slot:
 			continue
+		if rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid:
+			continue
 		table_cards.remove_at(i)
+		_sync_rite_instance_cards(rite_uid if rite_uid > 0 else int(tc.get("rite_uid", 0)))
 		return true
 	return false
 
 
-func remove_table_card_id(card_id: int) -> void:
+func remove_table_card_id(card_id: int, rite_uid: int = 0) -> void:
 	var keep: Array = []
 	for tc in table_cards:
-		if int(tc.get("id", 0)) != card_id:
+		if int(tc.get("id", 0)) != card_id or (rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid):
 			keep.append(tc)
 	table_cards = keep
+	_sync_rite_instance_cards(rite_uid)
 
 
 func card_is_on_table(card_id: int) -> bool:
@@ -430,20 +603,50 @@ func card_is_on_table(card_id: int) -> bool:
 	return false
 
 
-func slot_for_table_card(card_id: int) -> int:
+func slot_for_table_card(card_id: int, rite_uid: int = 0) -> int:
 	for tc in table_cards:
-		if int(tc.get("id", 0)) == card_id:
+		if int(tc.get("id", 0)) == card_id and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
 			return int(tc.get("slot", 0))
 	return 0
 
 
-func add_card_to_slot(card_id: int, slot: int, db) -> void:
+func add_card_to_slot(card_id: int, slot: int, db, rite_uid: int = 0) -> void:
 	var c: Dictionary = db.get_card(card_id)
 	var entry := {
 		"id": card_id,
 		"slot": slot,
+		"rite_uid": rite_uid,
 		"tags": c.get("tag", {}).duplicate() if not c.is_empty() else {},
 		"count": 1,
 		"is_lost": false,
 	}
 	table_cards.append(entry)
+	_sync_rite_instance_cards(rite_uid)
+
+
+func clear_rite_cards(rite_uid: int) -> void:
+	if rite_uid <= 0:
+		table_cards.clear()
+		for instance in rite_instances.values():
+			instance.cards.clear()
+		return
+	var keep: Array = []
+	for tc in table_cards:
+		if int(tc.get("rite_uid", 0)) != rite_uid:
+			keep.append(tc)
+	table_cards = keep
+	_sync_rite_instance_cards(rite_uid)
+
+
+func _sync_rite_instance_cards(rite_uid: int = 0) -> void:
+	if rite_uid > 0:
+		var instance := get_rite_instance(rite_uid)
+		if instance == null:
+			return
+		instance.cards.clear()
+		for tc in table_cards:
+			if int(tc.get("rite_uid", 0)) == rite_uid:
+				instance.cards.append(tc)
+		return
+	for instance in rite_instances.values():
+		_sync_rite_instance_cards(instance.uid)

@@ -7,7 +7,7 @@ class_name SaveSystem
 extends RefCounted
 
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 2
+const SAVE_VERSION := 4
 const SAVE_KIND_PLAYER := "player"
 
 static var save_path_override := ""
@@ -37,6 +37,9 @@ static func serialize(state) -> Dictionary:
 	var table_cards_data: Array = []
 	for tc in state.table_cards:
 		table_cards_data.append(tc.duplicate(true))
+	var rite_instances_data: Array = []
+	for instance in state.available_rite_instances():
+		rite_instances_data.append(instance.to_save_dict())
 	return {
 		"version": SAVE_VERSION,
 		"save_kind": SAVE_KIND_PLAYER,
@@ -54,12 +57,18 @@ static func serialize(state) -> Dictionary:
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
 		"table_cards": table_cards_data,
+		"rite_instances": rite_instances_data,
+		"next_rite_uid": state.next_rite_uid,
+		"active_rite_uid": state.active_rite_uid,
 		"available_rites": state.available_rites.duplicate(),
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
 		"event_queue": state.event_queue.duplicate(),
 		"event_prompts": state.event_prompts.duplicate(true),
+		"event_status": state.event_status.duplicate(true),
+		"event_done": state.event_done.duplicate(true),
+		"event_init_profile_id": state.event_init_profile_id,
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
 	}
@@ -97,7 +106,20 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.table_cards.clear()
 	for tc in data.get("table_cards", []):
 		if tc is Dictionary:
-			state.table_cards.append(tc.duplicate(true))
+			var entry: Dictionary = tc.duplicate(true)
+			entry["rite_uid"] = int(entry.get("rite_uid", 0))
+			state.table_cards.append(entry)
+	state.rite_instances.clear()
+	for instance_data in data.get("rite_instances", []):
+		if instance_data is Dictionary:
+			var instance := RiteInstance.from_save_dict(instance_data)
+			if instance.uid > 0 and instance.id > 0:
+				instance.cards.clear() # table_cards below is the single restored source.
+				state.rite_instances[instance.uid] = instance
+	state.next_rite_uid = int(data.get("next_rite_uid", 1))
+	for rite_uid in state.rite_instances:
+		state.next_rite_uid = maxi(state.next_rite_uid, int(rite_uid) + 1)
+	state.active_rite_uid = int(data.get("active_rite_uid", 0))
 	state.available_rites.clear()
 	for rid in data.get("available_rites", db.get_default_rites()):
 		state.available_rites.append(int(rid))
@@ -108,6 +130,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rid in data.get("auto_result_rites", []):
 		state.auto_result_rites.append(int(rid))
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
+	if state.has_method("_ensure_legacy_rite_instances"):
+		state._ensure_legacy_rite_instances()
+	if state.has_method("_sync_rite_instance_cards"):
+		state._sync_rite_instance_cards()
 	state.event_queue.clear()
 	for eid in data.get("event_queue", []):
 		state.event_queue.append(int(eid))
@@ -115,10 +141,21 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for prompt in data.get("event_prompts", []):
 		if prompt is Dictionary:
 			state.event_prompts.append(prompt.duplicate(true))
+	state.event_status.clear()
+	var saved_event_status: Dictionary = data.get("event_status", {})
+	for event_id in saved_event_status:
+		state.event_status[int(event_id)] = bool(saved_event_status[event_id])
+	state.event_done.clear()
+	var saved_event_done: Dictionary = data.get("event_done", {})
+	for event_id in saved_event_done:
+		state.event_done[int(event_id)] = bool(saved_event_done[event_id])
+	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))
 	state.local_counters = data.get("local_counters", {}).duplicate(true)
 	state.global_counters = data.get("global_counters", {}).duplicate(true)
 	if state.has_method("sync_rail_order"):
 		state.sync_rail_order()
+	if state.has_method("_rebuild_event_runtime"):
+		state._rebuild_event_runtime(db)
 
 
 ## Save to disk. Returns true on success.

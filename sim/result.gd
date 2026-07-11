@@ -79,22 +79,28 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Clean slot / clean rite.
 	if k == "clean.rite":
-		state.table_cards.clear()
+		if state.has_method("clear_rite_cards"):
+			state.clear_rite_cards(int(state.active_rite_uid))
+		else:
+			state.table_cards.clear()
 		deferred.clean_rite = true
 		return
 	if k.begins_with("clean."):
 		var slot := _clean_slot_from_key(k)
 		if slot > 0:
-			state.clear_slot(slot)
+			state.clear_slot(slot, int(state.active_rite_uid))
 			deferred.clean_slots.append(slot)
 			return
 		var card_id := _clean_card_id_from_key(k, db)
 		if card_id > 0:
 			if state.has_method("remove_table_card_id"):
-				state.remove_table_card_id(card_id)
+				state.remove_table_card_id(card_id, int(state.active_rite_uid))
 			deferred.clean_card_ids.append(card_id)
 		elif _clean_all_from_key(k):
-			state.table_cards.clear() # index<1 => all slots
+			if state.has_method("clear_rite_cards"):
+				state.clear_rite_cards(int(state.active_rite_uid))
+			else:
+				state.table_cards.clear() # index<1 => all slots
 			deferred.clean_rite = true
 		return
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
@@ -107,17 +113,14 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Events.
 	if k == "event_on":
-		deferred.events.append(int(val))
+		if state != null and state.has_method("enable_event"):
+			for event_id in _event_ids(val):
+				state.enable_event(event_id, db, true)
 		return
 	if k == "event_off":
-		# Disable the event from future triggering (event_off).
-		# [SRC: EventOff.c @ Do -> EventTrigger.Remove]
-		if state != null and state.get("event_runtime") != null:
-			if val is Array:
-				for off_id in val:
-					state.event_runtime.disable_event(int(off_id))
-			else:
-				state.event_runtime.disable_event(int(val))
+		if state != null and state.has_method("disable_event"):
+			for event_id in _event_ids(val):
+				state.disable_event(event_id)
 		return
 	# Rite jump.
 	if k == "rite":
@@ -162,6 +165,16 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Unhandled: log, don't crash.
 	deferred.logs.append("UNHANDLED result key: %s=%v" % [k, val])
+
+
+static func _event_ids(value: Variant) -> Array[int]:
+	var ids: Array[int] = []
+	if value is Array:
+		for entry in value:
+			ids.append(int(entry))
+	else:
+		ids.append(int(value))
+	return ids
 
 
 ## Merge a case/branch subtree's deferred into the parent deferred.

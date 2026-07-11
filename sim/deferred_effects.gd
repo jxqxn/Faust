@@ -72,6 +72,8 @@ static func execute_event(event: Dictionary, state, db, rng) -> Dictionary:
 			var deferred := ResultExec.execute(payload_alt, state, db)
 			_merge(merged, deferred)
 	apply(merged, state, db, rng)
+	if state != null and state.has_method("complete_event"):
+		state.complete_event(int(event.get("id", 0)), bool(event.get("is_replay", false)))
 	return merged
 
 
@@ -144,8 +146,8 @@ static func _apply_loot_item(id: int, state, db, rng) -> void:
 			state.queue_prompt({"id": "rite.%d" % id, "text": "出现新的仪式：%s" % str(rite.get("name", id))})
 		return
 	if db != null and not db.get_event(id).is_empty():
-		if state.has_method("queue_event"):
-			state.queue_event(id)
+		if state.has_method("enable_event"):
+			state.enable_event(id, db, true)
 		return
 	if db != null and not db.get_loot(id).is_empty():
 		_apply_loot_ref(id, state, db, rng)

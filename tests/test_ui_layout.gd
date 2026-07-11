@@ -173,7 +173,8 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	await wait_process_frames(2)
 
 	var opened: Array = []
-	screen.open_rite.connect(func(id: int): opened.append(id))
+	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
+	var estate = state.find_rite_instance_by_id(5000001)
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
 	assert_not_null(pin, "open playable rites should appear as clickable map pins")
 	if pin == null:
@@ -182,7 +183,7 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
-	assert_eq(opened, [5000001], "clicking a map pin should open that rite directly")
+	assert_eq(opened, [estate.uid], "clicking a map pin should open that rite instance directly")
 
 
 func test_game_screen_exposes_methinks_as_desktop_drop_target():
@@ -374,7 +375,7 @@ func test_game_screen_event_with_rite_auto_opens_rite():
 	if cont != null:
 		cont.pressed.emit()
 		await wait_process_frames(2)
-	assert_signal_emitted_with_parameters(screen, "open_rite", [5001001], "event rite handoff auto-opens the rite")
+	assert_signal_emitted_with_parameters(screen, "open_rite", [5001001])
 
 
 func test_game_menu_button_opens_real_overlay():
@@ -441,7 +442,7 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	stage.add_child(widget)
 	await wait_process_frames(1)
 
-	var data = widget._get_drag_data(Vector2.ZERO)
+	var data = widget.drag_payload()
 	assert_true(data is Dictionary, "dragging a card should produce a card payload")
 	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
 

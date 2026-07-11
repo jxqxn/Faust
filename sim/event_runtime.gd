@@ -11,9 +11,11 @@
 class_name EventRuntime
 extends RefCounted
 
-# timing string -> { event_id(int): trigger_value(int|Array) }
+# timing string -> { event_id(int): trigger_value(int|Array) }. This contains
+# only events currently enabled on the player, not every definition in db.
 var _by_timing := {}
-# Disabled event ids (event_off removes an event from future triggering).
+# Retained as a compatibility/debug view for callers that need to inspect
+# event_off. The source of truth is GameState.event_status.
 var _disabled: Dictionary = {}
 # Config + state refs for condition evaluation.
 var _db = null
@@ -27,13 +29,31 @@ func build(db, state) -> void:
 	_disabled.clear()
 	if db == null:
 		return
-	for eid in db.events:
-		var event: Dictionary = db.events[eid]
-		var on: Dictionary = event.get("on", {})
-		for timing in on:
-			if not _by_timing.has(timing):
-				_by_timing[timing] = {}
-			_by_timing[timing][int(eid)] = on[timing]
+	if state == null:
+		return
+	for eid in state.event_status:
+		if bool(state.event_status[eid]):
+			enable_event(int(eid))
+
+
+## Register one enabled event in its configured timing buckets. Event
+## definitions are intentionally not registered until EventOn or
+## auto_start_init enables them.
+## [SRC: decompiled/EventOn.__c__DisplayClass2_0.c @ <Do>b__0
+##       (RVA 0x51f1a0): SetEventStatus(id, true) then EventTrigger.Add(id)]
+func enable_event(event_id: int) -> bool:
+	if _db == null:
+		return false
+	var event: Dictionary = _db.get_event(event_id)
+	if event.is_empty():
+		return false
+	_disabled.erase(event_id)
+	var on: Dictionary = event.get("on", {})
+	for timing in on:
+		if not _by_timing.has(timing):
+			_by_timing[timing] = {}
+		_by_timing[timing][event_id] = on[timing]
+	return true
 
 
 ## Fire all events registered under `timing` whose trigger value matches the
@@ -67,6 +87,8 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 ## [SRC: EventOff.c @ Do (0x...); EventTrigger.c @ Remove]
 func disable_event(event_id: int) -> void:
 	_disabled[event_id] = true
+	for timing in _by_timing:
+		_by_timing[timing].erase(event_id)
 
 
 ## Whether the event's `on` value matches the firing context for this timing.

@@ -16,6 +16,7 @@ var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
 var _current_rite_id := 0
+var _current_rite_uid := 0
 
 
 func _ready() -> void:
@@ -73,6 +74,7 @@ func _show_game() -> void:
 	var gs := GameScreen.new()
 	gs.setup(state, db, rng)
 	gs.open_rite.connect(_on_open_rite)
+	gs.open_rite_instance.connect(_on_open_rite_instance)
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
@@ -87,34 +89,45 @@ func _show_game() -> void:
 func _on_open_rite_selector(location_filter: String = "") -> void:
 	# Count via the static filter to avoid instantiating a RiteSelector node
 	# just to probe (Nodes are not GC'd, so a probe instance would leak).
-	var open_ids := RiteSelector.filter_open_rite_ids(db, state, rng, location_filter)
-	if open_ids.size() == 1:
-		_on_open_rite(int(open_ids[0]))
+	var open_uids := RiteSelector.filter_open_rite_instance_uids(db, state, rng, location_filter)
+	if open_uids.size() == 1:
+		_on_open_rite_instance(int(open_uids[0]))
 		return
-	if open_ids.is_empty():
+	if open_uids.is_empty():
 		if _game_screen != null and _game_screen.has_method("set_log"):
 			_game_screen.set_log("该地点尚未开放。")
 		return
 	_clear_current()
 	var sel := RiteSelector.new()
 	sel.setup(db, state, rng, location_filter)
-	sel.rite_chosen.connect(_on_open_rite)
+	sel.rite_chosen_instance.connect(_on_open_rite_instance)
 	sel.closed.connect(_show_game)
 	add_child(sel)
 	_current = sel
 
 
 func _on_open_rite(rite_id: int) -> void:
+	var instance = state.find_rite_instance_by_id(rite_id) if state != null and state.has_method("find_rite_instance_by_id") else null
+	if instance == null:
+		return
+	_on_open_rite_instance(instance.uid)
+
+
+func _on_open_rite_instance(rite_uid: int) -> void:
+	var instance = state.get_rite_instance(rite_uid) if state != null and state.has_method("get_rite_instance") else null
+	if instance == null:
+		return
 	if _game_screen == null:
 		_show_game()
 	_close_rite_overlay()
-	_current_rite_id = rite_id
+	_current_rite_uid = instance.uid
+	_current_rite_id = instance.id
 	# Fire rite-start event triggers for the opening rite.
 	# [SRC: RitePanelController.__c__DisplayClass34_0.c:16 -> OnRiteStart]
 	if state != null:
-		state.trigger_events("rite_start", {"rite": rite_id})
+		state.trigger_events("rite_start", {"rite": instance.id})
 	var rv := RiteView.new()
-	rv.setup(state, db, rng, rite_id)
+	rv.setup(state, db, rng, instance.id, instance.uid)
 	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
 	rv.game_over_requested.connect(_show_game_over)

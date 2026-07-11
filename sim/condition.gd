@@ -253,6 +253,7 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 ## (Full infix parser is a future refinement; rite configs use name+name sums.)
 static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
 	var st = ctx.get("state")
+	var rite_uid := int(ctx.get("rite_uid", 0))
 	# Collect attribute names split on +/-/*.
 	var tokens: Array = []
 	var signs: Array = []
@@ -298,7 +299,7 @@ static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
 			continue
 		var s := 0
 		for slot_key in slots:
-			for tc in st.cards_in_slot(_slot_num(slot_key)):
+			for tc in st.cards_in_slot(_slot_num(slot_key), rite_uid):
 				s += int(tc.get("tags", {}).get(attr_name, 0))
 		total += signs[i] * s
 	return total
@@ -312,6 +313,7 @@ static func _slot_num(slot_key: String) -> int:
 
 static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
+	var rite_uid := int(ctx.get("rite_uid", 0))
 	var negate := k.begins_with("!") or k.begins_with("~")
 	var kk := k.lstrip("!~")
 	# "s1" presence, "s1.is <id>", "s1.<tag>"
@@ -319,7 +321,7 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 		var dot := kk.find(".")
 		var slot_num := kk.substr(1, dot - 1).to_int()
 		var rest := kk.substr(dot + 1)
-		var cards: Array = st.cards_in_slot(slot_num)
+		var cards: Array = st.cards_in_slot(slot_num, rite_uid)
 		if rest == "is":
 			var want_id := int(val)
 			var found := false

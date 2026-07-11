@@ -151,23 +151,19 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 ## [SRC: GameController.c @ DoStartAutoBeginRite (RVA 0x54ebc0, dump.cs:320166)]
 static func start_auto_begin_rites(state, db) -> Array:
 	var out: Array = []
-	var candidate_rites: Array = []
-	if state != null and state.get("available_rites") != null:
-		candidate_rites = state.available_rites
-	else:
-		candidate_rites = db.rites.keys()
-	for rid in candidate_rites:
-		if not db.rites.has(int(rid)):
+	if state == null or db == null:
+		return out
+	var candidate_rites: Array = state.available_rite_instances() if state.has_method("available_rite_instances") else []
+	for instance in candidate_rites:
+		if instance == null or not db.rites.has(instance.id):
 			continue
-		var rite: Dictionary = db.rites[int(rid)]
+		var rite: Dictionary = db.rites[instance.id]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
 		if not RiteOpen.is_rite_open(rite, state, db, null):
 			continue
-		var id := int(rid)
-		if not (id in state.started_rites):
-			state.started_rites.append(id)
-		out.append({"id": id, "started": true})
+		state.start_rite_instance(instance.uid)
+		out.append({"id": instance.id, "uid": instance.uid, "started": true})
 	return out
 
 
@@ -182,11 +178,11 @@ static func start_auto_begin_rites(state, db) -> Array:
 static func resolve_auto_result_rites(state, db, rng) -> void:
 	if state == null or db == null:
 		return
-	for rid in state.started_rites:
-		var id := int(rid)
-		if not db.rites.has(id):
+	var started_instances: Array = state.available_rite_instances() if state.has_method("available_rite_instances") else []
+	for instance in started_instances:
+		if instance == null or not instance.start or not db.rites.has(instance.id):
 			continue
-		var rite: Dictionary = db.rites[id]
+		var rite: Dictionary = db.rites[instance.id]
 		if int(rite.get("auto_result", 0)) != 1:
 			continue
 		# Build ctx from currently-slotted cards (empty if none placed).
@@ -195,15 +191,17 @@ static func resolve_auto_result_rites(state, db, rng) -> void:
 		var slots: Dictionary = rite.get("cards_slot", {})
 		for sk in slots:
 			var sn := str(sk)
-			var cards: Array = state.cards_in_slot(sn.substr(1).to_int()) if state.has_method("cards_in_slot") else []
+			var cards: Array = state.cards_in_slot(sn.substr(1).to_int(), instance.uid) if state.has_method("cards_in_slot") else []
 			if not cards.is_empty():
 				rite_state[sn] = int(cards[0].get("id", 0))
 			attr_slots.append(sn)
 		var ctx := {
 			"db": db, "state": state, "rng": rng,
-			"rite_state": rite_state, "attr_slots": attr_slots, "rite_id": id,
+			"rite_state": rite_state, "attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
 		}
+		state.active_rite_uid = instance.uid
 		var res = RiteResolver.resolve(rite, ctx, 0)
+		state.active_rite_uid = 0
 		DeferredEffects.apply(res.deferred, state, db, rng)
 
 
