@@ -298,9 +298,10 @@ func visible_rail_card_ids() -> Array[int]:
 func add_available_rite(id: int) -> int:
 	if id <= 0:
 		return 0
-	var existing := find_rite_instance_by_id(id)
-	if existing != null:
-		return existing.uid
+	# A generated RiteNode always becomes a fresh player-owned Rite. `once_new`
+	# only changes new_born; it does not coalesce matching config ids.
+	# [SRC: PlayerExtensions.c @ InitRite (RVA 0x38e140): constructs Rite,
+	# assigns the next uid, then appends it to the player's rite list.]
 	return create_rite_instance(id).uid
 
 
@@ -321,7 +322,11 @@ func get_rite_instance(rite_uid: int) -> RiteInstance:
 
 
 func find_rite_instance_by_id(rite_id: int) -> RiteInstance:
-	for rite_uid in rite_instances:
+	# Map pins are keyed by config id, while their panel needs a concrete runtime
+	# Rite. The clone picks the oldest matching instance deterministically.
+	var rite_uids: Array = rite_instances.keys()
+	rite_uids.sort()
+	for rite_uid in rite_uids:
 		var instance: RiteInstance = rite_instances[rite_uid]
 		if instance.id == rite_id:
 			return instance

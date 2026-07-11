@@ -353,13 +353,19 @@ func _refresh_rite_pins() -> void:
 	if _map_content == null:
 		return
 	_clear_rite_pins()
-	var name_counts := {}
+	var pinned_rite_ids := {}
 	for instance in _open_map_rite_instances():
+		# Runtime rites have unique uids, but the original player's pin list is
+		# `List<int>` and rejects a config id it already contains. Keep one map
+		# entry per RiteNode id. The state resolves the panel target
+		# deterministically when more than one runtime instance shares that id.
+		# [SRC: PlayerExtensions.c @ AddRitePin (RVA 0x38c360)]
+		if pinned_rite_ids.has(instance.id):
+			continue
+		pinned_rite_ids[instance.id] = true
 		var rite: Dictionary = _db.rites.get(instance.id, {})
-		var count := int(name_counts.get(instance.id, 0)) + 1
-		name_counts[instance.id] = count
 		var pin := Button.new()
-		pin.name = "RitePin_%d" % instance.id if count == 1 else "RitePin_%d_%d" % [instance.id, instance.uid]
+		pin.name = "RitePin_%d" % instance.id
 		pin.text = str(rite.get("name", str(instance.id)))
 		pin.tooltip_text = str(rite.get("text", ""))
 		pin.custom_minimum_size = Vector2(118, 34)

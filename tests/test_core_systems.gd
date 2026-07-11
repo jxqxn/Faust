@@ -178,6 +178,20 @@ func test_loot_type4_m_is_repeat_not_sum_num():
 	# M=2 (repeat), not 20 (sum of num). Draw 2 distinct.
 	assert_eq(out.size(), 2, "M=repeat=2, not sum(num)=20")
 
+
+func test_book_search_loot_generates_one_variant_per_trigger():
+	var db := ConfigDB.new()
+	db.load_all()
+	var book_search: Dictionary = db.get_loot(6000101)
+	var variants := [5002036, 5002037, 5002038]
+	assert_eq(int(book_search.get("type", 0)), 2)
+	assert_eq(int(book_search.get("repeat", 0)), 1)
+	for seed in range(1, 7):
+		var out := LootSystem.generate(RNG.new(seed), book_search)
+		assert_eq(out.size(), 1, "book-search loot is one weighted draw, never every variant")
+		if out.size() == 1:
+			assert_true(int(out[0]) in variants, "book-search draw stays inside its configured variants")
+
 # ---- ScopeFilter (vc#11-#12) ----
 func test_scope_parse_and_targets():
 	assert_eq(ScopeFilter.parse_scope("friend"), ScopeFilter.Friend)

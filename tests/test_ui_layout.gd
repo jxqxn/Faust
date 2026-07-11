@@ -186,6 +186,56 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	assert_eq(opened, [estate.uid], "clicking a map pin should open that rite instance directly")
 
 
+func test_game_screen_merges_duplicate_runtime_rites_into_one_map_pin():
+	var rng := RNG.new(22)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var first = state.find_rite_instance_by_id(5000001)
+	var second_uid := state.add_available_rite(5000001)
+	assert_not_null(first)
+	assert_ne(second_uid, first.uid, "generating the same RiteNode should create a second runtime rite")
+	RoundLoop.start_auto_begin_rites(state, db)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	assert_eq(_count_nodes_by_name(screen, "RitePin_5000001"), 1, "same config id keeps one original-style map pin")
+	var opened: Array = []
+	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
+	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
+	if pin != null:
+		pin.pressed.emit()
+		await wait_process_frames(1)
+	assert_eq(opened, [first.uid], "the id-keyed pin opens the oldest matching runtime rite")
+
+
+func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
+	var local_db := ConfigDB.new()
+	local_db.rites = {
+		991601: {
+			"id": 991601, "name": "同名仪式", "location": "自宅",
+			"cards_slot": {"s1": {"condition": {}}}, "settlement": [{"condition": {}}],
+		},
+		991602: {
+			"id": 991602, "name": "同名仪式", "location": "自宅",
+			"cards_slot": {"s1": {"condition": {}}}, "settlement": [{"condition": {}}],
+		},
+	}
+	var state := GameState.new()
+	state.create_rite_instance(991601)
+	state.create_rite_instance(991602)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, local_db, RNG.new(23))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	assert_not_null(_find_node_by_name(screen, "RitePin_991601"), "map pins are keyed by config id, not display name")
+	assert_not_null(_find_node_by_name(screen, "RitePin_991602"), "same-name variant config remains a distinct map entry")
+
+
 func test_game_screen_exposes_methinks_as_desktop_drop_target():
 	var rng := RNG.new(17)
 	var state := GameState.new()
