@@ -26,11 +26,11 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 		_apply_loot_ref(loot_ref, state, db, rng)
 
 
-static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng) -> void:
+static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:
 	if choice_key == "":
 		return
 	var result := {choice_key: choice_value}
-	var deferred := ResultExec.execute(result, state, db)
+	var deferred := ResultExec.execute(result, state, db, context)
 	apply(deferred, state, db, rng)
 
 
@@ -68,7 +68,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 			var payload: Dictionary = entry.get("action", {})
 			if payload.is_empty():
 				continue
-			var deferred := ResultExec.execute(payload, state, db)
+			var deferred := ResultExec.execute(payload, state, db, trigger_ctx)
 			_merge(merged, deferred)
 	else:
 		# Fallback for synthetic/test events using top-level result/action.
@@ -76,7 +76,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 			var payload_alt: Dictionary = event.get(key, {})
 			if payload_alt.is_empty():
 				continue
-			var deferred := ResultExec.execute(payload_alt, state, db)
+			var deferred := ResultExec.execute(payload_alt, state, db, trigger_ctx)
 			_merge(merged, deferred)
 	apply(merged, state, db, rng)
 	if state != null and state.has_method("complete_event"):

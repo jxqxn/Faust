@@ -14,7 +14,7 @@ extends RefCounted
 
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
-static func execute(result: Dictionary, state, db) -> Dictionary:
+static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
 	var deferred := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
@@ -29,7 +29,7 @@ static func execute(result: Dictionary, state, db) -> Dictionary:
 		return deferred
 	for key in result:
 		var val = result[key]
-		_apply_key(key, val, state, db, deferred)
+		_apply_key(key, val, state, db, deferred, context)
 	return deferred
 
 
@@ -54,7 +54,7 @@ static func is_supported_key(key: String) -> bool:
 	return false
 
 
-static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary) -> void:
+static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary, context: Dictionary = {}) -> void:
 	var k := key.strip_edges()
 	# Gold (GenCoin): coin / 金币 / g.coin.
 	if k == "coin" or k == "金币" or k == "g.coin":
@@ -79,10 +79,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Clean slot / clean rite.
 	if k == "clean.rite":
-		if state.has_method("clear_rite_cards"):
-			state.clear_rite_cards(int(state.active_rite_uid))
-		else:
-			state.table_cards.clear()
+		state.clear_rite_cards(int(state.active_rite_uid))
 		deferred.clean_rite = true
 		return
 	if k.begins_with("clean."):
@@ -97,19 +94,16 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 				state.remove_table_card_id(card_id, int(state.active_rite_uid))
 			deferred.clean_card_ids.append(card_id)
 		elif _clean_all_from_key(k):
-			if state.has_method("clear_rite_cards"):
-				state.clear_rite_cards(int(state.active_rite_uid))
-			else:
-				state.table_cards.clear() # index<1 => all slots
+			state.clear_rite_cards(int(state.active_rite_uid))
 			deferred.clean_rite = true
 		return
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
 	if _is_slot_tag_op(k):
-		_apply_slot_tag(k, val, state, db)
+		_apply_slot_tag(k, val, state, db, context)
 		return
 	# Table/g tag ops: table.<x>+/-<tag>, g.<x>+/-<tag>.
 	if k.begins_with("table.") or k.begins_with("g."):
-		_apply_table_tag(k, val, state, db)
+		_apply_table_tag(k, val, state, db, context)
 		return
 	# Events.
 	if k == "event_on":
@@ -300,7 +294,7 @@ static func _has_tag_op_after_dot(k: String) -> bool:
 	return "+" in rest or "-" in rest or "=" in rest
 
 
-static func _apply_slot_tag(k: String, val: Variant, state, db) -> void:
+static func _apply_slot_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:
 	# Parse "s4+回收" -> slot=4, op=+, tag=回收.
 	var op_idx := -1
 	var op_char := ""
@@ -315,21 +309,19 @@ static func _apply_slot_tag(k: String, val: Variant, state, db) -> void:
 	var tag_name := k.substr(op_idx + 1)
 	var op := TagSystem.op_from_char(op_char)
 	var amount := int(val)
-	if amount == 0:
+	if amount == 0 and op != TagSystem.Op.SET:
 		amount = 1
 	var can_add := _tag_can_add(db, tag_name)
-	var rite_uid := int(state.active_rite_uid)
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
 	for tc in state.cards_in_slot(slot_num, rite_uid):
-		var tags: Dictionary = tc.get("tags", {})
-		TagSystem.apply(tags, tag_name, op, amount, can_add)
-		tc.tags = tags
-		var instance = state.get_card_instance(int(tc.get("card_uid", 0))) if state.has_method("get_card_instance") else null
+		var instance = state.get_card_instance(int(tc.get("card_uid", 0)))
 		if instance != null:
-			instance.tags = tags
+			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
 
 
-static func _apply_table_tag(k: String, val: Variant, state, db) -> void:
-	# table.<x>+/-<tag> or g.<x>+/-<tag> -> apply to all table cards.
+static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:
+	# table.<card-or-tag>+/-<tag> or g.<...>. An event card_uid takes
+	# precedence, so two same-id Sultan instances cannot cross-modify each other.
 	var rest := k.substr(k.find(".") + 1)
 	var op_idx := -1
 	var op_char := ""
@@ -341,18 +333,27 @@ static func _apply_table_tag(k: String, val: Variant, state, db) -> void:
 	if op_idx < 0:
 		return
 	var tag_name := rest.substr(op_idx + 1)
+	var selector := rest.substr(0, op_idx)
 	var op := TagSystem.op_from_char(op_char)
 	var amount := int(val)
-	if amount == 0:
+	if amount == 0 and op != TagSystem.Op.SET:
 		amount = 1
 	var can_add := _tag_can_add(db, tag_name)
-	for tc in state.table_cards:
-		var tags: Dictionary = tc.get("tags", {})
-		TagSystem.apply(tags, tag_name, op, amount, can_add)
-		tc.tags = tags
-		var instance = state.get_card_instance(int(tc.get("card_uid", 0))) if state.has_method("get_card_instance") else null
-		if instance != null:
-			instance.tags = tags
+	var target_uid := int(context.get("card_uid", 0))
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+	for tc in state.surface_card_entries():
+		var instance = state.get_card_instance(int(tc.get("card_uid", 0)))
+		if instance == null:
+			continue
+		if target_uid > 0 and instance.uid != target_uid:
+			continue
+		if target_uid <= 0 and selector.is_valid_int() and instance.card_id != selector.to_int():
+			continue
+		if rite_uid > 0 and instance.rite_uid != rite_uid:
+			continue
+		if target_uid <= 0 and not selector.is_valid_int() and int(instance.tags.get(selector, 0)) == 0:
+			continue
+		TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
 
 
 ## Look up a tag's can_add flag from config (default true if not found).

@@ -74,3 +74,51 @@ func test_v5_save_restores_instance_uids_and_runtime_tags() -> void:
 	assert_eq(int(saved.get("version", 0)), SaveSystem.SAVE_VERSION)
 	assert_eq(int(restored.cards_in_slot(1)[0].get("card_uid", 0)), card_uid)
 	assert_eq(int(restored.get_card_instance(card_uid).tags.get("临时标记", 0)), 4)
+
+
+func test_event_context_modifies_only_the_triggering_sultan_instance() -> void:
+	var state := GameState.new()
+	var first_uid: int = state.create_card_instance(2000024, db, "sudan").uid
+	var second_uid: int = state.create_card_instance(2000024, db, "sudan").uid
+	DeferredEffects.execute_event({
+		"id": 990120,
+		"settlement": [{"action": {"table.2000024=上朝": 1}}],
+	}, state, db, RNG.new(17), {"card_uid": first_uid, "card": 2000024})
+
+	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 1)
+	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0)
+	ResultExec.execute({"table.2000024=上朝": 0}, state, db, {"card_uid": first_uid})
+	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 0, "set-zero removes the triggering Sultan state")
+	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0, "set-zero remains scoped to the triggering instance")
+
+
+func test_power_game_event_adsorbs_the_tagged_active_sultan_instance() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(91))
+	var sudan = RoundLoop.ActiveSudan.new(2000024, 3, state.round_number, 0)
+	var sultan_instance = state.create_card_instance(2000024, db, "sudan")
+	sudan.card_uid = sultan_instance.uid
+	state.active_sudan_cards.append(sudan)
+
+	var event := db.get_event(5300089)
+	assert_false(event.is_empty(), "the configured power-game event must be available")
+	DeferredEffects.execute_event(event, state, db, RNG.new(91))
+
+	var rite := state.find_rite_instance_by_id(5001001)
+	assert_not_null(rite, "the event should generate the configured Power Game rite")
+	if rite == null:
+		return
+	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 1)
+	assert_eq(int(rite.slot_cards.get("s2", 0)), sultan_instance.uid)
+	assert_eq(sultan_instance.zone, "slot")
+	assert_true(sultan_instance.uid not in state.hand, "the active Sultan is not copied into hand during adsorption")
+
+	var started := RoundLoop.start_auto_begin_rites(state, db)
+	assert_true(started.any(func(entry): return int(entry.get("uid", 0)) == rite.uid), "the generated rite auto-starts")
+	RoundLoop.advance_day(state, db, RNG.new(91))
+	assert_null(state.get_rite_instance(rite.uid), "the one-round rite settles exactly once and is removed")
+	assert_eq(sultan_instance.zone, "slot", "the configured settlement reuses the same Sultan in its next rite")
+	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 1, "the successor rite preserves the runtime state")
+
+	DeferredEffects.execute_event(db.get_event(5300357), state, db, RNG.new(91))
+	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 0, "the configured follow-up removes 上朝 from the same Sultan instance")

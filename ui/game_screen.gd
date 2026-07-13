@@ -765,7 +765,7 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		if choice_key != "":
 			# A chosen branch overrides the event's default result/action.
 			set_log("选择：%s" % str(choice_value))
-			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
+			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
 		else:
 			merged = DeferredEffects.execute_event(event, _state, _db, _rng, trigger_ctx)
 			if bool(merged.get("over", false)):

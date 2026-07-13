@@ -15,11 +15,9 @@ var start := false
 var start_round := 0
 var start_life := 0
 var life := 0
-# Authoritative slot ownership: `s1` -> CardInstance uid.  The legacy cards
-# array remains a derived compatibility view while condition/result callers
-# finish their migration.
+# Derived rite-local lookup: `s1` -> CardInstance uid. CardInstance placement
+# is authoritative and GameState rebuilds this index after loading.
 var slot_cards: Dictionary = {}
-var cards: Array[Dictionary] = []
 var is_cleaned := false
 var custom_name := ""
 
@@ -30,9 +28,6 @@ func _init(instance_uid: int = 0, rite_id: int = 0) -> void:
 
 
 func to_save_dict() -> Dictionary:
-	var card_data: Array = []
-	for card in cards:
-		card_data.append(card.duplicate(true))
 	return {
 		"uid": uid,
 		"id": id,
@@ -43,7 +38,6 @@ func to_save_dict() -> Dictionary:
 		"start_life": start_life,
 		"life": life,
 		"slot_cards": slot_cards.duplicate(true),
-		"cards": card_data,
 		"is_cleaned": is_cleaned,
 		"custom_name": custom_name,
 	}
@@ -61,7 +55,4 @@ static func from_save_dict(data: Dictionary) -> RiteInstance:
 		instance.slot_cards[str(slot_key)] = int(data["slot_cards"][slot_key])
 	instance.is_cleaned = bool(data.get("is_cleaned", false))
 	instance.custom_name = str(data.get("custom_name", ""))
-	for card in data.get("cards", []):
-		if card is Dictionary:
-			instance.cards.append(card.duplicate(true))
 	return instance

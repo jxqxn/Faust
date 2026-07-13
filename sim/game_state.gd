@@ -26,10 +26,12 @@ var hand: Array[int] = []
 # Visual order for the unified bottom card rail, including hand and active
 # sudan cards. Gameplay ownership still lives in hand/active_sudan_cards.
 var rail_order: Array[int] = []
-# Table index: cards placed in a rite slot, each
-# {id, card_uid, slot, rite_uid, tags, count, is_lost}. RiteInstance.slot_cards
-# is the per-instance authority; this flat list remains for global conditions.
-var table_cards: Array = []
+# Compatibility read view for table queries. Placement is owned exclusively by
+# CardInstance.zone/rite_uid/slot_key; this list is rebuilt for every read so
+# callers cannot create a second mutable card/tag state.
+var table_cards: Array:
+	get:
+		return table_card_entries()
 # Coin stack: the coin card (2000093) count. Gold = coin-card stack (spec 10.2).
 var coin_count := 0
 
@@ -416,7 +418,7 @@ func add_available_rite(id: int, db = null, rng = null) -> int:
 	return instance.uid
 
 
-func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bool:
+func _adsorb_open_slots(instance, rite: Dictionary, db, rng) -> bool:
 	var slots: Dictionary = rite.get("cards_slot", {})
 	var slot_keys: Array[String] = []
 	for key in slots.keys():
@@ -428,7 +430,7 @@ func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bo
 		if int(slot_def.get("open_adsorb", 0)) != 1:
 			continue
 		var candidates: Array[int] = []
-		for card_uid in hand:
+		for card_uid in _adsorbable_card_uids():
 			var uid := int(card_uid)
 			var card: Dictionary = card_data_for(uid, db)
 			if not _can_adsorb_card(slot_def, card, instance, rite, db, rng):
@@ -443,7 +445,7 @@ func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bo
 		if candidates.size() > 1 and rng != null and rng.has_method("range_int_half_open"):
 			choice_index = int(rng.range_int_half_open(0, candidates.size()))
 		var chosen_uid := int(candidates[choice_index])
-		if not remove_card_from_hand(chosen_uid):
+		if not _remove_adsorb_candidate(chosen_uid):
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
 		var slot_number := slot_key.substr(1).to_int()
@@ -452,15 +454,37 @@ func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bo
 	return true
 
 
-func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance: RiteInstance, rite: Dictionary, db, rng) -> bool:
+func _adsorbable_card_uids() -> Array[int]:
+	var out: Array[int] = hand.duplicate()
+	for active_sudan in active_sudan_cards:
+		var uid := int(active_sudan.card_uid)
+		if uid > 0 and uid not in out:
+			out.append(uid)
+	return out
+
+
+func _remove_adsorb_candidate(card_uid: int) -> bool:
+	if has_card_in_hand(card_uid):
+		return remove_card_from_hand(card_uid)
+	if is_active_sudan_card(card_uid):
+		var instance = get_card_instance(card_uid)
+		if instance != null:
+			instance.zone = "removed"
+			return true
+	return false
+
+
+func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Dictionary, db, rng) -> bool:
 	if card.is_empty():
 		return false
 	var condition: Dictionary = slot_def.get("condition", {})
 	if condition.is_empty():
 		return true
 	var rite_state := {}
-	for entry in instance.cards:
-		rite_state["s%d" % int(entry.get("slot", 0))] = int(entry.get("id", 0))
+	for slot_key in instance.slot_cards:
+		var slotted_card = card_data_for(int(instance.slot_cards[slot_key]), db)
+		if not slotted_card.is_empty():
+			rite_state[str(slot_key)] = int(slotted_card.get("id", 0))
 	var attr_slots: Array[String] = []
 	for key in rite.get("cards_slot", {}).keys():
 		attr_slots.append(str(key))
@@ -481,7 +505,14 @@ func _reback_absorbed_cards(absorbed: Array[Dictionary], rite_uid: int) -> void:
 	for entry in absorbed:
 		var card_uid := int(entry.get("uid", 0))
 		remove_card_from_slot(card_uid, int(entry.get("slot", 0)), rite_uid)
-		add_card_to_hand(card_uid)
+		if is_active_sudan_card(card_uid):
+			var sudan_instance = get_card_instance(card_uid)
+			if sudan_instance != null:
+				sudan_instance.zone = "sudan"
+				sudan_instance.rite_uid = 0
+				sudan_instance.slot_key = ""
+		else:
+			add_card_to_hand(card_uid)
 
 
 ## Create a distinct runtime rite. Callers that intentionally generate a
@@ -791,105 +822,122 @@ func hand_has_card_id(card_id: int) -> bool:
 	return card_uid_for(card_id, "hand") > 0
 
 
-# ---- Table (slots) ----
-## Cards currently in a given slot index. Passing rite_uid scopes the query to
-## one RiteInstance; the default remains a global compatibility query.
+# ---- Table (derived slot queries) ----
+## Every table entry is a snapshot derived from CardInstance placement. Tags
+## are intentionally duplicated so consumers must use the mutation APIs below.
+func table_card_entries() -> Array:
+	var out: Array = []
+	var uids: Array = card_instances.keys()
+	uids.sort()
+	for raw_uid in uids:
+		var instance = card_instances[raw_uid]
+		if instance.zone != "slot" or not instance.slot_key.begins_with("s"):
+			continue
+		var slot: int = instance.slot_key.substr(1).to_int()
+		if slot <= 0:
+			continue
+		out.append({
+			"id": instance.card_id,
+			"card_uid": instance.uid,
+			"slot": slot,
+			"rite_uid": instance.rite_uid,
+			"tags": instance.tags.duplicate(true),
+			"count": instance.count,
+			"is_lost": instance.is_lost,
+		})
+	return out
+
+
+## "table" DSL operations also see active Sudan cards, which are displayed on
+## the same desktop surface but are not assigned to a rite slot.
+func surface_card_entries() -> Array:
+	var out := table_card_entries()
+	var uids: Array = card_instances.keys()
+	uids.sort()
+	for raw_uid in uids:
+		var instance = card_instances[raw_uid]
+		if instance.zone != "sudan":
+			continue
+		out.append({
+			"id": instance.card_id,
+			"card_uid": instance.uid,
+			"slot": 0,
+			"rite_uid": 0,
+			"tags": instance.tags.duplicate(true),
+			"count": instance.count,
+			"is_lost": instance.is_lost,
+		})
+	return out
+
+
 func cards_in_slot(slot: int, rite_uid: int = 0) -> Array:
 	var out: Array = []
-	for tc in table_cards:
-		if int(tc.get("slot", 0)) == slot and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
-			out.append(tc)
+	for entry in table_card_entries():
+		if int(entry.get("slot", 0)) == slot and (rite_uid <= 0 or int(entry.get("rite_uid", 0)) == rite_uid):
+			out.append(entry)
 	return out
 
 
 func cards_in_slot_entries_for_rite(rite_uid: int) -> Array:
-	var out: Array = []
 	if rite_uid <= 0:
-		return out
-	for table_card in table_cards:
-		if int(table_card.get("rite_uid", 0)) == rite_uid:
-			out.append(table_card.duplicate(true))
-	return out
+		return []
+	return table_card_entries().filter(func(entry): return int(entry.get("rite_uid", 0)) == rite_uid)
 
 
 func slot_has_cards(slot: int, rite_uid: int = 0) -> bool:
-	return cards_in_slot(slot, rite_uid).size() > 0
+	return not cards_in_slot(slot, rite_uid).is_empty()
 
 
 func clear_slot(slot: int, rite_uid: int = 0) -> void:
-	var keep: Array = []
-	for tc in table_cards:
-		var matches := int(tc.get("slot", 0)) == slot and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid)
-		if not matches:
-			keep.append(tc)
-		else:
-			var instance = get_card_instance(int(tc.get("card_uid", 0)))
-			if instance != null and instance.zone == "slot":
-				instance.zone = "removed"
-				instance.rite_uid = 0
-				instance.slot_key = ""
-	table_cards = keep
-	_sync_rite_instance_cards(rite_uid)
+	for entry in cards_in_slot(slot, rite_uid):
+		_remove_slot_instance(int(entry.get("card_uid", 0)))
 
 
 func remove_card_from_slot(card_id: int, slot: int = 0, rite_uid: int = 0) -> bool:
 	var target_uid := _resolve_card_uid(card_id)
-	for i in range(table_cards.size() - 1, -1, -1):
-		var tc: Dictionary = table_cards[i]
-		if target_uid > 0:
-			if int(tc.get("card_uid", 0)) != target_uid:
-				continue
-		elif int(tc.get("id", 0)) != card_id:
+	for entry in table_card_entries():
+		if target_uid > 0 and int(entry.get("card_uid", 0)) != target_uid:
 			continue
-		if slot > 0 and int(tc.get("slot", 0)) != slot:
+		if target_uid <= 0 and int(entry.get("id", 0)) != card_id:
 			continue
-		if rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid:
+		if slot > 0 and int(entry.get("slot", 0)) != slot:
 			continue
-		table_cards.remove_at(i)
-		var instance = get_card_instance(int(tc.get("card_uid", 0)))
-		if instance != null:
-			instance.zone = "removed"
-			instance.rite_uid = 0
-			instance.slot_key = ""
-		_sync_rite_instance_cards(rite_uid if rite_uid > 0 else int(tc.get("rite_uid", 0)))
+		if rite_uid > 0 and int(entry.get("rite_uid", 0)) != rite_uid:
+			continue
+		_remove_slot_instance(int(entry.get("card_uid", 0)))
 		return true
 	return false
 
 
 func remove_table_card_id(card_id: int, rite_uid: int = 0) -> void:
-	var keep: Array = []
-	for tc in table_cards:
-		var matches := int(tc.get("id", 0)) == card_id and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid)
-		if not matches:
-			keep.append(tc)
-		else:
-			var instance = get_card_instance(int(tc.get("card_uid", 0)))
-			if instance != null and instance.zone == "slot":
-				instance.zone = "removed"
-				instance.rite_uid = 0
-				instance.slot_key = ""
-	table_cards = keep
-	_sync_rite_instance_cards(rite_uid)
+	for entry in table_card_entries():
+		if int(entry.get("id", 0)) == card_id and (rite_uid <= 0 or int(entry.get("rite_uid", 0)) == rite_uid):
+			_remove_slot_instance(int(entry.get("card_uid", 0)))
 
 
 func card_is_on_table(card_or_uid: int) -> bool:
-	var target_uid := _resolve_card_uid(card_or_uid)
-	for tc in table_cards:
-		if (target_uid > 0 and int(tc.get("card_uid", 0)) == target_uid) or (target_uid <= 0 and int(tc.get("id", 0)) == card_or_uid):
+	var uid := _resolve_card_uid(card_or_uid)
+	if uid > 0:
+		var instance = get_card_instance(uid)
+		return instance != null and instance.zone == "slot"
+	for entry in table_card_entries():
+		if int(entry.get("id", 0)) == card_or_uid:
 			return true
 	return false
 
 
 func slot_for_table_card(card_or_uid: int, rite_uid: int = 0) -> int:
-	var target_uid := _resolve_card_uid(card_or_uid)
-	for tc in table_cards:
-		var same_card := int(tc.get("card_uid", 0)) == target_uid if target_uid > 0 else int(tc.get("id", 0)) == card_or_uid
-		if same_card and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
-			return int(tc.get("slot", 0))
+	var uid := _resolve_card_uid(card_or_uid)
+	for entry in table_card_entries():
+		var matches := int(entry.get("card_uid", 0)) == uid if uid > 0 else int(entry.get("id", 0)) == card_or_uid
+		if matches and (rite_uid <= 0 or int(entry.get("rite_uid", 0)) == rite_uid):
+			return int(entry.get("slot", 0))
 	return 0
 
 
 func add_card_to_slot(card_or_uid: int, slot: int, db, rite_uid: int = 0) -> void:
+	if slot <= 0:
+		return
 	var uid := _resolve_card_uid(card_or_uid)
 	var instance = get_card_instance(uid)
 	if instance == null:
@@ -897,59 +945,64 @@ func add_card_to_slot(card_or_uid: int, slot: int, db, rite_uid: int = 0) -> voi
 		if instance == null:
 			return
 		uid = instance.uid
+	_unlink_slot_instance(instance)
+	if rite_uid > 0:
+		var rite := get_rite_instance(rite_uid)
+		if rite != null:
+			var slot_key := "s%d" % slot
+			var previous_uid := int(rite.slot_cards.get(slot_key, 0))
+			if previous_uid > 0 and previous_uid != uid:
+				_remove_slot_instance(previous_uid)
+			rite.slot_cards[slot_key] = uid
+	if uid in hand:
+		hand.erase(uid)
+		_erase_one_from_rail(uid)
 	instance.zone = "slot"
 	instance.rite_uid = rite_uid
 	instance.slot_key = "s%d" % slot
-	var entry := {
-		"id": instance.card_id,
-		"card_uid": uid,
-		"slot": slot,
-		"rite_uid": rite_uid,
-		"tags": instance.tags,
-		"count": instance.count,
-		"is_lost": instance.is_lost,
-	}
-	table_cards.append(entry)
-	_sync_rite_instance_cards(rite_uid)
 
 
 func clear_rite_cards(rite_uid: int) -> void:
-	if rite_uid <= 0:
-		for tc in table_cards:
-			var instance = get_card_instance(int(tc.get("card_uid", 0)))
-			if instance != null and instance.zone == "slot":
-				instance.zone = "removed"
-				instance.rite_uid = 0
-				instance.slot_key = ""
-		table_cards.clear()
-		for instance in rite_instances.values():
-			instance.cards.clear()
-		return
-	var keep: Array = []
-	for tc in table_cards:
-		if int(tc.get("rite_uid", 0)) != rite_uid:
-			keep.append(tc)
-		else:
-			var instance = get_card_instance(int(tc.get("card_uid", 0)))
-			if instance != null and instance.zone == "slot":
-				instance.zone = "removed"
-				instance.rite_uid = 0
-				instance.slot_key = ""
-	table_cards = keep
-	_sync_rite_instance_cards(rite_uid)
+	for entry in table_card_entries():
+		if rite_uid <= 0 or int(entry.get("rite_uid", 0)) == rite_uid:
+			_remove_slot_instance(int(entry.get("card_uid", 0)))
 
 
-func _sync_rite_instance_cards(rite_uid: int = 0) -> void:
-	if rite_uid > 0:
-		var instance := get_rite_instance(rite_uid)
-		if instance == null:
-			return
-		instance.slot_cards.clear()
-		instance.cards.clear()
-		for tc in table_cards:
-			if int(tc.get("rite_uid", 0)) == rite_uid:
-				instance.slot_cards["s%d" % int(tc.get("slot", 0))] = int(tc.get("card_uid", 0))
-				instance.cards.append(tc)
+func _remove_slot_instance(uid: int) -> void:
+	var instance = get_card_instance(uid)
+	if instance == null or instance.zone != "slot":
 		return
-	for instance in rite_instances.values():
-		_sync_rite_instance_cards(instance.uid)
+	_unlink_slot_instance(instance)
+	instance.zone = "removed"
+	instance.rite_uid = 0
+	instance.slot_key = ""
+
+
+func _unlink_slot_instance(card_instance) -> void:
+	if card_instance == null or card_instance.rite_uid <= 0:
+		return
+	var rite := get_rite_instance(int(card_instance.rite_uid))
+	if rite != null and int(rite.slot_cards.get(card_instance.slot_key, 0)) == int(card_instance.uid):
+		rite.slot_cards.erase(card_instance.slot_key)
+
+
+## Rebuild the RiteInstance lookup from the authoritative card positions after
+## a load. Invalid/duplicate positions are discarded deterministically.
+func _sync_rite_instance_cards(_rite_uid: int = 0) -> void:
+	for rite in rite_instances.values():
+		rite.slot_cards.clear()
+	var entries := table_card_entries()
+	for entry in entries:
+		var uid := int(entry.get("card_uid", 0))
+		var rite_uid := int(entry.get("rite_uid", 0))
+		if rite_uid <= 0:
+			continue
+		var rite := get_rite_instance(rite_uid)
+		if rite == null:
+			_remove_slot_instance(uid)
+			continue
+		var slot_key := "s%d" % int(entry.get("slot", 0))
+		if rite.slot_cards.has(slot_key):
+			_remove_slot_instance(uid)
+			continue
+		rite.slot_cards[slot_key] = uid

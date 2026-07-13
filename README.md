@@ -14,6 +14,12 @@ card loop, round/calendar, and the shared desktop event/prompt surface. This is
 still a prototype: condition/result DSL coverage is visible through tests and
 keeps expanding with each newly enabled content batch.
 
+Runtime cards use stable `CardInstance` identities. Mutable tags, stack count,
+loss state, and hand/slot/Sultan placement belong to the instance rather than
+the immutable card definition. Rite slot ownership is keyed by card UID, and
+save version 5 persists those instances; version 4 and older saves are
+intentionally rejected and do not expose Continue.
+
 ## Systems implemented
 
 - **Core rules engine** (`core/`): seeded RNG, weighted dice, counter
@@ -64,11 +70,11 @@ godot
 
 ## Testing
 
-Tests use GUT (Godot Unit Test). Current headless verification covers 10 test
-files across core systems, data loading, sim, Sultan cards, rite UI, selector,
-save system, and end-to-end integration. Read `gut-test.log` for the current
-pass/fail summary; Godot may still report resource/RID leak warnings at process
-exit after a successful run.
+Tests use GUT (Godot Unit Test). Run `tools/run_gut.ps1`; it fails on test
+failures, `SCRIPT ERROR`, `ERROR`, orphan counts, and leak diagnostics. The
+suite covers core systems, data loading, simulation,
+runtime card instances, Sultan cards, rite UI, save system, and end-to-end
+integration.
 
 Export the current condition/result/action coverage report when deciding which
 content batch to implement next. The report records every unsupported key with
@@ -89,13 +95,13 @@ the explicit `init/1` test-card profile for fast local verification. Normal
 difficulty selection always uses the curated normal starting hand; the large
 `init/1` `default_cards` list is only used by this explicit test entry.
 
-Continue is shown only for save files marked as valid player saves. Older raw
-JSON files and test data remain loadable for tests/migration, but they do not
-light up the player-facing continue button.
+Continue is shown only for valid version-5 player saves. Older raw JSON files,
+test data, and v4-or-earlier saves are rejected without deleting the source
+file, and they do not light up the player-facing continue button.
 
 ## Tech stack
 
-- Engine: Godot 4.6
+- Engine: Godot 4.7
 - Scripting: GDScript
 - Testing: GUT
 - Font: original game CJK body font (HYJieLongTaoHuaYuanW-2)

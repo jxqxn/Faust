@@ -406,7 +406,7 @@ static func eval_table_have(k: String, _val: Variant, ctx: Dictionary) -> bool:
 	var want_id := rest.to_int()
 	# Card on the table (any slot)?
 	var found := false
-	for tc in st.table_cards:
+	for tc in st.surface_card_entries():
 		if int(tc.get("id",0)) == want_id:
 			found = true
 			break
@@ -492,7 +492,7 @@ static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 				ok = true
 				break
 	if not ok and st != null:
-		for tc in st.table_cards:
+		for tc in st.surface_card_entries():
 			if apply_compare(int(tc.get("tags", {}).get(tag_name, 0)), need, parsed.op):
 				ok = true
 				break

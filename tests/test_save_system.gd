@@ -28,7 +28,8 @@ func test_save_load_round_trip_preserves_state():
 	state.day = 3
 	state.round_number = 2
 	state.add_card_to_slot(2000001, 1, db)
-	state.table_cards[0].tags["临时标记"] = 7
+	var global_slot_uid := int(state.cards_in_slot(1)[0].get("card_uid", 0))
+	state.get_card_instance(global_slot_uid).tags["临时标记"] = 7
 	state.available_rites.append(5000003)
 	state.started_rites.append(5000001)
 	state.auto_result_rites.append(5000002)
@@ -38,7 +39,7 @@ func test_save_load_round_trip_preserves_state():
 	state.start_rite_instance(first_instance.uid)
 	second_instance.life = 2
 	state.add_card_to_slot(2000006, 1, db, second_instance.uid)
-	state.queue_event(5310008)
+	state.queue_event(5310008, {"rite": 5000001, "card_uid": int(state.hand[0])})
 	state.queue_prompt({"id": "prompt.test", "text": "hello"})
 	state.enable_event(5310008, db)
 	state.disable_event(5300601)
@@ -78,6 +79,8 @@ func test_save_load_round_trip_preserves_state():
 		assert_eq(loaded_second.life, 2, "rite life preserved per instance")
 		assert_eq(state2.cards_in_slot(1, loaded_second.uid).size(), 1, "slotted card remains owned by its rite instance")
 	assert_true(5310008 in state2.event_queue, "queued events preserved")
+	assert_eq(int(state2.event_contexts[5310008].get("rite", 0)), 5000001, "queued event context preserves rite instance binding")
+	assert_eq(int(state2.event_contexts[5310008].get("card_uid", 0)), int(state.hand[0]), "queued event context preserves card instance uid")
 	assert_eq(str(state2.event_prompts[0].get("id", "")), "prompt.test", "queued prompts preserved")
 	assert_true(state2.is_event_enabled(5310008), "enabled event status preserved")
 	assert_false(state2.is_event_enabled(5300601), "disabled event status preserved")

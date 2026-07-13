@@ -1,5 +1,5 @@
 param(
-	[string]$GodotPath = $(if ($env:GODOT_BIN) { $env:GODOT_BIN } else { "C:\Tools\Godot\godot.exe" })
+	[string]$GodotPath = $(if ($env:GODOT_BIN) { $env:GODOT_BIN } else { "C:\Tools\Godot\4.7-stable\Godot_v4.7-stable_win64.exe" })
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,23 +28,13 @@ if (Test-Path -LiteralPath $logPath) {
 		ForEach-Object { $_.Line }
 }
 
-$knownGutShutdownResource = 'ERROR: 5 resources still in use at exit (run with --verbose for details).'
-$unexpectedErrors = @($engineErrors | Where-Object { $_ -ne $knownGutShutdownResource })
-$unexpectedLeakLines = @($leakLines | Where-Object {
-	$_ -notmatch 'ObjectDB instances leaked' -and $_ -ne $knownGutShutdownResource
-})
-
-if ($process.ExitCode -ne 0 -or $unexpectedErrors.Count -gt 0 -or $unexpectedLeakLines.Count -gt 0 -or $orphanFailures.Count -gt 0) {
-	$details = @($unexpectedErrors) + @($unexpectedLeakLines) + @($orphanFailures)
+if ($process.ExitCode -ne 0 -or $engineErrors.Count -gt 0 -or $leakLines.Count -gt 0 -or $orphanFailures.Count -gt 0) {
+	$details = @($engineErrors) + @($leakLines) + @($orphanFailures)
 	if ($details.Count -gt 0) {
 		Write-Error ("Godot test-gate failure:`n" + ($details -join "`n"))
 	}
 	exit 1
 }
 
-if ($engineErrors -contains $knownGutShutdownResource) {
-	Write-Host "GUT passed. Ignored the verified GUT 9.6 shutdown baseline: 5 cached Script resources."
-} else {
-	Write-Host "GUT passed without Godot engine errors."
-}
+Write-Host "GUT passed without Godot engine errors or leak diagnostics."
 exit 0

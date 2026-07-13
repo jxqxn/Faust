@@ -41,6 +41,12 @@ func _finish() -> void:
 		quit(_exit_code)
 		return
 	var finished_gut = _gut
+	# GUT retains collected test scripts after end_run. Clear those references
+	# before releasing the runner so project GDScripts are not left cached at
+	# process exit.
+	finished_gut.get_test_collector().clear()
+	finished_gut.get_stubber().clear()
+	finished_gut.get_spy().clear()
 	get_root().remove_child(finished_gut)
 	finished_gut.free()
 	_gut = null
