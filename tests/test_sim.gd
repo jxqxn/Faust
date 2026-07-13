@@ -543,6 +543,18 @@ func test_state_trigger_events_queues_matched_ids():
 	assert_eq(st.event_queue, [990040], "matched event is queued for display")
 
 
+func test_card_trigger_event_keeps_the_runtime_card_context():
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[990041] = {"id": 990041, "on": {"card_clean": 2000005}, "condition": {"is": 2000005}}
+	var st := GameState.new()
+	st.setup_new_run(local_db, 0, RNG.new(63))
+	assert_true(st.enable_event(990041, local_db))
+	var card_uid := st.card_uid_for(2000005, "hand")
+	assert_eq(st.trigger_events("card_clean", {"card": 2000005, "card_uid": card_uid}), [990041])
+	assert_eq(int(st.event_contexts[990041].get("card_uid", 0)), card_uid)
+
+
 # ---- option/case:opN branching ----
 
 func test_option_payload_becomes_choose_prompt_with_case_choices():

@@ -684,9 +684,19 @@ func _int_list_contains(values: Array, wanted: int) -> bool:
 func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 	if event_runtime == null:
 		return []
-	var matched: Array[int] = event_runtime.fire(timing, ctx)
+	var trigger_ctx := ctx.duplicate(true)
+	if not trigger_ctx.has("acting_card") and timing in ["card_clean", "card_born", "card_dead"]:
+		var card_uid := int(trigger_ctx.get("card_uid", 0))
+		if card_uid <= 0:
+			card_uid = card_uid_for(int(trigger_ctx.get("card", 0)))
+		var card := card_data_for(card_uid, event_runtime._db) if card_uid > 0 else {}
+		if not card.is_empty():
+			trigger_ctx["card_uid"] = card_uid
+			trigger_ctx["acting_card"] = card
+			trigger_ctx["acting_card_id"] = int(card.get("id", 0))
+	var matched: Array[int] = event_runtime.fire(timing, trigger_ctx)
 	for eid in matched:
-		queue_event(int(eid), ctx)
+		queue_event(int(eid), trigger_ctx)
 	return matched
 
 
