@@ -22,7 +22,7 @@ class RiteResult:
 		deferred = {
 			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 			"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-			"prompts": [], "loots": [], "delays": [], "sleeps": [],
+			"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 		}
 
 
@@ -42,15 +42,15 @@ static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant =
 	for entry in rite.get("settlement_prior", []):
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.prior_log.append(entry)
-			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db")))
-			_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db")))
+			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db"), ctx))
+			_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db"), ctx))
 			break
 	# 2. settlement: first match wins.
 	for entry in rite.get("settlement", []):
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.normal_entry = entry
-			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db")))
-			_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db")))
+			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db"), ctx))
+			_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db"), ctx))
 			break
 	# 3. settlement_extre: all matches execute.
 	var matched_extre: Array = []
@@ -58,9 +58,9 @@ static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant =
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.extre_log.append(entry)
 			matched_extre.append(entry)
-			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db")))
+			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db"), ctx))
 	for entry in matched_extre:
-		_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db")))
+		_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db"), ctx))
 	res.dice_types_seen = ctx.get("dice_types_seen", []).duplicate()
 	var cache: Dictionary = ctx.get("dice_cache", {})
 	for type_key in cache:
@@ -97,3 +97,5 @@ static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
 		into["delays"].append_array(src["delays"])
 	if src.has("sleeps"):
 		into["sleeps"].append_array(src["sleeps"])
+	if src.has("ordered_effects"):
+		into["ordered_effects"].append_array(src["ordered_effects"])

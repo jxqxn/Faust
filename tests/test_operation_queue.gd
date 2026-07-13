@@ -45,15 +45,17 @@ func test_delay_survives_v5_save_and_executes_once_when_due() -> void:
 	local_db.load_all()
 	local_db.events[990701] = {"id": 990701, "on": {}, "start_trigger": false, "condition": {}}
 	var state := _state()
+	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(701))
 	state.schedule_delay({"id": 701, "round": 1, "event_on": 990701}, {"card_uid": 77})
 	var saved := SaveSystem.serialize(state)
 	var restored := GameState.new()
 	SaveSystem.deserialize(saved, restored, local_db)
 	assert_eq(restored.delayed_operations.size(), 1)
 	assert_eq(int(restored.delayed_operations[0].get("context", {}).get("card_uid", 0)), 77)
-	restored.round_number += 1
-	var executed := DeferredEffects.execute_due_delays(restored, local_db, RNG.new(702))
-	assert_eq(executed.size(), 1)
+	var starting_round := restored.round_number
+	var day_result := RoundLoop.advance_day(restored, local_db, RNG.new(702))
+	assert_eq(restored.round_number, starting_round, "active Sultan keeps the game in the same round")
+	assert_eq(day_result.due_delays.size(), 1, "delay round=1 executes on the next day, not the next Sultan round")
 	assert_true(restored.is_event_enabled(990701))
 	assert_true(restored.delayed_operations.is_empty())
 	assert_true(DeferredEffects.execute_due_delays(restored, local_db, RNG.new(703)).is_empty(), "due delays are removed before execution")
@@ -73,6 +75,16 @@ func test_legacy_v5_split_queues_are_synthesized() -> void:
 	assert_eq(int(restored.pending_operation().get("context", {}).get("card_uid", 0)), 81)
 	restored.consume_pending_operation()
 	assert_eq(restored.pending_operation().get("kind", ""), "prompt")
+
+
+func test_v5_save_restores_a_pending_sleep_operation() -> void:
+	var state := _state()
+	state.queue_operation("sleep", "sleep", {"seconds": 0.5}, {"card_uid": 82})
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+	assert_eq(restored.pending_operation().get("kind", ""), "sleep")
+	assert_eq(float(restored.pending_operation().get("payload", {}).get("seconds", 0.0)), 0.5)
+	assert_eq(int(restored.pending_operation().get("context", {}).get("card_uid", 0)), 82)
 
 
 func test_focused_rite_loot_and_table_clean_dsl_uses_runtime_instances() -> void:
@@ -103,10 +115,30 @@ func test_no_prompt_sleep_and_choose_all_are_explicitly_handled() -> void:
 	}, state, db)
 	assert_eq(state.coin_count, 3)
 	assert_eq(float(deferred.sleeps[0].get("seconds", 0.0)), 0.25)
-	assert_true(deferred.choose.has("pop.one"))
-	assert_true(deferred.choose.has("pop.two"))
+	assert_true(deferred.choose.has("all"))
+	assert_true(deferred.choose.all is Dictionary)
 	DeferredEffects.apply(deferred, state, db, RNG.new(705))
 	assert_true(state.pending_operations.any(func(operation): return str(operation.get("kind", "")) == "sleep"))
+	var group: Dictionary = deferred.choose.all
+	DeferredEffects.execute_choice("all", group.get("value", {}), state, db, RNG.new(706))
+	var group_prompts := state.pending_operations.filter(func(operation): return str(operation.get("kind", "")) == "prompt")
+	assert_eq(group_prompts.size(), 2, "all starts each nested pop operation instead of exposing them as alternatives")
+
+
+func test_ordered_effects_keep_prompt_before_start_trigger_event() -> void:
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[990702] = {"id": 990702, "on": {}, "start_trigger": true, "condition": {}}
+	var state := _state()
+	var deferred := ResultExec.execute({
+		"prompt": {"id": "before_event", "text": "before"},
+		"event_on": 990702,
+	}, state, local_db, {"card_uid": 91})
+	DeferredEffects.apply(deferred, state, local_db, RNG.new(707))
+	assert_eq(state.pending_operations.size(), 2)
+	assert_eq(state.pending_operations[0].get("kind", ""), "prompt")
+	assert_eq(state.pending_operations[1].get("kind", ""), "event")
+	assert_eq(int(state.pending_operations[1].get("context", {}).get("card_uid", 0)), 91)
 
 
 func test_focused_dsl_audit_is_json_parseable_and_has_no_unknown_target_keys() -> void:

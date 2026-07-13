@@ -141,7 +141,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.pending_operations.clear()
 	if data.get("pending_operations", null) is Array:
 		for operation in data.pending_operations:
-			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice"]:
+			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep"]:
 				state.pending_operations.append(operation.duplicate(true))
 	else:
 		# First queue-schema saves were still v5. Their old split queues have no
@@ -158,7 +158,13 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.delayed_operations.clear()
 	for operation in data.get("delayed_operations", []):
 		if operation is Dictionary:
-			state.delayed_operations.append(operation.duplicate(true))
+			var restored_delay: Dictionary = operation.duplicate(true)
+			# v5 queue saves created before the countdown fix stored an absolute
+			# GameState.round_number target. Convert them at the load boundary.
+			if str(restored_delay.get("delay_mode", "")) != "next_day_countdown":
+				restored_delay["round"] = maxi(0, int(restored_delay.get("round", 0)) - state.round_number)
+				restored_delay["delay_mode"] = "next_day_countdown"
+			state.delayed_operations.append(restored_delay)
 	state.event_status.clear()
 	var saved_event_status: Dictionary = data.get("event_status", {})
 	for event_id in saved_event_status:

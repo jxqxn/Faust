@@ -324,7 +324,7 @@ static func _execute_waiting_round_end(rite: Dictionary, instance, state, db, rn
 
 
 static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
-	for key in ["events", "logs", "clean_slots", "clean_card_ids", "prompts", "loots", "delays", "sleeps"]:
+	for key in ["events", "logs", "clean_slots", "clean_card_ids", "prompts", "loots", "delays", "sleeps", "ordered_effects"]:
 		if src.has(key):
 			if not into.has(key):
 				into[key] = []

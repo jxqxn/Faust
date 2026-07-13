@@ -128,8 +128,9 @@ func test_result_deferred_events_and_choose():
 	var st := GameState.new()
 	var d := ResultExec.execute({"event_on": 5300601, "choose": {"a": "x"}}, st, db)
 	assert_true(st.is_event_enabled(5300601), "event_on enables the target event")
+	DeferredEffects.apply(d, st, db, RNG.new(1))
 	assert_true(5300601 in st.event_queue, "start_trigger event queues its settlement")
-	assert_true(d.events.is_empty(), "event_on is registration, not a deferred display event")
+	assert_true(d.events.is_empty(), "event_on display is carried by the ordered effect, not the legacy event list")
 	assert_eq(d.choose, {"a": "x"})
 
 func test_result_deferred_prompts_and_rite_generation_keys():
@@ -319,6 +320,7 @@ func test_settlement_prior_executes_action_after_result():
 	assert_eq(res.prior_log.size(), 1)
 	assert_eq(st.coin_count, 1)
 	assert_true(st.is_event_enabled(5300601), "rite event_on enables the target event")
+	DeferredEffects.apply(res.deferred, st, db, RNG.new(1))
 	assert_true(5300601 in st.event_queue, "start-trigger event is queued once enabled")
 	assert_true(res.deferred.events.is_empty(), "event_on does not masquerade as a display event")
 
@@ -634,10 +636,11 @@ func test_inactive_event_never_fires_until_event_on_enables_it():
 	var st := GameState.new()
 	st._rebuild_event_runtime(local_db)
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "definitions are inactive by default")
-	ResultExec.execute({"event_on": 990080}, st, local_db)
+	var deferred := ResultExec.execute({"event_on": 990080}, st, local_db)
 	assert_true(st.is_event_enabled(990080), "event_on sets persistent active status")
+	DeferredEffects.apply(deferred, st, local_db, RNG.new(1))
 	assert_eq(st.event_queue, [990080], "start_trigger queues an enabled event immediately")
-	st.event_queue.clear()
+	st.pending_operations.clear()
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990080], "enabled event now responds to its timing")
 
 

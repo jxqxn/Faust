@@ -699,10 +699,15 @@ func consume_pending_operation() -> Dictionary:
 func schedule_delay(payload: Dictionary, context: Dictionary = {}) -> void:
 	if payload.is_empty():
 		return
+	# DelayOp.round is a remaining Next Day countdown. The original decrements
+	# it in UpdateSingleDelayOps on every NextDay, regardless of Player.round.
+	# [SRC: PlayerExtensions.c @ AddDelayOp (RVA 0x38be90);
+	#       GameController.c @ UpdateSingleDelayOps (RVA 0x55a700)]
 	var delay_round := maxi(int(payload.get("round", 0)), 0)
 	delayed_operations.append({
 		"id": int(payload.get("id", 0)),
-		"round": round_number + delay_round,
+		"round": delay_round,
+		"delay_mode": "next_day_countdown",
 		"payload": payload.duplicate(true),
 		"context": context.duplicate(true),
 	})
@@ -712,10 +717,12 @@ func take_due_delayed_operations() -> Array[Dictionary]:
 	var due: Array[Dictionary] = []
 	var pending: Array[Dictionary] = []
 	for operation in delayed_operations:
-		if int(operation.get("round", 0)) <= round_number:
-			due.append(operation.duplicate(true))
+		var next_operation: Dictionary = operation.duplicate(true)
+		next_operation["round"] = int(next_operation.get("round", 0)) - 1
+		if int(next_operation["round"]) < 1:
+			due.append(next_operation)
 		else:
-			pending.append(operation)
+			pending.append(next_operation)
 	delayed_operations = pending
 	return due
 

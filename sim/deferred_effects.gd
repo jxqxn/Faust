@@ -5,6 +5,12 @@ class_name DeferredEffects
 extends RefCounted
 
 static func apply(deferred: Dictionary, state, db, rng) -> void:
+	var ordered_effects: Array = deferred.get("ordered_effects", [])
+	if not ordered_effects.is_empty():
+		for effect in ordered_effects:
+			if effect is Dictionary:
+				_apply_ordered_effect(effect, state, db, rng)
+		return
 	for event_id in deferred.get("events", []):
 		if state.has_method("queue_event"):
 			state.queue_event(int(event_id))
@@ -42,6 +48,36 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 		_apply_loot_ref(loot_ref, state, db, rng)
 
 
+static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
+	var kind := str(effect.get("kind", ""))
+	var payload: Dictionary = effect.get("payload", {}) if effect.get("payload", {}) is Dictionary else {}
+	var context: Dictionary = effect.get("context", {}) if effect.get("context", {}) is Dictionary else {}
+	match kind:
+		"event":
+			state.queue_event(int(payload.get("id", 0)), context)
+		"prompt":
+			var prompt := payload.duplicate(true)
+			if not prompt.has("context"):
+				prompt["context"] = context
+			state.queue_prompt(prompt)
+		"choice":
+			var choices: Dictionary = payload.get("choices", payload) if payload.get("choices", payload) is Dictionary else {}
+			state.queue_choice_prompt(
+				choices,
+				str(payload.get("title", "选择")),
+				str(payload.get("text", "")),
+				context
+			)
+		"delay":
+			state.schedule_delay(payload, context)
+		"sleep":
+			state.queue_operation("sleep", "sleep", {"seconds": float(payload.get("seconds", 0.0))}, context)
+		"rite":
+			state.add_available_rite(int(payload.get("id", 0)), db, rng)
+		"loot":
+			_apply_loot_ref(payload.get("value", 0), state, db, rng)
+
+
 static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:
 	if choice_key == "":
 		return
@@ -74,7 +110,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 	var merged := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-		"prompts": [], "loots": [], "delays": [], "sleeps": [],
+		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 	}
 	var settlements: Array = event.get("settlement", [])
 	if not settlements.is_empty():
@@ -146,6 +182,8 @@ static func _merge(into: Dictionary, src: Dictionary) -> void:
 		into["delays"].append_array(src["delays"])
 	if src.has("sleeps"):
 		into["sleeps"].append_array(src["sleeps"])
+	if src.has("ordered_effects"):
+		into["ordered_effects"].append_array(src["ordered_effects"])
 
 
 static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:

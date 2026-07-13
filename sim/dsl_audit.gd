@@ -91,8 +91,10 @@ static func _scan_result_dict(result: Variant, bucket: Dictionary, source: Dicti
 			for choose_key in result[key]:
 				var choose_op := str(choose_key)
 				# `all` is a ChooseOperations candidate-list wrapper, not a
-				# standalone result DSL operation. Record its concrete pop entries.
+				# standalone label. It is an AllOperations subtree and runs each
+				# concrete nested operation.
 				if choose_op == "all" and result[key][choose_key] is Dictionary:
+					_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.all"))
 					for nested_key in result[key][choose_key]:
 						var nested_op := str(nested_key)
 						_record(bucket, nested_op, ResultExec.is_supported_key(nested_op), _with_field(source, "choose.all.%s" % nested_op))

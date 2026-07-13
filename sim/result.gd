@@ -18,7 +18,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 	var deferred := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-		"prompts": [], "loots": [], "delays": [], "sleeps": [],
+		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 	}
 	# Option branching: if the payload has an `option` key, convert it to a
 	# choose prompt and stash the case:opN subtrees as choices. The remaining
@@ -35,7 +35,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
+	if k in ["coin", "金币", "g.coin", "card", "choose", "all", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
 		return true
 	if k.begins_with("case:"):
 		return true
@@ -77,10 +77,19 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Choose (pop options).
 	if k == "choose" and val is Dictionary:
-		deferred.choose = _flatten_choose(val)
+		deferred.choose = _prepare_choose(val)
+		_record_effect(deferred, "choice", {"choices": deferred.choose}, context)
+		return
+	if k == "all" and val is Dictionary:
+		# AllOperations starts every nested operation in source order.
+		# [SRC: decompiled/AllOperations.c @ Do (RVA 0x4ee520)]
+		for nested_key in val:
+			_apply_key(str(nested_key), val[nested_key], state, db, deferred, context)
 		return
 	if k == "delay" and val is Dictionary:
-		deferred.delays.append({"payload": val.duplicate(true), "context": context.duplicate(true)})
+		var delay_effect := {"payload": val.duplicate(true), "context": _queue_context(context)}
+		deferred.delays.append(delay_effect)
+		_record_effect(deferred, "delay", val, context)
 		return
 	if k == "no_prompt" and val is Dictionary:
 		# NoPrompt runs its nested operation immediately and only suppresses the
@@ -92,7 +101,9 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "sleep":
 		# SleepOperation is a UI promise wait, not a calendar delay.
 		# [SRC: decompiled/SleepOperation.c @ Do (RVA 0x51b9f0)]
-		deferred.sleeps.append({"seconds": float(val), "context": context.duplicate(true)})
+		var sleep_effect := {"seconds": float(val), "context": _queue_context(context)}
+		deferred.sleeps.append(sleep_effect)
+		_record_effect(deferred, "sleep", {"seconds": float(val)}, context)
 		return
 	# Clean slot / clean rite.
 	if k == "clean.rite":
@@ -129,7 +140,10 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "event_on":
 		if state != null and state.has_method("enable_event"):
 			for event_id in _event_ids(val):
-				state.enable_event(event_id, db, true)
+				state.enable_event(event_id, db, false)
+				var event: Dictionary = db.get_event(event_id) if db != null else {}
+				if bool(event.get("start_trigger", false)):
+					_record_effect(deferred, "event", {"id": event_id}, context)
 		return
 	if k == "event_off":
 		if state != null and state.has_method("disable_event"):
@@ -139,6 +153,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# Rite jump.
 	if k == "rite":
 		deferred.rite = int(val)
+		_record_effect(deferred, "rite", {"id": int(val)}, context)
 		return
 	# End / back.
 	if k == "over":
@@ -151,15 +166,20 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	if k == "prompt" and val is Dictionary:
 		deferred.prompts.append(val.duplicate(true))
+		_record_effect(deferred, "prompt", val, context)
 		return
 	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
-		deferred.prompts.append({"id": k, "text": str(val)})
+		var prompt := {"id": k, "text": str(val)}
+		deferred.prompts.append(prompt)
+		_record_effect(deferred, "prompt", prompt, context)
 		return
 	if k == "loot":
 		deferred.loots.append(val)
+		_record_effect(deferred, "loot", {"value": val}, context)
 		return
 	if k.begins_with("loot."):
 		deferred.loots.append(val)
+		_record_effect(deferred, "loot", {"value": val}, context)
 		return
 	if k == "no_show":
 		return
@@ -209,6 +229,8 @@ static func _merge_case(into: Dictionary, src: Dictionary) -> void:
 		into["delays"].append_array(src["delays"])
 	if src.has("sleeps"):
 		into["sleeps"].append_array(src["sleeps"])
+	if src.has("ordered_effects"):
+		into["ordered_effects"].append_array(src["ordered_effects"])
 	if src.has("clean_slots"):
 		into["clean_slots"].append_array(src["clean_slots"])
 	if src.has("clean_card_ids"):
@@ -253,23 +275,41 @@ static func _apply_option(action: Dictionary, deferred: Dictionary, context: Dic
 		"choices": choices,
 		"title": str(opt.get("id", "选择")),
 		"text": str(opt.get("text", "")),
-		"context": context.duplicate(true),
+		"context": _queue_context(context),
 	}
+	_record_effect(deferred, "choice", deferred.choose, context)
 
 
-static func _flatten_choose(choices: Dictionary) -> Dictionary:
-	# In the source `ChooseOperations` copies its candidate list, shuffles it
-	# and selects the configured number. The config-side `all` wrapper denotes
-	# a collection of normal pop candidates, not an executable DSL operation.
-	# [SRC: decompiled/ChooseOperations.c @ GetOperations (RVA 0x4f3830)]
-	var flattened := {}
+static func _prepare_choose(choices: Dictionary) -> Dictionary:
+	var prepared := {}
 	for key in choices:
 		if str(key) == "all" and choices[key] is Dictionary:
-			for nested_key in choices[key]:
-				flattened[nested_key] = choices[key][nested_key]
+			var lines: Array[String] = []
+			for nested_value in choices[key].values():
+				lines.append(str(nested_value))
+			prepared[key] = {"text": "\n".join(lines), "value": choices[key]}
 		else:
-			flattened[key] = choices[key]
-	return flattened
+			prepared[key] = choices[key]
+	return prepared
+
+
+static func _record_effect(deferred: Dictionary, kind: String, payload: Dictionary, context: Dictionary = {}) -> void:
+	deferred.ordered_effects.append({
+		"kind": kind,
+		"payload": payload.duplicate(true),
+		"context": _queue_context(context),
+	})
+
+
+static func _queue_context(context: Dictionary) -> Dictionary:
+	# Execution helpers are injected into evaluation contexts but cannot be
+	# serialized or used after a UI boundary. Keep the trigger data only.
+	var persisted := {}
+	for key in context:
+		if str(key) in ["state", "db", "rng", "rite_state", "attr_slots", "dice_cache", "gold_dice_map", "dice_types_seen", "gold_dice_used"]:
+			continue
+		persisted[key] = context[key]
+	return persisted
 
 
 static func _apply_counter(k: String, val: Variant, state) -> void:
