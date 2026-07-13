@@ -164,3 +164,27 @@ func test_next_day_orders_round_end_before_round_begin_auto_start_and_sudan_draw
 	assert_eq(state.round_number, 2)
 	assert_true(rite.start, "auto_begin starts only after the round-begin boundary")
 	assert_gt(int(result.drawn_sudan), 0, "new round draws Sudan after auto-start")
+
+
+func test_book_search_loot_generates_one_runtime_rite_and_survives_save_load():
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(91))
+	# All three 淘书 variants require the bookshop owner in an open-adsorb s1.
+	# [SRC: original config rite/5002036-5002038.json cards_slot.s1]
+	state.add_card_to_hand(2000199, db)
+	var picked: Array = LootSystem.generate(RNG.new(92), db.get_loot(6000101))
+	assert_eq(picked.size(), 1, "book-search loot performs one weighted draw")
+	if picked.is_empty():
+		return
+	DeferredEffects._apply_loot_item(int(picked[0]), state, db, RNG.new(93))
+	var generated: Array = state.available_rite_instances().filter(func(instance): return instance.id in [5002036, 5002037, 5002038])
+	assert_eq(generated.size(), 1, "book-search loot creates exactly one weighted rite variant")
+	if generated.is_empty():
+		return
+	var generated_uid := int(generated[0].uid)
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+	var loaded = restored.get_rite_instance(generated_uid)
+	assert_not_null(loaded, "generated book-search rite remains a runtime instance after loading")
+	if loaded != null:
+		assert_true(loaded.id in [5002036, 5002037, 5002038])
