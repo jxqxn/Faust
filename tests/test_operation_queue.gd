@@ -174,3 +174,49 @@ func test_reachability_audit_marks_normal_roots_and_generated_content() -> void:
 	assert_eq(report.result.references["reachable_root_gap"][0].reachability, "potentially_reachable")
 	assert_eq(report.result.references["reachable_loot_gap"][0].reachability, "potentially_reachable")
 	assert_eq(report.result.references["unreachable_gap"][0].reachability, "not_reached_by_static_graph")
+
+
+func test_total_tag_operation_filters_runtime_instances_and_lost_cards() -> void:
+	var state := _state()
+	var first = state.create_card_instance(2000005, db, "hand")
+	var second = state.create_card_instance(2000005, db, "hand")
+	var lost = state.create_card_instance(2000005, db, "hand")
+	lost.is_lost = true
+	ResultExec.execute({"total.2000005+测试标签": 2}, state, db)
+	assert_eq(int(first.tags.get("测试标签", 0)), 2)
+	assert_eq(int(second.tags.get("测试标签", 0)), 2, "same definition instances are independently modified")
+	assert_eq(int(lost.tags.get("测试标签", 0)), 0, "lost instances are excluded by OperationFilter")
+	first.tags["门槛"] = 0
+	second.tags["门槛"] = 1
+	ResultExec.execute({"total.2000005.门槛=0+命中": 1}, state, db)
+	assert_eq(int(first.tags.get("命中", 0)), 1, "tag comparison selector matches the runtime instance")
+	assert_eq(int(second.tags.get("命中", 0)), 0, "tag comparison selector excludes non-matching instances")
+
+
+func test_sudan_pool_operations_are_reported_as_supported_dsl():
+	assert_true(ResultExec.is_supported_key("sudan_pool.sudan+冻结"))
+	assert_true(ResultExec.is_supported_key("total.sudan+冻结"))
+	assert_true(ResultExec.is_supported_key("enable_auto_gen_sudan_card"))
+	var report := DslAudit.audit_configs({}, {991001: {
+		"id": 991001,
+		"action": {
+			"sudan_pool.sudan+冻结": 1,
+			"total.sudan+冻结": 1,
+			"enable_auto_gen_sudan_card": false,
+		},
+	}}, {}, db)
+	for key in ["sudan_pool.sudan+冻结", "total.sudan+冻结", "enable_auto_gen_sudan_card"]:
+		assert_true(report.action.supported.has(key), "%s has an execution path" % key)
+		assert_false(report.action.unsupported.has(key), "%s is not an audit debt" % key)
+	for key in ["total.parent+测试标签", "sudan_pool.friend+测试标签", "total.2000005+equip"]:
+		assert_false(ResultExec.is_supported_key(key), "%s needs unsupported scope/equip behavior" % key)
+	var unsupported_report := DslAudit.audit_configs({}, {991002: {
+		"id": 991002,
+		"action": {
+			"total.parent+测试标签": 1,
+			"sudan_pool.friend+测试标签": 1,
+			"total.2000005+equip": 1,
+		},
+	}}, {}, db)
+	for key in ["total.parent+测试标签", "sudan_pool.friend+测试标签", "total.2000005+equip"]:
+		assert_true(unsupported_report.action.unsupported.has(key), "%s remains explicit audit debt" % key)

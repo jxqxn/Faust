@@ -61,7 +61,7 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 	var cid: int = SudanCards.draw(state.sudan_deck)
 	if cid < 0:
 		return -1
-	var instance = state.create_card_instance(cid, db, "sudan") if state.has_method("create_card_instance") else null
+	var instance = _create_sudan_instance(state, db, cid)
 	var card_uid := int(instance.uid) if instance != null else cid
 	state.active_sudan_cards.append(ActiveSudan.new(cid, life, state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
@@ -75,7 +75,7 @@ static func start_round(state, db, rng) -> int:
 	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
 	if state.round_number % recovery == 0:
 		state.redraws_left = _redraws_per_round(state, db)
-	return draw_weekly_sudan(state, db, rng)
+	return draw_weekly_sudan(state, db, rng) if state.auto_gen_sudan_card else -1
 
 
 ## Original redraw: draw sudan_redraw_count new cards from the finite pool
@@ -110,7 +110,7 @@ static func use_redraw(state, rng, db = null) -> int:
 			break
 		if i == 0:
 			first_new = new_id
-		var instance = state.create_card_instance(new_id, db, "sudan") if state.has_method("create_card_instance") else null
+		var instance = _create_sudan_instance(state, db, new_id)
 		var new_uid := int(instance.uid) if instance != null else new_id
 		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number, new_uid))
 		if state.has_method("replace_card_in_rail"):
@@ -162,6 +162,19 @@ static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
 	return result
 
 
+## Pool tags are copied only when an ID becomes a runtime Sultan instance.
+## The pool never owns speculative CardInstances, so its operations cannot
+## consume a UID or mutate already drawn cards.
+static func _create_sudan_instance(state, db, card_id: int):
+	if state == null or not state.has_method("create_card_instance"):
+		return null
+	var instance = state.create_card_instance(card_id, db, "sudan")
+	if instance != null and state.sudan_pool_tags.has(card_id):
+		for tag_name in state.sudan_pool_tags[card_id]:
+			instance.tags[tag_name] = state.sudan_pool_tags[card_id][tag_name]
+	return instance
+
+
 static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
 	state.round_number += 1
@@ -175,7 +188,11 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	#       lines 120-150; GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
 	result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
 	result.auto_rites = start_auto_begin_rites(state, db)
-	result.drawn_sudan = draw_weekly_sudan(state, db, rng)
+	# The original always advances the round pipeline, then its final callback
+	# skips TryGenSudanCard when automatic generation is disabled.
+	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (RVA 0x56f9c0)
+	# and <Start>b__10 (RVA 0x56f780)]
+	result.drawn_sudan = draw_weekly_sudan(state, db, rng) if state.auto_gen_sudan_card else -1
 
 
 ## Open/start auto-begin rites. Do not resolve them: the original

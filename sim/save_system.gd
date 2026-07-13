@@ -82,6 +82,8 @@ static func serialize(state) -> Dictionary:
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
+		"sudan_pool_tags": state.sudan_pool_tags.duplicate(true),
+		"auto_gen_sudan_card": state.auto_gen_sudan_card,
 		"active_sudan_cards": sudan_cards_data,
 		"card_instances": state.card_instances.values().map(func(instance): return instance.to_save_dict()),
 		"next_card_uid": state.next_card_uid,
@@ -128,6 +130,15 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.sudan_deck.clear()
 	for cid in data.get("sudan_deck", []):
 		state.sudan_deck.append(int(cid))
+	state.sudan_pool_tags.clear()
+	var saved_pool_tags: Dictionary = data.get("sudan_pool_tags", {})
+	for card_id in saved_pool_tags:
+		if saved_pool_tags[card_id] is Dictionary:
+			var normalized_tags: Dictionary = {}
+			for tag_name in saved_pool_tags[card_id]:
+				normalized_tags[str(tag_name)] = int(saved_pool_tags[card_id][tag_name])
+			state.sudan_pool_tags[int(card_id)] = normalized_tags
+	state.auto_gen_sudan_card = bool(data.get("auto_gen_sudan_card", true))
 	state.active_sudan_cards.clear()
 	var ASC = preload("res://sim/round_loop.gd").ActiveSudan
 	for asc_data in data.get("active_sudan_cards", []):

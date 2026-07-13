@@ -55,6 +55,8 @@ var sudan_redraw_count := 1
 var active_sudan_cards: Array = []
 # Sudan deck (shuffled pool, consumed last-first per spec sec 10.6).
 var sudan_deck: Array[int] = []
+var sudan_pool_tags: Dictionary = {} # card_id -> runtime tags for un-drawn pool entries
+var auto_gen_sudan_card := true
 # Runtime rite instances are the authoritative player-owned ritual state.
 # Config ids below remain compatibility views for code not migrated yet.
 # [SRC: dump.cs:392391 Rite has uid/id/start/life/cards; StartRite.c @ Do
@@ -196,6 +198,8 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 		add_card_to_hand(int(cid), db)
 	# Sudan deck from pool (shuffled last-first).
 	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
+	sudan_pool_tags.clear()
+	auto_gen_sudan_card = true
 	# Day/round.
 	round_number = 1
 	day = 1

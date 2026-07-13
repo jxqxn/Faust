@@ -12,6 +12,8 @@
 class_name ResultExec
 extends RefCounted
 
+const RuntimeOperationFilter = preload("res://sim/operation_filter.gd")
+
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
@@ -52,6 +54,12 @@ static func is_supported_key(key: String) -> bool:
 	if _is_slot_tag_op(k):
 		return true
 	if (k.begins_with("table.") or k.begins_with("g.")) and _has_tag_op_after_dot(k):
+		return true
+	if _is_supported_filtered_tag_op(k, "total."):
+		return true
+	if _is_supported_filtered_tag_op(k, "sudan_pool."):
+		return true
+	if k == "enable_auto_gen_sudan_card":
 		return true
 	return false
 
@@ -135,6 +143,19 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# Table/g tag ops: table.<x>+/-<tag>, g.<x>+/-<tag>.
 	if k.begins_with("table.") or k.begins_with("g."):
 		_apply_table_tag(k, val, state, db, context)
+		return
+	if _is_supported_filtered_tag_op(k, "total."):
+		_apply_total_tag(k, val, state, db)
+		return
+	if _is_supported_filtered_tag_op(k, "sudan_pool."):
+		_apply_sudan_pool_tag(k, val, state, db)
+		return
+	if k == "enable_auto_gen_sudan_card":
+		# The original stores a disable flag, so the operation's value itself is
+		# the public "automatic generation enabled" state in this clone.
+		# [SRC: EnableAutoGenSudanCard.c @ Do (RVA 0x50ecc0); GameController
+		# __c__DisplayClass141_0.c @ <Start>b__10 (RVA 0x56f780)]
+		state.auto_gen_sudan_card = bool(val)
 		return
 	# Events.
 	if k == "event_on":
@@ -373,6 +394,17 @@ static func _has_tag_op_after_dot(k: String) -> bool:
 	return "+" in rest or "-" in rest or "=" in rest
 
 
+static func _is_supported_filtered_tag_op(k: String, prefix: String) -> bool:
+	if not k.begins_with(prefix):
+		return false
+	var rest := k.substr(prefix.length())
+	var op_idx := maxi(rest.rfind("+"), maxi(rest.rfind("-"), rest.rfind("=")))
+	if op_idx < 1:
+		return false
+	var tag_name := rest.substr(op_idx + 1)
+	return tag_name != "" and tag_name != "equip" and RuntimeOperationFilter.supports_selector(rest.substr(0, op_idx))
+
+
 static func _apply_slot_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:
 	# Parse "s4+回收" -> slot=4, op=+, tag=回收.
 	var op_idx := -1
@@ -448,6 +480,43 @@ static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictio
 		if target_uid <= 0 and not selector.is_valid_int() and int(instance.tags.get(selector, 0)) == 0:
 			continue
 		TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+
+
+static func _apply_total_tag(k: String, val: Variant, state, db) -> void:
+	var rest := k.substr("total.".length())
+	var op_idx := maxi(rest.rfind("+"), maxi(rest.rfind("-"), rest.rfind("=")))
+	if op_idx < 1:
+		return
+	var op := TagSystem.op_from_char(rest[op_idx])
+	var amount := int(val)
+	if amount == 0 and op != TagSystem.Op.SET:
+		amount = 1
+	var tag_name := rest.substr(op_idx + 1)
+	for instance in RuntimeOperationFilter.select_total(state, db, rest.substr(0, op_idx)):
+		TagSystem.apply(instance.tags, tag_name, op, amount, _tag_can_add(db, tag_name))
+
+
+static func _apply_sudan_pool_tag(k: String, val: Variant, state, db) -> void:
+	var rest := k.substr("sudan_pool.".length())
+	var op_idx := maxi(rest.rfind("+"), maxi(rest.rfind("-"), rest.rfind("=")))
+	if op_idx < 1:
+		return
+	var selector := rest.substr(0, op_idx)
+	var tag_name := rest.substr(op_idx + 1)
+	var op := TagSystem.op_from_char(rest[op_idx])
+	var amount := int(val)
+	if amount == 0 and op != TagSystem.Op.SET:
+		amount = 1
+	var seen_card_ids: Dictionary = {}
+	for card_id in state.sudan_deck:
+		var pool_card_id := int(card_id)
+		if seen_card_ids.has(pool_card_id):
+			continue
+		seen_card_ids[pool_card_id] = true
+		var tags: Dictionary = state.sudan_pool_tags.get(pool_card_id, db.get_card(pool_card_id).get("tag", {}).duplicate(true)).duplicate(true)
+		if RuntimeOperationFilter.matches_card_data(pool_card_id, tags, db, selector):
+			TagSystem.apply(tags, tag_name, op, amount, _tag_can_add(db, tag_name))
+			state.sudan_pool_tags[pool_card_id] = tags
 
 
 ## Look up a tag's can_add flag from config (default true if not found).

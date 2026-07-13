@@ -27,6 +27,8 @@ func test_save_load_round_trip_preserves_state():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
+	state.sudan_pool_tags[2010001] = {"存档牌池标签": 2}
+	state.auto_gen_sudan_card = false
 	state.add_coin(15)
 	state.gold_dice = 1
 	state.day = 3
@@ -67,6 +69,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.gold_dice, 1, "gold_dice preserved")
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
+	assert_eq(state2.sudan_pool_tags, state.sudan_pool_tags, "Sultan pool runtime tags preserved")
+	assert_eq(state2.auto_gen_sudan_card, state.auto_gen_sudan_card, "Sultan auto-generation flag preserved")
 	assert_eq(state2.active_sudan_cards.size(), 1, "active sudan card preserved")
 	assert_eq(state2.table_cards.size(), 2, "global and instance-owned table cards preserved")
 	if state2.table_cards.size() > 0:
@@ -133,6 +137,18 @@ func test_v4_save_is_rejected_after_card_instance_schema_upgrade():
 	assert_eq(SaveSystem.load_continue(db), null, "v4 lacks CardInstance identity and must not be loaded")
 	assert_false(SaveSystem.has_valid_save(db), "v4 save must not expose the continue-game entry")
 	SaveSystem.delete_save()
+
+
+func test_v5_save_without_sudan_pool_fields_uses_compatible_defaults():
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(53))
+	var old_v5 := SaveSystem.serialize(state)
+	old_v5.erase("sudan_pool_tags")
+	old_v5.erase("auto_gen_sudan_card")
+	var loaded := GameState.new()
+	SaveSystem.deserialize(old_v5, loaded, db)
+	assert_eq(loaded.sudan_pool_tags, {}, "old v5 saves default to no Sultan pool tag state")
+	assert_true(loaded.auto_gen_sudan_card, "old v5 saves keep Sultan auto-generation enabled")
 
 
 func test_load_rejects_version_mismatch():
