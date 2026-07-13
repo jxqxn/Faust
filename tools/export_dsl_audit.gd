@@ -8,7 +8,7 @@ func _init() -> void:
 	var output_dir := _output_dir()
 	var db := ConfigDB.new()
 	db.load_all()
-	var report := DslAudit.audit_configs(db.rites, db.events, db.loots, db)
+	var report := DslAudit.audit_potentially_reachable_configs(db.rites, db.events, db.loots, db)
 	var absolute_dir := ProjectSettings.globalize_path(output_dir)
 	DirAccess.make_dir_recursive_absolute(absolute_dir)
 	_write("%s/dsl_audit.json" % output_dir, DslAudit.to_json(report))

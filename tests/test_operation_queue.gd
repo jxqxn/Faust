@@ -149,3 +149,28 @@ func test_focused_dsl_audit_is_json_parseable_and_has_no_unknown_target_keys() -
 		for key in report[family].unsupported:
 			for reference in report[family].references.get(key, []):
 				assert_false(int(reference.get("id", 0)) in targets, "%s remains unexplained in focused id %s" % [key, reference.get("id", 0)])
+
+
+func test_reachability_audit_marks_normal_roots_and_generated_content() -> void:
+	var local_db := ConfigDB.new()
+	local_db.init_config = {"default_rite": [991000], "event_init_profile_id": 1}
+	local_db.cards = {}
+	local_db.rites = {
+		991000: {"id": 991000, "settlement": [{"result": {"reachable_root_gap": 1}, "action": {"event_on": 992000}}]},
+		991001: {"id": 991001, "settlement": [{"result": {"reachable_loot_gap": 1}}]},
+		991002: {"id": 991002, "settlement": [{"result": {"unreachable_gap": 1}}]},
+	}
+	local_db.events = {
+		992000: {"id": 992000, "on": {}, "settlement": [{"action": {"loot": 993000}}]},
+	}
+	local_db.loots = {
+		993000: {"id": 993000, "item": [{"id": 991001, "type": "rite"}]},
+	}
+	var report := DslAudit.audit_potentially_reachable_configs(local_db.rites, local_db.events, local_db.loots, local_db)
+	assert_true(991000 in report.reachability.sources.rite, "normal-start rite is a reachability root")
+	assert_true(992000 in report.reachability.sources.event, "event_on extends potential reachability")
+	assert_true(993000 in report.reachability.sources.loot, "event loot extends potential reachability")
+	assert_true(991001 in report.reachability.sources.rite, "rite loot extends potential reachability")
+	assert_eq(report.result.references["reachable_root_gap"][0].reachability, "potentially_reachable")
+	assert_eq(report.result.references["reachable_loot_gap"][0].reachability, "potentially_reachable")
+	assert_eq(report.result.references["unreachable_gap"][0].reachability, "not_reached_by_static_graph")

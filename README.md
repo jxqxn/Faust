@@ -93,8 +93,11 @@ godot --headless --path . --script tools/export_dsl_audit.gd
 ```
 
 It writes `dsl_audit.json` and `dsl_audit.md` under `user://dsl_audit` by
-default. Pass `-- --out user://another_folder` to choose a different user-data
-folder without modifying tracked content.
+default. The report marks each source with a conservative static reachability
+hop count from normal-start roots through implemented rite, event, loot, and
+card generation edges. It is a prioritization aid, not proof that a condition
+branch fires in a real run. Pass `-- --out user://another_folder` to choose a
+different user-data folder without modifying tracked content.
 
 ## Developer test start
 

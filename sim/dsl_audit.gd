@@ -54,12 +54,211 @@ static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dic
 	return out
 
 
+## Add a conservative, clone-runtime reachability layer to the full audit.
+## A source is "potentially_reachable" when it can be reached from the normal
+## start roots through known rite/event/loot/card generation operations. This
+## intentionally does not evaluate every branch condition, so it is a planning
+## aid rather than a claim that a source fires in every playthrough.
+static func audit_potentially_reachable_configs(rites: Dictionary, events: Dictionary, loots: Dictionary, db) -> Dictionary:
+	var report := audit_configs(rites, events, loots, db)
+	var reachability := _potential_reachability(rites, events, loots, db)
+	_annotate_reachability(report, reachability)
+	return report
+
+
 static func audit_rite_ids(rites: Dictionary, ids: Array[int], db = null) -> Dictionary:
 	var subset := {}
 	for id in ids:
 		if rites.has(id):
 			subset[id] = rites[id]
 	return audit_rites(subset, db)
+
+
+static func _potential_reachability(rites: Dictionary, events: Dictionary, loots: Dictionary, db) -> Dictionary:
+	var reachable := {"rite": {}, "event": {}, "loot": {}, "card": {}}
+	var distances := {"rite": {}, "event": {}, "loot": {}, "card": {}}
+	var roots := {"rite": [], "event": [], "card": []}
+	if db == null:
+		return {"reachable": reachable, "distances": distances, "roots": roots}
+	for rite_id in db.get_default_rites():
+		_add_reachable(reachable.rite, int(rite_id), roots.rite, distances.rite, 0)
+	var init_profile := int(db.init_config.get("event_init_profile_id", 1))
+	for event_id in events:
+		var event: Dictionary = events[event_id]
+		if _contains_int(event.get("auto_start_init", []), init_profile):
+			_add_reachable(reachable.event, int(event_id), roots.event, distances.event, 0)
+	for card_id in db.get_default_cards():
+		_add_reachable(reachable.card, int(card_id), roots.card, distances.card, 0)
+
+	var processed := {"rite": {}, "event": {}, "loot": {}, "card": {}}
+	var changed := true
+	while changed:
+		changed = false
+		for rite_id in reachable.rite.keys():
+			var rite_hops := int(distances.rite.get(rite_id, 999999))
+			if int(processed.rite.get(rite_id, 999999)) <= rite_hops or not rites.has(rite_id):
+				continue
+			processed.rite[rite_id] = rite_hops
+			changed = _collect_rite_edges(rites[rite_id], reachable, distances, rite_hops + 1) or changed
+		for event_id in reachable.event.keys():
+			var event_hops := int(distances.event.get(event_id, 999999))
+			if int(processed.event.get(event_id, 999999)) <= event_hops or not events.has(event_id):
+				continue
+			processed.event[event_id] = event_hops
+			changed = _collect_event_edges(events[event_id], reachable, distances, event_hops + 1) or changed
+		for loot_id in reachable.loot.keys():
+			var loot_hops := int(distances.loot.get(loot_id, 999999))
+			if int(processed.loot.get(loot_id, 999999)) <= loot_hops or not loots.has(loot_id):
+				continue
+			processed.loot[loot_id] = loot_hops
+			changed = _collect_loot_edges(loots[loot_id], reachable, distances, loot_hops + 1) or changed
+		for card_id in reachable.card.keys():
+			var card_hops := int(distances.card.get(card_id, 999999))
+			if int(processed.card.get(card_id, 999999)) <= card_hops:
+				continue
+			processed.card[card_id] = card_hops
+			var card: Dictionary = db.get_card(int(card_id))
+			var rite_id := int(card.get("is_rite", 0))
+			if rite_id > 0:
+				changed = _add_reachable(reachable.rite, rite_id, null, distances.rite, card_hops + 1) or changed
+	return {"reachable": reachable, "distances": distances, "roots": roots}
+
+
+static func _collect_rite_edges(rite: Dictionary, reachable: Dictionary, distances: Dictionary, hops: int) -> bool:
+	var changed := false
+	for section in ["settlement_prior", "settlement", "settlement_extre"]:
+		for entry in rite.get(section, []):
+			if entry is Dictionary:
+				changed = _collect_effect_edges(entry.get("result", {}), reachable, distances, hops) or changed
+				changed = _collect_effect_edges(entry.get("action", {}), reachable, distances, hops) or changed
+	for slot in rite.get("cards_slot", {}).values():
+		if not (slot is Dictionary):
+			continue
+		for pop in slot.get("pops", []):
+			if pop is Dictionary:
+				changed = _collect_effect_edges(pop.get("action", {}), reachable, distances, hops) or changed
+	return changed
+
+
+static func _collect_event_edges(event: Dictionary, reachable: Dictionary, distances: Dictionary, hops: int) -> bool:
+	var changed := _collect_effect_edges(event.get("result", {}), reachable, distances, hops)
+	changed = _collect_effect_edges(event.get("action", {}), reachable, distances, hops) or changed
+	for settlement in event.get("settlement", []):
+		if settlement is Dictionary:
+			changed = _collect_effect_edges(settlement.get("result", {}), reachable, distances, hops) or changed
+			changed = _collect_effect_edges(settlement.get("action", {}), reachable, distances, hops) or changed
+	return changed
+
+
+static func _collect_loot_edges(loot: Dictionary, reachable: Dictionary, distances: Dictionary, hops: int) -> bool:
+	var changed := _collect_effect_edges(loot.get("result", {}), reachable, distances, hops)
+	changed = _collect_effect_edges(loot.get("action", {}), reachable, distances, hops) or changed
+	for item in loot.get("item", []):
+		if not (item is Dictionary):
+			continue
+		var item_id := int(item.get("id", 0))
+		if item_id > 0:
+			if str(item.get("type", "")) == "rite":
+				changed = _add_reachable(reachable.rite, item_id, null, distances.rite, hops) or changed
+			else:
+				changed = _add_reachable(reachable.card, item_id, null, distances.card, hops) or changed
+		changed = _collect_effect_edges(item.get("result", {}), reachable, distances, hops) or changed
+		changed = _collect_effect_edges(item.get("action", {}), reachable, distances, hops) or changed
+	return changed
+
+
+static func _collect_effect_edges(payload: Variant, reachable: Dictionary, distances: Dictionary, hops: int) -> bool:
+	var changed := false
+	if payload is Array:
+		for item in payload:
+			changed = _collect_effect_edges(item, reachable, distances, hops) or changed
+		return changed
+	if not (payload is Dictionary):
+		return false
+	for raw_key in payload:
+		var key := str(raw_key)
+		var value = payload[raw_key]
+		if key == "rite":
+			for id in _ids_from_value(value):
+				changed = _add_reachable(reachable.rite, id, null, distances.rite, hops) or changed
+		elif key == "event_on":
+			for id in _ids_from_value(value):
+				changed = _add_reachable(reachable.event, id, null, distances.event, hops) or changed
+		elif key == "loot" or key.begins_with("loot."):
+			for id in _ids_from_value(value):
+				changed = _add_reachable(reachable.loot, id, null, distances.loot, hops) or changed
+		elif key == "card":
+			for id in _ids_from_value(value):
+				changed = _add_reachable(reachable.card, id, null, distances.card, hops) or changed
+		changed = _collect_effect_edges(value, reachable, distances, hops) or changed
+	return changed
+
+
+static func _ids_from_value(value: Variant) -> Array[int]:
+	var ids: Array[int] = []
+	if value is Array:
+		for item in value:
+			if item is Dictionary:
+				ids.append(int(item.get("id", 0)))
+			else:
+				ids.append(int(item))
+	elif value is Dictionary:
+		ids.append(int(value.get("id", 0)))
+	else:
+		ids.append(int(value))
+	return ids.filter(func(id): return id > 0)
+
+
+static func _add_reachable(bucket: Dictionary, id: int, root: Variant = null, distance: Dictionary = {}, hops: int = 0) -> bool:
+	if id <= 0:
+		return false
+	if bucket.has(id) and int(distance.get(id, 999999)) <= hops:
+		return false
+	bucket[id] = true
+	distance[id] = hops
+	if root is Array:
+		root.append(id)
+	return true
+
+
+static func _contains_int(values: Variant, wanted: int) -> bool:
+	if values is Array:
+		for value in values:
+			if _value_matches_int(value, wanted):
+				return true
+	return _value_matches_int(values, wanted)
+
+
+static func _value_matches_int(value: Variant, wanted: int) -> bool:
+	if value is int or value is float or value is String:
+		return int(value) == wanted
+	if value is Dictionary:
+		for field in ["id", "value", "values"]:
+			if value.has(field) and _contains_int(value[field], wanted):
+				return true
+	return false
+
+
+static func _annotate_reachability(report: Dictionary, data: Dictionary) -> void:
+	var reachable: Dictionary = data.get("reachable", {})
+	var distances: Dictionary = data.get("distances", {})
+	var summary := {"roots": data.get("roots", {}), "sources": {}, "hops": {}}
+	for family in ["condition", "result", "action"]:
+		for references in report[family].references.values():
+			for reference in references:
+				var kind := str(reference.get("kind", ""))
+				var id := int(reference.get("id", 0))
+				var is_reachable: bool = reachable.has(kind) and reachable[kind].has(id)
+				reference["reachability"] = "potentially_reachable" if is_reachable else "not_reached_by_static_graph"
+				reference["reachability_hops"] = int(distances.get(kind, {}).get(id, -1)) if is_reachable else -1
+	for kind in ["rite", "event", "loot", "card"]:
+		var ids: Array = []
+		for id in reachable.get(kind, {}).keys():
+			ids.append(int(id))
+		ids.sort()
+		summary.sources[kind] = ids
+		summary.hops[kind] = distances.get(kind, {}).duplicate()
+	report["reachability"] = summary
 
 
 static func _scan_open_conditions(open_conditions: Variant, bucket: Dictionary, source: Dictionary, known_tags: Dictionary) -> void:
@@ -187,6 +386,15 @@ static func to_json(report: Dictionary) -> String:
 
 static func to_markdown(report: Dictionary, limit: int = 20) -> String:
 	var lines: Array[String] = ["# DSL audit"]
+	if report.has("reachability"):
+		var reachability: Dictionary = report.reachability
+		var sources: Dictionary = reachability.get("sources", {})
+		lines.append("## Potential reachability")
+		lines.append("Static roots and generation edges only; this is not a guarantee that a condition branch fires.")
+		lines.append("- rites: %d" % (sources.get("rite", []) as Array).size())
+		lines.append("- events: %d" % (sources.get("event", []) as Array).size())
+		lines.append("- loots: %d" % (sources.get("loot", []) as Array).size())
+		lines.append("- cards: %d" % (sources.get("card", []) as Array).size())
 	for family in ["condition", "result", "action"]:
 		var unsupported: Dictionary = report.get(family, {}).get("unsupported", {})
 		lines.append("## %s" % family)
@@ -197,5 +405,8 @@ static func to_markdown(report: Dictionary, limit: int = 20) -> String:
 			var key := str(keys[index])
 			var refs: Array = report[family].references.get(key, [])
 			var first: Dictionary = refs[0] as Dictionary if not refs.is_empty() else {}
-			lines.append("- `%s` (%d): %s:%s" % [key, int(unsupported[key]), str(first.get("path", "")), str(first.get("field", ""))])
+			var reachability := str(first.get("reachability", "unclassified"))
+			var hops := int(first.get("reachability_hops", -1))
+			var suffix := " [%s%s]" % [reachability, " h%d" % hops if hops >= 0 else ""]
+			lines.append("- `%s` (%d): %s:%s%s" % [key, int(unsupported[key]), str(first.get("path", "")), str(first.get("field", "")), suffix])
 	return "\n".join(lines)
