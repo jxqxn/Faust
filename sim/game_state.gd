@@ -113,7 +113,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	active_rite_uid = 0
 	available_rites.clear()
 	for rid in db.get_default_rites():
-		create_rite_instance(int(rid))
+		add_available_rite(int(rid), db, rng)
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false
@@ -295,14 +295,93 @@ func visible_rail_card_ids() -> Array[int]:
 	return out
 
 
-func add_available_rite(id: int) -> int:
+func add_available_rite(id: int, db = null, rng = null) -> int:
 	if id <= 0:
 		return 0
 	# A generated RiteNode always becomes a fresh player-owned Rite. `once_new`
 	# only changes new_born; it does not coalesce matching config ids.
-	# [SRC: PlayerExtensions.c @ InitRite (RVA 0x38e140): constructs Rite,
-	# assigns the next uid, then appends it to the player's rite list.]
-	return create_rite_instance(id).uid
+	# InitRite performs open-slot adsorption before it appends the instance; a
+	# missing required auto slot aborts creation and returns earlier cards.
+	# [SRC: PlayerExtensions.c @ InitRite (RVA 0x38e140); RiteExtensions.c @
+	# AdsorbCards (RVA 0x38fca0), RebackCards (RVA 0x392ea0)]
+	var instance := create_rite_instance(id)
+	if db == null:
+		return instance.uid
+	var rite: Dictionary = db.get_rite(id)
+	if rite.is_empty():
+		remove_rite_instance(instance.uid)
+		return 0
+	if not _adsorb_open_slots(instance, rite, db, rng):
+		remove_rite_instance(instance.uid)
+		return 0
+	return instance.uid
+
+
+func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bool:
+	var slots: Dictionary = rite.get("cards_slot", {})
+	var slot_keys: Array[String] = []
+	for key in slots.keys():
+		slot_keys.append(str(key))
+	slot_keys.sort_custom(func(a: String, b: String) -> bool: return a.substr(1).to_int() < b.substr(1).to_int())
+	var absorbed: Array[Dictionary] = []
+	for slot_key in slot_keys:
+		var slot_def: Dictionary = slots.get(slot_key, {})
+		if int(slot_def.get("open_adsorb", 0)) != 1:
+			continue
+		var candidates: Array[int] = []
+		for card_id in hand:
+			var id := int(card_id)
+			var card: Dictionary = db.get_card(id)
+			if not _can_adsorb_card(slot_def, card, instance, rite, db, rng):
+				continue
+			candidates.append(id)
+		if candidates.is_empty():
+			if int(slot_def.get("is_empty", 0)) == 1:
+				continue
+			_reback_absorbed_cards(absorbed, instance.uid)
+			return false
+		var choice_index := 0
+		if candidates.size() > 1 and rng != null and rng.has_method("range_int_half_open"):
+			choice_index = int(rng.range_int_half_open(0, candidates.size()))
+		var chosen_id := int(candidates[choice_index])
+		if not remove_card_from_hand(chosen_id):
+			_reback_absorbed_cards(absorbed, instance.uid)
+			return false
+		var slot_number := slot_key.substr(1).to_int()
+		add_card_to_slot(chosen_id, slot_number, db, instance.uid)
+		absorbed.append({"id": chosen_id, "slot": slot_number})
+	return true
+
+
+func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance: RiteInstance, rite: Dictionary, db, rng) -> bool:
+	if card.is_empty():
+		return false
+	var condition: Dictionary = slot_def.get("condition", {})
+	if condition.is_empty():
+		return true
+	var rite_state := {}
+	for entry in instance.cards:
+		rite_state["s%d" % int(entry.get("slot", 0))] = int(entry.get("id", 0))
+	var attr_slots: Array[String] = []
+	for key in rite.get("cards_slot", {}).keys():
+		attr_slots.append(str(key))
+	return ConditionEval.evaluate(condition, {
+		"db": db,
+		"state": self,
+		"rng": rng,
+		"rite_state": rite_state,
+		"attr_slots": attr_slots,
+		"acting_card": card,
+		"acting_card_id": int(card.get("id", 0)),
+		"acting_card_only": true,
+	})
+
+
+func _reback_absorbed_cards(absorbed: Array[Dictionary], rite_uid: int) -> void:
+	for entry in absorbed:
+		var card_id := int(entry.get("id", 0))
+		remove_card_from_slot(card_id, int(entry.get("slot", 0)), rite_uid)
+		add_card_to_hand(card_id)
 
 
 ## Create a distinct runtime rite. Callers that intentionally generate a

@@ -40,6 +40,24 @@ func _db_with_lifecycle_rites() -> ConfigDB:
 		"settlement": [{"condition": {}, "result": {"coin": 4}, "action": {}}],
 		"settlement_extre": [], "auto_begin": 0, "auto_result": 1,
 	}
+	local_db.rites[991004] = {
+		"id": 991004,
+		"name": "Required adsorb test",
+		"open_conditions": [],
+		"cards_slot": {"s1": {"condition": {"is": 2000005}, "open_adsorb": 1, "is_empty": 0}},
+		"round_number": 0, "waiting_round": 0, "waiting_round_end_action": [],
+		"settlement_prior": [], "settlement": [{"condition": {}, "result": {}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
+	local_db.rites[991005] = {
+		"id": 991005,
+		"name": "Optional adsorb test",
+		"open_conditions": [],
+		"cards_slot": {"s1": {"condition": {"is": 2000005}, "open_adsorb": 1, "is_empty": 1}},
+		"round_number": 0, "waiting_round": 0, "waiting_round_end_action": [],
+		"settlement_prior": [], "settlement": [{"condition": {}, "result": {}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
 	return local_db
 
 
@@ -122,3 +140,46 @@ func test_auto_begin_only_reports_a_newly_started_instance_once():
 	assert_eq(RoundLoop.start_auto_begin_rites(state, local_db).size(), 1)
 	assert_true(instance.start)
 	assert_true(RoundLoop.start_auto_begin_rites(state, local_db).is_empty(), "already-started rites are skipped")
+
+
+func test_generation_adsorbs_required_open_slot_before_the_rite_is_available():
+	var local_db := _db_with_lifecycle_rites()
+	var state := GameState.new()
+	state.add_card_to_hand(2000005)
+
+	var rite_uid := state.add_available_rite(991004, local_db, RNG.new(6))
+	var instance = state.get_rite_instance(rite_uid)
+
+	assert_gt(rite_uid, 0, "matching required open_adsorb card permits rite generation")
+	assert_not_null(instance)
+	assert_false(state.has_card_in_hand(2000005), "adsorbed card leaves hand during rite generation")
+	assert_eq(state.cards_in_slot(1, rite_uid).size(), 1, "adsorbed card enters the generated rite slot immediately")
+
+
+func test_generation_rejects_missing_required_open_slot_and_keeps_hand_intact():
+	var local_db := _db_with_lifecycle_rites()
+	var state := GameState.new()
+
+	assert_eq(state.add_available_rite(991004, local_db, RNG.new(7)), 0, "missing required auto slot aborts the rite instance")
+	assert_true(state.available_rite_instances().is_empty(), "failed adsorption leaves no partial rite behind")
+
+
+func test_generation_allows_empty_optional_open_slot():
+	var local_db := _db_with_lifecycle_rites()
+	var state := GameState.new()
+
+	var rite_uid := state.add_available_rite(991005, local_db, RNG.new(8))
+	assert_gt(rite_uid, 0, "is_empty permits generation without an auto-adsorbed card")
+	assert_true(state.cards_in_slot(1, rite_uid).is_empty(), "optional auto slot remains empty")
+
+
+func test_deferred_rite_generation_uses_the_same_open_adsorb_gate():
+	var local_db := _db_with_lifecycle_rites()
+	var state := GameState.new()
+
+	DeferredEffects.apply({"rite": 991004}, state, local_db, RNG.new(9))
+	assert_true(state.available_rite_instances().is_empty(), "result DSL cannot create a rite when required auto slots are missing")
+
+	state.add_card_to_hand(2000005)
+	DeferredEffects.apply({"rite": 991004}, state, local_db, RNG.new(10))
+	assert_eq(state.available_rite_instances().size(), 1, "result DSL creates the rite once its auto slot can be filled")

@@ -36,9 +36,10 @@ func test_auto_begin_starts_rites_without_resolving_results():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var opened := RoundLoop.start_auto_begin_rites(state, db)
-	assert_eq(opened.size(), 2, "generated eligible auto_begin daily rites are opened")
+	assert_eq(opened.size(), 1, "only daily rites whose auto-adsorb prerequisites exist are opened")
 	assert_true(5000001 in state.started_rites, "治理家业 is marked started")
-	assert_true(5001001 in state.started_rites, "daily palace rite is marked started when generated")
+	assert_false(5001001 in state.started_rites, "palace rite waits for its Sultan-on-court event chain")
+	assert_false(5001001 in state.available_rites, "missing required auto slots prevent an unprepared palace instance")
 	assert_eq(state.coin_count, 0, "auto-begin does not execute settlement rewards")
 	assert_eq(state.auto_result_rites.size(), 0, "auto-result runtime state is separate from auto-begin")
 

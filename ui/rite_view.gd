@@ -80,7 +80,7 @@ func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 		_rite_uid = rite_uid
 		var instance = _state.get_rite_instance(_rite_uid) if _rite_uid > 0 else _state.find_rite_instance_by_id(rite_id)
 		if instance == null:
-			_rite_uid = int(_state.add_available_rite(rite_id))
+			_rite_uid = int(_state.add_available_rite(rite_id, _db, _rng))
 		else:
 			_rite_uid = int(instance.uid)
 		_load_placements_from_instance()
@@ -116,7 +116,6 @@ func _build_ui() -> void:
 	_slot_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_slot_layer)
 	_build_slot_placeholders()
-	_auto_adsorb_slots()
 
 	_rite_panel = _panel("RiteOverlayPanel")
 	_rite_panel.clip_contents = true
@@ -688,25 +687,6 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 		"acting_card_only": true,
 	}
 	return ConditionEval.evaluate(cond, ctx)
-
-
-func _auto_adsorb_slots() -> void:
-	if _state == null or _db == null:
-		return
-	for slot_key in _slot_keys():
-		if _placed.has(slot_key):
-			continue
-		var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
-		if int(slot_def.get("open_adsorb", 0)) != 1:
-			continue
-		for card_id in _state.visible_rail_card_ids():
-			var id := int(card_id)
-			var card: Dictionary = _db.get_card(id)
-			if not _slot_accepts_card(slot_def, card):
-				continue
-			var source := "active_sudan" if _state.is_active_sudan_card(id) else "hand"
-			_place_card_in_slot(slot_key, id, source, "")
-			break
 
 
 func _apply_deferred_to_world(deferred: Dictionary) -> void:

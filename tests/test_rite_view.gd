@@ -159,7 +159,7 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"settlement": [
-			{"condition": {}, "result": {"event_on": 5310008}, "action": {"rite": 5001001, "prompt": {"id": "p1"}}}
+			{"condition": {}, "result": {"event_on": 5310008}, "action": {"rite": 5000001, "prompt": {"id": "p1"}}}
 		],
 		"settlement_extre": [],
 		"settlement_prior": [],
@@ -168,12 +168,13 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	view._gold_dice_label = Label.new()
 	view._gold_dice_btn = Button.new()
 	view._result_label = RichTextLabel.new()
+	var rites_before := state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size()
 
 	view._resolve()
 
 	assert_true(state.is_event_enabled(5310008), "event_on should enable the runtime event")
 	assert_true(5310008 in state.event_queue, "start-trigger event should enter the runtime event queue")
-	assert_true(5001001 in state.available_rites, "rite result should generate a runtime rite entry")
+	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "rite result creates a fresh runtime rite entry")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "p1", "prompt should enter the runtime prompt queue")
 
 func test_rite_resolution_deferred_choose_reaches_prompt_queue():

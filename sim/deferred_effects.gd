@@ -21,7 +21,7 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 			state.queue_choice_prompt(choose)
 	var next_rite := int(deferred.get("rite", 0))
 	if next_rite > 0 and state.has_method("add_available_rite"):
-		state.add_available_rite(next_rite)
+		state.add_available_rite(next_rite, db, rng)
 	for loot_ref in deferred.get("loots", []):
 		_apply_loot_ref(loot_ref, state, db, rng)
 
@@ -139,9 +139,10 @@ static func _apply_loot_item(id: int, state, db, rng) -> void:
 			state.queue_prompt({"id": "card.%d" % id, "text": "获得卡牌：%s" % str(card.get("name", id))})
 		return
 	if db != null and not db.get_rite(id).is_empty():
+		var rite_uid := 0
 		if state.has_method("add_available_rite"):
-			state.add_available_rite(id)
-		if state.has_method("queue_prompt"):
+			rite_uid = int(state.add_available_rite(id, db, rng))
+		if rite_uid > 0 and state.has_method("queue_prompt"):
 			var rite: Dictionary = db.get_rite(id)
 			state.queue_prompt({"id": "rite.%d" % id, "text": "出现新的仪式：%s" % str(rite.get("name", id))})
 		return

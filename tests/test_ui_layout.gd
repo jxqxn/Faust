@@ -261,14 +261,15 @@ func test_methinks_drop_generates_rite_without_opening_rite_overlay():
 		"cards_slot": {"s1": {"condition": {}}},
 		"settlement_prior": [],
 		"settlement": [
-			{"condition": {"s1.is": 2000001}, "result": {}, "action": {"rite": 5001001, "prompt": {"id": "think.test"}}}
+			{"condition": {"s1.is": 2000001}, "result": {}, "action": {"rite": 5000001, "prompt": {"id": "think.test"}}}
 		],
 		"settlement_extre": [],
 	}
 	var rng := RNG.new(18)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, rng)
-	state.available_rites.erase(5001001)
+	state.available_rites.erase(5000001)
+	var rites_before := state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size()
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, local_db, rng)
@@ -277,7 +278,8 @@ func test_methinks_drop_generates_rite_without_opening_rite_overlay():
 
 	screen.drop_card_on_methinks({"type": "card", "card_id": 2000001, "source": "hand"})
 
-	assert_true(5001001 in state.available_rites, "I-think should generate rites through desktop processing")
+	assert_true(5000001 in state.available_rites, "I-think should generate rites through desktop processing")
+	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "I-think creates a fresh runtime rite instead of a config-only flag")
 	assert_true(2000001 in state.hand, "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
 	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "I-think results should use the desktop event prompt layer")
