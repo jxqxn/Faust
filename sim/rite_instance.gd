@@ -15,6 +15,10 @@ var start := false
 var start_round := 0
 var start_life := 0
 var life := 0
+# Authoritative slot ownership: `s1` -> CardInstance uid.  The legacy cards
+# array remains a derived compatibility view while condition/result callers
+# finish their migration.
+var slot_cards: Dictionary = {}
 var cards: Array[Dictionary] = []
 var is_cleaned := false
 var custom_name := ""
@@ -38,6 +42,7 @@ func to_save_dict() -> Dictionary:
 		"start_round": start_round,
 		"start_life": start_life,
 		"life": life,
+		"slot_cards": slot_cards.duplicate(true),
 		"cards": card_data,
 		"is_cleaned": is_cleaned,
 		"custom_name": custom_name,
@@ -52,6 +57,8 @@ static func from_save_dict(data: Dictionary) -> RiteInstance:
 	instance.start_round = int(data.get("start_round", 0))
 	instance.start_life = int(data.get("start_life", 0))
 	instance.life = int(data.get("life", 0))
+	for slot_key in data.get("slot_cards", {}):
+		instance.slot_cards[str(slot_key)] = int(data["slot_cards"][slot_key])
 	instance.is_cleaned = bool(data.get("is_cleaned", false))
 	instance.custom_name = str(data.get("custom_name", ""))
 	for card in data.get("cards", []):

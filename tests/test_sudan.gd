@@ -82,7 +82,10 @@ func test_full_new_run_setup():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng) # normal difficulty
 	# Normal runs use a curated starting hand; the huge init/1 list is a test profile.
-	assert_eq(state.hand, [2000001, 2000006, 2000523, 2000005])
+	var hand_card_ids: Array[int] = []
+	for card_uid in state.hand:
+		hand_card_ids.append(int(state.get_card_instance(int(card_uid)).card_id))
+	assert_eq(hand_card_ids, [2000001, 2000006, 2000523, 2000005])
 	assert_true(5000001 in state.available_rites)
 	assert_true(state.available_rites.size() < db.rites.size(), "normal start should not expose every configured rite")
 	# Sudan deck built from pool and shuffled.

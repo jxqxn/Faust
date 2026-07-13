@@ -7,10 +7,12 @@ extends RefCounted
 ## A sudan card in play with a countdown.
 class ActiveSudan:
 	var card_id: int = 0
+	var card_uid: int = 0
 	var days_left: int = 0
 	var drawn_round: int = 0
-	func _init(cid: int, life: int, rnd: int) -> void:
+	func _init(cid: int, life: int, rnd: int, uid: int = 0) -> void:
 		card_id = cid
+		card_uid = uid
 		days_left = life
 		drawn_round = rnd
 
@@ -33,7 +35,11 @@ static func advance_day(state, db, rng) -> Dictionary:
 			result.expired.append(asc.card_id)
 			result.game_over = true
 			if state.has_method("remove_card_from_rail"):
-				state.remove_card_from_rail(int(asc.card_id))
+				state.remove_card_from_rail(int(asc.card_uid))
+			var expired_instance = state.get_card_instance(int(asc.card_uid)) if state.has_method("get_card_instance") else null
+			if expired_instance != null:
+				expired_instance.zone = "removed"
+				expired_instance.is_lost = true
 		else:
 			still_active.append(asc)
 	state.active_sudan_cards = still_active
@@ -43,14 +49,16 @@ static func advance_day(state, db, rng) -> Dictionary:
 
 
 ## Draw one sudan card into the active set.
-static func draw_weekly_sudan(state, _db, _rng) -> int:
+static func draw_weekly_sudan(state, db, _rng) -> int:
 	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	var cid: int = SudanCards.draw(state.sudan_deck)
 	if cid < 0:
 		return -1
-	state.active_sudan_cards.append(ActiveSudan.new(cid, life, state.round_number))
+	var instance = state.create_card_instance(cid, db, "sudan") if state.has_method("create_card_instance") else null
+	var card_uid := int(instance.uid) if instance != null else cid
+	state.active_sudan_cards.append(ActiveSudan.new(cid, life, state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
-		state.insert_card_to_rail(cid, 0)
+		state.insert_card_to_rail(card_uid, 0)
 	return cid
 
 
@@ -69,7 +77,7 @@ static func start_round(state, db, rng) -> int:
 ## sudan_redraw_count cards. Returns the first new card id (or -1 on failure).
 ## [SRC: GameController.c @ RedrawSudanCard (0x5558b0): loops sudan_redraw_count
 ##  times (player+0x68), each inheriting discarded life; pre-loop pool gate]
-static func use_redraw(state, rng) -> int:
+static func use_redraw(state, rng, db = null) -> int:
 	if state.redraws_left <= 0:
 		return -1
 	if state.active_sudan_cards.is_empty():
@@ -81,24 +89,31 @@ static func use_redraw(state, rng) -> int:
 		return -1
 	var old_card = state.active_sudan_cards.pop_back()
 	var discarded: int = old_card.card_id
+	var discarded_uid: int = old_card.card_uid
 	var carried_life: int = old_card.days_left
 	var first_new := -1
-	var rail_index: int = state.rail_order.find(discarded) if state.has_method("replace_card_in_rail") else -1
+	var rail_index: int = state.rail_order.find(discarded_uid) if state.has_method("replace_card_in_rail") else -1
+	var old_instance = state.get_card_instance(discarded_uid) if state.has_method("get_card_instance") else null
+	if old_instance != null:
+		old_instance.zone = "removed"
+		old_instance.is_lost = true
 	for i in draw_count:
 		var new_id: int = SudanCards.draw(state.sudan_deck)
 		if new_id < 0:
 			break
 		if i == 0:
 			first_new = new_id
-		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number))
+		var instance = state.create_card_instance(new_id, db, "sudan") if state.has_method("create_card_instance") else null
+		var new_uid := int(instance.uid) if instance != null else new_id
+		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number, new_uid))
 		if state.has_method("replace_card_in_rail"):
 			if i == 0:
 				if rail_index >= 0:
-					state.replace_card_in_rail(discarded, new_id)
+					state.replace_card_in_rail(discarded_uid, new_uid)
 				else:
-					state.insert_card_to_rail(new_id, state.rail_order.size())
+					state.insert_card_to_rail(new_uid, state.rail_order.size())
 			else:
-				state.insert_card_to_rail(new_id, state.rail_order.size())
+				state.insert_card_to_rail(new_uid, state.rail_order.size())
 	# Insert the discarded card back into the pool.
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
@@ -111,15 +126,20 @@ static func use_redraw(state, rng) -> int:
 
 ## Consume a sudan card. The caller may then call start_round_if_no_sudan to
 ## match TryGenSudanCard's "draw when none active" behavior.
-static func consume_sudan(state, card_id: int) -> bool:
+static func consume_sudan(state, card_or_uid: int) -> bool:
 	for i in state.active_sudan_cards.size():
-		if state.active_sudan_cards[i].card_id == card_id:
+		var active = state.active_sudan_cards[i]
+		if active.card_id == card_or_uid or active.card_uid == card_or_uid:
 			state.active_sudan_cards.remove_at(i)
 			if state.has_method("remove_card_from_rail"):
-				state.remove_card_from_rail(card_id)
+				state.remove_card_from_rail(int(active.card_uid))
+			var instance = state.get_card_instance(int(active.card_uid)) if state.has_method("get_card_instance") else null
+			if instance != null:
+				instance.zone = "removed"
+				instance.is_lost = true
 			# Fire card-clean event triggers for the consumed card.
 			# [SRC: DesktopCleanCard/RiteResultPanelController -> OnCardClean]
-			state.trigger_events("card_clean", {"card": card_id})
+			state.trigger_events("card_clean", {"card": active.card_id, "card_uid": active.card_uid})
 			return true
 	return false
 
@@ -251,8 +271,15 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 				consume_sudan(state, card_id)
 			else:
 				state.trigger_events("card_clean", {"card": card_id})
-		elif not state.is_active_sudan_card(card_id) and not state.has_card_in_hand(card_id):
-			state.add_card_to_hand(card_id)
+		elif state.is_active_sudan_card(card_id):
+			var card_uid := int(table_card.get("card_uid", 0))
+			var sudan_instance = state.get_card_instance(card_uid) if state.has_method("get_card_instance") else null
+			if sudan_instance != null:
+				sudan_instance.zone = "sudan"
+				sudan_instance.rite_uid = 0
+				sudan_instance.slot_key = ""
+		elif not state.has_card_in_hand(int(table_card.get("card_uid", card_id))):
+			state.add_card_to_hand(int(table_card.get("card_uid", card_id)), db)
 	state.remove_rite_instance(instance.uid)
 
 

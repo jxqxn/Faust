@@ -5,6 +5,8 @@
 class_name GameState
 extends RefCounted
 
+const CardInstanceData = preload("res://sim/card_instance.gd")
+
 # Counter system for non-negative clamping on gated counters.
 # Counters. Local counters are per-run; global persist across runs (prestige etc).
 var local_counters := {}    # id(int) -> int
@@ -14,14 +16,19 @@ var global_counters := {}   # id(int) -> int
 # register_nonneg. Kept on the instance so runs/tests stay isolated.
 var _nonneg_ids := {CounterSystem.SPECIAL_NONNEG_ID: true}
 
-# Hand: card ids the player holds.
+# Card instances are the mutable card source of truth.  The id arrays below
+# remain compatibility views while callers migrate to uid-based APIs.
+var card_instances: Dictionary = {} # uid(int) -> CardInstanceData
+var next_card_uid := 1
+# Hand and bottom rail contain runtime CardInstance uids.  Config ids only
+# cross the public compatibility boundary, where they resolve to one instance.
 var hand: Array[int] = []
 # Visual order for the unified bottom card rail, including hand and active
 # sudan cards. Gameplay ownership still lives in hand/active_sudan_cards.
 var rail_order: Array[int] = []
 # Table index: cards placed in a rite slot, each
-# {id, slot, rite_uid, tags, count, is_lost}. RiteInstance.cards is the
-# per-instance view; this flat list remains for global table conditions.
+# {id, card_uid, slot, rite_uid, tags, count, is_lost}. RiteInstance.slot_cards
+# is the per-instance authority; this flat list remains for global conditions.
 var table_cards: Array = []
 # Coin stack: the coin card (2000093) count. Gold = coin-card stack (spec 10.2).
 var coin_count := 0
@@ -83,8 +90,61 @@ func _init() -> void:
 	pass
 
 
+func create_card_instance(card_id: int, db, zone: String = "hand"):
+	if card_id <= 0:
+		return null
+	var definition: Dictionary = db.get_card(card_id) if db != null else {}
+	var instance = CardInstanceData.new(next_card_uid, card_id, definition.get("tag", {}) if not definition.is_empty() else {})
+	next_card_uid += 1
+	instance.zone = zone
+	card_instances[instance.uid] = instance
+	return instance
+
+
+func get_card_instance(uid: int):
+	return card_instances.get(uid, null)
+
+
+func card_uid_for(card_id: int, preferred_zone: String = "") -> int:
+	var candidate_uids: Array = card_instances.keys()
+	candidate_uids.sort()
+	for uid in candidate_uids:
+		var instance = card_instances[uid]
+		if instance.card_id == card_id and (preferred_zone == "" or instance.zone == preferred_zone):
+			return instance.uid
+	return 0
+
+
+func card_data_for(uid: int, db) -> Dictionary:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return {}
+	var card: Dictionary = db.get_card(instance.card_id).duplicate(true) if db != null else {}
+	# Some legacy/test callers grant by config id before a ConfigDB is threaded
+	# through. Materialize the definition tags lazily at the first real lookup;
+	# after that only this instance owns and mutates them.
+	if instance.tags.is_empty() and not card.is_empty() and card.get("tag", {}) is Dictionary:
+		instance.tags = card.get("tag", {}).duplicate(true)
+	card["id"] = instance.card_id
+	card["instance_uid"] = instance.uid
+	card["tag"] = instance.tags.duplicate(true)
+	card["count"] = instance.count
+	card["is_lost"] = instance.is_lost
+	return card
+
+
+func _resolve_card_uid(card_or_uid: int, preferred_zone: String = "") -> int:
+	if card_instances.has(card_or_uid):
+		var direct = card_instances[card_or_uid]
+		if preferred_zone == "" or direct.zone == preferred_zone:
+			return card_or_uid
+	return card_uid_for(card_or_uid, preferred_zone)
+
+
 func setup_new_run(db, diff_index: int, rng) -> void:
 	hand.clear()
+	card_instances.clear()
+	next_card_uid = 1
 	rail_order.clear()
 	difficulty_index = diff_index
 	difficulty_config = db.get_difficulty(diff_index)
@@ -99,8 +159,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	sudan_redraw_count = int(db.init_config.get("sudan_redraw_count", 1))
 	# Starting hand comes through ConfigDB so normal and test profiles stay split.
 	for cid in db.get_default_cards():
-		hand.append(int(cid))
-		rail_order.append(int(cid))
+		add_card_to_hand(int(cid), db)
 	# Sudan deck from pool (shuffled last-first).
 	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
 	# Day/round.
@@ -190,52 +249,88 @@ func spend_coin(n: int) -> bool:
 
 
 # ---- Hand ----
-func has_card_in_hand(id: int) -> bool:
-	return id in hand
+func has_card_in_hand(card_or_uid: int) -> bool:
+	var uid := _resolve_card_uid(card_or_uid, "hand")
+	return uid > 0
 
 
-func add_card_to_hand(id: int) -> void:
-	hand.append(id)
-	rail_order.append(id)
+func add_card_to_hand(card_or_uid: int, db = null) -> int:
+	# Supplying a uid moves that exact runtime card. Supplying a definition id
+	# creates a newly granted card; return paths must pass the uid they removed.
+	var uid := card_or_uid if card_instances.has(card_or_uid) else 0
+	var instance = get_card_instance(uid)
+	if instance == null:
+		instance = create_card_instance(card_or_uid, db, "hand")
+		if instance == null:
+			return 0
+		uid = instance.uid
+	instance.zone = "hand"
+	instance.rite_uid = 0
+	instance.slot_key = ""
+	if uid not in hand:
+		hand.append(uid)
+	if uid not in rail_order:
+		rail_order.append(uid)
 	_sync_hand_order_from_rail()
+	return uid
 
 
-func insert_card_to_hand(id: int, index: int) -> void:
-	var existing := hand.find(id)
+func insert_card_to_hand(card_or_uid: int, index: int, db = null) -> void:
+	var uid := _resolve_card_uid(card_or_uid, "hand")
+	if uid <= 0:
+		uid = add_card_to_hand(card_or_uid, db)
+	if uid <= 0:
+		return
+	var existing := hand.find(uid)
 	if existing >= 0:
 		hand.remove_at(existing)
 	index = clampi(index, 0, hand.size())
-	hand.insert(index, id)
-	insert_card_to_rail(id, _rail_index_for_hand_index(index))
+	hand.insert(index, uid)
+	insert_card_to_rail(uid, _rail_index_for_hand_index(index))
 
 
-func remove_card_from_hand(id: int) -> bool:
-	var idx := hand.find(id)
+func remove_card_from_hand(card_or_uid: int) -> bool:
+	var uid := _resolve_card_uid(card_or_uid, "hand")
+	if uid <= 0:
+		return false
+	var instance = get_card_instance(uid)
+	var idx := hand.find(uid)
 	if idx >= 0:
 		hand.remove_at(idx)
-		_erase_one_from_rail(id)
+		_erase_one_from_rail(uid)
+		instance.zone = "removed"
 		return true
 	return false
 
 
-func insert_card_to_rail(id: int, index: int) -> void:
-	_erase_one_from_rail(id)
+func insert_card_to_rail(card_or_uid: int, index: int) -> void:
+	var uid := _resolve_card_uid(card_or_uid)
+	if uid <= 0:
+		return
+	_erase_one_from_rail(uid)
 	index = clampi(index, 0, rail_order.size())
-	rail_order.insert(index, id)
+	rail_order.insert(index, uid)
 	_sync_hand_order_from_rail()
 
 
-func remove_card_from_rail(id: int) -> void:
-	_erase_one_from_rail(id)
+func remove_card_from_rail(card_or_uid: int) -> void:
+	var uid := _resolve_card_uid(card_or_uid)
+	if uid <= 0:
+		return
+	_erase_one_from_rail(uid)
 	_sync_hand_order_from_rail()
 
 
-func replace_card_in_rail(old_id: int, new_id: int) -> void:
-	var idx := rail_order.find(old_id)
+func replace_card_in_rail(old_card_or_uid: int, new_card_or_uid: int) -> void:
+	var old_uid := _resolve_card_uid(old_card_or_uid)
+	var new_uid := _resolve_card_uid(new_card_or_uid)
+	if old_uid <= 0 or new_uid <= 0:
+		return
+	var idx := rail_order.find(old_uid)
 	if idx >= 0:
-		rail_order[idx] = new_id
-	elif new_id not in rail_order:
-		rail_order.append(new_id)
+		rail_order[idx] = new_uid
+	elif new_uid not in rail_order:
+		rail_order.append(new_uid)
 	_sync_hand_order_from_rail()
 
 
@@ -248,50 +343,50 @@ func active_sudan_card_ids() -> Array[int]:
 
 func is_active_sudan_card(id: int) -> bool:
 	for asc in active_sudan_cards:
-		if int(asc.card_id) == id:
+		if int(asc.card_id) == id or int(asc.card_uid) == id:
 			return true
 	return false
 
 
 func sync_rail_order() -> void:
-	var valid_counts := {}
-	for cid in hand:
-		var id := int(cid)
-		valid_counts[id] = int(valid_counts.get(id, 0)) + 1
-	for cid in active_sudan_card_ids():
-		var id := int(cid)
-		valid_counts[id] = int(valid_counts.get(id, 0)) + 1
+	var valid_uids: Dictionary = {}
+	for uid in hand:
+		valid_uids[int(uid)] = true
+	for asc in active_sudan_cards:
+		var uid := int(asc.card_uid)
+		if uid <= 0:
+			var instance = create_card_instance(int(asc.card_id), null, "sudan")
+			uid = int(instance.uid) if instance != null else 0
+			asc.card_uid = uid
+		if uid > 0:
+			valid_uids[uid] = true
 
 	var next_order: Array[int] = []
-	var remaining: Dictionary = valid_counts.duplicate()
-	for cid in rail_order:
-		var id := int(cid)
-		if int(remaining.get(id, 0)) > 0:
-			next_order.append(id)
-			remaining[id] = int(remaining[id]) - 1
-	for cid in hand:
-		var id := int(cid)
-		if int(remaining.get(id, 0)) > 0:
-			next_order.append(id)
-			remaining[id] = int(remaining[id]) - 1
-	for cid in active_sudan_card_ids():
-		var id := int(cid)
-		if int(remaining.get(id, 0)) > 0:
-			next_order.append(id)
-			remaining[id] = int(remaining[id]) - 1
+	for uid in rail_order:
+		if valid_uids.has(int(uid)):
+			next_order.append(int(uid))
+			valid_uids.erase(int(uid))
+	for uid in hand:
+		if valid_uids.has(int(uid)):
+			next_order.append(int(uid))
+			valid_uids.erase(int(uid))
+	for asc in active_sudan_cards:
+		var uid := int(asc.card_uid)
+		if valid_uids.has(uid):
+			next_order.append(uid)
+			valid_uids.erase(uid)
 	rail_order = next_order
 	_sync_hand_order_from_rail()
 
 
-func visible_rail_card_ids() -> Array[int]:
+func visible_rail_card_uids() -> Array[int]:
 	sync_rail_order()
 	var out: Array[int] = []
-	for cid in rail_order:
-		var id := int(cid)
-		if card_is_on_table(id):
+	for uid in rail_order:
+		if card_is_on_table(int(uid)):
 			continue
-		if id in hand or is_active_sudan_card(id):
-			out.append(id)
+		if int(uid) in hand or is_active_sudan_card(int(uid)):
+			out.append(int(uid))
 	return out
 
 
@@ -329,12 +424,12 @@ func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bo
 		if int(slot_def.get("open_adsorb", 0)) != 1:
 			continue
 		var candidates: Array[int] = []
-		for card_id in hand:
-			var id := int(card_id)
-			var card: Dictionary = db.get_card(id)
+		for card_uid in hand:
+			var uid := int(card_uid)
+			var card: Dictionary = card_data_for(uid, db)
 			if not _can_adsorb_card(slot_def, card, instance, rite, db, rng):
 				continue
-			candidates.append(id)
+			candidates.append(uid)
 		if candidates.is_empty():
 			if int(slot_def.get("is_empty", 0)) == 1:
 				continue
@@ -343,13 +438,13 @@ func _adsorb_open_slots(instance: RiteInstance, rite: Dictionary, db, rng) -> bo
 		var choice_index := 0
 		if candidates.size() > 1 and rng != null and rng.has_method("range_int_half_open"):
 			choice_index = int(rng.range_int_half_open(0, candidates.size()))
-		var chosen_id := int(candidates[choice_index])
-		if not remove_card_from_hand(chosen_id):
+		var chosen_uid := int(candidates[choice_index])
+		if not remove_card_from_hand(chosen_uid):
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
 		var slot_number := slot_key.substr(1).to_int()
-		add_card_to_slot(chosen_id, slot_number, db, instance.uid)
-		absorbed.append({"id": chosen_id, "slot": slot_number})
+		add_card_to_slot(chosen_uid, slot_number, db, instance.uid)
+		absorbed.append({"uid": chosen_uid, "slot": slot_number})
 	return true
 
 
@@ -373,15 +468,16 @@ func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance: RiteInst
 		"attr_slots": attr_slots,
 		"acting_card": card,
 		"acting_card_id": int(card.get("id", 0)),
+		"acting_card_uid": int(card.get("instance_uid", 0)),
 		"acting_card_only": true,
 	})
 
 
 func _reback_absorbed_cards(absorbed: Array[Dictionary], rite_uid: int) -> void:
 	for entry in absorbed:
-		var card_id := int(entry.get("id", 0))
-		remove_card_from_slot(card_id, int(entry.get("slot", 0)), rite_uid)
-		add_card_to_hand(card_id)
+		var card_uid := int(entry.get("uid", 0))
+		remove_card_from_slot(card_uid, int(entry.get("slot", 0)), rite_uid)
+		add_card_to_hand(card_uid)
 
 
 ## Create a distinct runtime rite. Callers that intentionally generate a
@@ -442,11 +538,19 @@ func return_rite_cards(rite_uid: int, _db) -> void:
 		return
 	var cards := cards_in_slot_entries_for_rite(rite_uid)
 	for table_card in cards:
+		var card_uid := int(table_card.get("card_uid", 0))
 		var card_id := int(table_card.get("id", 0))
-		if card_id <= 0 or is_active_sudan_card(card_id):
+		if card_id <= 0:
 			continue
-		if not has_card_in_hand(card_id):
-			add_card_to_hand(card_id)
+		if is_active_sudan_card(card_uid):
+			var sudan_instance = get_card_instance(card_uid)
+			if sudan_instance != null:
+				sudan_instance.zone = "sudan"
+				sudan_instance.rite_uid = 0
+				sudan_instance.slot_key = ""
+			continue
+		if card_uid > 0 and not has_card_in_hand(card_uid):
+			add_card_to_hand(card_uid)
 	clear_rite_cards(rite_uid)
 
 
@@ -596,37 +700,44 @@ func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: St
 	})
 
 
-func reorder_rail_card(id: int, rail_index: int) -> void:
-	if not (id in hand or is_active_sudan_card(id)):
+func reorder_rail_card(card_or_uid: int, rail_index: int) -> void:
+	var uid := _resolve_card_uid(card_or_uid)
+	if uid <= 0 or not (uid in hand or is_active_sudan_card(uid)):
 		return
-	insert_card_to_rail(id, rail_index)
+	insert_card_to_rail(uid, rail_index)
 
 
-func add_card_to_hand_at_rail(id: int, rail_index: int) -> void:
-	hand.append(id)
+func add_card_to_hand_at_rail(card_or_uid: int, rail_index: int, db = null) -> void:
+	var uid := card_or_uid if card_instances.has(card_or_uid) else add_card_to_hand(card_or_uid, db)
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return
+	instance.zone = "hand"
+	instance.rite_uid = 0
+	instance.slot_key = ""
+	hand.erase(uid)
+	hand.append(uid)
+	_erase_one_from_rail(uid)
 	rail_index = clampi(rail_index, 0, rail_order.size())
-	rail_order.insert(rail_index, id)
+	rail_order.insert(rail_index, uid)
 	_sync_hand_order_from_rail()
 
 
 func _sync_hand_order_from_rail() -> void:
 	if hand.is_empty():
 		return
-	var hand_counts := {}
-	for cid in hand:
-		var id := int(cid)
-		hand_counts[id] = int(hand_counts.get(id, 0)) + 1
+	var hand_uids := {}
+	for uid in hand:
+		hand_uids[int(uid)] = true
 	var ordered: Array[int] = []
-	for cid in rail_order:
-		var id := int(cid)
-		if int(hand_counts.get(id, 0)) > 0:
-			ordered.append(id)
-			hand_counts[id] = int(hand_counts[id]) - 1
-	for cid in hand:
-		var id := int(cid)
-		if int(hand_counts.get(id, 0)) > 0:
-			ordered.append(id)
-			hand_counts[id] = int(hand_counts[id]) - 1
+	for uid in rail_order:
+		if hand_uids.has(int(uid)):
+			ordered.append(int(uid))
+			hand_uids.erase(int(uid))
+	for uid in hand:
+		if hand_uids.has(int(uid)):
+			ordered.append(int(uid))
+			hand_uids.erase(int(uid))
 	hand = ordered
 
 
@@ -635,16 +746,16 @@ func _rail_index_for_hand_index(hand_index: int) -> int:
 		return 0
 	var seen := 0
 	for i in rail_order.size():
-		var id := int(rail_order[i])
-		if id in hand:
+		var uid := int(rail_order[i])
+		if uid in hand:
 			if seen >= hand_index:
 				return i
 			seen += 1
 	return rail_order.size()
 
 
-func _erase_one_from_rail(id: int) -> bool:
-	var idx := rail_order.find(id)
+func _erase_one_from_rail(uid: int) -> bool:
+	var idx := rail_order.find(uid)
 	if idx >= 0:
 		rail_order.remove_at(idx)
 		return true
@@ -653,15 +764,15 @@ func _erase_one_from_rail(id: int) -> bool:
 
 # ---- Hand tag queries (have.妻子 etc.) ----
 func hand_has_tag(db, tag_name: String) -> bool:
-	for cid in hand:
-		var c: Dictionary = db.get_card(cid)
-		if not c.is_empty() and int(c.get("tag", {}).get(tag_name, 0)) != 0:
+	for uid in hand:
+		var card: Dictionary = card_data_for(int(uid), db)
+		if int(card.get("tag", {}).get(tag_name, 0)) != 0:
 			return true
 	return false
 
 
 func hand_has_card_id(card_id: int) -> bool:
-	return card_id in hand
+	return card_uid_for(card_id, "hand") > 0
 
 
 # ---- Table (slots) ----
@@ -692,22 +803,38 @@ func slot_has_cards(slot: int, rite_uid: int = 0) -> bool:
 func clear_slot(slot: int, rite_uid: int = 0) -> void:
 	var keep: Array = []
 	for tc in table_cards:
-		if int(tc.get("slot", 0)) != slot or (rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid):
+		var matches := int(tc.get("slot", 0)) == slot and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid)
+		if not matches:
 			keep.append(tc)
+		else:
+			var instance = get_card_instance(int(tc.get("card_uid", 0)))
+			if instance != null and instance.zone == "slot":
+				instance.zone = "removed"
+				instance.rite_uid = 0
+				instance.slot_key = ""
 	table_cards = keep
 	_sync_rite_instance_cards(rite_uid)
 
 
 func remove_card_from_slot(card_id: int, slot: int = 0, rite_uid: int = 0) -> bool:
+	var target_uid := _resolve_card_uid(card_id)
 	for i in range(table_cards.size() - 1, -1, -1):
 		var tc: Dictionary = table_cards[i]
-		if int(tc.get("id", 0)) != card_id:
+		if target_uid > 0:
+			if int(tc.get("card_uid", 0)) != target_uid:
+				continue
+		elif int(tc.get("id", 0)) != card_id:
 			continue
 		if slot > 0 and int(tc.get("slot", 0)) != slot:
 			continue
 		if rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid:
 			continue
 		table_cards.remove_at(i)
+		var instance = get_card_instance(int(tc.get("card_uid", 0)))
+		if instance != null:
+			instance.zone = "removed"
+			instance.rite_uid = 0
+			instance.slot_key = ""
 		_sync_rite_instance_cards(rite_uid if rite_uid > 0 else int(tc.get("rite_uid", 0)))
 		return true
 	return false
@@ -716,35 +843,55 @@ func remove_card_from_slot(card_id: int, slot: int = 0, rite_uid: int = 0) -> bo
 func remove_table_card_id(card_id: int, rite_uid: int = 0) -> void:
 	var keep: Array = []
 	for tc in table_cards:
-		if int(tc.get("id", 0)) != card_id or (rite_uid > 0 and int(tc.get("rite_uid", 0)) != rite_uid):
+		var matches := int(tc.get("id", 0)) == card_id and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid)
+		if not matches:
 			keep.append(tc)
+		else:
+			var instance = get_card_instance(int(tc.get("card_uid", 0)))
+			if instance != null and instance.zone == "slot":
+				instance.zone = "removed"
+				instance.rite_uid = 0
+				instance.slot_key = ""
 	table_cards = keep
 	_sync_rite_instance_cards(rite_uid)
 
 
-func card_is_on_table(card_id: int) -> bool:
+func card_is_on_table(card_or_uid: int) -> bool:
+	var target_uid := _resolve_card_uid(card_or_uid)
 	for tc in table_cards:
-		if int(tc.get("id", 0)) == card_id:
+		if (target_uid > 0 and int(tc.get("card_uid", 0)) == target_uid) or (target_uid <= 0 and int(tc.get("id", 0)) == card_or_uid):
 			return true
 	return false
 
 
-func slot_for_table_card(card_id: int, rite_uid: int = 0) -> int:
+func slot_for_table_card(card_or_uid: int, rite_uid: int = 0) -> int:
+	var target_uid := _resolve_card_uid(card_or_uid)
 	for tc in table_cards:
-		if int(tc.get("id", 0)) == card_id and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
+		var same_card := int(tc.get("card_uid", 0)) == target_uid if target_uid > 0 else int(tc.get("id", 0)) == card_or_uid
+		if same_card and (rite_uid <= 0 or int(tc.get("rite_uid", 0)) == rite_uid):
 			return int(tc.get("slot", 0))
 	return 0
 
 
-func add_card_to_slot(card_id: int, slot: int, db, rite_uid: int = 0) -> void:
-	var c: Dictionary = db.get_card(card_id)
+func add_card_to_slot(card_or_uid: int, slot: int, db, rite_uid: int = 0) -> void:
+	var uid := _resolve_card_uid(card_or_uid)
+	var instance = get_card_instance(uid)
+	if instance == null:
+		instance = create_card_instance(card_or_uid, db, "slot")
+		if instance == null:
+			return
+		uid = instance.uid
+	instance.zone = "slot"
+	instance.rite_uid = rite_uid
+	instance.slot_key = "s%d" % slot
 	var entry := {
-		"id": card_id,
+		"id": instance.card_id,
+		"card_uid": uid,
 		"slot": slot,
 		"rite_uid": rite_uid,
-		"tags": c.get("tag", {}).duplicate() if not c.is_empty() else {},
-		"count": 1,
-		"is_lost": false,
+		"tags": instance.tags,
+		"count": instance.count,
+		"is_lost": instance.is_lost,
 	}
 	table_cards.append(entry)
 	_sync_rite_instance_cards(rite_uid)
@@ -752,6 +899,12 @@ func add_card_to_slot(card_id: int, slot: int, db, rite_uid: int = 0) -> void:
 
 func clear_rite_cards(rite_uid: int) -> void:
 	if rite_uid <= 0:
+		for tc in table_cards:
+			var instance = get_card_instance(int(tc.get("card_uid", 0)))
+			if instance != null and instance.zone == "slot":
+				instance.zone = "removed"
+				instance.rite_uid = 0
+				instance.slot_key = ""
 		table_cards.clear()
 		for instance in rite_instances.values():
 			instance.cards.clear()
@@ -760,6 +913,12 @@ func clear_rite_cards(rite_uid: int) -> void:
 	for tc in table_cards:
 		if int(tc.get("rite_uid", 0)) != rite_uid:
 			keep.append(tc)
+		else:
+			var instance = get_card_instance(int(tc.get("card_uid", 0)))
+			if instance != null and instance.zone == "slot":
+				instance.zone = "removed"
+				instance.rite_uid = 0
+				instance.slot_key = ""
 	table_cards = keep
 	_sync_rite_instance_cards(rite_uid)
 
@@ -769,9 +928,11 @@ func _sync_rite_instance_cards(rite_uid: int = 0) -> void:
 		var instance := get_rite_instance(rite_uid)
 		if instance == null:
 			return
+		instance.slot_cards.clear()
 		instance.cards.clear()
 		for tc in table_cards:
 			if int(tc.get("rite_uid", 0)) == rite_uid:
+				instance.slot_cards["s%d" % int(tc.get("slot", 0))] = int(tc.get("card_uid", 0))
 				instance.cards.append(tc)
 		return
 	for instance in rite_instances.values():

@@ -7,36 +7,38 @@
 class_name MethinksEngine
 extends RefCounted
 
-static func process_card(card_id: int, source: String, state, db, rng) -> Dictionary:
+static func process_card(card_or_uid: int, source: String, state, db, rng) -> Dictionary:
 	var result := {"accepted": false, "message": "", "deferred": {}}
 	var think_id := int(db.init_config.get("think_id", 5000002))
 	var rite: Dictionary = db.get_rite(think_id)
 	if rite.is_empty():
 		result.message = "俺寻思还没有配置。"
 		return result
-	var card: Dictionary = db.get_card(card_id)
-	if card.is_empty() and not state.is_active_sudan_card(card_id):
+	var card_uid = state._resolve_card_uid(card_or_uid) if state.has_method("_resolve_card_uid") else card_or_uid
+	var card: Dictionary = state.card_data_for(card_uid, db) if state.has_method("card_data_for") else db.get_card(card_or_uid)
+	var card_id := int(card.get("id", 0))
+	if card.is_empty() and not state.is_active_sudan_card(card_uid):
 		result.message = "这张牌暂时不能寻思。"
 		return result
 
 	var removed_from_hand := false
-	if source == "hand" and state.has_card_in_hand(card_id):
-		removed_from_hand = state.remove_card_from_hand(card_id)
-	state.remove_card_from_slot(card_id)
-	state.add_card_to_slot(card_id, 1, db)
+	if source == "hand" and state.has_card_in_hand(card_uid):
+		removed_from_hand = state.remove_card_from_hand(card_uid)
+	state.remove_card_from_slot(card_uid)
+	state.add_card_to_slot(card_uid, 1, db)
 	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {"s1": card_id}, "attr_slots": ["s1"], "rite_id": think_id}
 	var resolved = RiteResolver.resolve(rite, ctx, 0)
 	var deferred: Dictionary = resolved.deferred
 	DeferredEffects.apply(deferred, state, db, rng)
 
 	var consumes_card: bool = bool(deferred.get("clean_rite", false)) or (1 in deferred.get("clean_slots", [])) or (card_id in deferred.get("clean_card_ids", []))
-	state.remove_card_from_slot(card_id, 1)
+	state.remove_card_from_slot(card_uid, 1)
 	var sudan_consumed := false
-	if state.is_active_sudan_card(card_id):
+	if state.is_active_sudan_card(card_uid):
 		if consumes_card:
-			sudan_consumed = RoundLoop.consume_sudan(state, card_id)
+			sudan_consumed = RoundLoop.consume_sudan(state, card_uid)
 	elif removed_from_hand and not consumes_card:
-		state.add_card_to_hand(card_id)
+		state.add_card_to_hand(card_uid)
 
 	result.accepted = true
 	result.deferred = deferred

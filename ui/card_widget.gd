@@ -10,6 +10,7 @@ const CARD_SIZE := Vector2(104, 160)
 
 var _card: Dictionary = {}
 var card_id: int = 0
+var card_uid: int = 0
 var drag_source := "hand"
 var drag_slot := ""
 var drag_rite_uid := 0
@@ -20,6 +21,7 @@ var _hidden_for_drag := false
 func set_card(card: Dictionary) -> void:
 	_card = card
 	card_id = int(card.get("id", card_id))
+	card_uid = int(card.get("instance_uid", card_uid))
 	_rebuild()
 
 
@@ -57,6 +59,7 @@ func drag_payload() -> Dictionary:
 	return {
 		"type": "card",
 		"card_id": card_id,
+		"card_uid": card_uid,
 		"card": _card.duplicate(true),
 		"source": drag_source,
 		"source_slot": drag_slot,
@@ -181,6 +184,7 @@ static func make(card: Dictionary, source: String = "hand", slot_key: String = "
 	var w := CardWidget.new()
 	w.custom_minimum_size = CARD_SIZE
 	w.card_id = int(card.get("id", 0))
+	w.card_uid = int(card.get("instance_uid", 0))
 	w.drag_source = source
 	w.drag_slot = slot_key
 	w.drag_rite_uid = rite_uid

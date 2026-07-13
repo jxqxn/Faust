@@ -276,11 +276,12 @@ func test_methinks_drop_generates_rite_without_opening_rite_overlay():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	screen.drop_card_on_methinks({"type": "card", "card_id": 2000001, "source": "hand"})
+	var protagonist_uid := state.card_uid_for(2000001, "hand")
+	screen.drop_card_on_methinks({"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"})
 
 	assert_true(5000001 in state.available_rites, "I-think should generate rites through desktop processing")
 	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "I-think creates a fresh runtime rite instead of a config-only flag")
-	assert_true(2000001 in state.hand, "cards return to hand unless the result explicitly cleans them")
+	assert_true(state.hand_has_card_id(2000001), "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
 	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "I-think results should use the desktop event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "I-think should not open the rite overlay")
@@ -624,8 +625,9 @@ func test_game_screen_can_insert_hand_card_left_of_sudan_card():
 	var rng := RNG.new(13)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
-	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
-	var moved_id := int(state.hand[1])
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var sudan_uid := int(state.active_sudan_cards[0].card_uid)
+	var moved_uid := int(state.hand[1])
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -633,19 +635,20 @@ func test_game_screen_can_insert_hand_card_left_of_sudan_card():
 	await wait_process_frames(2)
 
 	screen.drop_card_to_hand(
-		{"type": "card", "card_id": moved_id, "source": "hand"},
-		_rail_drop_left_of_card(screen, sudan_id)
+		{"type": "card", "card_uid": moved_uid, "source": "hand"},
+		_rail_drop_left_of_card(screen, sudan_uid)
 	)
 
-	assert_eq(state.rail_order.find(moved_id), state.rail_order.find(sudan_id) - 1, "hand cards should be able to insert directly left of a sudan card")
+	assert_eq(state.rail_order.find(moved_uid), state.rail_order.find(sudan_uid) - 1, "hand cards should be able to insert directly left of a sudan card")
 
 
 func test_game_screen_can_reorder_sudan_card_in_bottom_rail():
 	var rng := RNG.new(14)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
-	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
-	var first_hand_id := int(state.hand[0])
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var sudan_uid := int(state.active_sudan_cards[0].card_uid)
+	var first_hand_uid := int(state.hand[0])
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -653,11 +656,11 @@ func test_game_screen_can_reorder_sudan_card_in_bottom_rail():
 	await wait_process_frames(2)
 
 	screen.drop_card_to_hand(
-		{"type": "card", "card_id": sudan_id, "source": "active_sudan"},
-		_rail_drop_left_of_card(screen, first_hand_id)
+		{"type": "card", "card_uid": sudan_uid, "source": "active_sudan"},
+		_rail_drop_left_of_card(screen, first_hand_uid)
 	)
 
-	assert_eq(state.rail_order[0], sudan_id, "active sudan cards should be reorderable in the same bottom rail")
+	assert_eq(state.rail_order[0], sudan_uid, "active sudan cards should be reorderable in the same bottom rail")
 
 
 func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
@@ -665,13 +668,14 @@ func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
 	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
+	var sudan_uid := int(state.active_sudan_cards[0].card_uid)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	assert_eq(state.rail_order[0], sudan_id, "newly drawn sudan cards should default to the first rail position")
+	assert_eq(state.rail_order[0], sudan_uid, "newly drawn sudan cards should default to the first rail position")
 	var rail_widgets := _rail_card_widgets(screen)
 	assert_true(rail_widgets.size() > 0, "rail should render at least one card")
 	if rail_widgets.size() > 0:
@@ -906,7 +910,7 @@ func _hand_drop_right_of(screen, index: int) -> Vector2:
 
 func _rail_drop_left_of_card(screen, card_id: int) -> Vector2:
 	for widget in _rail_card_widgets(screen):
-		if int((widget as CardWidget).card_id) == card_id:
+		if int((widget as CardWidget).card_id) == card_id or int((widget as CardWidget).card_uid) == card_id:
 			var card := widget as Control
 			return _rail_pos_for_card_items_local(screen, Vector2(card.position.x - 12, 12))
 	return _rail_pos_for_card_items_local(screen, Vector2.ZERO)

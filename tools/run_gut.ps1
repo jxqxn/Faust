@@ -28,7 +28,7 @@ if (Test-Path -LiteralPath $logPath) {
 		ForEach-Object { $_.Line }
 }
 
-$knownGutShutdownResource = 'ERROR: 4 resources still in use at exit (run with --verbose for details).'
+$knownGutShutdownResource = 'ERROR: 5 resources still in use at exit (run with --verbose for details).'
 $unexpectedErrors = @($engineErrors | Where-Object { $_ -ne $knownGutShutdownResource })
 $unexpectedLeakLines = @($leakLines | Where-Object {
 	$_ -notmatch 'ObjectDB instances leaked' -and $_ -ne $knownGutShutdownResource
@@ -43,7 +43,7 @@ if ($process.ExitCode -ne 0 -or $unexpectedErrors.Count -gt 0 -or $unexpectedLea
 }
 
 if ($engineErrors -contains $knownGutShutdownResource) {
-	Write-Host "GUT passed. Ignored the verified GUT 9.6 shutdown baseline: 4 cached Script resources."
+	Write-Host "GUT passed. Ignored the verified GUT 9.6 shutdown baseline: 5 cached Script resources."
 } else {
 	Write-Host "GUT passed without Godot engine errors."
 }

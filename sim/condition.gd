@@ -379,10 +379,10 @@ static func eval_have(k: String, val: Variant, ctx: Dictionary, _is_hand: bool) 
 		if parts.size() == 2 and str(parts[0]).is_valid_int():
 			var want_id := str(parts[0]).to_int()
 			var tag_name := str(parts[1])
-			for cid in st.hand:
-				if int(cid) != want_id:
+			for card_uid in st.hand:
+				var card: Dictionary = st.card_data_for(int(card_uid), db)
+				if int(card.get("id", 0)) != want_id:
 					continue
-				var card: Dictionary = db.get_card(int(cid))
 				return int(card.get("tag", {}).get(tag_name, 0)) >= int(val)
 			return false
 	if rest.is_valid_int():
@@ -486,8 +486,8 @@ static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var need := int(val)
 	var ok := false
 	if st != null:
-		for cid in st.hand:
-			var card: Dictionary = db.get_card(int(cid))
+		for card_uid in st.hand:
+			var card: Dictionary = st.card_data_for(int(card_uid), db)
 			if apply_compare(int(card.get("tag", {}).get(tag_name, 0)), need, parsed.op):
 				ok = true
 				break

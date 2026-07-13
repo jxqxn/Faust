@@ -481,17 +481,16 @@ func refresh() -> void:
 		child.queue_free()
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
 	_state.sync_rail_order()
-	for cid in _state.visible_rail_card_ids():
-		var id := int(cid)
-		if _state.is_active_sudan_card(id):
-			var asc = _active_sudan_for_card(id)
+	for card_uid in _state.visible_rail_card_uids():
+		var uid := int(card_uid)
+		if _state.is_active_sudan_card(uid):
+			var asc = _active_sudan_for_card(uid)
 			if asc != null:
 				_card_items.add_child(_make_sudan_card(asc, life))
 			continue
-		var card: Dictionary = _db.get_card(id)
+		var card: Dictionary = _state.card_data_for(uid, _db)
 		if card.is_empty():
 			continue
-		card["id"] = id
 		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		widget.clicked.connect(_show_card_detail)
@@ -500,16 +499,21 @@ func refresh() -> void:
 	_refresh_event_overlay()
 
 
-func _active_sudan_for_card(card_id: int) -> Variant:
+func _active_sudan_for_card(card_or_uid: int) -> Variant:
 	for asc in _state.active_sudan_cards:
-		if int(asc.card_id) == card_id:
+		if int(asc.card_id) == card_or_uid or int(asc.card_uid) == card_or_uid:
 			return asc
 	return null
 
 
 func _make_sudan_card(asc, life: int) -> CardWidget:
 	var dec = SudanCards.decode(int(asc.card_id))
-	var card: Dictionary = _db.get_card(int(asc.card_id)).duplicate(true)
+	var card: Dictionary = _state.card_data_for(int(asc.card_uid), _db)
+	if card.is_empty():
+		# Legacy fixtures may construct an ActiveSudan directly. Runtime play
+		# always has card_uid, but keep this display-only fallback harmless.
+		card = _db.get_card(int(asc.card_id)).duplicate(true)
+		card["instance_uid"] = int(asc.card_uid)
 	card["id"] = int(asc.card_id)
 	card["type"] = "sudan"
 	card["name"] = "%s%s" % [dec.rank, dec.action]
@@ -554,9 +558,9 @@ func can_drop_card_on_methinks(data: Variant) -> bool:
 func drop_card_on_methinks(data: Variant) -> void:
 	if not can_drop_card_on_methinks(data):
 		return
-	var card_id := int(data.get("card_id", 0))
+	var card_uid := int(data.get("card_uid", data.get("card_id", 0)))
 	var source := str(data.get("source", ""))
-	var result: Dictionary = MethinksEngine.process_card(card_id, source, _state, _db, _rng)
+	var result: Dictionary = MethinksEngine.process_card(card_uid, source, _state, _db, _rng)
 	set_log(str(result.get("message", "")))
 	refresh()
 	var deferred: Dictionary = result.get("deferred", {})
@@ -567,27 +571,30 @@ func drop_card_on_methinks(data: Variant) -> void:
 func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> void:
 	if not can_drop_card_to_hand(data):
 		return
-	var card_id := int(data.get("card_id", 0))
+	var card_uid := int(data.get("card_uid", data.get("card_id", 0)))
 	var source := str(data.get("source", ""))
 	var source_slot := str(data.get("source_slot", ""))
 	var source_rite_uid := int(data.get("source_rite_uid", 0))
-	var card: Dictionary = _db.get_card(card_id)
-	var is_sudan: bool = str(card.get("type", "")) == "sudan" or _state.is_active_sudan_card(card_id)
-	var insert_index := _rail_insert_index_at(rail_position, card_id)
+	var card: Dictionary = _state.card_data_for(card_uid, _db)
+	var is_sudan: bool = str(card.get("type", "")) == "sudan" or _state.is_active_sudan_card(card_uid)
+	var insert_index := _rail_insert_index_at(rail_position, card_uid)
 	if source == "slot":
-		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_id, source_rite_uid))
-		_state.remove_card_from_slot(card_id, slot_num, source_rite_uid)
+		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_uid, source_rite_uid))
+		_state.remove_card_from_slot(card_uid, slot_num, source_rite_uid)
 		if is_sudan:
-			_state.insert_card_to_rail(card_id, insert_index)
+			var instance = _state.get_card_instance(card_uid)
+			if instance != null:
+				instance.zone = "sudan"
+			_state.insert_card_to_rail(card_uid, insert_index)
 		else:
-			_state.add_card_to_hand_at_rail(card_id, insert_index)
-		_notify_card_returned_to_hand(card_id, source_slot)
+			_state.add_card_to_hand_at_rail(card_uid, insert_index, _db)
+		_notify_card_returned_to_hand(card_uid, source_slot)
 	elif source == "hand" or source == "active_sudan":
-		_state.reorder_rail_card(card_id, insert_index)
+		_state.reorder_rail_card(card_uid, insert_index)
 	refresh()
 
 
-func _rail_insert_index_at(rail_position: Vector2, dragged_card_id: int = 0) -> int:
+func _rail_insert_index_at(rail_position: Vector2, dragged_card_uid: int = 0) -> int:
 	if _card_items == null:
 		return _state.rail_order.size()
 	if rail_position.x == INF:
@@ -599,7 +606,7 @@ func _rail_insert_index_at(rail_position: Vector2, dragged_card_id: int = 0) -> 
 		if not (child is CardWidget):
 			continue
 		var widget := child as CardWidget
-		if int(widget.card_id) == dragged_card_id:
+		if int(widget.card_uid) == dragged_card_uid:
 			continue
 		if not widget.visible:
 			continue
@@ -610,12 +617,12 @@ func _rail_insert_index_at(rail_position: Vector2, dragged_card_id: int = 0) -> 
 	return index
 
 
-func _notify_card_returned_to_hand(card_id: int, source_slot: String) -> void:
+func _notify_card_returned_to_hand(card_uid: int, source_slot: String) -> void:
 	if _overlay_layer == null:
 		return
 	for child in _overlay_layer.get_children():
 		if child.has_method("return_card_to_hand"):
-			child.return_card_to_hand(card_id, source_slot)
+			child.return_card_to_hand(card_uid, source_slot)
 
 
 func set_log(text: String) -> void:
@@ -806,12 +813,12 @@ func _event_panel_style() -> StyleBoxFlat:
 	return style
 
 
-func show_card_detail(card_id: int) -> void:
-	var card: Dictionary = _db.get_card(card_id).duplicate(true)
+func show_card_detail(card_or_uid: int) -> void:
+	var card_uid = _state._resolve_card_uid(card_or_uid) if _state != null and _state.has_method("_resolve_card_uid") else 0
+	var card: Dictionary = _state.card_data_for(card_uid, _db) if card_uid > 0 else _db.get_card(card_or_uid).duplicate(true)
 	if card.is_empty():
 		return
-	card["id"] = card_id
-	_show_card_detail(card_id, card)
+	_show_card_detail(card_uid if card_uid > 0 else int(card.get("id", 0)), card)
 
 
 func _show_card_detail(card_id: int, card: Dictionary) -> void:

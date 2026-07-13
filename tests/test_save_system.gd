@@ -105,6 +105,23 @@ func test_continue_load_rejects_unmarked_legacy_save():
 	assert_eq(SaveSystem.load_continue(db), null, "continue loading should require a player save marker")
 
 
+func test_v4_save_is_rejected_after_card_instance_schema_upgrade():
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(52))
+	var old_save := SaveSystem.serialize(state)
+	old_save["version"] = 4
+	old_save.erase("card_instances")
+	old_save.erase("next_card_uid")
+	SaveSystem.delete_save()
+	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)
+	file.store_string(JSON.stringify(old_save))
+	file.close()
+
+	assert_eq(SaveSystem.load_continue(db), null, "v4 lacks CardInstance identity and must not be loaded")
+	assert_false(SaveSystem.has_valid_save(db), "v4 save must not expose the continue-game entry")
+	SaveSystem.delete_save()
+
+
 func test_load_rejects_version_mismatch():
 	# A save whose schema version doesn't match SAVE_VERSION is rejected,
 	# not silently loaded with potentially-wrong state.

@@ -318,10 +318,14 @@ static func _apply_slot_tag(k: String, val: Variant, state, db) -> void:
 	if amount == 0:
 		amount = 1
 	var can_add := _tag_can_add(db, tag_name)
-	for tc in state.cards_in_slot(slot_num):
+	var rite_uid := int(state.active_rite_uid)
+	for tc in state.cards_in_slot(slot_num, rite_uid):
 		var tags: Dictionary = tc.get("tags", {})
 		TagSystem.apply(tags, tag_name, op, amount, can_add)
 		tc.tags = tags
+		var instance = state.get_card_instance(int(tc.get("card_uid", 0))) if state.has_method("get_card_instance") else null
+		if instance != null:
+			instance.tags = tags
 
 
 static func _apply_table_tag(k: String, val: Variant, state, db) -> void:
@@ -346,6 +350,9 @@ static func _apply_table_tag(k: String, val: Variant, state, db) -> void:
 		var tags: Dictionary = tc.get("tags", {})
 		TagSystem.apply(tags, tag_name, op, amount, can_add)
 		tc.tags = tags
+		var instance = state.get_card_instance(int(tc.get("card_uid", 0))) if state.has_method("get_card_instance") else null
+		if instance != null:
+			instance.tags = tags
 
 
 ## Look up a tag's can_add flag from config (default true if not found).

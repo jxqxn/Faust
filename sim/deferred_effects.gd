@@ -159,8 +159,9 @@ static func _apply_loot_item(id: int, state, db, rng) -> void:
 
 static func _owned_ids(state) -> Array:
 	var ids: Array = []
-	for cid in state.hand:
-		ids.append(int(cid))
+	for card_uid in state.hand:
+		var instance = state.get_card_instance(int(card_uid)) if state.has_method("get_card_instance") else null
+		ids.append(int(instance.card_id) if instance != null else int(card_uid))
 	for rid in state.available_rites:
 		ids.append(int(rid))
 	for eid in state.event_queue:

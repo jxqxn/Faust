@@ -6,8 +6,10 @@
 class_name SaveSystem
 extends RefCounted
 
+const CardInstanceData = preload("res://sim/card_instance.gd")
+
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 const SAVE_KIND_PLAYER := "player"
 
 static var save_path_override := ""
@@ -31,6 +33,7 @@ static func serialize(state) -> Dictionary:
 	for asc in state.active_sudan_cards:
 		sudan_cards_data.append({
 			"card_id": asc.card_id,
+			"card_uid": asc.card_uid,
 			"days_left": asc.days_left,
 			"drawn_round": asc.drawn_round,
 		})
@@ -56,6 +59,8 @@ static func serialize(state) -> Dictionary:
 		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"active_sudan_cards": sudan_cards_data,
+		"card_instances": state.card_instances.values().map(func(instance): return instance.to_save_dict()),
+		"next_card_uid": state.next_card_uid,
 		"table_cards": table_cards_data,
 		"rite_instances": rite_instances_data,
 		"next_rite_uid": state.next_rite_uid,
@@ -86,6 +91,15 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
 	state.back_to_prev_left = int(data.get("back_to_prev_left", 0))
 	state.hand.clear()
+	state.card_instances.clear()
+	for card_data in data.get("card_instances", []):
+		if card_data is Dictionary:
+			var card_instance = CardInstanceData.from_save_dict(card_data)
+			if card_instance.uid > 0 and card_instance.card_id > 0:
+				state.card_instances[card_instance.uid] = card_instance
+	state.next_card_uid = int(data.get("next_card_uid", 1))
+	for card_uid in state.card_instances:
+		state.next_card_uid = maxi(state.next_card_uid, int(card_uid) + 1)
 	for cid in data.get("hand", []):
 		state.hand.append(int(cid))
 	state.sudan_deck.clear()
@@ -97,7 +111,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		var asc = ASC.new(
 			int(asc_data.get("card_id", 0)),
 			int(asc_data.get("days_left", 0)),
-			int(asc_data.get("drawn_round", 0))
+			int(asc_data.get("drawn_round", 0)),
+			int(asc_data.get("card_uid", 0))
 		)
 		state.active_sudan_cards.append(asc)
 	state.rail_order.clear()
@@ -108,13 +123,20 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		if tc is Dictionary:
 			var entry: Dictionary = tc.duplicate(true)
 			entry["rite_uid"] = int(entry.get("rite_uid", 0))
+			entry["card_uid"] = int(entry.get("card_uid", 0))
+			var card_instance = state.get_card_instance(int(entry["card_uid"])) if state.has_method("get_card_instance") else null
+			if card_instance != null:
+				entry["tags"] = card_instance.tags
+				entry["count"] = card_instance.count
+				entry["is_lost"] = card_instance.is_lost
 			state.table_cards.append(entry)
 	state.rite_instances.clear()
 	for instance_data in data.get("rite_instances", []):
 		if instance_data is Dictionary:
 			var instance := RiteInstance.from_save_dict(instance_data)
 			if instance.uid > 0 and instance.id > 0:
-				instance.cards.clear() # table_cards below is the single restored source.
+				instance.cards.clear() # table_cards below rebuilds the derived views.
+				instance.slot_cards.clear()
 				state.rite_instances[instance.uid] = instance
 	state.next_rite_uid = int(data.get("next_rite_uid", 1))
 	for rite_uid in state.rite_instances:

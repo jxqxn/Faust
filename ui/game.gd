@@ -279,7 +279,7 @@ func _show_game_over() -> void:
 
 
 func _on_redraw() -> void:
-	var new_id := RoundLoop.use_redraw(state, rng)
+	var new_id := RoundLoop.use_redraw(state, rng, db)
 	var log_text := ""
 	if new_id < 0:
 		log_text = "无法重抽（重抽次数耗尽或牌堆为空）。"
