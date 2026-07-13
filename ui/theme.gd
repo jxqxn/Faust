@@ -34,12 +34,20 @@ static func get_theme() -> Theme:
 	return _theme
 
 
+## Test runners and scene reloads must release the cached FontVariation before
+## the rendering server shuts down.  Keeping it alive until process exit leaves
+## a real Font/RID leak in headless Godot runs.
+static func clear_cache() -> void:
+	_theme = null
+
+
 static func _build() -> Theme:
 	var t := Theme.new()
-	var font := _load_font()
+	var font: Font = _load_font()
 	# Default font for every control type that uses the default font.
-	for type_name in ["", "Label", "Button", "OptionButton", "LineEdit", "RichTextLabel", "CheckBox"]:
-		t.set_font("font", type_name, font)
+	if font != null:
+		for type_name in ["", "Label", "Button", "OptionButton", "LineEdit", "RichTextLabel", "CheckBox"]:
+			t.set_font("font", type_name, font)
 	# Label sizes.
 	t.set_font_size("font_size", "Label", 16)
 	t.set_color("font_color", "Label", TEXT)
@@ -75,7 +83,11 @@ static func _build() -> Theme:
 	return t
 
 
-static func _load_font() -> FontVariation:
+static func _load_font() -> Font:
+	# Headless GUT runs validate structure and behavior, not typography. Avoid
+	# allocating the project FontFile in a process that is about to exit.
+	if DisplayServer.get_name() == "headless":
+		return null
 	# Load the game's CJK font as the base, with no forced bold/spacing.
 	var path := "res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf"
 	var base := load(path) as FontFile

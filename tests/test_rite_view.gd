@@ -9,12 +9,17 @@ func before_all():
 	db = ConfigDB.new()
 	db.load_all()
 
+
+func _owned(node: Node) -> Node:
+	autofree(node)
+	return node
+
 func test_gold_dice_reresolve_does_not_apply_results_twice():
 	var rng := RNG.new(1)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
 	state.gold_dice = 2
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"settlement": [
@@ -23,9 +28,9 @@ func test_gold_dice_reresolve_does_not_apply_results_twice():
 		"settlement_extre": [],
 		"settlement_prior": [],
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 	assert_eq(state.coin_count, 5, "first resolve applies reward once")
@@ -45,7 +50,7 @@ func test_gold_dice_reresolve_reuses_cached_dice():
 	state.setup_new_run(db, 0, rng)
 	state.gold_dice = 2
 	state.add_card_to_hand(2000005)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"settlement": [
@@ -55,9 +60,9 @@ func test_gold_dice_reresolve_reuses_cached_dice():
 		"settlement_prior": [],
 	}
 	view._placed = {"s1": 2000005}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 	var after_first := rng.get_state()
@@ -69,7 +74,7 @@ func test_resolved_rite_does_not_consume_sudan_without_clean_result():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000003)
 	view._rite = {
 		"settlement": [
@@ -79,9 +84,9 @@ func test_resolved_rite_does_not_consume_sudan_without_clean_result():
 		"settlement_prior": [],
 	}
 	view._placed = {"s1": sudan_id}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 	assert_eq(state.active_sudan_cards.size(), 1, "placing a sudan card does not consume it without an explicit clean result")
@@ -91,7 +96,7 @@ func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000003)
 	view._rite = {
 		"settlement": [
@@ -101,9 +106,9 @@ func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
 		"settlement_prior": [],
 	}
 	view._placed = {"s1": sudan_id}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 	assert_eq(state.active_sudan_cards.size(), 1, "preview must not consume a sudan card before result confirmation")
@@ -113,7 +118,7 @@ func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
 func test_slot_accepts_card_requires_type_and_tag_conditions():
 	var rng := RNG.new(90)
 	var state := GameState.new()
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	var noble_card: Dictionary = db.get_card(2000005).duplicate(true)
 	noble_card["id"] = 2000005
@@ -128,7 +133,7 @@ func test_slot_accepts_card_requires_type_and_tag_conditions():
 func test_slot_accepts_card_rejects_wrong_type():
 	var rng := RNG.new(91)
 	var state := GameState.new()
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	var card: Dictionary = db.get_card(2000005).duplicate(true)
 	card["id"] = 2000005
@@ -138,14 +143,14 @@ func test_rite_view_builds_dynamic_slots_from_config():
 	var rng := RNG.new(93)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5001001)
 	view._rite = {
 		"cards_slot": {
 			"s1": {}, "s2": {}, "s3": {}, "s4": {}, "s5": {}, "s6": {}, "s7": {},
 		}
 	}
-	view._slot_layer = Control.new()
+	view._slot_layer = _owned(Control.new()) as Control
 	view._build_slot_placeholders()
 
 	assert_eq(view._slot_buttons.size(), 7, "rite UI should render every configured slot")
@@ -155,7 +160,7 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	var rng := RNG.new(94)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"settlement": [
@@ -165,9 +170,9 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 		"settlement_prior": [],
 		"cards_slot": {},
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 	var rites_before := state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size()
 
 	view._resolve()
@@ -181,7 +186,7 @@ func test_rite_resolution_deferred_choose_reaches_prompt_queue():
 	var rng := RNG.new(95)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"settlement": [
@@ -191,9 +196,9 @@ func test_rite_resolution_deferred_choose_reaches_prompt_queue():
 		"settlement_prior": [],
 		"cards_slot": {},
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 
@@ -205,11 +210,11 @@ func test_drop_card_moves_between_hand_slot_and_back():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var card_id := int(state.hand[0])
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
-	view._slot_buttons = {"s1": Button.new()}
-	view._slot_titles = {"s1": Label.new()}
-	view._slot_details = {"s1": Label.new()}
+	view._slot_buttons = {"s1": _owned(Button.new()) as Button}
+	view._slot_titles = {"s1": _owned(Label.new()) as Label}
+	view._slot_details = {"s1": _owned(Label.new()) as Label}
 	var initial_hand_size := state.hand.size()
 
 	view.drop_card_on_slot("s1", {"type": "card", "card_id": card_id, "source": "hand"})
@@ -229,7 +234,7 @@ func test_prepare_table_preserves_cards_outside_placed_slots():
 	var state := GameState.new()
 	state.add_card_to_slot(2000006, 3, db)
 	state.add_card_to_slot(2000007, 1, db)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._placed = {"s1": 2000005}
 
@@ -246,7 +251,7 @@ func test_prepare_table_clears_slots_cancelled_after_prior_placement():
 	var rng := RNG.new(100)
 	var state := GameState.new()
 	state.add_card_to_slot(2000006, 3, db)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._placed = {"s1": 2000005}
 
@@ -266,7 +271,7 @@ func test_rite_over_result_emits_game_over_requested():
 	var rng := RNG.new(91)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000003)
 	view._rite = {
 		"settlement": [
@@ -275,9 +280,9 @@ func test_rite_over_result_emits_game_over_requested():
 		"settlement_extre": [],
 		"settlement_prior": [],
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 	watch_signals(view)
 
 	view._resolve()
@@ -291,7 +296,7 @@ func test_rite_without_over_does_not_emit_game_over():
 	var rng := RNG.new(92)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000003)
 	view._rite = {
 		"settlement": [
@@ -300,9 +305,9 @@ func test_rite_without_over_does_not_emit_game_over():
 		"settlement_extre": [],
 		"settlement_prior": [],
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 	watch_signals(view)
 
 	view._resolve()
@@ -313,16 +318,16 @@ func test_manual_rite_settlement_waits_for_confirmation_before_removing_instance
 	var rng := RNG.new(96)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"id": 5000001,
 		"settlement": [{"condition": {}, "result": {"coin": 2}, "action": {}}],
 		"settlement_prior": [], "settlement_extre": [], "cards_slot": {},
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 	watch_signals(view)
 
 	view._resolve()
@@ -340,7 +345,7 @@ func test_rite_view_binds_to_existing_runtime_instance_when_no_uid_is_supplied()
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var instance = state.find_rite_instance_by_id(5000001)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	assert_not_null(instance)
 	if instance != null:
@@ -351,16 +356,16 @@ func test_closing_pending_result_restores_uncommitted_world_effects():
 	var rng := RNG.new(97)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var view := RiteView.new()
+	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._rite = {
 		"id": 5000001,
 		"settlement": [{"condition": {}, "result": {"coin": 4}, "action": {}}],
 		"settlement_prior": [], "settlement_extre": [], "cards_slot": {},
 	}
-	view._gold_dice_label = Label.new()
-	view._gold_dice_btn = Button.new()
-	view._result_label = RichTextLabel.new()
+	view._gold_dice_label = _owned(Label.new()) as Label
+	view._gold_dice_btn = _owned(Button.new()) as Button
+	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
 	assert_eq(state.coin_count, 4, "preview applies its result into the rollback transaction")

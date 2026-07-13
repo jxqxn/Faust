@@ -3,6 +3,11 @@ extends GutTest
 const RiteSelector = preload("res://ui/rite_selector.gd")
 
 
+func _owned(node: Node) -> Node:
+	autofree(node)
+	return node
+
+
 func test_selector_shows_rite_when_open_conditions_are_satisfied():
 	var db := ConfigDB.new()
 	db.rites = {
@@ -17,9 +22,9 @@ func test_selector_shows_rite_when_open_conditions_are_satisfied():
 			"open_conditions": [{"condition": {}}],
 		},
 	}
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db)
-	selector._list_container = VBoxContainer.new()
+	selector._list_container = _owned(VBoxContainer.new()) as VBoxContainer
 
 	selector._populate()
 
@@ -34,9 +39,9 @@ func test_selector_hides_rite_when_open_condition_is_unsatisfied():
 		]),
 	}
 	var state := GameState.new()
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, state)
-	selector._list_container = VBoxContainer.new()
+	selector._list_container = _owned(VBoxContainer.new()) as VBoxContainer
 
 	selector._populate()
 
@@ -73,9 +78,9 @@ func test_selector_requires_all_open_conditions_current_assumption():
 		]),
 	}
 	var state := GameState.new()
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, state)
-	selector._list_container = VBoxContainer.new()
+	selector._list_container = _owned(VBoxContainer.new()) as VBoxContainer
 
 	selector._populate()
 
@@ -89,9 +94,9 @@ func test_selector_fails_closed_without_state_for_non_empty_condition():
 			{"condition": {"counter.7000001=": 0}},
 		]),
 	}
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db)
-	selector._list_container = VBoxContainer.new()
+	selector._list_container = _owned(VBoxContainer.new()) as VBoxContainer
 
 	selector._populate()
 
@@ -104,7 +109,7 @@ func test_selector_filters_open_rites_by_location():
 		9005: _rite_with_location("Home"),
 		9006: _rite_with_location("Market"),
 	}
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, null, null, "Home")
 
 	assert_eq(selector.open_rite_ids(), [9005])
@@ -117,7 +122,7 @@ func test_auto_begin_rite_is_available_only_after_it_is_started():
 	}
 	var state := GameState.new()
 	state.available_rites.append(9007)
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, state, null, "Home")
 
 	assert_eq(selector.open_rite_ids(), [], "auto-begin rites should not appear just because the config exists")
@@ -147,7 +152,7 @@ func test_rite_with_only_prior_settlement_is_interactive():
 	}
 	var state := GameState.new()
 	state.available_rites.append(9008)
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, state, null, "Home")
 	assert_eq(selector.open_rite_ids(), [9008], "prior-only rite should appear in the selector")
 	# The shared predicate is the single source of truth now.
@@ -163,7 +168,7 @@ func test_static_filter_counts_open_rites_without_instantiating():
 		9006: _rite_with_location("Market"),
 	}
 	var state := GameState.new()
-	var selector := RiteSelector.new()
+	var selector := _owned(RiteSelector.new()) as RiteSelector
 	selector.setup(db, state, null, "Home")
 	assert_eq(RiteSelector.filter_open_rite_ids(db, state, null, "Home"), selector.open_rite_ids(), "static filter matches instance filter")
 
