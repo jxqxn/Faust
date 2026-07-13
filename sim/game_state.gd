@@ -736,7 +736,7 @@ func queue_prompt(prompt: Dictionary) -> void:
 		event_prompts.append(prompt.duplicate(true))
 
 
-func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: String = "请选择回应。") -> void:
+func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: String = "请选择回应。", context: Dictionary = {}) -> void:
 	if choices.is_empty():
 		return
 	queue_prompt({
@@ -744,6 +744,7 @@ func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: St
 		"title": title,
 		"text": text,
 		"choices": choices.duplicate(true),
+		"context": context.duplicate(true),
 	})
 
 

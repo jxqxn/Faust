@@ -732,9 +732,12 @@ func _show_event_overlay(display: Dictionary) -> void:
 		buttons.add_child(cont)
 	else:
 		for key in choices.keys():
-			var choice := _event_button(str(choices[key]))
+			var choice_entry = choices[key]
+			var choice_text := str(choice_entry.get("text", key)) if choice_entry is Dictionary and choice_entry.has("value") else str(choice_entry)
+			var choice_value = choice_entry.get("value") if choice_entry is Dictionary and choice_entry.has("value") else choice_entry
+			var choice := _event_button(choice_text)
 			choice.name = "EventPromptChoiceButton"
-			choice.pressed.connect(_consume_event_display.bind(str(key), choices[key]))
+			choice.pressed.connect(_consume_event_display.bind(str(key), choice_value))
 			buttons.add_child(choice)
 	_apply_layout()
 
@@ -752,10 +755,12 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		return
 	var merged: Dictionary = {}
 	if not _state.event_prompts.is_empty():
+		var prompt: Dictionary = _state.event_prompts[0]
+		var prompt_context: Dictionary = prompt.get("context", {}).duplicate(true) if prompt.get("context", {}) is Dictionary else {}
 		_state.event_prompts.remove_at(0)
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
-			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
+			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, prompt_context)
 	elif not _state.event_queue.is_empty():
 		var event_id := int(_state.event_queue[0])
 		_state.event_queue.remove_at(0)

@@ -142,7 +142,12 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.event_queue.clear()
 	for eid in data.get("event_queue", []):
 		state.event_queue.append(int(eid))
-	state.event_contexts = data.get("event_contexts", {}).duplicate(true)
+	state.event_contexts.clear()
+	var saved_event_contexts: Dictionary = data.get("event_contexts", {})
+	for event_id in saved_event_contexts:
+		var saved_context = saved_event_contexts[event_id]
+		if saved_context is Dictionary:
+			state.event_contexts[int(event_id)] = saved_context.duplicate(true)
 	state.event_prompts.clear()
 	for prompt in data.get("event_prompts", []):
 		if prompt is Dictionary:
@@ -156,12 +161,21 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for event_id in saved_event_done:
 		state.event_done[int(event_id)] = bool(saved_event_done[event_id])
 	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))
-	state.local_counters = data.get("local_counters", {}).duplicate(true)
-	state.global_counters = data.get("global_counters", {}).duplicate(true)
+	state.local_counters = _restore_int_keyed_dictionary(data.get("local_counters", {}))
+	state.global_counters = _restore_int_keyed_dictionary(data.get("global_counters", {}))
 	if state.has_method("sync_rail_order"):
 		state.sync_rail_order()
 	if state.has_method("_rebuild_event_runtime"):
 		state._rebuild_event_runtime(db)
+
+
+static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Dictionary):
+		return restored
+	for raw_key in value:
+		restored[int(raw_key)] = value[raw_key]
+	return restored
 
 
 ## Save to disk. Returns true on success.

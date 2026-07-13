@@ -25,7 +25,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 	# keys are skipped — only the player's chosen case executes (via
 	# execute_choice), matching the original's last_op_tag state machine.
 	if result.has("option"):
-		_apply_option(result, deferred)
+		_apply_option(result, deferred, context)
 		return deferred
 	for key in result:
 		var val = result[key]
@@ -69,9 +69,9 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "card":
 		if val is Array:
 			if not val.is_empty():
-				state.add_card_to_hand(int(val[0]))
+				state.add_card_to_hand(int(val[0]), db)
 		else:
-			state.add_card_to_hand(int(val))
+			state.add_card_to_hand(int(val), db)
 		return
 	# Choose (pop options).
 	if k == "choose" and val is Dictionary:
@@ -146,7 +146,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# case:opN reached via execute_choice: run the matched case subtree as a
 	# nested result dict. This is the player's chosen branch from an option.
 	if k.begins_with("case:") and val is Dictionary:
-		var case_deferred := execute(val, state, db)
+		var case_deferred := execute(val, state, db, context)
 		# Merge the case's effects into the current deferred (in-place).
 		_merge_case(deferred, case_deferred)
 		return
@@ -154,7 +154,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# Execute their subtree like a case; for confirm both branches are treated
 	# the same initially (the tutorial's success/failed converge).
 	if (k == "success" or k == "failed") and val is Dictionary:
-		var branch_deferred := execute(val, state, db)
+		var branch_deferred := execute(val, state, db, context)
 		_merge_case(deferred, branch_deferred)
 		return
 	# Unhandled: log, don't crash.
@@ -199,12 +199,12 @@ static func _merge_case(into: Dictionary, src: Dictionary) -> void:
 ## choices keyed by their case tag (op1/op2/...), and each case:opN sibling in
 ## the same action dict becomes the choice's executable value (a result dict
 ## run via execute_choice when the player picks it).
-## A `case:def` sibling (if present) is a fallback/default branch added as an
-## extra choice, mirroring the original's def-wildcard match.
+## `case:def` remains an execution fallback; it is not a player-facing option.
 ## [SRC: Option.c @ Do (shows UI, resolves with tag);
 ##       CaseOperations.c @ Do (matches last_op_tag, or 'def' wildcard
-##       when last_op_status - 2 >= 3, runs case subtree, resets state)]
-static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
+##       when last_op_status - 2 >= 3, runs case subtree, resets state),
+##       RVA 0x518ac0 / 0x399570, dump.cs:315655 / 394112]
+static func _apply_option(action: Dictionary, deferred: Dictionary, context: Dictionary = {}) -> void:
 	var opt: Dictionary = action.get("option", {})
 	if opt.is_empty():
 		return
@@ -216,13 +216,12 @@ static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
 		var tag := str(item.get("tag", ""))
 		if tag == "":
 			continue
-		# The case subtree (if present) is the executable payload for this choice.
+		# Keep the player-facing label separate from the executable case subtree.
 		var case_key := "case:" + tag
-		choices[case_key] = action.get(case_key, {})
-	# def wildcard: a fallback branch the original matches when no case tag
-	# applies (last_op_status - 2 >= 3). Surfaced as an extra choice.
-	if action.has("case:def"):
-		choices["case:def"] = action["case:def"]
+		choices[case_key] = {
+			"text": str(item.get("text", tag)),
+			"value": action.get(case_key, {}),
+		}
 	# Stash as a choose prompt; DeferredEffects.apply routes it to the UI via
 	# queue_choice_prompt. The option text is the body narration; the title is
 	# a short label (the prompt id or "选择").
@@ -230,6 +229,7 @@ static func _apply_option(action: Dictionary, deferred: Dictionary) -> void:
 		"choices": choices,
 		"title": str(opt.get("id", "选择")),
 		"text": str(opt.get("text", "")),
+		"context": context.duplicate(true),
 	}
 
 

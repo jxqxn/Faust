@@ -571,9 +571,9 @@ func test_option_payload_becomes_choose_prompt_with_case_choices():
 	var choices: Dictionary = choose.get("choices", {})
 	assert_true(choices.has("case:op1"), "choice keyed by case tag op1")
 	assert_true(choices.has("case:op2"), "choice keyed by case tag op2")
-	# The case subtrees are the choice values (executable later).
-	assert_eq(choices["case:op1"], {"rite": 5001001}, "op1 choice value is its case subtree")
-	assert_eq(choices["case:op2"], {"over": 1}, "op2 choice value is its case subtree")
+	assert_eq(str(choices["case:op1"].text), "生", "option display text is retained")
+	assert_eq(choices["case:op1"].value, {"rite": 5001001}, "op1 choice value is its case subtree")
+	assert_eq(choices["case:op2"].value, {"over": 1}, "op2 choice value is its case subtree")
 
 
 func test_case_op_executes_matched_subtree_only():
@@ -611,7 +611,7 @@ func test_option_event_end_to_end_through_execute_event():
 	# Simulate player picking "给钱" (op1).
 	st.event_prompts.clear()
 	var choices: Dictionary = merged.choose.get("choices", {})
-	DeferredEffects.execute_choice("case:op1", choices["case:op1"], st, db, RNG.new(1))
+	DeferredEffects.execute_choice("case:op1", choices["case:op1"].value, st, db, RNG.new(1))
 	assert_eq(st.coin_count, -5, "picking op1 applied its case subtree (coin -5)")
 
 
@@ -709,15 +709,14 @@ func test_real_event_5300258_option_branch_executes():
 	var choices: Dictionary = choose.get("choices", {})
 	assert_true(choices.has("case:op1") and choices.has("case:op2") and choices.has("case:op3"), "all 3 options present")
 	# Pick op2: should add rite 5001027 and disable event 5300258.
-	DeferredEffects.execute_choice("case:op2", choices["case:op2"], st, db, RNG.new(1))
+	DeferredEffects.execute_choice("case:op2", choices["case:op2"].value, st, db, RNG.new(1))
 	assert_true(5001027 in st.available_rites, "op2 opened rite 5001027")
 	assert_true(st.event_runtime._disabled.has(5300258), "event_off disabled 5300258")
 
 
-func test_option_def_wildcard_surfaced_as_choice():
-	# A case:def fallback branch is surfaced as an extra choice alongside the
-	# tagged options, mirroring the original's def-wildcard match.
-	# [SRC: CaseOperations.c @ Do: 'def' tag matches when last_op_status - 2 >= 3]
+func test_option_def_wildcard_is_not_surfaced_as_choice():
+	# `def` is an execution fallback, not an item shown by Option.Do.
+	# [SRC: Option.c @ Do (RVA 0x518ac0); CaseOperations.c @ Do (RVA 0x399570)]
 	var action := {
 		"option": {"text": "选", "items": [{"text": "A", "tag": "op1"}]},
 		"case:op1": {"rite": 5001001},
@@ -725,5 +724,5 @@ func test_option_def_wildcard_surfaced_as_choice():
 	}
 	var deferred := ResultExec.execute(action, GameState.new(), db)
 	var choices: Dictionary = deferred.choose.get("choices", {})
-	assert_true(choices.has("case:def"), "def fallback is surfaced as a choice")
-	assert_eq(choices["case:def"], {"over": 1}, "def choice value is its subtree")
+	assert_false(choices.has("case:def"), "def fallback must not become a player-facing option")
+	assert_eq(choices["case:op1"].value, {"rite": 5001001})

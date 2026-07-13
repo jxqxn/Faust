@@ -16,7 +16,12 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 		# Two formats: a plain {key: value} choices dict (legacy choose), or a
 		# wrapped {choices: {...}, title, text} from an option payload.
 		if choose.has("choices"):
-			state.queue_choice_prompt(choose["choices"], str(choose.get("title", "选择")), str(choose.get("text", "")))
+			state.queue_choice_prompt(
+				choose["choices"],
+				str(choose.get("title", "选择")),
+				str(choose.get("text", "")),
+				choose.get("context", {}) if choose.get("context", {}) is Dictionary else {}
+			)
 		else:
 			state.queue_choice_prompt(choose)
 	var next_rite := int(deferred.get("rite", 0))

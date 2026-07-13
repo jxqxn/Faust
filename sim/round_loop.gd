@@ -277,15 +277,15 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 	var table_entries: Array = source_table_entries if not source_table_entries.is_empty() else state.cards_in_slot_entries_for_rite(instance.uid)
 	for table_card in table_entries:
 		var card_id := int(table_card.get("id", 0))
+		var card_uid := int(table_card.get("card_uid", 0))
 		var slot_num := int(table_card.get("slot", 0))
 		var is_cleaned := clean_rite or slot_num in clean_slots or card_id in clean_card_ids
 		if is_cleaned:
-			if state.is_active_sudan_card(card_id):
-				consume_sudan(state, card_id)
+			if state.is_active_sudan_card(card_uid):
+				consume_sudan(state, card_uid)
 			else:
-				state.trigger_events("card_clean", {"card": card_id})
-		elif state.is_active_sudan_card(card_id):
-			var card_uid := int(table_card.get("card_uid", 0))
+				state.trigger_events("card_clean", {"card": card_id, "card_uid": card_uid})
+		elif state.is_active_sudan_card(card_uid):
 			var sudan_instance = state.get_card_instance(card_uid) if state.has_method("get_card_instance") else null
 			if sudan_instance != null:
 				sudan_instance.zone = "sudan"

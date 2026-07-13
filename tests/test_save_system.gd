@@ -44,13 +44,17 @@ func test_save_load_round_trip_preserves_state():
 	state.enable_event(5310008, db)
 	state.disable_event(5300601)
 	state.event_done[5310008] = true
-	# Serialize.
-	var data := SaveSystem.serialize(state)
+	state.set_counter(7000001, 12)
+	state.set_global_counter(8000001, 34)
+	# Exercise the real JSON boundary; JSON object keys are strings on load.
+	assert_true(SaveSystem.save(state), "state should be written to the test save path")
+	var data = SaveSystem.read_save_data()
 	assert_true(SaveSystem.is_valid_player_save_data(data), "serialized player saves should be marked as continue-eligible")
 	assert_eq(data.get("save_kind", ""), SaveSystem.SAVE_KIND_PLAYER, "save kind should identify player saves")
-	# Deserialize into a fresh state.
-	var state2 := GameState.new()
-	SaveSystem.deserialize(data, state2, db)
+	var state2 = SaveSystem.load(db)
+	assert_not_null(state2, "v5 disk save should load")
+	if state2 == null:
+		return
 	# Verify all fields preserved.
 	assert_eq(state2.difficulty_index, 1, "difficulty preserved")
 	assert_eq(state2.round_number, 2, "round_number preserved")
@@ -81,6 +85,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_true(5310008 in state2.event_queue, "queued events preserved")
 	assert_eq(int(state2.event_contexts[5310008].get("rite", 0)), 5000001, "queued event context preserves rite instance binding")
 	assert_eq(int(state2.event_contexts[5310008].get("card_uid", 0)), int(state.hand[0]), "queued event context preserves card instance uid")
+	assert_eq(state2.get_counter(7000001), 12, "local counter integer keys survive JSON")
+	assert_eq(state2.get_global_counter(8000001), 34, "global counter integer keys survive JSON")
 	assert_eq(str(state2.event_prompts[0].get("id", "")), "prompt.test", "queued prompts preserved")
 	assert_true(state2.is_event_enabled(5310008), "enabled event status preserved")
 	assert_false(state2.is_event_enabled(5300601), "disabled event status preserved")

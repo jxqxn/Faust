@@ -318,6 +318,27 @@ func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
 	assert_true(state.event_prompts.is_empty(), "continue should consume the prompt queue")
 
 
+func test_game_screen_option_choice_uses_configured_label():
+	var rng := RNG.new(191)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.queue_choice_prompt({"case:op1": {"text": "给钱", "value": {"金币": 2}}})
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var choice := _find_node_by_name(screen, "EventPromptChoiceButton") as Button
+	assert_not_null(choice)
+	if choice == null:
+		return
+	assert_eq(choice.text, "给钱", "button should show option text instead of its action dictionary")
+	choice.pressed.emit()
+	await wait_process_frames(2)
+	assert_eq(state.coin_count, 2)
+
+
 func test_game_screen_event_overlay_displays_missing_event_placeholder():
 	var rng := RNG.new(20)
 	var state := GameState.new()

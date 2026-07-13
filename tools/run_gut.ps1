@@ -1,13 +1,30 @@
 param(
-	[string]$GodotPath = $(if ($env:GODOT_BIN) { $env:GODOT_BIN } else { "C:\Tools\Godot\4.7-stable\Godot_v4.7-stable_win64.exe" })
+	[string]$GodotPath = $env:GODOT_BIN
 )
 
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $logPath = Join-Path $repoRoot "gut-test.log"
 
-if (-not (Test-Path -LiteralPath $GodotPath)) {
-	throw "Godot executable not found: $GodotPath. Set GODOT_BIN or pass -GodotPath."
+if ([string]::IsNullOrWhiteSpace($GodotPath)) {
+	$localCandidate = "C:\Tools\Godot\4.7-stable\Godot_v4.7-stable_win64.exe"
+	if (Test-Path -LiteralPath $localCandidate) {
+		$GodotPath = $localCandidate
+	}
+}
+
+if ([string]::IsNullOrWhiteSpace($GodotPath)) {
+	foreach ($commandName in @("godot", "godot4")) {
+		$command = Get-Command $commandName -ErrorAction SilentlyContinue
+		if ($null -ne $command) {
+			$GodotPath = $command.Source
+			break
+		}
+	}
+}
+
+if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $GodotPath)) {
+	throw "Godot executable not found. Set GODOT_BIN, add godot to PATH, or pass -GodotPath."
 }
 
 Remove-Item -LiteralPath $logPath -Force -ErrorAction SilentlyContinue

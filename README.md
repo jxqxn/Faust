@@ -1,6 +1,6 @@
 # Faust - Sultan's Game Godot Prototype
 
-A first playable Godot 4.6 prototype inspired by Sultan's Game, a narrative
+A first playable Godot 4.7 prototype inspired by Sultan's Game, a narrative
 card-battle game where you play a noble punished by the Sultan. Each week
 you're forced to draw a Sultan card (kill/lust/luxury/conquer x
 rock/bronze/silver/gold rank) that must be fulfilled within a time limit, or
@@ -74,7 +74,8 @@ Tests use GUT (Godot Unit Test). Run `tools/run_gut.ps1`; it fails on test
 failures, `SCRIPT ERROR`, `ERROR`, orphan counts, and leak diagnostics. The
 suite covers core systems, data loading, simulation,
 runtime card instances, Sultan cards, rite UI, save system, and end-to-end
-integration.
+integration. The runner accepts `-GodotPath`, then checks `GODOT_BIN`, the
+verified local Godot 4.7 path, and finally PATH.
 
 Export the current condition/result/action coverage report when deciding which
 content batch to implement next. The report records every unsupported key with
