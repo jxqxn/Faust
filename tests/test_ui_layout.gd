@@ -14,14 +14,18 @@ var db: ConfigDB
 
 func before_all():
 	SaveSystem.use_save_path("user://test_ui_layout_save.json")
+	SaveSystem.use_user_archive_root("user://test_ui_layout_archives")
 	SaveSystem.delete_save()
+	SaveSystem.delete_all_user_archives()
 	db = ConfigDB.new()
 	db.load_all()
 
 
 func after_all():
 	SaveSystem.delete_save()
+	SaveSystem.delete_all_user_archives()
 	SaveSystem.use_default_save_path()
+	SaveSystem.use_default_user_archive_root()
 
 
 func test_main_menu_uses_wide_viewport_width():
@@ -60,6 +64,23 @@ func test_main_menu_shows_continue_for_valid_player_save():
 	await wait_process_frames(2)
 
 	assert_not_null(_find_node_by_name(menu, "ContinueGameButton"), "valid player saves should show a continue button")
+
+
+func test_main_menu_lists_named_archives_with_load_and_delete_actions():
+	SaveSystem.delete_all_user_archives()
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(19))
+	state.day = 5
+	assert_true(SaveSystem.save_user_archive(state, 0, "Book shop route"), "test setup should create a manual archive")
+	var stage := _stage()
+	var menu = MainMenu.new()
+	menu.setup(db)
+	stage.add_child(menu)
+	await wait_process_frames(2)
+
+	assert_not_null(_find_node_by_name(menu, "UserArchiveList"), "manual archives should be visible on the title menu")
+	assert_not_null(_find_node_by_name(menu, "LoadUserArchiveButton_0"), "an archive row should load its selected slot")
+	assert_not_null(_find_node_by_name(menu, "DeleteUserArchiveButton_0"), "an archive row should expose deletion")
 
 
 func test_main_menu_exposes_test_start_in_debug_builds():
@@ -494,7 +515,23 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(_find_node_by_name(game, "GameMenuOverlay"), "menu button should open an in-game menu overlay")
 	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
+	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+
+
+func test_game_menu_opens_manual_archive_picker():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	game._on_difficulty_selected(0)
+	await wait_process_frames(2)
+	game._show_user_archive_overlay()
+	await wait_process_frames(1)
+
+	assert_not_null(_find_node_by_name(game, "UserArchiveOverlay"), "manual save opens a separate archive picker")
+	assert_not_null(_find_node_by_name(game, "UserArchiveNameInput"), "archive picker accepts a player-specified name")
+	assert_not_null(_find_node_by_name(game, "SaveNewUserArchiveButton"), "archive picker can create a new slot")
 
 
 func test_test_start_entry_uses_test_card_profile():

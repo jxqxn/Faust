@@ -6,6 +6,8 @@ signal difficulty_selected(index: int)
 signal test_start_requested(index: int)
 
 signal continue_pressed()
+signal user_archive_load_requested(index: int)
+signal user_archive_delete_requested(index: int)
 
 
 const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
@@ -70,6 +72,10 @@ func _build_ui() -> void:
 		cont.pressed.connect(func(): continue_pressed.emit())
 		vbox.add_child(cont)
 		vbox.add_child(_spacer(8))
+	var archives := SaveSystem.list_user_archives(_db) if _db != null else []
+	if not archives.is_empty():
+		vbox.add_child(_make_archive_section(archives))
+		vbox.add_child(_spacer(8))
 	if OS.is_debug_build():
 		var test_btn := Button.new()
 		test_btn.name = "TestStartButton"
@@ -121,6 +127,63 @@ func _make_diff_card(index: int) -> Control:
 	col.add_child(desc)
 	panel.add_child(col)
 	return panel
+
+
+func _make_archive_section(archives: Array) -> Control:
+	var section := VBoxContainer.new()
+	section.name = "UserArchiveList"
+	section.add_theme_constant_override("separation", 6)
+	var title := Label.new()
+	title.text = "存档"
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	section.add_child(title)
+	for archive in archives:
+		section.add_child(_make_archive_row(archive))
+	return section
+
+
+func _make_archive_row(archive: Dictionary) -> Control:
+	var panel := PanelContainer.new()
+	panel.name = "UserArchive_%d" % int(archive.get("index", -1))
+	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	panel.add_child(row)
+	var summary := Label.new()
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	summary.text = "%s  |  第 %d 天 / 第 %d 回合\n%s" % [
+		str(archive.get("name", "未命名存档")),
+		int(archive.get("day", archive.get("live_days", 1))),
+		int(archive.get("round_number", 1)),
+		str(archive.get("save_time", "")),
+	]
+	row.add_child(summary)
+	var load := Button.new()
+	load.name = "LoadUserArchiveButton_%d" % int(archive.get("index", -1))
+	load.text = "读取"
+	load.custom_minimum_size = Vector2(72, 42)
+	load.pressed.connect(func(): user_archive_load_requested.emit(int(archive.get("index", -1))))
+	row.add_child(load)
+	var delete := Button.new()
+	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
+	delete.text = "删除"
+	delete.tooltip_text = "删除存档"
+	delete.custom_minimum_size = Vector2(72, 42)
+	delete.pressed.connect(_confirm_delete_archive.bind(int(archive.get("index", -1))))
+	row.add_child(delete)
+	return panel
+
+
+func _confirm_delete_archive(index: int) -> void:
+	var confirm := ConfirmationDialog.new()
+	confirm.dialog_text = "确定删除这个存档吗？此操作无法撤销。"
+	add_child(confirm)
+	confirm.confirmed.connect(func(): user_archive_delete_requested.emit(index))
+	confirm.canceled.connect(confirm.queue_free)
+	confirm.confirmed.connect(confirm.queue_free)
+	confirm.popup_centered()
 
 
 func _spacer(h: int) -> Control:

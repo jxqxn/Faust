@@ -9,14 +9,18 @@ var db: ConfigDB
 
 func before_all():
 	SaveSystem.use_save_path("user://test_save_system_save.json")
+	SaveSystem.use_user_archive_root("user://test_save_system_archives")
 	SaveSystem.delete_save()
+	SaveSystem.delete_all_user_archives()
 	db = ConfigDB.new()
 	db.load_all()
 
 
 func after_all():
 	SaveSystem.delete_save()
+	SaveSystem.delete_all_user_archives()
 	SaveSystem.use_default_save_path()
+	SaveSystem.use_default_user_archive_root()
 
 func test_save_load_round_trip_preserves_state():
 	var rng := RNG.new(42)
@@ -143,3 +147,39 @@ func test_load_rejects_version_mismatch():
 
 	assert_eq(SaveSystem.load(db), null, "version-mismatched save is refused")
 	assert_eq(SaveSystem.load_continue(db), null, "continue also refuses version mismatch")
+
+
+func test_user_archives_are_named_selectable_and_deleted_with_payload():
+	SaveSystem.delete_all_user_archives()
+	var first := GameState.new()
+	first.setup_new_run(db, 0, RNG.new(81))
+	first.day = 4
+	first.round_number = 2
+	assert_true(SaveSystem.save_user_archive(first, 0, "Estate before search"), "first archive should save")
+
+	var second := GameState.new()
+	second.setup_new_run(db, 1, RNG.new(82))
+	second.day = 7
+	second.round_number = 3
+	assert_true(SaveSystem.save_user_archive(second, 1, "Book shop"), "second archive should save")
+	assert_eq(SaveSystem.next_user_archive_index(), 2, "new archive uses the first free slot")
+
+	var archives := SaveSystem.list_user_archives(db)
+	assert_eq(archives.size(), 2, "two valid archive entries are listed")
+	assert_eq(str(archives[0].get("name", "")), "Estate before search", "archive keeps its player name")
+	assert_eq(int(archives[1].get("day", 0)), 7, "archive summary reads the saved day")
+
+	var loaded = SaveSystem.load_user_archive(db, 1)
+	assert_not_null(loaded, "selected archive should load")
+	if loaded != null:
+		assert_eq(loaded.day, 7, "selected archive restores its own state")
+		var continued = SaveSystem.load_continue(db)
+		assert_not_null(continued, "loading an archive refreshes the current continue save")
+		if continued != null:
+			assert_eq(continued.day, 7, "continue now follows the loaded archive")
+
+	var payload_path := SaveSystem.user_archive_save_path(0)
+	assert_true(FileAccess.file_exists(payload_path), "archive payload exists before deletion")
+	assert_true(SaveSystem.delete_user_archive(0), "archive deletion should succeed")
+	assert_false(FileAccess.file_exists(payload_path), "deletion removes the archive payload")
+	assert_eq(SaveSystem.list_user_archives(db).size(), 1, "deleted archive is no longer selectable")

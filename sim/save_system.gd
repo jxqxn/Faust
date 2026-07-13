@@ -11,8 +11,12 @@ const CardInstanceData = preload("res://sim/card_instance.gd")
 const DEFAULT_SAVE_PATH := "user://save.json"
 const SAVE_VERSION := 5
 const SAVE_KIND_PLAYER := "player"
+const USER_ARCHIVE_ROOT := "user://user_archives"
+const USER_ARCHIVE_INDEX_NAME := "user_archives.json"
+const MAX_USER_ARCHIVE_COUNT := 50
 
 static var save_path_override := ""
+static var user_archive_root_override := ""
 
 
 static func save_path() -> String:
@@ -25,6 +29,29 @@ static func use_save_path(path: String) -> void:
 
 static func use_default_save_path() -> void:
 	save_path_override = ""
+
+
+## Manual archives deliberately use a separate index and payload directory.
+## [SRC: Datapool.c @ SaveUserArchive (RVA 0x41aa50);
+##  GameApplicationConfig.USER_ARCHIVE_SAVE_ROOT (dump.cs:542386-542392)]
+static func user_archive_root() -> String:
+	return user_archive_root_override if user_archive_root_override != "" else USER_ARCHIVE_ROOT
+
+
+static func use_user_archive_root(path: String) -> void:
+	user_archive_root_override = path
+
+
+static func use_default_user_archive_root() -> void:
+	user_archive_root_override = ""
+
+
+static func user_archive_index_path() -> String:
+	return "%s/%s" % [user_archive_root(), USER_ARCHIVE_INDEX_NAME]
+
+
+static func user_archive_save_path(index: int) -> String:
+	return "%s/archive_%02d.json" % [user_archive_root(), index]
 
 
 ## Serialize the game state to a dictionary.
@@ -193,8 +220,112 @@ static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
 
 ## Save to disk. Returns true on success.
 static func save(state) -> bool:
+	return _write_save_data(save_path(), serialize(state))
+
+
+## Create or replace a named manual archive. Indexes are stable 0-based slots,
+## matching the original archive controller's fixed archive array.
+static func save_user_archive(state, index: int, archive_name: String) -> bool:
+	if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
+		return false
 	var data := serialize(state)
-	var path := save_path()
+	if not _write_save_data(user_archive_save_path(index), data):
+		return false
+	var archives := _read_user_archives()
+	var name := archive_name.strip_edges()
+	if name.is_empty():
+		name = "Day %d" % state.day
+	name = name.left(48)
+	var entry := {
+		"index": index,
+		"name": name,
+		"live_days": state.day,
+		"left_sudan": state.active_sudan_cards.size(),
+		"execution_day": _next_execution_day(state),
+		"back_to_prev_round": state.back_to_prev_left,
+		"save_time": Time.get_datetime_string_from_system(),
+	}
+	var replaced := false
+	for archive_index in archives.size():
+		if int(archives[archive_index].get("index", -1)) == index:
+			archives[archive_index] = entry
+			replaced = true
+			break
+	if not replaced:
+		archives.append(entry)
+	archives.sort_custom(func(a, b): return int(a.get("index", 0)) < int(b.get("index", 0)))
+	return _write_user_archives(archives)
+
+
+static func list_user_archives(db) -> Array:
+	var valid_archives: Array = []
+	for entry in _read_user_archives():
+		var index := int(entry.get("index", -1))
+		if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
+			continue
+		var data: Variant = _read_save_data_at(user_archive_save_path(index))
+		if not is_valid_player_save_data(data) or int(data.get("version", 0)) != SAVE_VERSION:
+			continue
+		var summary: Dictionary = entry.duplicate(true)
+		summary["round_number"] = int(data.get("round_number", 1))
+		summary["day"] = int(data.get("day", 1))
+		valid_archives.append(summary)
+	return valid_archives
+
+
+static func next_user_archive_index() -> int:
+	var used := {}
+	for entry in _read_user_archives():
+		used[int(entry.get("index", -1))] = true
+	for index in MAX_USER_ARCHIVE_COUNT:
+		if not used.has(index):
+			return index
+	return -1
+
+
+## Restoring an archive also refreshes the current-player continue file, as the
+## original LoadUserArchive restores Player and then calls SavePlayer.
+## [SRC: Datapool.c @ LoadUserArchive (RVA 0x417350)]
+static func load_user_archive(db, index: int) -> Variant:
+	if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
+		return null
+	var state = _load_from_path(db, user_archive_save_path(index), true)
+	if state != null:
+		save(state)
+	return state
+
+
+## Unlike the original index-only deletion, remove both registry entry and
+## payload so a player-selected deletion actually frees the archive.
+static func delete_user_archive(index: int) -> bool:
+	var archives := _read_user_archives()
+	var found := false
+	var retained: Array = []
+	for entry in archives:
+		if int(entry.get("index", -1)) == index:
+			found = true
+		else:
+			retained.append(entry)
+	if not found:
+		return false
+	var archive_path := user_archive_save_path(index)
+	if FileAccess.file_exists(archive_path) and DirAccess.remove_absolute(archive_path) != OK:
+		return false
+	return _write_user_archives(retained)
+
+
+static func delete_all_user_archives() -> void:
+	for entry in _read_user_archives():
+		var archive_path := user_archive_save_path(int(entry.get("index", -1)))
+		if FileAccess.file_exists(archive_path):
+			DirAccess.remove_absolute(archive_path)
+	var index_path := user_archive_index_path()
+	if FileAccess.file_exists(index_path):
+		DirAccess.remove_absolute(index_path)
+
+
+static func _write_save_data(path: String, data: Dictionary) -> bool:
+	_ensure_parent_directory(path)
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		push_warning("SaveSystem: cannot open %s" % path)
@@ -205,9 +336,13 @@ static func save(state) -> bool:
 
 
 static func read_save_data() -> Variant:
-	if not FileAccess.file_exists(save_path()):
+	return _read_save_data_at(save_path())
+
+
+static func _read_save_data_at(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
 		return null
-	var text := FileAccess.get_file_as_string(save_path())
+	var text := FileAccess.get_file_as_string(path)
 	var parsed = JSON.parse_string(text)
 	if not (parsed is Dictionary):
 		return null
@@ -218,7 +353,11 @@ static func read_save_data() -> Variant:
 ## version-mismatched. A version mismatch (older/newer save schema) is rejected
 ## rather than silently loading wrong state.
 static func load(db, require_player_save := false) -> Variant:
-	var parsed = SaveSystem.read_save_data()
+	return _load_from_path(db, save_path(), require_player_save)
+
+
+static func _load_from_path(db, path: String, require_player_save := false) -> Variant:
+	var parsed = _read_save_data_at(path)
 	if parsed == null:
 		return null
 	if require_player_save and not SaveSystem.is_valid_player_save_data(parsed):
@@ -258,3 +397,34 @@ static func is_valid_player_save_data(data: Variant) -> bool:
 static func delete_save() -> void:
 	if FileAccess.file_exists(save_path()):
 		DirAccess.remove_absolute(save_path())
+
+
+static func _read_user_archives() -> Array:
+	var path := user_archive_index_path()
+	if not FileAccess.file_exists(path):
+		return []
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (parsed is Dictionary) or int(parsed.get("version", 0)) != 1:
+		return []
+	var archives = parsed.get("archives", [])
+	if not (archives is Array):
+		return []
+	return archives.filter(func(entry): return entry is Dictionary)
+
+
+static func _write_user_archives(archives: Array) -> bool:
+	return _write_save_data(user_archive_index_path(), {"version": 1, "archives": archives})
+
+
+static func _ensure_parent_directory(path: String) -> void:
+	var directory := path.get_base_dir()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
+
+
+static func _next_execution_day(state) -> int:
+	var next_day := -1
+	for sudan in state.active_sudan_cards:
+		var candidate: int = state.day + int(sudan.days_left)
+		if next_day < 0 or candidate < next_day:
+			next_day = candidate
+	return next_day

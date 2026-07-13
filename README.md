@@ -107,6 +107,13 @@ Continue is shown only for valid version-5 player saves. Older raw JSON files,
 test data, and v4-or-earlier saves are rejected without deleting the source
 file, and they do not light up the player-facing continue button.
 
+Manual archives are separate from the current continue save. The title screen
+lists valid named archives for load or deletion; the in-game menu can create a
+new archive or overwrite a selected one. Archives use a 50-slot index under
+`user://user_archives`; loading one refreshes `user://save.json` as the
+current continue save, and deleting one removes both its index entry and JSON
+payload.
+
 The currently accepted first-week content scope is governance, I-think, book
 shop/search and the tagged Sultan -> Power Game chain. The full configuration
 set is not claimed complete: `tools/export_dsl_audit.gd` continues to report

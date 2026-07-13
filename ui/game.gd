@@ -15,6 +15,8 @@ var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
+var _user_archive_overlay: Control
+var _user_archive_name_input: LineEdit
 var _current_rite_id := 0
 var _current_rite_uid := 0
 
@@ -35,6 +37,8 @@ func _show_menu() -> void:
 	menu.setup(db)
 	menu.difficulty_selected.connect(_on_difficulty_selected)
 	menu.continue_pressed.connect(_on_continue)
+	menu.user_archive_load_requested.connect(_on_user_archive_load)
+	menu.user_archive_delete_requested.connect(_on_user_archive_delete)
 	menu.test_start_requested.connect(_on_test_start_requested)
 	add_child(menu)
 	_current = menu
@@ -47,6 +51,20 @@ func _on_continue() -> void:
 		return
 	state = loaded
 	_show_game()
+
+
+func _on_user_archive_load(index: int) -> void:
+	var loaded = SaveSystem.load_user_archive(db, index)
+	if loaded == null:
+		_show_menu()
+		return
+	state = loaded
+	_show_game()
+
+
+func _on_user_archive_delete(index: int) -> void:
+	SaveSystem.delete_user_archive(index)
+	_show_menu()
 
 
 func _on_difficulty_selected(index: int) -> void:
@@ -161,16 +179,16 @@ func _show_game_menu() -> void:
 
 	var panel := PanelContainer.new()
 	panel.name = "GameMenuPanel"
-	panel.custom_minimum_size = Vector2(260, 270)
+	panel.custom_minimum_size = Vector2(260, 330)
 	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
 	panel.anchor_left = 0.5
 	panel.anchor_top = 0.5
 	panel.anchor_right = 0.5
 	panel.anchor_bottom = 0.5
 	panel.offset_left = -130
-	panel.offset_top = -135
+	panel.offset_top = -165
 	panel.offset_right = 130
-	panel.offset_bottom = 135
+	panel.offset_bottom = 165
 	_menu_overlay.add_child(panel)
 
 	var box := VBoxContainer.new()
@@ -194,6 +212,11 @@ func _show_game_menu() -> void:
 	save.pressed.connect(_on_save_from_menu)
 	box.add_child(save)
 
+	var save_archive := _menu_button("保存为存档")
+	save_archive.name = "SaveUserArchiveButton"
+	save_archive.pressed.connect(_show_user_archive_overlay)
+	box.add_child(save_archive)
+
 	var title_screen := _menu_button("返回标题")
 	title_screen.name = "ReturnTitleButton"
 	title_screen.pressed.connect(_show_menu)
@@ -214,11 +237,158 @@ func _on_save_from_menu() -> void:
 		_current.set_log("已保存。" if ok else "保存失败。")
 
 
+func _show_user_archive_overlay() -> void:
+	_close_game_menu()
+	_close_user_archive_overlay()
+	_user_archive_overlay = Control.new()
+	_user_archive_overlay.name = "UserArchiveOverlay"
+	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_user_archive_overlay)
+
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.56)
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_user_archive_overlay.add_child(shade)
+
+	var panel := PanelContainer.new()
+	panel.name = "UserArchivePanel"
+	panel.custom_minimum_size = Vector2(720, 560)
+	panel.anchor_left = 0.5
+	panel.anchor_top = 0.5
+	panel.anchor_right = 0.5
+	panel.anchor_bottom = 0.5
+	panel.offset_left = -360
+	panel.offset_top = -280
+	panel.offset_right = 360
+	panel.offset_bottom = 280
+	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+	_user_archive_overlay.add_child(panel)
+
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	panel.add_child(box)
+	var title := Label.new()
+	title.text = "保存为存档"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	box.add_child(title)
+
+	var create_row := HBoxContainer.new()
+	create_row.add_theme_constant_override("separation", 8)
+	box.add_child(create_row)
+	_user_archive_name_input = LineEdit.new()
+	_user_archive_name_input.name = "UserArchiveNameInput"
+	_user_archive_name_input.placeholder_text = "存档名称"
+	_user_archive_name_input.text = "第 %d 天" % state.day
+	_user_archive_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	create_row.add_child(_user_archive_name_input)
+	var create := Button.new()
+	create.name = "SaveNewUserArchiveButton"
+	create.text = "新建存档"
+	create.custom_minimum_size = Vector2(110, 42)
+	var new_index := SaveSystem.next_user_archive_index()
+	create.disabled = new_index < 0
+	create.tooltip_text = "存档槽已满" if new_index < 0 else ""
+	create.pressed.connect(_save_user_archive.bind(new_index, ""))
+	create_row.add_child(create)
+
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	box.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.name = "UserArchiveSaveList"
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 6)
+	scroll.add_child(list)
+	for archive in SaveSystem.list_user_archives(db):
+		list.add_child(_make_user_archive_save_row(archive))
+
+	var back := Button.new()
+	back.name = "CloseUserArchiveButton"
+	back.text = "返回"
+	back.custom_minimum_size = Vector2(0, 42)
+	back.pressed.connect(_close_user_archive_overlay)
+	box.add_child(back)
+
+
+func _make_user_archive_save_row(archive: Dictionary) -> Control:
+	var row := HBoxContainer.new()
+	row.name = "UserArchiveSaveRow_%d" % int(archive.get("index", -1))
+	row.add_theme_constant_override("separation", 8)
+	var summary := Label.new()
+	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary.text = "%s  |  Day %d / Round %d" % [
+		str(archive.get("name", "Unnamed archive")),
+		int(archive.get("day", archive.get("live_days", 1))),
+		int(archive.get("round_number", 1)),
+	]
+	row.add_child(summary)
+	var overwrite := Button.new()
+	overwrite.name = "OverwriteUserArchiveButton_%d" % int(archive.get("index", -1))
+	overwrite.text = "覆盖"
+	overwrite.custom_minimum_size = Vector2(72, 42)
+	overwrite.pressed.connect(_confirm_overwrite_user_archive.bind(int(archive.get("index", -1)), str(archive.get("name", ""))))
+	row.add_child(overwrite)
+	var delete := Button.new()
+	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
+	delete.text = "删除"
+	delete.tooltip_text = "删除存档"
+	delete.custom_minimum_size = Vector2(72, 42)
+	delete.pressed.connect(_confirm_delete_user_archive.bind(int(archive.get("index", -1))))
+	row.add_child(delete)
+	return row
+
+
+func _confirm_overwrite_user_archive(index: int, existing_name: String) -> void:
+	var confirm := ConfirmationDialog.new()
+	confirm.dialog_text = "确定覆盖这个存档吗？"
+	_user_archive_overlay.add_child(confirm)
+	confirm.confirmed.connect(_save_user_archive.bind(index, existing_name))
+	confirm.canceled.connect(confirm.queue_free)
+	confirm.confirmed.connect(confirm.queue_free)
+	confirm.popup_centered()
+
+
+func _save_user_archive(index: int, fallback_name: String) -> void:
+	if index < 0 or state == null:
+		return
+	var name := _user_archive_name_input.text if _user_archive_name_input != null else ""
+	if name.strip_edges().is_empty():
+		name = fallback_name
+	var ok := SaveSystem.save_user_archive(state, index, name)
+	_close_user_archive_overlay()
+	if _current and _current.has_method("set_log"):
+		_current.set_log("已保存为存档" if ok else "存档保存失败")
+
+
+func _confirm_delete_user_archive(index: int) -> void:
+	var confirm := ConfirmationDialog.new()
+	confirm.dialog_text = "确定删除这个存档吗？此操作无法撤销。"
+	_user_archive_overlay.add_child(confirm)
+	confirm.confirmed.connect(func():
+		SaveSystem.delete_user_archive(index)
+		_close_user_archive_overlay()
+		_show_user_archive_overlay()
+	)
+	confirm.canceled.connect(confirm.queue_free)
+	confirm.confirmed.connect(confirm.queue_free)
+	confirm.popup_centered()
+
+
 func _close_game_menu() -> void:
 	if _menu_overlay == null:
 		return
 	_menu_overlay.queue_free()
 	_menu_overlay = null
+
+
+func _close_user_archive_overlay() -> void:
+	if _user_archive_overlay == null:
+		return
+	_user_archive_overlay.queue_free()
+	_user_archive_overlay = null
+	_user_archive_name_input = null
 
 
 func _after_rite_resolution() -> void:
@@ -293,6 +463,7 @@ func _on_redraw() -> void:
 
 func _clear_current() -> void:
 	_close_game_menu()
+	_close_user_archive_overlay()
 	_close_rite_overlay()
 	if _current:
 		_current.queue_free()
