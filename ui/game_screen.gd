@@ -759,13 +759,15 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 	elif not _state.event_queue.is_empty():
 		var event_id := int(_state.event_queue[0])
 		_state.event_queue.remove_at(0)
+		var trigger_ctx: Dictionary = _state.event_contexts.get(event_id, {}).duplicate(true)
+		_state.event_contexts.erase(event_id)
 		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
 		if choice_key != "":
 			# A chosen branch overrides the event's default result/action.
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng)
 		else:
-			merged = DeferredEffects.execute_event(event, _state, _db, _rng)
+			merged = DeferredEffects.execute_event(event, _state, _db, _rng, trigger_ctx)
 			if bool(merged.get("over", false)):
 				game_over_requested.emit()
 	# An event whose action opens a rite should surface that rite to the player

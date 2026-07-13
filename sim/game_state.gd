@@ -71,6 +71,9 @@ var available_rites: Array[int] = []
 var auto_result_rites: Array[int] = []
 var rite_auto_result := false
 var event_queue: Array[int] = []
+# Trigger payload retained until the queued event actually settles. This keeps
+# a CardInstance/rite context intact across the desktop display boundary.
+var event_contexts: Dictionary = {}
 var event_prompts: Array[Dictionary] = []
 # Event status mirrors the original Player event-status map. Definitions in
 # ConfigDB do not become live triggers until their status is enabled.
@@ -177,6 +180,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	auto_result_rites.clear()
 	rite_auto_result = false
 	event_queue.clear()
+	event_contexts.clear()
 	event_prompts.clear()
 	event_status.clear()
 	event_done.clear()
@@ -597,11 +601,13 @@ func _sync_rite_legacy_lists() -> void:
 	started_rites = started
 
 
-func queue_event(id: int) -> void:
+func queue_event(id: int, ctx: Dictionary = {}) -> void:
 	# A trigger can run again before the UI consumes its queued event. Keep one
 	# pending entry, matching the original's immediate operation dispatch.
 	if id > 0 and not (id in event_queue):
 		event_queue.append(id)
+	if id > 0 and not ctx.is_empty():
+		event_contexts[id] = ctx.duplicate(true)
 
 
 ## Enable and register an event. `event_on` requests start-trigger handling;
@@ -680,7 +686,7 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 		return []
 	var matched: Array[int] = event_runtime.fire(timing, ctx)
 	for eid in matched:
-		queue_event(int(eid))
+		queue_event(int(eid), ctx)
 	return matched
 
 

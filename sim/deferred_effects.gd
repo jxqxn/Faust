@@ -39,13 +39,20 @@ static func execute_choice(choice_key: String, choice_value: Variant, state, db,
 ## per entry — the condition is top-level). Mirrors RiteResolver's per-entry
 ## pattern. Returns the merged deferred dict so callers can inspect flags like
 ## `over`. Falls back to top-level result/action for synthetic/test events.
-static func execute_event(event: Dictionary, state, db, rng) -> Dictionary:
+static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictionary = {}) -> Dictionary:
 	if event.is_empty():
 		return {}
 	# Gate on the event's top-level condition (events have no per-entry conditions).
 	var cond: Dictionary = event.get("condition", {})
 	if not cond.is_empty():
-		var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+		var ctx := trigger_ctx.duplicate(true)
+		ctx["db"] = db
+		ctx["state"] = state
+		ctx["rng"] = rng
+		if not ctx.has("rite_state"):
+			ctx["rite_state"] = {}
+		if not ctx.has("attr_slots"):
+			ctx["attr_slots"] = ["s1", "s2"]
 		if not ConditionEval.evaluate(cond, ctx):
 			return {}
 	var merged := {
@@ -133,7 +140,7 @@ static func _apply_loot_item(id: int, state, db, rng) -> void:
 	if id <= 0:
 		return
 	if db != null and not db.get_card(id).is_empty():
-		state.add_card_to_hand(id)
+		state.add_card_to_hand(id, db)
 		if state.has_method("queue_prompt"):
 			var card: Dictionary = db.get_card(id)
 			state.queue_prompt({"id": "card.%d" % id, "text": "获得卡牌：%s" % str(card.get("name", id))})

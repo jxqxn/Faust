@@ -70,6 +70,7 @@ static func serialize(state) -> Dictionary:
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
 		"event_queue": state.event_queue.duplicate(),
+		"event_contexts": state.event_contexts.duplicate(true),
 		"event_prompts": state.event_prompts.duplicate(true),
 		"event_status": state.event_status.duplicate(true),
 		"event_done": state.event_done.duplicate(true),
@@ -159,6 +160,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.event_queue.clear()
 	for eid in data.get("event_queue", []):
 		state.event_queue.append(int(eid))
+	state.event_contexts = data.get("event_contexts", {}).duplicate(true)
 	state.event_prompts.clear()
 	for prompt in data.get("event_prompts", []):
 		if prompt is Dictionary:

@@ -75,7 +75,7 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 			continue
 		if not _value_matches(timing, trigger_value, ctx):
 			continue
-		if not _condition_holds(eid):
+		if not _condition_holds(eid, ctx):
 			continue
 		out.append(int(eid))
 	out.sort()
@@ -124,12 +124,19 @@ static func _is_any(trigger_value) -> bool:
 	return int(trigger_value) == 1
 
 
-func _condition_holds(event_id: int) -> bool:
+func _condition_holds(event_id: int, trigger_ctx: Dictionary = {}) -> bool:
 	if _db == null or _state == null:
 		return true
 	var event: Dictionary = _db.get_event(event_id)
 	var cond: Dictionary = event.get("condition", {})
 	if cond.is_empty():
 		return true
-	var ctx := {"db": _db, "state": _state, "rng": null, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+	var ctx := trigger_ctx.duplicate(true)
+	ctx["db"] = _db
+	ctx["state"] = _state
+	ctx["rng"] = null
+	if not ctx.has("rite_state"):
+		ctx["rite_state"] = {}
+	if not ctx.has("attr_slots"):
+		ctx["attr_slots"] = ["s1", "s2"]
 	return ConditionEval.evaluate(cond, ctx)

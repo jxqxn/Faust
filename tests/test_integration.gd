@@ -135,3 +135,32 @@ func test_auto_result_rite_with_slotted_card_grants_reward():
 	# With a 贵族 slotted, the r1:智慧+社交 branches become reachable.
 	# At minimum, the rite should not grant 0 (some income branch matched).
 	assert_ne(state.coin_count, coin_before, "slotted-card auto_result grants income")
+
+
+func test_next_day_orders_round_end_before_round_begin_auto_start_and_sudan_draw():
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.rites[991900] = {
+		"id": 991900, "name": "round-order probe", "cards_slot": {},
+		"open_conditions": {}, "auto_begin": 1, "auto_result": 0,
+		"round_number": 99, "waiting_round": 0,
+		"settlement_prior": [], "settlement": [], "settlement_extre": [],
+	}
+	local_db.events[991901] = {"id": 991901, "on": {"round_end": 1}, "condition": {}}
+	local_db.events[991902] = {"id": 991902, "on": {"round_begin_ba": 2}, "condition": {}}
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(80))
+	var rite_uid := state.add_available_rite(991900, local_db, RNG.new(81))
+	assert_gt(rite_uid, 0)
+	assert_true(state.enable_event(991901, local_db))
+	assert_true(state.enable_event(991902, local_db))
+
+	var result := RoundLoop.advance_day(state, local_db, RNG.new(82))
+	var rite = state.get_rite_instance(rite_uid)
+	assert_eq(result.round_end_events, [991901], "round_end observes outgoing round 1")
+	assert_eq(result.round_begin_events, [991902], "round_begin observes incremented round 2")
+	assert_lt(state.event_queue.find(991901), state.event_queue.find(991902), "display queue preserves transition order")
+	assert_true(result.new_round)
+	assert_eq(state.round_number, 2)
+	assert_true(rite.start, "auto_begin starts only after the round-begin boundary")
+	assert_gt(int(result.drawn_sudan), 0, "new round draws Sudan after auto-start")

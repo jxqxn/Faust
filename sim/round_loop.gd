@@ -24,8 +24,14 @@ class ActiveSudan:
 static func advance_day(state, db, rng) -> Dictionary:
 	var result := {
 		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
-		"settled_rites": [], "expired_rites": [],
+		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [],
 	}
+	# One day transition has a stable event boundary. Round-end effects observe
+	# the outgoing round before any rite life, expiry, or Sudan deadline changes.
+	# [SRC: GameController.c @ OnNextRound (RVA 0x554540) dispatches NextDay;
+	#       GameController @ UpdateSingleRite (RVA 0x55ab10) updates instances
+	#       in that transition; EventTriggerExtensions @ OnRoundEnd.]
+	result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
 	state.day += 1
 	_update_rite_instances(state, db, rng, result)
 	var still_active: Array = []
@@ -148,7 +154,7 @@ static func consume_sudan(state, card_or_uid: int) -> bool:
 static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
 	var result := {
 		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
-		"settled_rites": [], "expired_rites": [],
+		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [],
 	}
 	if state.active_sudan_cards.is_empty():
 		_begin_round(state, db, rng, result)
@@ -157,11 +163,18 @@ static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
 
 static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
+	state.round_number += 1
+	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
+	if state.round_number % recovery == 0:
+		state.redraws_left = _redraws_per_round(state, db)
+	# The original increments Player.round then runs OnRoundBeginBa before its
+	# follow-up round pipeline. Auto-start only changes Rite.start; it belongs
+	# after that event boundary and before the next Sudan draw.
+	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (RVA 0x56f9c0),
+	#       lines 120-150; GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
+	result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
 	result.auto_rites = start_auto_begin_rites(state, db)
-	result.drawn_sudan = start_round(state, db, rng)
-	# Fire round-begin event triggers after settlement (round_begin_ba).
-	# [SRC: GameController.__c__DisplayClass141_0.c:138 -> OnRoundBeginBa]
-	state.trigger_events("round_begin_ba", {"round": state.round_number})
+	result.drawn_sudan = draw_weekly_sudan(state, db, rng)
 
 
 ## Open/start auto-begin rites. Do not resolve them: the original
