@@ -24,7 +24,7 @@ class ActiveSudan:
 static func advance_day(state, db, rng) -> Dictionary:
 	var result := {
 		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
-		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [],
+		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [], "due_delays": [],
 	}
 	# One day transition has a stable event boundary. Round-end effects observe
 	# the outgoing round before any rite life, expiry, or Sudan deadline changes.
@@ -34,6 +34,7 @@ static func advance_day(state, db, rng) -> Dictionary:
 	result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
 	state.day += 1
 	_update_rite_instances(state, db, rng, result)
+	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
 	var still_active: Array = []
 	for asc in state.active_sudan_cards:
 		asc.days_left -= 1
@@ -323,7 +324,7 @@ static func _execute_waiting_round_end(rite: Dictionary, instance, state, db, rn
 
 
 static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
-	for key in ["events", "logs", "clean_slots", "clean_card_ids", "prompts", "loots"]:
+	for key in ["events", "logs", "clean_slots", "clean_card_ids", "prompts", "loots", "delays", "sleeps"]:
 		if src.has(key):
 			if not into.has(key):
 				into[key] = []

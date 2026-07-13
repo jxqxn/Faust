@@ -72,11 +72,40 @@ var available_rites: Array[int] = []
 # rite_auto_result flag separately from auto_begin.
 var auto_result_rites: Array[int] = []
 var rite_auto_result := false
-var event_queue: Array[int] = []
-# Trigger payload retained until the queued event actually settles. This keeps
-# a CardInstance/rite context intact across the desktop display boundary.
-var event_contexts: Dictionary = {}
-var event_prompts: Array[Dictionary] = []
+# Ordered runtime operation queue.  This is the single mutable presentation
+# boundary for events, narration and choices; every entry retains the context
+# of the occurrence that created it.
+var pending_operations: Array[Dictionary] = []
+# Operations scheduled by the DSL `delay` wrapper.  The original record only
+# stores an id and a round; we retain the clone payload/context as well so a
+# save can resume the exact occurrence.
+# [SRC: decompiled/DelayOperations.c @ Do (RVA 0x39b5c0);
+#       dump.cs:391358 DelayOp has id and round.]
+var delayed_operations: Array[Dictionary] = []
+
+# Legacy read views.  New code must consume `pending_operations`; these are
+# retained only while external callers and older v5 saves migrate.
+var event_queue: Array[int]:
+	get:
+		var ids: Array[int] = []
+		for operation in pending_operations:
+			if str(operation.get("kind", "")) == "event":
+				ids.append(int(operation.get("id", 0)))
+		return ids
+var event_contexts: Dictionary:
+	get:
+		var contexts := {}
+		for operation in pending_operations:
+			if str(operation.get("kind", "")) == "event":
+				contexts[int(operation.get("id", 0))] = operation.get("context", {}).duplicate(true)
+		return contexts
+var event_prompts: Array[Dictionary]:
+	get:
+		var prompts: Array[Dictionary] = []
+		for operation in pending_operations:
+			if str(operation.get("kind", "")) in ["prompt", "choice"]:
+				prompts.append(operation.get("payload", {}).duplicate(true))
+		return prompts
 # Event status mirrors the original Player event-status map. Definitions in
 # ConfigDB do not become live triggers until their status is enabled.
 # `event_done` is a clone-side history/audit record; status remains the rule
@@ -633,12 +662,62 @@ func _sync_rite_legacy_lists() -> void:
 
 
 func queue_event(id: int, ctx: Dictionary = {}) -> void:
-	# A trigger can run again before the UI consumes its queued event. Keep one
-	# pending entry, matching the original's immediate operation dispatch.
-	if id > 0 and not (id in event_queue):
-		event_queue.append(id)
-	if id > 0 and not ctx.is_empty():
-		event_contexts[id] = ctx.duplicate(true)
+	if id > 0:
+		queue_operation("event", id, {}, ctx)
+
+
+func queue_operation(kind: String, id: Variant, payload: Dictionary = {}, context: Dictionary = {}) -> void:
+	if kind.is_empty():
+		return
+	var operation_context := context.duplicate(true)
+	# Context fields are deliberately top-level and persisted even when the
+	# payload has a similar shape. This prevents same-id event occurrences from
+	# overwriting each other's card/rite target.
+	for key in ["card_uid", "rite_uid"]:
+		if not operation_context.has(key) and payload.has(key):
+			operation_context[key] = payload[key]
+	pending_operations.append({
+		"kind": kind,
+		"id": id,
+		"payload": payload.duplicate(true),
+		"context": operation_context,
+	})
+
+
+func pending_operation() -> Dictionary:
+	return pending_operations[0].duplicate(true) if not pending_operations.is_empty() else {}
+
+
+func consume_pending_operation() -> Dictionary:
+	if pending_operations.is_empty():
+		return {}
+	var operation: Dictionary = pending_operations[0]
+	pending_operations.remove_at(0)
+	return operation
+
+
+func schedule_delay(payload: Dictionary, context: Dictionary = {}) -> void:
+	if payload.is_empty():
+		return
+	var delay_round := maxi(int(payload.get("round", 0)), 0)
+	delayed_operations.append({
+		"id": int(payload.get("id", 0)),
+		"round": round_number + delay_round,
+		"payload": payload.duplicate(true),
+		"context": context.duplicate(true),
+	})
+
+
+func take_due_delayed_operations() -> Array[Dictionary]:
+	var due: Array[Dictionary] = []
+	var pending: Array[Dictionary] = []
+	for operation in delayed_operations:
+		if int(operation.get("round", 0)) <= round_number:
+			due.append(operation.duplicate(true))
+		else:
+			pending.append(operation)
+	delayed_operations = pending
+	return due
 
 
 ## Enable and register an event. `event_on` requests start-trigger handling;
@@ -733,7 +812,8 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 
 func queue_prompt(prompt: Dictionary) -> void:
 	if not prompt.is_empty():
-		event_prompts.append(prompt.duplicate(true))
+		var context: Dictionary = prompt.get("context", {}) if prompt.get("context", {}) is Dictionary else {}
+		queue_operation("choice" if prompt.has("choices") else "prompt", prompt.get("id", "prompt"), prompt, context)
 
 
 func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: String = "请选择回应。", context: Dictionary = {}) -> void:
@@ -914,6 +994,26 @@ func remove_table_card_id(card_id: int, rite_uid: int = 0) -> void:
 	for entry in table_card_entries():
 		if int(entry.get("id", 0)) == card_id and (rite_uid <= 0 or int(entry.get("rite_uid", 0)) == rite_uid):
 			_remove_slot_instance(int(entry.get("card_uid", 0)))
+
+
+## Remove matching slotted instances for `table.clean.<card>`. A card_uid in
+## the triggering context wins over config-id matching, preventing an event
+## from cleaning the same-id card in another rite instance.
+func clean_table_card_instances(card_id: int, rite_uid: int = 0, card_uid: int = 0, count: int = 0) -> Array:
+	var cleaned: Array = []
+	for entry in table_card_entries():
+		if rite_uid > 0 and int(entry.get("rite_uid", 0)) != rite_uid:
+			continue
+		if card_uid > 0 and int(entry.get("card_uid", 0)) != card_uid:
+			continue
+		if int(entry.get("id", 0)) != card_id:
+			continue
+		cleaned.append(entry.duplicate(true))
+		if count > 0 and cleaned.size() >= count:
+			break
+	for entry in cleaned:
+		_remove_slot_instance(int(entry.get("card_uid", 0)))
+	return cleaned
 
 
 func card_is_on_table(card_or_uid: int) -> bool:

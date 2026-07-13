@@ -59,11 +59,13 @@ var _advance_button: Button
 var _site_buttons: Array[Button] = []
 var _rite_pin_buttons: Array[Button] = []
 var _rite_pin_ids: Dictionary = {}
+var _rite_pin_by_rite_id: Dictionary = {}
 var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
 var _event_overlay: Control
 var _event_panel: Panel
+var _sleep_waiting := false
 
 
 func setup(state, db, rng) -> void:
@@ -352,33 +354,64 @@ func _rite_pin_hover_style() -> StyleBoxFlat:
 func _refresh_rite_pins() -> void:
 	if _map_content == null:
 		return
-	_clear_rite_pins()
-	var pinned_rite_ids := {}
+	var desired := {}
 	for instance in _open_map_rite_instances():
 		# Runtime rites have unique uids, but the original player's pin list is
 		# `List<int>` and rejects a config id it already contains. Keep one map
 		# entry per RiteNode id. The state resolves the panel target
 		# deterministically when more than one runtime instance shares that id.
 		# [SRC: PlayerExtensions.c @ AddRitePin (RVA 0x38c360)]
-		if pinned_rite_ids.has(instance.id):
+		if desired.has(instance.id):
 			continue
-		pinned_rite_ids[instance.id] = true
-		var rite: Dictionary = _db.rites.get(instance.id, {})
-		var pin := Button.new()
-		pin.name = "RitePin_%d" % instance.id
-		pin.text = str(rite.get("name", str(instance.id)))
-		pin.tooltip_text = str(rite.get("text", ""))
-		pin.custom_minimum_size = Vector2(118, 34)
-		pin.add_theme_font_size_override("font_size", 15)
-		pin.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-		pin.add_theme_stylebox_override("normal", _rite_pin_style())
-		pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
-		pin.add_theme_stylebox_override("pressed", _rite_pin_style(FaustTheme.BORDER))
-		pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
-		_rite_pin_buttons.append(pin)
-		_rite_pin_ids[pin] = instance.uid
-		_map_content.add_child(pin)
+		desired[instance.id] = instance
+	for rite_id in _rite_pin_by_rite_id.keys().duplicate():
+		var pin: Button = _rite_pin_by_rite_id[rite_id]
+		if not desired.has(rite_id):
+			_remove_rite_pin(pin)
+			continue
+		var instance = desired[rite_id]
+		if int(_rite_pin_ids.get(pin, 0)) != int(instance.uid):
+			# The map exposes one config-id pin, but its target is a runtime
+			# instance. Recreate only when that target changes.
+			_remove_rite_pin(pin)
+			_create_rite_pin(instance)
+		desired.erase(rite_id)
+	for instance in desired.values():
+		_create_rite_pin(instance)
 	_apply_layout()
+
+
+func _create_rite_pin(instance) -> void:
+	var rite: Dictionary = _db.rites.get(instance.id, {})
+	var pin := Button.new()
+	pin.name = "RitePin_%d" % instance.id
+	pin.set_meta("rite_id", instance.id)
+	pin.text = str(rite.get("name", str(instance.id)))
+	pin.tooltip_text = str(rite.get("text", ""))
+	pin.custom_minimum_size = Vector2(118, 34)
+	pin.add_theme_font_size_override("font_size", 15)
+	pin.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	pin.add_theme_stylebox_override("normal", _rite_pin_style())
+	pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
+	pin.add_theme_stylebox_override("pressed", _rite_pin_style(FaustTheme.BORDER))
+	pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
+	_rite_pin_buttons.append(pin)
+	_rite_pin_ids[pin] = instance.uid
+	_rite_pin_by_rite_id[instance.id] = pin
+	_map_content.add_child(pin)
+
+
+func _remove_rite_pin(pin: Button) -> void:
+	if pin == null:
+		return
+	var rite_id := int(pin.get_meta("rite_id", 0))
+	_rite_pin_by_rite_id.erase(rite_id)
+	_rite_pin_ids.erase(pin)
+	_rite_pin_buttons.erase(pin)
+	if is_instance_valid(pin):
+		if pin.get_parent() != null:
+			pin.get_parent().remove_child(pin)
+		pin.free()
 
 
 func _emit_open_rite(rite_id: int) -> void:
@@ -390,13 +423,9 @@ func _emit_open_rite_instance(rite_uid: int) -> void:
 
 
 func _clear_rite_pins() -> void:
-	for pin in _rite_pin_buttons:
-		if is_instance_valid(pin):
-			if pin.get_parent() != null:
-				pin.get_parent().remove_child(pin)
-			pin.free()
-	_rite_pin_buttons.clear()
-	_rite_pin_ids.clear()
+	for pin in _rite_pin_buttons.duplicate():
+		_remove_rite_pin(pin)
+	_rite_pin_by_rite_id.clear()
 
 
 func _open_map_rite_instances() -> Array:
@@ -646,22 +675,37 @@ func _refresh_event_overlay() -> void:
 	if display.is_empty():
 		_clear_event_overlay()
 		return
+	if str(display.get("kind", "")) == "sleep":
+		_clear_event_overlay()
+		if not is_inside_tree():
+			call_deferred("_refresh_event_overlay")
+			return
+		if not _sleep_waiting:
+			_sleep_waiting = true
+			_wait_for_queued_sleep(float(display.get("seconds", 0.0)))
+		return
 	_show_event_overlay(display)
 
 
 func _next_event_display() -> Dictionary:
 	if _state == null:
 		return {}
-	if not _state.event_prompts.is_empty():
-		var prompt: Dictionary = _state.event_prompts[0]
+	var operation: Dictionary = _state.pending_operation() if _state.has_method("pending_operation") else {}
+	if operation.is_empty():
+		return {}
+	var kind := str(operation.get("kind", ""))
+	var payload: Dictionary = operation.get("payload", {}) if operation.get("payload", {}) is Dictionary else {}
+	if kind in ["prompt", "choice"]:
 		return {
-			"kind": "prompt",
-			"title": str(prompt.get("title", prompt.get("id", "提示"))),
-			"text": str(prompt.get("text", prompt.get("desc", ""))),
-			"choices": prompt.get("choices", {}),
+			"kind": kind,
+			"title": str(payload.get("title", payload.get("id", "提示"))),
+			"text": str(payload.get("text", payload.get("desc", ""))),
+			"choices": payload.get("choices", {}),
 		}
-	if not _state.event_queue.is_empty():
-		var event_id := int(_state.event_queue[0])
+	if kind == "sleep":
+		return {"kind": "sleep", "seconds": float(payload.get("seconds", 0.0))}
+	if kind == "event":
+		var event_id := int(operation.get("id", 0))
 		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
 		return {
 			"kind": "event",
@@ -718,9 +762,8 @@ func _show_event_overlay(display: Dictionary) -> void:
 	body.scroll_active = true
 	root.add_child(body)
 
-	var buttons := HBoxContainer.new()
+	var buttons := HFlowContainer.new()
 	buttons.name = "EventPromptActions"
-	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 10)
 	root.add_child(buttons)
 
@@ -754,18 +797,18 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 	if _state == null:
 		return
 	var merged: Dictionary = {}
-	if not _state.event_prompts.is_empty():
-		var prompt: Dictionary = _state.event_prompts[0]
-		var prompt_context: Dictionary = prompt.get("context", {}).duplicate(true) if prompt.get("context", {}) is Dictionary else {}
-		_state.event_prompts.remove_at(0)
+	var operation: Dictionary = _state.consume_pending_operation() if _state.has_method("consume_pending_operation") else {}
+	if operation.is_empty():
+		return
+	var kind := str(operation.get("kind", ""))
+	var payload: Dictionary = operation.get("payload", {}) if operation.get("payload", {}) is Dictionary else {}
+	var trigger_ctx: Dictionary = operation.get("context", {}).duplicate(true) if operation.get("context", {}) is Dictionary else {}
+	if kind in ["prompt", "choice"]:
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
-			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, prompt_context)
-	elif not _state.event_queue.is_empty():
-		var event_id := int(_state.event_queue[0])
-		_state.event_queue.remove_at(0)
-		var trigger_ctx: Dictionary = _state.event_contexts.get(event_id, {}).duplicate(true)
-		_state.event_contexts.erase(event_id)
+			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
+	elif kind == "event":
+		var event_id := int(operation.get("id", 0))
 		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
 		if choice_key != "":
 			# A chosen branch overrides the event's default result/action.
@@ -784,6 +827,15 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		open_rite.emit(opened_rite)
 
 
+func _wait_for_queued_sleep(seconds: float) -> void:
+	await get_tree().create_timer(maxf(0.0, seconds)).timeout
+	if _state != null and _state.has_method("pending_operation") and _state.has_method("consume_pending_operation"):
+		if str(_state.pending_operation().get("kind", "")) == "sleep":
+			_state.consume_pending_operation()
+	_sleep_waiting = false
+	_refresh_event_overlay()
+
+
 func _event_body_text(event: Dictionary, event_id: int) -> String:
 	for key in ["text", "desc", "description", "content"]:
 		if str(event.get(key, "")) != "":
@@ -796,7 +848,7 @@ func _event_body_text(event: Dictionary, event_id: int) -> String:
 func _layout_event_prompt(s: float, view_size: Vector2) -> void:
 	if _event_panel == null:
 		return
-	var panel_w: float = min(view_size.x - 200 * s, 720 * s)
+	var panel_w: float = min(maxf(1.0, view_size.x - 32 * s), 720 * s)
 	# Panel occupies most of the vertical space so long narration text is visible.
 	var panel_h: float = min(view_size.y * 0.62, 520 * s)
 	var panel_x: float = (view_size.x - panel_w) * 0.5
@@ -808,6 +860,8 @@ func _event_button(label: String) -> Button:
 	var button := Button.new()
 	button.text = label
 	button.custom_minimum_size = Vector2(96, 36)
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	return button
 
 

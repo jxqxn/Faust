@@ -63,6 +63,20 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	# sudan_pool_have
 	if k.begins_with("sudan_pool_have") or k.begins_with("!sudan_pool_have"):
 		return eval_sudan_pool_have(k, val, ctx)
+	# CanLoot checks whether this loot has at least one currently generatable
+	# item. Negative form is used by the book-search variants once the only-new
+	# pool is exhausted.
+	# [SRC: decompiled/CanLoot.c @ CheckInternal (RVA 0x4ee990)]
+	if k == "!loot":
+		return not DeferredEffects.can_generate_loot(int(val), ctx)
+	if k == "loot":
+		return DeferredEffects.can_generate_loot(int(val), ctx)
+	# `!rite` is an existence test against runtime RiteInstances, not the JSON
+	# definition database. A configured rite which has never been created must
+	# still satisfy the negative condition.
+	if k == "!rite":
+		var rite_state = ctx.get("state")
+		return rite_state == null or rite_state.find_rite_instance_by_id(int(val)) == null
 	# is (card id match against the acting card)
 	if k == "is":
 		return eval_is(val, ctx)
@@ -110,7 +124,7 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 ## such as an unimplemented control key out of the supported bucket.
 static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	var k := key.strip_edges()
-	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "is_rite", "金币", "coin", "g.coin"]:
+	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
 		return true
 	if k.begins_with("rare"):
 		return true

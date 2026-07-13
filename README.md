@@ -20,6 +20,13 @@ the immutable card definition. Rite slot ownership is keyed by card UID, and
 save version 5 persists those instances; version 4 and older saves are
 intentionally rejected and do not expose Continue.
 
+Runtime events, prompts and choices share one FIFO `pending_operations` queue.
+Every entry retains its event/prompt payload plus `card_uid`, `rite_uid` and
+trigger context, so two occurrences of the same event remain independent.
+Delayed operations are persisted separately and execute once at the Next Day
+boundary. Existing v5 saves without these optional fields are synthesized from
+their legacy split queues; v4 and older saves remain rejected.
+
 ## Systems implemented
 
 - **Core rules engine** (`core/`): seeded RNG, weighted dice, counter
@@ -74,7 +81,7 @@ Tests use GUT (Godot Unit Test). Run `tools/run_gut.ps1`; it fails on test
 failures, `SCRIPT ERROR`, `ERROR`, orphan counts, and leak diagnostics. The
 suite covers core systems, data loading, simulation,
 runtime card instances, Sultan cards, rite UI, save system, and end-to-end
-integration. The runner accepts `-GodotPath`, then checks `GODOT_BIN`, the
+integration including first-week queue/DSL regressions. The runner accepts `-GodotPath`, then checks `GODOT_BIN`, the
 verified local Godot 4.7 path, and finally PATH.
 
 Export the current condition/result/action coverage report when deciding which
@@ -99,6 +106,11 @@ difficulty selection always uses the curated normal starting hand; the large
 Continue is shown only for valid version-5 player saves. Older raw JSON files,
 test data, and v4-or-earlier saves are rejected without deleting the source
 file, and they do not light up the player-facing continue button.
+
+The currently accepted first-week content scope is governance, I-think, book
+shop/search and the tagged Sultan -> Power Game chain. The full configuration
+set is not claimed complete: `tools/export_dsl_audit.gd` continues to report
+unsupported keys with their source IDs and locations.
 
 ## Tech stack
 

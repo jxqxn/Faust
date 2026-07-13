@@ -65,9 +65,8 @@ static func serialize(state) -> Dictionary:
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
-		"event_queue": state.event_queue.duplicate(),
-		"event_contexts": state.event_contexts.duplicate(true),
-		"event_prompts": state.event_prompts.duplicate(true),
+		"pending_operations": state.pending_operations.duplicate(true),
+		"delayed_operations": state.delayed_operations.duplicate(true),
 		"event_status": state.event_status.duplicate(true),
 		"event_done": state.event_done.duplicate(true),
 		"event_init_profile_id": state.event_init_profile_id,
@@ -139,19 +138,27 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		state._ensure_legacy_rite_instances()
 	if state.has_method("_sync_rite_instance_cards"):
 		state._sync_rite_instance_cards()
-	state.event_queue.clear()
-	for eid in data.get("event_queue", []):
-		state.event_queue.append(int(eid))
-	state.event_contexts.clear()
-	var saved_event_contexts: Dictionary = data.get("event_contexts", {})
-	for event_id in saved_event_contexts:
-		var saved_context = saved_event_contexts[event_id]
-		if saved_context is Dictionary:
-			state.event_contexts[int(event_id)] = saved_context.duplicate(true)
-	state.event_prompts.clear()
-	for prompt in data.get("event_prompts", []):
-		if prompt is Dictionary:
-			state.event_prompts.append(prompt.duplicate(true))
+	state.pending_operations.clear()
+	if data.get("pending_operations", null) is Array:
+		for operation in data.pending_operations:
+			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice"]:
+				state.pending_operations.append(operation.duplicate(true))
+	else:
+		# First queue-schema saves were still v5. Their old split queues have no
+		# cross-kind ordering metadata, so preserve the only deterministic order:
+		# queued events first, followed by prompts, while retaining event context.
+		var saved_event_contexts: Dictionary = data.get("event_contexts", {})
+		for eid in data.get("event_queue", []):
+			var event_id := int(eid)
+			var legacy_context: Dictionary = saved_event_contexts.get(str(event_id), saved_event_contexts.get(event_id, {}))
+			state.queue_event(event_id, legacy_context if legacy_context is Dictionary else {})
+		for prompt in data.get("event_prompts", []):
+			if prompt is Dictionary:
+				state.queue_prompt(prompt)
+	state.delayed_operations.clear()
+	for operation in data.get("delayed_operations", []):
+		if operation is Dictionary:
+			state.delayed_operations.append(operation.duplicate(true))
 	state.event_status.clear()
 	var saved_event_status: Dictionary = data.get("event_status", {})
 	for event_id in saved_event_status:

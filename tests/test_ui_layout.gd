@@ -211,6 +211,29 @@ func test_game_screen_merges_duplicate_runtime_rites_into_one_map_pin():
 	assert_eq(opened, [first.uid], "the id-keyed pin opens the oldest matching runtime rite")
 
 
+func test_game_screen_refreshes_rite_pins_incrementally():
+	var rng := RNG.new(221)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.start_auto_begin_rites(state, db)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
+	assert_not_null(pin)
+	if pin == null:
+		return
+	var original_instance_id := pin.get_instance_id()
+	screen.refresh()
+	await wait_process_frames(1)
+	var refreshed := _find_node_by_name(screen, "RitePin_5000001") as Button
+	assert_not_null(refreshed)
+	if refreshed != null:
+		assert_eq(refreshed.get_instance_id(), original_instance_id, "unchanged RiteInstance pins are not destroyed and rebuilt")
+
+
 func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
 	var local_db := ConfigDB.new()
 	local_db.rites = {

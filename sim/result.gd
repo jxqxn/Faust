@@ -18,7 +18,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 	var deferred := {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-		"prompts": [], "loots": [],
+		"prompts": [], "loots": [], "delays": [], "sleeps": [],
 	}
 	# Option branching: if the payload has an `option` key, convert it to a
 	# choose prompt and stash the case:opN subtrees as choices. The remaining
@@ -35,7 +35,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed"]:
+	if k in ["coin", "金币", "g.coin", "card", "choose", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
 		return true
 	if k.begins_with("case:"):
 		return true
@@ -46,6 +46,8 @@ static func is_supported_key(key: String) -> bool:
 	if k.begins_with("counter") or k.begins_with("global_counter"):
 		return true
 	if k.begins_with("clean."):
+		return true
+	if k.begins_with("table.clean."):
 		return true
 	if _is_slot_tag_op(k):
 		return true
@@ -75,7 +77,22 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Choose (pop options).
 	if k == "choose" and val is Dictionary:
-		deferred.choose = val
+		deferred.choose = _flatten_choose(val)
+		return
+	if k == "delay" and val is Dictionary:
+		deferred.delays.append({"payload": val.duplicate(true), "context": context.duplicate(true)})
+		return
+	if k == "no_prompt" and val is Dictionary:
+		# NoPrompt runs its nested operation immediately and only suppresses the
+		# source UI wrapper. The clone has no separate result-popup operation, so
+		# execute the nested payload through the same state path.
+		# [SRC: decompiled/NoPromptOperations.c @ Do (RVA 0x5001f0)]
+		_merge_case(deferred, execute(val, state, db, context))
+		return
+	if k == "sleep":
+		# SleepOperation is a UI promise wait, not a calendar delay.
+		# [SRC: decompiled/SleepOperation.c @ Do (RVA 0x51b9f0)]
+		deferred.sleeps.append({"seconds": float(val), "context": context.duplicate(true)})
 		return
 	# Clean slot / clean rite.
 	if k == "clean.rite":
@@ -100,6 +117,9 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
 	if _is_slot_tag_op(k):
 		_apply_slot_tag(k, val, state, db, context)
+		return
+	if k.begins_with("table.clean."):
+		_apply_table_clean(k, val, state, context)
 		return
 	# Table/g tag ops: table.<x>+/-<tag>, g.<x>+/-<tag>.
 	if k.begins_with("table.") or k.begins_with("g."):
@@ -185,6 +205,10 @@ static func _merge_case(into: Dictionary, src: Dictionary) -> void:
 		into["prompts"].append_array(src["prompts"])
 	if src.has("loots"):
 		into["loots"].append_array(src["loots"])
+	if src.has("delays"):
+		into["delays"].append_array(src["delays"])
+	if src.has("sleeps"):
+		into["sleeps"].append_array(src["sleeps"])
 	if src.has("clean_slots"):
 		into["clean_slots"].append_array(src["clean_slots"])
 	if src.has("clean_card_ids"):
@@ -231,6 +255,21 @@ static func _apply_option(action: Dictionary, deferred: Dictionary, context: Dic
 		"text": str(opt.get("text", "")),
 		"context": context.duplicate(true),
 	}
+
+
+static func _flatten_choose(choices: Dictionary) -> Dictionary:
+	# In the source `ChooseOperations` copies its candidate list, shuffles it
+	# and selects the configured number. The config-side `all` wrapper denotes
+	# a collection of normal pop candidates, not an executable DSL operation.
+	# [SRC: decompiled/ChooseOperations.c @ GetOperations (RVA 0x4f3830)]
+	var flattened := {}
+	for key in choices:
+		if str(key) == "all" and choices[key] is Dictionary:
+			for nested_key in choices[key]:
+				flattened[nested_key] = choices[key][nested_key]
+		else:
+			flattened[key] = choices[key]
+	return flattened
 
 
 static func _apply_counter(k: String, val: Variant, state) -> void:
@@ -317,6 +356,21 @@ static func _apply_slot_tag(k: String, val: Variant, state, db, context: Diction
 		var instance = state.get_card_instance(int(tc.get("card_uid", 0)))
 		if instance != null:
 			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+
+
+static func _apply_table_clean(k: String, val: Variant, state, context: Dictionary = {}) -> void:
+	var card_id_text := k.substr("table.clean.".length())
+	if not card_id_text.is_valid_int() or state == null or not state.has_method("clean_table_card_instances"):
+		return
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+	var card_uid := int(context.get("card_uid", 0))
+	var cleaned: Array = state.clean_table_card_instances(card_id_text.to_int(), rite_uid, card_uid, int(val))
+	for entry in cleaned:
+		var clean_context := context.duplicate(true)
+		clean_context["card_uid"] = int(entry.get("card_uid", 0))
+		clean_context["card"] = int(entry.get("id", 0))
+		clean_context["rite_uid"] = int(entry.get("rite_uid", rite_uid))
+		state.trigger_events("card_clean", clean_context)
 
 
 static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:

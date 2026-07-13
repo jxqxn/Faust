@@ -156,5 +156,11 @@ func test_power_game_event_adsorbs_the_tagged_active_sultan_instance() -> void:
 	assert_eq(sultan_instance.zone, "slot", "the configured settlement reuses the same Sultan in its next rite")
 	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 1, "the successor rite preserves the runtime state")
 
+	# `!rite` is now a runtime-instance gate. Move the Sultan to a neutral
+	# table slot after the repeatable Power Game instance has ended.
+	var successor := state.find_rite_instance_by_id(5001001)
+	if successor != null:
+		state.remove_rite_instance(successor.uid)
+	state.add_card_to_slot(sultan_instance.uid, 1, db)
 	DeferredEffects.execute_event(db.get_event(5300357), state, db, RNG.new(91))
 	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 0, "the configured follow-up removes 上朝 from the same Sultan instance")

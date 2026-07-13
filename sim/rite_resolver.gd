@@ -22,7 +22,7 @@ class RiteResult:
 		deferred = {
 			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
 			"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-			"prompts": [], "loots": [],
+			"prompts": [], "loots": [], "delays": [], "sleeps": [],
 		}
 
 
@@ -93,3 +93,7 @@ static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
 		into["prompts"].append_array(src["prompts"])
 	if src.has("loots"):
 		into["loots"].append_array(src["loots"])
+	if src.has("delays"):
+		into["delays"].append_array(src["delays"])
+	if src.has("sleeps"):
+		into["sleeps"].append_array(src["sleeps"])

@@ -90,6 +90,13 @@ static func _scan_result_dict(result: Variant, bucket: Dictionary, source: Dicti
 		if k == "choose" and result[key] is Dictionary:
 			for choose_key in result[key]:
 				var choose_op := str(choose_key)
+				# `all` is a ChooseOperations candidate-list wrapper, not a
+				# standalone result DSL operation. Record its concrete pop entries.
+				if choose_op == "all" and result[key][choose_key] is Dictionary:
+					for nested_key in result[key][choose_key]:
+						var nested_op := str(nested_key)
+						_record(bucket, nested_op, ResultExec.is_supported_key(nested_op), _with_field(source, "choose.all.%s" % nested_op))
+					continue
 				_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.%s" % choose_op))
 
 
