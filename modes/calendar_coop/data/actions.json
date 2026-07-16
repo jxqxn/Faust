@@ -76,6 +76,30 @@
       "required_cards": ["hero"],
       "optional_cards": ["crowd_clue", "tactical_note"],
       "phase_transition": {"from": "infiltration", "to": "route_confirmed"}
+    },
+    {
+      "id": "museum_calling_card",
+      "display_name": "Deliver the route notice",
+      "kind": "heist",
+      "day": 8,
+      "period": "after_school",
+      "actor_id": "hero",
+      "case_id": "museum_case",
+      "required_cards": ["hero"],
+      "optional_cards": ["crowd_clue", "tactical_note"],
+      "phase_transition": {"from": "route_confirmed", "to": "calling_card"}
+    },
+    {
+      "id": "museum_treasure_action",
+      "display_name": "Secure the gallery evidence",
+      "kind": "heist",
+      "day": 8,
+      "period": "night",
+      "actor_id": "hero",
+      "case_id": "museum_case",
+      "required_cards": ["hero"],
+      "optional_cards": [],
+      "phase_transition": {"from": "calling_card", "to": "treasure_secured"}
     }
   ]
 }
