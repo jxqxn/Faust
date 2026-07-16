@@ -1,9 +1,0 @@
-{
-  "cards": [
-    {"id": "arcana_moon", "display_name": "Moon Emblem", "kind": "persona", "tags": ["mentor"]},
-    {"id": "crowd_clue", "display_name": "Community Leads", "kind": "support", "tags": ["network", "heist"]},
-    {"id": "route_sketch", "display_name": "Gallery Route Sketch", "kind": "clue", "tags": ["museum_case"]},
-    {"id": "tactical_note", "display_name": "Reserve Rotation Note", "kind": "support", "tags": ["tactician", "heist"]},
-    {"id": "bully_request", "display_name": "Lost Station Request", "kind": "request", "tags": ["network"]}
-  ]
-}

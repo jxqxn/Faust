@@ -7,9 +7,6 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
-const GameModeRouter = preload("res://core/game_mode_router.gd")
-const CalendarCoopGame = preload("res://modes/calendar_coop/ui/calendar_coop_game.gd")
-const CalendarCoopSave = preload("res://modes/calendar_coop/services/calendar_coop_save.gd")
 
 var db: ConfigDB
 var state: GameState
@@ -22,8 +19,6 @@ var _user_archive_overlay: Control
 var _user_archive_name_input: LineEdit
 var _current_rite_id := 0
 var _current_rite_uid := 0
-var mode_router
-var calendar_resolver = null
 
 
 func _ready() -> void:
@@ -32,7 +27,6 @@ func _ready() -> void:
 	db = ConfigDB.new()
 	db.load_all()
 	rng = GameRNG.new()
-	mode_router = GameModeRouter.new()
 	_show_menu()
 
 
@@ -43,8 +37,6 @@ func _show_menu() -> void:
 	menu.setup(db)
 	menu.difficulty_selected.connect(_on_difficulty_selected)
 	menu.continue_pressed.connect(_on_continue)
-	menu.calendar_new_requested.connect(_on_calendar_new)
-	menu.calendar_continue_requested.connect(_on_calendar_continue)
 	menu.user_archive_load_requested.connect(_on_user_archive_load)
 	menu.user_archive_delete_requested.connect(_on_user_archive_delete)
 	menu.test_start_requested.connect(_on_test_start_requested)
@@ -59,33 +51,6 @@ func _on_continue() -> void:
 		return
 	state = loaded
 	_show_game()
-
-
-func _on_calendar_new() -> void:
-	calendar_resolver = mode_router.new_calendar_resolver()
-	if calendar_resolver != null:
-		_show_calendar_game()
-
-
-func _on_calendar_continue() -> void:
-	calendar_resolver = mode_router.load_calendar_resolver()
-	if calendar_resolver != null:
-		_show_calendar_game()
-
-
-func _show_calendar_game() -> void:
-	_clear_current()
-	var calendar_game = CalendarCoopGame.new()
-	calendar_game.setup(calendar_resolver)
-	calendar_game.return_to_title.connect(_on_calendar_return_to_title)
-	add_child(calendar_game)
-	_current = calendar_game
-
-
-func _on_calendar_return_to_title() -> void:
-	if calendar_resolver != null:
-		CalendarCoopSave.save(calendar_resolver)
-	_show_menu()
 
 
 func _on_user_archive_load(index: int) -> void:
