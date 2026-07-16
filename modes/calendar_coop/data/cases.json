@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "id": "museum_case",
+      "display_name": "The Closed Gallery",
+      "deadline_day": 8,
+      "initial_phase": "intel",
+      "failure_outcome": "museum_case_unresolved",
+      "forecast_ids": ["d03_case_warning", "d06_case_warning"]
+    }
+  ]
+}

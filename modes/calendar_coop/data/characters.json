@@ -1,0 +1,10 @@
+{
+  "characters": [
+    {"id": "hero", "display_name": "Lead", "role": "protagonist"},
+    {"id": "mentor", "display_name": "Night Mentor", "role": "confidant", "progression_source": "affinity"},
+    {"id": "network", "display_name": "Community Contact", "role": "confidant", "progression_source": "resolved_requests"},
+    {"id": "tactician", "display_name": "Strategy Tutor", "role": "confidant", "progression_source": "affinity"},
+    {"id": "vanguard", "display_name": "Vanguard", "role": "party_member"},
+    {"id": "reserve", "display_name": "Reserve", "role": "party_member"}
+  ]
+}
