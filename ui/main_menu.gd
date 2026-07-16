@@ -6,6 +6,8 @@ signal difficulty_selected(index: int)
 signal test_start_requested(index: int)
 
 signal continue_pressed()
+signal calendar_new_requested()
+signal calendar_continue_requested()
 signal user_archive_load_requested(index: int)
 signal user_archive_delete_requested(index: int)
 
@@ -18,6 +20,7 @@ const DIFF_DESC := [
 ]
 
 const CONTENT_WIDTH := 960
+const CalendarCoopSave = preload("res://modes/calendar_coop/services/calendar_coop_save.gd")
 
 var _db = null
 
@@ -72,6 +75,23 @@ func _build_ui() -> void:
 		cont.pressed.connect(func(): continue_pressed.emit())
 		vbox.add_child(cont)
 		vbox.add_child(_spacer(8))
+	var calendar_new := Button.new()
+	calendar_new.name = "CalendarNewButton"
+	calendar_new.text = "开始日历关系模式"
+	calendar_new.custom_minimum_size = Vector2(0, 50)
+	calendar_new.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	calendar_new.add_theme_font_size_override("font_size", 22)
+	calendar_new.pressed.connect(func(): calendar_new_requested.emit())
+	vbox.add_child(calendar_new)
+	if CalendarCoopSave.has_valid_save():
+		var calendar_continue := Button.new()
+		calendar_continue.name = "CalendarContinueButton"
+		calendar_continue.text = "继续日历关系模式"
+		calendar_continue.custom_minimum_size = Vector2(0, 42)
+		calendar_continue.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		calendar_continue.pressed.connect(func(): calendar_continue_requested.emit())
+		vbox.add_child(calendar_continue)
+	vbox.add_child(_spacer(8))
 	var archives := SaveSystem.list_user_archives(_db) if _db != null else []
 	if not archives.is_empty():
 		vbox.add_child(_make_archive_section(archives))
