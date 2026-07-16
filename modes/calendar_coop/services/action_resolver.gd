@@ -188,6 +188,9 @@ func _resolve_heist(action: Dictionary):
 	var transition: Dictionary = action.get("phase_transition", {})
 	case_state.advance_to(str(transition.get("to", "")))
 	var changes: Array = ["%s.phase = %s" % [case_state.case_id, case_state.phase]]
+	if case_state.phase == CaseStateModel.PHASE_TREASURE_SECURED:
+		case_state.resolve("%s_resolved" % case_state.case_id)
+		changes.append("%s.outcome = %s" % [case_state.case_id, case_state.outcome])
 	var generated: Array = []
 	var tactician = relations.get("tactician", null)
 	if tactician != null and "swap_reserve_member" in tactician.unlocks and str(action.get("id", "")) == "museum_key_action":

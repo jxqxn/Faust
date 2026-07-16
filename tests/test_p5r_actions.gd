@@ -56,6 +56,19 @@ func test_tactician_unlock_changes_the_key_heist_solution() -> void:
 	assert_true(result.state_changes.has("museum_case.solution = reserve_swap"))
 
 
+func test_day_eight_heists_settle_the_case_after_the_defined_stages() -> void:
+	var resolver = _resolver(7, "after_school")
+	resolver.cases["museum_case"].phase = "infiltration"
+	assert_true(resolver.resolve(resolver.find_opportunity("museum_key_action")).ok)
+	resolver.state.day = 8
+	resolver.state.period = "after_school"
+	assert_true(resolver.resolve(resolver.find_opportunity("museum_calling_card")).ok)
+	resolver.engine.advance_period()
+	assert_true(resolver.resolve(resolver.find_opportunity("museum_treasure_action")).ok)
+	assert_true(resolver.cases["museum_case"].resolved)
+	assert_eq(resolver.cases["museum_case"].outcome, "museum_case_resolved")
+
+
 func _resolver(day: int, period: String):
 	var repository = ContentRepository.new()
 	assert_true(repository.load_all())
