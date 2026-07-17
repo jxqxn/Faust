@@ -75,13 +75,12 @@ func _enter_tree():
 	await get_tree().create_timer(1).timeout
 	# ---
 
-	# Kick off a download of the remote versions file if it's been more than
-	# some number of days since we've downloaded it.
+	# Faust pins a reviewed GUT version in the repository. Keep editor startup
+	# deterministic and offline instead of querying GitHub's anonymous API on
+	# every stale/missing cache; the About panel still offers a manual check.
 	_check_for_update.visible = false
 	_bottom_panel.add_child(_check_for_update)
-	var days_since = _check_for_update.update_detector.get_days_since_last_fetch()
-	if(days_since >= 1):
-		_check_for_update.update_detector.check_for_update_with_fetch(true)
+	_check_for_update.update_detector.check_for_update()
 
 	_bottom_panel.set_interface(get_editor_interface())
 	_bottom_panel.set_plugin(self)

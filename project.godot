@@ -14,7 +14,7 @@ config/name="Faust"
 config/description="苏丹的游戏 Godot 克隆 — 忠实还原原作核心系统"
 config/version="0.1.0"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.6")
+config/features=PackedStringArray("4.7")
 
 [display]
 
