@@ -12,16 +12,28 @@ signal menu_pressed()
 signal game_over_requested()
 
 class HandRailDrop:
-	extends ScrollContainer
+	extends Control
 
 	var owner_screen: Control
 
-	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-		return owner_screen != null and owner_screen.has_method("can_drop_card_to_hand") and owner_screen.can_drop_card_to_hand(data)
+	func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+		var accepted: bool = (
+			owner_screen != null
+			and owner_screen.has_method("can_drop_card_to_hand")
+			and bool(owner_screen.can_drop_card_to_hand(data))
+		)
+		if accepted and owner_screen.has_method("_preview_hand_drop"):
+			owner_screen.call("_preview_hand_drop", data, at_position)
+		return accepted
 
 	func _drop_data(_at_position: Vector2, data: Variant) -> void:
 		if owner_screen != null and owner_screen.has_method("drop_card_to_hand"):
 			owner_screen.drop_card_to_hand(data, get_local_mouse_position())
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseMotion and owner_screen != null and owner_screen.has_method("_set_hand_pan_ratio"):
+			var ratio := clampf(event.position.x / maxf(size.x, 1.0), 0.0, 1.0)
+			owner_screen.call("_set_hand_pan_ratio", ratio)
 
 
 class MethinksDrop:
@@ -37,6 +49,9 @@ class MethinksDrop:
 			owner_screen.drop_card_on_methinks(data)
 
 const MOCKUP_SIZE := Vector2(1280, 720)
+const HAND_NATURAL_STEP := 112.0
+const HAND_MIN_VISIBLE_WIDTH := 20.0
+const HAND_RAIL_BOTTOM_GUTTER := 20.0
 
 var _state
 var _db
@@ -52,8 +67,15 @@ var _map_content: Control
 var _overlay_layer: Control
 var _methinks_target: PanelContainer
 var _rail_label: VBoxContainer
-var _card_rail_view: ScrollContainer
-var _card_items: HBoxContainer
+var _card_rail_view: Control
+var _rail_padding: MarginContainer
+var _card_items: Control
+var _hand_pan_ratio := 0.5
+var _hand_content_overflows := false
+var _hand_drop_preview_index := -1
+var _pending_hand_drop_origins: Dictionary = {}
+var _pending_hand_drop_poses: Dictionary = {}
+var _known_rail_card_uids: Dictionary = {}
 var _right_actions: VBoxContainer
 var _advance_button: Button
 var _site_buttons: Array[Button] = []
@@ -184,12 +206,33 @@ func _build_ui() -> void:
 	_card_rail_view.name = "CardRail"
 	(_card_rail_view as HandRailDrop).owner_screen = self
 	_card_rail_view.clip_contents = true
+	_card_rail_view.mouse_filter = Control.MOUSE_FILTER_STOP
+	_card_rail_view.mouse_exited.connect(_clear_hand_drop_preview)
 	add_child(_card_rail_view)
-	_card_items = HBoxContainer.new()
+	_rail_padding = MarginContainer.new()
+	_rail_padding.name = "CardRailPadding"
+	# Leave room for CardWidget's bottom-pivot hover lift and shadow inside the
+	# clipped hand viewport. Without this inset the effect exists in code but
+	# its top edge is visibly cut off by the rail.
+	_rail_padding.add_theme_constant_override("margin_top", 24)
+	# Extend the clipping viewport to the screen edge, then reserve the same
+	# amount as inner space.  This keeps the hand at its existing height while
+	# allowing tilted bottom corners and the 12 px card shadow to render fully.
+	_rail_padding.add_theme_constant_override("margin_bottom", int(HAND_RAIL_BOTTOM_GUTTER))
+	_card_rail_view.add_child(_rail_padding)
+	# Anchor only after parenting.  Doing this while the node is orphaned makes
+	# Godot calculate offsets from the viewport, shifting the centred hand right.
+	_rail_padding.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_card_items = Control.new()
 	_card_items.name = "CardRailItems"
-	_card_items.add_theme_constant_override("separation", 10)
-	_card_items.alignment = BoxContainer.ALIGNMENT_BEGIN
-	_card_rail_view.add_child(_card_items)
+	_card_items.mouse_filter = Control.MOUSE_FILTER_PASS
+	_card_items.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_card_items.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# Hidden Controls are excluded from Container layout.  Stay layout-visible
+	# and use alpha to suppress the unpositioned first frame instead.
+	_card_items.modulate = Color(1, 1, 1, 0)
+	_card_items.resized.connect(_layout_hand_cards)
+	_rail_padding.add_child(_card_items)
 
 	_right_actions = VBoxContainer.new()
 	_right_actions.name = "RightActions"
@@ -225,10 +268,20 @@ func _apply_layout() -> void:
 	_set_rect(_map_content, Rect2(_desk_map.position, _desk_map.size))
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
-	_set_rect(_card_rail_view, Rect2(Vector2(180 * s, view_size.y - 222 * s), Vector2(view_size.x - 360 * s, 202 * s)))
+	_set_rect(
+		_card_rail_view,
+		Rect2(
+			Vector2(180 * s, view_size.y - 222 * s),
+			Vector2(view_size.x - 360 * s, (202.0 + HAND_RAIL_BOTTOM_GUTTER) * s)
+		)
+	)
+	_rail_padding.add_theme_constant_override(
+		"margin_bottom", roundi(HAND_RAIL_BOTTOM_GUTTER * s)
+	)
 	_set_rect(_right_actions, Rect2(Vector2(view_size.x - 160 * s, view_size.y - 194 * s), Vector2(132 * s, 170 * s)))
 
-	_card_items.custom_minimum_size = Vector2(_card_items.get_minimum_size().x, CardWidget.CARD_SIZE.y * s)
+	_card_items.custom_minimum_size = Vector2.ZERO
+	call_deferred("_layout_hand_cards")
 	_layout_map_content(s)
 	_layout_card_detail(s, view_size)
 	_layout_event_prompt(s, view_size)
@@ -506,16 +559,34 @@ func refresh() -> void:
 		return
 	_round_label.text = "第 %d 天" % _state.day
 	_gold_label.text = "金骰 %d    重抽 %d" % [_state.gold_dice, _state.redraws_left]
+	var previous_positions := _capture_hand_visual_positions()
 	for child in _card_items.get_children():
 		child.queue_free()
+	_card_items.modulate = Color(1, 1, 1, 0)
+	_hand_pan_ratio = 0.5
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
 	_state.sync_rail_order()
+	var next_known_uids: Dictionary = {}
 	for card_uid in _state.visible_rail_card_uids():
 		var uid := int(card_uid)
 		if _state.is_active_sudan_card(uid):
 			var asc = _active_sudan_for_card(uid)
 			if asc != null:
-				_card_items.add_child(_make_sudan_card(asc, life))
+				var sudan_widget := _make_sudan_card(asc, life)
+				var has_drop_origin := _pending_hand_drop_origins.has(uid)
+				sudan_widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
+				if has_drop_origin:
+					sudan_widget.set_meta("reflow_from", _pending_hand_drop_origins[uid])
+					var sudan_drag_pose: Dictionary = _pending_hand_drop_poses.get(uid, {})
+					sudan_widget.set_meta("reflow_rotation_from", float(sudan_drag_pose.get("rotation", INF)))
+					sudan_widget.set_meta("reflow_scale_from", sudan_drag_pose.get("scale", Vector2.ZERO))
+					_pending_hand_drop_origins.erase(uid)
+					_pending_hand_drop_poses.erase(uid)
+				elif previous_positions.has(uid):
+					sudan_widget.set_meta("reflow_from", previous_positions[uid])
+				sudan_widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
+				_card_items.add_child(sudan_widget)
+				next_known_uids[uid] = true
 			continue
 		var card: Dictionary = _state.card_data_for(uid, _db)
 		if card.is_empty():
@@ -523,9 +594,175 @@ func refresh() -> void:
 		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		widget.clicked.connect(_show_card_detail)
+		var has_drop_origin := _pending_hand_drop_origins.has(uid)
+		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
+		if has_drop_origin:
+			widget.set_meta("reflow_from", _pending_hand_drop_origins[uid])
+			var card_drag_pose: Dictionary = _pending_hand_drop_poses.get(uid, {})
+			widget.set_meta("reflow_rotation_from", float(card_drag_pose.get("rotation", INF)))
+			widget.set_meta("reflow_scale_from", card_drag_pose.get("scale", Vector2.ZERO))
+			_pending_hand_drop_origins.erase(uid)
+			_pending_hand_drop_poses.erase(uid)
+		elif previous_positions.has(uid):
+			widget.set_meta("reflow_from", previous_positions[uid])
+		widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
 		_card_items.add_child(widget)
+		next_known_uids[uid] = true
+	_known_rail_card_uids = next_known_uids
+	_layout_hand_cards()
+	call_deferred("_layout_hand_cards")
 	_refresh_rite_pins()
 	_refresh_event_overlay()
+
+
+## The original HandCardsController lays its children out itself and compresses
+## their visible width (minVisibleWidth defaults to 20) instead of exposing a
+## ScrollRect.  Keep that accessibility boundary while using a straight,
+## centred row with complete borders at ordinary hand sizes.
+## [SRC: decompiled/HandCardsController.c @ Update (RVA 0x563520),
+## dump.cs:320760]
+func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
+	if _card_items == null or not is_instance_valid(_card_items):
+		return
+	var cards: Array[CardWidget] = []
+	for child in _card_items.get_children():
+		if child is CardWidget and not child.is_queued_for_deletion() and child.visible:
+			cards.append(child as CardWidget)
+	var count := cards.size()
+	if count == 0:
+		_hand_content_overflows = false
+		return
+	var slot_count := count + (1 if _hand_drop_preview_index >= 0 else 0)
+	var metrics := _hand_layout_metrics(slot_count)
+	if metrics.is_empty():
+		return
+	var available_width: float = metrics["available_width"]
+	var step: float = metrics["step"]
+	var start_x: float = metrics["start_x"]
+	_hand_content_overflows = bool(metrics["overflows"])
+	var base_y := maxf(0.0, (_card_items.size.y - CardWidget.CARD_SIZE.y) * 0.5)
+	for index in count:
+		var card := cards[index]
+		var slot_index := index
+		if _hand_drop_preview_index >= 0 and slot_index >= _hand_drop_preview_index:
+			slot_index += 1
+		card.set_hand_pose(
+			Vector2(start_x + step * slot_index, base_y),
+			0.0,
+			slot_index
+		)
+		card.set_hand_idle(true, slot_index)
+		if bool(card.get_meta("deal_pending", false)):
+			card.set_meta("deal_pending", false)
+			var deal_origin := Vector2(
+				available_width - card.position.x + 42.0,
+				28.0 + float(index % 2) * 4.0
+			)
+			card.play_deal_in(deal_origin, index)
+		elif card.has_meta("reflow_from"):
+			var old_position: Vector2 = card.get_meta("reflow_from")
+			var old_rotation := float(card.get_meta("reflow_rotation_from", INF))
+			var old_scale: Vector2 = card.get_meta("reflow_scale_from", Vector2.ZERO)
+			card.remove_meta("reflow_from")
+			card.remove_meta("reflow_rotation_from")
+			card.remove_meta("reflow_scale_from")
+			card.play_hand_reflow(old_position - card.position, old_rotation, old_scale)
+		elif previous_positions.has(card.card_uid):
+			var old_position: Vector2 = previous_positions[card.card_uid]
+			card.play_hand_reflow(old_position - card.position)
+	_card_items.modulate = Color.WHITE
+
+
+func _hand_layout_metrics(slot_count: int) -> Dictionary:
+	var available_width := _card_items.size.x
+	if available_width <= 0.0 or slot_count <= 0:
+		return {}
+	var step := HAND_NATURAL_STEP
+	if slot_count > 1:
+		var fit_step := (available_width - CardWidget.CARD_SIZE.x) / float(slot_count - 1)
+		step = minf(step, maxf(HAND_MIN_VISIBLE_WIDTH, fit_step))
+	var hand_width := CardWidget.CARD_SIZE.x + step * float(slot_count - 1)
+	var overflow := maxf(0.0, hand_width - available_width)
+	return {
+		"available_width": available_width,
+		"step": step,
+		"start_x": (available_width - hand_width) * 0.5 if overflow <= 0.0 else -overflow * _hand_pan_ratio,
+		"overflows": overflow > 0.0,
+	}
+
+
+func _capture_hand_visual_positions() -> Dictionary:
+	var positions: Dictionary = {}
+	if _card_items == null:
+		return positions
+	for child in _card_items.get_children():
+		if child is CardWidget and not child.is_queued_for_deletion() and child.visible:
+			var card := child as CardWidget
+			positions[card.card_uid] = card.position + card.offset_transform_position
+	return positions
+
+
+func _on_hand_card_drag_visibility_changed(card_uid: int, hidden: bool) -> void:
+	if not hidden:
+		_hand_drop_preview_index = -1
+		# A successful hand drop has already rebuilt this UID and started its
+		# pose-preserving return.  The old source's DRAG_END notification must not
+		# restart that animation with a direction-derived rotation.
+		for child in _card_items.get_children():
+			if (
+				child is CardWidget
+				and child.visible
+				and int((child as CardWidget).card_uid) == card_uid
+				and (child as CardWidget).is_hand_motion_active()
+			):
+				return
+	var previous_positions := _capture_hand_visual_positions()
+	_layout_hand_cards(previous_positions)
+
+
+func _preview_hand_drop(data: Variant, rail_position: Vector2) -> void:
+	if not can_drop_card_to_hand(data):
+		return
+	var dragged_uid := int(data.get("card_uid", data.get("card_id", 0)))
+	var next_index := _hand_preview_index_at(rail_position, dragged_uid)
+	if next_index == _hand_drop_preview_index:
+		return
+	var previous_positions := _capture_hand_visual_positions()
+	_hand_drop_preview_index = next_index
+	_layout_hand_cards(previous_positions)
+
+
+func _clear_hand_drop_preview() -> void:
+	if _hand_drop_preview_index < 0:
+		return
+	var previous_positions := _capture_hand_visual_positions()
+	_hand_drop_preview_index = -1
+	_layout_hand_cards(previous_positions)
+
+
+func _hand_preview_index_at(rail_position: Vector2, dragged_card_uid: int) -> int:
+	var visible_count := 0
+	for child in _card_items.get_children():
+		if child is CardWidget and child.visible and not child.is_queued_for_deletion():
+			if int((child as CardWidget).card_uid) != dragged_card_uid:
+				visible_count += 1
+	var metrics := _hand_layout_metrics(visible_count + 1)
+	if metrics.is_empty():
+		return visible_count
+	var global_pos := _card_rail_view.get_global_transform() * rail_position
+	var local_x := (_card_items.get_global_transform().affine_inverse() * global_pos).x
+	var first_center: float = float(metrics["start_x"]) + CardWidget.CARD_SIZE.x * 0.5
+	return clampi(roundi((local_x - first_center) / float(metrics["step"])), 0, visible_count)
+
+
+func _set_hand_pan_ratio(ratio: float) -> void:
+	if not _hand_content_overflows:
+		return
+	var next_ratio := clampf(ratio, 0.0, 1.0)
+	if is_equal_approx(next_ratio, _hand_pan_ratio):
+		return
+	_hand_pan_ratio = next_ratio
+	_layout_hand_cards()
 
 
 func _active_sudan_for_card(card_or_uid: int) -> Variant:
@@ -606,9 +843,28 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 	var source_rite_uid := int(data.get("source_rite_uid", 0))
 	var card: Dictionary = _state.card_data_for(card_uid, _db)
 	var is_sudan: bool = str(card.get("type", "")) == "sudan" or _state.is_active_sudan_card(card_uid)
-	var insert_index := _rail_insert_index_at(rail_position, card_uid)
+	var insert_index := (
+		_hand_drop_preview_index
+		if _hand_drop_preview_index >= 0
+		else _rail_insert_index_at(rail_position, card_uid)
+	)
+	if rail_position.x != INF:
+		var global_drop := _card_rail_view.get_global_transform() * rail_position
+		var local_drop := _card_items.get_global_transform().affine_inverse() * global_drop
+		var grab_offset: Vector2 = data.get("grab_offset", CardWidget.CARD_SIZE * 0.5)
+		var drag_visual_position: Vector2 = data.get("drag_visual_position", Vector2.ZERO)
+		_pending_hand_drop_origins[card_uid] = local_drop - grab_offset + drag_visual_position
+		_pending_hand_drop_poses[card_uid] = {
+			"rotation": float(data.get("drag_visual_rotation", INF)),
+			"scale": data.get("drag_visual_scale", Vector2.ZERO),
+		}
+	_hand_drop_preview_index = -1
 	if source == "slot":
-		var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_uid, source_rite_uid))
+		var slot_num: int = (
+			source_slot.substr(1).to_int()
+			if source_slot.begins_with("s")
+			else int(_state.slot_for_table_card(card_uid, source_rite_uid))
+		)
 		_state.remove_card_from_slot(card_uid, slot_num, source_rite_uid)
 		if is_sudan:
 			var instance = _state.get_card_instance(card_uid)

@@ -576,9 +576,15 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	stage.add_child(widget)
 	await wait_process_frames(1)
 
+	widget._drag_selected_position = Vector2(1.5, -11.0)
+	widget._drag_selected_rotation = deg_to_rad(1.25)
+	widget._drag_selected_scale = Vector2.ONE * 1.04
 	var data = widget.drag_payload()
 	assert_true(data is Dictionary, "dragging a card should produce a card payload")
 	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
+	assert_eq(data.get("drag_visual_position"), widget._drag_selected_position)
+	assert_almost_eq(float(data.get("drag_visual_rotation")), widget._drag_selected_rotation, 0.000001)
+	assert_eq(data.get("drag_visual_scale"), widget._drag_selected_scale)
 
 func test_card_widget_face_only_shows_name_and_art():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 3, "tag": {"智慧": 9, "主角": 1}}
@@ -612,11 +618,263 @@ func test_card_widget_hides_source_while_dragging_and_restores_on_failed_drop():
 	stage.add_child(widget)
 	await wait_process_frames(1)
 
+	widget._set_hovered(true)
+	widget._drag_selected_position = Vector2(2.0, -12.0)
+	widget._drag_selected_rotation = deg_to_rad(1.4)
+	widget._drag_selected_scale = Vector2.ONE * CardWidget.HOVER_SCALE
 	widget._hide_source_for_drag()
 	assert_false(widget.visible, "source card should disappear from hand while dragging")
+	assert_eq(widget.z_index, 0, "hidden drag source should release its temporary hover layer")
 
 	widget._restore_source_after_failed_drag()
 	assert_true(widget.visible, "source card should reappear if drop fails")
+	assert_almost_eq(
+		widget.offset_transform_rotation, widget._drag_selected_rotation, 0.000001,
+		"a failed drop should return from the selected angle without snapping"
+	)
+
+
+func test_card_widget_hover_raises_its_layer_and_scale():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(2)
+
+	widget._set_hovered(true)
+	assert_true(widget.z_index >= CardWidget.HOVER_Z_INDEX, "hovered card should render above neighbouring cards")
+	await wait_process_frames(8)
+	assert_true(widget.offset_transform_scale.x > 1.0, "hovered card should gain visual scale")
+	assert_true(widget.offset_transform_position.y < 0.0, "hovered card should visibly lift without moving its container layout")
+	assert_true(widget.offset_transform_visual_only, "hover transform should not distort the card's mouse hit rectangle")
+
+	# The headless test pointer is fixed over the top-left corner of the stage;
+	# take it out of hit testing before asserting the explicit leave transition.
+	widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	widget._set_hovered(false)
+	await wait_process_frames(12)
+	assert_eq(widget.z_index, 0, "card should return to its normal rail layer after hover")
+
+
+func test_card_widget_drag_preview_preserves_selected_pose_without_added_tilt():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	var selected_position := Vector2(1.5, -11.0)
+	var selected_rotation := deg_to_rad(1.25)
+	var selected_scale := Vector2.ONE * 1.04
+	widget.make_drag_preview(selected_position, selected_rotation, selected_scale)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "drag preview should not intercept drop targets")
+	assert_eq(widget.offset_transform_position, selected_position, "drag preview should retain the selected lift")
+	assert_eq(widget.offset_transform_scale, selected_scale, "drag preview should retain the selected scale")
+	assert_almost_eq(
+		widget.offset_transform_rotation, selected_rotation, 0.000001,
+		"drag preview must not add a fixed left tilt"
+	)
+
+
+func test_card_widget_deal_in_uses_visual_offset_and_settles():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+	var stable_position := Vector2(120, 18)
+	widget.set_hand_pose(stable_position, 0.0, 0)
+	widget.set_hand_idle(true, 0)
+	widget.play_deal_in(Vector2(320, 32), 0)
+
+	assert_eq(widget.position, stable_position, "deal animation must not move the stable hand slot")
+	assert_true(widget.offset_transform_position.x > 0.0, "card should start from the right-side deal origin")
+	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "an incoming card must not intercept hand input")
+	await wait_seconds(0.42)
+	assert_almost_eq(widget.offset_transform_position.x, 0.0, 1.0, "dealt card should settle into its hand slot")
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.02, "dealt card should finish at normal scale")
+	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled card should restore interaction")
+
+
+func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+	var stable_position := Vector2(220, 18)
+	widget.set_hand_pose(stable_position, 0.0, 0)
+	widget.set_hand_idle(true, 0)
+	widget.play_hand_reflow(Vector2(58, 0))
+
+	assert_eq(widget.position, stable_position, "reflow should leave the new hit-test slot stable")
+	assert_true(widget.offset_transform_position.x > 40.0, "remaining card should begin at its former visual position")
+	await wait_seconds(0.34)
+	assert_almost_eq(widget.offset_transform_position.x, 0.0, 1.0, "remaining card should settle into the recentered hand")
+	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled remaining card should restore interaction")
+
+
+func test_card_widget_idle_phase_stays_with_card_after_reorder():
+	var card := {
+		"id": 2000001,
+		"instance_uid": 420001,
+		"name": "Test",
+		"type": "char",
+		"rare": 1,
+		"tag": {},
+	}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	await wait_process_frames(1)
+
+	widget.set_hand_idle(true, 0)
+	var original_phase := widget._hand_idle_phase
+	var original_rotation := widget._idle_rotation_at(37.25)
+	var original_position := widget._idle_position_at(37.25)
+	widget.set_hand_idle(true, 4)
+
+	assert_almost_eq(widget._hand_idle_phase, original_phase, 0.000001, "reordering must preserve the card's idle phase")
+	assert_almost_eq(
+		widget._idle_rotation_at(37.25), original_rotation, 0.000001,
+		"reordered cards should remain on the same sway curve"
+	)
+	assert_almost_eq(
+		widget._idle_position_at(37.25).x, original_position.x, 0.000001,
+		"reordered cards should remain on the same drift curve"
+	)
+
+
+func test_game_screen_card_rail_reserves_hover_lift_space():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var rail_padding := _find_node_by_name(screen, "CardRailPadding") as MarginContainer
+	var card_rail := _find_node_by_name(screen, "CardRail") as Control
+	assert_not_null(rail_padding, "clipped card rail should reserve inset space for hover lift and shadow")
+	if rail_padding != null:
+		assert_true(rail_padding.get_theme_constant("margin_top") >= 20, "rail top inset should keep the raised card inside the viewport")
+		assert_true(
+			rail_padding.get_theme_constant("margin_bottom") >= 16,
+			"rail bottom inset should preserve the hand position while exposing card shadows"
+		)
+	assert_not_null(card_rail, "card rail viewport should exist")
+	if card_rail != null:
+		assert_false(card_rail is ScrollContainer, "hand navigation must not expose a scrollbar")
+		assert_almost_eq(
+			card_rail.position.y + card_rail.size.y, screen._effective_view_size().y, 1.0,
+			"the central hand clip should extend to the viewport bottom like its side siblings"
+		)
+	if rail_padding != null and card_rail != null:
+		assert_almost_eq(rail_padding.size.x, card_rail.size.x, 1.0, "hand content must use the rail width, not the whole viewport")
+		assert_almost_eq(screen._card_items.size.x, card_rail.size.x, 1.0, "centering should be calculated inside the hand rail")
+
+
+func test_game_screen_idle_hand_is_centered_spaced_and_straight():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(3)
+
+	var cards := _rail_card_widgets(screen)
+	assert_true(cards.size() >= 3, "starting rail should have enough cards to show centred spacing")
+	if cards.size() < 3:
+		return
+	var first := cards[0] as CardWidget
+	var last := cards[cards.size() - 1] as CardWidget
+	var hand_left := first.position.x
+	var hand_right := last.position.x + last.size.x
+	assert_almost_eq((hand_left + hand_right) * 0.5, screen._card_items.size.x * 0.5, 2.0, "untouched hand should be centred")
+	assert_true(cards[1].position.x - first.position.x > CardWidget.CARD_SIZE.x, "ordinary hands should leave every card border visible")
+	assert_almost_eq(first.position.y, last.position.y, 0.1, "this game's hand should stay on a straight baseline")
+	assert_almost_eq(first.rotation, 0.0, 0.001, "idle drift must not turn the stable hand layout into a fan")
+	assert_almost_eq(last.rotation, 0.0, 0.001, "idle drift must remain a visual-only offset")
+	assert_almost_eq(screen._card_items.modulate.a, 1.0, 0.001, "hand should only become opaque after its first valid layout")
+
+
+func test_game_screen_dragging_card_out_closes_gap_immediately():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_seconds(0.65)
+
+	var cards := _rail_card_widgets(screen)
+	assert_true(cards.size() >= 3)
+	if cards.size() < 3:
+		return
+	var dragged := cards[0] as CardWidget
+	var neighbour := cards[1] as CardWidget
+	var old_neighbour_x := neighbour.position.x
+	dragged._hide_source_for_drag()
+
+	assert_false(dragged.visible, "drag source should leave the stable hand layout")
+	assert_true(neighbour.position.x < old_neighbour_x, "remaining hand should close the empty slot while dragging")
+	assert_true(neighbour.offset_transform_position.x > 10.0, "gap closing should animate from the former visual slot")
+
+
+func test_game_screen_hand_drop_preview_opens_insertion_gap():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_seconds(0.65)
+
+	var cards := _rail_card_widgets(screen)
+	assert_true(cards.size() >= 3)
+	if cards.size() < 3:
+		return
+	var old_span := (cards[-1] as CardWidget).position.x - (cards[0] as CardWidget).position.x
+	screen._preview_hand_drop(
+		{"type": "card", "card_uid": 990001, "source": "slot"},
+		_hand_drop_between(screen, 1, 2)
+	)
+	var new_span := (cards[-1] as CardWidget).position.x - (cards[0] as CardWidget).position.x
+
+	assert_true(screen._hand_drop_preview_index >= 0, "hovering a dragged card over the hand should reserve an insertion slot")
+	assert_true(new_span > old_span + CardWidget.CARD_SIZE.x * 0.5, "existing cards should visibly make room instead of being covered")
+	screen._clear_hand_drop_preview()
+	assert_eq(screen._hand_drop_preview_index, -1)
+
+
+func test_game_screen_remaining_cards_animate_from_old_slots_after_one_is_played():
+	var rng := RNG.new(10)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_seconds(0.65)
+
+	var removed_uid := int(state.hand[0])
+	var remaining_uid := int(state.hand[1])
+	state.remove_card_from_hand(removed_uid)
+	screen.refresh()
+	await wait_process_frames(1)
+	var remaining := _find_card_widget_by_uid(screen, remaining_uid)
+	assert_not_null(remaining, "a neighbouring hand card should remain after one card is played")
+	if remaining == null:
+		return
+	assert_true(absf(remaining.offset_transform_position.x) > 10.0, "remaining card should still render near its former slot while reflow begins")
+	await wait_seconds(0.34)
+	assert_almost_eq(remaining.offset_transform_position.x, 0.0, 1.0, "remaining card should settle into its new centred slot")
 
 
 func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
@@ -643,13 +901,30 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 	if hand_widgets.size() < 3:
 		return
 	screen.drop_card_to_hand(
-		{"type": "card", "card_id": returned_id, "source": "slot", "source_slot": "s1"},
+		{
+			"type": "card",
+			"card_id": returned_id,
+			"source": "slot",
+			"source_slot": "s1",
+			"grab_offset": Vector2(12, 20),
+			"drag_visual_position": Vector2(1.5, -11.0),
+			"drag_visual_rotation": deg_to_rad(1.25),
+			"drag_visual_scale": Vector2.ONE * 1.04,
+		},
 		_hand_drop_between(screen, 1, 2)
 	)
 
 	assert_eq(state.hand[0], first_id)
 	assert_eq(state.hand[1], second_id)
 	assert_eq(state.hand[2], returned_id, "returned card should insert at the drop position instead of appending blindly")
+	var returned_widget := _find_card_widget_by_uid(screen, returned_id)
+	assert_not_null(returned_widget, "returned card should be rendered in its reserved hand slot")
+	if returned_widget != null:
+		assert_true(absf(returned_widget.offset_transform_position.x) > 10.0, "returned card should settle from the cursor instead of appearing under another card")
+		assert_almost_eq(
+			returned_widget.offset_transform_rotation, deg_to_rad(1.25), 0.000001,
+			"returned card should begin from the drag preview angle without snapping"
+		)
 
 
 func test_game_screen_reorders_hand_card_by_hand_drop_position():
@@ -967,6 +1242,13 @@ func _rail_card_widgets(node: Node) -> Array:
 	for child in node.get_children():
 		out.append_array(_rail_card_widgets(child))
 	return out
+
+
+func _find_card_widget_by_uid(node: Node, card_uid: int) -> CardWidget:
+	for widget in _rail_card_widgets(node):
+		if int((widget as CardWidget).card_uid) == card_uid and not widget.is_queued_for_deletion():
+			return widget as CardWidget
+	return null
 
 
 func _hand_drop_between(screen, left_index: int, right_index: int) -> Vector2:
