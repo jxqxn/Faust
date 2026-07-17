@@ -85,6 +85,7 @@ var _rite_pin_by_rite_id: Dictionary = {}
 var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
+var _card_detail_card_uid := 0
 var _event_overlay: Control
 var _event_panel: Panel
 var _sleep_waiting := false
@@ -580,12 +581,14 @@ func refresh() -> void:
 					var sudan_drag_pose: Dictionary = _pending_hand_drop_poses.get(uid, {})
 					sudan_widget.set_meta("reflow_rotation_from", float(sudan_drag_pose.get("rotation", INF)))
 					sudan_widget.set_meta("reflow_scale_from", sudan_drag_pose.get("scale", Vector2.ZERO))
+					sudan_widget.set_meta("reflow_tilt_from", sudan_drag_pose.get("tilt", Vector2(INF, INF)))
 					_pending_hand_drop_origins.erase(uid)
 					_pending_hand_drop_poses.erase(uid)
 				elif previous_positions.has(uid):
 					sudan_widget.set_meta("reflow_from", previous_positions[uid])
 				sudan_widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
 				_card_items.add_child(sudan_widget)
+				sudan_widget.set_selected(uid == _card_detail_card_uid, false)
 				next_known_uids[uid] = true
 			continue
 		var card: Dictionary = _state.card_data_for(uid, _db)
@@ -601,12 +604,14 @@ func refresh() -> void:
 			var card_drag_pose: Dictionary = _pending_hand_drop_poses.get(uid, {})
 			widget.set_meta("reflow_rotation_from", float(card_drag_pose.get("rotation", INF)))
 			widget.set_meta("reflow_scale_from", card_drag_pose.get("scale", Vector2.ZERO))
+			widget.set_meta("reflow_tilt_from", card_drag_pose.get("tilt", Vector2(INF, INF)))
 			_pending_hand_drop_origins.erase(uid)
 			_pending_hand_drop_poses.erase(uid)
 		elif previous_positions.has(uid):
 			widget.set_meta("reflow_from", previous_positions[uid])
 		widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
 		_card_items.add_child(widget)
+		widget.set_selected(uid == _card_detail_card_uid, false)
 		next_known_uids[uid] = true
 	_known_rail_card_uids = next_known_uids
 	_layout_hand_cards()
@@ -663,10 +668,12 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 			var old_position: Vector2 = card.get_meta("reflow_from")
 			var old_rotation := float(card.get_meta("reflow_rotation_from", INF))
 			var old_scale: Vector2 = card.get_meta("reflow_scale_from", Vector2.ZERO)
+			var old_tilt: Vector2 = card.get_meta("reflow_tilt_from", Vector2(INF, INF))
 			card.remove_meta("reflow_from")
 			card.remove_meta("reflow_rotation_from")
 			card.remove_meta("reflow_scale_from")
-			card.play_hand_reflow(old_position - card.position, old_rotation, old_scale)
+			card.remove_meta("reflow_tilt_from")
+			card.play_hand_reflow(old_position - card.position, old_rotation, old_scale, old_tilt)
 		elif previous_positions.has(card.card_uid):
 			var old_position: Vector2 = previous_positions[card.card_uid]
 			card.play_hand_reflow(old_position - card.position)
@@ -857,6 +864,7 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 		_pending_hand_drop_poses[card_uid] = {
 			"rotation": float(data.get("drag_visual_rotation", INF)),
 			"scale": data.get("drag_visual_scale", Vector2.ZERO),
+			"tilt": data.get("drag_visual_tilt", Vector2(INF, INF)),
 		}
 	_hand_drop_preview_index = -1
 	if source == "slot":
@@ -1141,11 +1149,19 @@ func show_card_detail(card_or_uid: int) -> void:
 func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	if card_id <= 0 or card.is_empty():
 		return
-	if _card_detail_overlay != null and _card_detail_card_id == card_id:
+	var card_uid := int(card.get("instance_uid", 0))
+	var same_card := (
+		card_uid > 0 and _card_detail_card_uid == card_uid
+	) or (
+		card_uid <= 0 and _card_detail_card_uid <= 0 and _card_detail_card_id == card_id
+	)
+	if _card_detail_overlay != null and same_card:
 		close_card_detail()
 		return
 	close_card_detail()
 	_card_detail_card_id = card_id
+	_card_detail_card_uid = card_uid
+	_sync_card_selection_visuals(card_uid, card_id)
 	_card_detail_overlay = Control.new()
 	_card_detail_overlay.name = "CardDetailOverlay"
 	_card_detail_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1248,11 +1264,29 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 
 func close_card_detail() -> void:
 	if _card_detail_overlay == null:
+		_card_detail_card_id = 0
+		_card_detail_card_uid = 0
+		_sync_card_selection_visuals()
 		return
 	_card_detail_overlay.queue_free()
 	_card_detail_overlay = null
 	_card_detail_panel = null
 	_card_detail_card_id = 0
+	_card_detail_card_uid = 0
+	_sync_card_selection_visuals()
+
+
+func _sync_card_selection_visuals(selected_uid: int = 0, selected_id: int = 0) -> void:
+	if _card_items == null or not is_instance_valid(_card_items):
+		return
+	for child in _card_items.get_children():
+		if not (child is CardWidget) or child.is_queued_for_deletion():
+			continue
+		var widget := child as CardWidget
+		var matches := selected_uid > 0 and widget.card_uid == selected_uid
+		if selected_uid <= 0 and selected_id > 0:
+			matches = widget.card_id == selected_id
+		widget.set_selected(matches)
 
 
 func _layout_card_detail(s: float, view_size: Vector2) -> void:

@@ -579,12 +579,14 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	widget._drag_selected_position = Vector2(1.5, -11.0)
 	widget._drag_selected_rotation = deg_to_rad(1.25)
 	widget._drag_selected_scale = Vector2.ONE * 1.04
+	widget._drag_selected_tilt = Vector2(0.35, -0.2)
 	var data = widget.drag_payload()
 	assert_true(data is Dictionary, "dragging a card should produce a card payload")
 	assert_eq(int(data.get("card_id", 0)), 2000001, "drag payload should identify the dragged card")
 	assert_eq(data.get("drag_visual_position"), widget._drag_selected_position)
 	assert_almost_eq(float(data.get("drag_visual_rotation")), widget._drag_selected_rotation, 0.000001)
 	assert_eq(data.get("drag_visual_scale"), widget._drag_selected_scale)
+	assert_eq(data.get("drag_visual_tilt"), widget._drag_selected_tilt)
 
 func test_card_widget_face_only_shows_name_and_art():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 3, "tag": {"智慧": 9, "主角": 1}}
@@ -645,8 +647,20 @@ func test_card_widget_hover_raises_its_layer_and_scale():
 	assert_true(widget.z_index >= CardWidget.HOVER_Z_INDEX, "hovered card should render above neighbouring cards")
 	await wait_process_frames(8)
 	assert_true(widget.offset_transform_scale.x > 1.0, "hovered card should gain visual scale")
-	assert_true(widget.offset_transform_position.y < 0.0, "hovered card should visibly lift without moving its container layout")
+	assert_almost_eq(widget.offset_transform_position.y, 0.0, 0.5, "hover alone should not invent a selected-card lift")
 	assert_true(widget.offset_transform_visual_only, "hover transform should not distort the card's mouse hit rectangle")
+	assert_not_null(_find_node_by_name(widget, "CardVisualSurface"), "the dynamic card face should render as one shader-ready surface")
+	assert_not_null(_find_node_by_name(widget, "CardShadowSurface"), "cards should render a separate table-plane shadow pass")
+	assert_not_null(_find_node_by_name(widget, "CardRenderRoot"), "face and shadow should live below one container-managed render root")
+	assert_eq(widget._shadow_surface.get_parent(), widget._render_root)
+	assert_eq(widget._visual_surface.get_parent(), widget._render_root)
+	assert_false(widget._render_root is Container, "projection offsets must not be rewritten by container layout")
+	var shadow_style := widget._style_for_card()
+	assert_eq(shadow_style.shadow_size, 0, "the perspective face texture must not contain a baked shadow")
+	assert_eq(shadow_style.shadow_offset, Vector2.ZERO)
+	assert_eq(widget._shadow_surface.texture, widget._visual_surface.texture, "shadow and face should sample the same pre-perspective card texture")
+	assert_ne(widget._shadow_surface.material, widget._visual_surface.material, "shadow must not inherit the face perspective material")
+	assert_almost_eq(widget._shadow_height, CardWidget.SHADOW_IDLE_HEIGHT, 0.001, "hover alone should not raise the table shadow")
 
 	# The headless test pointer is fixed over the top-left corner of the stage;
 	# take it out of hit testing before asserting the explicit leave transition.
@@ -656,24 +670,276 @@ func test_card_widget_hover_raises_its_layer_and_scale():
 	assert_eq(widget.z_index, 0, "card should return to its normal rail layer after hover")
 
 
-func test_card_widget_drag_preview_preserves_selected_pose_without_added_tilt():
+func test_card_widget_hover_uses_mild_two_axis_perspective_and_center_dead_zone():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget._set_hovered(true)
+	for frame in 18:
+		widget._update_depth_layers(Vector2(0.8, -0.7), false, 1.0 / 60.0)
+
+	assert_true(widget._perspective_tilt.x > 0.65, "pointer x should drive yaw on the complete card face")
+	assert_true(widget._perspective_tilt.y < -0.5, "pointer y should drive pitch on the complete card face")
+	assert_true(widget._perspective_tilt.length() < 1.3, "normalized tilt must remain restrained")
+	assert_eq(widget._perspective_material.get_shader_parameter("tilt"), widget._perspective_tilt)
+	assert_almost_eq(widget._shape_perspective_axis(0.03), 0.0, 0.000001, "the card center should have no visible tilt jitter")
+	assert_almost_eq(widget._shape_perspective_axis(-0.03), 0.0, 0.000001)
+
+	widget._set_hovered(false)
+	for frame in 35:
+		widget._update_depth_layers(Vector2.ZERO, false, 1.0 / 60.0)
+	assert_true(widget._perspective_tilt.length() < 0.01, "both axes should spring back without snapping")
+
+
+func test_card_hover_juice_matches_original_damped_sine_envelope():
+	var early_pop := CardWidget._sample_hover_juice(0.016, 1.0)
+	var opposite_direction := CardWidget._sample_hover_juice(0.016, -1.0)
+	var settled := CardWidget._sample_hover_juice(CardWidget.HOVER_JUICE_DURATION, 1.0)
+	assert_true(early_pop.x > 0.0, "juice should start its sine rebound immediately after the hard compression")
+	assert_true(early_pop.y > 0.0, "positive random direction should produce positive rotational juice")
+	assert_almost_eq(opposite_direction.x, early_pop.x, 0.000001)
+	assert_almost_eq(opposite_direction.y, -early_pop.y, 0.000001)
+	assert_eq(settled, Vector2.ZERO, "the original 0.4 second envelope must end exactly at rest")
+
+
+func test_card_hover_entry_compresses_immediately_and_exit_starts_no_new_juice():
+	var card := {"id": 2000001, "instance_uid": 42, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget._set_hovered(true)
+	assert_almost_eq(
+		widget.offset_transform_scale.x,
+		1.0 - CardWidget.HOVER_JUICE_COMPRESSION,
+		0.000001,
+		"Moveable juice should immediately compress VT.scale"
+	)
+	widget._step_hover_juice(0.067)
+	var before_exit_scale := widget._hover_juice_scale
+	var before_exit_rotation := widget._hover_juice_rotation
+	var before_exit_elapsed := widget._hover_juice_elapsed
+	widget._set_hovered(false)
+	assert_eq(widget._hover_juice_mode, CardWidget.HoverJuiceMode.ENTER, "stop_hover must not create an exit envelope")
+	assert_almost_eq(widget._hover_juice_elapsed, before_exit_elapsed, 0.000001)
+	assert_almost_eq(widget._hover_juice_scale, before_exit_scale, 0.000001, "the entry juice should keep decaying")
+	assert_almost_eq(widget._hover_juice_rotation, before_exit_rotation, 0.000001)
+	widget._step_hover_juice(0.03)
+
+	widget.offset_transform_scale = Vector2.ONE * 1.04
+	widget.offset_transform_rotation = 0.02
+	assert_eq(widget._composed_visual_scale(), widget.offset_transform_scale)
+	assert_almost_eq(
+		widget._composed_visual_rotation(),
+		widget.offset_transform_rotation,
+		0.000001,
+		"drag pickup should inherit the already integrated visual rotation"
+	)
+
+
+func test_card_moveable_scale_uses_original_exponential_recurrence():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.offset_transform_scale = Vector2.ONE
+	widget._pose_scale_velocity = Vector2.ZERO
+	var delta := 1.0 / 60.0
+	var target := Vector2.ONE * CardWidget.HOVER_SCALE
+	widget._step_moveable_pose(Vector2.ZERO, 0.0, target, delta)
+	var expected_velocity := (1.0 - exp(-CardWidget.MOVEABLE_SCALE_DECAY_RATE * delta)) * 0.05
+	assert_almost_eq(widget._pose_scale_velocity.x, expected_velocity, 0.000001)
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0 + expected_velocity, 0.000001)
+	assert_true(widget.offset_transform_scale.x > 1.03, "the first frame should be crisp rather than a slow generic spring")
+
+
+func test_card_hover_keeps_idle_roll_as_pointer_tilt_layer_changes():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.set_hand_idle(true, 0)
+	widget._hand_idle_phase = PI * 0.5 - widget._idle_time_seconds() * CardWidget.IDLE_SWAY_FREQUENCY
+	widget._set_hovered(true)
+	for frame in 5:
+		widget._step_interaction_motion(1.0 / 60.0)
+	assert_true(absf(widget.offset_transform_rotation) > 0.01, "hover must not replace CardArea's live idle roll")
+
+
+func test_card_shadow_uses_unwarped_alpha_and_height_parallax():
+	var shadow_shader: Shader = load("res://ui/card_shadow.gdshader")
+	assert_not_null(shadow_shader)
+	assert_true(shadow_shader.code.contains("texture(TEXTURE, UV).a"), "shadow should reuse the unwarped card alpha")
+	assert_true(shadow_shader.code.contains("card_alpha * shadow_color.a"), "shadow should tint only the card silhouette")
+	assert_false(shadow_shader.code.contains("tilt"), "the table shadow must not accept pointer perspective")
+
+	var left_idle := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_IDLE_HEIGHT, 0.0, 1000.0)
+	var right_idle := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_IDLE_HEIGHT, 1000.0, 1000.0)
+	var left_drag := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_DRAG_HEIGHT, 0.0, 1000.0)
+	assert_true(left_idle.x > 0.0, "a card left of screen center should cast inward to the right")
+	assert_true(right_idle.x < 0.0, "a card right of screen center should cast inward to the left")
+	assert_true(left_idle.y > 0.0, "the overhead-light shadow should fall below the card")
+	assert_true(left_drag.length() > left_idle.length() * 1.5, "drag height should separate the shadow without changing its silhouette")
+	var idle_exposure := CardWidget._shadow_bottom_exposure_for_height(CardWidget.SHADOW_IDLE_HEIGHT)
+	var drag_exposure := CardWidget._shadow_bottom_exposure_for_height(CardWidget.SHADOW_DRAG_HEIGHT)
+	assert_true(
+		idle_exposure >= CardWidget.CARD_SIZE.y * 0.04,
+		"idle shadow must retain a visible contact strip after scale compensation"
+	)
+	assert_true(
+		idle_exposure <= CardWidget.CARD_SIZE.y * 0.055,
+		"idle shadow should stay compact rather than becoming a halo"
+	)
+	assert_true(
+		drag_exposure >= CardWidget.CARD_SIZE.y * 0.07,
+		"drag shadow should visibly separate from the raised card"
+	)
+	assert_true(
+		drag_exposure <= CardWidget.CARD_SIZE.y * 0.09,
+		"drag shadow should remain proportional to card size"
+	)
+	assert_true(
+		drag_exposure < idle_exposure * 2.0,
+		"drag emphasis must not make the idle shadow comparatively disappear"
+	)
+
+
+func test_card_drag_height_changes_shadow_without_reusing_perspective_material():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.make_drag_preview(Vector2.ZERO, 0.0, Vector2.ONE)
+	for frame in 18:
+		widget._update_depth_layers(Vector2(0.8, -0.7), true, 1.0 / 60.0)
+
+	assert_true(widget._shadow_height > 0.30, "held cards should raise their shadow toward the original drag height")
+	assert_true(widget._perspective_tilt.length() > 0.5, "the held card face should still receive pointer perspective")
+	assert_ne(widget._shadow_surface.material, widget._perspective_material)
+	assert_true(widget._shadow_surface.scale.x < 0.95, "a raised shadow should shrink slightly like the original 2D pass")
+
+
+func test_card_hover_shader_leans_toward_pointer_instead_of_away():
+	var shader: Shader = load("res://ui/card_hover_perspective.gdshader")
+	assert_not_null(shader)
+	assert_true(
+		shader.code.contains("pitch = radians(tilt.y * max_pitch_degrees)"),
+		"moving down should use positive X-axis pitch"
+	)
+	assert_true(
+		shader.code.contains("yaw = radians(-tilt.x * max_yaw_degrees)"),
+		"moving right should use negative Y-axis yaw"
+	)
+
+
+func test_card_widget_drag_preview_starts_from_selected_pose_without_angle_jump():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
 	var widget := CardWidget.make(card)
 	var selected_position := Vector2(1.5, -11.0)
 	var selected_rotation := deg_to_rad(1.25)
 	var selected_scale := Vector2.ONE * 1.04
-	widget.make_drag_preview(selected_position, selected_rotation, selected_scale)
+	var selected_tilt := Vector2(0.32, -0.24)
+	widget.make_drag_preview(
+		selected_position,
+		selected_rotation,
+		selected_scale,
+		{"drag_visual_tilt": selected_tilt}
+	)
+	assert_eq(widget.offset_transform_position, selected_position, "drag preview must start at the selected lift")
+	assert_eq(widget.offset_transform_scale, selected_scale, "drag preview must start at the selected scale")
+	assert_eq(widget._perspective_tilt, selected_tilt, "drag preview must inherit the selected two-axis pose")
+	assert_almost_eq(
+		widget.offset_transform_rotation, selected_rotation, 0.000001,
+		"starting a drag must not add a fixed left tilt"
+	)
 	stage.add_child(widget)
 	await wait_process_frames(1)
 
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "drag preview should not intercept drop targets")
-	assert_eq(widget.offset_transform_position, selected_position, "drag preview should retain the selected lift")
-	assert_eq(widget.offset_transform_scale, selected_scale, "drag preview should retain the selected scale")
-	assert_almost_eq(
-		widget.offset_transform_rotation, selected_rotation, 0.000001,
-		"drag preview must not add a fixed left tilt"
+	assert_true(
+		widget.offset_transform_position.distance_to(selected_position) < 0.1,
+		"the first spring step should remain visually continuous with the selected pose"
 	)
+	assert_true(
+		absf(widget.offset_transform_rotation - selected_rotation) < deg_to_rad(0.1),
+		"the first spring step should not create an angle pop"
+	)
+
+
+func test_card_widget_drag_motion_stays_with_pointer_swings_and_updates_drop_pose():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var payload: Dictionary = {}
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.make_drag_preview(Vector2(0, -12), 0.0, Vector2.ONE * CardWidget.HOVER_SCALE, payload)
+	widget._step_drag_motion(Vector2(100, 100), 1.0 / 60.0)
+	widget._step_drag_motion(Vector2(124, 100), 1.0 / 60.0)
+
+	assert_true(
+		absf(widget._drag_rest_position.x - widget.offset_transform_position.x) < 0.25,
+		"the drag preview root already follows the cursor, so its visual must not add a second positional delay"
+	)
+	assert_true(widget.offset_transform_rotation > 0.0, "rightward movement should swing the held card clockwise")
+	assert_eq(payload.get("drag_visual_position"), widget.offset_transform_position)
+	assert_almost_eq(
+		float(payload.get("drag_visual_rotation")), widget.offset_transform_rotation, 0.000001,
+		"drop data must track the live held-card angle, not the pickup snapshot"
+	)
+	assert_eq(payload.get("drag_visual_scale"), widget.offset_transform_scale)
+
+
+func test_card_widget_drag_direction_reversal_is_smooth_then_changes_swing():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.make_drag_preview(Vector2(0, -12), 0.0, Vector2.ONE * CardWidget.HOVER_SCALE)
+	widget._step_drag_motion(Vector2(100, 100), 1.0 / 60.0)
+	for x in [112.0, 124.0, 136.0, 148.0]:
+		widget._step_drag_motion(Vector2(x, 100), 1.0 / 60.0)
+	var right_angle := widget.offset_transform_rotation
+	assert_true(right_angle > 0.0)
+
+	widget._step_drag_motion(Vector2(124, 100), 1.0 / 60.0)
+	var first_reverse_angle := widget.offset_transform_rotation
+	assert_true(
+		absf(first_reverse_angle - right_angle) < deg_to_rad(5.0),
+		"reversing the mouse must not snap the card to the opposite angle in one frame"
+	)
+	for x in [104.0, 84.0, 64.0, 44.0, 24.0, 4.0]:
+		widget._step_drag_motion(Vector2(x, 100), 1.0 / 60.0)
+	assert_true(widget.offset_transform_rotation < 0.0, "continued leftward movement should smoothly reverse the swing")
+
+
+func test_card_widget_selected_pose_uses_original_highlight_height_without_scale_impulse():
+	var card := {"id": 2000001, "instance_uid": 42, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.set_selected(true)
+	for frame in 30:
+		widget._step_interaction_motion(1.0 / 60.0)
+	assert_true(widget.is_selected())
+	assert_almost_eq(
+		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.5,
+		"highlighted cards should use CardArea's 0.2-card-height lift"
+	)
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001, "selection alone must not add hover zoom")
+
+	var selected_rotation := widget.offset_transform_rotation
+	widget.set_selected(false)
+	widget._step_interaction_motion(1.0 / 60.0)
+	assert_true(
+		absf(widget.offset_transform_rotation - selected_rotation) < deg_to_rad(5.0),
+		"deselecting should begin from the current angle without a transform reset"
+	)
+	for frame in 45:
+		widget._step_interaction_motion(1.0 / 60.0)
+	assert_false(widget.is_selected())
+	assert_true(widget.offset_transform_position.length() < 0.5, "deselected cards should spring back to their base pose")
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.01)
 
 
 func test_card_widget_deal_in_uses_visual_offset_and_settles():
@@ -714,7 +980,7 @@ func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled remaining card should restore interaction")
 
 
-func test_card_widget_idle_phase_stays_with_card_after_reorder():
+func test_card_widget_idle_phase_follows_spatial_slot_without_transform_snap():
 	var card := {
 		"id": 2000001,
 		"instance_uid": 420001,
@@ -728,20 +994,49 @@ func test_card_widget_idle_phase_stays_with_card_after_reorder():
 	stage.add_child(widget)
 	await wait_process_frames(1)
 
+	widget.set_hand_pose(Vector2(40.0, 0.0), 0.0, 0)
 	widget.set_hand_idle(true, 0)
 	var original_phase := widget._hand_idle_phase
-	var original_rotation := widget._idle_rotation_at(37.25)
-	var original_position := widget._idle_position_at(37.25)
+	var rendered_rotation := widget.offset_transform_rotation
+	widget.set_hand_pose(Vector2(264.0, 0.0), 0.0, 4)
 	widget.set_hand_idle(true, 4)
 
-	assert_almost_eq(widget._hand_idle_phase, original_phase, 0.000001, "reordering must preserve the card's idle phase")
+	assert_ne(widget._hand_idle_phase, original_phase, "the idle wave phase should follow the card's horizontal slot")
 	assert_almost_eq(
-		widget._idle_rotation_at(37.25), original_rotation, 0.000001,
-		"reordered cards should remain on the same sway curve"
+		widget._hand_idle_phase,
+		fposmod(264.0 * CardWidget.BALATRO_CARD_WIDTH_UNITS / CardWidget.CARD_SIZE.x, TAU),
+		0.000001,
+		"pixel positions should map to Balatro's card-relative phase units"
 	)
 	assert_almost_eq(
-		widget._idle_position_at(37.25).x, original_position.x, 0.000001,
-		"reordered cards should remain on the same drift curve"
+		widget.offset_transform_rotation, rendered_rotation, 0.000001,
+		"changing the idle target phase must not directly overwrite the rendered angle"
+	)
+
+
+func test_card_widget_idle_motion_matches_balatro_dynamic_terms_without_fan():
+	var card := {"id": 2000001, "instance_uid": 42, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget._hand_idle_phase = 0.0
+	var rotation_peak_time := PI / (2.0 * CardWidget.IDLE_SWAY_FREQUENCY)
+	var bob_peak_time := PI / (2.0 * CardWidget.IDLE_BOB_FREQUENCY)
+
+	assert_almost_eq(
+		widget._idle_rotation_at(rotation_peak_time), CardWidget.IDLE_SWAY_RADIANS, 0.000001,
+		"idle roll should preserve Balatro's 0.02-radian dynamic term"
+	)
+	assert_almost_eq(
+		widget._idle_position_at(bob_peak_time).y, CardWidget.IDLE_BOB_HEIGHT, 0.000001,
+		"idle bob should preserve Balatro's card-relative 0.03-unit term"
+	)
+	assert_almost_eq(widget._idle_position_at(17.0).x, 0.0, 0.000001, "flat hand idle should not invent horizontal drift")
+	assert_almost_eq(
+		widget._idle_rotation_at(rotation_peak_time + PI),
+		widget._idle_rotation_at(rotation_peak_time),
+		0.000001,
+		"the roll period should remain PI seconds at 2 radians per second"
 	)
 
 
@@ -910,6 +1205,7 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 			"drag_visual_position": Vector2(1.5, -11.0),
 			"drag_visual_rotation": deg_to_rad(1.25),
 			"drag_visual_scale": Vector2.ONE * 1.04,
+			"drag_visual_tilt": Vector2(0.4, -0.3),
 		},
 		_hand_drop_between(screen, 1, 2)
 	)
@@ -924,6 +1220,10 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 		assert_almost_eq(
 			returned_widget.offset_transform_rotation, deg_to_rad(1.25), 0.000001,
 			"returned card should begin from the drag preview angle without snapping"
+		)
+		assert_true(
+			returned_widget._perspective_tilt.distance_to(Vector2(0.4, -0.3)) < 0.001,
+			"returned card should begin from the drag preview pitch and yaw without snapping"
 		)
 
 
@@ -1054,10 +1354,22 @@ func test_game_screen_can_open_card_detail_overlay():
 	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a desktop card detail overlay")
 	assert_not_null(_find_node_by_name(screen, "CardDetailPanel"), "card detail should render as a floating panel, not a standalone screen")
 	assert_not_null(_find_node_by_name(screen, "CloseCardDetailButton"), "card detail overlay should be closable")
+	var selected_widget := _find_card_widget_by_uid(screen, int(state.hand[0]))
+	assert_not_null(selected_widget)
+	if selected_widget != null:
+		assert_true(selected_widget.is_selected(), "the detailed card should retain Balatro-style selected lift")
+	screen.refresh()
+	await wait_process_frames(2)
+	selected_widget = _find_card_widget_by_uid(screen, int(state.hand[0]))
+	assert_not_null(selected_widget)
+	if selected_widget != null:
+		assert_true(selected_widget.is_selected(), "refreshing the rail must preserve the detailed card's selected pose")
 
 	screen.show_card_detail(int(state.hand[0]))
 	await wait_process_frames(1)
 	assert_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking the same card again should close the detail overlay")
+	if selected_widget != null:
+		assert_false(selected_widget.is_selected(), "closing the detail should smoothly deselect the card")
 
 
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():
