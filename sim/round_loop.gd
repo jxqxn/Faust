@@ -35,10 +35,16 @@ static func advance_day(state, db, rng) -> Dictionary:
 	state.day += 1
 	_update_rite_instances(state, db, rng, result)
 	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
+	# Sultan deadline decrements unconditionally. Execution is suppressed only
+	# while the card is embedded in an in-progress started rite (zone=slot, the
+	# rite is started, and life has not yet reached its round_number). The
+	# countdown can run to zero or below; only the game-over trigger is gated.
+	# [SRC: 知乎专栏 p/1909509257005831882 "已被嵌入仪式中的苏丹卡倒计时哪怕退到负数
+	#       都不会触发处刑"; 巴哈姆特 snA=111; BWIKI 新手指南]
 	var still_active: Array = []
 	for asc in state.active_sudan_cards:
 		asc.days_left -= 1
-		if asc.days_left <= 0:
+		if asc.days_left <= 0 and not _is_sudan_embedded_in_open_rite(state, db, asc):
 			result.expired.append(asc.card_id)
 			result.game_over = true
 			if state.has_method("remove_card_from_rail"):
@@ -361,3 +367,29 @@ static func _redraws_per_round(state, db) -> int:
 		"sudan_redraw_times_per_round",
 		db.init_config.get("sudan_redraw_times_per_round", 1)
 	))
+
+
+## A Sultan card is "embedded" (safe from execution) when it currently sits in
+## the slot zone of a started rite that has not yet reached its round_number.
+## This covers multi-day rites whose lifetime window shelters the card; a
+## settled or 0-day rite no longer qualifies because life >= round_number.
+## Defensive against missing state APIs and partially-built instances.
+## [SRC: 知乎专栏 p/1909509257005831882; 巴哈姆特 snA=111]
+static func _is_sudan_embedded_in_open_rite(state, db, asc) -> bool:
+	if asc == null or not state.has_method("get_card_instance"):
+		return false
+	var sudan_uid := int(asc.card_uid)
+	var instance = state.get_card_instance(sudan_uid)
+	if instance == null or instance.zone != "slot" or instance.rite_uid <= 0:
+		return false
+	if not state.has_method("get_rite_instance"):
+		return false
+	var rite = state.get_rite_instance(instance.rite_uid)
+	if rite == null or not rite.start:
+		return false
+	var round_number := 0
+	if db != null and db.rites.has(rite.id):
+		round_number = int(db.rites[rite.id].get("round_number", 0))
+	# life has already been incremented earlier in this advance_day cycle (see
+	# _update_rite_instances). The rite is "open" while life < round_number.
+	return rite.life < round_number
