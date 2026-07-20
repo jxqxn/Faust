@@ -13,6 +13,7 @@
 > - `docs/design/sultan-innovation-production-pipeline.md`——管线流程与 Stage A→J 闸门定义
 > - `docs/design/p5r-mda-experience-baseline.md`——P5R 的 MDA 分析，**作为灵感素材，不是验收判据**
 > - `docs/design/cultist-simulator-core-experience-atoms.md`——五个体验原子，**作为分析视角，不是必须继承的清单**
+> - `docs/research/narrative-card-game-research.md`——叙事卡牌设计谱系研究（Kennedy resource narrative 框架 + 苏丹/AHLCG/密教设计师原话查证），**作为 §3.5 断言分类的查证基线**
 >
 > 填写纪律：
 >
