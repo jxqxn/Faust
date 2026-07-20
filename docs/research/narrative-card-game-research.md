@@ -5,6 +5,8 @@
 > 范围：以 Alexis Kennedy（Failbetter / Weather Factory 创始人）和 MJ Newman（AHLCG 主设计师）等**设计师本人的原话**为一手资料，回答三个问题——叙事卡牌为什么能讲故事？密教/苏丹和 AHLCG 的真正差异在哪？我们做原创提案时该用什么诊断工具？
 >
 > 资料状态：2026-07-20。所有带 `[已查证]` 标签的断言都有可追溯的网络来源（文末附），关键引文来自作者本人博客或访谈。这份文档遵守 `original-pitch.md §3.5` 的断言分类纪律。
+>
+> **追加（2026-07-20，第二轮辩证后）**：§八 追加了更广叙事游戏谱系的查证事实——Hocking 的 ludonarrative dissonance、Apocalypse World 的 fiction first/fail forward、Citizen Sleeper 的 Blades in the Dark 血统、极乐迪斯科的机制与 Planescape Torment 血统。**这些事实不连成系统**，详见 §八末尾的边界说明。本研究的过度系统化失败记录在 `docs/research/ai-over-systematization-track-record.md`。
 
 ---
 
@@ -291,7 +293,88 @@ Kennedy 原文定义（策划语言翻译）：
 
 ---
 
-## 八、资料来源清单
+## 八、更广的叙事游戏设计谱系（追加于 2026-07-20）
+
+> 本节是后续辩证讨论中查证到的**零散硬事实**。**不连成系统**——它们是被反复放在一起讨论的设计语料，但没有统一理论解释它们为什么被放在一起。强行连成系统会重犯 §九记录的"过度系统化"错误，所以本节保持"事实清单"形态。
+
+### 8.1 Clint Hocking 的 ludonarrative dissonance（游戏叙事失调，2009）`[已查证]`
+
+来源：Clint Hocking 2009 年针对 BioShock 提出的概念。
+
+- **Dissonance（失调）**：游戏机制奖励的行为与叙事主题表达的价值**矛盾**。例：BioShock 叙事讲"自由意志 vs 外部控制"，但机制是线性的、玩家无法选择回避战斗的 shooter——机制和主题矛盾。
+- **Harmony（和谐）**：上述的反面——机制和叙事主题**不矛盾**。Papers, Please 是典型和谐案例（审查机制 vs 权力主题一致）。
+
+**重要边界（自审后修正）**：
+- harmony 是**必要条件**，不是**充分条件**。炉石机制和叙事不矛盾，但炉石叙事弱。
+- 所以**"harmony 高"不能解释"叙事强"**——它只能解释"叙事为什么不崩"。
+- 这个概念最有用的地方是**诊断**——发现提案的机制和叙事是否矛盾。不是预测叙事强度。
+
+### 8.2 Apocalypse World（2010，Vincent & Meguey Baker）`[已查证]`
+
+被认为是现代叙事 TTRPG 的分水岭。确立的两个核心原则：
+
+- **Fiction first（虚构优先）**：先在虚构世界描述动作，再触发机制；不是先掷骰再编故事。
+- **Fail forward（失败向前）**：失败的检定不停叙事，而是制造**新的复杂情况**。典型实现是 2d6 的 7-9"部分成功带代价"。
+
+这两个原则通过 **Powered by the Apocalypse (PbtA)** 和 **Forged in the Dark**（Blades in the Dark 衍生）两大 TTRPG 谱系扩散。
+
+**边界**：PbtA 是**一条设计谱系**，不是"所有叙事游戏的源头"。它在 Citizen Sleeper 上是直接源头（见 8.3），但在密教/苏丹/极乐迪斯科上是**平行演化**，不是继承关系。
+
+### 8.3 Citizen Sleeper 的设计血统（Gareth Damian Martin 亲述）`[已查证]`
+
+来源：[Rascal News 对 Gareth Damian Martin 的访谈](https://www.rascal.news/tracing-citizen-sleepers-circuitous-vector-from-tabletop-to-hit-video-game/)。
+
+Martin 的原话关键点：
+
+> **"One of the massive ones is the agency of the player in relation to dice in Blades. ... the idea of the player's body or character as being a resource that you invest in order to push fate in different directions."**
+
+策划翻译：Citizen Sleeper 的核心机制（身体作为可投入的资源、push/stress 系统、dice pool）**直接借鉴自 Blades in the Dark**（Forged in the Dark 谱系的代表作，John Harper 设计）。
+
+Martin 还说**骰子作为物件本身有"诗意联想"——命运、机会、脆弱**——所以他拒绝把骰子"fictionalize"成"能量核心"。
+
+**对 Faust 的意义**：Citizen Sleeper 是"骰子叙事游戏"的另一条血统（PbtA 源头），和苏丹/密教（Kennedy resource narrative 源头）**平行**。如果要研究"骰子检定如何承载叙事"，Citizen Sleeper 是独立于苏丹的另一参考点。
+
+### 8.4 极乐迪斯科（Disco Elysium, 2019, ZA/UM）的关键机制 `[已查证]`
+
+来源：[GameAnalytics Rezzed 2018 对 Kurvitz 的访谈](https://www.gameanalytics.com/blog/disco-elysium-rezzed-2018-interview) + [Game Design Thinking 系统分析](https://gamedesignthinking.com/disco-elysium-rpg-system-analysis/)。
+
+**机制心脏**：
+- **4 属性 × 6 技能 = 24 个"内心声音"**——每个技能不是被动数值，是**有人格、有议程的声音**，会在对话中主动打断主角，给出（有时互相矛盾的）建议。
+- **被动检定**让"主角脑子里吵架"——技能等级越高，打断越频繁，玩家越难选。**难度来自角色脑子的混乱，不来自外部敌人**。
+- **思维内阁（Thought Cabinet）**：12 个槽位的思想物品栏，60+ 种思想，**玩家在内化前不知道加成**。思想会改变角色人格取向（共产主义者/自由主义者等），解锁新对话选项。
+
+**Kurvitz 本人的设计自述**：
+- 受 Planescape: Torment 影响最深——"每个 RPG 都有一个酷侦探角色，那些一直是我最爱的 RPG 部分……我想做一个只有这个的游戏"。
+- 团队是 **8 个写作者**，把对话树称为 **"The Mind Shatterer"**——"I still call it 'The Mind Shatterer', it's just so difficult mentally"。
+
+**对 Faust 的意义**：极乐迪斯科和苏丹/密教**不是同一条设计谱系**——它继承自 Planescape: Torment 的 CRPG 内省传统。把它和苏丹/密教放在一起讨论是社区共识，但**它们强化叙事的机制路径不同**。
+
+### 8.5 学术界对密教/极乐迪斯科的并置研究 `[已查证存在]`
+
+来源：Friedrich 2025 MDes 学位论文（Concordia University），《Modeling the Late Bronze Age Collapse in The Jagged Time》。
+
+**注意置信度**：我确认论文存在 + 摘要里把密教和极乐迪斯科作为设计参考，但 PDF 损坏**未读全文**。所以这是"学术界在并置研究"的**存在性证据**，不是"学术界得出了什么结论"的证据。具体结论需要后续补查 PDF 全文。
+
+### 8.6 评论界一致认为极乐迪斯科是 ludonarrative harmony 的"金标准"案例 `[已查证]`
+
+来源：[Pop & Locke 播客](https://www.libertarianism.org/podcasts/pop-locke/disco-elysium) + [r/truegaming 讨论串](https://www.reddit.com/r/truegaming/comments/rbtked/my_eternal_quest_for_games_with_ludonarrative/)。
+
+- Pop & Locke 播客原话：思维内阁是 **"a really, really good example of Ludonarrative harmony"**。
+- r/truegaming："Disco Elysium has no dividing line at all between gameplay and narrative."
+
+**边界**：这条断言是评论界共识，不是设计师本人自述。Kurvitz 没有用 "ludonarrative harmony" 这个词描述自己的设计。
+
+### 8.7 本节的事实清单不构成统一理论
+
+**自审后的诚实边界**（详见 §九）：
+
+本节列出的六条事实是**零散的查证数据点**。它们被评论界、设计师社区、学术界反复放在一起讨论，但**没有一个统一的理论解释为什么这些游戏被放在一起**。尝试把它们连成"家族相似网络 + 共同源头 + 三种路径"的系统会重犯"过度系统化"错误——这是 §九记录的失败模式。
+
+策划用法：把这些事实当作**独立的设计参考点**，而不是一个统一框架。每个参考点单独评估其对原创提案的启发价值，不要假设它们能被一个理论统合。
+
+---
+
+## 九、资料来源清单
 
 所有 `[已查证]` 断言的可追溯来源，按可信度排序。
 
@@ -329,6 +412,30 @@ Kennedy 原文定义（策划语言翻译）：
 10. **苏丹与密教官方捆绑包报道** — 业界认可两者设计理念相似的硬证据
     https://cngame-fnscore.com/news-20260429-1038-9352
 
+11. **Clint Hocking ludonarrative dissonance 概念文献综述**（Frédéric Seraphine 整理）— Hocking 2009 年原概念的溯源与演化
+    https://www.fredericseraphine.com/index.php/2016/09/02/ludonarrative-dissonance-is-storytelling-about-reaching-harmony/
+
+12. **Tracing Citizen Sleeper's circuitous vector from tabletop to hit video game**（Rascal News 对 Gareth Damian Martin 的访谈）— Citizen Sleeper 借鉴 Blades in the Dark 的设计师亲述
+    https://www.rascal.news/tracing-citizen-sleepers-circuitous-vector-from-tabletop-to-hit-video-game/
+
+13. **Setting Position & Effect**（Blades in the Dark 官方）— John Harper 对核心机制设计意图的原意
+    https://bladesinthedark.com/setting-position-effect
+
+14. **Glossary of Terms**（Indie Game Reading Club）— fiction first / fail forward 的术语定义
+    https://indiegamereadingclub.com/glossary-of-terms/
+
+15. **Apocalypse World**（Grokipedia 词条）— Baker 夫妇的设计影响与 PbtA 谱系
+    https://grokipedia.com/page/Apocalypse_World
+
+16. **Disco Elysium RPG System Analysis**（Game Design Thinking）— 极乐迪斯科机制的系统分析（24 技能、思维内阁、与 D&D 的对比）
+    https://gamedesignthinking.com/disco-elysium-rpg-system-analysis/
+
+17. **Disco Elysium - Rezzed 2018 Interview**（GameAnalytics 对 Kurvitz 的访谈）— Kurvitz 本人的设计自述（Planescape Torment 血统、8 人写作团队、"The Mind Shatterer"）
+    https://www.gameanalytics.com/blog/disco-elysium-rezzed-2018-interview
+
+18. **Disco Elysium | Pop & Locke Podcast** — 思维内阁作为 ludonarrative harmony 典型的评论界共识
+    https://www.libertarianism.org/podcasts/pop-locke/disco-elysium
+
 ### 未读但已确认存在的资料（继续深挖的入口）
 
 - Kennedy 的书 *Against Worldbuilding (and Other Provocations)*（2021，论文集）— 权威术语出处，超出免费网络资料范围
@@ -337,7 +444,7 @@ Kennedy 原文定义（策划语言翻译）：
 
 ---
 
-## 九、这份文档的边界
+## 十、这份文档的边界
 
 **这份文档不是**：
 - 不是命题通过的依据（按 `original-pitch.md` 纪律，命题评审只能由人在 Stage A/B 闸门正式做出）
