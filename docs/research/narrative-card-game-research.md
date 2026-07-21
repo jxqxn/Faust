@@ -336,18 +336,71 @@ Martin 还说**骰子作为物件本身有"诗意联想"——命运、机会、
 
 ### 8.4 极乐迪斯科（Disco Elysium, 2019, ZA/UM）的关键机制 `[已查证]`
 
-来源：[GameAnalytics Rezzed 2018 对 Kurvitz 的访谈](https://www.gameanalytics.com/blog/disco-elysium-rezzed-2018-interview) + [Game Design Thinking 系统分析](https://gamedesignthinking.com/disco-elysium-rpg-system-analysis/)。
+来源：[GameAnalytics Rezzed 2018 对 Kurvitz 的访谈](https://www.gameanalytics.com/blog/disco-elysium-rezzed-2018-interview) + [Game Design Thinking 系统分析](https://gamedesignthinking.com/disco-elysium-rpg-system-analysis/) + [Disco Elysium Wiki (wiki.gg) Skills 页](https://discoelysium.wiki.gg/wiki/Skills) + [Fandom Wiki Skills 页](https://discoelysium.fandom.com/wiki/Skills) + [游资网"被动检定"中文解析](https://www.gameres.com/839980.html) + [indienova"主动检定"中文解析](https://indienova.com/indie-game-development/the-devlog-of-disco-elsium-2/)。
 
-**机制心脏**：
-- **4 属性 × 6 技能 = 24 个"内心声音"**——每个技能不是被动数值，是**有人格、有议程的声音**，会在对话中主动打断主角，给出（有时互相矛盾的）建议。
-- **被动检定**让"主角脑子里吵架"——技能等级越高，打断越频繁，玩家越难选。**难度来自角色脑子的混乱，不来自外部敌人**。
-- **思维内阁（Thought Cabinet）**：12 个槽位的思想物品栏，60+ 种思想，**玩家在内化前不知道加成**。思想会改变角色人格取向（共产主义者/自由主义者等），解锁新对话选项。
+#### 8.4.1 技能不是"能力值"，是"人格的侧面"（关键认知，曾被误解过）
 
-**Kurvitz 本人的设计自述**：
-- 受 Planescape: Torment 影响最深——"每个 RPG 都有一个酷侦探角色，那些一直是我最爱的 RPG 部分……我想做一个只有这个的游戏"。
+**24 个技能（4 属性 × 6 技能）不是"角色会什么"，是"角色是谁的 24 个侧面"**。每个技能都有自己的性格、议程、声音。
+
+具体例子（来自 wiki 词条原话）`[已查证]`：
+- **Half Light**（体魄下）—— "战斗或逃跑反应"。让身体接管、威胁他人。官方性格标签："Cool for: High-Strung Investigators"（适合神经紧绷的调查员）。这是**恐惧和攻击本能**，不是"威胁技能"。
+- **Volition**（心灵下）—— 意志。被玩家社区描述为"知道哈里内心的善良"。是**道德自我保存**，不是"意志力数值"。
+- **Inland Empire**（心灵下）—— "未经过滤的想象力、情感、预感的源泉"。是**感性的直觉**，不是"灵知能力"。
+- **Drama**（智力下）—— 检测谎言、戏剧性直觉。是**狡黠和表演欲**，不是"欺骗技能"。
+
+**技能等级 = 这个侧面的"音量"**，不是"能力强度"。等级越高这个声音越频繁插话，但**不一定帮玩家**——Game Design Thinking 文章原话："Some of these advices are plain bad for the character, making him lose life, morale and putting him into all kinds of trouble."（有些高技能给的建议纯粹有害，让角色掉血掉士气惹麻烦）。
+
+**结构同构**：在这个意义上，**极乐迪斯科技能 ≈ 苏丹的人物卡**——都是"有独立意志、独立议程的对象"，只不过苏丹的对象在外部（宫廷人物），极乐迪斯科的对象在内部（人格侧面）。这是 §8.4.3 对比的机制基础。
+
+#### 8.4.2 被动检定 vs 主动检定（精确机制，曾被多次误解）
+
+**最大的认知纠错**：被动检定**没有骰子、纯阈值判定**，不是概率性的。
+
+| | 被动检定 | 主动检定 |
+|---|---|---|
+| 触发 | 对话中**自动触发**，玩家无操作 | 玩家**主动选**对话选项触发 |
+| 判定 | **纯阈值**——技能等级 ≥ 难度即成功，无骰子 | **掷 2d6 + 技能 + 调整 vs 难度** |
+| 运气成分 | **无**——完全由等级决定 | **有**——掷骰含运气 |
+| 失败可见性 | **隐藏**——玩家不知道错过了什么 | 明确告知失败结果 |
+| 可重试 | 不适用 | 白色检定可（加技能点解锁重试），红色检定不可 |
+| 投出 2 / 12 | 不适用 | 2 = 大失败（必败），12 = 大成功（必成） |
+
+**被动检定的"隐藏失败"哲学** `[已查证]`：官方说法是"just like in real life there's things you know you don't know, and there's things you aren't even thinking about"（就像现实生活中，有些事你知道你不知道，有些事你根本没意识到）。两种被动检定：
+- **只有成功才显示**——失败时玩家不知道错过了某段对话/选项
+- **只有失败才显示**——显示角色的盲点、误判、跑偏（通常带有黑色幽默）
+
+**机制含义**：极乐迪斯科用两套不同机制建模角色的两层——
+- **"角色是什么人"（身份层）= 被动检定**：稳定、可预测、没运气，由 build 决定
+- **"角色做了什么"（行动层）= 主动检定**：有运气、有概率、可失败可重试
+
+这两层分开建模是极乐迪斯科的核心创新之一——传统 CRPG（如 Planescape: Torment）只用属性阈值（接近被动检定），没有这层分离。
+
+#### 8.4.3 思维内阁（Thought Cabinet）
+
+- **12 个槽位**的"思想物品栏"，60+ 种可获取思想。
+- 思想由技能在对话中**提议**，玩家可选择接受或拒绝。
+- 接受后需要**内化时间**（几个游戏小时内）才生效。
+- **玩家在内化前不知道加成**——可能加某技能，也可能减某技能加别的。这是给一个本低不确定性的系统注入不确定性的设计。
+- 内化后改变角色人格取向（共产主义者/法西斯主义者/超级明星刑法家…），解锁新对话选项。
+- 可"遗忘"思想腾位置，也可花钱开新槽——允许 error recovery。
+
+**类比**：思维内阁中的思想 ≈ 可以装备/卸载的"意识形态物品"。和技能（人格侧面）是不同层的对象——技能是"角色是谁"，思想是"角色信什么"。
+
+#### 8.4.4 Kurvitz 本人的设计自述
+
+来源：GameAnalytics Rezzed 2018 访谈原话 `[已查证]`。
+
+- 受 **Planescape: Torment** 影响最深——"每个 RPG 都有一个酷侦探角色，那些一直是我最爱的 RPG 部分……我想做一个只有这个的游戏"。
 - 团队是 **8 个写作者**，把对话树称为 **"The Mind Shatterer"**——"I still call it 'The Mind Shatterer', it's just so difficult mentally"。
+- 设计起点是"把 RPG 里最好的部分（侦探/对话/调查）抽出来做成整局游戏"，通过**剥离战斗**逼自己把所有叙事重量压在对话和检定上。
 
-**对 Faust 的意义**：极乐迪斯科和苏丹/密教**不是同一条设计谱系**——它继承自 Planescape: Torment 的 CRPG 内省传统。把它和苏丹/密教放在一起讨论是社区共识，但**它们强化叙事的机制路径不同**。
+#### 8.4.5 对 Faust 的意义
+
+- 极乐迪斯科和苏丹/密教**不是同一条设计谱系**——它继承自 Planescape: Torment 的 CRPG 内省传统，没有直接继承 PbtA/Kennedy 谱系。
+- 但它和苏丹/密教**结构同构**——都是"调度有独立意志/独立状态的对象"。苏丹的对象在外部（人物卡），极乐迪斯科的对象在内部（人格侧面）。这是"为什么社区把它们放在一起讨论"的深层原因。
+- 按 Kennedy 的 resource narrative 框架诊断 `[推断]`：极乐迪斯科的技能不满足 fungibility（每个人格侧面不可替代），所以严格说不算 Kennedy 定义的 resource narrative——但它用另一条路径（CRPG 属性极致化）实现了类似的"机制强化叙事"效果。
+
+### 8.5 学术界对密教/极乐迪斯科的并置研究 `[已查证存在]`
 
 ### 8.5 学术界对密教/极乐迪斯科的并置研究 `[已查证存在]`
 
@@ -435,6 +488,21 @@ Martin 还说**骰子作为物件本身有"诗意联想"——命运、机会、
 
 18. **Disco Elysium | Pop & Locke Podcast** — 思维内阁作为 ludonarrative harmony 典型的评论界共识
     https://www.libertarianism.org/podcasts/pop-locke/disco-elysium
+
+19. **Half Light - Disco Elysium Wiki (Fandom)** — 技能作为人格侧面的具体证据（"Cool for: High-Strung Investigators"、战斗或逃跑反应）
+    https://discoelysium.fandom.com/wiki/Half_Light
+
+20. **Skills - Disco Elysium Wiki (wiki.gg)** — 被动检定无骰子纯阈值、与主动检定的精确机制对比
+    https://discoelysium.wiki.gg/wiki/Skills
+
+21. **《极乐迪斯科》中的技能检定（上）：被动检定 - 游资网** — 中文详细解析，确认被动检定无骰子
+    https://www.gameres.com/839980.html
+
+22. **《极乐迪斯科》（三）主动检定 - indienova** — 主动检定红/白机制、2d6 + 技能 + 调整 vs 难度、2 必败 12 必成
+    https://indienova.com/indie-game-development/the-devlog-of-disco-elsium-2/
+
+23. **Passive Skill Checks - Steam Community** — "things you know you don't know" 隐藏失败哲学
+    https://steamcommunity.com/app/632470/discussions/0/1755780148311380301/
 
 ### 未读但已确认存在的资料（继续深挖的入口）
 
