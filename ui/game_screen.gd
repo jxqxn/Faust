@@ -11,6 +11,8 @@ signal open_rite_selector(location_name: String)
 signal menu_pressed()
 signal game_over_requested()
 
+const UiMotionScript = preload("res://ui/ui_motion.gd")
+
 class HandRailDrop:
 	extends Control
 
@@ -134,6 +136,7 @@ func _build_ui() -> void:
 	_menu_button.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
 	add_child(_menu_button)
+	UiMotionScript.bind(_menu_button)
 
 	_desk_map = _panel("DeskMap")
 	add_child(_desk_map)
@@ -156,6 +159,7 @@ func _build_ui() -> void:
 		site.pressed.connect(_on_site_pressed.bind(location_name))
 		_site_buttons.append(site)
 		_map_content.add_child(site)
+		UiMotionScript.bind(site, UiMotionScript.Profile.SITE)
 
 	_methinks_target = MethinksDrop.new()
 	_methinks_target.name = "MethinksDropTarget"
@@ -250,11 +254,13 @@ func _build_ui() -> void:
 	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(FaustTheme.BORDER))
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
+	UiMotionScript.bind(_advance_button, UiMotionScript.Profile.PRIMARY)
 
 	var redraw_btn := _icon_button("抽")
 	redraw_btn.name = "RedrawSudanButton"
 	redraw_btn.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(redraw_btn)
+	UiMotionScript.bind(redraw_btn)
 
 
 func _apply_layout() -> void:
@@ -453,6 +459,7 @@ func _create_rite_pin(instance) -> void:
 	_rite_pin_ids[pin] = instance.uid
 	_rite_pin_by_rite_id[instance.id] = pin
 	_map_content.add_child(pin)
+	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
 
 
 func _remove_rite_pin(pin: Button) -> void:
@@ -995,6 +1002,7 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_event_panel.clip_contents = true
 	_event_panel.add_theme_stylebox_override("panel", _event_panel_style())
 	_event_overlay.add_child(_event_panel)
+	UiMotionScript.bind(_event_panel, UiMotionScript.Profile.PANEL, true)
 
 	var root := VBoxContainer.new()
 	root.name = "EventPromptContent"
@@ -1126,6 +1134,7 @@ func _event_button(label: String) -> Button:
 	button.custom_minimum_size = Vector2(96, 36)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	UiMotionScript.bind(button, UiMotionScript.Profile.PRIMARY)
 	return button
 
 
@@ -1174,6 +1183,7 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_card_detail_panel.clip_contents = true
 	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
 	_card_detail_overlay.add_child(_card_detail_panel)
+	UiMotionScript.bind(_card_detail_panel, UiMotionScript.Profile.PANEL, true)
 
 	var root := VBoxContainer.new()
 	root.name = "CardDetailContent"
@@ -1241,6 +1251,7 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	close.add_theme_stylebox_override("pressed", _round_close_style(FaustTheme.BORDER))
 	close.pressed.connect(close_card_detail)
 	top_row.add_child(close)
+	UiMotionScript.bind(close)
 
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 16)

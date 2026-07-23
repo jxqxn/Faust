@@ -9,6 +9,7 @@ signal continue_pressed()
 signal user_archive_load_requested(index: int)
 signal user_archive_delete_requested(index: int)
 
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
 const DIFF_DESC := [
@@ -71,6 +72,7 @@ func _build_ui() -> void:
 		cont.add_theme_font_size_override("font_size", 22)
 		cont.pressed.connect(func(): continue_pressed.emit())
 		vbox.add_child(cont)
+		UiMotionScript.bind(cont, UiMotionScript.Profile.PRIMARY)
 		vbox.add_child(_spacer(8))
 	var archives := SaveSystem.list_user_archives(_db) if _db != null else []
 	if not archives.is_empty():
@@ -84,6 +86,7 @@ func _build_ui() -> void:
 		test_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		test_btn.pressed.connect(func(): test_start_requested.emit(1))
 		vbox.add_child(test_btn)
+		UiMotionScript.bind(test_btn)
 	# Difficulty cards.
 	for i in 3:
 		vbox.add_child(_make_diff_card(i))
@@ -117,6 +120,7 @@ func _make_diff_card(index: int) -> Control:
 	btn.custom_minimum_size = Vector2(90, 40)
 	btn.pressed.connect(_on_difficulty.bind(index))
 	row.add_child(btn)
+	UiMotionScript.bind(btn, UiMotionScript.Profile.PRIMARY)
 	col.add_child(row)
 	var desc := Label.new()
 	desc.text = DIFF_DESC[index]
@@ -166,6 +170,7 @@ func _make_archive_row(archive: Dictionary) -> Control:
 	load.custom_minimum_size = Vector2(72, 42)
 	load.pressed.connect(func(): user_archive_load_requested.emit(int(archive.get("index", -1))))
 	row.add_child(load)
+	UiMotionScript.bind(load)
 	var delete := Button.new()
 	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
 	delete.text = "删除"
@@ -173,6 +178,7 @@ func _make_archive_row(archive: Dictionary) -> Control:
 	delete.custom_minimum_size = Vector2(72, 42)
 	delete.pressed.connect(_confirm_delete_archive.bind(int(archive.get("index", -1))))
 	row.add_child(delete)
+	UiMotionScript.bind(delete)
 	return panel
 
 

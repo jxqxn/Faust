@@ -5,6 +5,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -35,6 +36,97 @@ func test_main_menu_uses_wide_viewport_width():
 	await wait_process_frames(2)
 
 	assert_true(_widest_content(menu) >= MIN_CONTENT_WIDTH, "main menu content should use the wide viewport")
+
+
+func test_ui_motion_animates_visuals_without_moving_layout_or_hit_rect():
+	var stage := _stage()
+	var button := Button.new()
+	button.position = Vector2(80, 60)
+	button.size = Vector2(160, 48)
+	stage.add_child(button)
+	var layout_position := button.position
+	var layout_size := button.size
+	var motion = UiMotionScript.bind(button, UiMotionScript.Profile.PRIMARY)
+
+	motion.set_hovered_for_test(true)
+	for frame in 18:
+		motion._process(1.0 / 60.0)
+
+	assert_eq(button.position, layout_position, "motion must not change Container or anchor layout")
+	assert_eq(button.size, layout_size, "motion must not change the hit rectangle")
+	assert_true(button.offset_transform_visual_only, "interaction motion should be visual-only")
+	assert_true(button.offset_transform_scale.x > 1.0, "hover should lightly enlarge the visual")
+	assert_almost_eq(
+		button.offset_transform_position.y,
+		0.0,
+		0.001,
+		"ordinary UI hover should remain vertically anchored"
+	)
+
+
+func test_ui_motion_press_interrupts_hover_without_resetting_the_pose():
+	var stage := _stage()
+	var button := Button.new()
+	stage.add_child(button)
+	var motion = UiMotionScript.bind(button)
+	motion.set_hovered_for_test(true)
+	for frame in 12:
+		motion._process(1.0 / 60.0)
+	var hover_scale := button.offset_transform_scale.x
+
+	motion.set_pressed_for_test(true)
+	motion._process(1.0 / 60.0)
+	var first_pressed_scale := button.offset_transform_scale.x
+
+	assert_true(
+		absf(first_pressed_scale - hover_scale) < 0.08,
+		"press should retarget the active spring instead of snapping to a new Tween"
+	)
+	for frame in 18:
+		motion._process(1.0 / 60.0)
+	assert_true(
+		button.offset_transform_scale.x < hover_scale,
+		"held buttons should settle toward a compact pressed pose"
+	)
+
+
+func test_ui_motion_panel_reveal_is_bounded_and_settles():
+	var stage := _stage()
+	var panel := PanelContainer.new()
+	panel.position = Vector2(180, 90)
+	panel.size = Vector2(320, 240)
+	stage.add_child(panel)
+	var layout_position := panel.position
+	var motion = UiMotionScript.bind(panel, UiMotionScript.Profile.PANEL, true)
+
+	assert_true(panel.offset_transform_position.y > 0.0, "panel reveal should start slightly below rest")
+	assert_true(panel.self_modulate.a < 1.0, "panel reveal should begin transparent")
+	for frame in 90:
+		motion._process(1.0 / 60.0)
+
+	assert_eq(panel.position, layout_position, "panel reveal must preserve its anchored rectangle")
+	assert_almost_eq(panel.offset_transform_position.y, 0.0, 0.01)
+	assert_almost_eq(panel.offset_transform_scale.x, 1.0, 0.001)
+	assert_almost_eq(panel.self_modulate.a, 1.0, 0.001)
+
+
+func test_representative_desktop_controls_share_ui_motion():
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(71))
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(72))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	for node_name in ["MenuButton", "SiteHome", "AdvanceDayButton"]:
+		var control := _find_node_by_name(screen, node_name)
+		assert_not_null(control, "%s should exist" % node_name)
+		if control != null:
+			assert_not_null(
+				control.get_node_or_null(UiMotionScript.DRIVER_NAME),
+				"%s should use the shared interaction motion" % node_name
+			)
 
 
 func test_main_menu_hides_continue_without_valid_player_save():

@@ -15,6 +15,8 @@
 ## [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 extends Control
 
+const UiMotionScript = preload("res://ui/ui_motion.gd")
+
 class RiteSlotButton:
 	extends Button
 
@@ -120,6 +122,7 @@ func _build_ui() -> void:
 	_rite_panel = _panel("RiteOverlayPanel")
 	_rite_panel.clip_contents = true
 	add_child(_rite_panel)
+	UiMotionScript.bind(_rite_panel, UiMotionScript.Profile.PANEL, true)
 	_build_panel_content()
 
 	_log_label = Label.new()
@@ -146,6 +149,7 @@ func _build_slot_placeholders() -> void:
 		btn.add_theme_stylebox_override("focus", _slot_style(FaustTheme.GOLD_BRIGHT))
 		btn.pressed.connect(_on_slot_pressed.bind(slot_key))
 		_slot_layer.add_child(btn)
+		UiMotionScript.bind(btn, UiMotionScript.Profile.SLOT)
 		_slot_buttons[slot_key] = btn
 
 		var box := VBoxContainer.new()
@@ -234,6 +238,7 @@ func _build_panel_content() -> void:
 	_gold_dice_btn.custom_minimum_size = Vector2(96, 34)
 	_gold_dice_btn.pressed.connect(_use_gold_dice_reactive)
 	action_row.add_child(_gold_dice_btn)
+	UiMotionScript.bind(_gold_dice_btn)
 
 	_result_label = RichTextLabel.new()
 	_result_label.name = "RiteResult"
@@ -258,6 +263,7 @@ func _build_panel_content() -> void:
 	_close_btn.custom_minimum_size = Vector2(44, 42)
 	_close_btn.pressed.connect(_close_panel)
 	bottom_row.add_child(_close_btn)
+	UiMotionScript.bind(_close_btn)
 
 	_resolve_btn = _round_button("✓")
 	_resolve_btn.name = "ResolveRiteButton"
@@ -265,6 +271,7 @@ func _build_panel_content() -> void:
 	_resolve_btn.custom_minimum_size = Vector2(52, 42)
 	_resolve_btn.pressed.connect(_resolve)
 	bottom_row.add_child(_resolve_btn)
+	UiMotionScript.bind(_resolve_btn, UiMotionScript.Profile.PRIMARY)
 
 	_result_label.text = "[color=#a89880]从下方手牌选择卡牌后，点击左侧方块卡槽。[/color]"
 

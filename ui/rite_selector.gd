@@ -7,6 +7,8 @@ signal rite_chosen(rite_id: int)
 signal rite_chosen_instance(rite_uid: int)
 signal closed()
 
+const UiMotionScript = preload("res://ui/ui_motion.gd")
+
 var _db
 var _state = null
 var _rng = null
@@ -58,6 +60,7 @@ func _build_ui() -> void:
 	close_btn.custom_minimum_size = Vector2(100, 40)
 	close_btn.pressed.connect(func(): closed.emit())
 	head.add_child(close_btn)
+	UiMotionScript.bind(close_btn)
 	root.add_child(head)
 	# Scrollable list.
 	var scroll := ScrollContainer.new()
@@ -118,6 +121,7 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		btn.tooltip_text = str(r.get("text", ""))
 		btn.pressed.connect(_on_rite_instance.bind(instance.uid))
 		grid.add_child(btn)
+		UiMotionScript.bind(btn, UiMotionScript.Profile.SITE)
 	_list_container.add_child(grid)
 
 

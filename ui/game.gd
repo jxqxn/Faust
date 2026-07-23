@@ -7,6 +7,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 var db: ConfigDB
 var state: GameState
@@ -190,6 +191,7 @@ func _show_game_menu() -> void:
 	panel.offset_right = 130
 	panel.offset_bottom = 165
 	_menu_overlay.add_child(panel)
+	UiMotionScript.bind(panel, UiMotionScript.Profile.PANEL, true)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
@@ -227,6 +229,7 @@ func _menu_button(label: String) -> Button:
 	var button := Button.new()
 	button.text = label
 	button.custom_minimum_size = Vector2(220, 42)
+	UiMotionScript.bind(button)
 	return button
 
 
@@ -263,6 +266,7 @@ func _show_user_archive_overlay() -> void:
 	panel.offset_bottom = 280
 	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
 	_user_archive_overlay.add_child(panel)
+	UiMotionScript.bind(panel, UiMotionScript.Profile.PANEL, true)
 
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 10)
@@ -292,6 +296,7 @@ func _show_user_archive_overlay() -> void:
 	create.tooltip_text = "存档槽已满" if new_index < 0 else ""
 	create.pressed.connect(_save_user_archive.bind(new_index, ""))
 	create_row.add_child(create)
+	UiMotionScript.bind(create, UiMotionScript.Profile.PRIMARY)
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -310,6 +315,7 @@ func _show_user_archive_overlay() -> void:
 	back.custom_minimum_size = Vector2(0, 42)
 	back.pressed.connect(_close_user_archive_overlay)
 	box.add_child(back)
+	UiMotionScript.bind(back)
 
 
 func _make_user_archive_save_row(archive: Dictionary) -> Control:
@@ -330,6 +336,7 @@ func _make_user_archive_save_row(archive: Dictionary) -> Control:
 	overwrite.custom_minimum_size = Vector2(72, 42)
 	overwrite.pressed.connect(_confirm_overwrite_user_archive.bind(int(archive.get("index", -1)), str(archive.get("name", ""))))
 	row.add_child(overwrite)
+	UiMotionScript.bind(overwrite)
 	var delete := Button.new()
 	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
 	delete.text = "删除"
@@ -337,6 +344,7 @@ func _make_user_archive_save_row(archive: Dictionary) -> Control:
 	delete.custom_minimum_size = Vector2(72, 42)
 	delete.pressed.connect(_confirm_delete_user_archive.bind(int(archive.get("index", -1))))
 	row.add_child(delete)
+	UiMotionScript.bind(delete)
 	return row
 
 
