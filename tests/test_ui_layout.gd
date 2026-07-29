@@ -978,7 +978,11 @@ func test_card_widget_drag_preview_starts_from_selected_pose_without_angle_jump(
 		"starting a drag must not add a fixed left tilt"
 	)
 	stage.add_child(widget)
-	await wait_process_frames(1)
+	# The first drag sample only establishes the pointer baseline.  Calling the
+	# step directly keeps this visual contract independent of GUT's scene-tree
+	# scheduling, which can otherwise advance a newly attached preview beyond
+	# its initial pointer baseline before this coroutine resumes in a full run.
+	widget._step_drag_motion(Vector2.ZERO, 1.0 / 60.0)
 
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "drag preview should not intercept drop targets")
 	assert_true(
