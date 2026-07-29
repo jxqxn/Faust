@@ -1,8 +1,8 @@
-# AGENTS.md — 苏丹的游戏 Godot 克隆项目
+# AGENTS.md — Faust Godot 项目
 
 ## 项目目标
 
-在 `C:\Users\User\Documents\GitHub\Faust` 用 Godot 4.x 克隆 Unity 游戏《苏丹的游戏》。
+在 `C:\Users\User\Documents\GitHub\Faust` 维护《苏丹的游戏》规则复刻底座，并以该底座在主工程中验证“模拟一名角色如何形成意志并采取行动”的原创方向。
 
 ## 语料库
 
@@ -14,23 +14,24 @@
 
 ## 当前进度
 
-Godot 工程具备主桌面、仪式浮层、事件队列、运行时卡牌/仪式实例、v5 存读档与第一批常驻仪式。卡牌 UID、运行时标签、数量和仪式槽位归属均由 `CardInstance` 维护；v4 及更早存档明确拒绝加载且不显示继续游戏。
+Godot 工程具备横版主场景、统一“思考”入口、仪式浮层、事件队列、运行时卡牌/仪式实例、v5 存读档与第一批常驻仪式。卡牌 UID、运行时标签、数量和仪式槽位归属均由 `CardInstance` 维护；v4 及更早存档明确拒绝加载且不显示继续游戏。
 
 已验收治理家业/俺寻思/淘书生成存读档链，以及“上朝 -> 权力的游戏 -> 标签移除”实例链。全配置中未支持的 DSL 键必须继续由 `tools/export_dsl_audit.gd` 按配置 ID、次数和位置报告，不得静默视为支持。
 
-## 项目阶段：复刻维护冻结 + 原创创意发散中（2026-07-19 修正）
+## 项目阶段：复刻维护冻结 + 原创方向修正/机制定义（2026-07-29 修正）
 
-复刻的研究目的已基本达成：规则引擎、Condition/Result DSL 子集、分层结算、苏丹卡循环、CardInstance、v5 存读档与首周四链均成立（253 测试 / 3100 断言全绿）。剩余缺口（全量事件/仪式内容、全 DSL、新手引导、表现层）属于内容铺量与产品化，不再是能力缺口。
+复刻的研究目的已基本达成：规则引擎、Condition/Result DSL 子集、分层结算、苏丹卡循环、CardInstance、v5 存读档与首周四链均成立。主工程现已接入横版场景、主角移动和统一“思考”入口；最近一次完整验收为 271 个测试、3011 个断言全绿。剩余复刻缺口属于内容铺量与产品化，不再是默认开发方向。
 
 **默认行为：**
 
 - 复刻进入**维护冻结**。继续修复 bug、保持测试绿、保持 Queue/Save/DSL 审计边界不变，但**不再扩展苏丹的内容链、仪式与 DSL 覆盖**。不要把配置中的全部仪式或卡牌直接塞入正常开局。
-- 原创产线当前位于**创意发散阶段**（`docs/design/sultan-innovation-production-pipeline.md` 的 Stage A 之前）。`docs/design/original-pitch.md` 是素材汇集区，**不是已通过的立项文档**：没有命题、没有核心机制、没有评审结论。允许同时并存多个互相矛盾的方向假设。
-- **创意阶段纪律（2026-07-19 确立）：**
-  - 任何"命题已通过""核心机制是 X""我们决定 Y"的措辞都表示走错了阶段，应回到素材发散。
-  - 题材、机制、UI、数据结构、`modes/` 子目录、配置、原型代码——**都属于实施层，不在此阶段决定或产出**。
-  - 命题评审只能由人在 Stage A/B 闸门处正式做出，由评审记录（`original-pitch.md` §6）记入；不能由文档或会话在正文单方面宣布"已通过"。
-- 原创原型**不要直接进入 Faust 主工程**。前车之鉴：2026-07-16 `calendar_coop` 模式（8 提交 / 34 文件 / 2263 行）被整体 revert，因为它跳过了命题压缩直接进实现并污染了主分支。新原型应在独立子目录、独立 Godot 项目或纸面/表格上进行，命题评审通过后再决定接入方式。
+- 原创方向的当前工作定义见 `docs/design/single-character-will-simulation.md`。创新目标不是“用苏丹系统扮演一个人”，而是“用对象化系统模拟一名角色如何在外部压力下形成意志并采取行动”。
+- 玩家控制角色当下可调用的注意与执行意图，**不等于**角色的全部意志。身体、情绪、习惯、记忆、观念和关系可以影响玩家看见什么、想到什么和行动的阻力。
+- 内在不一致不能被简化为“多个人格轮流说台词”。盲点、默认、冲动、身体反应、行动惯性和无法直接控制的状态都属于机制候选；具体采用哪一项仍需原型验证。
+- 横版场景和思考云是**表现与交互探针**，不是创新命题本身。《十三机兵防卫圈》只提供表现语法参考；不得把视觉相似视为机制成立。
+- 用户已明确授权在 Faust 主工程中实施机制原型。允许复用现有 Queue、Save、CardInstance、Rite 和结算边界，并继续用苏丹内容占位；但占位内容只能验证技术链，不能作为原创体验成立的证据。
+- 当前不进入原创内容生产：不要新增人格名册、技能台词、剧情包、题材设定或“思维内阁”内容。先修正设计问题、建立机制假说和无内容的体验验收标准。
+- `MethinksEngine`、`drop_card_on_methinks` 等命名属于复刻期兼容接口。玩家可见概念统一为“思考”；在机制方向确定前，不因命名不理想而破坏已验收的旧链。
 - 复刻期的强约束在创新期依然适用：未支持的规则要进入审计而不是被静默吞掉；存档/队列边界要保留；不要按配置数量机械安排内容。
 
 ## 语料库在创新期的新角色
@@ -76,7 +77,8 @@ Godot 工程具备主桌面、仪式浮层、事件队列、运行时卡牌/仪�
   `SaveSystem` archive APIs so index metadata and slot payloads stay together.
   Loading an archive refreshes the continue save; deletion removes both the
   index record and payload. Keep the 50-slot limit and the v5 player-save gate.
-- The accepted first-week content batch is governance, I-think, book
+- The accepted first-week clone-content batch is governance, the legacy
+  Methinks compatibility chain, book
   shop/search, and tagged Sultan -> Power Game. Keep all other DSL gaps in the
   machine-readable audit rather than silently marking them supported.
 - Use the reachability metadata in `tools/export_dsl_audit.gd` to choose the

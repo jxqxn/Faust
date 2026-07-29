@@ -110,7 +110,7 @@ func test_ui_motion_panel_reveal_is_bounded_and_settles():
 	assert_almost_eq(panel.self_modulate.a, 1.0, 0.001)
 
 
-func test_representative_desktop_controls_share_ui_motion():
+func test_representative_main_screen_controls_share_ui_motion():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(71))
 	var stage := _stage()
@@ -199,9 +199,9 @@ func test_game_screen_uses_wide_viewport_width():
 
 	assert_true(_widest_content(screen) >= MIN_CONTENT_WIDTH, "game screen content should use the wide viewport")
 	var desk_map := _find_node_by_name(screen, "DeskMap") as Control
-	assert_not_null(desk_map, "game screen should keep the desktop map as the wide central panel")
+	assert_not_null(desk_map, "game screen should keep the lateral scene as the wide central panel")
 	if desk_map != null:
-		assert_true(desk_map.size.x >= MIN_CONTENT_WIDTH, "desktop map should not remain in a left-column layout")
+		assert_true(desk_map.size.x >= MIN_CONTENT_WIDTH, "lateral scene should not remain in a left-column layout")
 
 
 func test_game_screen_uses_bottom_card_rail_for_sudan_and_hand():
@@ -408,7 +408,7 @@ func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
 	assert_not_null(_find_node_by_name(screen, "RitePin_991602"), "same-name variant config remains a distinct map entry")
 
 
-func test_game_screen_merges_methinks_into_think_button_drop_target():
+func test_game_screen_exposes_one_player_facing_thought_drop_target():
 	var rng := RNG.new(17)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -422,19 +422,19 @@ func test_game_screen_merges_methinks_into_think_button_drop_target():
 	var world := _find_node_by_name(screen, "SceneWorld")
 	var card_uid := state.card_uid_for(2000001, "hand")
 	var drag_data := {"type": "card", "card_id": 2000001, "card_uid": card_uid, "source": "hand"}
-	assert_not_null(target, "thinking and I-think should share one visible control")
-	assert_null(_find_node_by_name(screen, "MethinksDropTarget"), "the obsolete standalone I-think target should be gone")
+	assert_not_null(target, "all player-facing thought interactions should share one visible control")
+	assert_null(_find_node_by_name(screen, "MethinksDropTarget"), "the obsolete standalone clone-era target should be gone")
 	if target == null or world == null:
 		return
 	assert_eq((target as Button).text, "思考", "the merged control should always use the single player-facing name")
-	assert_lt(target.position.x, world.size.x * 0.2, "the merged thought control stays in the old I-think position")
+	assert_lt(target.position.x, world.size.x * 0.2, "the unified thought control stays in the established lower-left position")
 	assert_false(target._can_drop_data(Vector2.ZERO, drag_data), "the button is not a card target while walking")
 	world.set_thinking(true)
-	assert_eq((target as Button).text, "思考", "entering thought mode must not rename the control to I-think")
+	assert_eq((target as Button).text, "思考", "entering thought mode must not expose the legacy mechanism name")
 	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the thinking button accepts cards during thought mode")
 
 
-func test_methinks_drop_generates_rite_without_opening_rite_overlay():
+func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.init_config["think_id"] = 999000
@@ -467,15 +467,15 @@ func test_methinks_drop_generates_rite_without_opening_rite_overlay():
 		{"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"}
 	)
 
-	assert_true(5000001 in state.available_rites, "I-think should generate rites through desktop processing")
-	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "I-think creates a fresh runtime rite instead of a config-only flag")
+	assert_true(5000001 in state.available_rites, "the legacy card-to-thought bridge should generate rites through scene processing")
+	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "the compatibility bridge creates a fresh runtime rite instead of a config-only flag")
 	assert_true(state.hand_has_card_id(2000001), "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
 	var prompt_panel := _find_node_by_name(screen, "EventPromptPanel") as Control
 	var scene := _find_node_by_name(screen, "DeskMap") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
-	assert_not_null(prompt_panel, "I-think results should use the scene event prompt layer")
-	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "I-think should not open the rite overlay")
+	assert_not_null(prompt_panel, "card-to-thought results should use the scene event prompt layer")
+	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "card-to-thought processing should not open the rite overlay")
 	assert_true(world.is_thinking(), "dropping a card should keep the thought cloud open for the generated rite")
 	if prompt_panel != null and scene != null and rail != null:
 		assert_lte(
@@ -506,7 +506,7 @@ func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "queued choices should render as a desktop overlay")
+	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "queued choices should render as a scene overlay")
 	var choice := _find_node_by_name(screen, "EventPromptChoiceButton") as Button
 	assert_not_null(choice, "choice prompts should render clickable option buttons")
 	if choice == null:
@@ -591,7 +591,7 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 	await wait_process_frames(2)
 
 	var panel := _find_node_by_name(screen, "EventPromptPanel")
-	assert_not_null(panel, "queued events should render as a desktop overlay even before event configs are imported")
+	assert_not_null(panel, "queued events should render as a scene overlay even before event configs are imported")
 	var text := _collect_label_and_button_text(panel)
 	assert_true(text.find("5310008") >= 0, "missing event configs should fall back to a visible event id")
 
@@ -753,7 +753,7 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	await wait_process_frames(2)
 
 	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
-	assert_not_null(pin, "triggered rites should appear as clickable map pins on the main desktop")
+	assert_not_null(pin, "triggered rites should appear as clickable thoughts in the main scene")
 	if pin == null:
 		return
 	pin.pressed.emit()
@@ -1551,7 +1551,7 @@ func test_game_screen_can_open_card_detail_overlay():
 	screen.show_card_detail(int(state.hand[0]))
 	await wait_process_frames(1)
 
-	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a desktop card detail overlay")
+	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a main-screen card detail overlay")
 	assert_not_null(_find_node_by_name(screen, "CardDetailPanel"), "card detail should render as a floating panel, not a standalone screen")
 	assert_not_null(_find_node_by_name(screen, "CloseCardDetailButton"), "card detail overlay should be closable")
 	var selected_widget := _find_card_widget_by_uid(screen, int(state.hand[0]))

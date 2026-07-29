@@ -1,6 +1,6 @@
-## Rite overlay: appears on top of the main desk screen instead of replacing it.
-## It owns the rite slots and settlement controls, while the main desktop HUD,
-## map, hand rail, and day controls remain visible underneath.
+## Rite overlay: appears on top of the main scene instead of replacing it.
+## It owns the rite slots and settlement controls, while the main scene HUD,
+## lateral world, hand rail, and day controls remain visible underneath.
 ## Cards move between hand, slots, and back again like the original
 ## CardController/CardDropManager flow instead of being copied into placeholders.
 ## [SRC: CardController.c @ OnDrag/OnEndDrag/RemoveFromSlot (RVA 0x52a150/0x52a570/0x52ba20);

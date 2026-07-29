@@ -144,7 +144,7 @@ func _build_overlay() -> void:
 	_think_button.name = "ThinkButton"
 	(_think_button as ThinkDropButton).owner_world = self
 	_think_button.text = "思考"
-	_think_button.tooltip_text = "停下脚步，让可以采取的行动浮现在意识中"
+	_think_button.tooltip_text = "停下脚步，让此刻的念头浮现"
 	_think_button.custom_minimum_size = Vector2(138, 54)
 	_think_button.add_theme_font_size_override("font_size", 15)
 	_think_button.add_theme_color_override("font_color", Color(0.98, 0.96, 0.89, 0.94))
@@ -231,9 +231,9 @@ func set_thinking(enabled: bool) -> void:
 	_hint_label.text = "选择一段思绪，或按 ESC 回到现实" if enabled else "A / D 或 ← / → 移动"
 	_think_button.text = "思考"
 	_think_button.tooltip_text = (
-		"拖入手牌或苏丹卡触发俺寻思；点击或按 ESC 结束思考"
+		"拖入手牌或苏丹卡产生联想；点击或按 ESC 结束思考"
 		if enabled
-		else "停下脚步，让可以采取的行动浮现在意识中"
+		else "停下脚步，让此刻的念头浮现"
 	)
 	_audio.stream = THINK_SOUND if enabled else SELECT_SOUND
 	if not DisplayServer.get_name() == "headless":
@@ -251,6 +251,8 @@ func can_drop_card_on_think_button(data: Variant) -> bool:
 	if not _thinking:
 		return false
 	var screen := get_parent()
+	# Methinks is the verified clone-era processing bridge. Keep that internal
+	# compatibility boundary while the player-facing concept remains Thought.
 	return (
 		screen != null
 		and screen.has_method("can_drop_card_on_methinks")
@@ -276,9 +278,12 @@ func set_thought_targets(targets: Array) -> void:
 
 func set_thought_count(count: int) -> void:
 	if count <= 0:
-		_thought_heading.text = "此刻没有可以追随的思绪"
+		_thought_heading.text = "此刻没有浮现的念头"
 	else:
-		_thought_heading.text = "思考 · %d" % count
+		# The runtime currently knows how many placeholder rites are visible,
+		# but presenting a total would imply that the character sees an
+		# exhaustive action menu. The new direction keeps that count internal.
+		_thought_heading.text = "思考"
 
 
 func protagonist_center() -> Vector2:

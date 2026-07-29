@@ -2,7 +2,7 @@
 
 > 目的：记录 AI 在叙事/设计推理中反复出现的"过度系统化"失败模式，作为后续会话的防坑参考。
 >
-> 关联文档：`narrative-card-game-research.md`（研究主体）、`original-pitch.md §3.5`（断言分类纪律）、HTML demo 的 v1→v5 track record（复刻理解层的 track record）。
+> 关联文档：`narrative-card-game-research.md`（研究主体）、`docs/design/single-character-will-simulation.md §8`（证据与阶段纪律）、HTML demo 的 v1→v5 track record（复刻理解层的 track record）。
 >
 > 资料状态：2026-07-20。
 
@@ -122,7 +122,7 @@
 
 ### 闸门应用
 
-按 `original-pitch.md §3.5` 的纪律扩展：
+按 `docs/design/single-character-will-simulation.md §8` 的纪律扩展：
 
 **任何对叙事/设计推理的系统性断言**（不只是对苏丹/P5R 具体机制的断言），进入 Stage A/B 评审时必须通过以下三道闸：
 
@@ -136,7 +136,7 @@
 
 **这份文档是**：
 - 一个具体的失败模式的记录
-- 对 `original-pitch.md §3.5` 纪律的具体扩展（诊断力自检 + N 值自检）
+- 对当前证据与阶段纪律的具体扩展（诊断力自检 + N 值自检）
 - 对未来会话的防坑参考
 
 **这份文档不是**：

@@ -13,6 +13,18 @@ its copyrighted characters, backgrounds, footage, logos, or UI art. The
 project ships only original generated production art and separately licensed
 open assets.
 
+## Design boundary
+
+The lateral scene and thought cloud are presentation and interaction probes.
+They are not the project's innovation claim. Their job is to make embodiment,
+place, time, and currently perceived possibilities legible. A visual match
+does not prove that the single-character simulation works.
+
+The current working direction is defined in
+`docs/design/single-character-will-simulation.md`. Sultan rites and cards may
+continue to appear here as technical placeholders, but their presence only
+verifies the existing runtime chain.
+
 ## Primary references
 
 - Official ATLUS product page and trailers:

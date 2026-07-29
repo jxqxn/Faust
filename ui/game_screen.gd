@@ -1,6 +1,6 @@
-﻿## Main in-game desk screen.
-## Layout mirrors docs/mockups/game-screen-layout.html: a top HUD, a broad
-## desk/map area, and a bottom card rail beside the day/action controls.
+﻿## Main in-game scene screen.
+## The legacy class now hosts the lateral ThoughtWorld while preserving the
+## shared card rail, runtime overlays, queue surfaces, and day controls.
 extends Control
 
 signal open_rite(rite_id: int)
@@ -873,6 +873,9 @@ func can_drop_card_to_hand(data: Variant) -> bool:
 	return source == "slot" or source == "hand" or source == "active_sudan"
 
 
+# Clone-era compatibility adapter. ThoughtWorld owns the player-facing
+# "思考" interaction; this method preserves the verified MethinksEngine chain
+# until a replacement mechanism has been prototyped and accepted.
 func can_drop_card_on_methinks(data: Variant) -> bool:
 	if not (data is Dictionary):
 		return false
