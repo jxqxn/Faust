@@ -454,6 +454,38 @@ func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
 	assert_true(state.event_prompts.is_empty(), "continue should consume the prompt queue")
 
 
+func test_game_screen_rename_operation_blocks_for_input_and_updates_card() -> void:
+	var rng := RNG.new(190)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var card_uid := int(state.hand[0])
+	state.queue_operation("rename_card", "rename.test", {
+		"card_uid": card_uid,
+		"title": "为卡牌命名",
+		"text": "输入一个名字。",
+		"initial_text": "旧名字",
+	}, {"card_uid": card_uid})
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var input := _find_node_by_name(screen, "CardRenameInput") as LineEdit
+	var confirm := _find_node_by_name(screen, "CardRenameConfirmButton") as Button
+	assert_not_null(input, "rename operations render a real text input")
+	assert_not_null(confirm, "rename operations require an explicit confirmation")
+	if input == null or confirm == null:
+		return
+	input.text = "新名字"
+	confirm.pressed.emit()
+	await wait_process_frames(2)
+
+	assert_true(state.pending_operations.is_empty())
+	assert_eq(str(state.card_data_for(card_uid, db).name), "新名字")
+	assert_null(_find_node_by_name(screen, "CardRenameInput"), "the blocking rename overlay closes after a valid submission")
+
+
 func test_game_screen_option_choice_uses_configured_label():
 	var rng := RNG.new(191)
 	var state := GameState.new()
@@ -1462,6 +1494,27 @@ func test_game_screen_can_open_card_detail_overlay():
 	assert_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking the same card again should close the detail overlay")
 	if selected_widget != null:
 		assert_false(selected_widget.is_selected(), "closing the detail should smoothly deselect the card")
+
+
+func test_card_detail_lists_attached_equipment() -> void:
+	var rng := RNG.new(901)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var host_uid := int(state.hand[0])
+	var equipment_uid := state.add_card_to_hand(2000246, db)
+	state.attach_equipment(host_uid, equipment_uid, db, true, true)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	screen.show_card_detail(host_uid)
+	await wait_process_frames(1)
+	var detail := _find_node_by_name(screen, "CardDetailPanel")
+	var text := _collect_label_and_button_text(detail)
+	assert_true(text.find("装备") >= 0, "card detail exposes an equipment section")
+	assert_true(text.find("匕首") >= 0, "the attached equipment name is visible to the player")
 
 
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():

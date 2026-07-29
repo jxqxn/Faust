@@ -163,10 +163,242 @@ func card_data_for(uid: int, db) -> Dictionary:
 		instance.tags = card.get("tag", {}).duplicate(true)
 	card["id"] = instance.card_id
 	card["instance_uid"] = instance.uid
-	card["tag"] = instance.tags.duplicate(true)
+	card["tag"] = effective_card_tags(instance.uid, db)
 	card["count"] = instance.count
 	card["is_lost"] = instance.is_lost
+	card["rare"] = clampi(int(card.get("rare", 1)) + instance.rare_up, 1, 4)
+	if not instance.custom_name.is_empty():
+		card["name"] = instance.custom_name
+	if not instance.custom_text.is_empty():
+		card["text"] = instance.custom_text
+	card["base_name"] = str(db.get_card(instance.card_id).get("name", "")) if db != null else ""
+	card["rare_up"] = instance.rare_up
+	card["equip_slots"] = card_equip_slots(instance.uid, db)
+	card["equipped_uids"] = instance.equipped_uids.duplicate()
+	var equipped_cards: Array[Dictionary] = []
+	for equipped_uid in instance.equipped_uids:
+		var equipped = get_card_instance(int(equipped_uid))
+		if equipped == null:
+			continue
+		var equipped_definition: Dictionary = db.get_card(equipped.card_id).duplicate(true) if db != null else {}
+		equipped_definition["instance_uid"] = equipped.uid
+		equipped_definition["equipped_slot"] = equipped.equipped_slot
+		equipped_cards.append(equipped_definition)
+	card["equipped_cards"] = equipped_cards
 	return card
+
+
+func effective_card_tags(uid: int, db) -> Dictionary:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return {}
+	var effective: Dictionary = instance.tags.duplicate(true)
+	for equipped_uid in instance.equipped_uids:
+		var equipped = get_card_instance(int(equipped_uid))
+		if equipped == null or equipped.zone != "equipped":
+			continue
+		for tag_name in equipped.tags:
+			if not _equipment_tag_contributes(str(tag_name), db):
+				continue
+			effective[str(tag_name)] = int(effective.get(str(tag_name), 0)) + int(equipped.tags[tag_name])
+	return effective
+
+
+func _equipment_tag_contributes(tag_name: String, db) -> bool:
+	if db == null:
+		return false
+	var code := str(db.tag_name_to_code.get(tag_name, ""))
+	if code.is_empty() or not db.tags_by_code.has(code):
+		return false
+	# GetTag includes attached-card values only for TagNode's offset 0x43,
+	# which dump.cs maps to can_nagative_and_zero (not can_inherit).
+	# [SRC: decompiled/CardExtensions.c @ GetTag (RVA 0x3814a0);
+	#  dump.cs:386944-386950 TagNode field layout.]
+	return int(db.tags_by_code[code].get("can_nagative_and_zero", 0)) != 0
+
+
+func set_card_custom_name(uid: int, value: String) -> bool:
+	var instance = get_card_instance(uid)
+	var clean_value := value.strip_edges().left(32)
+	if instance == null or clean_value.is_empty():
+		return false
+	instance.custom_name = clean_value
+	return true
+
+
+func set_card_custom_text(uid: int, value: String) -> bool:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return false
+	instance.custom_text = value.strip_edges()
+	return true
+
+
+func modify_card_rarity(uid: int, delta: int, db) -> bool:
+	var instance = get_card_instance(uid)
+	if instance == null or db == null:
+		return false
+	var base_rare := int(db.get_card(instance.card_id).get("rare", 1))
+	var before := clampi(base_rare + instance.rare_up, 1, 4)
+	var after := clampi(before + delta, 1, 4)
+	instance.rare_up += after - before
+	return after != before
+
+
+func card_equip_slots(uid: int, db) -> Array[String]:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return []
+	var slots: Array[String] = []
+	if db != null:
+		for slot in db.get_card(instance.card_id).get("equips", []):
+			slots.append(str(slot))
+	for removed_slot in instance.removed_equip_slots:
+		var removed_index := slots.find(str(removed_slot))
+		if removed_index >= 0:
+			slots.remove_at(removed_index)
+	for slot in instance.equip_slots:
+		slots.append(str(slot))
+	return slots
+
+
+func add_card_equip_slot(uid: int, slot: String, db) -> bool:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return false
+	var normalized := _equip_slot_name(slot, db)
+	if normalized.is_empty():
+		return false
+	instance.equip_slots.append(normalized)
+	return true
+
+
+func remove_card_equip_slot(uid: int, slot: String, db) -> bool:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return false
+	var normalized := _equip_slot_name(slot, db)
+	var added_index: int = instance.equip_slots.find(normalized)
+	if added_index >= 0:
+		instance.equip_slots.remove_at(added_index)
+	elif normalized in card_equip_slots(uid, db):
+		instance.removed_equip_slots.append(normalized)
+	else:
+		return false
+	for equipment_uid in instance.equipped_uids.duplicate():
+		var equipment = get_card_instance(int(equipment_uid))
+		if equipment != null and equipment.equipped_slot == normalized:
+			detach_equipment(uid, int(equipment_uid), true)
+			break
+	return true
+
+
+func attach_equipment(host_uid: int, equipment_uid: int, db, recover_replaced := false, enforce_slot := false) -> int:
+	var host = get_card_instance(host_uid)
+	var equipment = get_card_instance(equipment_uid)
+	if host == null or equipment == null or host_uid == equipment_uid:
+		return -1
+	if enforce_slot and (
+		host.zone != "hand"
+		or equipment.zone != "hand"
+		or int(equipment.tags.get("装备", 0)) < 1
+	):
+		return -1
+	var slot := _matching_equip_slot(host_uid, equipment_uid, db)
+	if enforce_slot and slot.is_empty():
+		return -1
+	# Interactive CanEquip accepts only a hand-card host and an equipment-tagged
+	# hand card whose category intersects a host slot. Operation-driven +equip
+	# deliberately calls this with enforce_slot=false (see ResultExec).
+	# [SRC: decompiled/CardExtensions.c @ CanEquip (RVA 0x37ec10);
+	#  decompiled/CardController.c @ CardEquip (RVA 0x528020).]
+	var replaced_uid := 0
+	if recover_replaced and not slot.is_empty():
+		var slot_capacity := card_equip_slots(host_uid, db).count(slot)
+		var occupying_uids: Array[int] = []
+		for current_uid in host.equipped_uids:
+			var current = get_card_instance(int(current_uid))
+			if current != null and current.equipped_slot == slot:
+				occupying_uids.append(int(current.uid))
+		if occupying_uids.size() >= slot_capacity and not occupying_uids.is_empty():
+			replaced_uid = occupying_uids[0]
+			detach_equipment(host_uid, replaced_uid, true)
+	if equipment.zone == "hand":
+		hand.erase(equipment_uid)
+		_erase_one_from_rail(equipment_uid)
+	elif equipment.zone == "slot":
+		_unlink_slot_instance(equipment)
+	if equipment.equipped_to_uid > 0:
+		detach_equipment(equipment.equipped_to_uid, equipment_uid, false)
+	equipment.zone = "equipped"
+	equipment.rite_uid = 0
+	equipment.slot_key = ""
+	equipment.equipped_to_uid = host_uid
+	equipment.equipped_slot = slot
+	if equipment_uid not in host.equipped_uids:
+		host.equipped_uids.append(equipment_uid)
+	return replaced_uid
+
+
+func detach_equipment(host_uid: int, equipment_uid: int, recover_to_hand := false) -> bool:
+	var host = get_card_instance(host_uid)
+	var equipment = get_card_instance(equipment_uid)
+	if host == null or equipment == null or equipment_uid not in host.equipped_uids:
+		return false
+	host.equipped_uids.erase(equipment_uid)
+	equipment.equipped_to_uid = 0
+	equipment.equipped_slot = ""
+	equipment.zone = "removed"
+	if recover_to_hand:
+		add_card_to_hand(equipment_uid)
+	return true
+
+
+func _matching_equip_slot(host_uid: int, equipment_uid: int, db) -> String:
+	var equipment = get_card_instance(equipment_uid)
+	if equipment == null:
+		return ""
+	for slot in card_equip_slots(host_uid, db):
+		if int(equipment.tags.get(slot, 0)) > 0:
+			return slot
+	return ""
+
+
+func _equip_slot_name(slot: String, db) -> String:
+	var value := slot.strip_edges()
+	if db != null and db.tags_by_code.has(value):
+		return str(db.tags_by_code[value].get("name", value))
+	return value
+
+
+func repair_equipment_links() -> void:
+	# Treat the parent list and child's backlink as a single persisted relation.
+	# Malformed/partial saves must not leave invisible cards contributing stats.
+	for host in card_instances.values():
+		var valid: Array[int] = []
+		var seen: Dictionary = {}
+		for raw_uid in host.equipped_uids:
+			var equipment_uid := int(raw_uid)
+			var equipment = get_card_instance(equipment_uid)
+			if (
+				equipment == null
+				or equipment_uid == int(host.uid)
+				or seen.has(equipment_uid)
+				or equipment.zone != "equipped"
+				or equipment.equipped_to_uid != int(host.uid)
+			):
+				continue
+			seen[equipment_uid] = true
+			valid.append(equipment_uid)
+		host.equipped_uids = valid
+	for equipment in card_instances.values():
+		if equipment.zone != "equipped":
+			continue
+		var host = get_card_instance(int(equipment.equipped_to_uid))
+		if host == null or int(equipment.uid) not in host.equipped_uids:
+			equipment.zone = "removed"
+			equipment.equipped_to_uid = 0
+			equipment.equipped_slot = ""
 
 
 func _resolve_card_uid(card_or_uid: int, preferred_zone: String = "") -> int:

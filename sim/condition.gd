@@ -314,7 +314,8 @@ static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
 		var s := 0
 		for slot_key in slots:
 			for tc in st.cards_in_slot(_slot_num(slot_key), rite_uid):
-				s += int(tc.get("tags", {}).get(attr_name, 0))
+				var effective: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), ctx.get("db"))
+				s += int(effective.get("tag", {}).get(attr_name, 0))
 		total += signs[i] * s
 	return total
 
@@ -359,7 +360,7 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 			var f_rare := false
 			var db_rare = ctx.get("db")
 			for tc in cards:
-				var card_rare: Dictionary = db_rare.get_card(int(tc.get("id", 0)))
+				var card_rare: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), db_rare)
 				if apply_compare(int(card_rare.get("rare", 0)), want_rare, parsed_rare.op):
 					f_rare = true
 					break
@@ -370,7 +371,8 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 		var need := int(val)
 		var ok := false
 		for tc in cards:
-			if apply_compare(int(tc.get("tags", {}).get(tag_name, 0)), need, tag_query.op):
+			var effective_card: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), ctx.get("db"))
+			if apply_compare(int(effective_card.get("tag", {}).get(tag_name, 0)), need, tag_query.op):
 				ok = true
 				break
 		return ok if not negate else not ok

@@ -90,6 +90,7 @@ var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
 var _event_panel: Panel
+var _rename_input: LineEdit
 var _sleep_waiting := false
 
 
@@ -973,6 +974,13 @@ func _next_event_display() -> Dictionary:
 			"text": str(payload.get("text", payload.get("desc", ""))),
 			"choices": payload.get("choices", {}),
 		}
+	if kind == "rename_card":
+		return {
+			"kind": kind,
+			"title": str(payload.get("title", "为卡牌命名")),
+			"text": str(payload.get("text", "")),
+			"initial_text": str(payload.get("initial_text", "")),
+		}
 	if kind == "sleep":
 		return {"kind": "sleep", "seconds": float(payload.get("seconds", 0.0))}
 	if kind == "event":
@@ -1034,13 +1042,30 @@ func _show_event_overlay(display: Dictionary) -> void:
 	body.scroll_active = true
 	root.add_child(body)
 
+	if str(display.get("kind", "")) == "rename_card":
+		_rename_input = LineEdit.new()
+		_rename_input.name = "CardRenameInput"
+		_rename_input.text = str(display.get("initial_text", ""))
+		_rename_input.placeholder_text = "输入名字"
+		_rename_input.max_length = 32
+		_rename_input.custom_minimum_size = Vector2(320, 42)
+		_rename_input.text_submitted.connect(func(_value: String): _consume_event_display())
+		root.add_child(_rename_input)
+		_rename_input.call_deferred("grab_focus")
+		_rename_input.call_deferred("select_all")
+
 	var buttons := HFlowContainer.new()
 	buttons.name = "EventPromptActions"
 	buttons.add_theme_constant_override("separation", 10)
 	root.add_child(buttons)
 
 	var choices: Dictionary = display.get("choices", {})
-	if choices.is_empty():
+	if str(display.get("kind", "")) == "rename_card":
+		var confirm_rename := _event_button("确认")
+		confirm_rename.name = "CardRenameConfirmButton"
+		confirm_rename.pressed.connect(_consume_event_display)
+		buttons.add_child(confirm_rename)
+	elif choices.is_empty():
 		var cont := _event_button("继续")
 		cont.name = "EventPromptContinueButton"
 		cont.pressed.connect(_consume_event_display)
@@ -1063,6 +1088,7 @@ func _clear_event_overlay() -> void:
 	_event_overlay.queue_free()
 	_event_overlay = null
 	_event_panel = null
+	_rename_input = null
 
 
 func _consume_event_display(choice_key: String = "", choice_value: Variant = "") -> void:
@@ -1079,6 +1105,14 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
+	elif kind == "rename_card":
+		var card_uid := int(trigger_ctx.get("card_uid", payload.get("card_uid", 0)))
+		if _rename_input == null or not _state.set_card_custom_name(card_uid, _rename_input.text):
+			# Keep the operation in front until the player submits a non-empty
+			# name; the original naming overlay is likewise a blocking promise.
+			_state.pending_operations.push_front(operation)
+			return
+		set_log("卡牌已命名")
 	elif kind == "event":
 		var event_id := int(operation.get("id", 0))
 		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
@@ -1263,6 +1297,7 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	body.add_child(info)
 	_add_detail_section(info, "属性", _attribute_lines(card))
 	_add_detail_section(info, "标签", _tag_lines(card))
+	_add_detail_section(info, "装备", _equipment_lines(card))
 
 	var portrait := ColorRect.new()
 	portrait.name = "CardDetailPortraitPlaceholder"
@@ -1355,6 +1390,17 @@ func _tag_lines(card: Dictionary) -> Array[String]:
 	if visible_tags.is_empty():
 		return []
 	return [" ".join(visible_tags.slice(0, 10))]
+
+
+func _equipment_lines(card: Dictionary) -> Array[String]:
+	var lines: Array[String] = []
+	for equipment in card.get("equipped_cards", []):
+		if not (equipment is Dictionary):
+			continue
+		var slot := str(equipment.get("equipped_slot", ""))
+		var name := str(equipment.get("name", equipment.get("id", "?")))
+		lines.append("%s：%s" % [slot if not slot.is_empty() else "附着", name])
+	return lines
 
 
 func _rarity_badge(card: Dictionary) -> String:

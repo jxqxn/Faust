@@ -125,6 +125,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.next_card_uid = int(data.get("next_card_uid", 1))
 	for card_uid in state.card_instances:
 		state.next_card_uid = maxi(state.next_card_uid, int(card_uid) + 1)
+	if state.has_method("repair_equipment_links"):
+		state.repair_equipment_links()
 	for cid in data.get("hand", []):
 		state.hand.append(int(cid))
 	state.sudan_deck.clear()
@@ -179,7 +181,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.pending_operations.clear()
 	if data.get("pending_operations", null) is Array:
 		for operation in data.pending_operations:
-			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep"]:
+			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep", "rename_card"]:
 				state.pending_operations.append(operation.duplicate(true))
 	else:
 		# First queue-schema saves were still v5. Their old split queues have no

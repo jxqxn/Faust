@@ -14,6 +14,19 @@ var is_lost := false
 var zone := "hand" # hand, slot, sudan, removed
 var rite_uid := 0
 var slot_key := ""
+# Persistent presentation/gameplay deltas. The definition id never changes:
+# the original Card stores rareup/custom_name/custom_text on the runtime card.
+# [SRC: decompiled/OperationContext.c @ UprareCard (RVA 0x3a03d0);
+#  decompiled/ChangeCardName.__c__DisplayClass7_0.c @ <Do>b__0;
+#  decompiled/Card.c @ get_Rare (RVA 0x383c30)]
+var rare_up := 0
+var custom_name := ""
+var custom_text := ""
+var equip_slots: Array[String] = []
+var removed_equip_slots: Array[String] = []
+var equipped_uids: Array[int] = []
+var equipped_to_uid := 0
+var equipped_slot := ""
 
 
 func _init(instance_uid: int = 0, definition_id: int = 0, initial_tags: Dictionary = {}) -> void:
@@ -32,6 +45,14 @@ func to_save_dict() -> Dictionary:
 		"zone": zone,
 		"rite_uid": rite_uid,
 		"slot_key": slot_key,
+		"rare_up": rare_up,
+		"custom_name": custom_name,
+		"custom_text": custom_text,
+		"equip_slots": equip_slots.duplicate(),
+		"removed_equip_slots": removed_equip_slots.duplicate(),
+		"equipped_uids": equipped_uids.duplicate(),
+		"equipped_to_uid": equipped_to_uid,
+		"equipped_slot": equipped_slot,
 	}
 
 
@@ -46,4 +67,15 @@ static func from_save_dict(data: Dictionary):
 	instance.zone = str(data.get("zone", "hand"))
 	instance.rite_uid = int(data.get("rite_uid", 0))
 	instance.slot_key = str(data.get("slot_key", ""))
+	instance.rare_up = int(data.get("rare_up", 0))
+	instance.custom_name = str(data.get("custom_name", ""))
+	instance.custom_text = str(data.get("custom_text", ""))
+	for slot in data.get("equip_slots", []):
+		instance.equip_slots.append(str(slot))
+	for slot in data.get("removed_equip_slots", []):
+		instance.removed_equip_slots.append(str(slot))
+	for equipped_uid in data.get("equipped_uids", []):
+		instance.equipped_uids.append(int(equipped_uid))
+	instance.equipped_to_uid = int(data.get("equipped_to_uid", 0))
+	instance.equipped_slot = str(data.get("equipped_slot", ""))
 	return instance

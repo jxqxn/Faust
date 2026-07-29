@@ -51,6 +51,12 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k.begins_with("table.clean."):
 		return true
+	if _is_modify_rare_key(k) or _is_change_card_copy_key(k):
+		return true
+	if _is_equip_key(k) or _is_equip_slot_key(k):
+		return true
+	if k == "change_name":
+		return true
 	if _is_slot_tag_op(k):
 		return true
 	if (k.begins_with("table.") or k.begins_with("g.")) and _has_tag_op_after_dot(k):
@@ -133,6 +139,23 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			state.clear_rite_cards(int(state.active_rite_uid))
 			deferred.clean_rite = true
 		return
+	# Persistent runtime-card changes. These must run before the generic slot
+	# tag parser because equip/equip_slot are relationships, not ordinary tags.
+	if _is_modify_rare_key(k):
+		_apply_modify_rare(k, val, state, db, context)
+		return
+	if _is_change_card_copy_key(k):
+		_apply_change_card_copy(k, val, state, context)
+		return
+	if k == "change_name":
+		_queue_change_name(val, state, db, deferred, context)
+		return
+	if _is_equip_key(k):
+		_apply_equip(k, val, state, db, context)
+		return
+	if _is_equip_slot_key(k):
+		_apply_equip_slot(k, val, state, db, context)
+		return
 	# Slot tag op: s<n>+/-<tag>  (ModifyTag).
 	if _is_slot_tag_op(k):
 		_apply_slot_tag(k, val, state, db, context)
@@ -202,7 +225,11 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.loots.append(val)
 		_record_effect(deferred, "loot", {"value": val}, context)
 		return
-	if k == "no_show":
+	if k == "no_show" and val is Dictionary:
+		# NoShowOperations hides the card-operation presentation, then starts
+		# its nested AllOperations payload. [SRC: decompiled/NoShowOperations.c
+		# @ PreDo (RVA 0x500410); dump.cs:312597-312612.]
+		_merge_case(deferred, execute(val, state, db, context))
 		return
 	# case:opN reached via execute_choice: run the matched case subtree as a
 	# nested result dict. This is the player's chosen branch from an option.
@@ -384,6 +411,155 @@ static func _is_slot_tag_op(k: String) -> bool:
 	if not k.begins_with("s"):
 		return false
 	return ("+" in k or "-" in k or "=" in k) and not k.begins_with("sudan")
+
+
+static func _is_modify_rare_key(k: String) -> bool:
+	if k.begins_with("s") and k.ends_with(".uprare"):
+		return k.substr(1, k.find(".") - 1).is_valid_int()
+	if (k.begins_with("table.") or k.begins_with("g.")) and k.ends_with(".uprare"):
+		return RuntimeOperationFilter.supports_selector(k.get_slice(".", 1))
+	return false
+
+
+static func _is_change_card_copy_key(k: String) -> bool:
+	if not (k.begins_with("change_card_name.") or k.begins_with("change_card_text.")):
+		return false
+	var parts := k.split(".", false)
+	return parts.size() == 3 and str(parts[2]).begins_with("s") and str(parts[2]).substr(1).is_valid_int()
+
+
+static func _is_equip_key(k: String) -> bool:
+	if not k.begins_with("s"):
+		return false
+	for suffix in ["+equip", "-equip", "~equip"]:
+		if k.ends_with(suffix):
+			return k.substr(1, k.length() - suffix.length() - 1).is_valid_int()
+	return false
+
+
+static func _is_equip_slot_key(k: String) -> bool:
+	if not k.begins_with("s"):
+		return false
+	for suffix in ["+equip_slot", "-equip_slot"]:
+		if k.ends_with(suffix):
+			return k.substr(1, k.length() - suffix.length() - 1).is_valid_int()
+	return false
+
+
+static func _apply_modify_rare(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	var targets: Array[int] = []
+	if k.begins_with("s"):
+		targets = _slot_target_uids(k.substr(0, k.find(".")), state, context)
+	else:
+		var selector := k.get_slice(".", 1)
+		var contextual_uid := int(context.get("card_uid", 0))
+		for instance in RuntimeOperationFilter.select_total(state, db, selector):
+			if contextual_uid <= 0 or int(instance.uid) == contextual_uid:
+				targets.append(int(instance.uid))
+	for uid in targets:
+		state.modify_card_rarity(uid, int(val), db)
+
+
+static func _apply_change_card_copy(k: String, val: Variant, state, context: Dictionary) -> void:
+	var parts := k.split(".", false)
+	if parts.size() != 3:
+		return
+	for uid in _slot_target_uids(str(parts[2]), state, context):
+		if str(parts[0]) == "change_card_name":
+			state.set_card_custom_name(uid, str(val))
+		else:
+			state.set_card_custom_text(uid, str(val))
+
+
+static func _queue_change_name(val: Variant, state, db, deferred: Dictionary, context: Dictionary) -> void:
+	var card_id := int(val)
+	var target_uid := int(context.get("card_uid", 0))
+	if target_uid > 0:
+		var contextual = state.get_card_instance(target_uid)
+		if contextual == null or contextual.card_id != card_id:
+			target_uid = 0
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+	if target_uid <= 0 and rite_uid > 0:
+		for entry in state.cards_in_slot_entries_for_rite(rite_uid):
+			if int(entry.get("id", 0)) == card_id:
+				target_uid = int(entry.get("card_uid", 0))
+				break
+	if target_uid <= 0:
+		target_uid = state.card_uid_for(card_id, "hand")
+	if target_uid <= 0:
+		return
+	var card: Dictionary = state.card_data_for(target_uid, db)
+	var payload := {
+		"card_uid": target_uid,
+		"title": "为卡牌命名",
+		"text": "为%s起一个新名字。" % str(card.get("name", "这张卡牌")),
+		"initial_text": str(card.get("name", "")),
+	}
+	var rename_context := context.duplicate(true)
+	rename_context["card_uid"] = target_uid
+	rename_context["rite_uid"] = rite_uid
+	_record_effect(deferred, "rename_card", payload, rename_context)
+
+
+static func _apply_equip(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	var op_index := maxi(k.rfind("+equip"), maxi(k.rfind("-equip"), k.rfind("~equip")))
+	if op_index < 0:
+		return
+	var selector := k.substr(0, op_index)
+	var op := k[op_index]
+	for host_uid in _slot_target_uids(selector, state, context):
+		var host = state.get_card_instance(host_uid)
+		if host == null:
+			continue
+		if op == "+":
+			var equipment_id := int(val[0]) if val is Array and not val.is_empty() else int(val)
+			var equipment = state.create_card_instance(equipment_id, db, "removed")
+			if equipment != null:
+				# Result ModifyEquip directly calls AddEquip after generating the
+				# card; it does not run the interactive CanEquip replacement gate.
+				# [SRC: decompiled/ModifyEquip.c @ HandleCard (RVA 0x516ab0)]
+				state.attach_equipment(host_uid, equipment.uid, db, false, false)
+			continue
+		var equipped_snapshot: Array[int] = host.equipped_uids.duplicate()
+		for equipment_uid in equipped_snapshot:
+			var equipment = state.get_card_instance(int(equipment_uid))
+			if equipment == null or not _equipment_matches(equipment, val, db):
+				continue
+			state.detach_equipment(host_uid, equipment.uid, op == "~")
+
+
+static func _equipment_matches(equipment, selector_value: Variant, db) -> bool:
+	var selectors: Array = selector_value if selector_value is Array else [selector_value]
+	for raw_selector in selectors:
+		var selector := str(raw_selector)
+		if selector.is_valid_int() and equipment.card_id == selector.to_int():
+			return true
+		if RuntimeOperationFilter.matches_card_data(equipment.card_id, equipment.tags, db, selector):
+			return true
+	return false
+
+
+static func _apply_equip_slot(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	var add := "+equip_slot" in k
+	var suffix := "+equip_slot" if add else "-equip_slot"
+	var selector := k.substr(0, k.length() - suffix.length())
+	var values: Array = val if val is Array else [val]
+	for uid in _slot_target_uids(selector, state, context):
+		for slot in values:
+			if add:
+				state.add_card_equip_slot(uid, str(slot), db)
+			else:
+				state.remove_card_equip_slot(uid, str(slot), db)
+
+
+static func _slot_target_uids(selector: String, state, context: Dictionary) -> Array[int]:
+	var targets: Array[int] = []
+	if not selector.begins_with("s") or not selector.substr(1).is_valid_int():
+		return targets
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+	for entry in state.cards_in_slot(selector.substr(1).to_int(), rite_uid):
+		targets.append(int(entry.get("card_uid", 0)))
+	return targets
 
 
 static func _has_tag_op_after_dot(k: String) -> bool:

@@ -72,6 +72,13 @@ static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 			state.schedule_delay(payload, context)
 		"sleep":
 			state.queue_operation("sleep", "sleep", {"seconds": float(payload.get("seconds", 0.0))}, context)
+		"rename_card":
+			state.queue_operation(
+				"rename_card",
+				"rename.%d" % int(context.get("card_uid", payload.get("card_uid", 0))),
+				payload,
+				context
+			)
 		"rite":
 			state.add_available_rite(int(payload.get("id", 0)), db, rng)
 		"loot":
