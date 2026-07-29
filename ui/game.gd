@@ -105,6 +105,35 @@ func _show_game() -> void:
 	gs.refresh()
 
 
+## Visual-capture hook used by the managed UI review tool. It opens a normal
+## run and enters the same thought state a player reaches with Space.
+func _mcp_capture_thought_world() -> void:
+	if state == null:
+		_on_difficulty_selected(0)
+	elif _game_screen == null:
+		_show_game()
+	if _game_screen == null:
+		return
+	var world := _game_screen.get_node_or_null("SceneWorld")
+	if world != null and world.has_method("set_thinking"):
+		world.set_thinking(true)
+
+
+func _mcp_capture_compact_prompt() -> void:
+	if state == null:
+		_on_difficulty_selected(0)
+	elif _game_screen == null:
+		_show_game()
+	if state == null or _game_screen == null:
+		return
+	state.queue_prompt({
+		"id": "capture.compact_prompt",
+		"title": "一闪而过的念头",
+		"text": "也许趁机把房子装修一番，可以满足眷属的需求……",
+	})
+	_game_screen.refresh()
+
+
 func _on_open_rite_selector(location_filter: String = "") -> void:
 	# Count via the static filter to avoid instantiating a RiteSelector node
 	# just to probe (Nodes are not GC'd, so a probe instance would leak).

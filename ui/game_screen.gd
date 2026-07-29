@@ -12,6 +12,7 @@ signal menu_pressed()
 signal game_over_requested()
 
 const UiMotionScript = preload("res://ui/ui_motion.gd")
+const ThoughtWorldScript = preload("res://ui/thought_world.gd")
 
 class HandRailDrop:
 	extends Control
@@ -38,18 +39,6 @@ class HandRailDrop:
 			owner_screen.call("_set_hand_pan_ratio", ratio)
 
 
-class MethinksDrop:
-	extends PanelContainer
-
-	var owner_screen: Control
-
-	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-		return owner_screen != null and owner_screen.has_method("can_drop_card_on_methinks") and owner_screen.can_drop_card_on_methinks(data)
-
-	func _drop_data(_at_position: Vector2, data: Variant) -> void:
-		if owner_screen != null and owner_screen.has_method("drop_card_on_methinks"):
-			owner_screen.drop_card_on_methinks(data)
-
 const MOCKUP_SIZE := Vector2(1280, 720)
 const HAND_NATURAL_STEP := 112.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
@@ -62,12 +51,12 @@ var _rng
 var _round_label: Label
 var _gold_label: Label
 var _log_label: Label
+var _background: ColorRect
 var _hud: PanelContainer
 var _menu_button: Button
 var _desk_map: PanelContainer
 var _map_content: Control
 var _overlay_layer: Control
-var _methinks_target: PanelContainer
 var _rail_label: VBoxContainer
 var _card_rail_view: Control
 var _rail_padding: MarginContainer
@@ -110,12 +99,16 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = FaustTheme.BG_DEEP
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	_background = ColorRect.new()
+	_background.name = "ScreenBackground"
+	_background.color = Color("#090b16")
+	add_child(_background)
+	# The screen uses an explicit scaled layout; keep the background on the
+	# same top-left coordinate system so resizing it does not fight anchors.
+	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	_hud = _panel("Hud")
+	_hud.add_theme_stylebox_override("panel", _chrome_panel_style())
 	add_child(_hud)
 	var hud_row := HBoxContainer.new()
 	hud_row.add_theme_constant_override("separation", 24)
@@ -133,25 +126,30 @@ func _build_ui() -> void:
 	_menu_button.name = "MenuButton"
 	_menu_button.text = "菜单"
 	_menu_button.flat = true
-	_menu_button.add_theme_font_size_override("font_size", 18)
-	_menu_button.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_menu_button.add_theme_font_size_override("font_size", 15)
+	_menu_button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.82))
+	_menu_button.add_theme_color_override("font_hover_color", Color("#fff0ba"))
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
 	add_child(_menu_button)
 	UiMotionScript.bind(_menu_button)
 
 	_desk_map = _panel("DeskMap")
+	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
 	add_child(_desk_map)
-	_map_content = Control.new()
+	_map_content = ThoughtWorldScript.new()
+	_map_content.name = "SceneWorld"
 	_map_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_map_content.clip_contents = true
+	_map_content.thinking_changed.connect(_on_thinking_changed)
+	_map_content.protagonist_moved.connect(_on_protagonist_moved)
 	add_child(_map_content)
 
 	var site_specs := [
-		{"name": "SiteHome", "label": "自宅", "location": "自宅"},
-		{"name": "SiteMarket", "label": "商业区", "location": "商业区"},
-		{"name": "SitePalace", "label": "宫廷", "location": "宫廷"},
-		{"name": "SiteTemple", "label": "神殿区", "location": "神殿区"},
-		{"name": "SiteWild", "label": "野外", "location": "野外"},
+		{"name": "SiteHome", "label": "家", "location": "自宅"},
+		{"name": "SiteMarket", "label": "商店街", "location": "商业区"},
+		{"name": "SitePalace", "label": "校舍", "location": "宫廷"},
+		{"name": "SiteTemple", "label": "旧校舍", "location": "神殿区"},
+		{"name": "SiteWild", "label": "河堤", "location": "野外"},
 	]
 	for spec in site_specs:
 		var site := _site_button(str(spec["label"]))
@@ -162,28 +160,15 @@ func _build_ui() -> void:
 		_map_content.add_child(site)
 		UiMotionScript.bind(site, UiMotionScript.Profile.SITE)
 
-	_methinks_target = MethinksDrop.new()
-	_methinks_target.name = "MethinksDropTarget"
-	(_methinks_target as MethinksDrop).owner_screen = self
-	_methinks_target.add_theme_stylebox_override("panel", _methinks_style())
-	_map_content.add_child(_methinks_target)
-	var methinks_label := Label.new()
-	methinks_label.name = "MethinksLabel"
-	methinks_label.text = "俺寻思"
-	methinks_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	methinks_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	methinks_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	methinks_label.add_theme_font_size_override("font_size", 18)
-	methinks_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	methinks_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_methinks_target.add_child(methinks_label)
-
 	_log_label = Label.new()
 	_log_label.name = "EventToast"
 	_log_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_log_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_log_label.add_theme_font_size_override("font_size", 18)
-	_log_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_log_label.add_theme_color_override("font_color", Color("#fff1c2"))
+	_log_label.add_theme_color_override("font_shadow_color", Color(0.02, 0.025, 0.06, 0.90))
+	_log_label.add_theme_constant_override("shadow_offset_x", 1)
+	_log_label.add_theme_constant_override("shadow_offset_y", 2)
 	_map_content.add_child(_log_label)
 
 	_overlay_layer = Control.new()
@@ -196,16 +181,16 @@ func _build_ui() -> void:
 	_rail_label.add_theme_constant_override("separation", 8)
 	add_child(_rail_label)
 	var rail_text := Label.new()
-	rail_text.text = "统一卡牌栏"
+	rail_text.text = "持有卡牌"
 	rail_text.add_theme_font_size_override("font_size", 14)
-	rail_text.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	rail_text.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.72))
 	_rail_label.add_child(rail_text)
 	for rank in ["I", "II", "III", "IV"]:
 		var tab := Label.new()
 		tab.text = rank
 		tab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tab.custom_minimum_size = Vector2(34, 24)
-		tab.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+		tab.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.56))
 		_rail_label.add_child(tab)
 
 	_card_rail_view = HandRailDrop.new()
@@ -249,15 +234,17 @@ func _build_ui() -> void:
 	_advance_button.name = "AdvanceDayButton"
 	_advance_button.text = "下一天"
 	_advance_button.custom_minimum_size = Vector2(132, 132)
-	_advance_button.add_theme_font_size_override("font_size", 26)
+	_advance_button.add_theme_font_size_override("font_size", 23)
+	_advance_button.add_theme_color_override("font_color", Color("#f3f1eb"))
+	_advance_button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
 	_advance_button.add_theme_stylebox_override("normal", _round_button_style())
-	_advance_button.add_theme_stylebox_override("hover", _round_button_style(FaustTheme.GOLD_BRIGHT))
-	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(FaustTheme.BORDER))
+	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")))
+	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")))
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
 	UiMotionScript.bind(_advance_button, UiMotionScript.Profile.PRIMARY)
 
-	var redraw_btn := _icon_button("抽")
+	var redraw_btn := _icon_button("重抽")
 	redraw_btn.name = "RedrawSudanButton"
 	redraw_btn.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(redraw_btn)
@@ -270,6 +257,7 @@ func _apply_layout() -> void:
 	var view_size := _effective_view_size()
 	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
 
+	_set_rect(_background, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(340, 44) * s))
 	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
 	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
@@ -315,22 +303,19 @@ func _layout_map_content(s: float) -> void:
 	if _map_content == null:
 		return
 	var map_size := _map_content.size
-	var site_size := Vector2(112, 34) * s
+	var site_size := Vector2(108, 32) * s
 	var site_positions := [
-		Vector2(0.11, 0.42),
-		Vector2(0.33, 0.27),
-		Vector2(0.48, 0.41),
-		Vector2(0.63, 0.24),
-		Vector2(0.73, 0.63),
+		Vector2(0.16, 0.84),
+		Vector2(0.33, 0.84),
+		Vector2(0.50, 0.84),
+		Vector2(0.67, 0.84),
+		Vector2(0.84, 0.84),
 	]
 	for i in _site_buttons.size():
 		var site := _site_buttons[i]
 		site.size = site_size
 		site.position = Vector2(map_size.x * site_positions[i].x, map_size.y * site_positions[i].y)
 	_layout_rite_pins(s, map_size)
-	if _methinks_target != null:
-		_methinks_target.size = Vector2(126, 72) * s
-		_methinks_target.position = Vector2(24, map_size.y - 104 * s)
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
 		_log_label.position = Vector2((map_size.x - _log_label.size.x) * 0.5, map_size.y - 58 * s)
@@ -343,8 +328,8 @@ func _set_rect(node: Control, rect: Rect2) -> void:
 
 func _stat_label() -> Label:
 	var label := Label.new()
-	label.add_theme_font_size_override("font_size", 18)
-	label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	label.add_theme_font_size_override("font_size", 16)
+	label.add_theme_color_override("font_color", Color(0.94, 0.93, 0.89, 0.88))
 	return label
 
 
@@ -355,10 +340,39 @@ func _panel(node_name: String) -> PanelContainer:
 	return panel
 
 
+func _chrome_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.035, 0.043, 0.09, 0.82)
+	style.border_color = Color(0.78, 0.80, 0.84, 0.20)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.shadow_color = Color(0.0, 0.0, 0.02, 0.40)
+	style.shadow_size = 5
+	return style
+
+
+func _scene_frame_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#14182a")
+	style.border_color = Color(0.74, 0.78, 0.84, 0.24)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.shadow_color = Color(0.01, 0.012, 0.03, 0.54)
+	style.shadow_size = 7
+	return style
+
+
 func _site_button(label: String) -> Button:
 	var button := Button.new()
 	button.text = label
 	button.custom_minimum_size = Vector2(98, 34)
+	button.flat = true
+	button.add_theme_font_size_override("font_size", 13)
+	button.add_theme_color_override("font_color", Color(0.93, 0.94, 0.95, 0.72))
+	button.add_theme_color_override("font_hover_color", Color("#fff0b7"))
+	button.add_theme_color_override("font_shadow_color", Color(0.02, 0.025, 0.06, 0.92))
+	button.add_theme_constant_override("shadow_offset_x", 1)
+	button.add_theme_constant_override("shadow_offset_y", 2)
 	return button
 
 
@@ -371,44 +385,59 @@ func _icon_button(label: String) -> Button:
 	button.text = label
 	button.custom_minimum_size = Vector2(62, 38)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.add_theme_font_size_override("font_size", 14)
+	button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.84))
+	button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
+	button.add_theme_stylebox_override("normal", _small_action_style())
+	button.add_theme_stylebox_override("hover", _small_action_style(Color("#efc46e")))
+	button.add_theme_stylebox_override("pressed", _small_action_style(Color("#fff1bc")))
 	return button
 
 
-func _round_button_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
+func _small_action_style(border: Color = Color(0.82, 0.84, 0.88, 0.30)) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#15100c")
+	style.bg_color = Color(0.035, 0.043, 0.09, 0.72)
 	style.border_color = border
-	style.border_width_left = 4
-	style.border_width_right = 4
-	style.border_width_top = 4
-	style.border_width_bottom = 4
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(6)
+	return style
+
+
+func _round_button_style(border: Color = Color(0.82, 0.84, 0.88, 0.42)) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.035, 0.043, 0.09, 0.78)
+	style.border_color = border
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
 	style.corner_radius_top_left = 72
 	style.corner_radius_top_right = 72
 	style.corner_radius_bottom_left = 72
 	style.corner_radius_bottom_right = 72
+	style.shadow_color = Color(0.0, 0.0, 0.02, 0.48)
+	style.shadow_size = 7
 	return style
 
 
-func _methinks_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
-	var style := FaustTheme.card_style(border)
-	style.bg_color = Color("#15100c")
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	return style
-
-
-func _rite_pin_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
-	var style := FaustTheme.card_style(border)
-	style.bg_color = Color(0.08, 0.055, 0.04, 0.96)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
-	style.set_content_margin_all(8)
+func _rite_pin_style(border: Color = Color(0.88, 0.88, 0.88, 0.38)) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.035, 0.045, 0.10, 0.58)
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(7)
+	style.shadow_color = Color(0.01, 0.015, 0.045, 0.48)
+	style.shadow_size = 5
 	return style
 
 
 func _rite_pin_hover_style() -> StyleBoxFlat:
-	var style := _rite_pin_style(FaustTheme.GOLD_BRIGHT)
-	style.bg_color = Color(0.13, 0.085, 0.045, 0.98)
+	var style := _rite_pin_style(Color("#f7ca70"))
+	style.bg_color = Color(0.10, 0.075, 0.13, 0.78)
+	style.shadow_color = Color(1.0, 0.66, 0.22, 0.18)
+	style.shadow_size = 8
 	return style
 
 
@@ -449,17 +478,20 @@ func _create_rite_pin(instance) -> void:
 	pin.set_meta("rite_id", instance.id)
 	pin.text = str(rite.get("name", str(instance.id)))
 	pin.tooltip_text = str(rite.get("text", ""))
-	pin.custom_minimum_size = Vector2(118, 34)
+	pin.custom_minimum_size = Vector2(164, 38)
 	pin.add_theme_font_size_override("font_size", 15)
-	pin.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	pin.add_theme_stylebox_override("normal", _rite_pin_style())
+	pin.add_theme_color_override("font_color", Color("#fff2c7"))
+	pin.add_theme_color_override("font_hover_color", Color("#fff7df"))
+	pin.add_theme_stylebox_override("normal", _rite_pin_style(Color(0.88, 0.88, 0.88, 0.38)))
 	pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
-	pin.add_theme_stylebox_override("pressed", _rite_pin_style(FaustTheme.BORDER))
+	pin.add_theme_stylebox_override("pressed", _rite_pin_style(Color("#fff0af")))
 	pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
+	pin.z_index = 8
 	_rite_pin_buttons.append(pin)
 	_rite_pin_ids[pin] = instance.uid
 	_rite_pin_by_rite_id[instance.id] = pin
 	_map_content.add_child(pin)
+	pin.visible = _map_content.is_thinking()
 	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
 
 
@@ -481,6 +513,8 @@ func _emit_open_rite(rite_id: int) -> void:
 
 
 func _emit_open_rite_instance(rite_uid: int) -> void:
+	if _map_content != null and _map_content.has_method("set_thinking"):
+		_map_content.set_thinking(false)
 	open_rite_instance.emit(rite_uid)
 
 
@@ -518,49 +552,61 @@ func _is_map_rite_open(instance, rite: Dictionary) -> bool:
 
 
 func _layout_rite_pins(s: float, map_size: Vector2) -> void:
-	var by_location: Dictionary = {}
+	var pins: Array[Button] = []
 	for pin in _rite_pin_buttons:
 		if not is_instance_valid(pin):
 			continue
-		var rite_uid := int(_rite_pin_ids.get(pin, 0))
-		var instance = _state.get_rite_instance(rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
-		var rite: Dictionary = _db.rites.get(instance.id, {}) if instance != null else {}
-		var loc := _rite_location_name(rite)
-		if not by_location.has(loc):
-			by_location[loc] = []
-		by_location[loc].append(pin)
-	for loc in by_location.keys():
-		var pins: Array = by_location[loc]
-		for i in pins.size():
-			var pin := pins[i] as Button
-			var anchor := _map_location_anchor(loc)
-			var col := i % 2
-			var row := floori(float(i) / 2.0)
-			var pin_size := Vector2(120, 34) * s
-			pin.size = pin_size
-			var raw := Vector2(
-				map_size.x * anchor.x + (col * 128 + 6) * s,
-				map_size.y * anchor.y + (46 + row * 40) * s
-			)
-			pin.position = Vector2(
-				clamp(raw.x, 8.0 * s, max(8.0 * s, map_size.x - pin_size.x - 8.0 * s)),
-				clamp(raw.y, 8.0 * s, max(8.0 * s, map_size.y - pin_size.y - 8.0 * s))
-			)
+		pins.append(pin)
+	var thinking: bool = _map_content != null and bool(_map_content.is_thinking())
+	var origin: Vector2 = (
+		_map_content.protagonist_center()
+		if _map_content != null and _map_content.has_method("protagonist_center")
+		else map_size * Vector2(0.5, 0.72)
+	)
+	var count := pins.size()
+	var pin_size := Vector2(164, 38) * s
+	for i in count:
+		var pin := pins[i]
+		pin.visible = thinking
+		pin.size = pin_size
+		var row := floori(float(i) / 4.0)
+		var row_start := row * 4
+		var row_count: int = mini(4, count - row_start)
+		var column := i - row_start
+		var spread := minf(map_size.x * 0.68, 660.0 * s)
+		var x_offset := 0.0
+		if row_count > 1:
+			x_offset = -spread * 0.5 + spread * float(column) / float(row_count - 1)
+		var arc := absf(x_offset) / maxf(spread * 0.5, 1.0)
+		var raw := Vector2(
+			origin.x + x_offset - pin_size.x * 0.5,
+			origin.y - (132.0 + row * 52.0 - arc * 30.0) * s - pin_size.y * 0.5
+		)
+		pin.position = Vector2(
+			clamp(raw.x, 10.0 * s, max(10.0 * s, map_size.x - pin_size.x - 10.0 * s)),
+			clamp(raw.y, 54.0 * s, max(54.0 * s, map_size.y - pin_size.y - 54.0 * s))
+		)
+	if _map_content != null:
+		_map_content.set_thought_targets(pins)
+		_map_content.set_thought_count(count)
 
 
-func _rite_location_name(rite: Dictionary) -> String:
-	return str(rite.get("location", "?")).split(":")[0]
+func _on_thinking_changed(enabled: bool) -> void:
+	for site in _site_buttons:
+		if is_instance_valid(site):
+			site.visible = not enabled
+	_layout_rite_pins(
+		minf(_map_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
+		_map_content.size
+	)
 
 
-func _map_location_anchor(location_name: String) -> Vector2:
-	var anchors := {
-		"自宅": Vector2(0.11, 0.42),
-		"商业区": Vector2(0.33, 0.27),
-		"宫廷": Vector2(0.48, 0.41),
-		"神殿区": Vector2(0.63, 0.24),
-		"野外": Vector2(0.73, 0.63),
-	}
-	return anchors.get(location_name, Vector2(0.48, 0.48))
+func _on_protagonist_moved() -> void:
+	if _map_content != null and _map_content.is_thinking():
+		_layout_rite_pins(
+			minf(_map_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
+			_map_content.size
+		)
 
 
 func refresh() -> void:
@@ -1026,8 +1072,8 @@ func _show_event_overlay(display: Dictionary) -> void:
 	title.name = "EventPromptTitle"
 	title.text = str(display.get("title", "事件"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	title.add_theme_font_size_override("font_size", 21)
+	title.add_theme_color_override("font_color", Color("#fff1c3"))
 	root.add_child(title)
 
 	var body := RichTextLabel.new()
@@ -1038,7 +1084,7 @@ func _show_event_overlay(display: Dictionary) -> void:
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_font_size_override("font_size", 16)
-	body.add_theme_color_override("default_color", FaustTheme.TEXT)
+	body.add_theme_color_override("default_color", Color("#f0eee9"))
 	body.scroll_active = true
 	root.add_child(body)
 
@@ -1154,11 +1200,16 @@ func _event_body_text(event: Dictionary, event_id: int) -> String:
 func _layout_event_prompt(s: float, view_size: Vector2) -> void:
 	if _event_panel == null:
 		return
-	var panel_w: float = min(maxf(1.0, view_size.x - 32 * s), 720 * s)
-	# Panel occupies most of the vertical space so long narration text is visible.
-	var panel_h: float = min(view_size.y * 0.62, 520 * s)
-	var panel_x: float = (view_size.x - panel_w) * 0.5
-	var panel_y: float = (view_size.y - panel_h) * 0.5
+	var scene_rect := (
+		Rect2(_desk_map.position, _desk_map.size)
+		if _desk_map != null
+		else Rect2(Vector2(16, 70) * s, view_size - Vector2(32, 320) * s)
+	)
+	var panel_w: float = min(maxf(1.0, scene_rect.size.x - 220 * s), 760 * s)
+	var panel_h: float = 226 * s if _rename_input != null else 176 * s
+	panel_h = minf(panel_h, maxf(1.0, scene_rect.size.y - 36 * s))
+	var panel_x: float = scene_rect.position.x + (scene_rect.size.x - panel_w) * 0.5
+	var panel_y: float = scene_rect.position.y + 18 * s
 	_set_rect(_event_panel, Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h)))
 
 
@@ -1168,16 +1219,24 @@ func _event_button(label: String) -> Button:
 	button.custom_minimum_size = Vector2(96, 36)
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.add_theme_color_override("font_color", Color("#f2f0eb"))
+	button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
+	button.add_theme_stylebox_override("normal", _small_action_style())
+	button.add_theme_stylebox_override("hover", _small_action_style(Color("#efc46e")))
+	button.add_theme_stylebox_override("pressed", _small_action_style(Color("#fff1bc")))
 	UiMotionScript.bind(button, UiMotionScript.Profile.PRIMARY)
 	return button
 
 
 func _event_panel_style() -> StyleBoxFlat:
-	var style := FaustTheme.card_style(FaustTheme.GOLD)
-	style.bg_color = Color(0.05, 0.045, 0.035, 0.94)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.032, 0.075, 0.90)
+	style.border_color = Color(0.86, 0.88, 0.91, 0.34)
 	style.set_content_margin_all(16)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.shadow_color = Color(0.01, 0.012, 0.03, 0.62)
+	style.shadow_size = 10
 	return style
 
 

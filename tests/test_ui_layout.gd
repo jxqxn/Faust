@@ -289,14 +289,50 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
 	var estate = state.find_rite_instance_by_id(5000001)
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
-	assert_not_null(pin, "open playable rites should appear as clickable map pins")
+	var world := _find_node_by_name(screen, "SceneWorld")
+	var think := _find_node_by_name(screen, "ThinkButton") as Button
+	assert_not_null(world, "main play should happen in the lateral scene")
+	assert_not_null(think, "the player should have an explicit thinking action")
+	assert_not_null(pin, "open playable rites should exist as thought objects")
 	if pin == null:
 		return
-	assert_eq(pin.text, "治理家业", "map pins should show the rite name players recognize")
+	assert_false(pin.visible, "rites stay inside the protagonist until thinking begins")
+	if think != null:
+		think.pressed.emit()
+		await wait_process_frames(1)
+	assert_true(pin.visible, "thinking should make the current rites appear around the protagonist")
+	assert_eq(pin.text, "治理家业", "thoughts should show the rite name players recognize")
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
-	assert_eq(opened, [estate.uid], "clicking a map pin should open that rite instance directly")
+	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
+	if world != null:
+		assert_false(world.is_thinking(), "entering a rite should return from the thought cloud")
+
+
+func test_game_screen_protagonist_moves_independently_of_simulation_state():
+	var rng := RNG.new(211)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var day_before := state.day
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var world := _find_node_by_name(screen, "SceneWorld")
+	var protagonist := _find_node_by_name(screen, "Protagonist") as Control
+	assert_not_null(world)
+	assert_not_null(protagonist)
+	if world == null or protagonist == null:
+		return
+	var x_before := protagonist.position.x
+	world.set_player_x_ratio_for_test(0.8)
+	await wait_process_frames(1)
+
+	assert_gt(protagonist.position.x, x_before, "the protagonist should occupy a real position in the lateral scene")
+	assert_eq(state.day, day_before, "walking is presentation and must not advance the simulation")
 
 
 func test_game_screen_merges_duplicate_runtime_rites_into_one_map_pin():
@@ -372,7 +408,7 @@ func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
 	assert_not_null(_find_node_by_name(screen, "RitePin_991602"), "same-name variant config remains a distinct map entry")
 
 
-func test_game_screen_exposes_methinks_as_desktop_drop_target():
+func test_game_screen_merges_methinks_into_think_button_drop_target():
 	var rng := RNG.new(17)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -382,10 +418,20 @@ func test_game_screen_exposes_methinks_as_desktop_drop_target():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	var target := _find_node_by_name(screen, "MethinksDropTarget") as Control
-	assert_not_null(target, "main desktop should expose I-think as a drop target, not a rite selector button")
-	if target != null:
-		assert_true(target.position.y < (_find_node_by_name(screen, "CardRail") as Control).position.y, "I-think should live on the desktop above the hand rail")
+	var target := _find_node_by_name(screen, "ThinkButton") as Control
+	var world := _find_node_by_name(screen, "SceneWorld")
+	var card_uid := state.card_uid_for(2000001, "hand")
+	var drag_data := {"type": "card", "card_id": 2000001, "card_uid": card_uid, "source": "hand"}
+	assert_not_null(target, "thinking and I-think should share one visible control")
+	assert_null(_find_node_by_name(screen, "MethinksDropTarget"), "the obsolete standalone I-think target should be gone")
+	if target == null or world == null:
+		return
+	assert_eq((target as Button).text, "思考", "the merged control should always use the single player-facing name")
+	assert_lt(target.position.x, world.size.x * 0.2, "the merged thought control stays in the old I-think position")
+	assert_false(target._can_drop_data(Vector2.ZERO, drag_data), "the button is not a card target while walking")
+	world.set_thinking(true)
+	assert_eq((target as Button).text, "思考", "entering thought mode must not rename the control to I-think")
+	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the thinking button accepts cards during thought mode")
 
 
 func test_methinks_drop_generates_rite_without_opening_rite_overlay():
@@ -413,14 +459,40 @@ func test_methinks_drop_generates_rite_without_opening_rite_overlay():
 	await wait_process_frames(2)
 
 	var protagonist_uid := state.card_uid_for(2000001, "hand")
-	screen.drop_card_on_methinks({"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"})
+	var think_button := _find_node_by_name(screen, "ThinkButton") as Control
+	var world := _find_node_by_name(screen, "SceneWorld")
+	world.set_thinking(true)
+	think_button._drop_data(
+		Vector2.ZERO,
+		{"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"}
+	)
 
 	assert_true(5000001 in state.available_rites, "I-think should generate rites through desktop processing")
 	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "I-think creates a fresh runtime rite instead of a config-only flag")
 	assert_true(state.hand_has_card_id(2000001), "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
-	assert_not_null(_find_node_by_name(screen, "EventPromptPanel"), "I-think results should use the desktop event prompt layer")
+	var prompt_panel := _find_node_by_name(screen, "EventPromptPanel") as Control
+	var scene := _find_node_by_name(screen, "DeskMap") as Control
+	var rail := _find_node_by_name(screen, "CardRail") as Control
+	assert_not_null(prompt_panel, "I-think results should use the scene event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "I-think should not open the rite overlay")
+	assert_true(world.is_thinking(), "dropping a card should keep the thought cloud open for the generated rite")
+	if prompt_panel != null and scene != null and rail != null:
+		assert_lte(
+			prompt_panel.position.y + prompt_panel.size.y,
+			scene.position.y + scene.size.y,
+			"event dialogue should stay inside the lateral scene"
+		)
+		assert_lt(
+			prompt_panel.position.y + prompt_panel.size.y,
+			rail.position.y,
+			"event dialogue must not cover the card rail"
+		)
+		assert_lt(
+			prompt_panel.size.y,
+			scene.size.y * 0.6,
+			"ordinary prompts should be compact dialogue strips, not full-scene pages"
+		)
 
 
 func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
