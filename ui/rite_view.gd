@@ -201,6 +201,19 @@ func _build_panel_content() -> void:
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	col.add_child(title)
 
+	var actor := Label.new()
+	actor.name = "RiteActorLabel"
+	var actor_data: Dictionary = (
+		_state.player_actor_data(_db)
+		if _state != null and _state.has_method("player_actor_data")
+		else {}
+	)
+	actor.text = "行动者：%s" % str(actor_data.get("name", "主角"))
+	actor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	actor.add_theme_font_size_override("font_size", 13)
+	actor.add_theme_color_override("font_color", FaustTheme.GOLD)
+	col.add_child(actor)
+
 	var desc := Label.new()
 	desc.text = "%s" % _rite.get("text", "")
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -209,7 +222,8 @@ func _build_panel_content() -> void:
 	col.add_child(desc)
 
 	var tips := Label.new()
-	tips.text = "每回合自动进行，检定数值越高，金币收益越大。"
+	tips.name = "RitePerspectiveHint"
+	tips.text = "人物表示谁被卷入这次行动；物品表示你准备调用什么。"
 	tips.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	tips.add_theme_font_size_override("font_size", 11)
 	tips.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
@@ -457,6 +471,8 @@ func _do_resolve() -> void:
 		"attr_slots": _slot_keys(), "rite_id": _rite_id,
 		"dice_cache": _resolve_dice_cache,
 	}
+	if _state != null and _state.has_method("with_player_actor_context"):
+		ctx = _state.with_player_actor_context(ctx, _db)
 	var gold_dice_bonus = _gold_used_this_resolve
 	if not _gold_dice_map.is_empty():
 		gold_dice_bonus = _gold_dice_map

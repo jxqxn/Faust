@@ -79,6 +79,8 @@ func test_save_load_round_trip_preserves_state():
 	)
 	assert_eq(state2.coin_count, 15, "coin_count preserved")
 	assert_eq(state2.gold_dice, 1, "gold_dice preserved")
+	assert_eq(state2.player_actor_uid, state.player_actor_uid, "single player actor preserved")
+	assert_eq(int(state2.player_actor_data(db).get("id", 0)), 2000001, "restored actor remains the protagonist")
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
 	assert_eq(state2.sudan_pool_tags, state.sudan_pool_tags, "Sultan pool runtime tags preserved")
@@ -122,6 +124,17 @@ func test_load_missing_save_returns_null():
 	SaveSystem.delete_save()
 	var result = SaveSystem.load(db)
 	assert_eq(result, null, "no save -> null")
+
+
+func test_old_v5_save_recovers_player_actor_from_existing_instances() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(43))
+	var data := SaveSystem.serialize(state)
+	data.erase("player_actor_uid")
+	var restored := GameState.new()
+	SaveSystem.deserialize(data, restored, db)
+	assert_gt(restored.player_actor_uid, 0)
+	assert_eq(int(restored.player_actor_data(db).get("id", 0)), 2000001)
 
 
 func test_continue_load_rejects_unmarked_legacy_save():

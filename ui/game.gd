@@ -119,6 +119,15 @@ func _mcp_capture_thought_world() -> void:
 		world.set_thinking(true)
 
 
+func _mcp_capture_thought_rite() -> void:
+	_mcp_capture_thought_world()
+	if state == null:
+		return
+	var instance = state.find_rite_instance_by_id(5000001)
+	if instance != null:
+		_on_open_rite_instance(instance.uid)
+
+
 func _mcp_capture_compact_prompt() -> void:
 	if state == null:
 		_on_difficulty_selected(0)

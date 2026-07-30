@@ -291,8 +291,12 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
 	var world := _find_node_by_name(screen, "SceneWorld")
 	var think := _find_node_by_name(screen, "ThinkButton") as Button
+	var rail_context := _find_node_by_name(screen, "RailContextLabel") as Label
 	assert_not_null(world, "main play should happen in the lateral scene")
 	assert_not_null(think, "the player should have an explicit thinking action")
+	assert_not_null(rail_context)
+	if rail_context != null:
+		assert_eq(rail_context.text, "当前处境", "the rail should describe the protagonist's situation, not owned people")
 	assert_not_null(pin, "open playable rites should exist as thought objects")
 	if pin == null:
 		return
@@ -302,12 +306,23 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 		await wait_process_frames(1)
 	assert_true(pin.visible, "thinking should make the current rites appear around the protagonist")
 	assert_eq(pin.text, "治理家业", "thoughts should show the rite name players recognize")
+	var thought_mask := _find_node_by_name(world, "ThoughtWorldMask") as Control
+	var protagonist := _find_node_by_name(world, "Protagonist") as Control
+	var heroine := _find_node_by_name(world, "WorldNpc_heroine") as Control
+	assert_not_null(thought_mask)
+	assert_not_null(protagonist)
+	assert_not_null(heroine)
+	if thought_mask != null and protagonist != null and heroine != null:
+		assert_true(thought_mask.visible)
+		assert_gt(thought_mask.z_index, heroine.z_index, "thought should dim external characters")
+		assert_gt(protagonist.z_index, thought_mask.z_index, "the protagonist should remain above the thought mask")
+		assert_eq(protagonist.self_modulate, Color.WHITE, "thought should preserve the protagonist's full brightness")
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
 	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
 	if world != null:
-		assert_false(world.is_thinking(), "entering a rite should return from the thought cloud")
+		assert_true(world.is_thinking(), "entering a rite should retain the thought state behind its deeper overlay")
 
 
 func test_game_screen_protagonist_moves_independently_of_simulation_state():
@@ -471,6 +486,16 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "the compatibility bridge creates a fresh runtime rite instead of a config-only flag")
 	assert_true(state.hand_has_card_id(2000001), "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
+	assert_eq(
+		int(state.event_prompts[0].get("context", {}).get("player_actor_uid", 0)),
+		state.player_actor_uid,
+		"thought results retain who the player is acting through"
+	)
+	assert_eq(
+		int(state.event_prompts[0].get("context", {}).get("focus_card_uid", 0)),
+		protagonist_uid,
+		"thought results distinguish the focused object from the player actor"
+	)
 	var prompt_panel := _find_node_by_name(screen, "EventPromptPanel") as Control
 	var scene := _find_node_by_name(screen, "DeskMap") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
@@ -767,6 +792,8 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	assert_not_null(pin, "triggered rites should appear as clickable thoughts in the main scene")
 	if pin == null:
 		return
+	var world := _find_node_by_name(game, "SceneWorld")
+	world.set_thinking(true)
 	pin.pressed.emit()
 	await wait_process_frames(2)
 
@@ -774,10 +801,18 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	var selector := _find_node_by_name(game, "RiteSelector")
 	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
 	assert_null(selector, "map rite pins should not route through the separate rite selector page")
-	var world := _find_node_by_name(game, "SceneWorld")
 	assert_true(world.is_scene_blocked(), "rite overlays should block lateral input")
+	assert_true(world.is_thinking(), "rite overlays opened from thought should retain the thought state")
+	var protagonist := _find_node_by_name(world, "Protagonist") as Control
+	var overlay_layer := _find_node_by_name(game, "OverlayLayer") as Control
+	assert_not_null(protagonist)
+	assert_not_null(overlay_layer)
+	if protagonist != null and overlay_layer != null:
+		assert_eq(protagonist.self_modulate, Color.WHITE, "thought keeps the protagonist bright before modal composition")
+		assert_gt(overlay_layer.z_index, protagonist.z_index, "the deeper rite modal must still cover the whole world")
 	game._close_rite_overlay()
 	assert_false(world.is_scene_blocked(), "closing a rite should release its blocker")
+	assert_true(world.is_thinking(), "closing the rite should return to the same thought cloud")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():
@@ -1569,6 +1604,10 @@ func test_game_screen_can_open_card_detail_overlay():
 	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a main-screen card detail overlay")
 	assert_not_null(_find_node_by_name(screen, "CardDetailPanel"), "card detail should render as a floating panel, not a standalone screen")
 	assert_not_null(_find_node_by_name(screen, "CloseCardDetailButton"), "card detail overlay should be closable")
+	var subtitle := _find_node_by_name(screen, "CardDetailSubtitle") as Label
+	assert_not_null(subtitle)
+	if subtitle != null:
+		assert_string_contains(subtitle.text, "自身", "the protagonist card should expose its single-character role")
 	var selected_widget := _find_card_widget_by_uid(screen, int(state.hand[0]))
 	assert_not_null(selected_widget)
 	if selected_widget != null:
@@ -1642,13 +1681,29 @@ func test_game_screen_menu_is_separate_but_below_rite_overlay():
 	var hud := _find_node_by_name(screen, "Hud") as Control
 	var menu := _find_node_by_name(screen, "MenuButton") as Control
 	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
+	var world := _find_node_by_name(screen, "SceneWorld") as Control
+	var rail := _find_node_by_name(screen, "CardRail") as Control
+	var right_actions := _find_node_by_name(screen, "RightActions") as Control
 	assert_not_null(hud, "HUD should exist")
 	assert_not_null(menu, "menu should exist")
 	assert_not_null(overlay, "rite overlay layer should exist")
-	if hud == null or menu == null or overlay == null:
+	assert_not_null(world)
+	assert_not_null(rail)
+	assert_not_null(right_actions)
+	if hud == null or menu == null or overlay == null or world == null or rail == null or right_actions == null:
 		return
 	assert_eq(menu.get_parent(), screen, "menu button should be separate from the HUD info panel")
 	assert_true(menu.get_index() < overlay.get_index(), "rite overlays should disable the top-right menu")
+	assert_gt(overlay.z_index, menu.z_index, "modal rendering must not rely only on sibling insertion order")
+	for child in world.get_children():
+		if child is CanvasItem:
+			assert_lt(
+				(child as CanvasItem).z_index,
+				overlay.z_index,
+				"every present and future world actor must remain below modal overlays: %s" % child.name
+			)
+	assert_gt(rail.z_index, overlay.z_index, "the card rail must remain usable above the rite shade")
+	assert_gt(right_actions.z_index, overlay.z_index, "persistent actions retain their established layer")
 
 
 func test_game_screen_matches_mockup_spatial_layout():

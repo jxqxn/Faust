@@ -279,6 +279,8 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 		"db": db, "state": state, "rng": rng, "rite_state": rite_state,
 		"attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
 	}
+	if state.has_method("with_player_actor_context"):
+		ctx = state.with_player_actor_context(ctx, db)
 	state.active_rite_uid = instance.uid
 	var res = RiteResolver.resolve(rite, ctx, 0)
 	state.active_rite_uid = 0
@@ -332,6 +334,8 @@ static func _execute_waiting_round_end(rite: Dictionary, instance, state, db, rn
 		if not cards.is_empty():
 			rite_state[key] = int(cards[0].get("id", 0))
 	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": rite_state, "attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid}
+	if state.has_method("with_player_actor_context"):
+		ctx = state.with_player_actor_context(ctx, db)
 	state.active_rite_uid = instance.uid
 	for entry in rite.get("waiting_round_end_action", []):
 		if not (entry is Dictionary) or not ConditionEval.evaluate(entry.get("condition", {}), ctx):

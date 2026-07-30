@@ -44,6 +44,13 @@ const MOCKUP_SIZE := Vector2(1280, 720)
 const HAND_NATURAL_STEP := 112.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
 const HAND_RAIL_BOTTOM_GUTTER := 20.0
+# Rendering contract for the lateral presentation:
+# - ThoughtWorld may use local z values below WORLD_MODAL_Z.
+# - modal content always covers every world child, including future NPCs.
+# - the persistent card rail stays above the modal shade so cards remain
+#   visible and draggable into rite slots.
+const WORLD_MODAL_Z := 100
+const PERSISTENT_CONTROL_Z := 200
 
 var _state
 var _db
@@ -196,14 +203,17 @@ func _build_ui() -> void:
 	_overlay_layer = Control.new()
 	_overlay_layer.name = "OverlayLayer"
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay_layer.z_index = WORLD_MODAL_Z
 	add_child(_overlay_layer)
 
 	_rail_label = VBoxContainer.new()
 	_rail_label.name = "RailLabel"
+	_rail_label.z_index = PERSISTENT_CONTROL_Z
 	_rail_label.add_theme_constant_override("separation", 8)
 	add_child(_rail_label)
 	var rail_text := Label.new()
-	rail_text.text = "持有卡牌"
+	rail_text.name = "RailContextLabel"
+	rail_text.text = "当前处境"
 	rail_text.add_theme_font_size_override("font_size", 14)
 	rail_text.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.72))
 	_rail_label.add_child(rail_text)
@@ -217,6 +227,7 @@ func _build_ui() -> void:
 
 	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
+	_card_rail_view.z_index = PERSISTENT_CONTROL_Z
 	(_card_rail_view as HandRailDrop).owner_screen = self
 	_card_rail_view.clip_contents = true
 	_card_rail_view.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -249,6 +260,7 @@ func _build_ui() -> void:
 
 	_right_actions = VBoxContainer.new()
 	_right_actions.name = "RightActions"
+	_right_actions.z_index = PERSISTENT_CONTROL_Z
 	_right_actions.add_theme_constant_override("separation", 12)
 	add_child(_right_actions)
 
@@ -535,8 +547,6 @@ func _emit_open_rite(rite_id: int) -> void:
 
 
 func _emit_open_rite_instance(rite_uid: int) -> void:
-	if _map_content != null and _map_content.has_method("set_thinking"):
-		_map_content.set_thinking(false)
 	open_rite_instance.emit(rite_uid)
 
 
@@ -1522,7 +1532,16 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 
 	var subtitle := Label.new()
 	subtitle.name = "CardDetailSubtitle"
-	subtitle.text = "%s  %s" % [CardWidget._type_label(str(card.get("type", ""))), str(card.get("title", ""))]
+	var perspective_role: String = (
+		_state.card_perspective_role(card_uid if card_uid > 0 else int(card.get("id", 0)), _db)
+		if _state != null and _state.has_method("card_perspective_role")
+		else ""
+	)
+	subtitle.text = "%s  ·  %s  %s" % [
+		perspective_role,
+		CardWidget._type_label(str(card.get("type", ""))),
+		str(card.get("title", "")),
+	]
 	subtitle.add_theme_font_size_override("font_size", 16)
 	subtitle.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	title_box.add_child(subtitle)

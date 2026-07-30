@@ -20,6 +20,13 @@ var _nonneg_ids := {CounterSystem.SPECIAL_NONNEG_ID: true}
 # remain compatibility views while callers migrate to uid-based APIs.
 var card_instances: Dictionary = {} # uid(int) -> CardInstanceData
 var next_card_uid := 1
+# The player always acts through one concrete protagonist instance. Other
+# character cards remain world people that the protagonist can involve in an
+# action; moving one into a rite never changes the player actor.
+#
+# This is an innovation-layer interpretation of the verified CardInstance
+# boundary, not a claim about an additional field in the original runtime.
+var player_actor_uid := 0
 # Hand and bottom rail contain runtime CardInstance uids.  Config ids only
 # cross the public compatibility boundary, where they resolve to one instance.
 var hand: Array[int] = []
@@ -417,10 +424,71 @@ func _resolve_card_uid(card_or_uid: int, preferred_zone: String = "") -> int:
 	return card_uid_for(card_or_uid, preferred_zone)
 
 
+## Resolve the one character whose attention and decisions the player controls.
+## Prefer the saved UID, then the explicit protagonist tag, then the clone's
+## established protagonist definition. This keeps old v5 saves compatible.
+func ensure_player_actor(db) -> int:
+	var current = get_card_instance(player_actor_uid)
+	if current != null and not current.is_lost:
+		var current_definition: Dictionary = db.get_card(current.card_id) if db != null else {}
+		var current_tags: Dictionary = current_definition.get("tag", {})
+		if int(current_tags.get("主角", 0)) > 0:
+			return player_actor_uid
+	var candidate_uids: Array = card_instances.keys()
+	candidate_uids.sort()
+	for uid in candidate_uids:
+		var instance = card_instances[uid]
+		if instance.is_lost:
+			continue
+		var definition: Dictionary = db.get_card(instance.card_id) if db != null else {}
+		if int(definition.get("tag", {}).get("主角", 0)) > 0:
+			player_actor_uid = int(uid)
+			return player_actor_uid
+	player_actor_uid = card_uid_for(2000001)
+	return player_actor_uid
+
+
+func player_actor_data(db) -> Dictionary:
+	var uid := ensure_player_actor(db)
+	return card_data_for(uid, db) if uid > 0 else {}
+
+
+## Add the single-character perspective to an existing rule context without
+## replacing `acting_card`, which still means the card currently inspected by
+## a source-compatible condition or event trigger.
+func with_player_actor_context(context: Dictionary, db) -> Dictionary:
+	var out := context.duplicate(true)
+	var uid := ensure_player_actor(db)
+	out["player_actor_uid"] = uid
+	var actor = get_card_instance(uid)
+	out["player_actor_id"] = int(actor.card_id) if actor != null else 0
+	return out
+
+
+## Player-facing semantic role of a runtime card in the single-character
+## presentation. Definitions and settlement behavior remain unchanged.
+func card_perspective_role(card_or_uid: int, db) -> String:
+	var uid := _resolve_card_uid(card_or_uid)
+	var card: Dictionary = card_data_for(uid, db) if uid > 0 else db.get_card(card_or_uid)
+	if card.is_empty():
+		return ""
+	if uid > 0 and uid == ensure_player_actor(db):
+		return "自身"
+	match str(card.get("type", "")):
+		"char":
+			return "相关人物"
+		"sudan":
+			return "外部压力"
+		"item":
+			return "可用事物"
+	return "当前对象"
+
+
 func setup_new_run(db, diff_index: int, rng) -> void:
 	hand.clear()
 	card_instances.clear()
 	next_card_uid = 1
+	player_actor_uid = 0
 	rail_order.clear()
 	difficulty_index = diff_index
 	difficulty_config = db.get_difficulty(diff_index)
@@ -436,6 +504,7 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	# Starting hand comes through ConfigDB so normal and test profiles stay split.
 	for cid in db.get_default_cards():
 		add_card_to_hand(int(cid), db)
+	ensure_player_actor(db)
 	# Sudan deck from pool (shuffled last-first).
 	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
 	sudan_pool_tags.clear()
@@ -918,6 +987,11 @@ func queue_operation(kind: String, id: Variant, payload: Dictionary = {}, contex
 	if kind.is_empty():
 		return
 	var operation_context := context.duplicate(true)
+	if player_actor_uid > 0 and not operation_context.has("player_actor_uid"):
+		operation_context["player_actor_uid"] = player_actor_uid
+	if player_actor_uid > 0 and not operation_context.has("player_actor_id"):
+		var player_actor = get_card_instance(player_actor_uid)
+		operation_context["player_actor_id"] = int(player_actor.card_id) if player_actor != null else 0
 	# Context fields are deliberately top-level and persisted even when the
 	# payload has a similar shape. This prevents same-id event occurrences from
 	# overwriting each other's card/rite target.

@@ -91,6 +91,7 @@ static func serialize(state) -> Dictionary:
 		"active_sudan_cards": sudan_cards_data,
 		"card_instances": state.card_instances.values().map(func(instance): return instance.to_save_dict()),
 		"next_card_uid": state.next_card_uid,
+		"player_actor_uid": state.player_actor_uid,
 		"rite_instances": rite_instances_data,
 		"next_rite_uid": state.next_rite_uid,
 		"active_rite_uid": state.active_rite_uid,
@@ -139,6 +140,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.next_card_uid = int(data.get("next_card_uid", 1))
 	for card_uid in state.card_instances:
 		state.next_card_uid = maxi(state.next_card_uid, int(card_uid) + 1)
+	state.player_actor_uid = int(data.get("player_actor_uid", 0))
+	if state.has_method("ensure_player_actor"):
+		state.ensure_player_actor(db)
 	if state.has_method("repair_equipment_links"):
 		state.repair_equipment_links()
 	for cid in data.get("hand", []):

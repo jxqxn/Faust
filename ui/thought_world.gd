@@ -53,6 +53,7 @@ const WALK_SPEED := 330.0
 const INTERACTION_ARRIVAL_EPSILON := 0.0005
 const PLAYER_BASE_SIZE := Vector2(154, 308)
 const NPC_BASE_SIZE := Vector2(150, 300)
+const THOUGHT_WORLD_MASK_COLOR := Color(0.035, 0.045, 0.105, 0.46)
 
 var _thinking := false
 var _player_x_ratio := 0.5
@@ -73,6 +74,7 @@ var _pending_npc_interaction: Dictionary = {}
 
 var _protagonist: TextureRect
 var _atmosphere: ColorRect
+var _thought_world_mask: ColorRect
 var _think_button: Button
 var _hint_label: Label
 var _scene_title: Label
@@ -153,13 +155,24 @@ func _build_overlay() -> void:
 	_thought_heading.z_index = 10
 	add_child(_thought_heading)
 
+	# Thought separates the protagonist's active attention from the surrounding
+	# world. The mask sits above every background/NPC layer but below Al-Tu,
+	# so future scene actors inherit the same visual rule without per-NPC tint.
+	_thought_world_mask = ColorRect.new()
+	_thought_world_mask.name = "ThoughtWorldMask"
+	_thought_world_mask.color = THOUGHT_WORLD_MASK_COLOR
+	_thought_world_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_thought_world_mask.visible = false
+	_thought_world_mask.z_index = 4
+	add_child(_thought_world_mask)
+
 	_protagonist = TextureRect.new()
 	_protagonist.name = "Protagonist"
 	_protagonist.texture = IDLE_TEXTURE
 	_protagonist.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_protagonist.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_protagonist.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_protagonist.z_index = 4
+	_protagonist.z_index = 5
 	add_child(_protagonist)
 
 	_interaction_hint = Label.new()
@@ -312,6 +325,8 @@ func set_thinking(enabled: bool) -> void:
 		return
 	_thinking = enabled
 	_protagonist.texture = THINK_TEXTURE if enabled else IDLE_TEXTURE
+	_protagonist.self_modulate = Color.WHITE
+	_thought_world_mask.visible = enabled
 	_thought_heading.visible = enabled
 	_hint_label.text = "选择一段思绪，或按 ESC 回到现实" if enabled else "A / D 或 ← / → 移动"
 	_think_button.text = "思考"
@@ -443,6 +458,8 @@ func _layout_overlay() -> void:
 		return
 	_atmosphere.position = Vector2.ZERO
 	_atmosphere.size = size
+	_thought_world_mask.position = Vector2.ZERO
+	_thought_world_mask.size = size
 	_scene_title.position = Vector2(20, 15)
 	_scene_title.size = Vector2(220, 26)
 	_hint_label.position = Vector2((size.x - 360.0) * 0.5, size.y - 28.0)
@@ -531,7 +548,6 @@ func _draw() -> void:
 		)
 
 	if _thinking:
-		draw_rect(rect, Color(0.035, 0.045, 0.105, 0.46))
 		var center := protagonist_center()
 		var pulse_radius := 62.0 + sin(_world_time * 2.0) * 4.0
 		draw_circle(center, pulse_radius * 0.72, Color(1.0, 0.79, 0.38, 0.035))

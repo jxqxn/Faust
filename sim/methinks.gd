@@ -26,7 +26,18 @@ static func process_card(card_or_uid: int, source: String, state, db, rng) -> Di
 		removed_from_hand = state.remove_card_from_hand(card_uid)
 	state.remove_card_from_slot(card_uid)
 	state.add_card_to_slot(card_uid, 1, db)
-	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {"s1": card_id}, "attr_slots": ["s1"], "rite_id": think_id}
+	var ctx := {
+		"db": db,
+		"state": state,
+		"rng": rng,
+		"rite_state": {"s1": card_id},
+		"attr_slots": ["s1"],
+		"rite_id": think_id,
+		"focus_card_uid": card_uid,
+		"focus_card_id": card_id,
+	}
+	if state.has_method("with_player_actor_context"):
+		ctx = state.with_player_actor_context(ctx, db)
 	var resolved = RiteResolver.resolve(rite, ctx, 0)
 	var deferred: Dictionary = resolved.deferred
 	DeferredEffects.apply(deferred, state, db, rng)
@@ -59,10 +70,10 @@ static func process_card(card_or_uid: int, source: String, state, db, rng) -> Di
 
 static func _message_from_result(resolved, deferred: Dictionary) -> String:
 	if not deferred.get("choose", {}).is_empty():
-		return "俺寻思有了几个念头。"
+		return "思考产生了几个可选结果。"
 	if not deferred.get("prompts", []).is_empty():
 		var prompt: Dictionary = deferred.prompts[0]
-		return str(prompt.get("text", prompt.get("id", "俺寻思有了结果。")))
+		return str(prompt.get("text", prompt.get("id", "思考有了结果。")))
 	var entry: Dictionary = resolved.normal_entry
 	if not entry.is_empty():
 		var title := str(entry.get("result_title", ""))
@@ -72,7 +83,7 @@ static func _message_from_result(resolved, deferred: Dictionary) -> String:
 		if text != "":
 			return text
 	if int(deferred.get("rite", 0)) > 0:
-		return "俺寻思出了一件新事。"
+		return "思考产生了一个可执行事项。"
 	if not deferred.get("events", []).is_empty():
-		return "俺寻思触发了一段事件。"
-	return "俺寻思了一下，但暂时没有新的结果。"
+		return "思考产生了一个事件。"
+	return "思考暂时没有新的结果。"

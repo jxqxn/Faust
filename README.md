@@ -11,14 +11,21 @@ the game ends.
 Core slices have been verified against the reverse-engineered `.c` source:
 dice, counter, tag, loot, scope-filter, branch, settlement ordering, Sultan
 card loop, round/calendar, and the shared desktop event/prompt surface. This is
-still a prototype: condition/result DSL coverage is visible through tests and
-keeps expanding with each newly enabled content batch.
+still a prototype: condition/result DSL coverage is visible through tests.
+Clone-content expansion is currently frozen; unsupported keys remain auditable
+instead of being treated as implemented.
 
 Runtime cards use stable `CardInstance` identities. Mutable tags, stack count,
 loss state, and hand/slot/Sultan placement belong to the instance rather than
 the immutable card definition. Rite slot ownership is keyed by card UID, and
 save version 5 persists those instances; version 4 and older saves are
 intentionally rejected and do not expose Continue.
+
+The lateral presentation now gives the run one persistent player actor:
+Al-Tu. Existing character, item, Sultan, rite, queue, and settlement data keep
+their clone behavior, while the UI treats them respectively as relevant people,
+usable things, external pressures, and actions belonging to Al-Tu's situation.
+This is a semantic migration of the accepted clone slice, not a second ruleset.
 
 Runtime events, prompts and choices share one FIFO `pending_operations` queue.
 Every entry retains its event/prompt payload plus `card_uid`, `rite_uid` and

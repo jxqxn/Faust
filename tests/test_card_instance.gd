@@ -10,6 +10,55 @@ func before_all() -> void:
 	db.load_all()
 
 
+func test_single_character_perspective_keeps_one_player_actor() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(70))
+	var protagonist_uid := state.card_uid_for(2000001)
+	var wife_uid := state.card_uid_for(2000006)
+	var item_uid: int = state.create_card_instance(2000246, db, "hand").uid
+	var pressure_uid: int = state.create_card_instance(2010001, db, "sudan").uid
+
+	assert_eq(state.player_actor_uid, protagonist_uid)
+	assert_eq(int(state.player_actor_data(db).get("id", 0)), 2000001)
+	assert_eq(state.card_perspective_role(protagonist_uid, db), "自身")
+	assert_eq(state.card_perspective_role(wife_uid, db), "相关人物")
+	assert_eq(state.card_perspective_role(item_uid, db), "可用事物")
+	assert_eq(state.card_perspective_role(pressure_uid, db), "外部压力")
+	state.player_actor_uid = wife_uid
+	assert_eq(
+		state.ensure_player_actor(db),
+		protagonist_uid,
+		"a related character cannot replace the protagonist as player actor"
+	)
+
+	var context := state.with_player_actor_context(
+		{"acting_card_uid": wife_uid, "focus_card_uid": wife_uid},
+		db
+	)
+	assert_eq(int(context.get("player_actor_uid", 0)), protagonist_uid)
+	assert_eq(int(context.get("player_actor_id", 0)), 2000001)
+	assert_eq(int(context.get("focus_card_uid", 0)), wife_uid)
+	assert_ne(
+		int(context.get("player_actor_uid", 0)),
+		int(context.get("focus_card_uid", 0)),
+		"focusing on another character must not transfer player control"
+	)
+
+
+func test_pending_operations_inherit_the_single_player_actor() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(71))
+	state.queue_prompt({"id": "actor.context", "text": "test"})
+	assert_eq(
+		int(state.pending_operation().get("context", {}).get("player_actor_uid", 0)),
+		state.player_actor_uid
+	)
+	assert_eq(
+		int(state.pending_operation().get("context", {}).get("player_actor_id", 0)),
+		2000001
+	)
+
+
 func test_instance_tags_survive_hand_slot_and_hand_round_trip() -> void:
 	var state := GameState.new()
 	var card_uid := state.add_card_to_hand(2000005, db)
