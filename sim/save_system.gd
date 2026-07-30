@@ -74,6 +74,10 @@ static func serialize(state) -> Dictionary:
 		"difficulty_index": state.difficulty_index,
 		"round_number": state.round_number,
 		"day": state.day,
+		"world_location_id": state.world_location_id,
+		"world_spawn_id": state.world_spawn_id,
+		"world_position_ratio": state.world_position_ratio,
+		"visited_world_locations": state.visited_world_locations.duplicate(),
 		"coin_count": state.coin_count,
 		"gold_dice": state.gold_dice,
 		"redraws_left": state.redraws_left,
@@ -110,6 +114,16 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.difficulty_config = db.get_difficulty(state.difficulty_index)
 	state.round_number = int(data.get("round_number", 1))
 	state.day = int(data.get("day", 1))
+	state.world_location_id = str(data.get("world_location_id", "school_rooftop"))
+	state.world_spawn_id = str(data.get("world_spawn_id", "default"))
+	state.world_position_ratio = clampf(float(data.get("world_position_ratio", 0.5)), 0.04, 0.96)
+	state.visited_world_locations.clear()
+	for raw_location_id in data.get("visited_world_locations", [state.world_location_id]):
+		var location_id := str(raw_location_id)
+		if not location_id.is_empty() and location_id not in state.visited_world_locations:
+			state.visited_world_locations.append(location_id)
+	if state.world_location_id not in state.visited_world_locations:
+		state.visited_world_locations.append(state.world_location_id)
 	state.coin_count = int(data.get("coin_count", 0))
 	state.gold_dice = int(data.get("gold_dice", 0))
 	state.redraws_left = int(data.get("redraws_left", 0))

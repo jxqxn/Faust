@@ -33,6 +33,10 @@ func test_save_load_round_trip_preserves_state():
 	state.gold_dice = 1
 	state.day = 3
 	state.round_number = 2
+	state.world_location_id = "riverbank"
+	state.world_spawn_id = "from_rooftop"
+	state.world_position_ratio = 0.37
+	state.visited_world_locations = ["school_rooftop", "riverbank"]
 	state.add_card_to_slot(2000001, 1, db)
 	var global_slot_uid := int(state.cards_in_slot(1)[0].get("card_uid", 0))
 	state.get_card_instance(global_slot_uid).tags["临时标记"] = 7
@@ -65,6 +69,14 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.difficulty_index, 1, "difficulty preserved")
 	assert_eq(state2.round_number, 2, "round_number preserved")
 	assert_eq(state2.day, 3, "day preserved")
+	assert_eq(state2.world_location_id, "riverbank", "lateral location preserved")
+	assert_eq(state2.world_spawn_id, "from_rooftop", "lateral spawn preserved")
+	assert_almost_eq(state2.world_position_ratio, 0.37, 0.001, "lateral position preserved")
+	assert_eq(
+		state2.visited_world_locations,
+		["school_rooftop", "riverbank"],
+		"visited lateral locations preserved"
+	)
 	assert_eq(state2.coin_count, 15, "coin_count preserved")
 	assert_eq(state2.gold_dice, 1, "gold_dice preserved")
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
@@ -149,6 +161,25 @@ func test_v5_save_without_sudan_pool_fields_uses_compatible_defaults():
 	SaveSystem.deserialize(old_v5, loaded, db)
 	assert_eq(loaded.sudan_pool_tags, {}, "old v5 saves default to no Sultan pool tag state")
 	assert_true(loaded.auto_gen_sudan_card, "old v5 saves keep Sultan auto-generation enabled")
+
+
+func test_v5_save_without_world_fields_resumes_on_default_rooftop():
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(54))
+	var old_v5 := SaveSystem.serialize(state)
+	for key in [
+		"world_location_id",
+		"world_spawn_id",
+		"world_position_ratio",
+		"visited_world_locations",
+	]:
+		old_v5.erase(key)
+	var loaded := GameState.new()
+	SaveSystem.deserialize(old_v5, loaded, db)
+	assert_eq(loaded.world_location_id, "school_rooftop")
+	assert_eq(loaded.world_spawn_id, "default")
+	assert_almost_eq(loaded.world_position_ratio, 0.5, 0.001)
+	assert_eq(loaded.visited_world_locations, ["school_rooftop"])
 
 
 func test_load_rejects_version_mismatch():

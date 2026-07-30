@@ -17,6 +17,12 @@ or copied from *13 Sentinels: Aegis Rim*.
   pose, preserving costume, proportions, lighting, and viewpoint.
 - `protagonist_walk_a.png` / `protagonist_walk_b.png`: two matching walk-cycle
   key poses for lateral movement.
+- `riverbank_sunset.png`: an empty, fictional late-1980s East Asian riverside
+  embankment at sunset; side-view concrete path, underpass, calm river and
+  distant low-rise city, with a clear walkable foreground and no interface.
+- `heroine_idle.png`: an original fictional schoolgirl in a navy sailor
+  uniform with a shoulder satchel, full-body three-quarter view facing left,
+  rendered in the same warm-rimmed painterly style as the protagonist.
 
 The character images were generated against a chroma background and converted
 to transparent PNGs. Only the final transparent production files are kept in

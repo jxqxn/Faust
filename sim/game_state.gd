@@ -39,6 +39,14 @@ var coin_count := 0
 var round_number := 1
 var day := 1
 
+# Lateral-scene progress is run state, not UI state. Keeping only a location,
+# spawn and normalized position makes saves independent from viewport size and
+# allows the presentation to be rebuilt safely after loading.
+var world_location_id := "school_rooftop"
+var world_spawn_id := "default"
+var world_position_ratio := 0.5
+var visited_world_locations: Array[String] = ["school_rooftop"]
+
 # Difficulty index (0=easy,1=normal,2=hard) and its config.
 var difficulty_index := 1
 var difficulty_config := {}   # {single_dice_face_weight, sudan_life_time, gold_dice_count, ...}
@@ -435,6 +443,10 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	# Day/round.
 	round_number = 1
 	day = 1
+	world_location_id = "school_rooftop"
+	world_spawn_id = "default"
+	world_position_ratio = 0.5
+	visited_world_locations = ["school_rooftop"]
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
 	rite_instances.clear()

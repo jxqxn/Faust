@@ -713,6 +713,13 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
 	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+	var world := _find_node_by_name(game, "SceneWorld")
+	assert_true(world.is_scene_blocked(), "the game menu should block lateral input")
+	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
+	if resume != null:
+		resume.pressed.emit()
+		await wait_process_frames(1)
+		assert_false(world.is_scene_blocked(), "resuming should release the menu blocker")
 
 
 func test_game_menu_opens_manual_archive_picker():
@@ -728,6 +735,10 @@ func test_game_menu_opens_manual_archive_picker():
 	assert_not_null(_find_node_by_name(game, "UserArchiveOverlay"), "manual save opens a separate archive picker")
 	assert_not_null(_find_node_by_name(game, "UserArchiveNameInput"), "archive picker accepts a player-specified name")
 	assert_not_null(_find_node_by_name(game, "SaveNewUserArchiveButton"), "archive picker can create a new slot")
+	var world := _find_node_by_name(game, "SceneWorld")
+	assert_true(world.is_scene_blocked(), "the archive picker should block lateral input")
+	game._close_user_archive_overlay()
+	assert_false(world.is_scene_blocked(), "closing the archive picker should release its blocker")
 
 
 func test_test_start_entry_uses_test_card_profile():
@@ -763,6 +774,10 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	var selector := _find_node_by_name(game, "RiteSelector")
 	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
 	assert_null(selector, "map rite pins should not route through the separate rite selector page")
+	var world := _find_node_by_name(game, "SceneWorld")
+	assert_true(world.is_scene_blocked(), "rite overlays should block lateral input")
+	game._close_rite_overlay()
+	assert_false(world.is_scene_blocked(), "closing a rite should release its blocker")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():

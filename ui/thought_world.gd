@@ -8,6 +8,8 @@ extends Control
 
 signal thinking_changed(enabled: bool)
 signal protagonist_moved()
+signal interaction_requested(interaction: Dictionary)
+signal location_changed(location_id: String)
 
 class ThinkDropButton:
 	extends Button
@@ -26,9 +28,7 @@ class ThinkDropButton:
 			owner_world.drop_card_on_think_button(data)
 
 
-const BACKGROUND_TEXTURE = preload(
-	"res://assets/original/thought_world/school_rooftop_sunset.png"
-)
+const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 const IDLE_TEXTURE = preload(
 	"res://assets/original/thought_world/protagonist_idle.png"
 )
@@ -50,15 +50,26 @@ const THINK_SOUND = preload(
 )
 
 const WALK_SPEED := 330.0
+const INTERACTION_ARRIVAL_EPSILON := 0.0005
 const PLAYER_BASE_SIZE := Vector2(154, 308)
-const GROUND_RATIO := 0.94
+const NPC_BASE_SIZE := Vector2(150, 300)
 
 var _thinking := false
 var _player_x_ratio := 0.5
+var _location_id := WorldScenes.DEFAULT_LOCATION_ID
+var _location_data: Dictionary = {}
+var _background_texture: Texture2D
+var _state
 var _walk_time := 0.0
 var _world_time := 0.0
 var _thought_targets: Array[Control] = []
 var _motes: Array[Vector3] = []
+var _npc_nodes: Array[Dictionary] = []
+var _exit_nodes: Array[Dictionary] = []
+var _scene_blockers: Dictionary = {}
+var _interaction_walk_active := false
+var _interaction_walk_target := 0.5
+var _pending_npc_interaction: Dictionary = {}
 
 var _protagonist: TextureRect
 var _atmosphere: ColorRect
@@ -66,7 +77,17 @@ var _think_button: Button
 var _hint_label: Label
 var _scene_title: Label
 var _thought_heading: Label
+var _interaction_hint: Label
+var _transition_flash: ColorRect
 var _audio: AudioStreamPlayer
+
+
+func setup(state) -> void:
+	_state = state
+	if state == null:
+		return
+	_location_id = str(state.world_location_id)
+	_player_x_ratio = clampf(float(state.world_position_ratio), 0.04, 0.96)
 
 
 func _ready() -> void:
@@ -75,6 +96,7 @@ func _ready() -> void:
 	focus_mode = Control.FOCUS_ALL
 	_build_overlay()
 	_make_motes()
+	_apply_location(_location_id, "", true, false)
 	resized.connect(_layout_overlay)
 	_layout_overlay()
 	set_process(true)
@@ -140,6 +162,21 @@ func _build_overlay() -> void:
 	_protagonist.z_index = 4
 	add_child(_protagonist)
 
+	_interaction_hint = Label.new()
+	_interaction_hint.name = "WorldInteractionHint"
+	_interaction_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_interaction_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_interaction_hint.add_theme_font_size_override("font_size", 15)
+	_interaction_hint.add_theme_color_override("font_color", Color("#fff3cb"))
+	_interaction_hint.add_theme_color_override("font_shadow_color", Color(0.01, 0.02, 0.05, 0.92))
+	_interaction_hint.add_theme_constant_override("shadow_offset_x", 1)
+	_interaction_hint.add_theme_constant_override("shadow_offset_y", 2)
+	_interaction_hint.add_theme_stylebox_override("normal", _interaction_style())
+	_interaction_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_interaction_hint.visible = false
+	_interaction_hint.z_index = 15
+	add_child(_interaction_hint)
+
 	_think_button = ThinkDropButton.new()
 	_think_button.name = "ThinkButton"
 	(_think_button as ThinkDropButton).owner_world = self
@@ -161,6 +198,13 @@ func _build_overlay() -> void:
 	_audio.volume_db = -9.0
 	add_child(_audio)
 
+	_transition_flash = ColorRect.new()
+	_transition_flash.name = "LocationTransition"
+	_transition_flash.color = Color(0.96, 0.72, 0.40, 0.0)
+	_transition_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_transition_flash.z_index = 30
+	add_child(_transition_flash)
+
 
 func _make_motes() -> void:
 	var rng := RandomNumberGenerator.new()
@@ -172,7 +216,11 @@ func _make_motes() -> void:
 func _process(delta: float) -> void:
 	_world_time += delta
 	var direction := 0.0
-	if not _thinking and not _has_blocking_overlay():
+	var blocking := _has_blocking_overlay()
+	_update_world_chrome_visibility(blocking or _interaction_walk_active)
+	if _interaction_walk_active:
+		direction = signf(_interaction_walk_target - _player_x_ratio)
+	elif not _thinking and not blocking:
 		direction = Input.get_axis("ui_left", "ui_right")
 		if Input.is_key_pressed(KEY_A):
 			direction -= 1.0
@@ -181,19 +229,30 @@ func _process(delta: float) -> void:
 		direction = clampf(direction, -1.0, 1.0)
 	if not is_zero_approx(direction):
 		var usable_width := maxf(size.x - 170.0, 1.0)
-		_player_x_ratio = clampf(
-			_player_x_ratio + direction * WALK_SPEED * delta / usable_width,
-			0.04,
-			0.96
-		)
+		var step := WALK_SPEED * delta / usable_width
+		if _interaction_walk_active:
+			_player_x_ratio = move_toward(_player_x_ratio, _interaction_walk_target, step)
+		else:
+			_player_x_ratio = clampf(_player_x_ratio + direction * step, 0.04, 0.96)
 		_walk_time += delta
 		_protagonist.flip_h = direction < 0.0
 		_protagonist.texture = WALK_TEXTURES[int(_walk_time * 5.0) % WALK_TEXTURES.size()]
 		_layout_protagonist()
+		_store_player_position()
+		_update_interaction_hint()
 		protagonist_moved.emit()
+		if (
+			_interaction_walk_active
+			and absf(_interaction_walk_target - _player_x_ratio)
+			<= INTERACTION_ARRIVAL_EPSILON
+		):
+			_finish_npc_interaction()
 	else:
 		_walk_time = 0.0
 		_protagonist.texture = THINK_TEXTURE if _thinking else IDLE_TEXTURE
+		_update_interaction_hint()
+		if _interaction_walk_active:
+			_finish_npc_interaction()
 	queue_redraw()
 
 
@@ -203,8 +262,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	if key_event.keycode == KEY_SPACE:
+	if key_event.keycode == KEY_SPACE and not _has_blocking_overlay():
 		set_thinking(not _thinking)
+		get_viewport().set_input_as_handled()
+	elif key_event.keycode == KEY_E and not _thinking and not _has_blocking_overlay():
+		interact_with_nearest()
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_ESCAPE and _thinking:
 		set_thinking(false)
@@ -212,17 +274,40 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _has_blocking_overlay() -> bool:
+	if is_scene_blocked():
+		return true
+	# Compatibility fallback for callers that have not adopted the explicit
+	# blocker API. Wildcards also tolerate a transient Godot auto-rename.
 	var screen := get_parent()
 	if screen == null:
 		return false
-	for overlay_name in ["EventPromptOverlay", "CardDetailOverlay"]:
+	for overlay_name in ["EventPromptOverlay*", "CardDetailOverlay*"]:
 		var overlay := screen.find_child(overlay_name, true, false)
 		if overlay != null and overlay.visible:
 			return true
 	return false
 
 
+func set_scene_blocker(source: String, blocking: bool) -> void:
+	if source.is_empty():
+		return
+	if blocking:
+		_scene_blockers[source] = true
+	else:
+		_scene_blockers.erase(source)
+	var scene_blocked := is_scene_blocked()
+	_update_world_chrome_visibility(scene_blocked)
+	_update_interaction_hint()
+	queue_redraw()
+
+
+func is_scene_blocked() -> bool:
+	return not _scene_blockers.is_empty()
+
+
 func set_thinking(enabled: bool) -> void:
+	if enabled and _interaction_walk_active:
+		return
 	if _thinking == enabled:
 		return
 	_thinking = enabled
@@ -239,6 +324,7 @@ func set_thinking(enabled: bool) -> void:
 	if not DisplayServer.get_name() == "headless":
 		_audio.play()
 	_layout_overlay()
+	_update_interaction_hint()
 	thinking_changed.emit(enabled)
 	queue_redraw()
 
@@ -288,18 +374,68 @@ func set_thought_count(count: int) -> void:
 
 func protagonist_center() -> Vector2:
 	if _protagonist == null:
-		return Vector2(size.x * _player_x_ratio, size.y * GROUND_RATIO)
+		return Vector2(size.x * _player_x_ratio, size.y * _ground_ratio())
 	return _protagonist.position + _protagonist.size * Vector2(0.5, 0.43)
+
+
+func dialogue_anchor_global(actor_id: String) -> Vector2:
+	var actor: Control = null
+	if actor_id == "protagonist":
+		actor = _protagonist
+	else:
+		for entry in _npc_nodes:
+			var data: Dictionary = entry.get("data", {})
+			if str(data.get("id", "")) == actor_id:
+				actor = entry.get("node") as Control
+				break
+	if actor == null:
+		return get_global_transform() * protagonist_center()
+	return actor.get_global_transform() * (actor.size * Vector2(0.5, 0.02))
 
 
 func set_player_x_ratio_for_test(value: float) -> void:
 	_player_x_ratio = clampf(value, 0.04, 0.96)
 	_layout_protagonist()
+	_store_player_position()
+	_update_interaction_hint()
 	protagonist_moved.emit()
 
 
 func player_x_ratio() -> float:
 	return _player_x_ratio
+
+
+func location_id() -> String:
+	return _location_id
+
+
+func is_approaching_interaction() -> bool:
+	return _interaction_walk_active
+
+
+func change_location(location_id_value: String, spawn_id: String = "default") -> bool:
+	if not WorldScenes.LOCATIONS.has(location_id_value):
+		return false
+	set_thinking(false)
+	_apply_location(location_id_value, spawn_id, false, true)
+	return true
+
+
+func interact_with_nearest() -> bool:
+	if _thinking or _has_blocking_overlay() or _interaction_walk_active:
+		return false
+	var interaction := _nearest_interaction()
+	if interaction.is_empty():
+		return false
+	if str(interaction.get("type", "")) == "exit":
+		return change_location(
+			str(interaction.get("target", "")),
+			str(interaction.get("target_spawn", "default"))
+		)
+	if str(interaction.get("type", "")) == "npc":
+		_begin_npc_interaction(interaction)
+		return true
+	return false
 
 
 func _layout_overlay() -> void:
@@ -315,7 +451,13 @@ func _layout_overlay() -> void:
 	_thought_heading.size = Vector2(320, 28)
 	_think_button.position = Vector2(24.0, size.y - 82.0)
 	_think_button.size = Vector2(138, 54)
+	_interaction_hint.position = Vector2((size.x - 360.0) * 0.5, size.y - 76.0)
+	_interaction_hint.size = Vector2(360, 40)
+	_transition_flash.position = Vector2.ZERO
+	_transition_flash.size = size
 	_layout_protagonist()
+	_layout_location_actors()
+	_update_interaction_hint()
 	protagonist_moved.emit()
 	queue_redraw()
 
@@ -327,9 +469,33 @@ func _layout_protagonist() -> void:
 	var player_size := PLAYER_BASE_SIZE * scale_factor
 	var half_width := player_size.x * 0.55
 	var center_x := lerpf(half_width, maxf(half_width, size.x - half_width), _player_x_ratio)
-	var ground_y := size.y * GROUND_RATIO
+	var ground_y := size.y * _ground_ratio()
 	_protagonist.position = Vector2(center_x - player_size.x * 0.5, ground_y - player_size.y)
 	_protagonist.size = player_size
+
+
+func _layout_location_actors() -> void:
+	var scale_factor := clampf(size.y / 420.0, 0.74, 1.22)
+	var actor_size := NPC_BASE_SIZE * scale_factor
+	var ground_y := size.y * _ground_ratio()
+	for entry in _npc_nodes:
+		var node: TextureRect = entry.get("node")
+		var data: Dictionary = entry.get("data", {})
+		if node == null:
+			continue
+		var center_x := size.x * float(data.get("x_ratio", 0.5))
+		node.position = Vector2(center_x - actor_size.x * 0.5, ground_y - actor_size.y)
+		node.size = actor_size
+	for entry in _exit_nodes:
+		var node: Label = entry.get("node")
+		var data: Dictionary = entry.get("data", {})
+		if node == null:
+			continue
+		node.position = Vector2(
+			size.x * float(data.get("x_ratio", 0.05)) - 70.0,
+			ground_y - 112.0
+		)
+		node.size = Vector2(140, 34)
 
 
 func _draw() -> void:
@@ -350,7 +516,7 @@ func _draw() -> void:
 		var alpha: float = 0.012 + (180.0 - float(radius)) / 8000.0
 		draw_circle(Vector2(size.x * 0.12, size.y * 0.48), radius, Color(1.0, 0.63, 0.28, alpha))
 
-	var ground_y := size.y * GROUND_RATIO
+	var ground_y := size.y * _ground_ratio()
 	draw_set_transform(Vector2(size.x * _player_x_ratio, ground_y + 2.0), 0.0, Vector2(2.4, 0.34))
 	draw_circle(Vector2.ZERO, 38.0, Color(0.02, 0.025, 0.055, 0.34))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -392,7 +558,9 @@ func _draw() -> void:
 
 
 func _draw_background_cover(target: Rect2) -> void:
-	var texture_size := BACKGROUND_TEXTURE.get_size()
+	if _background_texture == null:
+		return
+	var texture_size := _background_texture.get_size()
 	if texture_size.x <= 0.0 or texture_size.y <= 0.0 or target.size.y <= 0.0:
 		return
 	var target_aspect := target.size.x / target.size.y
@@ -400,11 +568,217 @@ func _draw_background_cover(target: Rect2) -> void:
 	var source := Rect2(Vector2.ZERO, texture_size)
 	if target_aspect > texture_aspect:
 		source.size.y = texture_size.x / target_aspect
-		source.position.y = (texture_size.y - source.size.y) * 0.64
+		source.position.y = (
+			(texture_size.y - source.size.y)
+			* float(_location_data.get("crop_anchor", 0.5))
+		)
 	else:
 		source.size.x = texture_size.y * target_aspect
 		source.position.x = (texture_size.x - source.size.x) * 0.5
-	draw_texture_rect_region(BACKGROUND_TEXTURE, target, source)
+	draw_texture_rect_region(_background_texture, target, source)
+
+
+func _apply_location(
+	location_id_value: String,
+	spawn_id: String,
+	use_saved_position: bool,
+	play_transition: bool
+) -> void:
+	_cancel_npc_interaction()
+	_location_id = (
+		location_id_value
+		if WorldScenes.LOCATIONS.has(location_id_value)
+		else WorldScenes.DEFAULT_LOCATION_ID
+	)
+	_location_data = WorldScenes.location(_location_id)
+	var background_path := str(_location_data.get("background", ""))
+	_background_texture = load(background_path) as Texture2D
+	_scene_title.text = str(_location_data.get("title", _location_id))
+	if not use_saved_position:
+		_player_x_ratio = WorldScenes.spawn_ratio(_location_id, spawn_id)
+	_clear_location_actors()
+	_build_location_actors()
+	if _state != null:
+		_state.world_location_id = _location_id
+		if not use_saved_position or not spawn_id.is_empty():
+			_state.world_spawn_id = spawn_id if not spawn_id.is_empty() else "default"
+		_state.world_position_ratio = _player_x_ratio
+		if _location_id not in _state.visited_world_locations:
+			_state.visited_world_locations.append(_location_id)
+	_layout_overlay()
+	location_changed.emit(_location_id)
+	if play_transition:
+		_play_location_transition()
+
+
+func _clear_location_actors() -> void:
+	for entry in _npc_nodes:
+		var node: Node = entry.get("node")
+		if is_instance_valid(node):
+			node.free()
+	for entry in _exit_nodes:
+		var node: Node = entry.get("node")
+		if is_instance_valid(node):
+			node.free()
+	_npc_nodes.clear()
+	_exit_nodes.clear()
+
+
+func _build_location_actors() -> void:
+	for raw_npc in _location_data.get("npcs", []):
+		if not (raw_npc is Dictionary):
+			continue
+		var npc_data: Dictionary = raw_npc.duplicate(true)
+		var sprite := TextureRect.new()
+		sprite.name = "WorldNpc_%s" % str(npc_data.get("id", "unknown"))
+		sprite.texture = load(str(npc_data.get("sprite", "")))
+		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sprite.z_index = 3
+		add_child(sprite)
+		_npc_nodes.append({"data": npc_data, "node": sprite})
+	for raw_exit in _location_data.get("exits", []):
+		if not (raw_exit is Dictionary):
+			continue
+		var exit_data: Dictionary = raw_exit.duplicate(true)
+		var marker := Label.new()
+		marker.name = "WorldExit_%s" % str(exit_data.get("id", "unknown"))
+		marker.text = "%s  %s" % [
+			str(exit_data.get("direction", "◇")),
+			str(exit_data.get("label", "出口")),
+		]
+		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		marker.add_theme_font_size_override("font_size", 13)
+		marker.add_theme_color_override("font_color", Color(0.94, 0.95, 0.98, 0.68))
+		marker.add_theme_color_override("font_shadow_color", Color(0.01, 0.02, 0.05, 0.92))
+		marker.add_theme_constant_override("shadow_offset_x", 1)
+		marker.add_theme_constant_override("shadow_offset_y", 2)
+		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		marker.z_index = 7
+		add_child(marker)
+		_exit_nodes.append({"data": exit_data, "node": marker})
+
+
+func _nearest_interaction() -> Dictionary:
+	var nearest := {}
+	var nearest_distance := INF
+	for entry in _npc_nodes:
+		var data: Dictionary = entry.get("data", {})
+		var distance := absf(_player_x_ratio - float(data.get("x_ratio", 0.5)))
+		if distance <= float(data.get("radius", 0.08)) and distance < nearest_distance:
+			nearest_distance = distance
+			nearest = data.duplicate(true)
+			nearest["type"] = "npc"
+			nearest["location_id"] = _location_id
+	for entry in _exit_nodes:
+		var data: Dictionary = entry.get("data", {})
+		var distance := absf(_player_x_ratio - float(data.get("x_ratio", 0.5)))
+		if distance <= float(data.get("radius", 0.08)) and distance < nearest_distance:
+			nearest_distance = distance
+			nearest = data.duplicate(true)
+			nearest["type"] = "exit"
+			nearest["location_id"] = _location_id
+	return nearest
+
+
+func _update_interaction_hint() -> void:
+	if _interaction_hint == null:
+		return
+	var interaction := _nearest_interaction()
+	_interaction_hint.visible = (
+		not _thinking
+		and not _interaction_walk_active
+		and not interaction.is_empty()
+		and not _has_blocking_overlay()
+	)
+	if not _interaction_hint.visible:
+		return
+	if str(interaction.get("type", "")) == "npc":
+		_interaction_hint.text = "E  ·  %s" % str(interaction.get("prompt", "交谈"))
+	else:
+		_interaction_hint.text = "E  ·  %s" % str(interaction.get("label", "前往"))
+
+
+func _update_world_chrome_visibility(blocking: bool) -> void:
+	if _think_button != null:
+		_think_button.visible = not blocking
+	if _hint_label != null:
+		_hint_label.visible = not blocking
+	if _thought_heading != null:
+		_thought_heading.visible = _thinking and not blocking
+	if _interaction_hint != null and blocking:
+		_interaction_hint.visible = false
+	for entry in _exit_nodes:
+		var node: Control = entry.get("node")
+		if node != null:
+			node.visible = not blocking
+
+
+func _begin_npc_interaction(interaction: Dictionary) -> void:
+	_pending_npc_interaction = interaction.duplicate(true)
+	_interaction_walk_target = clampf(
+		float(interaction.get("talk_x_ratio", _player_x_ratio)),
+		0.04,
+		0.96
+	)
+	_interaction_walk_active = true
+	_update_world_chrome_visibility(true)
+	_update_interaction_hint()
+
+
+func _finish_npc_interaction() -> void:
+	if not _interaction_walk_active:
+		return
+	var interaction := _pending_npc_interaction.duplicate(true)
+	var npc_x := float(interaction.get("x_ratio", _player_x_ratio))
+	_interaction_walk_active = false
+	_pending_npc_interaction.clear()
+	_walk_time = 0.0
+	if _protagonist != null:
+		_protagonist.flip_h = _player_x_ratio > npc_x
+		_protagonist.texture = IDLE_TEXTURE
+	_store_player_position()
+	_update_interaction_hint()
+	protagonist_moved.emit()
+	interaction_requested.emit(interaction)
+
+
+func _cancel_npc_interaction() -> void:
+	_interaction_walk_active = false
+	_pending_npc_interaction.clear()
+
+
+func _store_player_position() -> void:
+	if _state != null:
+		_state.world_position_ratio = _player_x_ratio
+
+
+func _ground_ratio() -> float:
+	return float(_location_data.get("ground_ratio", 0.94))
+
+
+func _play_location_transition() -> void:
+	if _transition_flash == null:
+		return
+	_transition_flash.color.a = 0.78
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(_transition_flash, "color:a", 0.0, 0.42)
+
+
+func _interaction_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.035, 0.08, 0.68)
+	style.border_color = Color(1.0, 0.78, 0.40, 0.48)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(18)
+	style.set_content_margin_all(7)
+	style.shadow_color = Color(0.0, 0.0, 0.02, 0.52)
+	style.shadow_size = 6
+	return style
 
 
 func _think_style(border: Color, bright := false) -> StyleBoxFlat:

@@ -134,6 +134,41 @@ func _mcp_capture_compact_prompt() -> void:
 	_game_screen.refresh()
 
 
+func _mcp_capture_world_dialogue() -> void:
+	if state == null:
+		_on_difficulty_selected(0)
+	elif _game_screen == null:
+		_show_game()
+	if _game_screen == null:
+		return
+	var world := _game_screen.get_node_or_null("SceneWorld")
+	if world == null:
+		return
+	world.set_player_x_ratio_for_test(0.68)
+	world.interact_with_nearest()
+
+
+func _mcp_capture_world_dialogue_second_line() -> void:
+	_mcp_capture_world_dialogue()
+	if _game_screen == null:
+		return
+	var continue_button := _game_screen.find_child("EventPromptContinueButton", true, false) as Button
+	if continue_button != null:
+		continue_button.pressed.emit()
+
+
+func _mcp_capture_riverbank() -> void:
+	if state == null:
+		_on_difficulty_selected(0)
+	elif _game_screen == null:
+		_show_game()
+	if _game_screen == null:
+		return
+	var world := _game_screen.get_node_or_null("SceneWorld")
+	if world != null and world.has_method("change_location"):
+		world.change_location("riverbank", "default")
+
+
 func _on_open_rite_selector(location_filter: String = "") -> void:
 	# Count via the static filter to avoid instantiating a RiteSelector node
 	# just to probe (Nodes are not GC'd, so a probe instance would leak).
@@ -184,6 +219,7 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	else:
 		add_child(rv)
 	_rite_overlay = rv
+	_set_world_scene_blocker("rite", true)
 
 
 func _on_menu_pressed() -> void:
@@ -196,6 +232,7 @@ func _on_menu_pressed() -> void:
 func _show_game_menu() -> void:
 	if _current == null:
 		return
+	_set_world_scene_blocker("game_menu", true)
 	_menu_overlay = Control.new()
 	_menu_overlay.name = "GameMenuOverlay"
 	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -272,6 +309,7 @@ func _on_save_from_menu() -> void:
 func _show_user_archive_overlay() -> void:
 	_close_game_menu()
 	_close_user_archive_overlay()
+	_set_world_scene_blocker("user_archive", true)
 	_user_archive_overlay = Control.new()
 	_user_archive_overlay.name = "UserArchiveOverlay"
 	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -414,6 +452,7 @@ func _confirm_delete_user_archive(index: int) -> void:
 
 
 func _close_game_menu() -> void:
+	_set_world_scene_blocker("game_menu", false)
 	if _menu_overlay == null:
 		return
 	_menu_overlay.queue_free()
@@ -421,6 +460,7 @@ func _close_game_menu() -> void:
 
 
 func _close_user_archive_overlay() -> void:
+	_set_world_scene_blocker("user_archive", false)
 	if _user_archive_overlay == null:
 		return
 	_user_archive_overlay.queue_free()
@@ -508,7 +548,13 @@ func _clear_current() -> void:
 
 
 func _close_rite_overlay() -> void:
+	_set_world_scene_blocker("rite", false)
 	if _rite_overlay == null:
 		return
 	_rite_overlay.queue_free()
 	_rite_overlay = null
+
+
+func _set_world_scene_blocker(source: String, blocking: bool) -> void:
+	if _game_screen != null and _game_screen.has_method("set_world_scene_blocker"):
+		_game_screen.set_world_scene_blocker(source, blocking)
