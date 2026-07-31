@@ -48,16 +48,12 @@ const INK := Color("#271c15")
 const RED_WAX := Color("#8a3a31")
 
 var _state
-var _thinking := false
 var _scene_blockers: Dictionary = {}
-var _thought_targets: Array[Control] = []
-var _world_time := 0.0
 
 var _title: Label
 var _subtitle: Label
 var _dossier: Button
 var _think_button: ThinkDropButton
-var _thought_heading: Label
 var _site_buttons: Array[Button] = []
 
 
@@ -73,28 +69,7 @@ func _ready() -> void:
 	resized.connect(_layout)
 	_layout()
 	refresh_context()
-	set_process(true)
 	queue_redraw()
-
-
-func _process(delta: float) -> void:
-	_world_time += delta
-	if _thinking:
-		queue_redraw()
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if event is not InputEventKey:
-		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo or is_scene_blocked():
-		return
-	if key_event.keycode == KEY_SPACE:
-		set_thinking(not _thinking)
-		get_viewport().set_input_as_handled()
-	elif key_event.keycode == KEY_ESCAPE and _thinking:
-		set_thinking(false)
-		get_viewport().set_input_as_handled()
 
 
 func _build_chrome() -> void:
@@ -138,30 +113,16 @@ func _build_chrome() -> void:
 	_think_button.name = "ThinkButton"
 	_think_button.owner_desk = self
 	_think_button.text = "思考"
-	_think_button.tooltip_text = "翻开此刻能够意识到的行动"
+	_think_button.tooltip_text = "将手牌或苏丹卡拖到这里，触发既有思考事件"
 	_think_button.add_theme_font_size_override("font_size", 16)
 	_think_button.add_theme_color_override("font_color", INK)
 	_think_button.add_theme_color_override("font_hover_color", Color("#6b231d"))
 	_think_button.add_theme_stylebox_override("normal", _paper_button_style(PAPER_SHADOW))
 	_think_button.add_theme_stylebox_override("hover", _paper_button_style(RED_WAX, true))
 	_think_button.add_theme_stylebox_override("pressed", _paper_button_style(Color("#d7b86e"), true))
-	_think_button.pressed.connect(func(): set_thinking(not _thinking))
 	_think_button.z_index = 5
 	add_child(_think_button)
 	UiMotionScript.bind(_think_button, UiMotionScript.Profile.SITE)
-
-	_thought_heading = Label.new()
-	_thought_heading.name = "ThoughtHeading"
-	_thought_heading.text = "思考"
-	_thought_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_thought_heading.add_theme_font_size_override("font_size", 18)
-	_thought_heading.add_theme_color_override("font_color", INK)
-	_thought_heading.add_theme_color_override("font_outline_color", Color(1.0, 0.93, 0.72, 0.72))
-	_thought_heading.add_theme_constant_override("outline_size", 2)
-	_thought_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_thought_heading.visible = false
-	_thought_heading.z_index = 5
-	add_child(_thought_heading)
 
 	for spec in SITE_SPECS:
 		var button := Button.new()
@@ -193,25 +154,14 @@ func refresh_context() -> void:
 	queue_redraw()
 
 
-func set_thinking(enabled: bool) -> void:
-	if enabled and is_scene_blocked():
-		return
-	if _thinking == enabled:
-		return
-	_thinking = enabled
-	_thought_heading.visible = enabled
-	_think_button.tooltip_text = (
-		"拖入手牌或苏丹卡，聚焦此刻的对象；按 ESC 收起"
-		if enabled
-		else "翻开此刻能够意识到的行动"
-	)
-	_update_chrome_visibility()
-	thinking_changed.emit(enabled)
-	queue_redraw()
+func set_thinking(_enabled: bool) -> void:
+	# Compatibility no-op: the desk's player-facing button is a permanent card
+	# drop target, not a click-to-enter thought mode.
+	pass
 
 
 func is_thinking() -> bool:
-	return _thinking
+	return false
 
 
 func set_scene_blocker(source: String, blocking: bool) -> void:
@@ -230,7 +180,7 @@ func is_scene_blocked() -> bool:
 
 
 func can_drop_card_on_think_button(data: Variant) -> bool:
-	if not _thinking or is_scene_blocked():
+	if is_scene_blocked():
 		return false
 	var screen := get_parent()
 	return (
@@ -248,20 +198,8 @@ func drop_card_on_think_button(data: Variant) -> void:
 		screen.drop_card_on_methinks(data)
 
 
-func set_thought_targets(targets: Array) -> void:
-	_thought_targets.clear()
-	for target in targets:
-		if target is Control:
-			_thought_targets.append(target)
-	queue_redraw()
-
-
-func set_thought_count(count: int) -> void:
-	_thought_heading.text = "思考" if count > 0 else "此刻没有浮现的念头"
-
-
 func protagonist_center() -> Vector2:
-	return Vector2(size.x * 0.5, size.y * 0.56)
+	return Vector2(size.x * 0.5, size.y * 0.72)
 
 
 func _layout() -> void:
@@ -281,8 +219,6 @@ func _layout() -> void:
 	_dossier.size = Vector2(170.0 if not compact else 160.0, 62.0)
 	_think_button.position = Vector2(28.0, size.y - 76.0)
 	_think_button.size = Vector2(132.0, 48.0)
-	_thought_heading.position = Vector2((size.x - 320.0) * 0.5, 84.0)
-	_thought_heading.size = Vector2(320.0, 28.0)
 	var site_size := Vector2(116.0, 38.0) if not compact else Vector2(104.0, 36.0)
 	for index in _site_buttons.size():
 		var site := _site_buttons[index]
@@ -298,12 +234,11 @@ func _layout() -> void:
 
 func _update_chrome_visibility() -> void:
 	var blocked := is_scene_blocked()
-	_dossier.visible = not blocked and not _thinking
+	_dossier.visible = not blocked
 	_think_button.visible = not blocked
-	_thought_heading.visible = _thinking and not blocked
 	for site in _site_buttons:
 		if is_instance_valid(site):
-			site.visible = not blocked and not _thinking
+			site.visible = not blocked
 
 
 func _draw() -> void:
@@ -341,18 +276,6 @@ func _draw() -> void:
 		draw_circle(point, 18.0, Color(0.27, 0.16, 0.09, 0.28))
 		draw_circle(point, 12.0, Color(0.94, 0.80, 0.50, 0.58))
 		draw_circle(point, 5.0, RED_WAX)
-	if not _thinking:
-		return
-	var center := protagonist_center()
-	var pulse := 36.0 + sin(_world_time * 2.0) * 2.0
-	draw_circle(center, pulse * 1.8, Color(0.37, 0.19, 0.10, 0.12))
-	draw_circle(center, pulse, Color(0.78, 0.25, 0.18, 0.20))
-	for target in _thought_targets:
-		if not is_instance_valid(target) or not target.visible:
-			continue
-		var target_center := target.position + target.size * 0.5
-		draw_line(center, target_center, Color(0.38, 0.14, 0.08, 0.48), 1.4, true)
-		draw_circle(target_center, 5.0, RED_WAX)
 
 
 func _paper_button_style(border: Color, highlighted := false) -> StyleBoxFlat:

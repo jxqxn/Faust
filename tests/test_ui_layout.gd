@@ -304,18 +304,19 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 		return
 	assert_true(desk.visible, "the situation desk should be visible before opening a local scene")
 	assert_false(world.visible, "the lateral scene should not be the default navigation surface")
-	assert_false(pin.visible, "rites stay inside the protagonist until thinking begins")
+	assert_true(pin.visible, "open rites should remain visible as desk action slips")
 	if think != null:
 		think.pressed.emit()
 		await wait_process_frames(1)
-	assert_true(pin.visible, "thinking should make the current rites appear around the protagonist")
-	assert_eq(pin.text, "治理家业", "thoughts should show the rite name players recognize")
+	assert_false(desk.is_thinking(), "clicking the desk drop target must not enter scene thought mode")
+	assert_true(pin.visible, "clicking the desk drop target must not hide current action slips")
+	assert_eq(pin.text, "治理家业", "action slips should show the rite name players recognize")
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
 	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
 	if desk != null:
-		assert_true(desk.is_thinking(), "entering a rite should retain the thought state behind its deeper overlay")
+		assert_false(desk.is_thinking(), "opening a desk action must not create a thought presentation state")
 
 
 func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_simulation():
@@ -441,10 +442,9 @@ func test_game_screen_exposes_one_player_facing_thought_drop_target():
 		return
 	assert_eq((target as Button).text, "思考", "the merged control should always use the single player-facing name")
 	assert_lt(target.position.x, desk.size.x * 0.2, "the unified thought control stays in the desk lower-left position")
-	assert_false(target._can_drop_data(Vector2.ZERO, drag_data), "the button is not a card target before thinking")
-	desk.set_thinking(true)
-	assert_eq((target as Button).text, "思考", "entering thought mode must not expose the legacy mechanism name")
-	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the thinking button accepts cards during thought mode")
+	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk button should always accept valid card drops")
+	(target as Button).pressed.emit()
+	assert_false(desk.is_thinking(), "clicking the desk drop target must not enter scene thought mode")
 
 
 func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
@@ -474,7 +474,6 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var protagonist_uid := state.card_uid_for(2000001, "hand")
 	var think_button := _find_node_by_name(screen, "ThinkButton") as Control
 	var desk := _find_node_by_name(screen, "SituationDesk")
-	desk.set_thinking(true)
 	think_button._drop_data(
 		Vector2.ZERO,
 		{"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"}
@@ -499,7 +498,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	assert_not_null(prompt_panel, "card-to-thought results should use the scene event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "card-to-thought processing should not open the rite overlay")
-	assert_true(desk.is_thinking(), "dropping a card should keep the thought cloud open for the generated rite")
+	assert_false(desk.is_thinking(), "dropping a card should not create a desk thought presentation state")
 	if prompt_panel != null and scene != null and rail != null:
 		assert_lte(
 			prompt_panel.position.y + prompt_panel.size.y,
@@ -794,7 +793,6 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	assert_not_null(desk)
 	if desk == null:
 		return
-	desk.set_thinking(true)
 	pin.pressed.emit()
 	await wait_process_frames(2)
 
@@ -802,15 +800,15 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	var selector := _find_node_by_name(game, "RiteSelector")
 	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
 	assert_null(selector, "map rite pins should not route through the separate rite selector page")
-	assert_true(desk.is_scene_blocked(), "rite overlays should block thought input")
-	assert_true(desk.is_thinking(), "rite overlays opened from thought should retain the thought state")
+	assert_true(desk.is_scene_blocked(), "rite overlays should block desk input")
+	assert_false(desk.is_thinking(), "rite overlays opened from the desk should not create a thought state")
 	var overlay_layer := _find_node_by_name(game, "OverlayLayer") as Control
 	assert_not_null(overlay_layer)
 	if overlay_layer != null:
 		assert_gt(overlay_layer.z_index, desk.z_index, "the deeper rite modal must still cover the desk")
 	game._close_rite_overlay()
 	assert_false(desk.is_scene_blocked(), "closing a rite should release its blocker")
-	assert_true(desk.is_thinking(), "closing the rite should return to the same thought cloud")
+	assert_false(desk.is_thinking(), "closing a rite should return to the unchanged desk")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():

@@ -496,7 +496,7 @@ func _create_rite_pin(instance) -> void:
 	_rite_pin_ids[pin] = instance.uid
 	_rite_pin_by_rite_id[instance.id] = pin
 	_desk_content.add_child(pin)
-	pin.visible = _desk_content.is_thinking()
+	pin.visible = not _desk_content.is_scene_blocked()
 	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
 
 
@@ -560,9 +560,8 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 		if not is_instance_valid(pin):
 			continue
 		pins.append(pin)
-	var thinking: bool = (
+	var can_show_pins: bool = (
 		_desk_content != null
-		and bool(_desk_content.is_thinking())
 		and (
 			not _desk_content.has_method("is_scene_blocked")
 			or not bool(_desk_content.is_scene_blocked())
@@ -577,7 +576,7 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 	var pin_size := Vector2(164, 38) * s
 	for i in count:
 		var pin := pins[i]
-		pin.visible = thinking
+		pin.visible = can_show_pins
 		pin.size = pin_size
 		var row := floori(float(i) / 4.0)
 		var row_start := row * 4
@@ -596,9 +595,6 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 			clamp(raw.x, 10.0 * s, max(10.0 * s, map_size.x - pin_size.x - 10.0 * s)),
 			clamp(raw.y, 54.0 * s, max(54.0 * s, map_size.y - pin_size.y - 54.0 * s))
 		)
-	if _desk_content != null:
-		_desk_content.set_thought_targets(pins)
-		_desk_content.set_thought_count(count)
 
 
 func _on_thinking_changed(enabled: bool) -> void:

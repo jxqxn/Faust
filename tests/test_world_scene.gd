@@ -94,8 +94,14 @@ func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_des
 	assert_true(world.visible, "opening the dossier should reveal the saved scene")
 	assert_eq(world.location_id(), "riverbank")
 	assert_almost_eq(world.player_x_ratio(), 0.63, 0.001)
-	assert_false((world.get_node("ThinkButton") as Control).visible, "the scene must not duplicate desk thought entry")
+	assert_true((world.get_node("ThinkButton") as Control).visible, "the local scene should retain its own thought action")
 	assert_true((world.get_node("ReturnToDeskButton") as Control).visible)
+	var scene_think := world.get_node("ThinkButton") as Button
+	scene_think.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(world.is_thinking(), "the scene thought button should retain its established thought mode")
+	assert_true((world.get_node("ThoughtWorldMask") as Control).visible)
+	world.set_thinking(false)
 	state.queue_prompt({"id": "desk.return.queue", "text": "keep"})
 	world.return_requested.emit()
 	await wait_process_frames(1)
@@ -257,9 +263,9 @@ func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 					(world.get_node("ReturnToDeskButton") as Control).visible,
 					"context scene should offer a clear return after the last line"
 				)
-				assert_false(
+				assert_true(
 					(world.get_node("ThinkButton") as Control).visible,
-					"the context scene must not duplicate the desk thought action"
+					"the context scene should restore its own thought action"
 				)
 
 

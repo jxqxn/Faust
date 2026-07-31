@@ -320,7 +320,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	if key_event.keycode == KEY_SPACE and not _context_mode and not _has_blocking_overlay():
+	if key_event.keycode == KEY_SPACE and not _has_blocking_overlay():
 		set_thinking(not _thinking)
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_E and not _thinking and not _has_blocking_overlay():
@@ -367,7 +367,7 @@ func is_scene_blocked() -> bool:
 
 
 func set_thinking(enabled: bool) -> void:
-	if enabled and (_context_mode or _interaction_walk_active):
+	if enabled and _interaction_walk_active:
 		return
 	if _thinking == enabled:
 		return
@@ -769,7 +769,7 @@ func _update_interaction_hint() -> void:
 
 func _update_world_chrome_visibility(blocking: bool) -> void:
 	if _think_button != null:
-		_think_button.visible = not blocking and not _context_mode
+		_think_button.visible = not blocking
 	if _return_button != null:
 		_return_button.visible = not blocking and _context_mode and not _thinking
 	if _hint_label != null:
