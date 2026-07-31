@@ -116,6 +116,7 @@ func _mcp_capture_thought_world() -> void:
 		_show_game()
 	if _game_screen == null:
 		return
+	_open_scene_context_for_capture()
 	var world := _game_screen.get_node_or_null("SceneWorld")
 	if world != null and world.has_method("set_thinking"):
 		world.set_thinking(true)
@@ -152,6 +153,7 @@ func _mcp_capture_world_dialogue() -> void:
 		_show_game()
 	if _game_screen == null:
 		return
+	_open_scene_context_for_capture()
 	var world := _game_screen.get_node_or_null("SceneWorld")
 	if world == null:
 		return
@@ -175,9 +177,15 @@ func _mcp_capture_riverbank() -> void:
 		_show_game()
 	if _game_screen == null:
 		return
+	_open_scene_context_for_capture()
 	var world := _game_screen.get_node_or_null("SceneWorld")
 	if world != null and world.has_method("change_location"):
 		world.change_location("riverbank", "default")
+
+
+func _open_scene_context_for_capture() -> void:
+	if _game_screen != null and _game_screen.has_method("open_scene_context"):
+		_game_screen.open_scene_context()
 
 
 func _on_open_rite_selector(location_filter: String = "") -> void:

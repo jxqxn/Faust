@@ -102,7 +102,7 @@ func set_context_mode(enabled: bool) -> void:
 	if enabled:
 		set_thinking(false)
 	if is_node_ready():
-		_update_world_chrome_visibility(_has_blocking_overlay())
+		_apply_presentation()
 		_layout_overlay()
 
 
@@ -124,7 +124,7 @@ func _ready() -> void:
 	_apply_location(_location_id, "", true, false)
 	resized.connect(_layout_overlay)
 	_layout_overlay()
-	_update_world_chrome_visibility(_has_blocking_overlay())
+	_apply_presentation()
 	set_process(true)
 	queue_redraw()
 
@@ -273,7 +273,7 @@ func _process(delta: float) -> void:
 		return
 	var direction := 0.0
 	var blocking := _has_blocking_overlay()
-	_update_world_chrome_visibility(blocking or _interaction_walk_active)
+	_apply_presentation()
 	if _interaction_walk_active:
 		direction = signf(_interaction_walk_target - _player_x_ratio)
 	elif not _thinking and not blocking:
@@ -295,7 +295,6 @@ func _process(delta: float) -> void:
 		_protagonist.texture = WALK_TEXTURES[int(_walk_time * 5.0) % WALK_TEXTURES.size()]
 		_layout_protagonist()
 		_store_player_position()
-		_update_interaction_hint()
 		protagonist_moved.emit()
 		if (
 			_interaction_walk_active
@@ -306,7 +305,6 @@ func _process(delta: float) -> void:
 	else:
 		_walk_time = 0.0
 		_protagonist.texture = THINK_TEXTURE if _thinking else IDLE_TEXTURE
-		_update_interaction_hint()
 		if _interaction_walk_active:
 			_finish_npc_interaction()
 	queue_redraw()
@@ -356,9 +354,7 @@ func set_scene_blocker(source: String, blocking: bool) -> void:
 		_scene_blockers[source] = true
 	else:
 		_scene_blockers.erase(source)
-	var scene_blocked := is_scene_blocked()
-	_update_world_chrome_visibility(scene_blocked)
-	_update_interaction_hint()
+	_apply_presentation()
 	queue_redraw()
 
 
@@ -374,8 +370,6 @@ func set_thinking(enabled: bool) -> void:
 	_thinking = enabled
 	_protagonist.texture = THINK_TEXTURE if enabled else IDLE_TEXTURE
 	_protagonist.self_modulate = Color.WHITE
-	_thought_world_mask.visible = enabled
-	_thought_heading.visible = enabled
 	_hint_label.text = "选择一段思绪，或按 ESC 回到现实" if enabled else "A / D 或 ← / → 移动"
 	_think_button.text = "思考"
 	_think_button.tooltip_text = (
@@ -387,7 +381,7 @@ func set_thinking(enabled: bool) -> void:
 	if not DisplayServer.get_name() == "headless":
 		_audio.play()
 	_layout_overlay()
-	_update_interaction_hint()
+	_apply_presentation()
 	thinking_changed.emit(enabled)
 	queue_redraw()
 
@@ -460,7 +454,7 @@ func set_player_x_ratio_for_test(value: float) -> void:
 	_player_x_ratio = clampf(value, 0.04, 0.96)
 	_layout_protagonist()
 	_store_player_position()
-	_update_interaction_hint()
+	_apply_presentation()
 	protagonist_moved.emit()
 
 
@@ -524,7 +518,7 @@ func _layout_overlay() -> void:
 	_transition_flash.size = size
 	_layout_protagonist()
 	_layout_location_actors()
-	_update_interaction_hint()
+	_apply_presentation()
 	protagonist_moved.emit()
 	queue_redraw()
 
@@ -767,21 +761,25 @@ func _update_interaction_hint() -> void:
 		_interaction_hint.text = "E  ·  %s" % str(interaction.get("label", "前往"))
 
 
-func _update_world_chrome_visibility(blocking: bool) -> void:
+## One rendering pass derives every thought-world control from the scene state.
+## Buttons never toggle sibling visibility directly.
+func _apply_presentation() -> void:
+	var blocking := _has_blocking_overlay() or _interaction_walk_active
 	if _think_button != null:
 		_think_button.visible = not blocking
 	if _return_button != null:
 		_return_button.visible = not blocking and _context_mode and not _thinking
 	if _hint_label != null:
 		_hint_label.visible = not blocking
+	if _thought_world_mask != null:
+		_thought_world_mask.visible = _thinking
 	if _thought_heading != null:
 		_thought_heading.visible = _thinking and not blocking
-	if _interaction_hint != null and blocking:
-		_interaction_hint.visible = false
 	for entry in _exit_nodes:
 		var node: Control = entry.get("node")
 		if node != null:
 			node.visible = not blocking
+	_update_interaction_hint()
 
 
 func _begin_npc_interaction(interaction: Dictionary) -> void:
@@ -792,8 +790,7 @@ func _begin_npc_interaction(interaction: Dictionary) -> void:
 		0.96
 	)
 	_interaction_walk_active = true
-	_update_world_chrome_visibility(true)
-	_update_interaction_hint()
+	_apply_presentation()
 
 
 func _finish_npc_interaction() -> void:
@@ -808,7 +805,7 @@ func _finish_npc_interaction() -> void:
 		_protagonist.flip_h = _player_x_ratio > npc_x
 		_protagonist.texture = IDLE_TEXTURE
 	_store_player_position()
-	_update_interaction_hint()
+	_apply_presentation()
 	protagonist_moved.emit()
 	interaction_requested.emit(interaction)
 

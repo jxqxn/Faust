@@ -4,6 +4,11 @@
 ## day controls remain persistent.
 extends Control
 
+## Presentation contract:
+## - SituationDesk and ThoughtWorld are alternate play surfaces.
+## - Rite pins always belong to ThoughtWorld; they never move between surfaces.
+## - Only _set_presentation_state changes which surface is visible.
+
 signal open_rite(rite_id: int)
 signal open_rite_instance(rite_uid: int)
 signal advance_pressed()
@@ -46,13 +51,16 @@ const MOCKUP_SIZE := Vector2(1280, 720)
 const HAND_NATURAL_STEP := 112.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
 const HAND_RAIL_BOTTOM_GUTTER := 20.0
-# Rendering contract for the lateral presentation:
-# - ThoughtWorld may use local z values below WORLD_MODAL_Z.
-# - modal content always covers every world child, including future NPCs.
-# - the persistent card rail stays above the modal shade so cards remain
-#   visible and draggable into rite slots.
+# Rendering budget. Game owns the global menu above this entire screen.
+const SCENE_CONTENT_Z_MAX := 99
 const WORLD_MODAL_Z := 100
 const PERSISTENT_CONTROL_Z := 200
+
+enum PresentationState {
+	DESK,
+	SCENE,
+	SCENE_THINKING,
+}
 
 var _state
 var _db
@@ -96,6 +104,7 @@ var _event_dialogue_actor_id := "protagonist"
 var _rename_input: LineEdit
 var _sleep_waiting := false
 var _event_is_dialogue := false
+var _presentation_state := PresentationState.DESK
 
 
 func setup(state, db, rng) -> void:
@@ -108,6 +117,7 @@ func _ready() -> void:
 	theme = FaustTheme.get_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
+	_set_presentation_state(PresentationState.DESK)
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
 	refresh()
@@ -181,7 +191,6 @@ func _build_ui() -> void:
 	_scene_world.protagonist_moved.connect(_on_scene_world_protagonist_moved)
 	_scene_world.interaction_requested.connect(_on_world_interaction_requested)
 	_scene_world.return_requested.connect(_close_context_scene)
-	_scene_world.visible = false
 	add_child(_scene_world)
 
 	_log_label = Label.new()
@@ -564,7 +573,8 @@ func _layout_rite_pins() -> void:
 			continue
 		pins.append(pin)
 	var can_show_pins: bool = (
-		_scene_world.visible
+		_presentation_state == PresentationState.SCENE_THINKING
+		and _scene_world.visible
 		and _scene_world.is_thinking()
 		and not _scene_world.is_scene_blocked()
 	)
@@ -599,6 +609,13 @@ func _layout_rite_pins() -> void:
 
 
 func _on_scene_world_thinking_changed(_enabled: bool) -> void:
+	if _presentation_state == PresentationState.DESK:
+		if _enabled and _scene_world != null:
+			_scene_world.set_thinking(false)
+		return
+	_set_presentation_state(
+		PresentationState.SCENE_THINKING if _enabled else PresentationState.SCENE
+	)
 	_layout_rite_pins()
 
 
@@ -1018,30 +1035,54 @@ func set_world_scene_blocker(source: String, blocking: bool) -> void:
 	_layout_rite_pins()
 
 
-func _open_context_scene() -> void:
-	if _scene_world == null or _desk_content == null:
+func presentation_state() -> int:
+	return _presentation_state
+
+
+func is_scene_context_open() -> bool:
+	return _presentation_state != PresentationState.DESK
+
+
+func _set_presentation_state(next_state: int) -> void:
+	if _desk_content == null or _scene_world == null:
 		return
-	if _event_overlay != null or _card_detail_overlay != null:
-		return
-	_desk_content.set_thinking(false)
-	_desk_content.visible = false
-	_scene_world.reload_from_state()
-	_scene_world.visible = true
+	_presentation_state = next_state
+	var scene_active := next_state != PresentationState.DESK
+	_desk_content.visible = not scene_active
+	_scene_world.visible = scene_active
+	if not scene_active or next_state == PresentationState.SCENE:
+		_scene_world.set_thinking(false)
 	_layout_rite_pins()
+
+
+func open_scene_context() -> bool:
+	if _scene_world == null or _desk_content == null:
+		return false
+	if _event_overlay != null or _card_detail_overlay != null:
+		return false
+	_scene_world.reload_from_state()
+	_set_presentation_state(PresentationState.SCENE)
 	set_log("")
+	return true
 
 
-func _close_context_scene() -> void:
+func _open_context_scene() -> void:
+	open_scene_context()
+
+
+func return_to_situation_desk() -> void:
 	if _scene_world == null or _desk_content == null:
 		return
-	_scene_world.set_thinking(false)
-	_scene_world.visible = false
-	_desk_content.visible = true
+	_set_presentation_state(PresentationState.DESK)
 	_desk_content.refresh_context()
 	_layout_situation_desk(
 		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y)
 	)
 	set_log("")
+
+
+func _close_context_scene() -> void:
+	return_to_situation_desk()
 
 
 func _refresh_event_overlay() -> void:
