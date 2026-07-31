@@ -9,6 +9,8 @@ const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 
+const GLOBAL_MODAL_Z := 1000
+
 var db: ConfigDB
 var state: GameState
 var rng: GameRNG
@@ -245,12 +247,15 @@ func _show_game_menu() -> void:
 	_menu_overlay = Control.new()
 	_menu_overlay.name = "GameMenuOverlay"
 	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_menu_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_menu_overlay.z_index = GLOBAL_MODAL_Z
 	add_child(_menu_overlay)
 	move_child(_menu_overlay, get_child_count() - 1)
 
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.48)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	_menu_overlay.add_child(shade)
 
 	var panel := PanelContainer.new()
@@ -322,11 +327,14 @@ func _show_user_archive_overlay() -> void:
 	_user_archive_overlay = Control.new()
 	_user_archive_overlay.name = "UserArchiveOverlay"
 	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_user_archive_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	_user_archive_overlay.z_index = GLOBAL_MODAL_Z
 	add_child(_user_archive_overlay)
 
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.56)
 	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	_user_archive_overlay.add_child(shade)
 
 	var panel := PanelContainer.new()

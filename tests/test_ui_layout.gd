@@ -743,11 +743,24 @@ func test_game_menu_button_opens_real_overlay():
 	menu.pressed.emit()
 	await wait_process_frames(1)
 
-	assert_not_null(_find_node_by_name(game, "GameMenuOverlay"), "menu button should open an in-game menu overlay")
+	var overlay := _find_node_by_name(game, "GameMenuOverlay") as Control
+	var rail := _find_node_by_name(game, "CardRail") as Control
+	var protagonist := _find_node_by_name(game, "Protagonist") as Control
+	assert_not_null(overlay, "menu button should open an in-game menu overlay")
+	assert_not_null(rail)
+	assert_not_null(protagonist)
 	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
 	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+	if overlay != null and rail != null and protagonist != null:
+		assert_gt(overlay.z_index, rail.z_index, "the menu must cover persistent hand cards")
+		assert_gt(overlay.z_index, protagonist.z_index, "the menu must cover the local scene protagonist")
+		assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "the global menu layer must block clicks behind it")
+		var shade := overlay.get_child(0) as Control
+		assert_not_null(shade)
+		if shade != null:
+			assert_eq(shade.mouse_filter, Control.MOUSE_FILTER_STOP, "the menu shade must absorb background input")
 	var world := _find_node_by_name(game, "SceneWorld")
 	assert_true(world.is_scene_blocked(), "the game menu should block lateral input")
 	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
