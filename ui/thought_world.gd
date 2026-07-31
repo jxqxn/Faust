@@ -233,7 +233,7 @@ func _build_overlay() -> void:
 
 	_return_button = Button.new()
 	_return_button.name = "ReturnToDeskButton"
-	_return_button.text = "返回形势桌"
+	_return_button.text = "← 当日形势"
 	_return_button.tooltip_text = "回到地图与档案，保留当前位置和未处理事项"
 	_return_button.add_theme_font_size_override("font_size", 14)
 	_return_button.add_theme_color_override("font_color", Color(0.98, 0.96, 0.89, 0.94))
@@ -527,16 +527,17 @@ func _layout_overlay() -> void:
 	_atmosphere.size = size
 	_thought_world_mask.position = Vector2.ZERO
 	_thought_world_mask.size = size
-	_scene_title.position = Vector2(20, 15)
-	_scene_title.size = Vector2(220, 26)
+	_scene_title.position = Vector2((size.x - 300.0) * 0.5, 15)
+	_scene_title.size = Vector2(300, 26)
+	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint_label.position = Vector2((size.x - 360.0) * 0.5, size.y - 28.0)
 	_hint_label.size = Vector2(360, 22)
 	_thought_heading.position = Vector2((size.x - 320.0) * 0.5, 15)
 	_thought_heading.size = Vector2(320, 28)
 	_think_button.position = Vector2(24.0, size.y - 82.0)
 	_think_button.size = Vector2(138, 54)
-	_return_button.position = Vector2(size.x - 152.0, 18.0)
-	_return_button.size = Vector2(134.0, 38.0)
+	_return_button.position = Vector2(24.0, 22.0)
+	_return_button.size = Vector2(170.0, 62.0)
 	_interaction_hint.position = Vector2((size.x - 360.0) * 0.5, size.y - 76.0)
 	_interaction_hint.size = Vector2(360, 40)
 	_transition_flash.position = Vector2.ZERO
@@ -729,10 +730,7 @@ func _build_location_actors() -> void:
 		var exit_data: Dictionary = raw_exit.duplicate(true)
 		var marker := Label.new()
 		marker.name = "WorldExit_%s" % str(exit_data.get("id", "unknown"))
-		marker.text = "%s  %s" % [
-			str(exit_data.get("direction", "◇")),
-			str(exit_data.get("label", "出口")),
-		]
+		marker.text = "场景出口 · %s" % str(exit_data.get("label", "前往"))
 		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		marker.add_theme_font_size_override("font_size", 13)
@@ -793,7 +791,7 @@ func _apply_presentation() -> void:
 	if _think_button != null:
 		_think_button.visible = not hide_chrome
 	if _return_button != null:
-		_return_button.visible = not hide_chrome and _context_mode and not _thinking
+		_return_button.visible = not hide_chrome and _context_mode
 	if _hint_label != null:
 		_hint_label.visible = not hide_chrome
 	if _thought_world_mask != null:

@@ -13,37 +13,58 @@ var _db
 var _state = null
 var _rng = null
 var _location_filter := ""
+var _overlay_mode := false
 var _location_order := ["自宅", "商业区", "宫廷", "上城区", "黑街", "神殿区", "野外", "大敌", "奇珍", "结局"]
 
 var _list_container: VBoxContainer
+var _overlay_panel: PanelContainer
 
 
 func setup(db, state = null, rng = null, location_filter: String = "") -> void:
 	_db = db
 	_state = state
-	_rng = rng
+	_rng = rng.duplicate_stream() if rng != null and rng.has_method("duplicate_stream") else rng
 	_location_filter = location_filter
+
+
+func set_overlay_mode(enabled: bool) -> void:
+	_overlay_mode = enabled
 
 
 func _ready() -> void:
 	name = "RiteSelector"
 	theme = FaustTheme.get_theme()
 	_build_ui()
+	if _overlay_mode:
+		resized.connect(_layout_overlay_panel)
+		call_deferred("_layout_overlay_panel")
 
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var bg := ColorRect.new()
-	bg.color = FaustTheme.BG_DEEP
+	bg.color = Color(0.01, 0.012, 0.025, 0.72) if _overlay_mode else FaustTheme.BG_DEEP
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(bg)
+
+	var content_parent: Control = self
+	if _overlay_mode:
+		_overlay_panel = PanelContainer.new()
+		_overlay_panel.name = "RiteSelectorPanel"
+		add_child(_overlay_panel)
+		_overlay_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_overlay_panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+		content_parent = _overlay_panel
+
 	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if not _overlay_mode:
+		margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.add_theme_constant_override("margin_left", 16)
 	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 12)
 	margin.add_theme_constant_override("margin_bottom", 12)
-	add_child(margin)
+	content_parent.add_child(margin)
 	var root := VBoxContainer.new()
 	root.add_theme_constant_override("separation", 8)
 	margin.add_child(root)
@@ -56,7 +77,8 @@ func _build_ui() -> void:
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(title)
 	var close_btn := Button.new()
-	close_btn.text = "返回"
+	close_btn.name = "CloseRiteSelectorButton"
+	close_btn.text = "关闭"
 	close_btn.custom_minimum_size = Vector2(100, 40)
 	close_btn.pressed.connect(func(): closed.emit())
 	head.add_child(close_btn)
@@ -71,6 +93,13 @@ func _build_ui() -> void:
 	_list_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(_list_container)
 	_populate()
+
+
+func _layout_overlay_panel() -> void:
+	if _overlay_panel == null or size.x <= 0.0 or size.y <= 0.0:
+		return
+	_overlay_panel.position = Vector2(size.x * 0.12, size.y * 0.11).round()
+	_overlay_panel.size = Vector2(size.x * 0.76, size.y * 0.59).round()
 
 
 func _populate() -> void:

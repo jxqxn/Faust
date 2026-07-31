@@ -274,6 +274,52 @@ func test_game_screen_home_site_and_menu_are_interactive():
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
 
 
+func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	game._on_difficulty_selected(0)
+	await wait_process_frames(2)
+
+	var screen := game._game_screen as Control
+	var home := _find_node_by_name(game, "SiteHome") as Button
+	var right_actions := _find_node_by_name(game, "RightActions") as Control
+	var advance := _find_node_by_name(game, "AdvanceDayButton") as Button
+	assert_not_null(screen)
+	assert_not_null(home)
+	assert_not_null(right_actions)
+	assert_not_null(advance)
+	if screen == null or home == null or right_actions == null or advance == null:
+		return
+	assert_false(home.disabled, "a site with available actions should be visibly enabled")
+	assert_string_contains(home.text, "·", "site labels should expose their action availability")
+	var rng_state_before: int = game.rng.get_state()
+	home.pressed.emit()
+	await wait_process_frames(2)
+
+	var selector := _find_node_by_name(game, "RiteSelector") as Control
+	var selector_panel := _find_node_by_name(game, "RiteSelectorPanel") as Control
+	var close_selector := _find_node_by_name(game, "CloseRiteSelectorButton") as Button
+	assert_not_null(selector, "every non-empty site should open the same action selector")
+	assert_not_null(selector_panel, "site actions should use a local panel instead of replacing the game screen")
+	assert_not_null(close_selector)
+	assert_eq(game._game_screen, screen, "opening a site action list must preserve the current GameScreen")
+	assert_eq(game.rng.get_state(), rng_state_before, "availability previews must not consume simulation RNG")
+	assert_null(_find_node_by_name(game, "RiteOverlayPanel"), "a single action must not skip the selector contract")
+	if selector_panel != null:
+		assert_gt(selector_panel.size.x, 700.0, "the local action panel should use the central play surface")
+		assert_gt(selector_panel.global_position.x, 100.0, "the local action panel must not collapse into the top-left corner")
+	assert_false(right_actions.visible, "day controls must disappear while a local action panel is open")
+	assert_true(advance.disabled, "hidden progression controls must also reject programmatic activation")
+	if close_selector != null:
+		close_selector.pressed.emit()
+		await wait_process_frames(1)
+	assert_null(_find_node_by_name(game, "RiteSelector"), "closing the action panel should remove the selector")
+	assert_true(right_actions.visible, "closing the local panel should restore desk progression controls")
+	assert_false(advance.disabled)
+
+
 func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	var rng := RNG.new(21)
 	var state := GameState.new()
@@ -291,7 +337,7 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
 	var desk := _find_node_by_name(screen, "SituationDesk") as Control
 	var world := _find_node_by_name(screen, "SceneWorld") as Control
-	var desk_think := _find_node_by_name(screen, "ThinkButton") as Button
+	var desk_think := _find_node_by_name(screen, "ThinkDropZone") as Control
 	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Button
 	var rail_context := _find_node_by_name(screen, "RailContextLabel") as Label
 	assert_not_null(desk, "situation desk should be the default main play surface")
@@ -307,11 +353,8 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	assert_true(desk.visible, "the situation desk should be visible before opening a local scene")
 	assert_false(world.visible, "the lateral scene should not be the default navigation surface")
 	assert_false(pin.visible, "open rites must not become action choices on the situation desk")
-	if desk_think != null:
-		desk_think.pressed.emit()
-		await wait_process_frames(1)
-	assert_false(desk.is_thinking(), "clicking the desk drop target must not enter scene thought mode")
-	assert_false(pin.visible, "clicking the desk drop target must not reveal scene thought choices")
+	assert_false(desk_think is Button, "a drag-only thought target must not advertise button semantics")
+	assert_false(pin.visible, "the desk drop target must not reveal scene thought choices")
 	dossier.pressed.emit()
 	await wait_process_frames(1)
 	var scene_think := world.get_node("ThinkButton") as Button
@@ -435,7 +478,7 @@ func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
 	assert_not_null(_find_node_by_name(screen, "RitePin_991602"), "same-name variant config remains a distinct map entry")
 
 
-func test_game_screen_exposes_one_player_facing_thought_drop_target():
+func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
 	var rng := RNG.new(17)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -445,19 +488,22 @@ func test_game_screen_exposes_one_player_facing_thought_drop_target():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	var target := _find_node_by_name(screen, "ThinkButton") as Control
+	var target := _find_node_by_name(screen, "ThinkDropZone") as Control
 	var desk := _find_node_by_name(screen, "SituationDesk")
 	var card_uid := state.card_uid_for(2000001, "hand")
 	var drag_data := {"type": "card", "card_id": 2000001, "card_uid": card_uid, "source": "hand"}
-	assert_not_null(target, "all player-facing thought interactions should share one visible control")
+	assert_not_null(target, "the desk should expose one visible card-to-thought drop zone")
 	assert_null(_find_node_by_name(screen, "MethinksDropTarget"), "the obsolete standalone clone-era target should be gone")
 	if target == null or desk == null:
 		return
-	assert_eq((target as Button).text, "思考", "the merged control should always use the single player-facing name")
-	assert_lt(target.position.x, desk.size.x * 0.2, "the unified thought control stays in the desk lower-left position")
-	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk button should always accept valid card drops")
-	(target as Button).pressed.emit()
-	assert_false(desk.is_thinking(), "clicking the desk drop target must not enter scene thought mode")
+	assert_false(target is Button, "drag-only affordances must not be exposed as clickable buttons")
+	assert_string_contains(
+		_collect_label_and_button_text(target),
+		"拖入卡牌",
+		"the drop zone should state the required gesture without relying on a tooltip"
+	)
+	assert_lt(target.position.x, desk.size.x * 0.2, "the thought drop zone stays in the desk lower-left position")
+	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk drop zone should accept valid card drops")
 
 
 func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
@@ -485,7 +531,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	await wait_process_frames(2)
 
 	var protagonist_uid := state.card_uid_for(2000001, "hand")
-	var think_button := _find_node_by_name(screen, "ThinkButton") as Control
+	var think_button := _find_node_by_name(screen, "ThinkDropZone") as Control
 	var desk := _find_node_by_name(screen, "SituationDesk")
 	think_button._drop_data(
 		Vector2.ZERO,
@@ -747,7 +793,7 @@ func test_game_menu_button_opens_real_overlay():
 	var rail := _find_node_by_name(game, "CardRail") as Control
 	var protagonist := _find_node_by_name(game, "Protagonist") as Control
 	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Control
-	var desk_think := _find_node_by_name(game, "ThinkButton") as Control
+	var desk_think := _find_node_by_name(game, "ThinkDropZone") as Control
 	assert_not_null(overlay, "menu button should open an in-game menu overlay")
 	assert_not_null(rail)
 	assert_not_null(protagonist)
@@ -862,12 +908,14 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	var world := _find_node_by_name(game, "SceneWorld") as Control
 	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
 	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
+	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	assert_not_null(screen)
 	assert_not_null(desk)
 	assert_not_null(world)
 	assert_not_null(dossier)
 	assert_not_null(pin)
-	if screen == null or desk == null or world == null or dossier == null or pin == null:
+	assert_not_null(right_actions)
+	if screen == null or desk == null or world == null or dossier == null or pin == null or right_actions == null:
 		return
 
 	assert_eq(screen.presentation_state(), GameScreen.PresentationState.DESK)
@@ -878,21 +926,39 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	assert_eq(world.get_parent(), screen, "the scene keeps GameScreen as its permanent parent")
 	assert_eq(pin.get_parent(), world, "rite pins keep ThoughtWorld as their permanent parent")
 	assert_true(dossier.visible, "the visible dossier is the real route into the scene")
+	assert_true(right_actions.visible, "day controls belong to the desk commit surface")
+	var desk_navigation_position := dossier.global_position
 	dossier.pressed.emit()
 	await wait_process_frames(1)
 
 	var scene_think := world.get_node("ThinkButton") as Button
+	var return_to_desk := world.get_node("ReturnToDeskButton") as Button
 	assert_not_null(scene_think)
-	if scene_think == null:
+	assert_not_null(return_to_desk)
+	if scene_think == null or return_to_desk == null:
 		return
 	assert_eq(screen.presentation_state(), GameScreen.PresentationState.SCENE)
 	assert_true(world.visible)
 	assert_false(desk.visible)
+	assert_false(right_actions.visible, "scene exploration must not expose day-commit controls")
+	assert_almost_eq(
+		return_to_desk.global_position.x,
+		desk_navigation_position.x,
+		2.0,
+		"enter and return navigation should occupy the same horizontal anchor"
+	)
+	assert_almost_eq(
+		return_to_desk.global_position.y,
+		desk_navigation_position.y,
+		2.0,
+		"enter and return navigation should occupy the same vertical anchor"
+	)
 	assert_true(scene_think.visible, "the visible scene thought button is the real route into thought")
 	scene_think.pressed.emit()
 	await wait_process_frames(1)
 
 	assert_eq(screen.presentation_state(), GameScreen.PresentationState.SCENE_THINKING)
+	assert_true(return_to_desk.visible, "global surface navigation should remain visible while thinking")
 	assert_true((world.get_node("ThoughtWorldMask") as Control).visible, "thought owns its scene mask")
 	assert_true(pin.visible, "the visible thought choice belongs to the active scene")
 	assert_true(pin in world._thought_targets, "thought effects retain the same choice nodes the player can press")
@@ -1910,7 +1976,7 @@ func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
 
 
-func test_game_screen_menu_is_separate_but_below_rite_overlay():
+func test_game_screen_menu_entry_stays_above_local_rite_overlay():
 	var rng := RNG.new(8)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -1935,8 +2001,8 @@ func test_game_screen_menu_is_separate_but_below_rite_overlay():
 	if hud == null or menu == null or overlay == null or world == null or rail == null or right_actions == null:
 		return
 	assert_eq(menu.get_parent(), screen, "menu button should be separate from the HUD info panel")
-	assert_true(menu.get_index() < overlay.get_index(), "rite overlays should disable the top-right menu")
-	assert_gt(overlay.z_index, menu.z_index, "modal rendering must not rely only on sibling insertion order")
+	assert_true(menu.get_index() < overlay.get_index(), "menu ordering must not be the source of its global priority")
+	assert_gt(menu.z_index, overlay.z_index, "the global menu entry must remain reachable over local modals")
 	for child in world.get_children():
 		if child is CanvasItem:
 			assert_lt(

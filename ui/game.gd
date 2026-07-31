@@ -17,6 +17,7 @@ var rng: GameRNG
 var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
+var _rite_selector_overlay: Control
 var _menu_overlay: Control
 var _user_archive_overlay: Control
 var _user_archive_name_input: LineEdit
@@ -107,8 +108,22 @@ func _show_game() -> void:
 	gs.refresh()
 
 
-## Visual-capture hook used by the managed UI review tool. It opens a normal
-## run and enters the same thought state a player reaches with Space.
+## Visual-capture hooks used by the managed UI review tool. Each enters a
+## normal player-reachable presentation state.
+func _mcp_capture_situation_desk() -> void:
+	if state == null:
+		_on_difficulty_selected(0)
+	elif _game_screen == null:
+		_show_game()
+	if _game_screen != null and _game_screen.has_method("return_to_situation_desk"):
+		_game_screen.return_to_situation_desk()
+
+
+func _mcp_capture_site_actions() -> void:
+	_mcp_capture_situation_desk()
+	_on_open_rite_selector("自宅")
+
+
 func _mcp_capture_thought_world() -> void:
 	if state == null:
 		_on_difficulty_selected(0)
@@ -189,23 +204,31 @@ func _open_scene_context_for_capture() -> void:
 
 
 func _on_open_rite_selector(location_filter: String = "") -> void:
-	# Count via the static filter to avoid instantiating a RiteSelector node
-	# just to probe (Nodes are not GC'd, so a probe instance would leak).
-	var open_uids := RiteSelector.filter_open_rite_instance_uids(db, state, rng, location_filter)
-	if open_uids.size() == 1:
-		_on_open_rite_instance(int(open_uids[0]))
-		return
+	var availability_rng = rng.duplicate_stream() if rng != null else null
+	var open_uids := RiteSelector.filter_open_rite_instance_uids(
+		db, state, availability_rng, location_filter
+	)
 	if open_uids.is_empty():
 		if _game_screen != null and _game_screen.has_method("set_log"):
-			_game_screen.set_log("该地点尚未开放。")
+			_game_screen.set_log("该地点当前没有可处理行动。")
 		return
-	_clear_current()
+	_close_rite_selector_overlay()
 	var sel := RiteSelector.new()
 	sel.setup(db, state, rng, location_filter)
-	sel.rite_chosen_instance.connect(_on_open_rite_instance)
-	sel.closed.connect(_show_game)
-	add_child(sel)
-	_current = sel
+	sel.set_overlay_mode(true)
+	sel.rite_chosen_instance.connect(_on_rite_selector_choice)
+	sel.closed.connect(_close_rite_selector_overlay)
+	if _game_screen != null and _game_screen.has_method("add_overlay"):
+		_game_screen.add_overlay(sel)
+	else:
+		add_child(sel)
+	_rite_selector_overlay = sel
+	_set_world_scene_blocker("rite_selector", true)
+
+
+func _on_rite_selector_choice(rite_uid: int) -> void:
+	_close_rite_selector_overlay()
+	_on_open_rite_instance(rite_uid)
 
 
 func _on_open_rite(rite_id: int) -> void:
@@ -221,6 +244,7 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 		return
 	if _game_screen == null:
 		_show_game()
+	_close_rite_selector_overlay()
 	_close_rite_overlay()
 	_current_rite_uid = instance.uid
 	_current_rite_id = instance.id
@@ -570,6 +594,7 @@ func _on_redraw() -> void:
 func _clear_current() -> void:
 	_close_game_menu()
 	_close_user_archive_overlay()
+	_close_rite_selector_overlay()
 	_close_rite_overlay()
 	if _current:
 		_current.queue_free()
@@ -582,6 +607,14 @@ func _close_rite_overlay() -> void:
 		return
 	_rite_overlay.queue_free()
 	_rite_overlay = null
+
+
+func _close_rite_selector_overlay() -> void:
+	_set_world_scene_blocker("rite_selector", false)
+	if _rite_selector_overlay == null:
+		return
+	_rite_selector_overlay.queue_free()
+	_rite_selector_overlay = null
 
 
 func _set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:

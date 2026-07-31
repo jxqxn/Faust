@@ -28,6 +28,16 @@ func get_state() -> int:
 	return _gen.state
 
 
+func set_state(state_value: int) -> void:
+	_gen.state = state_value
+
+
+func duplicate_stream() -> GameRNG:
+	var copy := GameRNG.new(get_seed())
+	copy.set_state(get_state())
+	return copy
+
+
 ## Inclusive int range [from, to], matching Godot randi_range semantics.
 ## NOTE: this is NOT Unity-equivalent. Unity's Random.Range(int,int) is
 ## half-open [a,b). Use range_int_half_open for those call sites.

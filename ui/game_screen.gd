@@ -88,6 +88,7 @@ var _pending_hand_drop_poses: Dictionary = {}
 var _known_rail_card_uids: Dictionary = {}
 var _right_actions: VBoxContainer
 var _advance_button: Button
+var _redraw_button: Button
 var _rite_pin_buttons: Array[Button] = []
 var _rite_pin_ids: Dictionary = {}
 var _rite_pin_by_rite_id: Dictionary = {}
@@ -106,6 +107,7 @@ var _sleep_waiting := false
 var _event_is_dialogue := false
 var _presentation_state := PresentationState.DESK
 var _presentation_frozen := false
+var _presentation_blockers: Dictionary = {}
 
 
 func setup(state, db, rng) -> void:
@@ -167,6 +169,7 @@ func _build_ui() -> void:
 	_menu_button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.82))
 	_menu_button.add_theme_color_override("font_hover_color", Color("#fff0ba"))
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
+	_menu_button.z_index = PERSISTENT_CONTROL_Z
 	add_child(_menu_button)
 	UiMotionScript.bind(_menu_button)
 
@@ -175,7 +178,7 @@ func _build_ui() -> void:
 	add_child(_desk_map)
 	_desk_content = SituationDeskScript.new()
 	_desk_content.name = "SituationDesk"
-	_desk_content.setup(_state)
+	_desk_content.setup(_state, _db, _rng)
 	_desk_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
 	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
@@ -222,13 +225,16 @@ func _build_ui() -> void:
 	rail_text.add_theme_font_size_override("font_size", 14)
 	rail_text.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.72))
 	_rail_label.add_child(rail_text)
-	for rank in ["I", "II", "III", "IV"]:
-		var tab := Label.new()
-		tab.text = rank
-		tab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tab.custom_minimum_size = Vector2(34, 24)
-		tab.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.56))
-		_rail_label.add_child(tab)
+	var rank_caption := Label.new()
+	rank_caption.text = "卡牌等级"
+	rank_caption.add_theme_font_size_override("font_size", 11)
+	rank_caption.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.46))
+	_rail_label.add_child(rank_caption)
+	var rank_range := Label.new()
+	rank_range.text = "I — IV"
+	rank_range.add_theme_font_size_override("font_size", 13)
+	rank_range.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.62))
+	_rail_label.add_child(rank_range)
 
 	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
@@ -283,11 +289,11 @@ func _build_ui() -> void:
 	_right_actions.add_child(_advance_button)
 	UiMotionScript.bind(_advance_button, UiMotionScript.Profile.PRIMARY)
 
-	var redraw_btn := _icon_button("重抽")
-	redraw_btn.name = "RedrawSudanButton"
-	redraw_btn.pressed.connect(func(): redraw_pressed.emit())
-	_right_actions.add_child(redraw_btn)
-	UiMotionScript.bind(redraw_btn)
+	_redraw_button = _icon_button("重抽")
+	_redraw_button.name = "RedrawSudanButton"
+	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
+	_right_actions.add_child(_redraw_button)
+	UiMotionScript.bind(_redraw_button)
 
 
 func _apply_layout() -> void:
@@ -1025,14 +1031,22 @@ func add_overlay(node: Control) -> void:
 		add_child(node)
 		return
 	_overlay_layer.add_child(node)
+	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
 
 
 func set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
+	if source.is_empty():
+		return
+	if blocking:
+		_presentation_blockers[source] = hide_chrome
+	else:
+		_presentation_blockers.erase(source)
 	if _desk_content != null and _desk_content.has_method("set_scene_blocker"):
 		_desk_content.set_scene_blocker(source, blocking, hide_chrome)
 	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
 		_scene_world.set_scene_blocker(source, blocking, hide_chrome)
+	_update_persistent_action_availability()
 	_layout_rite_pins()
 
 
@@ -1063,7 +1077,26 @@ func _set_presentation_state(next_state: int) -> void:
 	_scene_world.visible = scene_active
 	if not scene_active or next_state == PresentationState.SCENE:
 		_scene_world.set_thinking(false)
+	_update_persistent_action_availability()
 	_layout_rite_pins()
+
+
+func _update_persistent_action_availability() -> void:
+	var local_modal_open := false
+	for hide_chrome in _presentation_blockers.values():
+		if bool(hide_chrome):
+			local_modal_open = true
+			break
+	var actions_available := (
+		_presentation_state == PresentationState.DESK
+		and not local_modal_open
+	)
+	if _right_actions != null:
+		_right_actions.visible = actions_available
+	if _advance_button != null:
+		_advance_button.disabled = not actions_available
+	if _redraw_button != null:
+		_redraw_button.disabled = not actions_available
 
 
 func open_scene_context() -> bool:

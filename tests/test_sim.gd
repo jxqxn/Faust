@@ -11,6 +11,17 @@ func before_all():
 func _make_ctx(state: GameState, rng) -> Dictionary:
 	return {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1","s2"]}
 
+
+func test_rng_duplicate_stream_copies_position_without_sharing_state():
+	var rng := RNG.new(9182)
+	rng.range_int(1, 20)
+	var copied = rng.duplicate_stream()
+	var original_state: int = rng.get_state()
+	var copied_roll := copied.range_int(1, 100)
+	assert_eq(rng.get_state(), original_state, "probing a copied stream must not advance simulation RNG")
+	assert_eq(rng.range_int(1, 100), copied_roll, "the copied stream should begin at the same current position")
+
+
 func test_counter_condition_equality():
 	var st := GameState.new()
 	st.set_counter(7000617, 7)

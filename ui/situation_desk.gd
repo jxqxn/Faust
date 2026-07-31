@@ -7,31 +7,36 @@
 class_name SituationDesk
 extends Control
 
-signal thinking_changed(enabled: bool)
 signal open_rite_selector(location_name: String)
 signal open_rite_instance(rite_uid: int)
 signal context_requested()
 
 
-class ThinkDropButton:
-	extends Button
+class ThinkDropZone:
+	extends PanelContainer
 
 	var owner_desk: Control
 
 	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-		return (
+		var accepted := (
 			owner_desk != null
 			and owner_desk.has_method("can_drop_card_on_think_button")
 			and bool(owner_desk.can_drop_card_on_think_button(data))
 		)
+		if owner_desk != null and owner_desk.has_method("_set_think_drop_highlight"):
+			owner_desk.call("_set_think_drop_highlight", accepted)
+		return accepted
 
 	func _drop_data(_at_position: Vector2, data: Variant) -> void:
 		if owner_desk != null and owner_desk.has_method("drop_card_on_think_button"):
 			owner_desk.drop_card_on_think_button(data)
+		if owner_desk != null and owner_desk.has_method("_set_think_drop_highlight"):
+			owner_desk.call("_set_think_drop_highlight", false)
 
 
 const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 const UiMotionScript = preload("res://ui/ui_motion.gd")
+const RiteSelectorScript = preload("res://ui/rite_selector.gd")
 
 const SITE_SPECS := [
 	{"name": "SiteHome", "label": "家", "location": "自宅", "position": Vector2(0.18, 0.67)},
@@ -48,17 +53,22 @@ const INK := Color("#271c15")
 const RED_WAX := Color("#8a3a31")
 
 var _state
+var _db
+var _rng
 var _scene_blockers: Dictionary = {}
 
 var _title: Label
 var _subtitle: Label
 var _dossier: Button
-var _think_button: ThinkDropButton
+var _think_drop_zone: ThinkDropZone
+var _think_drop_label: Label
 var _site_buttons: Array[Button] = []
 
 
-func setup(state) -> void:
+func setup(state, db = null, rng = null) -> void:
 	_state = state
+	_db = db
+	_rng = rng
 
 
 func _ready() -> void:
@@ -96,7 +106,7 @@ func _build_chrome() -> void:
 
 	_dossier = Button.new()
 	_dossier.name = "CurrentSceneDossier"
-	_dossier.text = "当前现场"
+	_dossier.text = "进入现场"
 	_dossier.tooltip_text = "打开当前保存的现场"
 	_dossier.add_theme_font_size_override("font_size", 14)
 	_dossier.add_theme_color_override("font_color", INK)
@@ -109,20 +119,25 @@ func _build_chrome() -> void:
 	add_child(_dossier)
 	UiMotionScript.bind(_dossier, UiMotionScript.Profile.SITE)
 
-	_think_button = ThinkDropButton.new()
-	_think_button.name = "ThinkButton"
-	_think_button.owner_desk = self
-	_think_button.text = "思考"
-	_think_button.tooltip_text = "将手牌或苏丹卡拖到这里，触发既有思考事件"
-	_think_button.add_theme_font_size_override("font_size", 16)
-	_think_button.add_theme_color_override("font_color", INK)
-	_think_button.add_theme_color_override("font_hover_color", Color("#6b231d"))
-	_think_button.add_theme_stylebox_override("normal", _paper_button_style(PAPER_SHADOW))
-	_think_button.add_theme_stylebox_override("hover", _paper_button_style(RED_WAX, true))
-	_think_button.add_theme_stylebox_override("pressed", _paper_button_style(Color("#d7b86e"), true))
-	_think_button.z_index = 5
-	add_child(_think_button)
-	UiMotionScript.bind(_think_button, UiMotionScript.Profile.SITE)
+	_think_drop_zone = ThinkDropZone.new()
+	_think_drop_zone.name = "ThinkDropZone"
+	_think_drop_zone.owner_desk = self
+	_think_drop_zone.tooltip_text = "将手牌或苏丹卡拖到这里，触发既有思考事件"
+	_think_drop_zone.mouse_default_cursor_shape = Control.CURSOR_CAN_DROP
+	_think_drop_zone.add_theme_stylebox_override("panel", _paper_button_style(PAPER_SHADOW))
+	_think_drop_zone.mouse_exited.connect(_set_think_drop_highlight.bind(false))
+	_think_drop_zone.z_index = 5
+	add_child(_think_drop_zone)
+
+	_think_drop_label = Label.new()
+	_think_drop_label.text = "拖入卡牌\n以思考"
+	_think_drop_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_think_drop_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_think_drop_label.add_theme_font_size_override("font_size", 15)
+	_think_drop_label.add_theme_color_override("font_color", INK)
+	_think_drop_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_think_drop_zone.add_child(_think_drop_label)
+	_think_drop_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	for spec in SITE_SPECS:
 		var button := Button.new()
@@ -135,6 +150,7 @@ func _build_chrome() -> void:
 		button.add_theme_stylebox_override("normal", _site_style(Color(0.31, 0.20, 0.12, 0.48)))
 		button.add_theme_stylebox_override("hover", _site_style(RED_WAX, true))
 		button.add_theme_stylebox_override("pressed", _site_style(Color("#d7b86e"), true))
+		button.add_theme_stylebox_override("disabled", _site_style(Color(0.31, 0.20, 0.12, 0.22)))
 		button.pressed.connect(open_rite_selector.emit.bind(str(spec["location"])))
 		button.z_index = 4
 		_site_buttons.append(button)
@@ -149,14 +165,49 @@ func refresh_context() -> void:
 	var location_data: Dictionary = WorldScenes.location(location_id)
 	var title := str(location_data.get("title", location_id))
 	_subtitle.text = "地图 · 档案 · %s" % title
-	_dossier.text = "现场档案\n%s" % title
+	_dossier.text = "进入现场\n%s" % title
 	_dossier.tooltip_text = "进入%s；现场位置会继续写入当前存档" % title
+	_refresh_site_availability()
 	queue_redraw()
 
 
+func _refresh_site_availability() -> void:
+	if _db == null or _state == null:
+		return
+	for index in _site_buttons.size():
+		var button := _site_buttons[index]
+		var spec: Dictionary = SITE_SPECS[index]
+		var location_name := str(spec["location"])
+		var availability_rng = (
+			_rng.duplicate_stream()
+			if _rng != null and _rng.has_method("duplicate_stream")
+			else _rng
+		)
+		var open_uids := RiteSelectorScript.filter_open_rite_instance_uids(
+			_db, _state, availability_rng, location_name
+		)
+		var count := open_uids.size()
+		button.disabled = count == 0
+		button.text = "%s · %s" % [str(spec["label"]), str(count) if count > 0 else "无"]
+		button.tooltip_text = (
+			"%s有 %d 项可处理行动" % [location_name, count]
+			if count > 0
+			else "%s当前没有可处理行动" % location_name
+		)
+
+
+func _set_think_drop_highlight(highlighted: bool) -> void:
+	if _think_drop_zone == null:
+		return
+	_think_drop_zone.add_theme_stylebox_override(
+		"panel",
+		_paper_button_style(RED_WAX, true) if highlighted else _paper_button_style(PAPER_SHADOW)
+	)
+
+
 func set_thinking(_enabled: bool) -> void:
-	# Compatibility no-op: the desk's player-facing button is a permanent card
-	# drop target, not a click-to-enter thought mode.
+	# Compatibility only. The desk exposes a labelled drop zone, not a thought
+	# presentation state.
 	pass
 
 
@@ -226,8 +277,8 @@ func _layout() -> void:
 	_subtitle.add_theme_font_size_override("font_size", 13 if not compact else 11)
 	_dossier.position = Vector2(24.0, 22.0)
 	_dossier.size = Vector2(170.0 if not compact else 160.0, 62.0)
-	_think_button.position = Vector2(28.0, size.y - 76.0)
-	_think_button.size = Vector2(132.0, 48.0)
+	_think_drop_zone.position = Vector2(28.0, size.y - 82.0)
+	_think_drop_zone.size = Vector2(150.0, 56.0)
 	var site_size := Vector2(116.0, 38.0) if not compact else Vector2(104.0, 36.0)
 	for index in _site_buttons.size():
 		var site := _site_buttons[index]
@@ -244,7 +295,7 @@ func _layout() -> void:
 func _update_chrome_visibility() -> void:
 	var hide_chrome := is_scene_chrome_hidden()
 	_dossier.visible = not hide_chrome
-	_think_button.visible = not hide_chrome
+	_think_drop_zone.visible = not hide_chrome
 	for site in _site_buttons:
 		if is_instance_valid(site):
 			site.visible = not hide_chrome
