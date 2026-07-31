@@ -9,7 +9,7 @@ signal closed()
 
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 
-const OVERLAY_SHADE_ALPHA := 0.32
+const OVERLAY_SHADE_ALPHA := 0.38
 const OPEN_DURATION := 0.16
 const CLOSE_DURATION := 0.12
 const CONTEXT_MENU_MIN_WIDTH := 288.0
@@ -75,7 +75,7 @@ func _build_ui() -> void:
 	_overlay_backdrop = ColorRect.new()
 	_overlay_backdrop.name = "RiteSelectorBackdrop"
 	_overlay_backdrop.color = (
-		Color(0.01, 0.012, 0.025, 0.0)
+		Color(0.12, 0.075, 0.035, 0.0)
 		if _overlay_mode
 		else FaustTheme.BG_DEEP
 	)
@@ -92,7 +92,7 @@ func _build_ui() -> void:
 		add_child(_overlay_panel)
 		_overlay_panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		_overlay_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-		_overlay_panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
+		_overlay_panel.add_theme_stylebox_override("panel", _parchment_panel_style())
 		content_parent = _overlay_panel
 
 	var margin := MarginContainer.new()
@@ -117,7 +117,9 @@ func _build_ui() -> void:
 	)
 	_title_label.custom_minimum_size = Vector2(0, 26)
 	_title_label.add_theme_font_size_override("font_size", 18)
-	_title_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_title_label.add_theme_color_override("font_color", Color("#302116"))
+	_title_label.add_theme_color_override("font_outline_color", Color(0.94, 0.79, 0.46, 0.42))
+	_title_label.add_theme_constant_override("outline_size", 1)
 	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	root.add_child(_title_label)
 	# Scrollable list.
@@ -374,7 +376,7 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		var loc_label := Label.new()
 		loc_label.text = "【%s】（%d）" % [loc_name, rids.size()]
 		loc_label.add_theme_font_size_override("font_size", 18)
-		loc_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+		loc_label.add_theme_color_override("font_color", Color("#3a291c"))
 		_list_container.add_child(loc_label)
 	# Grid of rite buttons.
 	var grid := GridContainer.new()
@@ -390,12 +392,50 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		btn.custom_minimum_size = Vector2(0, 44)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		btn.tooltip_text = str(r.get("text", ""))
+		btn.add_theme_font_size_override("font_size", 15)
+		btn.add_theme_color_override("font_color", Color("#2d2017"))
+		btn.add_theme_color_override("font_hover_color", Color("#681f1b"))
+		btn.add_theme_color_override("font_pressed_color", Color("#421713"))
+		btn.add_theme_color_override("font_focus_color", Color("#2d2017"))
+		btn.add_theme_stylebox_override("normal", _rite_button_style())
+		btn.add_theme_stylebox_override("hover", _rite_button_style(Color("#9a4335"), true))
+		btn.add_theme_stylebox_override("pressed", _rite_button_style(Color("#6f281f"), true))
+		btn.add_theme_stylebox_override("focus", _rite_button_style(Color("#b98736"), true))
 		btn.pressed.connect(_on_rite_instance.bind(instance.uid))
 		grid.add_child(btn)
 		UiMotionScript.bind(btn, UiMotionScript.Profile.SITE)
 		if _first_rite_button == null:
 			_first_rite_button = btn
 	_list_container.add_child(grid)
+
+
+func _parchment_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#e4cc8e")
+	style.border_color = Color("#8a6238")
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(8)
+	style.shadow_color = Color(0.05, 0.028, 0.014, 0.66)
+	style.shadow_size = 9
+	style.shadow_offset = Vector2(5.0, 7.0)
+	return style
+
+
+func _rite_button_style(
+	border: Color = Color(0.38, 0.25, 0.15, 0.62),
+	highlighted := false
+) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#f1dea5") if highlighted else Color("#e8d39b")
+	style.border_color = border
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(2)
+	style.set_content_margin_all(7)
+	style.shadow_color = Color(0.08, 0.04, 0.02, 0.24)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(2.0, 2.0)
+	return style
 
 
 func _on_rite(rid: int) -> void:

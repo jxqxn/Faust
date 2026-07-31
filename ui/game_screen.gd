@@ -1,5 +1,5 @@
 ﻿## Main in-game scene screen.
-## The screen defaults to a paper SituationDesk. ThoughtWorld is retained as
+## The screen defaults to a tabletop-map SituationDesk. ThoughtWorld is retained as
 ## an optional local-context page while the shared rail, queue surfaces, and
 ## day controls remain persistent.
 extends Control
@@ -142,7 +142,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _build_ui() -> void:
 	_background = ColorRect.new()
 	_background.name = "ScreenBackground"
-	_background.color = Color("#090b16")
+	_background.color = Color("#17120e")
 	add_child(_background)
 	# The screen uses an explicit scaled layout; keep the background on the
 	# same top-left coordinate system so resizing it does not fight anchors.
@@ -168,7 +168,7 @@ func _build_ui() -> void:
 	_menu_button.text = "菜单"
 	_menu_button.flat = true
 	_menu_button.add_theme_font_size_override("font_size", 15)
-	_menu_button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.82))
+	_menu_button.add_theme_color_override("font_color", Color("#e8d59f"))
 	_menu_button.add_theme_color_override("font_hover_color", Color("#fff0ba"))
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
 	_menu_button.z_index = PERSISTENT_CONTROL_Z
@@ -185,6 +185,9 @@ func _build_ui() -> void:
 	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
 	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
 	_desk_content.context_requested.connect(_open_context_scene)
+	_desk_content.site_navigation_active_changed.connect(
+		_on_desk_site_navigation_active_changed
+	)
 	add_child(_desk_content)
 
 	_scene_world = ThoughtWorldScript.new()
@@ -282,9 +285,9 @@ func _build_ui() -> void:
 	_advance_button.text = "下一天"
 	_advance_button.custom_minimum_size = Vector2(132, 132)
 	_advance_button.add_theme_font_size_override("font_size", 23)
-	_advance_button.add_theme_color_override("font_color", Color("#f3f1eb"))
-	_advance_button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
-	_advance_button.add_theme_color_override("font_disabled_color", Color(0.94, 0.94, 0.92, 0.54))
+	_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
+	_advance_button.add_theme_color_override("font_hover_color", Color("#681f1b"))
+	_advance_button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.52))
 	_advance_button.add_theme_stylebox_override("normal", _round_button_style())
 	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")))
 	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")))
@@ -310,11 +313,27 @@ func _apply_layout() -> void:
 	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
 
 	_set_rect(_background, Rect2(Vector2.ZERO, view_size))
-	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(340, 44) * s))
+	_set_rect(_hud, Rect2(Vector2(22, 16) * s, Vector2(392, 48) * s))
 	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
-	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
+	# The painted board extends behind the persistent card band. Cards and HUD
+	# remain front-facing, while only the map surface uses tabletop perspective.
+	_set_rect(
+		_desk_map,
+		Rect2(
+			Vector2(18, 66) * s,
+			Vector2(view_size.x - 36 * s, view_size.y - (66 + 118) * s)
+		)
+	)
 	_set_rect(_desk_content, Rect2(_desk_map.position, _desk_map.size))
-	_set_rect(_scene_world, Rect2(_desk_map.position, _desk_map.size))
+	# The lateral scene remains an independent prototype with its established
+	# safe rectangle; expanding the board must not change its navigation space.
+	_set_rect(
+		_scene_world,
+		Rect2(
+			Vector2(34, 78) * s,
+			Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)
+		)
+	)
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(
@@ -356,6 +375,18 @@ func _layout_situation_desk(s: float) -> void:
 	if _desk_content == null:
 		return
 	var map_size := _desk_content.size
+	var dossier := _desk_content.get_node_or_null("CurrentSceneDossier") as Control
+	var return_button := (
+		_scene_world.get_node_or_null("ReturnToDeskButton") as Control
+		if _scene_world != null
+		else null
+	)
+	if dossier != null and return_button != null:
+		dossier.position = (
+			_scene_world.position
+			+ return_button.position
+			- _desk_content.position
+		)
 	_desk_content.refresh_context()
 	_layout_rite_pins()
 	if _log_label != null:
@@ -384,28 +415,37 @@ func _panel(node_name: String) -> PanelContainer:
 
 func _chrome_panel_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.035, 0.043, 0.09, 0.82)
-	style.border_color = Color(0.78, 0.80, 0.84, 0.20)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.shadow_color = Color(0.0, 0.0, 0.02, 0.40)
-	style.shadow_size = 5
+	style.bg_color = Color(0.12, 0.085, 0.055, 0.92)
+	style.border_color = Color(0.82, 0.66, 0.34, 0.48)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(2)
+	style.shadow_color = Color(0.015, 0.008, 0.004, 0.58)
+	style.shadow_size = 7
+	style.shadow_offset = Vector2(3.0, 4.0)
 	return style
 
 
 func _scene_frame_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#14182a")
-	style.border_color = Color(0.74, 0.78, 0.84, 0.24)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(2)
-	style.shadow_color = Color(0.01, 0.012, 0.03, 0.54)
-	style.shadow_size = 7
+	# SituationDesk paints the complete board. The host panel exists only as a
+	# stable layout/safe-area node and must not reintroduce the old dark frame.
+	style.bg_color = Color.TRANSPARENT
+	style.border_color = Color.TRANSPARENT
 	return style
 
 
 func _on_desk_rite_selector_requested(location_name: String) -> void:
 	open_rite_selector.emit(location_name)
+
+
+func _on_desk_site_navigation_active_changed(active: bool) -> void:
+	set_world_scene_blocker(
+		"site_navigation",
+		active,
+		false,
+		true,
+		true
+	)
 
 
 func site_action_anchor(location_name: String) -> Vector2:
@@ -420,9 +460,15 @@ func site_action_anchor(location_name: String) -> Vector2:
 func site_action_menu_bounds() -> Rect2:
 	if _desk_map == null:
 		return Rect2()
-	# Keep location actions inside the map work area. The card rail has a
-	# separate, persistent interaction role below this rectangle.
-	return Rect2(_desk_map.position, _desk_map.size)
+	# The map visually continues behind the hand, but contextual actions belong
+	# to the readable upper work area and must never cover the persistent cards.
+	var lower_edge: float = _desk_map.position.y + _desk_map.size.y
+	if _card_rail_view != null:
+		lower_edge = minf(lower_edge, _card_rail_view.position.y - 8.0)
+	return Rect2(
+		_desk_map.position,
+		Vector2(_desk_map.size.x, maxf(0.0, lower_edge - _desk_map.position.y))
+	)
 
 
 func clear_site_focus() -> void:
@@ -436,9 +482,9 @@ func _icon_button(label: String) -> Button:
 	button.custom_minimum_size = Vector2(62, 38)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.84))
-	button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
-	button.add_theme_color_override("font_disabled_color", Color(0.94, 0.94, 0.92, 0.50))
+	button.add_theme_color_override("font_color", Color("#2b1d12"))
+	button.add_theme_color_override("font_hover_color", Color("#681f1b"))
+	button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.48))
 	button.add_theme_stylebox_override("normal", _small_action_style())
 	button.add_theme_stylebox_override("hover", _small_action_style(Color("#efc46e")))
 	button.add_theme_stylebox_override("pressed", _small_action_style(Color("#fff1bc")))
@@ -446,19 +492,22 @@ func _icon_button(label: String) -> Button:
 	return button
 
 
-func _small_action_style(border: Color = Color(0.82, 0.84, 0.88, 0.30)) -> StyleBoxFlat:
+func _small_action_style(border: Color = Color(0.43, 0.28, 0.15, 0.68)) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.035, 0.043, 0.09, 0.72)
+	style.bg_color = Color("#dfc886")
 	style.border_color = border
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(3)
 	style.set_content_margin_all(6)
+	style.shadow_color = Color(0.04, 0.022, 0.012, 0.42)
+	style.shadow_size = 4
+	style.shadow_offset = Vector2(2.0, 3.0)
 	return style
 
 
-func _round_button_style(border: Color = Color(0.82, 0.84, 0.88, 0.42)) -> StyleBoxFlat:
+func _round_button_style(border: Color = Color(0.55, 0.38, 0.17, 0.82)) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.035, 0.043, 0.09, 0.78)
+	style.bg_color = Color("#d8bd74")
 	style.border_color = border
 	style.border_width_left = 2
 	style.border_width_right = 2
@@ -468,8 +517,9 @@ func _round_button_style(border: Color = Color(0.82, 0.84, 0.88, 0.42)) -> Style
 	style.corner_radius_top_right = 72
 	style.corner_radius_bottom_left = 72
 	style.corner_radius_bottom_right = 72
-	style.shadow_color = Color(0.0, 0.0, 0.02, 0.48)
+	style.shadow_color = Color(0.04, 0.022, 0.012, 0.54)
 	style.shadow_size = 7
+	style.shadow_offset = Vector2(4.0, 5.0)
 	return style
 
 

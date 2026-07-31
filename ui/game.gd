@@ -132,6 +132,20 @@ func _mcp_capture_site_actions() -> void:
 		_on_open_rite_selector("自宅")
 
 
+func _mcp_capture_tabletop_market_actions() -> void:
+	_mcp_capture_situation_desk()
+	var market_site: Button = null
+	if _game_screen != null:
+		market_site = _game_screen.get_node_or_null("SituationDesk/SiteMarket") as Button
+	if market_site == null or market_site.disabled:
+		_mcp_capture_site_actions()
+		return
+	var previous_reduced_motion := UiMotionScript.reduced_motion
+	UiMotionScript.reduced_motion = true
+	market_site.pressed.emit()
+	UiMotionScript.reduced_motion = previous_reduced_motion
+
+
 func _mcp_capture_thought_world() -> void:
 	if state == null:
 		_on_difficulty_selected(0)

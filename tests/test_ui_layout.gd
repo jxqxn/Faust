@@ -356,7 +356,12 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	if selector != null:
 		assert_eq(selector._overlay_anchor, source_anchor, "the selector should open from the clicked site")
 	assert_true(home.visible, "the selected site should remain visible beneath its local panel")
-	assert_lt(market.self_modulate.a, 1.0, "non-selected sites should recede while one site is focused")
+	assert_almost_eq(
+		market.self_modulate.a,
+		1.0,
+		0.001,
+		"pausing a site menu must not fade or remove the other physical nodes"
+	)
 	assert_true(dossier.visible, "a compact site menu must not make the scene entry disappear")
 	assert_true(think_drop.visible, "a compact site menu must not make the thought drop target disappear")
 	if selector_panel != null:
@@ -2149,7 +2154,10 @@ func test_game_screen_matches_mockup_spatial_layout():
 	assert_true(desk_map.position.y > hud.position.y + hud.size.y, "DeskMap should sit below the Hud")
 	assert_true(desk_map.size.x > 1080.0, "DeskMap should use the broad middle area")
 	assert_true(desk_map.size.y > 330.0, "DeskMap should be the dominant middle area")
-	assert_true(card_rail.position.y > desk_map.position.y + desk_map.size.y - 8.0, "CardRail should live below the DeskMap")
+	assert_true(
+		card_rail.position.y < desk_map.position.y + desk_map.size.y,
+		"the painted tabletop should continue behind the front-facing card rail"
+	)
 	assert_almost_eq(card_rail.position.x, 162.0, 8.0, "CardRail should leave room for the mockup rail label")
 	assert_true(card_rail.size.x < 840.0, "CardRail should leave room for the right action column")
 	assert_true(rail_label.position.x < card_rail.position.x, "RailLabel should be left of CardRail")
