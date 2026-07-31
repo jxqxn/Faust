@@ -746,9 +746,13 @@ func test_game_menu_button_opens_real_overlay():
 	var overlay := _find_node_by_name(game, "GameMenuOverlay") as Control
 	var rail := _find_node_by_name(game, "CardRail") as Control
 	var protagonist := _find_node_by_name(game, "Protagonist") as Control
+	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Control
+	var desk_think := _find_node_by_name(game, "ThinkButton") as Control
 	assert_not_null(overlay, "menu button should open an in-game menu overlay")
 	assert_not_null(rail)
 	assert_not_null(protagonist)
+	assert_not_null(dossier)
+	assert_not_null(desk_think)
 	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
 	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
@@ -761,6 +765,14 @@ func test_game_menu_button_opens_real_overlay():
 		assert_not_null(shade)
 		if shade != null:
 			assert_eq(shade.mouse_filter, Control.MOUSE_FILTER_STOP, "the menu shade must absorb background input")
+	if dossier != null and desk_think != null:
+		assert_true(dossier.visible, "the global menu pauses the visible desk instead of hiding its dossier")
+		assert_true(desk_think.visible, "the global menu pauses the visible desk instead of hiding its thought target")
+	assert_eq(
+		(game._game_screen as Node).process_mode,
+		Node.PROCESS_MODE_DISABLED,
+		"the global menu freezes the complete lower gameplay layer"
+	)
 	var world := _find_node_by_name(game, "SceneWorld")
 	assert_true(world.is_scene_blocked(), "the game menu should block lateral input")
 	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
@@ -768,6 +780,73 @@ func test_game_menu_button_opens_real_overlay():
 		resume.pressed.emit()
 		await wait_process_frames(1)
 		assert_false(world.is_scene_blocked(), "resuming should release the menu blocker")
+		assert_eq(
+			(game._game_screen as Node).process_mode,
+			Node.PROCESS_MODE_INHERIT,
+			"resuming should reactivate the lower gameplay layer"
+		)
+
+
+func test_global_menu_freezes_scene_thought_without_hiding_its_visual_state():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	game._on_difficulty_selected(0)
+	await wait_process_frames(2)
+
+	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
+	assert_not_null(dossier)
+	if dossier == null:
+		return
+	dossier.pressed.emit()
+	await wait_process_frames(1)
+	var world := _find_node_by_name(game, "SceneWorld")
+	var scene_think := _find_node_by_name(world, "ThinkButton") as Button
+	var menu := _find_node_by_name(game, "MenuButton") as Button
+	assert_not_null(scene_think)
+	assert_not_null(menu)
+	if scene_think == null or menu == null:
+		return
+	scene_think.pressed.emit()
+	await wait_process_frames(1)
+
+	var thought_mask := _find_node_by_name(world, "ThoughtWorldMask") as Control
+	var thought_heading := _find_node_by_name(world, "ThoughtHeading") as Control
+	var pin := _find_node_by_name(world, "RitePin_5000001") as Control
+	assert_not_null(thought_mask)
+	assert_not_null(thought_heading)
+	assert_not_null(pin)
+	if thought_mask == null or thought_heading == null or pin == null:
+		return
+	assert_true(world.is_thinking())
+	assert_true(thought_mask.visible)
+	assert_true(thought_heading.visible)
+	assert_true(pin.visible)
+	var paused_world_time: float = world._world_time
+	menu.pressed.emit()
+	await wait_process_frames(2)
+
+	assert_true(world.is_scene_blocked(), "global menu locks scene input")
+	assert_false(world.is_scene_chrome_hidden(), "global menu is an input pause, not a chrome-hiding local modal")
+	assert_true(world.is_thinking(), "the menu must retain the previous thought state")
+	assert_true(thought_mask.visible, "the menu must retain the previous thought mask")
+	assert_true(thought_heading.visible, "the menu must retain the previous thought heading")
+	assert_true(pin.visible, "the menu must retain the previous thought choices under its shade")
+	assert_true(scene_think.visible, "the menu must retain visible scene buttons under its shade")
+	assert_almost_eq(world._world_time, paused_world_time, 0.000001, "the menu freezes the scene's procedural presentation clock")
+	var atmosphere := _find_node_by_name(world, "Atmosphere") as ColorRect
+	assert_not_null(atmosphere)
+	if atmosphere != null:
+		var atmosphere_material := atmosphere.material as ShaderMaterial
+		assert_not_null(atmosphere_material)
+		if atmosphere_material != null:
+			assert_almost_eq(
+				float(atmosphere_material.get_shader_parameter("world_time")),
+				paused_world_time,
+				0.000001,
+				"the menu freezes the atmosphere shader on the same scene clock"
+			)
 
 
 func test_player_path_keeps_surface_ownership_and_modal_budget_intact():

@@ -137,6 +137,7 @@ func _build_overlay() -> void:
 	_atmosphere.z_index = 1
 	var atmosphere_material := ShaderMaterial.new()
 	atmosphere_material.shader = ATMOSPHERE_SHADER
+	atmosphere_material.set_shader_parameter("world_time", _world_time)
 	_atmosphere.material = atmosphere_material
 	add_child(_atmosphere)
 
@@ -265,14 +266,24 @@ func _make_motes() -> void:
 		_motes.append(Vector3(rng.randf(), rng.randf_range(0.18, 0.86), rng.randf_range(0.35, 1.0)))
 
 
+func _update_atmosphere_time() -> void:
+	if _atmosphere == null:
+		return
+	var atmosphere_material := _atmosphere.material as ShaderMaterial
+	if atmosphere_material != null:
+		atmosphere_material.set_shader_parameter("world_time", _world_time)
+
+
 func _process(delta: float) -> void:
-	_world_time += delta
 	# In GameScreen this control stays constructed for save continuity, but it
 	# must not react to movement or interaction input until its dossier is open.
 	if not is_visible_in_tree():
 		return
 	var direction := 0.0
 	var blocking := _has_blocking_overlay()
+	if not blocking:
+		_world_time += delta
+		_update_atmosphere_time()
 	_apply_presentation()
 	if _interaction_walk_active:
 		direction = signf(_interaction_walk_target - _player_x_ratio)
@@ -335,6 +346,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _has_blocking_overlay() -> bool:
 	if is_scene_blocked():
 		return true
+	return _has_implicit_blocking_overlay()
+
+
+func _has_implicit_blocking_overlay() -> bool:
 	# Compatibility fallback for callers that have not adopted the explicit
 	# blocker API. Wildcards also tolerate a transient Godot auto-rename.
 	var screen := get_parent()
@@ -347,11 +362,14 @@ func _has_blocking_overlay() -> bool:
 	return false
 
 
-func set_scene_blocker(source: String, blocking: bool) -> void:
+## `hide_chrome` separates a local modal that replaces the scene's controls
+## from a global pause layer that leaves the exact underlying presentation in
+## place while its own shade absorbs all input.
+func set_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
 	if source.is_empty():
 		return
 	if blocking:
-		_scene_blockers[source] = true
+		_scene_blockers[source] = hide_chrome
 	else:
 		_scene_blockers.erase(source)
 	_apply_presentation()
@@ -360,6 +378,13 @@ func set_scene_blocker(source: String, blocking: bool) -> void:
 
 func is_scene_blocked() -> bool:
 	return not _scene_blockers.is_empty()
+
+
+func is_scene_chrome_hidden() -> bool:
+	for hide_chrome in _scene_blockers.values():
+		if bool(hide_chrome):
+			return true
+	return _has_implicit_blocking_overlay()
 
 
 func set_thinking(enabled: bool) -> void:
@@ -751,7 +776,7 @@ func _update_interaction_hint() -> void:
 		not _thinking
 		and not _interaction_walk_active
 		and not interaction.is_empty()
-		and not _has_blocking_overlay()
+		and not is_scene_chrome_hidden()
 	)
 	if not _interaction_hint.visible:
 		return
@@ -764,21 +789,21 @@ func _update_interaction_hint() -> void:
 ## One rendering pass derives every thought-world control from the scene state.
 ## Buttons never toggle sibling visibility directly.
 func _apply_presentation() -> void:
-	var blocking := _has_blocking_overlay() or _interaction_walk_active
+	var hide_chrome := is_scene_chrome_hidden() or _interaction_walk_active
 	if _think_button != null:
-		_think_button.visible = not blocking
+		_think_button.visible = not hide_chrome
 	if _return_button != null:
-		_return_button.visible = not blocking and _context_mode and not _thinking
+		_return_button.visible = not hide_chrome and _context_mode and not _thinking
 	if _hint_label != null:
-		_hint_label.visible = not blocking
+		_hint_label.visible = not hide_chrome
 	if _thought_world_mask != null:
 		_thought_world_mask.visible = _thinking
 	if _thought_heading != null:
-		_thought_heading.visible = _thinking and not blocking
+		_thought_heading.visible = _thinking and not hide_chrome
 	for entry in _exit_nodes:
 		var node: Control = entry.get("node")
 		if node != null:
-			node.visible = not blocking
+			node.visible = not hide_chrome
 	_update_interaction_hint()
 
 

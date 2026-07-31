@@ -164,11 +164,13 @@ func is_thinking() -> bool:
 	return false
 
 
-func set_scene_blocker(source: String, blocking: bool) -> void:
+## Global pause layers retain the desk exactly as it was; they block input via
+## their own full-screen shade instead of hiding the underlying controls.
+func set_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
 	if source.is_empty():
 		return
 	if blocking:
-		_scene_blockers[source] = true
+		_scene_blockers[source] = hide_chrome
 	else:
 		_scene_blockers.erase(source)
 	_update_chrome_visibility()
@@ -177,6 +179,13 @@ func set_scene_blocker(source: String, blocking: bool) -> void:
 
 func is_scene_blocked() -> bool:
 	return not _scene_blockers.is_empty()
+
+
+func is_scene_chrome_hidden() -> bool:
+	for hide_chrome in _scene_blockers.values():
+		if bool(hide_chrome):
+			return true
+	return false
 
 
 func can_drop_card_on_think_button(data: Variant) -> bool:
@@ -233,12 +242,12 @@ func _layout() -> void:
 
 
 func _update_chrome_visibility() -> void:
-	var blocked := is_scene_blocked()
-	_dossier.visible = not blocked
-	_think_button.visible = not blocked
+	var hide_chrome := is_scene_chrome_hidden()
+	_dossier.visible = not hide_chrome
+	_think_button.visible = not hide_chrome
 	for site in _site_buttons:
 		if is_instance_valid(site):
-			site.visible = not blocked
+			site.visible = not hide_chrome
 
 
 func _draw() -> void:

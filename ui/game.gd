@@ -251,7 +251,8 @@ func _on_menu_pressed() -> void:
 func _show_game_menu() -> void:
 	if _current == null:
 		return
-	_set_world_scene_blocker("game_menu", true)
+	_set_world_scene_blocker("game_menu", true, false)
+	_set_gameplay_presentation_frozen(true)
 	_menu_overlay = Control.new()
 	_menu_overlay.name = "GameMenuOverlay"
 	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -331,7 +332,8 @@ func _on_save_from_menu() -> void:
 func _show_user_archive_overlay() -> void:
 	_close_game_menu()
 	_close_user_archive_overlay()
-	_set_world_scene_blocker("user_archive", true)
+	_set_world_scene_blocker("user_archive", true, false)
+	_set_gameplay_presentation_frozen(true)
 	_user_archive_overlay = Control.new()
 	_user_archive_overlay.name = "UserArchiveOverlay"
 	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -477,7 +479,8 @@ func _confirm_delete_user_archive(index: int) -> void:
 
 
 func _close_game_menu() -> void:
-	_set_world_scene_blocker("game_menu", false)
+	_set_gameplay_presentation_frozen(false)
+	_set_world_scene_blocker("game_menu", false, false)
 	if _menu_overlay == null:
 		return
 	_menu_overlay.queue_free()
@@ -485,7 +488,8 @@ func _close_game_menu() -> void:
 
 
 func _close_user_archive_overlay() -> void:
-	_set_world_scene_blocker("user_archive", false)
+	_set_gameplay_presentation_frozen(false)
+	_set_world_scene_blocker("user_archive", false, false)
 	if _user_archive_overlay == null:
 		return
 	_user_archive_overlay.queue_free()
@@ -580,6 +584,11 @@ func _close_rite_overlay() -> void:
 	_rite_overlay = null
 
 
-func _set_world_scene_blocker(source: String, blocking: bool) -> void:
+func _set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
 	if _game_screen != null and _game_screen.has_method("set_world_scene_blocker"):
-		_game_screen.set_world_scene_blocker(source, blocking)
+		_game_screen.set_world_scene_blocker(source, blocking, hide_chrome)
+
+
+func _set_gameplay_presentation_frozen(frozen: bool) -> void:
+	if _game_screen != null and _game_screen.has_method("set_presentation_frozen"):
+		_game_screen.set_presentation_frozen(frozen)

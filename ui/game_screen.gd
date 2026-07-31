@@ -105,6 +105,7 @@ var _rename_input: LineEdit
 var _sleep_waiting := false
 var _event_is_dialogue := false
 var _presentation_state := PresentationState.DESK
+var _presentation_frozen := false
 
 
 func setup(state, db, rng) -> void:
@@ -576,7 +577,7 @@ func _layout_rite_pins() -> void:
 		_presentation_state == PresentationState.SCENE_THINKING
 		and _scene_world.visible
 		and _scene_world.is_thinking()
-		and not _scene_world.is_scene_blocked()
+		and not _scene_world.is_scene_chrome_hidden()
 	)
 	var map_size := _scene_world.size
 	var s := minf(map_size.x / MOCKUP_SIZE.x, map_size.y / MOCKUP_SIZE.y)
@@ -1027,12 +1028,22 @@ func add_overlay(node: Control) -> void:
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
 
 
-func set_world_scene_blocker(source: String, blocking: bool) -> void:
+func set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
 	if _desk_content != null and _desk_content.has_method("set_scene_blocker"):
-		_desk_content.set_scene_blocker(source, blocking)
+		_desk_content.set_scene_blocker(source, blocking, hide_chrome)
 	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
-		_scene_world.set_scene_blocker(source, blocking)
+		_scene_world.set_scene_blocker(source, blocking, hide_chrome)
 	_layout_rite_pins()
+
+
+## A global modal lives above GameScreen. Freeze this complete lower layer so
+## its already-visible controls remain a true paused snapshot beneath the
+## modal rather than continuing their own visual processing.
+func set_presentation_frozen(frozen: bool) -> void:
+	if _presentation_frozen == frozen:
+		return
+	_presentation_frozen = frozen
+	process_mode = Node.PROCESS_MODE_DISABLED if frozen else Node.PROCESS_MODE_INHERIT
 
 
 func presentation_state() -> int:
