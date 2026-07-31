@@ -34,6 +34,7 @@ var _target: Control
 var _profile := Profile.BUTTON
 var _hovered := false
 var _focused := false
+var _selected := false
 var _pressed := false
 var _revealing := false
 var _position_velocity := Vector2.ZERO
@@ -135,6 +136,19 @@ func _on_button_up() -> void:
 	set_process(true)
 
 
+func set_selected(selected: bool) -> void:
+	if _selected == selected:
+		return
+	var was_active := _hovered or _focused or _selected
+	_selected = selected
+	if selected and not was_active:
+		_start_entry_juice()
+	if reduced_motion:
+		_snap_to_target()
+	else:
+		set_process(true)
+
+
 func _start_entry_juice() -> void:
 	if reduced_motion:
 		_snap_to_target()
@@ -171,7 +185,7 @@ func _process(delta: float) -> void:
 
 
 func _motion_targets() -> Dictionary:
-	var active := (_hovered or _focused) and not _is_disabled()
+	var active := (_hovered or _focused or _selected) and not _is_disabled()
 	var position := Vector2.ZERO
 	var scale := Vector2.ONE
 	var rotation := 0.0
@@ -179,6 +193,11 @@ func _motion_targets() -> Dictionary:
 		scale = Vector2.ONE * _hover_scale()
 		if _profile == Profile.SITE:
 			rotation = _juice_direction * 0.004
+	if _selected and not _is_disabled():
+		scale = Vector2.ONE * maxf(scale.x, _selected_scale())
+		if _profile == Profile.SITE:
+			position.y = -6.0
+			rotation *= 0.35
 	if _pressed and not _is_disabled():
 		scale = Vector2.ONE * _pressed_scale()
 		rotation *= 0.25
@@ -205,6 +224,10 @@ func _hover_scale() -> float:
 
 func _pressed_scale() -> float:
 	return 0.965 if _profile == Profile.PRIMARY else 0.972
+
+
+func _selected_scale() -> float:
+	return 1.050 if _profile == Profile.SITE else _hover_scale()
 
 
 func _juice_amount() -> float:

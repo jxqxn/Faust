@@ -63,6 +63,8 @@ var _dossier: Button
 var _think_drop_zone: ThinkDropZone
 var _think_drop_label: Label
 var _site_buttons: Array[Button] = []
+var _selected_site_button: Button
+var _selected_site_location := ""
 
 
 func setup(state, db = null, rng = null) -> void:
@@ -151,7 +153,9 @@ func _build_chrome() -> void:
 		button.add_theme_stylebox_override("hover", _site_style(RED_WAX, true))
 		button.add_theme_stylebox_override("pressed", _site_style(Color("#d7b86e"), true))
 		button.add_theme_stylebox_override("disabled", _site_style(Color(0.31, 0.20, 0.12, 0.22)))
-		button.pressed.connect(open_rite_selector.emit.bind(str(spec["location"])))
+		button.pressed.connect(
+			_on_site_pressed.bind(button, str(spec["location"]))
+		)
 		button.z_index = 4
 		_site_buttons.append(button)
 		add_child(button)
@@ -169,6 +173,71 @@ func refresh_context() -> void:
 	_dossier.tooltip_text = "进入%s；现场位置会继续写入当前存档" % title
 	_refresh_site_availability()
 	queue_redraw()
+
+
+func _on_site_pressed(button: Button, location_name: String) -> void:
+	if button == null:
+		return
+	_set_site_focus(button, location_name)
+	open_rite_selector.emit(location_name)
+
+
+func _set_site_focus(button: Button, location_name: String) -> void:
+	if _selected_site_button != null and _selected_site_button != button:
+		var previous_motion = _selected_site_button.get_node_or_null(
+			UiMotionScript.DRIVER_NAME
+		)
+		if previous_motion != null and previous_motion.has_method("set_selected"):
+			previous_motion.set_selected(false)
+	_selected_site_button = button
+	_selected_site_location = location_name
+	for site in _site_buttons:
+		var is_selected := site == button
+		site.self_modulate = (
+			Color.WHITE
+			if is_selected
+			else Color(0.88, 0.88, 0.88, 0.88)
+		)
+		var motion = site.get_node_or_null(UiMotionScript.DRIVER_NAME)
+		if motion != null and motion.has_method("set_selected"):
+			motion.set_selected(is_selected)
+
+
+func site_action_anchor(location_name: String) -> Vector2:
+	var button := _site_button_for_location(location_name)
+	if button == null:
+		return Vector2(-1.0, -1.0)
+	return button.position + button.size * 0.5
+
+
+func clear_site_focus() -> void:
+	_clear_site_focus(true)
+
+
+func _clear_site_focus(restore_focus: bool) -> void:
+	var previous := _selected_site_button
+	_selected_site_button = null
+	_selected_site_location = ""
+	for site in _site_buttons:
+		site.self_modulate = Color.WHITE
+		var motion = site.get_node_or_null(UiMotionScript.DRIVER_NAME)
+		if motion != null and motion.has_method("set_selected"):
+			motion.set_selected(false)
+	if (
+		restore_focus
+		and previous != null
+		and is_instance_valid(previous)
+		and previous.visible
+		and not previous.disabled
+	):
+		previous.call_deferred("grab_focus")
+
+
+func _site_button_for_location(location_name: String) -> Button:
+	for index in _site_buttons.size():
+		if str(SITE_SPECS[index]["location"]) == location_name:
+			return _site_buttons[index]
+	return null
 
 
 func _refresh_site_availability() -> void:
@@ -194,6 +263,8 @@ func _refresh_site_availability() -> void:
 			if count > 0
 			else "%s当前没有可处理行动" % location_name
 		)
+		if count == 0 and location_name == _selected_site_location:
+			_clear_site_focus(false)
 
 
 func _set_think_drop_highlight(highlighted: bool) -> void:

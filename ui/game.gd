@@ -121,7 +121,15 @@ func _mcp_capture_situation_desk() -> void:
 
 func _mcp_capture_site_actions() -> void:
 	_mcp_capture_situation_desk()
-	_on_open_rite_selector("自宅")
+	# Use the normal site-button path so the capture includes the same focus
+	# state a player sees, rather than opening a detached selector directly.
+	var home_site: Button = null
+	if _game_screen != null:
+		home_site = _game_screen.get_node_or_null("SituationDesk/SiteHome") as Button
+	if home_site != null and not home_site.disabled:
+		home_site.pressed.emit()
+	else:
+		_on_open_rite_selector("自宅")
 
 
 func _mcp_capture_thought_world() -> void:
@@ -211,19 +219,31 @@ func _on_open_rite_selector(location_filter: String = "") -> void:
 	if open_uids.is_empty():
 		if _game_screen != null and _game_screen.has_method("set_log"):
 			_game_screen.set_log("该地点当前没有可处理行动。")
+		if _game_screen != null and _game_screen.has_method("clear_site_focus"):
+			_game_screen.clear_site_focus()
 		return
-	_close_rite_selector_overlay()
+	_close_rite_selector_overlay(false)
 	var sel := RiteSelector.new()
 	sel.setup(db, state, rng, location_filter)
 	sel.set_overlay_mode(true)
+	if _game_screen != null and _game_screen.has_method("site_action_anchor"):
+		sel.set_overlay_anchor(_game_screen.site_action_anchor(location_filter))
+	if _game_screen != null and _game_screen.has_method("site_action_menu_bounds"):
+		sel.set_overlay_safe_rect(_game_screen.site_action_menu_bounds())
 	sel.rite_chosen_instance.connect(_on_rite_selector_choice)
 	sel.closed.connect(_close_rite_selector_overlay)
 	if _game_screen != null and _game_screen.has_method("add_overlay"):
 		_game_screen.add_overlay(sel)
+		# Unlike a full rite view, this compact menu pauses the entire desk. Its
+		# backdrop must therefore sit above the persistent rail, actions, and menu
+		# instead of leaving those controls visually floating in front of it.
+		sel.z_index = GameScreen.PERSISTENT_CONTROL_Z + 1
 	else:
 		add_child(sel)
 	_rite_selector_overlay = sel
-	_set_world_scene_blocker("rite_selector", true)
+	# A site menu preserves the desk as a dimmed snapshot. Its own overlay stays
+	# live, while every underlying persistent control is locked and paused.
+	_set_world_scene_blocker("rite_selector", true, false, true, true)
 
 
 func _on_rite_selector_choice(rite_uid: int) -> void:
@@ -609,17 +629,34 @@ func _close_rite_overlay() -> void:
 	_rite_overlay = null
 
 
-func _close_rite_selector_overlay() -> void:
+func _close_rite_selector_overlay(clear_focus: bool = true) -> void:
 	_set_world_scene_blocker("rite_selector", false)
-	if _rite_selector_overlay == null:
-		return
-	_rite_selector_overlay.queue_free()
-	_rite_selector_overlay = null
+	if _rite_selector_overlay != null:
+		_rite_selector_overlay.queue_free()
+		_rite_selector_overlay = null
+	if (
+		clear_focus
+		and _game_screen != null
+		and _game_screen.has_method("clear_site_focus")
+	):
+		_game_screen.clear_site_focus()
 
 
-func _set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
+func _set_world_scene_blocker(
+	source: String,
+	blocking: bool,
+	hide_chrome: bool = true,
+	lock_persistent_actions: bool = false,
+	pause_underlying_presentation: bool = false
+) -> void:
 	if _game_screen != null and _game_screen.has_method("set_world_scene_blocker"):
-		_game_screen.set_world_scene_blocker(source, blocking, hide_chrome)
+		_game_screen.set_world_scene_blocker(
+			source,
+			blocking,
+			hide_chrome,
+			lock_persistent_actions,
+			pause_underlying_presentation
+		)
 
 
 func _set_gameplay_presentation_frozen(frozen: bool) -> void:

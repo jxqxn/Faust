@@ -121,6 +121,7 @@ var _hover_juice_elapsed := 0.0
 var _hover_juice_scale := 0.0
 var _hover_juice_rotation := 0.0
 var _hover_juice_direction := 1.0
+var _presentation_paused := false
 
 
 func set_card(card: Dictionary) -> void:
@@ -167,7 +168,44 @@ func set_hand_pose(target_position: Vector2, target_rotation: float, order: int)
 func set_hand_idle(enabled: bool, _order: int = 0) -> void:
 	_hand_idle_enabled = enabled
 	_hand_idle_phase = fposmod(position.x * BALATRO_CARD_WIDTH_UNITS / CARD_SIZE.x, TAU)
-	set_process(_drag_preview or _hovered or _hand_idle_enabled or _selected)
+	_refresh_presentation_processing()
+
+
+## A local context menu may keep the rail visible as background, but its cards
+## must become a still, non-interactive snapshot until that menu closes.
+## This only controls visual/input presentation; it never changes card data,
+## selection, or the stable layout rectangle owned by the hand rail.
+func set_presentation_paused(paused: bool) -> void:
+	if _presentation_paused == paused:
+		return
+	_presentation_paused = paused
+	if paused:
+		set_process(false)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		return
+	if not _drag_preview and not _dealing and not _hidden_for_drag:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+	_refresh_presentation_processing()
+
+
+func is_presentation_paused() -> bool:
+	return _presentation_paused
+
+
+func _refresh_presentation_processing() -> void:
+	if _presentation_paused:
+		set_process(false)
+		return
+	var idle_position := _idle_position_at(_idle_time_seconds()) if _hand_idle_enabled else Vector2.ZERO
+	var idle_rotation := _idle_rotation_at(_idle_time_seconds()) if _hand_idle_enabled else 0.0
+	set_process(
+		_drag_preview
+		or _dealing
+		or _hovered
+		or _hand_idle_enabled
+		or _selected
+		or not _pose_is_settled(idle_position, idle_rotation, Vector2.ONE)
+	)
 
 
 ## Selection changes only the hand target height, matching CardArea's
@@ -177,7 +215,7 @@ func set_selected(selected: bool, _with_impulse: bool = true) -> void:
 		return
 	_selected = selected
 	z_index = _base_z_index + HOVER_Z_INDEX if (_selected or _hovered) else _base_z_index
-	set_process(true)
+	_refresh_presentation_processing()
 	_set_card_style()
 
 
@@ -255,11 +293,7 @@ func _finish_hand_motion() -> void:
 	_hand_motion_fades_in = false
 	modulate = Color.WHITE
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_process(_hand_idle_enabled or _selected or not _pose_is_settled(
-		_idle_position_at(_idle_time_seconds()) if _hand_idle_enabled else Vector2.ZERO,
-		_idle_rotation_at(_idle_time_seconds()) if _hand_idle_enabled else 0.0,
-		Vector2.ONE
-	))
+	_refresh_presentation_processing()
 
 
 func is_hand_motion_active() -> bool:
@@ -289,7 +323,7 @@ func _style_for_card() -> StyleBoxFlat:
 
 
 func _get_drag_data(at_position: Vector2) -> Variant:
-	if card_id <= 0:
+	if _presentation_paused or card_id <= 0:
 		return null
 	_drag_grab_offset = at_position
 	# The cursor-held card starts from the exact rendered hover pose.  There is
@@ -363,6 +397,8 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if _presentation_paused:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			_press_position = event.position
@@ -461,17 +497,20 @@ func make_drag_preview(
 
 
 func _set_hovered(is_hovered: bool) -> void:
-	if _drag_preview or _dealing or _hidden_for_drag or _hovered == is_hovered:
+	if _presentation_paused or _drag_preview or _dealing or _hidden_for_drag or _hovered == is_hovered:
 		return
 	_hovered = is_hovered
 	if is_hovered:
 		_start_hover_juice()
 	z_index = _base_z_index + HOVER_Z_INDEX if (_hovered or _selected) else _base_z_index
-	set_process(true)
+	_refresh_presentation_processing()
 	_set_card_style()
 
 
 func _process(delta: float) -> void:
+	if _presentation_paused:
+		set_process(false)
+		return
 	_step_hover_juice(delta)
 	if _drag_preview:
 		var pointer := get_viewport().get_mouse_position() if get_viewport() != null else _drag_last_pointer

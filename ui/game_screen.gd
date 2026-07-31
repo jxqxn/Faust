@@ -108,6 +108,8 @@ var _event_is_dialogue := false
 var _presentation_state := PresentationState.DESK
 var _presentation_frozen := false
 var _presentation_blockers: Dictionary = {}
+var _persistent_action_locks: Dictionary = {}
+var _underlying_presentation_pauses: Dictionary = {}
 
 
 func setup(state, db, rng) -> void:
@@ -282,9 +284,14 @@ func _build_ui() -> void:
 	_advance_button.add_theme_font_size_override("font_size", 23)
 	_advance_button.add_theme_color_override("font_color", Color("#f3f1eb"))
 	_advance_button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
+	_advance_button.add_theme_color_override("font_disabled_color", Color(0.94, 0.94, 0.92, 0.54))
 	_advance_button.add_theme_stylebox_override("normal", _round_button_style())
 	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")))
 	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")))
+	# Disabled is a distinct theme state. Without this explicit style Godot falls
+	# back to a rectangular default, making the paused primary action look
+	# malformed even though its layout rectangle has not changed.
+	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)))
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
 	UiMotionScript.bind(_advance_button, UiMotionScript.Profile.PRIMARY)
@@ -401,6 +408,28 @@ func _on_desk_rite_selector_requested(location_name: String) -> void:
 	open_rite_selector.emit(location_name)
 
 
+func site_action_anchor(location_name: String) -> Vector2:
+	if _desk_content == null or not _desk_content.has_method("site_action_anchor"):
+		return Vector2(-1.0, -1.0)
+	var desk_anchor: Vector2 = _desk_content.site_action_anchor(location_name)
+	if desk_anchor.x < 0.0 or desk_anchor.y < 0.0:
+		return desk_anchor
+	return _desk_content.position + desk_anchor
+
+
+func site_action_menu_bounds() -> Rect2:
+	if _desk_map == null:
+		return Rect2()
+	# Keep location actions inside the map work area. The card rail has a
+	# separate, persistent interaction role below this rectangle.
+	return Rect2(_desk_map.position, _desk_map.size)
+
+
+func clear_site_focus() -> void:
+	if _desk_content != null and _desk_content.has_method("clear_site_focus"):
+		_desk_content.clear_site_focus()
+
+
 func _icon_button(label: String) -> Button:
 	var button := Button.new()
 	button.text = label
@@ -409,9 +438,11 @@ func _icon_button(label: String) -> Button:
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", Color(0.94, 0.94, 0.92, 0.84))
 	button.add_theme_color_override("font_hover_color", Color("#fff0b6"))
+	button.add_theme_color_override("font_disabled_color", Color(0.94, 0.94, 0.92, 0.50))
 	button.add_theme_stylebox_override("normal", _small_action_style())
 	button.add_theme_stylebox_override("hover", _small_action_style(Color("#efc46e")))
 	button.add_theme_stylebox_override("pressed", _small_action_style(Color("#fff1bc")))
+	button.add_theme_stylebox_override("disabled", _small_action_style(Color(0.82, 0.84, 0.88, 0.20)))
 	return button
 
 
@@ -1035,18 +1066,35 @@ func add_overlay(node: Control) -> void:
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
 
 
-func set_world_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true) -> void:
+func set_world_scene_blocker(
+	source: String,
+	blocking: bool,
+	hide_chrome: bool = true,
+	lock_persistent_actions: bool = false,
+	pause_underlying_presentation: bool = false
+) -> void:
 	if source.is_empty():
 		return
 	if blocking:
 		_presentation_blockers[source] = hide_chrome
+		if lock_persistent_actions:
+			_persistent_action_locks[source] = true
+		else:
+			_persistent_action_locks.erase(source)
+		if pause_underlying_presentation:
+			_underlying_presentation_pauses[source] = true
+		else:
+			_underlying_presentation_pauses.erase(source)
 	else:
 		_presentation_blockers.erase(source)
+		_persistent_action_locks.erase(source)
+		_underlying_presentation_pauses.erase(source)
 	if _desk_content != null and _desk_content.has_method("set_scene_blocker"):
 		_desk_content.set_scene_blocker(source, blocking, hide_chrome)
 	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
 		_scene_world.set_scene_blocker(source, blocking, hide_chrome)
 	_update_persistent_action_availability()
+	_set_underlying_presentation_paused(not _underlying_presentation_pauses.is_empty())
 	_layout_rite_pins()
 
 
@@ -1058,6 +1106,24 @@ func set_presentation_frozen(frozen: bool) -> void:
 		return
 	_presentation_frozen = frozen
 	process_mode = Node.PROCESS_MODE_DISABLED if frozen else Node.PROCESS_MODE_INHERIT
+
+
+## Context menus are still part of GameScreen, so disabling this complete node
+## would also freeze their entrance/exit animation. Pause only the persistent
+## background controls instead: they remain visible under the selector shade,
+## but cannot receive input or keep animating independently.
+func _set_underlying_presentation_paused(paused: bool) -> void:
+	if _menu_button != null:
+		_menu_button.disabled = paused
+	if _card_rail_view != null:
+		_card_rail_view.mouse_filter = (
+			Control.MOUSE_FILTER_IGNORE if paused else Control.MOUSE_FILTER_STOP
+		)
+	if _card_items == null or not is_instance_valid(_card_items):
+		return
+	for child in _card_items.get_children():
+		if child is CardWidget and not child.is_queued_for_deletion():
+			(child as CardWidget).set_presentation_paused(paused)
 
 
 func presentation_state() -> int:
@@ -1073,6 +1139,8 @@ func _set_presentation_state(next_state: int) -> void:
 		return
 	_presentation_state = next_state
 	var scene_active := next_state != PresentationState.DESK
+	if scene_active:
+		clear_site_focus()
 	_desk_content.visible = not scene_active
 	_scene_world.visible = scene_active
 	if not scene_active or next_state == PresentationState.SCENE:
@@ -1082,17 +1150,25 @@ func _set_presentation_state(next_state: int) -> void:
 
 
 func _update_persistent_action_availability() -> void:
-	var local_modal_open := false
+	var chrome_hidden := false
 	for hide_chrome in _presentation_blockers.values():
 		if bool(hide_chrome):
-			local_modal_open = true
+			chrome_hidden = true
 			break
-	var actions_available := (
+	var persistent_actions_locked := not _persistent_action_locks.is_empty()
+	var actions_visible := (
 		_presentation_state == PresentationState.DESK
-		and not local_modal_open
+		and not chrome_hidden
+	)
+	var actions_available := (
+		actions_visible
+		and not persistent_actions_locked
 	)
 	if _right_actions != null:
-		_right_actions.visible = actions_available
+		_right_actions.visible = actions_visible
+		# Every background element recedes through the same pause shade. Applying
+		# another alpha only to this column makes it read as a broken floating UI.
+		_right_actions.self_modulate = Color.WHITE
 	if _advance_button != null:
 		_advance_button.disabled = not actions_available
 	if _redraw_button != null:

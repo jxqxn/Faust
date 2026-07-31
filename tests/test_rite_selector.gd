@@ -1,11 +1,16 @@
 extends GutTest
 
 const RiteSelector = preload("res://ui/rite_selector.gd")
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 
 func _owned(node: Node) -> Node:
 	autofree(node)
 	return node
+
+
+func after_each():
+	UiMotionScript.reduced_motion = false
 
 
 func test_selector_shows_rite_when_open_conditions_are_satisfied():
@@ -173,6 +178,109 @@ func test_static_filter_counts_open_rites_without_instantiating():
 	assert_eq(RiteSelector.filter_open_rite_ids(db, state, null, "Home"), selector.open_rite_ids(), "static filter matches instance filter")
 
 
+func test_overlay_panel_is_a_compact_site_menu_inside_its_safe_area():
+	var db := ConfigDB.new()
+	db.rites = {}
+	for rite_id in range(9005, 9009):
+		var rite := _rite_with_location("Home")
+		rite["id"] = rite_id
+		rite["name"] = "Home action %d" % rite_id
+		db.rites[rite_id] = rite
+	var cases := [
+		{
+			"size": Vector2(1280, 720),
+			"safe_rect": Rect2(34, 78, 1212, 404),
+			"anchor": Vector2(180, 310),
+			"columns": 2,
+		},
+		{
+			"size": Vector2(720, 720),
+			"safe_rect": Rect2(20, 72, 680, 360),
+			"anchor": Vector2(570, 270),
+			"columns": 2,
+		},
+		{
+			"size": Vector2(440, 640),
+			"safe_rect": Rect2(18, 54, 404, 280),
+			"anchor": Vector2(100, 230),
+			"columns": 1,
+		},
+	]
+	for test_case in cases:
+		var stage := Control.new()
+		add_child_autofree(stage)
+		stage.size = test_case["size"]
+		var selector := RiteSelector.new()
+		selector.setup(db, null, null, "Home")
+		selector.set_overlay_mode(true)
+		selector.set_overlay_anchor(test_case["anchor"])
+		selector.set_overlay_safe_rect(test_case["safe_rect"])
+		stage.add_child(selector)
+		selector.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		await wait_process_frames(2)
+
+		var panel := _find_node_by_name(selector, "RiteSelectorPanel") as Control
+		var grid := _find_first_grid(selector)
+		assert_not_null(panel)
+		assert_null(
+			_find_node_by_name(selector, "RiteSelectorConnector"),
+			"a nearby menu should not need a decorative tether line"
+		)
+		assert_not_null(grid)
+		if panel != null:
+			var safe_rect: Rect2 = test_case["safe_rect"]
+			var panel_rect := Rect2(panel.position, panel.size)
+			assert_true(safe_rect.encloses(panel_rect), "menu must stay inside the map work area")
+			if panel.size.x < safe_rect.size.x:
+				assert_false(panel_rect.has_point(test_case["anchor"]), "menu must not cover its source site")
+			assert_lte(panel.size.x, RiteSelector.CONTEXT_MENU_MAX_WIDTH)
+			assert_lte(panel.size.y, RiteSelector.CONTEXT_MENU_MAX_HEIGHT)
+		if grid != null:
+			assert_eq(grid.columns, test_case["columns"])
+
+		selector.queue_free()
+		await wait_process_frames(1)
+
+
+func test_compact_site_menu_closes_from_backdrop_or_escape_without_return_button():
+	UiMotionScript.reduced_motion = true
+	var db := ConfigDB.new()
+	db.rites = {9005: _rite_with_location("Home")}
+	for close_kind in ["backdrop", "escape"]:
+		var stage := Control.new()
+		add_child_autofree(stage)
+		stage.size = Vector2(960, 640)
+		var selector := RiteSelector.new()
+		selector.setup(db, null, null, "Home")
+		selector.set_overlay_mode(true)
+		selector.set_overlay_anchor(Vector2(210, 190))
+		selector.set_overlay_safe_rect(Rect2(24, 48, 912, 320))
+		var close_count := [0]
+		selector.closed.connect(func(): close_count[0] += 1)
+		stage.add_child(selector)
+		selector.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		await wait_process_frames(2)
+
+		assert_null(
+			_find_node_by_name(selector, "CloseRiteSelectorButton"),
+			"the map remains visible, so a return button would be redundant"
+		)
+		if close_kind == "backdrop":
+			var click := InputEventMouseButton.new()
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.pressed = true
+			selector._on_backdrop_input(click)
+		else:
+			var escape := InputEventKey.new()
+			escape.keycode = KEY_ESCAPE
+			escape.pressed = true
+			selector._unhandled_key_input(escape)
+		assert_eq(close_count[0], 1, "%s should emit the shared close signal once" % close_kind)
+
+		selector.queue_free()
+		await wait_process_frames(1)
+
+
 func _count_buttons(node: Node) -> int:
 	var count := 0
 	if node is Button:
@@ -180,6 +288,26 @@ func _count_buttons(node: Node) -> int:
 	for child in node.get_children():
 		count += _count_buttons(child)
 	return count
+
+
+func _find_node_by_name(node: Node, node_name: String) -> Node:
+	if node.name == node_name:
+		return node
+	for child in node.get_children():
+		var found := _find_node_by_name(child, node_name)
+		if found != null:
+			return found
+	return null
+
+
+func _find_first_grid(node: Node) -> GridContainer:
+	if node is GridContainer:
+		return node
+	for child in node.get_children():
+		var found := _find_first_grid(child)
+		if found != null:
+			return found
+	return null
 
 
 func _rite_with_open_conditions(open_conditions: Array) -> Dictionary:

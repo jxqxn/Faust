@@ -110,6 +110,34 @@ func test_ui_motion_panel_reveal_is_bounded_and_settles():
 	assert_almost_eq(panel.self_modulate.a, 1.0, 0.001)
 
 
+func test_ui_motion_selected_site_survives_hover_exit_and_reduced_motion_snaps():
+	var stage := _stage()
+	var button := Button.new()
+	stage.add_child(button)
+	var motion = UiMotionScript.bind(button, UiMotionScript.Profile.SITE)
+
+	motion.set_hovered_for_test(true)
+	motion.set_selected(true)
+	motion.set_hovered_for_test(false)
+	for frame in 90:
+		motion._process(1.0 / 60.0)
+
+	assert_almost_eq(button.offset_transform_position.y, -6.0, 0.02)
+	assert_almost_eq(button.offset_transform_scale.x, 1.05, 0.002)
+	motion.set_selected(false)
+	for frame in 90:
+		motion._process(1.0 / 60.0)
+	assert_almost_eq(button.offset_transform_position.y, 0.0, 0.02)
+
+	UiMotionScript.reduced_motion = true
+	motion.set_selected(true)
+	assert_almost_eq(button.offset_transform_position.y, -6.0, 0.001)
+	assert_almost_eq(button.offset_transform_scale.x, 1.05, 0.001)
+	motion.set_selected(false)
+	assert_almost_eq(button.offset_transform_position.y, 0.0, 0.001)
+	UiMotionScript.reduced_motion = false
+
+
 func test_representative_main_screen_controls_share_ui_motion():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(71))
@@ -284,40 +312,110 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 
 	var screen := game._game_screen as Control
 	var home := _find_node_by_name(game, "SiteHome") as Button
+	var market := _find_node_by_name(game, "SiteMarket") as Button
+	var desk := _find_node_by_name(game, "SituationDesk") as Control
+	var card_rail := _find_node_by_name(game, "CardRail") as Control
+	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
+	var think_drop := _find_node_by_name(game, "ThinkDropZone") as Control
 	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	var advance := _find_node_by_name(game, "AdvanceDayButton") as Button
+	var redraw := _find_node_by_name(game, "RedrawSudanButton") as Button
+	var menu := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(screen)
 	assert_not_null(home)
+	assert_not_null(market)
+	assert_not_null(desk)
+	assert_not_null(card_rail)
+	assert_not_null(dossier)
+	assert_not_null(think_drop)
 	assert_not_null(right_actions)
 	assert_not_null(advance)
-	if screen == null or home == null or right_actions == null or advance == null:
+	assert_not_null(redraw)
+	assert_not_null(menu)
+	if screen == null or home == null or market == null or desk == null or card_rail == null or dossier == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
 		return
 	assert_false(home.disabled, "a site with available actions should be visibly enabled")
 	assert_string_contains(home.text, "·", "site labels should expose their action availability")
 	var rng_state_before: int = game.rng.get_state()
+	var source_anchor: Vector2 = screen.site_action_anchor("自宅")
 	home.pressed.emit()
 	await wait_process_frames(2)
 
 	var selector := _find_node_by_name(game, "RiteSelector") as Control
 	var selector_panel := _find_node_by_name(game, "RiteSelectorPanel") as Control
-	var close_selector := _find_node_by_name(game, "CloseRiteSelectorButton") as Button
+	var selector_backdrop := _find_node_by_name(game, "RiteSelectorBackdrop") as Control
+	var rail_cards := _rail_card_widgets(screen)
 	assert_not_null(selector, "every non-empty site should open the same action selector")
-	assert_not_null(selector_panel, "site actions should use a local panel instead of replacing the game screen")
-	assert_not_null(close_selector)
+	assert_not_null(selector_panel, "site actions should use a local context menu instead of replacing the game screen")
+	assert_not_null(selector_backdrop, "the menu needs a full-screen input-capturing pause shade")
+	assert_null(_find_node_by_name(game, "RiteSelectorConnector"), "nearby context should not need a tether line")
+	assert_null(_find_node_by_name(game, "CloseRiteSelectorButton"), "the visible map makes a return button redundant")
 	assert_eq(game._game_screen, screen, "opening a site action list must preserve the current GameScreen")
 	assert_eq(game.rng.get_state(), rng_state_before, "availability previews must not consume simulation RNG")
 	assert_null(_find_node_by_name(game, "RiteOverlayPanel"), "a single action must not skip the selector contract")
+	if selector != null:
+		assert_eq(selector._overlay_anchor, source_anchor, "the selector should open from the clicked site")
+	assert_true(home.visible, "the selected site should remain visible beneath its local panel")
+	assert_lt(market.self_modulate.a, 1.0, "non-selected sites should recede while one site is focused")
+	assert_true(dossier.visible, "a compact site menu must not make the scene entry disappear")
+	assert_true(think_drop.visible, "a compact site menu must not make the thought drop target disappear")
 	if selector_panel != null:
-		assert_gt(selector_panel.size.x, 700.0, "the local action panel should use the central play surface")
-		assert_gt(selector_panel.global_position.x, 100.0, "the local action panel must not collapse into the top-left corner")
-	assert_false(right_actions.visible, "day controls must disappear while a local action panel is open")
-	assert_true(advance.disabled, "hidden progression controls must also reject programmatic activation")
-	if close_selector != null:
-		close_selector.pressed.emit()
+		var panel_rect := selector_panel.get_global_rect()
+		assert_lte(selector_panel.size.x, 288.0, "one local action should use a compact menu")
+		assert_true(
+			desk.get_global_rect().encloses(panel_rect),
+			"the menu should stay inside the map work area"
+		)
+		assert_false(
+			panel_rect.intersects(card_rail.get_global_rect()),
+			"the menu must never overlap the persistent card rail"
+		)
+		assert_false(
+			Rect2(selector_panel.position, selector_panel.size).has_point(source_anchor),
+			"the menu should open beside, not over, the selected site"
+		)
+	assert_true(right_actions.visible, "a local context menu must not make persistent actions disappear")
+	assert_true(advance.disabled, "visible day controls must reject programmatic activation while the menu is open")
+	assert_true(redraw.disabled, "visible redraw controls must reject programmatic activation while the menu is open")
+	assert_almost_eq(right_actions.self_modulate.a, 1.0, 0.001, "the shared pause shade, not a special alpha, should dim right-side controls")
+	var disabled_advance_style := advance.get_theme_stylebox("disabled") as StyleBoxFlat
+	assert_not_null(disabled_advance_style, "the disabled primary action must retain an authored shape")
+	if disabled_advance_style != null:
+		assert_eq(disabled_advance_style.corner_radius_top_left, 72, "the disabled primary action must retain its round silhouette")
+	var disabled_redraw_style := redraw.get_theme_stylebox("disabled") as StyleBoxFlat
+	assert_not_null(disabled_redraw_style, "the disabled secondary action must retain an authored shape")
+	if selector != null:
+		assert_gt(selector.z_index, card_rail.z_index, "the contextual pause shade must cover the card rail")
+		assert_gt(selector.z_index, right_actions.z_index, "the contextual pause shade must cover right-side controls")
+		assert_gt(selector.z_index, menu.z_index, "the contextual pause shade must cover the menu entry")
+	if selector_backdrop != null:
+		assert_eq(selector_backdrop.mouse_filter, Control.MOUSE_FILTER_STOP, "the shade must intercept all background pointer input")
+	assert_true(menu.disabled, "the menu must pause with the rest of the background")
+	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the paused rail must reject direct drag/drop input")
+	if not rail_cards.is_empty():
+		var first_card := rail_cards[0] as CardWidget
+		assert_true(first_card.is_presentation_paused(), "visible rail cards must stop their idle and hover processing")
+		assert_false(first_card.is_processing(), "a paused background card must not keep animating beneath the menu")
+	if selector != null:
+		var escape := InputEventKey.new()
+		escape.keycode = KEY_ESCAPE
+		escape.pressed = true
+		selector.call("_unhandled_key_input", escape)
+		await wait_seconds(0.18)
 		await wait_process_frames(1)
 	assert_null(_find_node_by_name(game, "RiteSelector"), "closing the action panel should remove the selector")
 	assert_true(right_actions.visible, "closing the local panel should restore desk progression controls")
 	assert_false(advance.disabled)
+	assert_false(redraw.disabled)
+	assert_almost_eq(right_actions.self_modulate.a, 1.0, 0.001)
+	assert_false(menu.disabled, "closing the local panel should restore the persistent menu entry")
+	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_STOP, "closing the local panel should restore rail input")
+	if not rail_cards.is_empty():
+		var restored_card := rail_cards[0] as CardWidget
+		assert_false(restored_card.is_presentation_paused(), "closing the local panel should resume rail presentation")
+	assert_almost_eq(market.self_modulate.a, 1.0, 0.001)
+	await wait_process_frames(1)
+	assert_true(home.has_focus(), "returning from the local panel should restore the source site focus")
 
 
 func test_game_screen_renders_open_rites_as_clickable_map_pins():
