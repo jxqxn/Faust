@@ -291,32 +291,45 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
 	var desk := _find_node_by_name(screen, "SituationDesk") as Control
 	var world := _find_node_by_name(screen, "SceneWorld") as Control
-	var think := _find_node_by_name(screen, "ThinkButton") as Button
+	var desk_think := _find_node_by_name(screen, "ThinkButton") as Button
+	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Button
 	var rail_context := _find_node_by_name(screen, "RailContextLabel") as Label
 	assert_not_null(desk, "situation desk should be the default main play surface")
 	assert_not_null(world, "the local lateral scene should remain available through the dossier")
-	assert_not_null(think, "the player should have an explicit thinking action")
+	assert_not_null(desk_think, "the desk should retain its explicit card drop target")
+	assert_not_null(dossier, "the desk should retain a route to the current local scene")
 	assert_not_null(rail_context)
 	if rail_context != null:
 		assert_eq(rail_context.text, "当前处境", "the rail should describe the protagonist's situation, not owned people")
 	assert_not_null(pin, "open playable rites should exist as thought objects")
-	if pin == null:
+	if pin == null or desk == null or world == null or dossier == null:
 		return
 	assert_true(desk.visible, "the situation desk should be visible before opening a local scene")
 	assert_false(world.visible, "the lateral scene should not be the default navigation surface")
-	assert_true(pin.visible, "open rites should remain visible as desk action slips")
-	if think != null:
-		think.pressed.emit()
+	assert_false(pin.visible, "open rites must not become action choices on the situation desk")
+	if desk_think != null:
+		desk_think.pressed.emit()
 		await wait_process_frames(1)
 	assert_false(desk.is_thinking(), "clicking the desk drop target must not enter scene thought mode")
-	assert_true(pin.visible, "clicking the desk drop target must not hide current action slips")
+	assert_false(pin.visible, "clicking the desk drop target must not reveal scene thought choices")
+	dossier.pressed.emit()
+	await wait_process_frames(1)
+	var scene_think := world.get_node("ThinkButton") as Button
+	assert_not_null(scene_think, "the local scene should retain its own thought control")
+	if scene_think == null:
+		return
+	scene_think.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(world.is_thinking(), "scene thought should remain available after entering through the dossier")
+	assert_true(pin.visible, "open rites should appear only inside scene thought")
+	assert_eq(pin.get_parent(), world, "thought choices must remain in the scene that renders their effects")
+	assert_true(pin in world._thought_targets, "scene thought effects should retain links to their visible choices")
 	assert_eq(pin.text, "治理家业", "action slips should show the rite name players recognize")
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
 	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
-	if desk != null:
-		assert_false(desk.is_thinking(), "opening a desk action must not create a thought presentation state")
+	assert_false(desk.is_thinking(), "opening a scene thought must not create a desk thought presentation state")
 
 
 func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_simulation():
@@ -793,6 +806,22 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	assert_not_null(desk)
 	if desk == null:
 		return
+	assert_false(pin.visible, "the desk must not expose runtime rites as direct action options")
+	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
+	var world := _find_node_by_name(game, "SceneWorld")
+	assert_not_null(dossier)
+	assert_not_null(world)
+	if dossier == null or world == null:
+		return
+	dossier.pressed.emit()
+	await wait_process_frames(1)
+	var scene_think := world.get_node("ThinkButton") as Button
+	assert_not_null(scene_think)
+	if scene_think == null:
+		return
+	scene_think.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(pin.visible, "runtime rites should become clickable in scene thought")
 	pin.pressed.emit()
 	await wait_process_frames(2)
 

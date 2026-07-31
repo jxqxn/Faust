@@ -166,7 +166,6 @@ func _build_ui() -> void:
 	_desk_content.name = "SituationDesk"
 	_desk_content.setup(_state)
 	_desk_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_desk_content.thinking_changed.connect(_on_thinking_changed)
 	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
 	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
 	_desk_content.context_requested.connect(_open_context_scene)
@@ -178,6 +177,8 @@ func _build_ui() -> void:
 	_scene_world.set_context_mode(true)
 	_scene_world.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_scene_world.clip_contents = true
+	_scene_world.thinking_changed.connect(_on_scene_world_thinking_changed)
+	_scene_world.protagonist_moved.connect(_on_scene_world_protagonist_moved)
 	_scene_world.interaction_requested.connect(_on_world_interaction_requested)
 	_scene_world.return_requested.connect(_close_context_scene)
 	_scene_world.visible = false
@@ -333,7 +334,7 @@ func _layout_situation_desk(s: float) -> void:
 		return
 	var map_size := _desk_content.size
 	_desk_content.refresh_context()
-	_layout_rite_pins(s, map_size)
+	_layout_rite_pins()
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
 		_log_label.position = Vector2((map_size.x - _log_label.size.x) * 0.5, map_size.y - 58 * s)
@@ -490,13 +491,13 @@ func _create_rite_pin(instance) -> void:
 	pin.add_theme_stylebox_override("normal", _rite_pin_style(Color(0.88, 0.88, 0.88, 0.38)))
 	pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
 	pin.add_theme_stylebox_override("pressed", _rite_pin_style(Color("#fff0af")))
-	pin.pressed.connect(_desk_content.open_rite_instance.emit.bind(instance.uid))
+	pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
 	pin.z_index = 8
 	_rite_pin_buttons.append(pin)
 	_rite_pin_ids[pin] = instance.uid
 	_rite_pin_by_rite_id[instance.id] = pin
-	_desk_content.add_child(pin)
-	pin.visible = not _desk_content.is_scene_blocked()
+	_scene_world.add_child(pin)
+	pin.visible = false
 	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
 
 
@@ -554,24 +555,22 @@ func _is_map_rite_open(instance, rite: Dictionary) -> bool:
 	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
 
 
-func _layout_rite_pins(s: float, map_size: Vector2) -> void:
+func _layout_rite_pins() -> void:
+	if _scene_world == null:
+		return
 	var pins: Array[Button] = []
 	for pin in _rite_pin_buttons:
 		if not is_instance_valid(pin):
 			continue
 		pins.append(pin)
 	var can_show_pins: bool = (
-		_desk_content != null
-		and (
-			not _desk_content.has_method("is_scene_blocked")
-			or not bool(_desk_content.is_scene_blocked())
-		)
+		_scene_world.visible
+		and _scene_world.is_thinking()
+		and not _scene_world.is_scene_blocked()
 	)
-	var origin: Vector2 = (
-		_desk_content.protagonist_center()
-		if _desk_content != null and _desk_content.has_method("protagonist_center")
-		else map_size * Vector2(0.5, 0.72)
-	)
+	var map_size := _scene_world.size
+	var s := minf(map_size.x / MOCKUP_SIZE.x, map_size.y / MOCKUP_SIZE.y)
+	var origin := _scene_world.protagonist_center()
 	var count := pins.size()
 	var pin_size := Vector2(164, 38) * s
 	for i in count:
@@ -595,15 +594,17 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 			clamp(raw.x, 10.0 * s, max(10.0 * s, map_size.x - pin_size.x - 10.0 * s)),
 			clamp(raw.y, 54.0 * s, max(54.0 * s, map_size.y - pin_size.y - 54.0 * s))
 		)
+	_scene_world.set_thought_targets(pins)
+	_scene_world.set_thought_count(count)
 
 
-func _on_thinking_changed(enabled: bool) -> void:
-	if _desk_content == null:
-		return
-	_layout_rite_pins(
-		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
-		_desk_content.size
-	)
+func _on_scene_world_thinking_changed(_enabled: bool) -> void:
+	_layout_rite_pins()
+
+
+func _on_scene_world_protagonist_moved() -> void:
+	if _scene_world != null and _scene_world.is_thinking():
+		_layout_rite_pins()
 
 
 func _on_world_interaction_requested(interaction: Dictionary) -> void:
@@ -1014,11 +1015,7 @@ func set_world_scene_blocker(source: String, blocking: bool) -> void:
 		_desk_content.set_scene_blocker(source, blocking)
 	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
 		_scene_world.set_scene_blocker(source, blocking)
-	if _desk_content != null:
-		_layout_rite_pins(
-			minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
-			_desk_content.size
-		)
+	_layout_rite_pins()
 
 
 func _open_context_scene() -> void:
@@ -1030,7 +1027,8 @@ func _open_context_scene() -> void:
 	_desk_content.visible = false
 	_scene_world.reload_from_state()
 	_scene_world.visible = true
-	set_log("进入当前现场")
+	_layout_rite_pins()
+	set_log("")
 
 
 func _close_context_scene() -> void:
@@ -1043,7 +1041,7 @@ func _close_context_scene() -> void:
 	_layout_situation_desk(
 		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y)
 	)
-	set_log("返回形势桌")
+	set_log("")
 
 
 func _refresh_event_overlay() -> void:

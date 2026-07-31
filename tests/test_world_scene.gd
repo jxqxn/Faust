@@ -80,11 +80,13 @@ func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_des
 	var dossier := screen.find_child("CurrentSceneDossier", true, false) as Button
 	var world = screen.get_node_or_null("SceneWorld")
 	var rail := screen.get_node_or_null("CardRail") as Control
+	var toast := screen.find_child("EventToast", true, false) as Label
 	assert_not_null(desk)
 	assert_not_null(dossier)
 	assert_not_null(world)
 	assert_not_null(rail)
-	if desk == null or dossier == null or world == null or rail == null:
+	assert_not_null(toast)
+	if desk == null or dossier == null or world == null or rail == null or toast == null:
 		return
 	var rail_instance_id := rail.get_instance_id()
 	assert_true(desk.visible, "the desk should be the first visible play surface")
@@ -109,6 +111,7 @@ func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_des
 	assert_false(world.visible)
 	assert_eq(screen.get_node("CardRail").get_instance_id(), rail_instance_id, "return must preserve the card rail")
 	assert_eq(str(state.pending_operation().get("payload", {}).get("id", "")), "desk.return.queue", "return must not discard queued work")
+	assert_eq(toast.text, "", "returning to the desk must not leave a scene-return label that reads as another action")
 
 
 func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
