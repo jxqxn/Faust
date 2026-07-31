@@ -81,6 +81,7 @@ var _card_rail_view: Control
 var _rail_padding: MarginContainer
 var _card_items: Control
 var _hand_pan_ratio := 0.5
+var _hand_idle_clock_seconds := 0.0
 var _hand_content_overflows := false
 var _hand_drop_preview_index := -1
 var _pending_hand_drop_origins: Dictionary = {}
@@ -126,6 +127,20 @@ func _ready() -> void:
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
 	refresh()
+
+
+func _process(delta: float) -> void:
+	if (
+		delta <= 0.0
+		or _presentation_frozen
+		or not _underlying_presentation_pauses.is_empty()
+	):
+		return
+	_hand_idle_clock_seconds += delta
+
+
+func hand_idle_time_seconds() -> float:
+	return _hand_idle_clock_seconds
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -837,7 +852,11 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 			0.0,
 			slot_index
 		)
-		card.set_hand_idle(true, slot_index)
+		card.set_hand_idle(
+			true,
+			slot_index,
+			Callable(self, "hand_idle_time_seconds")
+		)
 		if bool(card.get_meta("deal_pending", false)):
 			card.set_meta("deal_pending", false)
 			var deal_origin := Vector2(

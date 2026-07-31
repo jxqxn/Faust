@@ -157,6 +157,105 @@ func test_representative_main_screen_controls_share_ui_motion():
 			)
 
 
+func test_card_idle_clock_freezes_without_resume_pose_jump():
+	var stage := _stage()
+	var widget := CardWidget.make({
+		"id": 2000001,
+		"name": "Clock test",
+		"type": "char",
+		"rare": 1,
+		"tag": {},
+	})
+	stage.add_child(widget)
+	widget.set_hand_idle(true, 0)
+	widget.set_process(false)
+	widget._process(0.25)
+	widget.set_process(false)
+	var time_before := widget._idle_time_seconds()
+	var target_position_before := widget._idle_position_at(time_before)
+	var target_rotation_before := widget._idle_rotation_at(time_before)
+	var pose_position_before := widget.offset_transform_position
+	var pose_rotation_before := widget.offset_transform_rotation
+	var position_velocity_before := widget._pose_position_velocity
+	var rotation_velocity_before := widget._pose_rotation_velocity
+
+	widget.set_presentation_paused(true)
+	await wait_seconds(0.16)
+	assert_almost_eq(widget._idle_time_seconds(), time_before, 0.000001)
+	assert_eq(widget.offset_transform_position, pose_position_before)
+	assert_almost_eq(widget.offset_transform_rotation, pose_rotation_before, 0.000001)
+	assert_eq(widget._pose_position_velocity, position_velocity_before)
+	assert_almost_eq(widget._pose_rotation_velocity, rotation_velocity_before, 0.000001)
+
+	widget.set_presentation_paused(false)
+	widget.set_process(false)
+	assert_eq(widget._idle_position_at(widget._idle_time_seconds()), target_position_before)
+	assert_almost_eq(
+		widget._idle_rotation_at(widget._idle_time_seconds()),
+		target_rotation_before,
+		0.000001
+	)
+	var delta := 1.0 / 60.0
+	widget._process(delta)
+	widget.set_process(false)
+	assert_almost_eq(widget._idle_time_seconds(), time_before + delta, 0.000001)
+	assert_lt(
+		widget.offset_transform_position.distance_to(pose_position_before),
+		0.5,
+		"resuming should advance by one ordinary frame, not by the paused wall time"
+	)
+	assert_lt(
+		absf(widget.offset_transform_rotation - pose_rotation_before),
+		0.005,
+		"idle roll should continue smoothly from the frozen pose"
+	)
+
+
+func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
+	var rng := RNG.new(73)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	screen.set_process(false)
+	var rail_cards := _rail_card_widgets(screen)
+	assert_gt(rail_cards.size(), 0)
+	if rail_cards.is_empty():
+		return
+	var card := rail_cards[0] as CardWidget
+	var initial_time := screen.hand_idle_time_seconds()
+	assert_almost_eq(card._idle_time_seconds(), initial_time, 0.000001)
+
+	screen.set_world_scene_blocker("clock_test", true, false, true, true)
+	screen._process(4.0)
+	assert_almost_eq(screen.hand_idle_time_seconds(), initial_time, 0.000001)
+	assert_almost_eq(card._idle_time_seconds(), initial_time, 0.000001)
+	screen.set_world_scene_blocker("clock_test", false, false, true, true)
+	var delta := 1.0 / 60.0
+	screen._process(delta)
+	var after_local_resume := initial_time + delta
+	assert_almost_eq(screen.hand_idle_time_seconds(), after_local_resume, 0.000001)
+	assert_almost_eq(card._idle_time_seconds(), after_local_resume, 0.000001)
+
+	screen.set_presentation_frozen(true)
+	screen._process(4.0)
+	assert_almost_eq(screen.hand_idle_time_seconds(), after_local_resume, 0.000001)
+	assert_almost_eq(card._idle_time_seconds(), after_local_resume, 0.000001)
+	screen.set_presentation_frozen(false)
+	screen.set_process(false)
+	screen._process(delta)
+	assert_almost_eq(
+		screen.hand_idle_time_seconds(),
+		after_local_resume + delta,
+		0.000001,
+		"continue game should resume the shared hand clock from its frozen phase"
+	)
+
+
 func test_main_menu_hides_continue_without_valid_player_save():
 	SaveSystem.delete_save()
 	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)

@@ -90,6 +90,8 @@ var _dealing := false
 var _base_z_index := 0
 var _hand_idle_enabled := false
 var _hand_idle_phase := 0.0
+var _idle_elapsed_seconds := 0.0
+var _idle_time_source := Callable()
 var _pose_position_velocity := Vector2.ZERO
 var _pose_rotation_velocity := 0.0
 var _pose_scale_velocity := Vector2.ZERO
@@ -165,8 +167,13 @@ func set_hand_pose(target_position: Vector2, target_rotation: float, order: int)
 ## across the hand rather than unrelated random motion. Convert our pixel x to
 ## the same card-relative world units; the pose spring/reflow tween absorbs a
 ## phase target change when a card moves to another slot.
-func set_hand_idle(enabled: bool, _order: int = 0) -> void:
+func set_hand_idle(
+	enabled: bool,
+	_order: int = 0,
+	idle_time_source: Callable = Callable()
+) -> void:
 	_hand_idle_enabled = enabled
+	_idle_time_source = idle_time_source
 	_hand_idle_phase = fposmod(position.x * BALATRO_CARD_WIDTH_UNITS / CARD_SIZE.x, TAU)
 	_refresh_presentation_processing()
 
@@ -511,6 +518,11 @@ func _process(delta: float) -> void:
 	if _presentation_paused:
 		set_process(false)
 		return
+	# Standalone CardWidgets own a local presentation clock. Hand cards receive
+	# GameScreen's shared clock instead, so the complete rail remains one spatial
+	# wave while every pause surface freezes the same phase.
+	if _hand_idle_enabled and not _idle_time_source.is_valid():
+		_idle_elapsed_seconds += maxf(delta, 0.0)
 	_step_hover_juice(delta)
 	if _drag_preview:
 		var pointer := get_viewport().get_mouse_position() if get_viewport() != null else _drag_last_pointer
@@ -838,7 +850,9 @@ func _request_visual_redraw() -> void:
 
 
 func _idle_time_seconds() -> float:
-	return Time.get_ticks_msec() * 0.001
+	if _idle_time_source.is_valid():
+		return float(_idle_time_source.call())
+	return _idle_elapsed_seconds
 
 
 func _idle_rotation_at(time_seconds: float) -> float:
