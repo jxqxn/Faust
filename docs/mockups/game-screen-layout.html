@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Faust 主桌面页 UI 校对稿</title>
+  <title>Faust 形势桌 UI 校对稿</title>
   <style>
     :root {
       --bg: #0f0b09;
@@ -307,38 +307,158 @@
       font-size: 13px;
       pointer-events: none;
     }
+
+    /* Situation desk prototype: original paper, ink and wax treatment.
+       It borrows only the broad visual grammar of a layered 2D desk, not
+       any texture, icon, composition or asset from a reference game. */
+    :root {
+      --ink: #2e2118;
+      --paper: #d9bd7b;
+      --paper-light: #f2dda0;
+      --wax: #8c3d31;
+    }
+
+    body { background: #211b16; color: var(--ink); }
+
+    .frame {
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(255, 234, 166, .35), transparent 42%),
+        repeating-linear-gradient(12deg, rgba(83, 53, 26, .045) 0 1px, transparent 1px 13px),
+        #5d4732;
+      border-color: #271c13;
+    }
+
+    .hud {
+      right: auto;
+      width: 340px;
+      padding: 0 16px;
+      color: var(--ink);
+      border-color: rgba(67, 43, 25, .55);
+      background: linear-gradient(135deg, #ecd99e, #b9935b);
+      box-shadow: 0 3px 0 rgba(42, 25, 13, .34);
+    }
+
+    .map {
+      border: 3px solid #50331e;
+      background:
+        radial-gradient(circle at 16% 56%, rgba(92, 128, 83, .34), transparent 11%),
+        radial-gradient(circle at 57% 65%, rgba(105, 132, 141, .26), transparent 13%),
+        radial-gradient(circle at 79% 30%, rgba(137, 103, 66, .22), transparent 11%),
+        repeating-linear-gradient(20deg, rgba(75, 43, 18, .045) 0 1px, transparent 1px 11px),
+        linear-gradient(135deg, var(--paper-light), var(--paper));
+      box-shadow: inset 0 0 42px rgba(69, 42, 20, .32), 0 9px 16px rgba(0, 0, 0, .25);
+    }
+
+    .map::before {
+      inset: 16px;
+      opacity: .70;
+      background:
+        linear-gradient(153deg, transparent 0 28%, rgba(92, 64, 34, .45) 28.2% 28.7%, transparent 29% 50%, rgba(92, 64, 34, .35) 50.2% 50.7%, transparent 51%),
+        radial-gradient(circle at 18% 67%, rgba(140, 61, 49, .76) 0 7px, transparent 8px),
+        radial-gradient(circle at 40% 38%, rgba(140, 61, 49, .76) 0 7px, transparent 8px),
+        radial-gradient(circle at 57% 62%, rgba(140, 61, 49, .76) 0 7px, transparent 8px),
+        radial-gradient(circle at 73% 31%, rgba(140, 61, 49, .76) 0 7px, transparent 8px),
+        radial-gradient(circle at 82% 72%, rgba(140, 61, 49, .76) 0 7px, transparent 8px);
+    }
+
+    .desk-title {
+      position: absolute;
+      left: 50%; top: 18px;
+      transform: translateX(-50%);
+      text-align: center;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: 24px;
+      letter-spacing: .12em;
+      z-index: 2;
+    }
+
+    .desk-title small { display: block; margin-top: 5px; font-size: 12px; letter-spacing: .08em; font-weight: 700; opacity: .72; }
+
+    .dossier, .think-button {
+      position: absolute;
+      z-index: 3;
+      border: 2px solid #5c3b22;
+      color: var(--ink);
+      background: linear-gradient(135deg, #faeab6, #d8b673);
+      box-shadow: 3px 4px 0 rgba(66, 36, 18, .25);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .dossier { left: 24px; top: 22px; width: 170px; min-height: 62px; padding: 9px; font-size: 14px; }
+    .dossier span { display: block; margin-top: 5px; font-size: 12px; font-weight: 700; opacity: .72; }
+    .think-button { left: 28px; bottom: 26px; min-width: 132px; padding: 13px 18px; }
+
+    .site {
+      z-index: 2;
+      min-width: 116px;
+      border: 2px solid rgba(77, 48, 27, .78);
+      background: rgba(250, 232, 178, .88);
+      color: var(--ink);
+      border-radius: 18px;
+      box-shadow: 0 3px 0 rgba(73, 39, 18, .28);
+    }
+
+    .site.home { left: 12%; top: 64%; }
+    .site.market { left: 34%; top: 35%; }
+    .site.palace { left: 51%; top: 59%; }
+    .site.temple { left: 67%; top: 27%; }
+    .site.wild { left: 76%; top: 69%; }
+
+    .rite-slip {
+      position: absolute;
+      z-index: 4;
+      left: 50%; top: 40%;
+      width: 168px;
+      padding: 9px 12px;
+      transform: translateX(-50%) rotate(-1.5deg);
+      background: #f4df9d;
+      border: 1px solid #6a4226;
+      box-shadow: 3px 5px 0 rgba(69, 38, 17, .28);
+      color: var(--ink);
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .rite-slip::before { content: "进行中仪式"; display: block; margin-bottom: 3px; color: var(--wax); font-size: 11px; letter-spacing: .08em; }
+    .toast { color: var(--ink); background: rgba(244, 223, 157, .88); border-color: rgba(75, 46, 25, .55); }
+    .card-rail { background: linear-gradient(180deg, rgba(57, 37, 22, .15), rgba(34, 24, 17, .86) 34%); border-top-color: rgba(242, 221, 160, .38); }
+    .rail-label { color: #f2dda0; }
+    .round-button { background: radial-gradient(circle, #d9bb73 0 45%, #5a3e26 46% 70%, #b6934d 71% 100%); border-color: #e3c77c; color: #2d1e13; }
+    .card { border-color: #e9cf82; background: linear-gradient(180deg, rgba(255,255,255,.26), transparent 18%), linear-gradient(135deg, #d2bd7e, #5b4932 72%); }
   </style>
 </head>
 <body>
-  <main class="frame" aria-label="主桌面页目标布局校对稿">
+  <main class="frame" aria-label="形势桌目标布局校对稿">
     <section class="hud" aria-label="顶部轻 HUD">
-      <span>第 1 回合 · 第 1 天</span>
-      <span>金币 0</span>
-      <span>金骰 3</span>
-      <span>重抽 3</span>
-      <span class="spacer"></span>
-      <span>菜单</span>
+      <span>第 1 天</span>
+      <span>金骰 3　重抽 3</span>
     </section>
 
-    <section class="map" aria-label="主桌面/地图区域">
-      <div class="site home">治理家业</div>
-      <div class="site market">商业区</div>
-      <div class="site palace">宫廷</div>
-      <div class="site temple">神殿区</div>
-      <div class="site wild">野外</div>
-      <div class="toast">事件提示 / 当前选择说明显示在桌面上，不单独占一个大日志面板</div>
+    <section class="map" aria-label="磨损纸质地图与行动单">
+      <div class="desk-title">当日形势<small>地图 · 档案 · 当前可处理事项</small></div>
+      <div class="dossier">当前现场档案<span>1985 · 放学后　→ 进入现场</span></div>
+      <div class="think-button">思考</div>
+      <div class="site home">家 · 自宅</div>
+      <div class="site market">商店街 · 商业区</div>
+      <div class="site palace">校舍 · 宫廷</div>
+      <div class="site temple">旧校舍 · 神殿区</div>
+      <div class="site wild">河堤 · 野外</div>
+      <div class="rite-slip">治理家业</div>
+      <div class="toast">思考后展开行动单；可将底部卡牌拖入“思考”</div>
     </section>
 
     <aside class="right-actions" aria-label="右侧行动按钮">
       <div class="round-button">下一天</div>
       <div class="small-actions">
-        <div class="icon-button">仪</div>
+        <div class="icon-button">档</div>
         <div class="icon-button">抽</div>
       </div>
     </aside>
 
     <aside class="rail-label" aria-label="卡牌栏辅助信息">
-      <div>统一卡牌栏</div>
+      <div>当前处境</div>
       <div class="rank-tabs">
         <span>I</span>
         <span>II</span>
@@ -364,7 +484,7 @@
       <article class="card"><div class="name">女奴</div><div class="portrait"></div><div class="meta"><span>角色</span><span>●</span></div></article>
     </section>
 
-    <div class="callout">校对重点：苏丹卡与普通卡同在底部卡牌栏；“下一天”和手牌并排属于底部操作带；顶部只保留资源 HUD；中部恢复主桌面/地图语义。</div>
+    <div class="callout">校对重点：首屏是纸质形势桌；地点、档案、思考和进行中仪式共同解释当天局面。横版现场只由“当前现场档案”进入，底部手牌与“下一天”保持原位。</div>
   </main>
 </body>
 </html>

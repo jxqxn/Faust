@@ -268,7 +268,15 @@ func is_hand_motion_active() -> bool:
 
 func _style_for_card() -> StyleBoxFlat:
 	var accent := _rarity_color(int(_card.get("rare", 0)), str(_card.get("type", "")))
-	var style := FaustTheme.card_style(accent)
+	# Hand cards share the desk's paper language, while their accent still
+	# carries rarity/type information. The face remains authored locally so no
+	# external texture or historical-reference asset is required.
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#ead69a")
+	style.border_color = accent.darkened(0.24)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(4)
+	style.set_content_margin_all(6)
 	# The face texture must contain no baked shadow. The same pre-perspective
 	# texture is sampled by a separate shadow pass below the card surface.
 	style.shadow_color = Color.TRANSPARENT
@@ -276,7 +284,7 @@ func _style_for_card() -> StyleBoxFlat:
 	style.shadow_offset = Vector2.ZERO
 	if _hovered or _selected or _drag_preview:
 		style.border_color = accent.lightened(0.18)
-		style.set_border_width_all(2)
+		style.bg_color = Color("#f5e5b4")
 	return style
 
 
@@ -851,13 +859,13 @@ func _rebuild() -> void:
 	title.text = str(_card.get("name", "?"))
 	_fit_card_label(title)
 	title.add_theme_font_size_override("font_size", 15)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	title.add_theme_color_override("font_color", Color("#2d2118"))
 	col.add_child(title)
 
 	var art := ColorRect.new()
 	art.name = "CardArt"
 	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	art.color = Color("#141515")
+	art.color = _card_art_color()
 	art.custom_minimum_size = Vector2(88, 112)
 	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	art.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -954,6 +962,12 @@ static func _type_label(t: String) -> String:
 			return "苏丹"
 		_:
 			return t
+
+
+func _card_art_color() -> Color:
+	if str(_card.get("type", "")) == "sudan":
+		return Color("#7890b2")
+	return _rarity_color(int(_card.get("rare", 0)), str(_card.get("type", ""))).darkened(0.42)
 
 
 static func _rarity_color(rare: int, card_type: String = "") -> Color:

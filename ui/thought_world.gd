@@ -10,6 +10,7 @@ signal thinking_changed(enabled: bool)
 signal protagonist_moved()
 signal interaction_requested(interaction: Dictionary)
 signal location_changed(location_id: String)
+signal return_requested()
 
 class ThinkDropButton:
 	extends Button
@@ -56,6 +57,7 @@ const NPC_BASE_SIZE := Vector2(150, 300)
 const THOUGHT_WORLD_MASK_COLOR := Color(0.035, 0.045, 0.105, 0.46)
 
 var _thinking := false
+var _context_mode := false
 var _player_x_ratio := 0.5
 var _location_id := WorldScenes.DEFAULT_LOCATION_ID
 var _location_data: Dictionary = {}
@@ -76,6 +78,7 @@ var _protagonist: TextureRect
 var _atmosphere: ColorRect
 var _thought_world_mask: ColorRect
 var _think_button: Button
+var _return_button: Button
 var _hint_label: Label
 var _scene_title: Label
 var _thought_heading: Label
@@ -92,6 +95,26 @@ func setup(state) -> void:
 	_player_x_ratio = clampf(float(state.world_position_ratio), 0.04, 0.96)
 
 
+## GameScreen uses the lateral world as a local dossier, while direct users
+## retain the established standalone Thought interaction.
+func set_context_mode(enabled: bool) -> void:
+	_context_mode = enabled
+	if enabled:
+		set_thinking(false)
+	if is_node_ready():
+		_update_world_chrome_visibility(_has_blocking_overlay())
+		_layout_overlay()
+
+
+func reload_from_state() -> void:
+	if _state == null:
+		return
+	_location_id = str(_state.world_location_id)
+	_player_x_ratio = clampf(float(_state.world_position_ratio), 0.04, 0.96)
+	if is_node_ready():
+		_apply_location(_location_id, str(_state.world_spawn_id), true, false)
+
+
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	clip_contents = true
@@ -101,6 +124,7 @@ func _ready() -> void:
 	_apply_location(_location_id, "", true, false)
 	resized.connect(_layout_overlay)
 	_layout_overlay()
+	_update_world_chrome_visibility(_has_blocking_overlay())
 	set_process(true)
 	queue_redraw()
 
@@ -206,6 +230,21 @@ func _build_overlay() -> void:
 	_think_button.z_index = 12
 	add_child(_think_button)
 
+	_return_button = Button.new()
+	_return_button.name = "ReturnToDeskButton"
+	_return_button.text = "返回形势桌"
+	_return_button.tooltip_text = "回到地图与档案，保留当前位置和未处理事项"
+	_return_button.add_theme_font_size_override("font_size", 14)
+	_return_button.add_theme_color_override("font_color", Color(0.98, 0.96, 0.89, 0.94))
+	_return_button.add_theme_color_override("font_hover_color", Color("#fff1bd"))
+	_return_button.add_theme_stylebox_override("normal", _think_style(Color(0.86, 0.89, 0.91, 0.42)))
+	_return_button.add_theme_stylebox_override("hover", _think_style(Color("#f0c56b"), true))
+	_return_button.add_theme_stylebox_override("pressed", _think_style(Color("#fff0b3"), true))
+	_return_button.pressed.connect(func(): return_requested.emit())
+	_return_button.visible = false
+	_return_button.z_index = 12
+	add_child(_return_button)
+
 	_audio = AudioStreamPlayer.new()
 	_audio.name = "SceneAudio"
 	_audio.volume_db = -9.0
@@ -228,6 +267,10 @@ func _make_motes() -> void:
 
 func _process(delta: float) -> void:
 	_world_time += delta
+	# In GameScreen this control stays constructed for save continuity, but it
+	# must not react to movement or interaction input until its dossier is open.
+	if not is_visible_in_tree():
+		return
 	var direction := 0.0
 	var blocking := _has_blocking_overlay()
 	_update_world_chrome_visibility(blocking or _interaction_walk_active)
@@ -270,12 +313,14 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
+	if not is_visible_in_tree():
+		return
 	if event is not InputEventKey:
 		return
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	if key_event.keycode == KEY_SPACE and not _has_blocking_overlay():
+	if key_event.keycode == KEY_SPACE and not _context_mode and not _has_blocking_overlay():
 		set_thinking(not _thinking)
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_E and not _thinking and not _has_blocking_overlay():
@@ -283,6 +328,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_ESCAPE and _thinking:
 		set_thinking(false)
+		get_viewport().set_input_as_handled()
+	elif key_event.keycode == KEY_ESCAPE and _context_mode and not _has_blocking_overlay():
+		return_requested.emit()
 		get_viewport().set_input_as_handled()
 
 
@@ -319,7 +367,7 @@ func is_scene_blocked() -> bool:
 
 
 func set_thinking(enabled: bool) -> void:
-	if enabled and _interaction_walk_active:
+	if enabled and (_context_mode or _interaction_walk_active):
 		return
 	if _thinking == enabled:
 		return
@@ -468,6 +516,8 @@ func _layout_overlay() -> void:
 	_thought_heading.size = Vector2(320, 28)
 	_think_button.position = Vector2(24.0, size.y - 82.0)
 	_think_button.size = Vector2(138, 54)
+	_return_button.position = Vector2(size.x - 152.0, 18.0)
+	_return_button.size = Vector2(134.0, 38.0)
 	_interaction_hint.position = Vector2((size.x - 360.0) * 0.5, size.y - 76.0)
 	_interaction_hint.size = Vector2(360, 40)
 	_transition_flash.position = Vector2.ZERO
@@ -719,7 +769,9 @@ func _update_interaction_hint() -> void:
 
 func _update_world_chrome_visibility(blocking: bool) -> void:
 	if _think_button != null:
-		_think_button.visible = not blocking
+		_think_button.visible = not blocking and not _context_mode
+	if _return_button != null:
+		_return_button.visible = not blocking and _context_mode and not _thinking
 	if _hint_label != null:
 		_hint_label.visible = not blocking
 	if _thought_heading != null:

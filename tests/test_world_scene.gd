@@ -63,6 +63,48 @@ func test_world_rebuild_restores_saved_location_position_and_spawn() -> void:
 	assert_not_null(world.get_node_or_null("WorldExit_to_rooftop"))
 
 
+func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_desk() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(907))
+	state.world_location_id = "riverbank"
+	state.world_spawn_id = "from_rooftop"
+	state.world_position_ratio = 0.63
+	state.visited_world_locations = ["school_rooftop", "riverbank"]
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(908))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var desk := screen.get_node_or_null("SituationDesk") as Control
+	var dossier := screen.find_child("CurrentSceneDossier", true, false) as Button
+	var world = screen.get_node_or_null("SceneWorld")
+	var rail := screen.get_node_or_null("CardRail") as Control
+	assert_not_null(desk)
+	assert_not_null(dossier)
+	assert_not_null(world)
+	assert_not_null(rail)
+	if desk == null or dossier == null or world == null or rail == null:
+		return
+	var rail_instance_id := rail.get_instance_id()
+	assert_true(desk.visible, "the desk should be the first visible play surface")
+	assert_false(world.visible, "the dossier scene should remain closed until requested")
+	dossier.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(world.visible, "opening the dossier should reveal the saved scene")
+	assert_eq(world.location_id(), "riverbank")
+	assert_almost_eq(world.player_x_ratio(), 0.63, 0.001)
+	assert_false((world.get_node("ThinkButton") as Control).visible, "the scene must not duplicate desk thought entry")
+	assert_true((world.get_node("ReturnToDeskButton") as Control).visible)
+	state.queue_prompt({"id": "desk.return.queue", "text": "keep"})
+	world.return_requested.emit()
+	await wait_process_frames(1)
+	assert_true(desk.visible, "return should restore the same desk rather than rebuild navigation")
+	assert_false(world.visible)
+	assert_eq(screen.get_node("CardRail").get_instance_id(), rail_instance_id, "return must preserve the card rail")
+	assert_eq(str(state.pending_operation().get("payload", {}).get("id", "")), "desk.return.queue", "return must not discard queued work")
+
+
 func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(902))
@@ -71,6 +113,12 @@ func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 	screen.setup(state, db, RNG.new(903))
 	stage.add_child(screen)
 	await wait_process_frames(2)
+	var dossier := screen.find_child("CurrentSceneDossier", true, false) as Button
+	assert_not_null(dossier)
+	if dossier == null:
+		return
+	dossier.pressed.emit()
+	await wait_process_frames(1)
 	var world = screen.get_node_or_null("SceneWorld")
 	assert_not_null(world)
 	if world == null:
@@ -206,8 +254,12 @@ func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 				await wait_process_frames(2)
 				assert_false(world.is_scene_blocked(), "finishing dialogue should release the scene")
 				assert_true(
+					(world.get_node("ReturnToDeskButton") as Control).visible,
+					"context scene should offer a clear return after the last line"
+				)
+				assert_false(
 					(world.get_node("ThinkButton") as Control).visible,
-					"normal scene controls should return after the last line"
+					"the context scene must not duplicate the desk thought action"
 				)
 
 

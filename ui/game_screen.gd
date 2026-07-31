@@ -1,6 +1,7 @@
 ﻿## Main in-game scene screen.
-## The legacy class now hosts the lateral ThoughtWorld while preserving the
-## shared card rail, runtime overlays, queue surfaces, and day controls.
+## The screen defaults to a paper SituationDesk. ThoughtWorld is retained as
+## an optional local-context page while the shared rail, queue surfaces, and
+## day controls remain persistent.
 extends Control
 
 signal open_rite(rite_id: int)
@@ -12,6 +13,7 @@ signal menu_pressed()
 signal game_over_requested()
 
 const UiMotionScript = preload("res://ui/ui_motion.gd")
+const SituationDeskScript = preload("res://ui/situation_desk.gd")
 const ThoughtWorldScript = preload("res://ui/thought_world.gd")
 const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 
@@ -63,7 +65,8 @@ var _background: ColorRect
 var _hud: PanelContainer
 var _menu_button: Button
 var _desk_map: PanelContainer
-var _map_content: Control
+var _desk_content: SituationDesk
+var _scene_world: ThoughtWorld
 var _overlay_layer: Control
 var _rail_label: VBoxContainer
 var _card_rail_view: Control
@@ -77,7 +80,6 @@ var _pending_hand_drop_poses: Dictionary = {}
 var _known_rail_card_uids: Dictionary = {}
 var _right_actions: VBoxContainer
 var _advance_button: Button
-var _site_buttons: Array[Button] = []
 var _rite_pin_buttons: Array[Button] = []
 var _rite_pin_ids: Dictionary = {}
 var _rite_pin_by_rite_id: Dictionary = {}
@@ -160,34 +162,26 @@ func _build_ui() -> void:
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
 	add_child(_desk_map)
-	_map_content = ThoughtWorldScript.new()
-	_map_content.name = "SceneWorld"
-	_map_content.setup(_state)
-	_map_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_map_content.clip_contents = true
-	_map_content.thinking_changed.connect(_on_thinking_changed)
-	_map_content.protagonist_moved.connect(_on_protagonist_moved)
-	_map_content.interaction_requested.connect(_on_world_interaction_requested)
-	add_child(_map_content)
+	_desk_content = SituationDeskScript.new()
+	_desk_content.name = "SituationDesk"
+	_desk_content.setup(_state)
+	_desk_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_desk_content.thinking_changed.connect(_on_thinking_changed)
+	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
+	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
+	_desk_content.context_requested.connect(_open_context_scene)
+	add_child(_desk_content)
 
-	var site_specs := [
-		{"name": "SiteHome", "label": "家", "location": "自宅"},
-		{"name": "SiteMarket", "label": "商店街", "location": "商业区"},
-		{"name": "SitePalace", "label": "校舍", "location": "宫廷"},
-		{"name": "SiteTemple", "label": "旧校舍", "location": "神殿区"},
-		{"name": "SiteWild", "label": "河堤", "location": "野外"},
-	]
-	for spec in site_specs:
-		var site := _site_button(str(spec["label"]))
-		site.name = str(spec["name"])
-		var location_name := str(spec["location"])
-		site.pressed.connect(_on_site_pressed.bind(location_name))
-		_site_buttons.append(site)
-		_map_content.add_child(site)
-		# Kept as a compatibility signal surface for existing clone tests and
-		# callers. Visible navigation now happens through in-world exits.
-		site.visible = false
-		UiMotionScript.bind(site, UiMotionScript.Profile.SITE)
+	_scene_world = ThoughtWorldScript.new()
+	_scene_world.name = "SceneWorld"
+	_scene_world.setup(_state)
+	_scene_world.set_context_mode(true)
+	_scene_world.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_scene_world.clip_contents = true
+	_scene_world.interaction_requested.connect(_on_world_interaction_requested)
+	_scene_world.return_requested.connect(_close_context_scene)
+	_scene_world.visible = false
+	add_child(_scene_world)
 
 	_log_label = Label.new()
 	_log_label.name = "EventToast"
@@ -198,7 +192,7 @@ func _build_ui() -> void:
 	_log_label.add_theme_color_override("font_shadow_color", Color(0.02, 0.025, 0.06, 0.90))
 	_log_label.add_theme_constant_override("shadow_offset_x", 1)
 	_log_label.add_theme_constant_override("shadow_offset_y", 2)
-	_map_content.add_child(_log_label)
+	_desk_content.add_child(_log_label)
 
 	_overlay_layer = Control.new()
 	_overlay_layer.name = "OverlayLayer"
@@ -295,7 +289,8 @@ func _apply_layout() -> void:
 	_set_rect(_hud, Rect2(Vector2(22, 18) * s, Vector2(340, 44) * s))
 	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
 	_set_rect(_desk_map, Rect2(Vector2(34, 78) * s, Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)))
-	_set_rect(_map_content, Rect2(_desk_map.position, _desk_map.size))
+	_set_rect(_desk_content, Rect2(_desk_map.position, _desk_map.size))
+	_set_rect(_scene_world, Rect2(_desk_map.position, _desk_map.size))
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(
@@ -312,7 +307,7 @@ func _apply_layout() -> void:
 
 	_card_items.custom_minimum_size = Vector2.ZERO
 	call_deferred("_layout_hand_cards")
-	_layout_map_content(s)
+	_layout_situation_desk(s)
 	_layout_card_detail(s, view_size)
 	_layout_event_prompt(s, view_size)
 
@@ -333,22 +328,11 @@ func _effective_view_size() -> Vector2:
 	return MOCKUP_SIZE
 
 
-func _layout_map_content(s: float) -> void:
-	if _map_content == null:
+func _layout_situation_desk(s: float) -> void:
+	if _desk_content == null:
 		return
-	var map_size := _map_content.size
-	var site_size := Vector2(108, 32) * s
-	var site_positions := [
-		Vector2(0.16, 0.84),
-		Vector2(0.33, 0.84),
-		Vector2(0.50, 0.84),
-		Vector2(0.67, 0.84),
-		Vector2(0.84, 0.84),
-	]
-	for i in _site_buttons.size():
-		var site := _site_buttons[i]
-		site.size = site_size
-		site.position = Vector2(map_size.x * site_positions[i].x, map_size.y * site_positions[i].y)
+	var map_size := _desk_content.size
+	_desk_content.refresh_context()
 	_layout_rite_pins(s, map_size)
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
@@ -396,21 +380,7 @@ func _scene_frame_style() -> StyleBoxFlat:
 	return style
 
 
-func _site_button(label: String) -> Button:
-	var button := Button.new()
-	button.text = label
-	button.custom_minimum_size = Vector2(98, 34)
-	button.flat = true
-	button.add_theme_font_size_override("font_size", 13)
-	button.add_theme_color_override("font_color", Color(0.93, 0.94, 0.95, 0.72))
-	button.add_theme_color_override("font_hover_color", Color("#fff0b7"))
-	button.add_theme_color_override("font_shadow_color", Color(0.02, 0.025, 0.06, 0.92))
-	button.add_theme_constant_override("shadow_offset_x", 1)
-	button.add_theme_constant_override("shadow_offset_y", 2)
-	return button
-
-
-func _on_site_pressed(location_name: String) -> void:
+func _on_desk_rite_selector_requested(location_name: String) -> void:
 	open_rite_selector.emit(location_name)
 
 
@@ -476,7 +446,7 @@ func _rite_pin_hover_style() -> StyleBoxFlat:
 
 
 func _refresh_rite_pins() -> void:
-	if _map_content == null:
+	if _desk_content == null:
 		return
 	var desired := {}
 	for instance in _open_map_rite_instances():
@@ -484,7 +454,8 @@ func _refresh_rite_pins() -> void:
 		# `List<int>` and rejects a config id it already contains. Keep one map
 		# entry per RiteNode id. The state resolves the panel target
 		# deterministically when more than one runtime instance shares that id.
-		# [SRC: PlayerExtensions.c @ AddRitePin (RVA 0x38c360)]
+		# [SRC: PlayerExtensions.c @ AddRitePin (RVA 0x38c360);
+		#  il2cpp_dump/dump.cs:320055]
 		if desired.has(instance.id):
 			continue
 		desired[instance.id] = instance
@@ -519,13 +490,13 @@ func _create_rite_pin(instance) -> void:
 	pin.add_theme_stylebox_override("normal", _rite_pin_style(Color(0.88, 0.88, 0.88, 0.38)))
 	pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
 	pin.add_theme_stylebox_override("pressed", _rite_pin_style(Color("#fff0af")))
-	pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
+	pin.pressed.connect(_desk_content.open_rite_instance.emit.bind(instance.uid))
 	pin.z_index = 8
 	_rite_pin_buttons.append(pin)
 	_rite_pin_ids[pin] = instance.uid
 	_rite_pin_by_rite_id[instance.id] = pin
-	_map_content.add_child(pin)
-	pin.visible = _map_content.is_thinking()
+	_desk_content.add_child(pin)
+	pin.visible = _desk_content.is_thinking()
 	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
 
 
@@ -590,16 +561,16 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 			continue
 		pins.append(pin)
 	var thinking: bool = (
-		_map_content != null
-		and bool(_map_content.is_thinking())
+		_desk_content != null
+		and bool(_desk_content.is_thinking())
 		and (
-			not _map_content.has_method("is_scene_blocked")
-			or not bool(_map_content.is_scene_blocked())
+			not _desk_content.has_method("is_scene_blocked")
+			or not bool(_desk_content.is_scene_blocked())
 		)
 	)
 	var origin: Vector2 = (
-		_map_content.protagonist_center()
-		if _map_content != null and _map_content.has_method("protagonist_center")
+		_desk_content.protagonist_center()
+		if _desk_content != null and _desk_content.has_method("protagonist_center")
 		else map_size * Vector2(0.5, 0.72)
 	)
 	var count := pins.size()
@@ -625,27 +596,18 @@ func _layout_rite_pins(s: float, map_size: Vector2) -> void:
 			clamp(raw.x, 10.0 * s, max(10.0 * s, map_size.x - pin_size.x - 10.0 * s)),
 			clamp(raw.y, 54.0 * s, max(54.0 * s, map_size.y - pin_size.y - 54.0 * s))
 		)
-	if _map_content != null:
-		_map_content.set_thought_targets(pins)
-		_map_content.set_thought_count(count)
+	if _desk_content != null:
+		_desk_content.set_thought_targets(pins)
+		_desk_content.set_thought_count(count)
 
 
 func _on_thinking_changed(enabled: bool) -> void:
-	for site in _site_buttons:
-		if is_instance_valid(site):
-			site.visible = false
+	if _desk_content == null:
+		return
 	_layout_rite_pins(
-		minf(_map_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
-		_map_content.size
+		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
+		_desk_content.size
 	)
-
-
-func _on_protagonist_moved() -> void:
-	if _map_content != null and _map_content.is_thinking():
-		_layout_rite_pins(
-			minf(_map_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
-			_map_content.size
-		)
 
 
 func _on_world_interaction_requested(interaction: Dictionary) -> void:
@@ -1052,13 +1014,40 @@ func add_overlay(node: Control) -> void:
 
 
 func set_world_scene_blocker(source: String, blocking: bool) -> void:
-	if _map_content == null or not _map_content.has_method("set_scene_blocker"):
+	if _desk_content != null and _desk_content.has_method("set_scene_blocker"):
+		_desk_content.set_scene_blocker(source, blocking)
+	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
+		_scene_world.set_scene_blocker(source, blocking)
+	if _desk_content != null:
+		_layout_rite_pins(
+			minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
+			_desk_content.size
+		)
+
+
+func _open_context_scene() -> void:
+	if _scene_world == null or _desk_content == null:
 		return
-	_map_content.set_scene_blocker(source, blocking)
-	_layout_rite_pins(
-		minf(_map_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y),
-		_map_content.size
+	if _event_overlay != null or _card_detail_overlay != null:
+		return
+	_desk_content.set_thinking(false)
+	_desk_content.visible = false
+	_scene_world.reload_from_state()
+	_scene_world.visible = true
+	set_log("进入当前现场")
+
+
+func _close_context_scene() -> void:
+	if _scene_world == null or _desk_content == null:
+		return
+	_scene_world.set_thinking(false)
+	_scene_world.visible = false
+	_desk_content.visible = true
+	_desk_content.refresh_context()
+	_layout_situation_desk(
+		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y)
 	)
+	set_log("返回形势桌")
 
 
 func _refresh_event_overlay() -> void:
@@ -1388,11 +1377,12 @@ func _layout_event_prompt(s: float, view_size: Vector2) -> void:
 		var line_h := 58.0 * s
 		var anchor := scene_rect.get_center()
 		if (
-			_map_content != null
-			and _map_content.has_method("dialogue_anchor_global")
+			_scene_world != null
+			and _scene_world.visible
+			and _scene_world.has_method("dialogue_anchor_global")
 			and _event_overlay != null
 		):
-			var global_anchor: Vector2 = _map_content.dialogue_anchor_global(_event_dialogue_actor_id)
+			var global_anchor: Vector2 = _scene_world.dialogue_anchor_global(_event_dialogue_actor_id)
 			anchor = _event_overlay.get_global_transform().affine_inverse() * global_anchor
 		var line_x := clampf(
 			anchor.x - line_w * 0.5,

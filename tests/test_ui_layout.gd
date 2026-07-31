@@ -199,9 +199,9 @@ func test_game_screen_uses_wide_viewport_width():
 
 	assert_true(_widest_content(screen) >= MIN_CONTENT_WIDTH, "game screen content should use the wide viewport")
 	var desk_map := _find_node_by_name(screen, "DeskMap") as Control
-	assert_not_null(desk_map, "game screen should keep the lateral scene as the wide central panel")
+	assert_not_null(desk_map, "game screen should keep the situation desk as the wide central panel")
 	if desk_map != null:
-		assert_true(desk_map.size.x >= MIN_CONTENT_WIDTH, "lateral scene should not remain in a left-column layout")
+		assert_true(desk_map.size.x >= MIN_CONTENT_WIDTH, "situation desk should not remain in a left-column layout")
 
 
 func test_game_screen_uses_bottom_card_rail_for_sudan_and_hand():
@@ -289,10 +289,12 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
 	var estate = state.find_rite_instance_by_id(5000001)
 	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
-	var world := _find_node_by_name(screen, "SceneWorld")
+	var desk := _find_node_by_name(screen, "SituationDesk") as Control
+	var world := _find_node_by_name(screen, "SceneWorld") as Control
 	var think := _find_node_by_name(screen, "ThinkButton") as Button
 	var rail_context := _find_node_by_name(screen, "RailContextLabel") as Label
-	assert_not_null(world, "main play should happen in the lateral scene")
+	assert_not_null(desk, "situation desk should be the default main play surface")
+	assert_not_null(world, "the local lateral scene should remain available through the dossier")
 	assert_not_null(think, "the player should have an explicit thinking action")
 	assert_not_null(rail_context)
 	if rail_context != null:
@@ -300,32 +302,23 @@ func test_game_screen_renders_open_rites_as_clickable_map_pins():
 	assert_not_null(pin, "open playable rites should exist as thought objects")
 	if pin == null:
 		return
+	assert_true(desk.visible, "the situation desk should be visible before opening a local scene")
+	assert_false(world.visible, "the lateral scene should not be the default navigation surface")
 	assert_false(pin.visible, "rites stay inside the protagonist until thinking begins")
 	if think != null:
 		think.pressed.emit()
 		await wait_process_frames(1)
 	assert_true(pin.visible, "thinking should make the current rites appear around the protagonist")
 	assert_eq(pin.text, "治理家业", "thoughts should show the rite name players recognize")
-	var thought_mask := _find_node_by_name(world, "ThoughtWorldMask") as Control
-	var protagonist := _find_node_by_name(world, "Protagonist") as Control
-	var heroine := _find_node_by_name(world, "WorldNpc_heroine") as Control
-	assert_not_null(thought_mask)
-	assert_not_null(protagonist)
-	assert_not_null(heroine)
-	if thought_mask != null and protagonist != null and heroine != null:
-		assert_true(thought_mask.visible)
-		assert_gt(thought_mask.z_index, heroine.z_index, "thought should dim external characters")
-		assert_gt(protagonist.z_index, thought_mask.z_index, "the protagonist should remain above the thought mask")
-		assert_eq(protagonist.self_modulate, Color.WHITE, "thought should preserve the protagonist's full brightness")
 	pin.pressed.emit()
 	await wait_process_frames(1)
 
 	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
-	if world != null:
-		assert_true(world.is_thinking(), "entering a rite should retain the thought state behind its deeper overlay")
+	if desk != null:
+		assert_true(desk.is_thinking(), "entering a rite should retain the thought state behind its deeper overlay")
 
 
-func test_game_screen_protagonist_moves_independently_of_simulation_state():
+func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_simulation():
 	var rng := RNG.new(211)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -336,17 +329,22 @@ func test_game_screen_protagonist_moves_independently_of_simulation_state():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
+	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Button
 	var world := _find_node_by_name(screen, "SceneWorld")
 	var protagonist := _find_node_by_name(screen, "Protagonist") as Control
+	assert_not_null(dossier)
 	assert_not_null(world)
 	assert_not_null(protagonist)
-	if world == null or protagonist == null:
+	if dossier == null or world == null or protagonist == null:
 		return
+	dossier.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(world.visible, "current scene dossier should open the saved local scene")
 	var x_before := protagonist.position.x
 	world.set_player_x_ratio_for_test(0.8)
 	await wait_process_frames(1)
 
-	assert_gt(protagonist.position.x, x_before, "the protagonist should occupy a real position in the lateral scene")
+	assert_gt(protagonist.position.x, x_before, "the protagonist should occupy a real position in the dossier scene")
 	assert_eq(state.day, day_before, "walking is presentation and must not advance the simulation")
 
 
@@ -434,17 +432,17 @@ func test_game_screen_exposes_one_player_facing_thought_drop_target():
 	await wait_process_frames(2)
 
 	var target := _find_node_by_name(screen, "ThinkButton") as Control
-	var world := _find_node_by_name(screen, "SceneWorld")
+	var desk := _find_node_by_name(screen, "SituationDesk")
 	var card_uid := state.card_uid_for(2000001, "hand")
 	var drag_data := {"type": "card", "card_id": 2000001, "card_uid": card_uid, "source": "hand"}
 	assert_not_null(target, "all player-facing thought interactions should share one visible control")
 	assert_null(_find_node_by_name(screen, "MethinksDropTarget"), "the obsolete standalone clone-era target should be gone")
-	if target == null or world == null:
+	if target == null or desk == null:
 		return
 	assert_eq((target as Button).text, "思考", "the merged control should always use the single player-facing name")
-	assert_lt(target.position.x, world.size.x * 0.2, "the unified thought control stays in the established lower-left position")
-	assert_false(target._can_drop_data(Vector2.ZERO, drag_data), "the button is not a card target while walking")
-	world.set_thinking(true)
+	assert_lt(target.position.x, desk.size.x * 0.2, "the unified thought control stays in the desk lower-left position")
+	assert_false(target._can_drop_data(Vector2.ZERO, drag_data), "the button is not a card target before thinking")
+	desk.set_thinking(true)
 	assert_eq((target as Button).text, "思考", "entering thought mode must not expose the legacy mechanism name")
 	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the thinking button accepts cards during thought mode")
 
@@ -475,8 +473,8 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 
 	var protagonist_uid := state.card_uid_for(2000001, "hand")
 	var think_button := _find_node_by_name(screen, "ThinkButton") as Control
-	var world := _find_node_by_name(screen, "SceneWorld")
-	world.set_thinking(true)
+	var desk := _find_node_by_name(screen, "SituationDesk")
+	desk.set_thinking(true)
 	think_button._drop_data(
 		Vector2.ZERO,
 		{"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"}
@@ -501,7 +499,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	assert_not_null(prompt_panel, "card-to-thought results should use the scene event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "card-to-thought processing should not open the rite overlay")
-	assert_true(world.is_thinking(), "dropping a card should keep the thought cloud open for the generated rite")
+	assert_true(desk.is_thinking(), "dropping a card should keep the thought cloud open for the generated rite")
 	if prompt_panel != null and scene != null and rail != null:
 		assert_lte(
 			prompt_panel.position.y + prompt_panel.size.y,
@@ -792,8 +790,11 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	assert_not_null(pin, "triggered rites should appear as clickable thoughts in the main scene")
 	if pin == null:
 		return
-	var world := _find_node_by_name(game, "SceneWorld")
-	world.set_thinking(true)
+	var desk := _find_node_by_name(game, "SituationDesk")
+	assert_not_null(desk)
+	if desk == null:
+		return
+	desk.set_thinking(true)
 	pin.pressed.emit()
 	await wait_process_frames(2)
 
@@ -801,18 +802,15 @@ func test_game_home_location_uses_generic_rite_entry_flow():
 	var selector := _find_node_by_name(game, "RiteSelector")
 	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
 	assert_null(selector, "map rite pins should not route through the separate rite selector page")
-	assert_true(world.is_scene_blocked(), "rite overlays should block lateral input")
-	assert_true(world.is_thinking(), "rite overlays opened from thought should retain the thought state")
-	var protagonist := _find_node_by_name(world, "Protagonist") as Control
+	assert_true(desk.is_scene_blocked(), "rite overlays should block thought input")
+	assert_true(desk.is_thinking(), "rite overlays opened from thought should retain the thought state")
 	var overlay_layer := _find_node_by_name(game, "OverlayLayer") as Control
-	assert_not_null(protagonist)
 	assert_not_null(overlay_layer)
-	if protagonist != null and overlay_layer != null:
-		assert_eq(protagonist.self_modulate, Color.WHITE, "thought keeps the protagonist bright before modal composition")
-		assert_gt(overlay_layer.z_index, protagonist.z_index, "the deeper rite modal must still cover the whole world")
+	if overlay_layer != null:
+		assert_gt(overlay_layer.z_index, desk.z_index, "the deeper rite modal must still cover the desk")
 	game._close_rite_overlay()
-	assert_false(world.is_scene_blocked(), "closing a rite should release its blocker")
-	assert_true(world.is_thinking(), "closing the rite should return to the same thought cloud")
+	assert_false(desk.is_scene_blocked(), "closing a rite should release its blocker")
+	assert_true(desk.is_thinking(), "closing the rite should return to the same thought cloud")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():
@@ -1751,6 +1749,41 @@ func test_game_screen_matches_mockup_spatial_layout():
 	assert_true(advance.size.x >= 110.0 and advance.size.y >= 110.0, "AdvanceDayButton should be the large round bottom action")
 
 
+func test_situation_desk_keeps_actions_separate_at_narrow_width():
+	var rng := RNG.new(41)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var stage := _stage(Vector2(720, 720))
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var desk := _find_node_by_name(screen, "SituationDesk") as Control
+	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Control
+	var title := _find_node_by_name(screen, "SituationDeskTitle") as Control
+	var rail := _find_node_by_name(screen, "CardRail") as Control
+	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Control
+	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
+	assert_not_null(desk)
+	assert_not_null(dossier)
+	assert_not_null(title)
+	assert_not_null(rail)
+	assert_not_null(advance)
+	assert_not_null(overlay)
+	if desk == null or dossier == null or title == null or rail == null or advance == null or overlay == null:
+		return
+	assert_true(desk.visible, "narrow layouts should still open on the desk")
+	assert_lte(
+		dossier.get_global_rect().end.x,
+		title.get_global_rect().position.x,
+		"the dossier should not cover the compact desk title"
+	)
+	assert_lt(rail.get_global_rect().end.x, advance.get_global_rect().position.x, "hand rail and next-day action should remain separate")
+	assert_gt(overlay.z_index, desk.z_index, "queue overlays should remain above the paper desk")
+
+
 func test_rite_view_uses_wide_viewport_width():
 	var rng := RNG.new(2)
 	var state := GameState.new()
@@ -1771,10 +1804,10 @@ func test_rite_view_uses_wide_viewport_width():
 		assert_true(slot_layer.size.x >= MIN_CONTENT_WIDTH, "rite slot layer should cover the wide viewport")
 
 
-func _stage() -> Control:
+func _stage(view_size: Vector2 = WIDE_VIEWPORT) -> Control:
 	var stage: Control = Control.new()
 	add_child_autofree(stage)
-	stage.size = WIDE_VIEWPORT
+	stage.size = view_size
 	return stage
 
 
