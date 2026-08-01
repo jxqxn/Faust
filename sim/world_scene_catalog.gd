@@ -1,9 +1,10 @@
 ## Data boundary for the lateral exploration presentation.
 ##
 ## Locations, exits, NPCs and short prototype conversations live here so the
-## scene controller does not hard-code one rooftop. These entries are original
-## placeholder content used to validate the system; they do not expand the
-## frozen Sultan content set.
+## scene controller does not hard-code one backdrop. The legacy location and
+## spawn IDs remain stable because player saves already persist them; only the
+## non-canonical presentation has moved from a modern campus to a neutral
+## hand-painted fantasy road.
 class_name WorldSceneCatalog
 extends RefCounted
 
@@ -11,10 +12,15 @@ const DEFAULT_LOCATION_ID := "school_rooftop"
 
 const LOCATIONS := {
 	"school_rooftop": {
-		"title": "1985 · 放学后",
-		"background": "res://assets/original/thought_world/school_rooftop_sunset.png",
-		"ground_ratio": 0.94,
-		"crop_anchor": 0.64,
+		"title": "高地驿台 · 暮光",
+		"background": "res://assets/original/thought_world/hilltop_waystation_stage.png",
+		"foreground": "res://assets/original/thought_world/hilltop_waystation_foreground.png",
+		"ambient": "highland",
+		"world_width_ratio": 1.32,
+		"ground_ratio": 0.82,
+		"ground_curve": 0.018,
+		"ground_slope": -0.012,
+		"crop_anchor": 0.50,
 		"spawn_points": {
 			"default": 0.50,
 			"from_riverbank": 0.12,
@@ -26,28 +32,33 @@ const LOCATIONS := {
 				"radius": 0.075,
 				"target": "riverbank",
 				"target_spawn": "from_rooftop",
-				"label": "前往河堤",
+				"label": "下行河岸古道",
 				"direction": "←",
 			},
 		],
 		"npcs": [
 			{
 				"id": "heroine",
-				"name": "女主",
+				"name": "同行者",
 				"x_ratio": 0.80,
 				"radius": 0.14,
 				"talk_x_ratio": 0.68,
-				"sprite": "res://assets/original/thought_world/heroine_idle.png",
+				"sprite": "res://assets/original/thought_world/traveling_companion.png",
 				"dialogue": "heroine.rooftop",
-				"prompt": "与女主交谈",
+				"prompt": "与同行者交谈",
 			},
 		],
 	},
 	"riverbank": {
-		"title": "河堤 · 黄昏",
-		"background": "res://assets/original/thought_world/riverbank_sunset.png",
-		"ground_ratio": 0.90,
-		"crop_anchor": 0.57,
+		"title": "河岸古道 · 暮光",
+		"background": "res://assets/original/thought_world/river_road_stage.png",
+		"foreground": "res://assets/original/thought_world/river_road_foreground.png",
+		"ambient": "river",
+		"world_width_ratio": 1.32,
+		"ground_ratio": 0.82,
+		"ground_curve": 0.014,
+		"ground_slope": 0.008,
+		"crop_anchor": 0.50,
 		"spawn_points": {
 			"default": 0.50,
 			"from_rooftop": 0.14,
@@ -59,7 +70,7 @@ const LOCATIONS := {
 				"radius": 0.075,
 				"target": "school_rooftop",
 				"target_spawn": "from_riverbank",
-				"label": "返回天台",
+				"label": "返回高地驿台",
 				"direction": "←",
 			},
 		],
@@ -70,7 +81,7 @@ const LOCATIONS := {
 const DIALOGUES := {
 	"heroine.rooftop": [
 		{
-			"speaker": "女主",
+			"speaker": "同行者",
 			"actor_id": "heroine",
 			"text": "你也还没有回去？",
 		},
@@ -80,7 +91,7 @@ const DIALOGUES := {
 			"text": "只是想再待一会儿。",
 		},
 		{
-			"speaker": "女主",
+			"speaker": "同行者",
 			"actor_id": "heroine",
 			"text": "那就一起看看天黑吧。",
 		},
@@ -117,6 +128,10 @@ static func validate_graph() -> PackedStringArray:
 		var location_data: Dictionary = LOCATIONS[location_id]
 		if not ResourceLoader.exists(str(location_data.get("background", ""))):
 			errors.append("%s 缺少背景资源" % location_id)
+		if not ResourceLoader.exists(str(location_data.get("foreground", ""))):
+			errors.append("%s 缺少前景遮挡资源" % location_id)
+		if float(location_data.get("world_width_ratio", 1.0)) <= 1.0:
+			errors.append("%s 缺少可供摄像机移动的横向舞台宽度" % location_id)
 		var spawn_points: Dictionary = location_data.get("spawn_points", {})
 		if not spawn_points.has("default"):
 			errors.append("%s 缺少 default 出生点" % location_id)

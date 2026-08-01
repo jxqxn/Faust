@@ -29,16 +29,105 @@ class ThinkDropButton:
 			owner_world.drop_card_on_think_button(data)
 
 
+class ParallaxTextureLayer:
+	extends Control
+
+	var texture: Texture2D
+	var pan_ratio := 0.0
+	var zoom := 1.0
+	var crop_anchor := 0.5
+	var tint := Color.WHITE
+
+	func set_view(next_texture: Texture2D, next_pan: float, next_zoom: float, next_anchor: float) -> void:
+		texture = next_texture
+		pan_ratio = clampf(next_pan, 0.0, 1.0)
+		zoom = maxf(next_zoom, 1.0)
+		crop_anchor = clampf(next_anchor, 0.0, 1.0)
+		queue_redraw()
+
+	func _draw() -> void:
+		if texture == null or size.x <= 0.0 or size.y <= 0.0:
+			return
+		var texture_size := texture.get_size()
+		if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+			return
+		var target_aspect := size.x / size.y
+		var source := Rect2(Vector2.ZERO, texture_size)
+		if texture_size.x / texture_size.y > target_aspect:
+			source.size.x = texture_size.y * target_aspect
+		else:
+			source.size.y = texture_size.x / target_aspect
+		var base_source_size := source.size
+		source.size = base_source_size / zoom
+		var horizontal_room := texture_size.x - source.size.x
+		var vertical_room := texture_size.y - source.size.y
+		source.position = Vector2(horizontal_room * pan_ratio, vertical_room * crop_anchor)
+		draw_texture_rect_region(texture, Rect2(Vector2.ZERO, size), source, tint)
+
+
+class StageEffectsLayer:
+	extends Control
+
+	var ambient := "highland"
+	var world_time := 0.0
+	var pan_ratio := 0.0
+	var reduced_motion := false
+	var particles: Array[Vector4] = []
+
+	func configure(next_ambient: String, seed: int) -> void:
+		ambient = next_ambient
+		particles.clear()
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed
+		for i in 18:
+			particles.append(Vector4(rng.randf(), rng.randf_range(0.2, 0.9), rng.randf_range(0.5, 1.4), rng.randf_range(-1.0, 1.0)))
+		queue_redraw()
+
+	func set_view(next_time: float, next_pan: float, motion_reduced: bool) -> void:
+		world_time = next_time
+		pan_ratio = next_pan
+		reduced_motion = motion_reduced
+		queue_redraw()
+
+	func _draw() -> void:
+		if size.x <= 0.0 or size.y <= 0.0:
+			return
+		var animation_time := 0.0 if reduced_motion else world_time
+		if ambient == "river":
+			for ribbon in 4:
+				var y := size.y * (0.61 + float(ribbon) * 0.055)
+				var drift := sin(animation_time * (0.13 + ribbon * 0.025) + ribbon) * 38.0
+				draw_arc(
+					Vector2(size.x * (0.52 - pan_ratio * 0.08) + drift, y),
+					size.x * (0.26 + ribbon * 0.035),
+					3.32,
+					6.04,
+					42,
+					Color(0.70, 0.78, 0.74, 0.035 + ribbon * 0.006),
+					2.0 + ribbon * 0.5,
+					true
+				)
+		else:
+			for particle in particles:
+				var drift_x := fposmod(particle.x + animation_time * 0.012 * particle.z - pan_ratio * 0.06, 1.08) - 0.04
+				var y := particle.y * size.y + sin(animation_time * particle.z + particle.x * 9.0) * 7.0
+				var center := Vector2(drift_x * size.x, y)
+				var angle := animation_time * 0.55 * particle.w
+				var tangent := Vector2(cos(angle), sin(angle)) * (2.0 + particle.z * 2.2)
+				draw_line(center - tangent, center + tangent, Color(0.85, 0.66, 0.27, 0.20), 1.2, true)
+
+
 const WorldScenes = preload("res://sim/world_scene_catalog.gd")
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 const IDLE_TEXTURE = preload(
-	"res://assets/original/thought_world/protagonist_idle.png"
+	"res://assets/original/thought_world/protagonist_traveler_idle.png"
 )
 const THINK_TEXTURE = preload(
-	"res://assets/original/thought_world/protagonist_think.png"
+	"res://assets/original/thought_world/protagonist_traveler_think.png"
 )
 const WALK_TEXTURES := [
-	preload("res://assets/original/thought_world/protagonist_walk_a.png"),
-	preload("res://assets/original/thought_world/protagonist_walk_b.png"),
+	preload("res://assets/original/thought_world/protagonist_traveler_walk_a.png"),
+	preload("res://assets/original/thought_world/protagonist_traveler_walk_b.png"),
 ]
 const ATMOSPHERE_SHADER = preload(
 	"res://ui/shaders/thought_world_atmosphere.gdshader"
@@ -54,7 +143,9 @@ const WALK_SPEED := 330.0
 const INTERACTION_ARRIVAL_EPSILON := 0.0005
 const PLAYER_BASE_SIZE := Vector2(154, 308)
 const NPC_BASE_SIZE := Vector2(150, 300)
-const THOUGHT_WORLD_MASK_COLOR := Color(0.035, 0.045, 0.105, 0.46)
+const THOUGHT_WORLD_MASK_COLOR := Color(0.12, 0.095, 0.065, 0.48)
+const CAMERA_RESPONSE := 5.5
+const EXIT_TRANSITION_SECONDS := 0.30
 
 var _thinking := false
 var _context_mode := false
@@ -62,6 +153,7 @@ var _player_x_ratio := 0.5
 var _location_id := WorldScenes.DEFAULT_LOCATION_ID
 var _location_data: Dictionary = {}
 var _background_texture: Texture2D
+var _foreground_texture: Texture2D
 var _state
 var _walk_time := 0.0
 var _world_time := 0.0
@@ -73,9 +165,19 @@ var _scene_blockers: Dictionary = {}
 var _interaction_walk_active := false
 var _interaction_walk_target := 0.5
 var _pending_npc_interaction: Dictionary = {}
+var _exit_transition_active := false
+var _exit_transition_elapsed := 0.0
+var _pending_exit_interaction: Dictionary = {}
+var _camera_pan := 0.5
+var _camera_target_pan := 0.5
+var _camera_focus_ratio := -1.0
+var _dialogue_focus_ratio := -1.0
 
 var _protagonist: TextureRect
+var _backdrop_layer: ParallaxTextureLayer
 var _atmosphere: ColorRect
+var _foreground_layer: ParallaxTextureLayer
+var _stage_effects: StageEffectsLayer
 var _thought_world_mask: ColorRect
 var _think_button: Button
 var _return_button: Button
@@ -130,11 +232,17 @@ func _ready() -> void:
 
 
 func _build_overlay() -> void:
+	_backdrop_layer = ParallaxTextureLayer.new()
+	_backdrop_layer.name = "BackdropParallax"
+	_backdrop_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backdrop_layer.z_index = 0
+	add_child(_backdrop_layer)
+
 	_atmosphere = ColorRect.new()
 	_atmosphere.name = "Atmosphere"
 	_atmosphere.color = Color.WHITE
 	_atmosphere.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_atmosphere.z_index = 1
+	_atmosphere.z_index = 2
 	var atmosphere_material := ShaderMaterial.new()
 	atmosphere_material.shader = ATMOSPHERE_SHADER
 	atmosphere_material.set_shader_parameter("world_time", _world_time)
@@ -143,14 +251,14 @@ func _build_overlay() -> void:
 
 	_scene_title = Label.new()
 	_scene_title.name = "SceneTitle"
-	_scene_title.text = "1985 · 放学后"
+	_scene_title.text = "高地驿台 · 暮光"
 	_scene_title.add_theme_font_size_override("font_size", 13)
-	_scene_title.add_theme_color_override("font_color", Color(0.94, 0.94, 0.91, 0.90))
-	_scene_title.add_theme_color_override("font_shadow_color", Color(0.03, 0.04, 0.08, 0.72))
+	_scene_title.add_theme_color_override("font_color", Color(0.96, 0.87, 0.66, 0.94))
+	_scene_title.add_theme_color_override("font_shadow_color", Color(0.12, 0.08, 0.04, 0.82))
 	_scene_title.add_theme_constant_override("shadow_offset_x", 1)
 	_scene_title.add_theme_constant_override("shadow_offset_y", 2)
 	_scene_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_scene_title.z_index = 10
+	_scene_title.z_index = 20
 	add_child(_scene_title)
 
 	_hint_label = Label.new()
@@ -163,7 +271,7 @@ func _build_overlay() -> void:
 	_hint_label.add_theme_constant_override("shadow_offset_x", 1)
 	_hint_label.add_theme_constant_override("shadow_offset_y", 2)
 	_hint_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hint_label.z_index = 10
+	_hint_label.z_index = 20
 	add_child(_hint_label)
 
 	_thought_heading = Label.new()
@@ -177,7 +285,7 @@ func _build_overlay() -> void:
 	_thought_heading.add_theme_constant_override("shadow_offset_y", 2)
 	_thought_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_thought_heading.visible = false
-	_thought_heading.z_index = 10
+	_thought_heading.z_index = 20
 	add_child(_thought_heading)
 
 	# Thought separates the protagonist's active attention from the surrounding
@@ -188,7 +296,7 @@ func _build_overlay() -> void:
 	_thought_world_mask.color = THOUGHT_WORLD_MASK_COLOR
 	_thought_world_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_thought_world_mask.visible = false
-	_thought_world_mask.z_index = 4
+	_thought_world_mask.z_index = 7
 	add_child(_thought_world_mask)
 
 	_protagonist = TextureRect.new()
@@ -197,8 +305,20 @@ func _build_overlay() -> void:
 	_protagonist.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_protagonist.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_protagonist.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_protagonist.z_index = 5
+	_protagonist.z_index = 6
 	add_child(_protagonist)
+
+	_foreground_layer = ParallaxTextureLayer.new()
+	_foreground_layer.name = "ForegroundOcclusion"
+	_foreground_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_foreground_layer.z_index = 9
+	add_child(_foreground_layer)
+
+	_stage_effects = StageEffectsLayer.new()
+	_stage_effects.name = "EnvironmentLoop"
+	_stage_effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_effects.z_index = 10
+	add_child(_stage_effects)
 
 	_interaction_hint = Label.new()
 	_interaction_hint.name = "WorldInteractionHint"
@@ -212,7 +332,7 @@ func _build_overlay() -> void:
 	_interaction_hint.add_theme_stylebox_override("normal", _interaction_style())
 	_interaction_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_interaction_hint.visible = false
-	_interaction_hint.z_index = 15
+	_interaction_hint.z_index = 25
 	add_child(_interaction_hint)
 
 	_think_button = ThinkDropButton.new()
@@ -228,7 +348,7 @@ func _build_overlay() -> void:
 	_think_button.add_theme_stylebox_override("hover", _think_style(Color("#f0c56b"), true))
 	_think_button.add_theme_stylebox_override("pressed", _think_style(Color("#fff0b3"), true))
 	_think_button.pressed.connect(func(): set_thinking(not _thinking))
-	_think_button.z_index = 12
+	_think_button.z_index = 22
 	add_child(_think_button)
 
 	_return_button = Button.new()
@@ -243,7 +363,7 @@ func _build_overlay() -> void:
 	_return_button.add_theme_stylebox_override("pressed", _think_style(Color("#fff0b3"), true))
 	_return_button.pressed.connect(func(): return_requested.emit())
 	_return_button.visible = false
-	_return_button.z_index = 12
+	_return_button.z_index = 22
 	add_child(_return_button)
 
 	_audio = AudioStreamPlayer.new()
@@ -261,7 +381,7 @@ func _build_overlay() -> void:
 
 func _make_motes() -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 13071985
+	rng.seed = 13072024
 	for i in 38:
 		_motes.append(Vector3(rng.randf(), rng.randf_range(0.18, 0.86), rng.randf_range(0.35, 1.0)))
 
@@ -285,7 +405,9 @@ func _process(delta: float) -> void:
 		_world_time += delta
 		_update_atmosphere_time()
 	_apply_presentation()
-	if _interaction_walk_active:
+	if _exit_transition_active:
+		_update_exit_transition(delta)
+	elif _interaction_walk_active:
 		direction = signf(_interaction_walk_target - _player_x_ratio)
 	elif not _thinking and not blocking:
 		direction = Input.get_axis("ui_left", "ui_right")
@@ -295,8 +417,7 @@ func _process(delta: float) -> void:
 			direction += 1.0
 		direction = clampf(direction, -1.0, 1.0)
 	if not is_zero_approx(direction):
-		var usable_width := maxf(size.x - 170.0, 1.0)
-		var step := WALK_SPEED * delta / usable_width
+		var step := WALK_SPEED * delta / maxf(_world_width(), 1.0)
 		if _interaction_walk_active:
 			_player_x_ratio = move_toward(_player_x_ratio, _interaction_walk_target, step)
 		else:
@@ -314,10 +435,13 @@ func _process(delta: float) -> void:
 		):
 			_finish_npc_interaction()
 	else:
-		_walk_time = 0.0
-		_protagonist.texture = THINK_TEXTURE if _thinking else IDLE_TEXTURE
+		if not _exit_transition_active:
+			_walk_time = 0.0
+			_protagonist.texture = THINK_TEXTURE if _thinking else IDLE_TEXTURE
 		if _interaction_walk_active:
 			_finish_npc_interaction()
+	_update_camera(delta)
+	_layout_stage()
 	queue_redraw()
 
 
@@ -372,6 +496,8 @@ func set_scene_blocker(source: String, blocking: bool, hide_chrome: bool = true)
 		_scene_blockers[source] = hide_chrome
 	else:
 		_scene_blockers.erase(source)
+		if _scene_blockers.is_empty():
+			_dialogue_focus_ratio = -1.0
 	_apply_presentation()
 	queue_redraw()
 
@@ -388,7 +514,7 @@ func is_scene_chrome_hidden() -> bool:
 
 
 func set_thinking(enabled: bool) -> void:
-	if enabled and _interaction_walk_active:
+	if enabled and (_interaction_walk_active or _exit_transition_active):
 		return
 	if _thinking == enabled:
 		return
@@ -477,7 +603,9 @@ func dialogue_anchor_global(actor_id: String) -> Vector2:
 
 func set_player_x_ratio_for_test(value: float) -> void:
 	_player_x_ratio = clampf(value, 0.04, 0.96)
-	_layout_protagonist()
+	_camera_target_pan = _camera_pan_for_ratio(_player_x_ratio)
+	_camera_pan = _camera_target_pan
+	_layout_stage()
 	_store_player_position()
 	_apply_presentation()
 	protagonist_moved.emit()
@@ -495,6 +623,10 @@ func is_approaching_interaction() -> bool:
 	return _interaction_walk_active
 
 
+func is_exit_transition_active() -> bool:
+	return _exit_transition_active
+
+
 func change_location(location_id_value: String, spawn_id: String = "default") -> bool:
 	if not WorldScenes.LOCATIONS.has(location_id_value):
 		return false
@@ -504,16 +636,14 @@ func change_location(location_id_value: String, spawn_id: String = "default") ->
 
 
 func interact_with_nearest() -> bool:
-	if _thinking or _has_blocking_overlay() or _interaction_walk_active:
+	if _thinking or _has_blocking_overlay() or _interaction_walk_active or _exit_transition_active:
 		return false
 	var interaction := _nearest_interaction()
 	if interaction.is_empty():
 		return false
 	if str(interaction.get("type", "")) == "exit":
-		return change_location(
-			str(interaction.get("target", "")),
-			str(interaction.get("target_spawn", "default"))
-		)
+		_begin_exit_transition(interaction)
+		return true
 	if str(interaction.get("type", "")) == "npc":
 		_begin_npc_interaction(interaction)
 		return true
@@ -523,8 +653,14 @@ func interact_with_nearest() -> bool:
 func _layout_overlay() -> void:
 	if _protagonist == null:
 		return
+	_backdrop_layer.position = Vector2.ZERO
+	_backdrop_layer.size = size
 	_atmosphere.position = Vector2.ZERO
 	_atmosphere.size = size
+	_foreground_layer.position = Vector2.ZERO
+	_foreground_layer.size = size
+	_stage_effects.position = Vector2.ZERO
+	_stage_effects.size = size
 	_thought_world_mask.position = Vector2.ZERO
 	_thought_world_mask.size = size
 	_scene_title.position = Vector2((size.x - 300.0) * 0.5, 15)
@@ -542,53 +678,83 @@ func _layout_overlay() -> void:
 	_interaction_hint.size = Vector2(360, 40)
 	_transition_flash.position = Vector2.ZERO
 	_transition_flash.size = size
-	_layout_protagonist()
-	_layout_location_actors()
+	_layout_stage()
 	_apply_presentation()
 	protagonist_moved.emit()
 	queue_redraw()
+
+
+func _layout_stage() -> void:
+	_layout_protagonist()
+	_layout_location_actors()
+	_update_parallax_layers()
+	if _stage_effects != null:
+		_stage_effects.set_view(_world_time, _camera_pan, UiMotionScript.reduced_motion)
 
 
 func _layout_protagonist() -> void:
 	if _protagonist == null:
 		return
 	var scale_factor := clampf(size.y / 420.0, 0.74, 1.22)
-	var player_size := PLAYER_BASE_SIZE * scale_factor
-	var half_width := player_size.x * 0.55
-	var center_x := lerpf(half_width, maxf(half_width, size.x - half_width), _player_x_ratio)
-	var ground_y := size.y * _ground_ratio()
+	var motion_scale := 1.0
+	var vertical_offset := 0.0
+	if not UiMotionScript.reduced_motion and not is_scene_blocked():
+		if _walk_time > 0.0 or _exit_transition_active:
+			vertical_offset = absf(sin(_world_time * 10.5)) * -3.0
+			motion_scale = 1.0 + sin(_world_time * 10.5) * 0.004
+		elif not _thinking:
+			vertical_offset = sin(_world_time * 1.75) * 1.7
+			motion_scale = 1.0 + sin(_world_time * 1.75 + 0.6) * 0.006
+	var player_size := PLAYER_BASE_SIZE * scale_factor * motion_scale
+	var center_x := _world_to_screen_x(_player_x_ratio)
+	var ground_y := _ground_y_for_ratio(_player_x_ratio) + vertical_offset
 	_protagonist.position = Vector2(center_x - player_size.x * 0.5, ground_y - player_size.y)
 	_protagonist.size = player_size
+	_protagonist.pivot_offset = player_size * Vector2(0.5, 0.96)
+	_protagonist.rotation = 0.0 if UiMotionScript.reduced_motion else sin(_world_time * 2.1) * 0.004
 
 
 func _layout_location_actors() -> void:
 	var scale_factor := clampf(size.y / 420.0, 0.74, 1.22)
 	var actor_size := NPC_BASE_SIZE * scale_factor
-	var ground_y := size.y * _ground_ratio()
-	for entry in _npc_nodes:
+	for actor_index in _npc_nodes.size():
+		var entry: Dictionary = _npc_nodes[actor_index]
 		var node: TextureRect = entry.get("node")
 		var data: Dictionary = entry.get("data", {})
 		if node == null:
 			continue
-		var center_x := size.x * float(data.get("x_ratio", 0.5))
-		node.position = Vector2(center_x - actor_size.x * 0.5, ground_y - actor_size.y)
-		node.size = actor_size
+		var actor_ratio := float(data.get("x_ratio", 0.5))
+		var center_x := _world_to_screen_x(actor_ratio)
+		var ground_y := _ground_y_for_ratio(actor_ratio)
+		var idle_phase := _world_time * 1.45 + actor_index * 1.37
+		var npc_scale := 1.0 if UiMotionScript.reduced_motion or is_scene_blocked() else 1.0 + sin(idle_phase) * 0.005
+		var staged_size := actor_size * npc_scale
+		var idle_y := 0.0 if UiMotionScript.reduced_motion or is_scene_blocked() else sin(idle_phase + 0.4) * 1.4
+		node.position = Vector2(center_x - staged_size.x * 0.5, ground_y - staged_size.y + idle_y)
+		node.size = staged_size
+		node.pivot_offset = staged_size * Vector2(0.5, 0.96)
+		node.rotation = 0.0 if UiMotionScript.reduced_motion else sin(idle_phase * 0.72) * 0.003
+		if absf(_player_x_ratio - actor_ratio) <= 0.24 or _dialogue_focus_ratio >= 0.0:
+			node.flip_h = _player_x_ratio > actor_ratio
+		node.z_index = 5 + int(round(ground_y / maxf(size.y, 1.0) * 2.0))
 	for entry in _exit_nodes:
 		var node: Label = entry.get("node")
 		var data: Dictionary = entry.get("data", {})
 		if node == null:
 			continue
+		var marker_width := minf(220.0, maxf(120.0, size.x - 32.0))
+		var marker_center := _world_to_screen_x(float(data.get("x_ratio", 0.05)))
+		var ground_y := _ground_y_for_ratio(float(data.get("x_ratio", 0.05)))
 		node.position = Vector2(
-			size.x * float(data.get("x_ratio", 0.05)) - 70.0,
+			clampf(marker_center - marker_width * 0.5, 16.0, size.x - marker_width - 16.0),
 			ground_y - 112.0
 		)
-		node.size = Vector2(140, 34)
+		node.size = Vector2(marker_width, 34)
 
 
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
-	draw_rect(rect, Color("#1d2440"))
-	_draw_background_cover(rect)
+	draw_rect(rect, Color("#30291f"))
 
 	# A restrained cinematic grade: warm horizon, cool vignette and deep
 	# foreground shapes. The illustration stays readable instead of becoming a
@@ -597,19 +763,29 @@ func _draw() -> void:
 		var t := float(i) / 10.0
 		draw_rect(
 			Rect2(0, size.y * (0.72 + t * 0.028), size.x, size.y * 0.035),
-			Color(0.025, 0.035, 0.075, 0.018 + t * 0.012)
+			Color(0.09, 0.075, 0.05, 0.018 + t * 0.012)
 		)
 	for radius in [180.0, 130.0, 82.0]:
 		var alpha: float = 0.012 + (180.0 - float(radius)) / 8000.0
-		draw_circle(Vector2(size.x * 0.12, size.y * 0.48), radius, Color(1.0, 0.63, 0.28, alpha))
+		draw_circle(Vector2(size.x * 0.12, size.y * 0.48), radius, Color(0.95, 0.69, 0.34, alpha))
 
-	var ground_y := size.y * _ground_ratio()
-	draw_set_transform(Vector2(size.x * _player_x_ratio, ground_y + 2.0), 0.0, Vector2(2.4, 0.34))
-	draw_circle(Vector2.ZERO, 38.0, Color(0.02, 0.025, 0.055, 0.34))
+	var ground_y := _ground_y_for_ratio(_player_x_ratio)
+	draw_set_transform(Vector2(_world_to_screen_x(_player_x_ratio), ground_y + 2.0), 0.0, Vector2(2.4, 0.34))
+	draw_circle(Vector2.ZERO, 38.0, Color(0.07, 0.055, 0.035, 0.34))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	for entry in _npc_nodes:
+		var data: Dictionary = entry.get("data", {})
+		var npc_ratio := float(data.get("x_ratio", 0.5))
+		draw_set_transform(
+			Vector2(_world_to_screen_x(npc_ratio), _ground_y_for_ratio(npc_ratio) + 2.0),
+			0.0,
+			Vector2(2.15, 0.31)
+		)
+		draw_circle(Vector2.ZERO, 34.0, Color(0.07, 0.055, 0.035, 0.28))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	for mote in _motes:
-		var drift_x := fposmod(mote.x + _world_time * 0.006 * mote.z, 1.0)
+		var drift_x := fposmod(mote.x + _world_time * 0.006 * mote.z - _camera_pan * 0.025, 1.0)
 		var pulse := 0.16 + 0.18 * sin(_world_time * mote.z * 1.8 + mote.x * 12.0)
 		draw_circle(
 			Vector2(drift_x * size.x, mote.y * size.y),
@@ -643,27 +819,6 @@ func _draw() -> void:
 			draw_circle(target_center, 7.0, Color(1.0, 0.78, 0.38, 0.08))
 
 
-func _draw_background_cover(target: Rect2) -> void:
-	if _background_texture == null:
-		return
-	var texture_size := _background_texture.get_size()
-	if texture_size.x <= 0.0 or texture_size.y <= 0.0 or target.size.y <= 0.0:
-		return
-	var target_aspect := target.size.x / target.size.y
-	var texture_aspect := texture_size.x / texture_size.y
-	var source := Rect2(Vector2.ZERO, texture_size)
-	if target_aspect > texture_aspect:
-		source.size.y = texture_size.x / target_aspect
-		source.position.y = (
-			(texture_size.y - source.size.y)
-			* float(_location_data.get("crop_anchor", 0.5))
-		)
-	else:
-		source.size.x = texture_size.y * target_aspect
-		source.position.x = (texture_size.x - source.size.x) * 0.5
-	draw_texture_rect_region(_background_texture, target, source)
-
-
 func _apply_location(
 	location_id_value: String,
 	spawn_id: String,
@@ -679,11 +834,19 @@ func _apply_location(
 	_location_data = WorldScenes.location(_location_id)
 	var background_path := str(_location_data.get("background", ""))
 	_background_texture = load(background_path) as Texture2D
+	var foreground_path := str(_location_data.get("foreground", ""))
+	_foreground_texture = load(foreground_path) as Texture2D
+	_camera_focus_ratio = -1.0
+	_dialogue_focus_ratio = -1.0
 	_scene_title.text = str(_location_data.get("title", _location_id))
 	if not use_saved_position:
 		_player_x_ratio = WorldScenes.spawn_ratio(_location_id, spawn_id)
 	_clear_location_actors()
 	_build_location_actors()
+	if _stage_effects != null:
+		_stage_effects.configure(str(_location_data.get("ambient", "highland")), _location_id.hash())
+	_camera_target_pan = _camera_pan_for_ratio(_player_x_ratio)
+	_camera_pan = _camera_target_pan
 	if _state != null:
 		_state.world_location_id = _location_id
 		if not use_saved_position or not spawn_id.is_empty():
@@ -721,7 +884,7 @@ func _build_location_actors() -> void:
 		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		sprite.z_index = 3
+		sprite.z_index = 5
 		add_child(sprite)
 		_npc_nodes.append({"data": npc_data, "node": sprite})
 	for raw_exit in _location_data.get("exits", []):
@@ -730,16 +893,19 @@ func _build_location_actors() -> void:
 		var exit_data: Dictionary = raw_exit.duplicate(true)
 		var marker := Label.new()
 		marker.name = "WorldExit_%s" % str(exit_data.get("id", "unknown"))
-		marker.text = "场景出口 · %s" % str(exit_data.get("label", "前往"))
+		marker.text = "%s  %s" % [
+			str(exit_data.get("direction", "←")),
+			str(exit_data.get("label", "前往")),
+		]
 		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		marker.add_theme_font_size_override("font_size", 13)
-		marker.add_theme_color_override("font_color", Color(0.94, 0.95, 0.98, 0.68))
+		marker.add_theme_color_override("font_color", Color(0.96, 0.86, 0.62, 0.78))
 		marker.add_theme_color_override("font_shadow_color", Color(0.01, 0.02, 0.05, 0.92))
 		marker.add_theme_constant_override("shadow_offset_x", 1)
 		marker.add_theme_constant_override("shadow_offset_y", 2)
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		marker.z_index = 7
+		marker.z_index = 8
 		add_child(marker)
 		_exit_nodes.append({"data": exit_data, "node": marker})
 
@@ -787,7 +953,7 @@ func _update_interaction_hint() -> void:
 ## One rendering pass derives every thought-world control from the scene state.
 ## Buttons never toggle sibling visibility directly.
 func _apply_presentation() -> void:
-	var hide_chrome := is_scene_chrome_hidden() or _interaction_walk_active
+	var hide_chrome := is_scene_chrome_hidden() or _interaction_walk_active or _exit_transition_active
 	if _think_button != null:
 		_think_button.visible = not hide_chrome
 	if _return_button != null:
@@ -805,8 +971,51 @@ func _apply_presentation() -> void:
 	_update_interaction_hint()
 
 
+func _begin_exit_transition(interaction: Dictionary) -> void:
+	_pending_exit_interaction = interaction.duplicate(true)
+	_exit_transition_active = true
+	_exit_transition_elapsed = 0.0
+	_camera_focus_ratio = clampf(float(interaction.get("x_ratio", _player_x_ratio)), 0.0, 1.0)
+	_protagonist.flip_h = str(interaction.get("direction", "←")) == "←"
+	_apply_presentation()
+	if UiMotionScript.reduced_motion:
+		_complete_exit_transition()
+
+
+func _update_exit_transition(delta: float) -> void:
+	if not _exit_transition_active:
+		return
+	_exit_transition_elapsed += maxf(delta, 0.0)
+	_walk_time += maxf(delta, 0.0)
+	_protagonist.texture = WALK_TEXTURES[int(_walk_time * 7.0) % WALK_TEXTURES.size()]
+	var progress := clampf(_exit_transition_elapsed / EXIT_TRANSITION_SECONDS, 0.0, 1.0)
+	_transition_flash.color.a = sin(progress * PI) * 0.52
+	if progress >= 1.0:
+		_complete_exit_transition()
+
+
+func _complete_exit_transition() -> void:
+	if not _exit_transition_active:
+		return
+	var interaction := _pending_exit_interaction.duplicate(true)
+	_exit_transition_active = false
+	_exit_transition_elapsed = 0.0
+	_pending_exit_interaction.clear()
+	_camera_focus_ratio = -1.0
+	_transition_flash.color.a = 0.0
+	change_location(
+		str(interaction.get("target", "")),
+		str(interaction.get("target_spawn", "default"))
+	)
+
+
 func _begin_npc_interaction(interaction: Dictionary) -> void:
 	_pending_npc_interaction = interaction.duplicate(true)
+	_dialogue_focus_ratio = clampf(float(interaction.get("x_ratio", _player_x_ratio)), 0.0, 1.0)
+	_camera_focus_ratio = (
+		float(interaction.get("talk_x_ratio", _player_x_ratio))
+		+ _dialogue_focus_ratio
+	) * 0.5
 	_interaction_walk_target = clampf(
 		float(interaction.get("talk_x_ratio", _player_x_ratio)),
 		0.04,
@@ -823,6 +1032,8 @@ func _finish_npc_interaction() -> void:
 	var npc_x := float(interaction.get("x_ratio", _player_x_ratio))
 	_interaction_walk_active = false
 	_pending_npc_interaction.clear()
+	_camera_focus_ratio = -1.0
+	_dialogue_focus_ratio = npc_x
 	_walk_time = 0.0
 	if _protagonist != null:
 		_protagonist.flip_h = _player_x_ratio > npc_x
@@ -836,11 +1047,87 @@ func _finish_npc_interaction() -> void:
 func _cancel_npc_interaction() -> void:
 	_interaction_walk_active = false
 	_pending_npc_interaction.clear()
+	_dialogue_focus_ratio = -1.0
 
 
 func _store_player_position() -> void:
 	if _state != null:
 		_state.world_position_ratio = _player_x_ratio
+
+
+func _world_width() -> float:
+	return maxf(size.x * float(_location_data.get("world_width_ratio", 1.32)), size.x)
+
+
+func _world_to_screen_x(world_ratio: float) -> float:
+	var width := _world_width()
+	var camera_travel := maxf(width - size.x, 0.0)
+	return width * clampf(world_ratio, 0.0, 1.0) - camera_travel * _camera_pan
+
+
+func _ground_y_for_ratio(world_ratio: float) -> float:
+	var centered := clampf(world_ratio, 0.0, 1.0) - 0.5
+	var curve := float(_location_data.get("ground_curve", 0.0))
+	var slope := float(_location_data.get("ground_slope", 0.0))
+	return size.y * (
+		_ground_ratio()
+		+ sin(centered * PI) * curve
+		+ centered * slope
+	)
+
+
+func _camera_pan_for_ratio(world_ratio: float) -> float:
+	return clampf(inverse_lerp(0.24, 0.76, world_ratio), 0.0, 1.0)
+
+
+func _update_camera(delta: float) -> void:
+	var focus_ratio := _player_x_ratio
+	if _camera_focus_ratio >= 0.0:
+		focus_ratio = _camera_focus_ratio
+	elif _dialogue_focus_ratio >= 0.0:
+		focus_ratio = (_player_x_ratio + _dialogue_focus_ratio) * 0.5
+	_camera_target_pan = _camera_pan_for_ratio(focus_ratio)
+	if UiMotionScript.reduced_motion:
+		_camera_pan = _camera_target_pan
+	else:
+		var response := 1.0 - exp(-CAMERA_RESPONSE * maxf(delta, 0.0))
+		_camera_pan = lerpf(_camera_pan, _camera_target_pan, response)
+
+
+func _update_parallax_layers() -> void:
+	var thought_zoom := 1.08 if _thinking else 1.0
+	if _backdrop_layer != null:
+		_backdrop_layer.set_view(
+			_background_texture,
+			lerpf(0.5, _camera_pan, 0.42),
+			1.10 * thought_zoom,
+			float(_location_data.get("crop_anchor", 0.5))
+		)
+	if _foreground_layer != null:
+		_foreground_layer.set_view(
+			_foreground_texture,
+			lerpf(0.5, _camera_pan, 0.92),
+			1.15 * thought_zoom,
+			0.78
+		)
+
+
+func camera_pan_ratio() -> float:
+	return _camera_pan
+
+
+func stage_layer_names() -> PackedStringArray:
+	return PackedStringArray([
+		"BackdropParallax",
+		"Atmosphere",
+		"Protagonist",
+		"ForegroundOcclusion",
+		"EnvironmentLoop",
+	])
+
+
+func stage_time_seconds() -> float:
+	return _world_time
 
 
 func _ground_ratio() -> float:
@@ -859,23 +1146,23 @@ func _play_location_transition() -> void:
 
 func _interaction_style() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.02, 0.035, 0.08, 0.68)
-	style.border_color = Color(1.0, 0.78, 0.40, 0.48)
+	style.bg_color = Color(0.17, 0.12, 0.075, 0.82)
+	style.border_color = Color(0.91, 0.73, 0.39, 0.58)
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(18)
 	style.set_content_margin_all(7)
-	style.shadow_color = Color(0.0, 0.0, 0.02, 0.52)
+	style.shadow_color = Color(0.07, 0.045, 0.025, 0.58)
 	style.shadow_size = 6
 	return style
 
 
 func _think_style(border: Color, bright := false) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.045, 0.09, 0.50) if not bright else Color(0.08, 0.075, 0.12, 0.72)
+	style.bg_color = Color(0.17, 0.12, 0.075, 0.72) if not bright else Color(0.25, 0.17, 0.09, 0.86)
 	style.border_color = border
 	style.set_border_width_all(1)
 	style.set_corner_radius_all(20)
 	style.set_content_margin_all(8)
-	style.shadow_color = Color(0.01, 0.015, 0.04, 0.38)
+	style.shadow_color = Color(0.07, 0.045, 0.025, 0.46)
 	style.shadow_size = 4
 	return style

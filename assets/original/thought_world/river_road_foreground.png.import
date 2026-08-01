@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c8v1jg7nm4de3"
-path="res://.godot/imported/riverbank_sunset.png-2cca1dff4fbc69128061b2f4ffb43fe1.ctex"
+uid="uid://cil0ke57hubia"
+path="res://.godot/imported/river_road_foreground.png-b4b607af4395a310cc103b20383aa085.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/riverbank_sunset.png"
-dest_files=["res://.godot/imported/riverbank_sunset.png-2cca1dff4fbc69128061b2f4ffb43fe1.ctex"]
+source_file="res://assets/original/thought_world/river_road_foreground.png"
+dest_files=["res://.godot/imported/river_road_foreground.png-b4b607af4395a310cc103b20383aa085.ctex"]
 
 [params]
 

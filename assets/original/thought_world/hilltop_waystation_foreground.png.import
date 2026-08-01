@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d0a2tnml6r06y"
-path="res://.godot/imported/heroine_idle.png-797ac4b368d4ee1330abcb8c51f0ebbc.ctex"
+uid="uid://cswlgdh2m8y7v"
+path="res://.godot/imported/hilltop_waystation_foreground.png-2785218020a7140d3f9bca83cf60a9ea.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/heroine_idle.png"
-dest_files=["res://.godot/imported/heroine_idle.png-797ac4b368d4ee1330abcb8c51f0ebbc.ctex"]
+source_file="res://assets/original/thought_world/hilltop_waystation_foreground.png"
+dest_files=["res://.godot/imported/hilltop_waystation_foreground.png-2785218020a7140d3f9bca83cf60a9ea.ctex"]
 
 [params]
 

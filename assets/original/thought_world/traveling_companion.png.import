@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bkacpdly51m0o"
-path="res://.godot/imported/protagonist_idle.png-1cc4be93071537afa54a989d96aa7beb.ctex"
+uid="uid://c82r4lcngsif5"
+path="res://.godot/imported/traveling_companion.png-cabef37c97748886ee74fe655764f357.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/protagonist_idle.png"
-dest_files=["res://.godot/imported/protagonist_idle.png-1cc4be93071537afa54a989d96aa7beb.ctex"]
+source_file="res://assets/original/thought_world/traveling_companion.png"
+dest_files=["res://.godot/imported/traveling_companion.png-cabef37c97748886ee74fe655764f357.ctex"]
 
 [params]
 

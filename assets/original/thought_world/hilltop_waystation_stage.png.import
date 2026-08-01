@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dtict4x3v4vr2"
-path="res://.godot/imported/protagonist_walk_b.png-3dff69fb65559eec6aac7e3de2e53e9f.ctex"
+uid="uid://brqggm77u1nbo"
+path="res://.godot/imported/hilltop_waystation_stage.png-56e2856da5a8041665787ef6bdd8f4f6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/protagonist_walk_b.png"
-dest_files=["res://.godot/imported/protagonist_walk_b.png-3dff69fb65559eec6aac7e3de2e53e9f.ctex"]
+source_file="res://assets/original/thought_world/hilltop_waystation_stage.png"
+dest_files=["res://.godot/imported/hilltop_waystation_stage.png-56e2856da5a8041665787ef6bdd8f4f6.ctex"]
 
 [params]
 

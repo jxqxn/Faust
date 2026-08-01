@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bmhslo1qujh6j"
-path="res://.godot/imported/school_rooftop_sunset.png-c94ecbb6cc48949157bdcbf99c0cce11.ctex"
+uid="uid://ms6v78571its"
+path="res://.godot/imported/protagonist_traveler_idle.png-95bd6e08ab7fc86589624f2f3a941789.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/school_rooftop_sunset.png"
-dest_files=["res://.godot/imported/school_rooftop_sunset.png-c94ecbb6cc48949157bdcbf99c0cce11.ctex"]
+source_file="res://assets/original/thought_world/protagonist_traveler_idle.png"
+dest_files=["res://.godot/imported/protagonist_traveler_idle.png-95bd6e08ab7fc86589624f2f3a941789.ctex"]
 
 [params]
 

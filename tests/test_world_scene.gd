@@ -3,6 +3,7 @@ extends GutTest
 const RNG = preload("res://core/rng.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const ThoughtWorld = preload("res://ui/thought_world.gd")
+const UiMotionScript = preload("res://ui/ui_motion.gd")
 const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 
 const VIEWPORT_SIZE := Vector2(1152, 648)
@@ -23,7 +24,93 @@ func test_world_catalog_has_valid_resources_exits_and_dialogues() -> void:
 	)
 
 
-func test_rooftop_exit_moves_to_riverbank_and_updates_run_state() -> void:
+func test_active_world_presentation_uses_neutral_fantasy_painted_assets() -> void:
+	assert_eq(
+		WorldScenes.DEFAULT_LOCATION_ID,
+		"school_rooftop",
+		"the legacy persisted location key should remain compatible"
+	)
+	var forbidden_terms := ["1985", "放学", "校园", "学校", "天台"]
+	for location_id in WorldScenes.LOCATIONS:
+		var location_data: Dictionary = WorldScenes.location(str(location_id))
+		var title := str(location_data.get("title", ""))
+		var background := str(location_data.get("background", ""))
+		assert_true(background.ends_with(".png"), "%s should use final painted raster art" % location_id)
+		for term in forbidden_terms:
+			assert_false(title.contains(term), "%s must not expose campus-era wording" % location_id)
+			assert_false(background.contains(term), "%s must not load campus-era art" % location_id)
+		for npc_data in location_data.get("npcs", []):
+			assert_true(str(npc_data.get("sprite", "")).ends_with(".png"))
+			assert_eq(str(npc_data.get("name", "")), "同行者")
+
+
+func test_fantasy_character_sprites_have_transparent_corners_and_stable_aspect() -> void:
+	var sprite_paths := [
+		"res://assets/original/thought_world/protagonist_traveler_idle.png",
+		"res://assets/original/thought_world/protagonist_traveler_think.png",
+		"res://assets/original/thought_world/protagonist_traveler_walk_a.png",
+		"res://assets/original/thought_world/protagonist_traveler_walk_b.png",
+		"res://assets/original/thought_world/traveling_companion.png",
+	]
+	for path in sprite_paths:
+		var texture := load(path) as Texture2D
+		assert_not_null(texture, "%s should load as a character texture" % path)
+		if texture == null:
+			continue
+		var image := texture.get_image()
+		assert_not_null(image)
+		if image == null:
+			continue
+		assert_almost_eq(
+			float(image.get_width()) / float(image.get_height()),
+			0.5,
+			0.001,
+			"all poses should share one layout aspect"
+		)
+		for corner in [
+			Vector2i(0, 0),
+			Vector2i(image.get_width() - 1, 0),
+			Vector2i(0, image.get_height() - 1),
+			Vector2i(image.get_width() - 1, image.get_height() - 1),
+		]:
+			assert_almost_eq(
+				image.get_pixelv(corner).a,
+				0.0,
+				0.01,
+				"character corners should stay transparent after key removal"
+			)
+
+
+func test_foreground_layers_keep_real_alpha_for_actor_occlusion() -> void:
+	for path in [
+		"res://assets/original/thought_world/hilltop_waystation_foreground.png",
+		"res://assets/original/thought_world/river_road_foreground.png",
+	]:
+		var texture := load(path) as Texture2D
+		assert_not_null(texture)
+		if texture == null:
+			continue
+		var image := texture.get_image()
+		assert_not_null(image)
+		if image == null:
+			continue
+		assert_almost_eq(image.get_pixel(0, 0).a, 0.0, 0.01)
+		assert_almost_eq(image.get_pixel(image.get_width() - 1, 0).a, 0.0, 0.01)
+		var has_walk_plane_occluder := false
+		for y in range(int(image.get_height() * 0.76), image.get_height(), 16):
+			for x in range(0, image.get_width(), 16):
+				if image.get_pixel(x, y).a > 0.1:
+					has_walk_plane_occluder = true
+					break
+			if has_walk_plane_occluder:
+				break
+		assert_true(
+			has_walk_plane_occluder,
+			"the foreground should contain painted occluders near the walk plane"
+		)
+
+
+func test_waystation_exit_moves_to_river_road_and_updates_run_state() -> void:
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(901))
 	var stage := _stage()
@@ -33,8 +120,12 @@ func test_rooftop_exit_moves_to_riverbank_and_updates_run_state() -> void:
 	await wait_process_frames(2)
 
 	world.set_player_x_ratio_for_test(0.055)
-	assert_true(world.interact_with_nearest(), "the nearby rooftop exit should accept E interaction")
-	await wait_process_frames(1)
+	assert_true(world.interact_with_nearest(), "the nearby waystation exit should accept E interaction")
+	assert_true(world.is_exit_transition_active(), "exits should stage a short world transition")
+	for frame in 40:
+		if not world.is_exit_transition_active():
+			break
+		await wait_process_frames(1)
 
 	assert_eq(world.location_id(), "riverbank")
 	assert_eq(state.world_location_id, "riverbank")
@@ -42,6 +133,62 @@ func test_rooftop_exit_moves_to_riverbank_and_updates_run_state() -> void:
 	assert_almost_eq(state.world_position_ratio, 0.14, 0.001)
 	assert_true("riverbank" in state.visited_world_locations)
 	assert_not_null(world.get_node_or_null("WorldExit_to_rooftop"))
+
+
+func test_world_stage_has_camera_parallax_occlusion_and_environment_layers() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(919))
+	var stage := _stage()
+	var world = ThoughtWorld.new()
+	world.setup(state)
+	stage.add_child(world)
+	await wait_process_frames(2)
+
+	for layer_name in world.stage_layer_names():
+		assert_not_null(
+			world.get_node_or_null(layer_name),
+			"%s should be an explicit stage layer" % layer_name
+		)
+	var foreground := world.get_node_or_null("ForegroundOcclusion") as Control
+	var effects := world.get_node_or_null("EnvironmentLoop") as Control
+	assert_not_null(foreground)
+	assert_not_null(effects)
+	if foreground != null:
+		assert_gt(foreground.z_index, (world.get_node("Protagonist") as Control).z_index)
+	var left_pan := world.camera_pan_ratio()
+	world.set_player_x_ratio_for_test(0.90)
+	assert_gt(world.camera_pan_ratio(), left_pan, "the camera should track authored world position")
+	var running_time := world.stage_time_seconds()
+	world.set_scene_blocker("pause_probe", true, false)
+	await wait_process_frames(3)
+	assert_almost_eq(
+		world.stage_time_seconds(),
+		running_time,
+		0.0001,
+		"camera, actor idle and environment loops should share the scene pause boundary"
+	)
+	world.set_scene_blocker("pause_probe", false)
+
+
+func test_reduced_motion_exit_skips_transition_but_preserves_world_state_contract() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(920))
+	var day_before: int = state.day
+	var gold_before: int = state.coin_count
+	var stage := _stage()
+	var world = ThoughtWorld.new()
+	world.setup(state)
+	stage.add_child(world)
+	await wait_process_frames(2)
+	world.set_player_x_ratio_for_test(0.055)
+	UiMotionScript.reduced_motion = true
+	var accepted := world.interact_with_nearest()
+	UiMotionScript.reduced_motion = false
+	assert_true(accepted)
+	assert_false(world.is_exit_transition_active())
+	assert_eq(world.location_id(), "riverbank")
+	assert_eq(state.day, day_before)
+	assert_eq(state.coin_count, gold_before)
 
 
 func test_world_rebuild_restores_saved_location_position_and_spawn() -> void:
@@ -114,7 +261,7 @@ func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_des
 	assert_eq(toast.text, "", "returning to the desk must not leave a scene-return label that reads as another action")
 
 
-func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
+func test_nearby_companion_queues_scene_dialogue_in_order() -> void:
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(902))
 	var stage := _stage()
@@ -134,7 +281,7 @@ func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 		return
 
 	world.set_player_x_ratio_for_test(0.79)
-	assert_true(world.interact_with_nearest(), "the nearby heroine should accept E interaction")
+	assert_true(world.interact_with_nearest(), "the nearby companion should accept E interaction")
 	assert_almost_eq(
 		world.player_x_ratio(),
 		0.79,
@@ -241,7 +388,7 @@ func test_nearby_heroine_queues_scene_dialogue_in_order() -> void:
 			assert_lt(
 				next_line.position.x,
 				first_line_x,
-				"the line should move from the heroine to the protagonist"
+				"the line should move from the companion to the protagonist"
 			)
 		if next_text != null:
 			assert_eq(next_text.text, "只是想再待一会儿。", "conversation lines should preserve queue order")

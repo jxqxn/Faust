@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccqwo6xclk8x"
-path="res://.godot/imported/protagonist_walk_a.png-20e4c36a320b0ff03ae72f8978729a40.ctex"
+uid="uid://c2a7ghy70y1bv"
+path="res://.godot/imported/river_road_stage.png-a0db0ebae2ec78035fe46b68d3ce095e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/original/thought_world/protagonist_walk_a.png"
-dest_files=["res://.godot/imported/protagonist_walk_a.png-20e4c36a320b0ff03ae72f8978729a40.ctex"]
+source_file="res://assets/original/thought_world/river_road_stage.png"
+dest_files=["res://.godot/imported/river_road_stage.png-a0db0ebae2ec78035fe46b68d3ce095e.ctex"]
 
 [params]
 

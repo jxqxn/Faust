@@ -4,7 +4,7 @@ render_mode unshaded;
 // Procedural fog/film overlay inspired by the CC0 "2D Fog Overlay" pattern:
 // https://godotshaders.com/shader/2d-fog-overlay-2/
 // This implementation is original and uses no bundled reference imagery.
-uniform vec4 fog_color : source_color = vec4(0.36, 0.42, 0.65, 0.11);
+uniform vec4 fog_color : source_color = vec4(0.55, 0.48, 0.34, 0.09);
 uniform float drift_speed : hint_range(0.0, 0.1) = 0.012;
 uniform float grain_strength : hint_range(0.0, 0.1) = 0.018;
 // ThoughtWorld owns this clock so a global menu can freeze the scene beneath
