@@ -59,7 +59,6 @@ const PERSISTENT_CONTROL_Z := 200
 enum PresentationState {
 	DESK,
 	SCENE,
-	SCENE_THINKING,
 }
 
 var _state
@@ -90,9 +89,6 @@ var _known_rail_card_uids: Dictionary = {}
 var _right_actions: VBoxContainer
 var _advance_button: Button
 var _redraw_button: Button
-var _rite_pin_buttons: Array[Button] = []
-var _rite_pin_ids: Dictionary = {}
-var _rite_pin_by_rite_id: Dictionary = {}
 var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
@@ -211,8 +207,6 @@ func _build_ui() -> void:
 	_scene_world.set_context_mode(true)
 	_scene_world.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_scene_world.clip_contents = true
-	_scene_world.thinking_changed.connect(_on_scene_world_thinking_changed)
-	_scene_world.protagonist_moved.connect(_on_scene_world_protagonist_moved)
 	_scene_world.interaction_requested.connect(_on_world_interaction_requested)
 	_scene_world.return_requested.connect(_close_context_scene)
 	add_child(_scene_world)
@@ -403,7 +397,6 @@ func _layout_situation_desk(s: float) -> void:
 			- _desk_content.position
 		)
 	_desk_content.refresh_context()
-	_layout_rite_pins()
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
 		_log_label.position = Vector2((map_size.x - _log_label.size.x) * 0.5, map_size.y - 58 * s)
@@ -538,193 +531,12 @@ func _round_button_style(border: Color = Color(0.55, 0.38, 0.17, 0.82)) -> Style
 	return style
 
 
-func _rite_pin_style(border: Color = Color(0.88, 0.88, 0.88, 0.38)) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.035, 0.045, 0.10, 0.58)
-	style.border_color = border
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(18)
-	style.set_content_margin_all(7)
-	style.shadow_color = Color(0.01, 0.015, 0.045, 0.48)
-	style.shadow_size = 5
-	return style
-
-
-func _rite_pin_hover_style() -> StyleBoxFlat:
-	var style := _rite_pin_style(Color("#f7ca70"))
-	style.bg_color = Color(0.10, 0.075, 0.13, 0.78)
-	style.shadow_color = Color(1.0, 0.66, 0.22, 0.18)
-	style.shadow_size = 8
-	return style
-
-
-func _refresh_rite_pins() -> void:
-	if _desk_content == null:
-		return
-	var desired := {}
-	for instance in _open_map_rite_instances():
-		# Runtime rites have unique uids, but the original player's pin list is
-		# `List<int>` and rejects a config id it already contains. Keep one map
-		# entry per RiteNode id. The state resolves the panel target
-		# deterministically when more than one runtime instance shares that id.
-		# [SRC: PlayerExtensions.c @ AddRitePin (RVA 0x38c360);
-		#  il2cpp_dump/dump.cs:320055]
-		if desired.has(instance.id):
-			continue
-		desired[instance.id] = instance
-	for rite_id in _rite_pin_by_rite_id.keys().duplicate():
-		var pin: Button = _rite_pin_by_rite_id[rite_id]
-		if not desired.has(rite_id):
-			_remove_rite_pin(pin)
-			continue
-		var instance = desired[rite_id]
-		if int(_rite_pin_ids.get(pin, 0)) != int(instance.uid):
-			# The map exposes one config-id pin, but its target is a runtime
-			# instance. Recreate only when that target changes.
-			_remove_rite_pin(pin)
-			_create_rite_pin(instance)
-		desired.erase(rite_id)
-	for instance in desired.values():
-		_create_rite_pin(instance)
-	_apply_layout()
-
-
-func _create_rite_pin(instance) -> void:
-	var rite: Dictionary = _db.rites.get(instance.id, {})
-	var pin := Button.new()
-	pin.name = "RitePin_%d" % instance.id
-	pin.set_meta("rite_id", instance.id)
-	pin.text = str(rite.get("name", str(instance.id)))
-	pin.tooltip_text = str(rite.get("text", ""))
-	pin.custom_minimum_size = Vector2(164, 38)
-	pin.add_theme_font_size_override("font_size", 15)
-	pin.add_theme_color_override("font_color", Color("#fff2c7"))
-	pin.add_theme_color_override("font_hover_color", Color("#fff7df"))
-	pin.add_theme_stylebox_override("normal", _rite_pin_style(Color(0.88, 0.88, 0.88, 0.38)))
-	pin.add_theme_stylebox_override("hover", _rite_pin_hover_style())
-	pin.add_theme_stylebox_override("pressed", _rite_pin_style(Color("#fff0af")))
-	pin.pressed.connect(_emit_open_rite_instance.bind(instance.uid))
-	pin.z_index = 8
-	_rite_pin_buttons.append(pin)
-	_rite_pin_ids[pin] = instance.uid
-	_rite_pin_by_rite_id[instance.id] = pin
-	_scene_world.add_child(pin)
-	pin.visible = false
-	UiMotionScript.bind(pin, UiMotionScript.Profile.SITE)
-
-
-func _remove_rite_pin(pin: Button) -> void:
-	if pin == null:
-		return
-	var rite_id := int(pin.get_meta("rite_id", 0))
-	_rite_pin_by_rite_id.erase(rite_id)
-	_rite_pin_ids.erase(pin)
-	_rite_pin_buttons.erase(pin)
-	if is_instance_valid(pin):
-		if pin.get_parent() != null:
-			pin.get_parent().remove_child(pin)
-		pin.free()
-
-
-func _emit_open_rite(rite_id: int) -> void:
-	open_rite.emit(rite_id)
 
 
 func _emit_open_rite_instance(rite_uid: int) -> void:
 	open_rite_instance.emit(rite_uid)
 
 
-func _clear_rite_pins() -> void:
-	for pin in _rite_pin_buttons.duplicate():
-		_remove_rite_pin(pin)
-	_rite_pin_by_rite_id.clear()
-
-
-func _open_map_rite_instances() -> Array:
-	var out: Array = []
-	if _db == null or _state == null:
-		return out
-	if not _state.has_method("available_rite_instances"):
-		return out
-	for instance in _state.available_rite_instances():
-		var rite: Dictionary = _db.rites.get(instance.id, {})
-		if not _is_map_rite_interactive(rite):
-			continue
-		if not _is_map_rite_open(instance, rite):
-			continue
-		out.append(instance)
-	out.sort_custom(func(a, b) -> bool: return a.uid < b.uid)
-	return out
-
-
-func _is_map_rite_interactive(rite: Dictionary) -> bool:
-	return RiteOpen.is_interactive(rite)
-
-
-func _is_map_rite_open(instance, rite: Dictionary) -> bool:
-	if int(rite.get("auto_begin", 0)) == 1:
-		return bool(instance.start)
-	return RiteOpen.is_rite_open(rite, _state, _db, _rng)
-
-
-func _layout_rite_pins() -> void:
-	if _scene_world == null:
-		return
-	var pins: Array[Button] = []
-	for pin in _rite_pin_buttons:
-		if not is_instance_valid(pin):
-			continue
-		pins.append(pin)
-	var can_show_pins: bool = (
-		_presentation_state == PresentationState.SCENE_THINKING
-		and _scene_world.visible
-		and _scene_world.is_thinking()
-		and not _scene_world.is_scene_chrome_hidden()
-	)
-	var map_size := _scene_world.size
-	var s := minf(map_size.x / MOCKUP_SIZE.x, map_size.y / MOCKUP_SIZE.y)
-	var origin := _scene_world.protagonist_center()
-	var count := pins.size()
-	var pin_size := Vector2(164, 38) * s
-	for i in count:
-		var pin := pins[i]
-		pin.visible = can_show_pins
-		pin.size = pin_size
-		var row := floori(float(i) / 4.0)
-		var row_start := row * 4
-		var row_count: int = mini(4, count - row_start)
-		var column := i - row_start
-		var spread := minf(map_size.x * 0.68, 660.0 * s)
-		var x_offset := 0.0
-		if row_count > 1:
-			x_offset = -spread * 0.5 + spread * float(column) / float(row_count - 1)
-		var arc := absf(x_offset) / maxf(spread * 0.5, 1.0)
-		var raw := Vector2(
-			origin.x + x_offset - pin_size.x * 0.5,
-			origin.y - (132.0 + row * 52.0 - arc * 30.0) * s - pin_size.y * 0.5
-		)
-		pin.position = Vector2(
-			clamp(raw.x, 10.0 * s, max(10.0 * s, map_size.x - pin_size.x - 10.0 * s)),
-			clamp(raw.y, 54.0 * s, max(54.0 * s, map_size.y - pin_size.y - 54.0 * s))
-		)
-	_scene_world.set_thought_targets(pins)
-	_scene_world.set_thought_count(count)
-
-
-func _on_scene_world_thinking_changed(_enabled: bool) -> void:
-	if _presentation_state == PresentationState.DESK:
-		if _enabled and _scene_world != null:
-			_scene_world.set_thinking(false)
-		return
-	_set_presentation_state(
-		PresentationState.SCENE_THINKING if _enabled else PresentationState.SCENE
-	)
-	_layout_rite_pins()
-
-
-func _on_scene_world_protagonist_moved() -> void:
-	if _scene_world != null and _scene_world.is_thinking():
-		_layout_rite_pins()
 
 
 func _on_world_interaction_requested(interaction: Dictionary) -> void:
@@ -812,7 +624,6 @@ func refresh() -> void:
 	_known_rail_card_uids = next_known_uids
 	_layout_hand_cards()
 	call_deferred("_layout_hand_cards")
-	_refresh_rite_pins()
 	_refresh_event_overlay()
 
 
@@ -1164,7 +975,6 @@ func set_world_scene_blocker(
 		_scene_world.set_scene_blocker(source, blocking, hide_chrome)
 	_update_persistent_action_availability()
 	_set_underlying_presentation_paused(not _underlying_presentation_pauses.is_empty())
-	_layout_rite_pins()
 
 
 ## A global modal lives above GameScreen. Freeze this complete lower layer so
@@ -1212,10 +1022,7 @@ func _set_presentation_state(next_state: int) -> void:
 		clear_site_focus()
 	_desk_content.visible = not scene_active
 	_scene_world.visible = scene_active
-	if not scene_active or next_state == PresentationState.SCENE:
-		_scene_world.set_thinking(false)
 	_update_persistent_action_availability()
-	_layout_rite_pins()
 
 
 func _update_persistent_action_availability() -> void:

@@ -47,7 +47,6 @@ func test_active_world_presentation_uses_neutral_fantasy_painted_assets() -> voi
 func test_fantasy_character_sprites_have_transparent_corners_and_stable_aspect() -> void:
 	var sprite_paths := [
 		"res://assets/original/thought_world/protagonist_traveler_idle.png",
-		"res://assets/original/thought_world/protagonist_traveler_think.png",
 		"res://assets/original/thought_world/protagonist_traveler_walk_a.png",
 		"res://assets/original/thought_world/protagonist_traveler_walk_b.png",
 		"res://assets/original/thought_world/traveling_companion.png",
@@ -243,14 +242,7 @@ func test_game_screen_dossier_restores_saved_scene_and_returns_to_persistent_des
 	assert_true(world.visible, "opening the dossier should reveal the saved scene")
 	assert_eq(world.location_id(), "riverbank")
 	assert_almost_eq(world.player_x_ratio(), 0.63, 0.001)
-	assert_true((world.get_node("ThinkButton") as Control).visible, "the local scene should retain its own thought action")
 	assert_true((world.get_node("ReturnToDeskButton") as Control).visible)
-	var scene_think := world.get_node("ThinkButton") as Button
-	scene_think.pressed.emit()
-	await wait_process_frames(1)
-	assert_true(world.is_thinking(), "the scene thought button should retain its established thought mode")
-	assert_true((world.get_node("ThoughtWorldMask") as Control).visible)
-	world.set_thinking(false)
 	state.queue_prompt({"id": "desk.return.queue", "text": "keep"})
 	world.return_requested.emit()
 	await wait_process_frames(1)
@@ -413,10 +405,6 @@ func test_nearby_companion_queues_scene_dialogue_in_order() -> void:
 					(world.get_node("ReturnToDeskButton") as Control).visible,
 					"context scene should offer a clear return after the last line"
 				)
-				assert_true(
-					(world.get_node("ThinkButton") as Control).visible,
-					"the context scene should restore its own thought action"
-				)
 
 
 func test_scene_blockers_stack_and_card_detail_uses_the_same_boundary() -> void:
@@ -453,7 +441,7 @@ func _stage() -> Control:
 
 
 func _assert_world_chrome_hidden(world: Control) -> void:
-	for node_name in ["WorldInteractionHint", "MovementHint", "ThinkButton", "ThoughtHeading"]:
+	for node_name in ["WorldInteractionHint", "MovementHint"]:
 		var control := world.get_node_or_null(node_name) as Control
 		assert_not_null(control, "%s should exist" % node_name)
 		if control != null:

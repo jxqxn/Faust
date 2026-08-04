@@ -522,61 +522,6 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	assert_true(home.has_focus(), "returning from the local panel should restore the source site focus")
 
 
-func test_game_screen_renders_open_rites_as_clickable_map_pins():
-	var rng := RNG.new(21)
-	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
-	RoundLoop.start_auto_begin_rites(state, db)
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, db, rng)
-	stage.add_child(screen)
-	await wait_process_frames(2)
-
-	var opened: Array = []
-	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
-	var estate = state.find_rite_instance_by_id(5000001)
-	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
-	var desk := _find_node_by_name(screen, "SituationDesk") as Control
-	var world := _find_node_by_name(screen, "SceneWorld") as Control
-	var desk_think := _find_node_by_name(screen, "ThinkDropZone") as Control
-	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Button
-	var rail_context := _find_node_by_name(screen, "RailContextLabel") as Label
-	assert_not_null(desk, "situation desk should be the default main play surface")
-	assert_not_null(world, "the local lateral scene should remain available through the dossier")
-	assert_not_null(desk_think, "the desk should retain its explicit card drop target")
-	assert_not_null(dossier, "the desk should retain a route to the current local scene")
-	assert_not_null(rail_context)
-	if rail_context != null:
-		assert_eq(rail_context.text, "当前处境", "the rail should describe the protagonist's situation, not owned people")
-	assert_not_null(pin, "open playable rites should exist as thought objects")
-	if pin == null or desk == null or world == null or dossier == null:
-		return
-	assert_true(desk.visible, "the situation desk should be visible before opening a local scene")
-	assert_false(world.visible, "the lateral scene should not be the default navigation surface")
-	assert_false(pin.visible, "open rites must not become action choices on the situation desk")
-	assert_false(desk_think is Button, "a drag-only thought target must not advertise button semantics")
-	assert_false(pin.visible, "the desk drop target must not reveal scene thought choices")
-	dossier.pressed.emit()
-	await wait_process_frames(1)
-	var scene_think := world.get_node("ThinkButton") as Button
-	assert_not_null(scene_think, "the local scene should retain its own thought control")
-	if scene_think == null:
-		return
-	scene_think.pressed.emit()
-	await wait_process_frames(1)
-	assert_true(world.is_thinking(), "scene thought should remain available after entering through the dossier")
-	assert_true(pin.visible, "open rites should appear only inside scene thought")
-	assert_eq(pin.get_parent(), world, "thought choices must remain in the scene that renders their effects")
-	assert_true(pin in world._thought_targets, "scene thought effects should retain links to their visible choices")
-	assert_eq(pin.text, "治理家业", "action slips should show the rite name players recognize")
-	pin.pressed.emit()
-	await wait_process_frames(1)
-
-	assert_eq(opened, [estate.uid], "choosing a thought should open that runtime rite directly")
-	assert_false(desk.is_thinking(), "opening a scene thought must not create a desk thought presentation state")
-
-
 func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_simulation():
 	var rng := RNG.new(211)
 	var state := GameState.new()
@@ -605,79 +550,6 @@ func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_
 
 	assert_gt(protagonist.position.x, x_before, "the protagonist should occupy a real position in the dossier scene")
 	assert_eq(state.day, day_before, "walking is presentation and must not advance the simulation")
-
-
-func test_game_screen_merges_duplicate_runtime_rites_into_one_map_pin():
-	var rng := RNG.new(22)
-	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
-	var first = state.find_rite_instance_by_id(5000001)
-	var second_uid := state.add_available_rite(5000001)
-	assert_not_null(first)
-	assert_ne(second_uid, first.uid, "generating the same RiteNode should create a second runtime rite")
-	RoundLoop.start_auto_begin_rites(state, db)
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, db, rng)
-	stage.add_child(screen)
-	await wait_process_frames(2)
-
-	assert_eq(_count_nodes_by_name(screen, "RitePin_5000001"), 1, "same config id keeps one original-style map pin")
-	var opened: Array = []
-	screen.open_rite_instance.connect(func(uid: int): opened.append(uid))
-	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
-	if pin != null:
-		pin.pressed.emit()
-		await wait_process_frames(1)
-	assert_eq(opened, [first.uid], "the id-keyed pin opens the oldest matching runtime rite")
-
-
-func test_game_screen_refreshes_rite_pins_incrementally():
-	var rng := RNG.new(221)
-	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
-	RoundLoop.start_auto_begin_rites(state, db)
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, db, rng)
-	stage.add_child(screen)
-	await wait_process_frames(2)
-	var pin := _find_node_by_name(screen, "RitePin_5000001") as Button
-	assert_not_null(pin)
-	if pin == null:
-		return
-	var original_instance_id := pin.get_instance_id()
-	screen.refresh()
-	await wait_process_frames(1)
-	var refreshed := _find_node_by_name(screen, "RitePin_5000001") as Button
-	assert_not_null(refreshed)
-	if refreshed != null:
-		assert_eq(refreshed.get_instance_id(), original_instance_id, "unchanged RiteInstance pins are not destroyed and rebuilt")
-
-
-func test_game_screen_keeps_same_name_but_distinct_rite_ids_separate():
-	var local_db := ConfigDB.new()
-	local_db.rites = {
-		991601: {
-			"id": 991601, "name": "同名仪式", "location": "自宅",
-			"cards_slot": {"s1": {"condition": {}}}, "settlement": [{"condition": {}}],
-		},
-		991602: {
-			"id": 991602, "name": "同名仪式", "location": "自宅",
-			"cards_slot": {"s1": {"condition": {}}}, "settlement": [{"condition": {}}],
-		},
-	}
-	var state := GameState.new()
-	state.create_rite_instance(991601)
-	state.create_rite_instance(991602)
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, local_db, RNG.new(23))
-	stage.add_child(screen)
-	await wait_process_frames(2)
-
-	assert_not_null(_find_node_by_name(screen, "RitePin_991601"), "map pins are keyed by config id, not display name")
-	assert_not_null(_find_node_by_name(screen, "RitePin_991602"), "same-name variant config remains a distinct map entry")
 
 
 func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
@@ -1035,68 +907,6 @@ func test_game_menu_button_opens_real_overlay():
 		)
 
 
-func test_global_menu_freezes_scene_thought_without_hiding_its_visual_state():
-	var stage := _stage()
-	var game = Game.new()
-	stage.add_child(game)
-	await wait_process_frames(2)
-	game._on_difficulty_selected(0)
-	await wait_process_frames(2)
-
-	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
-	assert_not_null(dossier)
-	if dossier == null:
-		return
-	dossier.pressed.emit()
-	await wait_process_frames(1)
-	var world := _find_node_by_name(game, "SceneWorld")
-	var scene_think := _find_node_by_name(world, "ThinkButton") as Button
-	var menu := _find_node_by_name(game, "MenuButton") as Button
-	assert_not_null(scene_think)
-	assert_not_null(menu)
-	if scene_think == null or menu == null:
-		return
-	scene_think.pressed.emit()
-	await wait_process_frames(1)
-
-	var thought_mask := _find_node_by_name(world, "ThoughtWorldMask") as Control
-	var thought_heading := _find_node_by_name(world, "ThoughtHeading") as Control
-	var pin := _find_node_by_name(world, "RitePin_5000001") as Control
-	assert_not_null(thought_mask)
-	assert_not_null(thought_heading)
-	assert_not_null(pin)
-	if thought_mask == null or thought_heading == null or pin == null:
-		return
-	assert_true(world.is_thinking())
-	assert_true(thought_mask.visible)
-	assert_true(thought_heading.visible)
-	assert_true(pin.visible)
-	var paused_world_time: float = world._world_time
-	menu.pressed.emit()
-	await wait_process_frames(2)
-
-	assert_true(world.is_scene_blocked(), "global menu locks scene input")
-	assert_false(world.is_scene_chrome_hidden(), "global menu is an input pause, not a chrome-hiding local modal")
-	assert_true(world.is_thinking(), "the menu must retain the previous thought state")
-	assert_true(thought_mask.visible, "the menu must retain the previous thought mask")
-	assert_true(thought_heading.visible, "the menu must retain the previous thought heading")
-	assert_true(pin.visible, "the menu must retain the previous thought choices under its shade")
-	assert_true(scene_think.visible, "the menu must retain visible scene buttons under its shade")
-	assert_almost_eq(world._world_time, paused_world_time, 0.000001, "the menu freezes the scene's procedural presentation clock")
-	var atmosphere := _find_node_by_name(world, "Atmosphere") as ColorRect
-	assert_not_null(atmosphere)
-	if atmosphere != null:
-		var atmosphere_material := atmosphere.material as ShaderMaterial
-		assert_not_null(atmosphere_material)
-		if atmosphere_material != null:
-			assert_almost_eq(
-				float(atmosphere_material.get_shader_parameter("world_time")),
-				paused_world_time,
-				0.000001,
-				"the menu freezes the atmosphere shader on the same scene clock"
-			)
-
-
 func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	var stage := _stage()
 	var game = Game.new()
@@ -1109,35 +919,29 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	var desk := _find_node_by_name(game, "SituationDesk") as Control
 	var world := _find_node_by_name(game, "SceneWorld") as Control
 	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
-	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
 	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	assert_not_null(screen)
 	assert_not_null(desk)
 	assert_not_null(world)
 	assert_not_null(dossier)
-	assert_not_null(pin)
 	assert_not_null(right_actions)
-	if screen == null or desk == null or world == null or dossier == null or pin == null or right_actions == null:
+	if screen == null or desk == null or world == null or dossier == null or right_actions == null:
 		return
 
 	assert_eq(screen.presentation_state(), GameScreen.PresentationState.DESK)
 	assert_true(desk.visible, "the player starts on the situation desk")
 	assert_false(world.visible, "the local scene is closed until the dossier is chosen")
-	assert_false(pin.visible, "scene thought choices must not leak onto the desk")
 	assert_eq(desk.get_parent(), screen, "the desk keeps GameScreen as its permanent parent")
 	assert_eq(world.get_parent(), screen, "the scene keeps GameScreen as its permanent parent")
-	assert_eq(pin.get_parent(), world, "rite pins keep ThoughtWorld as their permanent parent")
 	assert_true(dossier.visible, "the visible dossier is the real route into the scene")
 	assert_true(right_actions.visible, "day controls belong to the desk commit surface")
 	var desk_navigation_position := dossier.global_position
 	dossier.pressed.emit()
 	await wait_process_frames(1)
 
-	var scene_think := world.get_node("ThinkButton") as Button
 	var return_to_desk := world.get_node("ReturnToDeskButton") as Button
-	assert_not_null(scene_think)
 	assert_not_null(return_to_desk)
-	if scene_think == null or return_to_desk == null:
+	if return_to_desk == null:
 		return
 	assert_eq(screen.presentation_state(), GameScreen.PresentationState.SCENE)
 	assert_true(world.visible)
@@ -1155,30 +959,12 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 		2.0,
 		"enter and return navigation should occupy the same vertical anchor"
 	)
-	assert_true(scene_think.visible, "the visible scene thought button is the real route into thought")
-	scene_think.pressed.emit()
-	await wait_process_frames(1)
-
-	assert_eq(screen.presentation_state(), GameScreen.PresentationState.SCENE_THINKING)
-	assert_true(return_to_desk.visible, "global surface navigation should remain visible while thinking")
-	assert_true((world.get_node("ThoughtWorldMask") as Control).visible, "thought owns its scene mask")
-	assert_true(pin.visible, "the visible thought choice belongs to the active scene")
-	assert_true(pin in world._thought_targets, "thought effects retain the same choice nodes the player can press")
 	for child in world.get_children():
 		if child is CanvasItem:
 			assert_lte((child as CanvasItem).z_index, GameScreen.SCENE_CONTENT_Z_MAX, "scene content stays inside its layer budget: %s" % child.name)
-	pin.pressed.emit()
-	await wait_process_frames(1)
-
-	var rite_overlay := _find_node_by_name(game, "RiteOverlayPanel") as Control
-	var close_rite := _find_node_by_name(game, "CloseRiteButton") as Button
-	assert_not_null(rite_overlay, "pressing the visible thought choice opens its local rite modal")
-	assert_not_null(close_rite)
-	assert_true(world.is_scene_blocked(), "the local rite modal blocks scene input")
-	assert_false(pin.visible, "blocked scene thought choices stop accepting input")
 	var menu_button := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(menu_button)
-	if menu_button == null or rite_overlay == null:
+	if menu_button == null:
 		return
 	assert_true(menu_button.visible, "the visible top menu remains the real route into the global modal")
 	menu_button.pressed.emit()
@@ -1191,15 +977,6 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	if menu_overlay != null and rail != null:
 		assert_eq(menu_overlay.get_parent(), game, "the global menu keeps Game as its permanent parent")
 		assert_gt(menu_overlay.z_index, rail.z_index, "global menu outranks persistent hand cards")
-		var rite_view := rite_overlay.get_parent() as Control
-		var local_modal_layer: CanvasItem = null
-		if rite_view != null:
-			local_modal_layer = rite_view.get_parent() as CanvasItem
-		assert_not_null(local_modal_layer)
-		if local_modal_layer != null:
-			assert_eq(local_modal_layer.name, "OverlayLayer", "rite content remains in the local modal layer")
-			assert_eq(local_modal_layer.z_index, GameScreen.WORLD_MODAL_Z, "local modal uses its assigned layer")
-			assert_gt(menu_overlay.z_index, local_modal_layer.z_index, "global menu outranks the local modal layer")
 		for child in world.get_children():
 			if child is CanvasItem:
 				assert_lt((child as CanvasItem).z_index, menu_overlay.z_index, "global menu outranks scene content: %s" % child.name)
@@ -1207,39 +984,11 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	assert_true(world.is_scene_blocked(), "the global menu blocks all lower scene input")
 	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
 	assert_not_null(resume)
-	if resume == null or close_rite == null:
+	if resume == null:
 		return
 	resume.pressed.emit()
 	await wait_process_frames(1)
-	assert_true(rite_overlay.visible, "closing the global menu must not destroy the local modal")
-	assert_true(world.is_scene_blocked(), "the local modal lock remains after the global menu closes")
-	assert_true(close_rite.visible, "the visible local modal close action returns control to the player")
-	close_rite.pressed.emit()
-	await wait_process_frames(1)
-	assert_false(world.is_scene_blocked(), "closing the local modal releases its scene input lock")
-
-
-func test_visual_capture_hook_enters_the_same_visible_scene_thought_state():
-	var stage := _stage()
-	var game = Game.new()
-	stage.add_child(game)
-	await wait_process_frames(2)
-	game._mcp_capture_thought_world()
-	await wait_process_frames(2)
-
-	var desk := _find_node_by_name(game, "SituationDesk") as Control
-	var world := _find_node_by_name(game, "SceneWorld") as Control
-	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
-	assert_not_null(desk)
-	assert_not_null(world)
-	assert_not_null(pin)
-	if desk == null or world == null or pin == null:
-		return
-	assert_false(desk.visible, "visual capture must not leave the desk over the scene")
-	assert_true(world.visible, "visual capture must open the local scene")
-	assert_true(world.is_thinking(), "visual capture must enter the real thought state")
-	assert_true((world.get_node("ThoughtWorldMask") as Control).visible)
-	assert_true(pin.visible, "visual capture must include the visible thought choices")
+	assert_false(world.is_scene_blocked(), "closing the global menu releases the scene input lock")
 
 
 func test_game_menu_opens_manual_archive_picker():
@@ -1272,57 +1021,6 @@ func test_test_start_entry_uses_test_card_profile():
 
 	assert_true(game.state.hand.size() > 50, "test start profile should use the full init/1 card list")
 	assert_false(game.db.use_test_starting_cards, "test-card flag should not leak into later normal starts")
-
-
-func test_game_home_location_uses_generic_rite_entry_flow():
-	var stage := _stage()
-	var game = Game.new()
-	stage.add_child(game)
-	await wait_process_frames(2)
-
-	game._on_difficulty_selected(0)
-	await wait_process_frames(2)
-
-	var pin := _find_node_by_name(game, "RitePin_5000001") as Button
-	assert_not_null(pin, "triggered rites should appear as clickable thoughts in the main scene")
-	if pin == null:
-		return
-	var desk := _find_node_by_name(game, "SituationDesk")
-	assert_not_null(desk)
-	if desk == null:
-		return
-	assert_false(pin.visible, "the desk must not expose runtime rites as direct action options")
-	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
-	var world := _find_node_by_name(game, "SceneWorld")
-	assert_not_null(dossier)
-	assert_not_null(world)
-	if dossier == null or world == null:
-		return
-	dossier.pressed.emit()
-	await wait_process_frames(1)
-	var scene_think := world.get_node("ThinkButton") as Button
-	assert_not_null(scene_think)
-	if scene_think == null:
-		return
-	scene_think.pressed.emit()
-	await wait_process_frames(1)
-	assert_true(pin.visible, "runtime rites should become clickable in scene thought")
-	pin.pressed.emit()
-	await wait_process_frames(2)
-
-	var overlay := _find_node_by_name(game, "RiteOverlayPanel")
-	var selector := _find_node_by_name(game, "RiteSelector")
-	assert_not_null(overlay, "clicking a map rite pin should open the rite overlay directly")
-	assert_null(selector, "map rite pins should not route through the separate rite selector page")
-	assert_true(desk.is_scene_blocked(), "rite overlays should block desk input")
-	assert_false(desk.is_thinking(), "rite overlays opened from the desk should not create a thought state")
-	var overlay_layer := _find_node_by_name(game, "OverlayLayer") as Control
-	assert_not_null(overlay_layer)
-	if overlay_layer != null:
-		assert_gt(overlay_layer.z_index, desk.z_index, "the deeper rite modal must still cover the desk")
-	game._close_rite_overlay()
-	assert_false(desk.is_scene_blocked(), "closing a rite should release its blocker")
-	assert_false(desk.is_thinking(), "closing a rite should return to the unchanged desk")
 
 
 func test_card_widget_exports_drag_payload_with_card_id():

@@ -6,28 +6,10 @@
 class_name ThoughtWorld
 extends Control
 
-signal thinking_changed(enabled: bool)
 signal protagonist_moved()
 signal interaction_requested(interaction: Dictionary)
 signal location_changed(location_id: String)
 signal return_requested()
-
-class ThinkDropButton:
-	extends Button
-
-	var owner_world: Control
-
-	func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
-		return (
-			owner_world != null
-			and owner_world.has_method("can_drop_card_on_think_button")
-			and bool(owner_world.can_drop_card_on_think_button(data))
-		)
-
-	func _drop_data(_at_position: Vector2, data: Variant) -> void:
-		if owner_world != null and owner_world.has_method("drop_card_on_think_button"):
-			owner_world.drop_card_on_think_button(data)
-
 
 class ParallaxTextureLayer:
 	extends Control
@@ -122,9 +104,6 @@ const UiMotionScript = preload("res://ui/ui_motion.gd")
 const IDLE_TEXTURE = preload(
 	"res://assets/original/thought_world/protagonist_traveler_idle.png"
 )
-const THINK_TEXTURE = preload(
-	"res://assets/original/thought_world/protagonist_traveler_think.png"
-)
 const WALK_TEXTURES := [
 	preload("res://assets/original/thought_world/protagonist_traveler_walk_a.png"),
 	preload("res://assets/original/thought_world/protagonist_traveler_walk_b.png"),
@@ -132,22 +111,14 @@ const WALK_TEXTURES := [
 const ATMOSPHERE_SHADER = preload(
 	"res://ui/shaders/thought_world_atmosphere.gdshader"
 )
-const SELECT_SOUND = preload(
-	"res://assets/third_party/kenney_new_platformer_subset/audio/sfx_select.ogg"
-)
-const THINK_SOUND = preload(
-	"res://assets/third_party/kenney_new_platformer_subset/audio/sfx_magic.ogg"
-)
 
 const WALK_SPEED := 330.0
 const INTERACTION_ARRIVAL_EPSILON := 0.0005
 const PLAYER_BASE_SIZE := Vector2(154, 308)
 const NPC_BASE_SIZE := Vector2(150, 300)
-const THOUGHT_WORLD_MASK_COLOR := Color(0.12, 0.095, 0.065, 0.48)
 const CAMERA_RESPONSE := 5.5
 const EXIT_TRANSITION_SECONDS := 0.30
 
-var _thinking := false
 var _context_mode := false
 var _player_x_ratio := 0.5
 var _location_id := WorldScenes.DEFAULT_LOCATION_ID
@@ -157,7 +128,6 @@ var _foreground_texture: Texture2D
 var _state
 var _walk_time := 0.0
 var _world_time := 0.0
-var _thought_targets: Array[Control] = []
 var _motes: Array[Vector3] = []
 var _npc_nodes: Array[Dictionary] = []
 var _exit_nodes: Array[Dictionary] = []
@@ -178,15 +148,11 @@ var _backdrop_layer: ParallaxTextureLayer
 var _atmosphere: ColorRect
 var _foreground_layer: ParallaxTextureLayer
 var _stage_effects: StageEffectsLayer
-var _thought_world_mask: ColorRect
-var _think_button: Button
 var _return_button: Button
 var _hint_label: Label
 var _scene_title: Label
-var _thought_heading: Label
 var _interaction_hint: Label
 var _transition_flash: ColorRect
-var _audio: AudioStreamPlayer
 
 
 func setup(state) -> void:
@@ -197,12 +163,9 @@ func setup(state) -> void:
 	_player_x_ratio = clampf(float(state.world_position_ratio), 0.04, 0.96)
 
 
-## GameScreen uses the lateral world as a local dossier, while direct users
-## retain the established standalone Thought interaction.
+## GameScreen uses the lateral world as a local dossier.
 func set_context_mode(enabled: bool) -> void:
 	_context_mode = enabled
-	if enabled:
-		set_thinking(false)
 	if is_node_ready():
 		_apply_presentation()
 		_layout_overlay()
@@ -274,31 +237,6 @@ func _build_overlay() -> void:
 	_hint_label.z_index = 20
 	add_child(_hint_label)
 
-	_thought_heading = Label.new()
-	_thought_heading.name = "ThoughtHeading"
-	_thought_heading.text = "思考"
-	_thought_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_thought_heading.add_theme_font_size_override("font_size", 16)
-	_thought_heading.add_theme_color_override("font_color", Color("#fff0bf"))
-	_thought_heading.add_theme_color_override("font_shadow_color", Color(0.02, 0.03, 0.07, 0.92))
-	_thought_heading.add_theme_constant_override("shadow_offset_x", 1)
-	_thought_heading.add_theme_constant_override("shadow_offset_y", 2)
-	_thought_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_thought_heading.visible = false
-	_thought_heading.z_index = 20
-	add_child(_thought_heading)
-
-	# Thought separates the protagonist's active attention from the surrounding
-	# world. The mask sits above every background/NPC layer but below Al-Tu,
-	# so future scene actors inherit the same visual rule without per-NPC tint.
-	_thought_world_mask = ColorRect.new()
-	_thought_world_mask.name = "ThoughtWorldMask"
-	_thought_world_mask.color = THOUGHT_WORLD_MASK_COLOR
-	_thought_world_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_thought_world_mask.visible = false
-	_thought_world_mask.z_index = 7
-	add_child(_thought_world_mask)
-
 	_protagonist = TextureRect.new()
 	_protagonist.name = "Protagonist"
 	_protagonist.texture = IDLE_TEXTURE
@@ -335,22 +273,6 @@ func _build_overlay() -> void:
 	_interaction_hint.z_index = 25
 	add_child(_interaction_hint)
 
-	_think_button = ThinkDropButton.new()
-	_think_button.name = "ThinkButton"
-	(_think_button as ThinkDropButton).owner_world = self
-	_think_button.text = "思考"
-	_think_button.tooltip_text = "停下脚步，让此刻的念头浮现"
-	_think_button.custom_minimum_size = Vector2(138, 54)
-	_think_button.add_theme_font_size_override("font_size", 15)
-	_think_button.add_theme_color_override("font_color", Color(0.98, 0.96, 0.89, 0.94))
-	_think_button.add_theme_color_override("font_hover_color", Color("#fff1bd"))
-	_think_button.add_theme_stylebox_override("normal", _think_style(Color(0.86, 0.89, 0.91, 0.42)))
-	_think_button.add_theme_stylebox_override("hover", _think_style(Color("#f0c56b"), true))
-	_think_button.add_theme_stylebox_override("pressed", _think_style(Color("#fff0b3"), true))
-	_think_button.pressed.connect(func(): set_thinking(not _thinking))
-	_think_button.z_index = 22
-	add_child(_think_button)
-
 	_return_button = Button.new()
 	_return_button.name = "ReturnToDeskButton"
 	_return_button.text = "← 当日形势"
@@ -358,18 +280,13 @@ func _build_overlay() -> void:
 	_return_button.add_theme_font_size_override("font_size", 14)
 	_return_button.add_theme_color_override("font_color", Color(0.98, 0.96, 0.89, 0.94))
 	_return_button.add_theme_color_override("font_hover_color", Color("#fff1bd"))
-	_return_button.add_theme_stylebox_override("normal", _think_style(Color(0.86, 0.89, 0.91, 0.42)))
-	_return_button.add_theme_stylebox_override("hover", _think_style(Color("#f0c56b"), true))
-	_return_button.add_theme_stylebox_override("pressed", _think_style(Color("#fff0b3"), true))
+	_return_button.add_theme_stylebox_override("normal", _chrome_button_style(Color(0.86, 0.89, 0.91, 0.42)))
+	_return_button.add_theme_stylebox_override("hover", _chrome_button_style(Color("#f0c56b"), true))
+	_return_button.add_theme_stylebox_override("pressed", _chrome_button_style(Color("#fff0b3"), true))
 	_return_button.pressed.connect(func(): return_requested.emit())
 	_return_button.visible = false
 	_return_button.z_index = 22
 	add_child(_return_button)
-
-	_audio = AudioStreamPlayer.new()
-	_audio.name = "SceneAudio"
-	_audio.volume_db = -9.0
-	add_child(_audio)
 
 	_transition_flash = ColorRect.new()
 	_transition_flash.name = "LocationTransition"
@@ -409,7 +326,7 @@ func _process(delta: float) -> void:
 		_update_exit_transition(delta)
 	elif _interaction_walk_active:
 		direction = signf(_interaction_walk_target - _player_x_ratio)
-	elif not _thinking and not blocking:
+	elif not blocking:
 		direction = Input.get_axis("ui_left", "ui_right")
 		if Input.is_key_pressed(KEY_A):
 			direction -= 1.0
@@ -437,7 +354,7 @@ func _process(delta: float) -> void:
 	else:
 		if not _exit_transition_active:
 			_walk_time = 0.0
-			_protagonist.texture = THINK_TEXTURE if _thinking else IDLE_TEXTURE
+			_protagonist.texture = IDLE_TEXTURE
 		if _interaction_walk_active:
 			_finish_npc_interaction()
 	_update_camera(delta)
@@ -453,14 +370,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	var key_event := event as InputEventKey
 	if not key_event.pressed or key_event.echo:
 		return
-	if key_event.keycode == KEY_SPACE and not _has_blocking_overlay():
-		set_thinking(not _thinking)
-		get_viewport().set_input_as_handled()
-	elif key_event.keycode == KEY_E and not _thinking and not _has_blocking_overlay():
+	if key_event.keycode == KEY_E and not _has_blocking_overlay():
 		interact_with_nearest()
-		get_viewport().set_input_as_handled()
-	elif key_event.keycode == KEY_ESCAPE and _thinking:
-		set_thinking(false)
 		get_viewport().set_input_as_handled()
 	elif key_event.keycode == KEY_ESCAPE and _context_mode and not _has_blocking_overlay():
 		return_requested.emit()
@@ -513,73 +424,6 @@ func is_scene_chrome_hidden() -> bool:
 	return _has_implicit_blocking_overlay()
 
 
-func set_thinking(enabled: bool) -> void:
-	if enabled and (_interaction_walk_active or _exit_transition_active):
-		return
-	if _thinking == enabled:
-		return
-	_thinking = enabled
-	_protagonist.texture = THINK_TEXTURE if enabled else IDLE_TEXTURE
-	_protagonist.self_modulate = Color.WHITE
-	_hint_label.text = "选择一段思绪，或按 ESC 回到现实" if enabled else "A / D 或 ← / → 移动"
-	_think_button.text = "思考"
-	_think_button.tooltip_text = (
-		"拖入手牌或苏丹卡产生联想；点击或按 ESC 结束思考"
-		if enabled
-		else "停下脚步，让此刻的念头浮现"
-	)
-	_audio.stream = THINK_SOUND if enabled else SELECT_SOUND
-	if not DisplayServer.get_name() == "headless":
-		_audio.play()
-	_layout_overlay()
-	_apply_presentation()
-	thinking_changed.emit(enabled)
-	queue_redraw()
-
-
-func is_thinking() -> bool:
-	return _thinking
-
-
-func can_drop_card_on_think_button(data: Variant) -> bool:
-	if not _thinking:
-		return false
-	var screen := get_parent()
-	# Methinks is the verified clone-era processing bridge. Keep that internal
-	# compatibility boundary while the player-facing concept remains Thought.
-	return (
-		screen != null
-		and screen.has_method("can_drop_card_on_methinks")
-		and bool(screen.can_drop_card_on_methinks(data))
-	)
-
-
-func drop_card_on_think_button(data: Variant) -> void:
-	if not can_drop_card_on_think_button(data):
-		return
-	var screen := get_parent()
-	if screen != null and screen.has_method("drop_card_on_methinks"):
-		screen.drop_card_on_methinks(data)
-
-
-func set_thought_targets(targets: Array) -> void:
-	_thought_targets.clear()
-	for target in targets:
-		if target is Control:
-			_thought_targets.append(target)
-	queue_redraw()
-
-
-func set_thought_count(count: int) -> void:
-	if count <= 0:
-		_thought_heading.text = "此刻没有浮现的念头"
-	else:
-		# The runtime currently knows how many placeholder rites are visible,
-		# but presenting a total would imply that the character sees an
-		# exhaustive action menu. The new direction keeps that count internal.
-		_thought_heading.text = "思考"
-
-
 func protagonist_center() -> Vector2:
 	if _protagonist == null:
 		return Vector2(size.x * _player_x_ratio, size.y * _ground_ratio())
@@ -630,13 +474,12 @@ func is_exit_transition_active() -> bool:
 func change_location(location_id_value: String, spawn_id: String = "default") -> bool:
 	if not WorldScenes.LOCATIONS.has(location_id_value):
 		return false
-	set_thinking(false)
 	_apply_location(location_id_value, spawn_id, false, true)
 	return true
 
 
 func interact_with_nearest() -> bool:
-	if _thinking or _has_blocking_overlay() or _interaction_walk_active or _exit_transition_active:
+	if _has_blocking_overlay() or _interaction_walk_active or _exit_transition_active:
 		return false
 	var interaction := _nearest_interaction()
 	if interaction.is_empty():
@@ -661,17 +504,11 @@ func _layout_overlay() -> void:
 	_foreground_layer.size = size
 	_stage_effects.position = Vector2.ZERO
 	_stage_effects.size = size
-	_thought_world_mask.position = Vector2.ZERO
-	_thought_world_mask.size = size
 	_scene_title.position = Vector2((size.x - 300.0) * 0.5, 15)
 	_scene_title.size = Vector2(300, 26)
 	_scene_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint_label.position = Vector2((size.x - 360.0) * 0.5, size.y - 28.0)
 	_hint_label.size = Vector2(360, 22)
-	_thought_heading.position = Vector2((size.x - 320.0) * 0.5, 15)
-	_thought_heading.size = Vector2(320, 28)
-	_think_button.position = Vector2(24.0, size.y - 82.0)
-	_think_button.size = Vector2(138, 54)
 	_return_button.position = Vector2(24.0, 22.0)
 	_return_button.size = Vector2(170.0, 62.0)
 	_interaction_hint.position = Vector2((size.x - 360.0) * 0.5, size.y - 76.0)
@@ -702,7 +539,7 @@ func _layout_protagonist() -> void:
 		if _walk_time > 0.0 or _exit_transition_active:
 			vertical_offset = absf(sin(_world_time * 10.5)) * -3.0
 			motion_scale = 1.0 + sin(_world_time * 10.5) * 0.004
-		elif not _thinking:
+		else:
 			vertical_offset = sin(_world_time * 1.75) * 1.7
 			motion_scale = 1.0 + sin(_world_time * 1.75 + 0.6) * 0.006
 	var player_size := PLAYER_BASE_SIZE * scale_factor * motion_scale
@@ -792,31 +629,6 @@ func _draw() -> void:
 			0.7 + mote.z * 1.2,
 			Color(1.0, 0.78, 0.43, maxf(0.04, pulse))
 		)
-
-	if _thinking:
-		var center := protagonist_center()
-		var pulse_radius := 62.0 + sin(_world_time * 2.0) * 4.0
-		draw_circle(center, pulse_radius * 0.72, Color(1.0, 0.79, 0.38, 0.035))
-		for segment in 7:
-			var start := -1.7 + float(segment) * 0.78
-			var length := 0.22 + 0.09 * sin(float(segment) * 1.7)
-			draw_arc(
-				center,
-				pulse_radius + float(segment % 2) * 11.0,
-				start,
-				start + length,
-				12,
-				Color(1.0, 0.86, 0.56, 0.56),
-				1.4,
-				true
-			)
-		for target in _thought_targets:
-			if not is_instance_valid(target) or not target.visible:
-				continue
-			var target_center := target.position + target.size * 0.5
-			draw_line(center, target_center, Color(1.0, 0.83, 0.55, 0.24), 1.0, true)
-			draw_circle(target_center, 3.2, Color(1.0, 0.88, 0.64, 0.78))
-			draw_circle(target_center, 7.0, Color(1.0, 0.78, 0.38, 0.08))
 
 
 func _apply_location(
@@ -937,8 +749,7 @@ func _update_interaction_hint() -> void:
 		return
 	var interaction := _nearest_interaction()
 	_interaction_hint.visible = (
-		not _thinking
-		and not _interaction_walk_active
+		not _interaction_walk_active
 		and not interaction.is_empty()
 		and not is_scene_chrome_hidden()
 	)
@@ -954,16 +765,10 @@ func _update_interaction_hint() -> void:
 ## Buttons never toggle sibling visibility directly.
 func _apply_presentation() -> void:
 	var hide_chrome := is_scene_chrome_hidden() or _interaction_walk_active or _exit_transition_active
-	if _think_button != null:
-		_think_button.visible = not hide_chrome
 	if _return_button != null:
 		_return_button.visible = not hide_chrome and _context_mode
 	if _hint_label != null:
 		_hint_label.visible = not hide_chrome
-	if _thought_world_mask != null:
-		_thought_world_mask.visible = _thinking
-	if _thought_heading != null:
-		_thought_heading.visible = _thinking and not hide_chrome
 	for entry in _exit_nodes:
 		var node: Control = entry.get("node")
 		if node != null:
@@ -1095,19 +900,18 @@ func _update_camera(delta: float) -> void:
 
 
 func _update_parallax_layers() -> void:
-	var thought_zoom := 1.08 if _thinking else 1.0
 	if _backdrop_layer != null:
 		_backdrop_layer.set_view(
 			_background_texture,
 			lerpf(0.5, _camera_pan, 0.42),
-			1.10 * thought_zoom,
+			1.10,
 			float(_location_data.get("crop_anchor", 0.5))
 		)
 	if _foreground_layer != null:
 		_foreground_layer.set_view(
 			_foreground_texture,
 			lerpf(0.5, _camera_pan, 0.92),
-			1.15 * thought_zoom,
+			1.15,
 			0.78
 		)
 
@@ -1156,7 +960,7 @@ func _interaction_style() -> StyleBoxFlat:
 	return style
 
 
-func _think_style(border: Color, bright := false) -> StyleBoxFlat:
+func _chrome_button_style(border: Color, bright := false) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.17, 0.12, 0.075, 0.72) if not bright else Color(0.25, 0.17, 0.09, 0.86)
 	style.border_color = border

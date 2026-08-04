@@ -15,9 +15,9 @@ Japanese 2D fantasy-game presentation while remaining project-original.
 
 ## Design boundary
 
-The lateral scene and thought cloud are presentation and interaction probes.
-They are not the project's innovation claim. Their job is to make embodiment,
-place, time, and currently perceived possibilities legible. A visual match
+The lateral scene is a presentation and interaction probe.
+It is not the project's innovation claim. Its job is to make embodiment,
+place and time legible. A visual match
 does not prove that the single-character simulation works.
 
 The current working direction is defined in
@@ -33,11 +33,9 @@ verifies the existing runtime chain.
   <https://asia.sega.com/unicorn-overlord/cn/system/>
 - *Grand Knights History* remains the structural reference for a physical pawn
   moving through an illustrated tabletop map.
-- *13 Sentinels: Aegis Rim* is a secondary interaction reference only: nearby
-  dialogue, quiet scene framing and the thought/action focus transition. Its
-  1980s campus, modern city and science-fiction art direction are not setting
-  references for Faust:
-  <https://asia.sega.com/13sar/>
+
+The 13 Sentinels-style scene thought cloud / thought mode has been removed;
+nearby dialogue remains a scene interaction.
 
 Official and Wiki screenshots remain external references and must not be
 copied into the repository. When generated art uses them directly, every input
@@ -60,9 +58,9 @@ explicit presentation layers:
 
 The protagonist moves through a virtual stage wider than the viewport. Camera
 tracking keeps the active actor inside a readable central band, dialogue
-temporarily frames both speakers, thought mode tightens the scene around the
-protagonist, and exits use a short staged transition. Reduced-motion mode snaps
-camera and environmental loops to their stable presentation.
+temporarily frames both speakers, and exits use a short staged transition.
+Reduced-motion mode snaps camera and environmental loops to their stable
+presentation.
 
 ## Open implementation references
 

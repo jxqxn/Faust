@@ -146,28 +146,6 @@ func _mcp_capture_tabletop_market_actions() -> void:
 	UiMotionScript.reduced_motion = previous_reduced_motion
 
 
-func _mcp_capture_thought_world() -> void:
-	if state == null:
-		_on_difficulty_selected(0)
-	elif _game_screen == null:
-		_show_game()
-	if _game_screen == null:
-		return
-	_open_scene_context_for_capture()
-	var world := _game_screen.get_node_or_null("SceneWorld")
-	if world != null and world.has_method("set_thinking"):
-		world.set_thinking(true)
-
-
-func _mcp_capture_thought_rite() -> void:
-	_mcp_capture_thought_world()
-	if state == null:
-		return
-	var instance = state.find_rite_instance_by_id(5000001)
-	if instance != null:
-		_on_open_rite_instance(instance.uid)
-
-
 func _mcp_capture_compact_prompt() -> void:
 	if state == null:
 		_on_difficulty_selected(0)
