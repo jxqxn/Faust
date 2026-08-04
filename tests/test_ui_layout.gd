@@ -1224,7 +1224,8 @@ func test_card_shadow_uses_unwarped_alpha_and_height_parallax():
 	var shadow_shader: Shader = load("res://ui/card_shadow.gdshader")
 	assert_not_null(shadow_shader)
 	assert_true(shadow_shader.code.contains("texture(TEXTURE, UV).a"), "shadow should reuse the unwarped card alpha")
-	assert_true(shadow_shader.code.contains("card_alpha * shadow_color.a"), "shadow should tint only the card silhouette")
+	assert_true(shadow_shader.code.contains("blur_radius_px"), "overlapping cards need a compact silhouette-edge blur")
+	assert_true(shadow_shader.code.contains("min(card_alpha, 1.0) * shadow_color.a"), "shadow should tint only the blurred card silhouette")
 	assert_false(shadow_shader.code.contains("tilt"), "the table shadow must not accept pointer perspective")
 
 	var left_idle := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_IDLE_HEIGHT, 0.0, 1000.0)
@@ -1271,6 +1272,32 @@ func test_card_drag_height_changes_shadow_without_reusing_perspective_material()
 	assert_true(widget._perspective_tilt.length() > 0.5, "the held card face should still receive pointer perspective")
 	assert_ne(widget._shadow_surface.material, widget._perspective_material)
 	assert_true(widget._shadow_surface.scale.x < 0.95, "a raised shadow should shrink slightly like the original 2D pass")
+
+
+func test_card_selected_shadow_stays_on_the_table_plane_and_softens_overlap():
+	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
+	var stage := _stage()
+	var widget := CardWidget.make(card)
+	stage.add_child(widget)
+	widget.set_selected(true)
+	widget.offset_transform_position = Vector2(0.0, -CardWidget.SELECTED_LIFT)
+	widget._update_shadow_projection(false, 1.0)
+	var projection := widget._shadow_surface.position + Vector2.ONE * CardWidget.VISUAL_MARGIN
+	assert_almost_eq(
+		projection.y,
+		CardWidget._shadow_offset_for_height(
+			CardWidget.SHADOW_SELECTED_HEIGHT,
+			widget.get_global_rect().get_center().x,
+			widget.get_viewport_rect().size.x
+		).y + CardWidget.SELECTED_LIFT,
+		0.001,
+		"selected-face lift must be cancelled so the shadow remains on lower cards"
+	)
+	assert_almost_eq(widget._shadow_height, CardWidget.SHADOW_SELECTED_HEIGHT, 0.001)
+	assert_true(
+		float(widget._shadow_material.get_shader_parameter("blur_radius_px")) > 1.35,
+		"selected cards should soften the silhouette edge where cards overlap"
+	)
 
 
 func test_card_hover_shader_leans_toward_pointer_instead_of_away():

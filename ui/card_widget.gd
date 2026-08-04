@@ -53,6 +53,7 @@ const DRAG_MAX_ROTATION_DEGREES := 13.0
 const DRAG_VELOCITY_ROTATION_RADIANS := 0.00012
 const DRAG_LIFT_BLEND_DURATION := 0.08
 const SHADOW_IDLE_HEIGHT := 0.10
+const SHADOW_SELECTED_HEIGHT := 0.24
 const SHADOW_DRAG_HEIGHT := 0.35
 # These ratios specify the part of the shadow that must remain visible outside
 # the scaled card silhouette, not a raw offset. Keeping the contract relative
@@ -785,13 +786,30 @@ func _update_depth_layers(pointer: Vector2, dragging: bool, delta: float) -> voi
 func _update_shadow_projection(dragging: bool, weight: float) -> void:
 	if not is_instance_valid(_shadow_surface):
 		return
-	var target_height := SHADOW_DRAG_HEIGHT if dragging else SHADOW_IDLE_HEIGHT
+	var target_height := SHADOW_DRAG_HEIGHT if dragging else (
+		SHADOW_SELECTED_HEIGHT if _selected else SHADOW_IDLE_HEIGHT
+	)
 	_shadow_height = lerpf(_shadow_height, target_height, clampf(weight, 0.0, 1.0))
 	var viewport_width := get_viewport_rect().size.x if is_inside_tree() else 1.0
 	var card_center_x := get_global_rect().get_center().x if is_inside_tree() else viewport_width * 0.5
 	var projection := _shadow_offset_for_height(_shadow_height, card_center_x, viewport_width)
+	# offset_transform_position raises the face as one visual-only Control. Keep
+	# a selected card's shadow on the table plane instead, so it can darken a
+	# lower card where the two silhouettes overlap.
+	if _selected:
+		projection.y += maxf(-offset_transform_position.y, 0.0)
 	_shadow_surface.position = Vector2.ONE * -VISUAL_MARGIN + projection
 	_shadow_surface.scale = Vector2.ONE * _shadow_scale_for_height(_shadow_height)
+	var height_mix := clampf(
+		inverse_lerp(SHADOW_IDLE_HEIGHT, SHADOW_DRAG_HEIGHT, _shadow_height),
+		0.0,
+		1.0
+	)
+	_shadow_material.set_shader_parameter("blur_radius_px", lerpf(1.35, 3.0, height_mix))
+	_shadow_material.set_shader_parameter(
+		"shadow_color",
+		Color(0.0, 0.0, 0.0, lerpf(0.30, 0.42, height_mix))
+	)
 
 
 static func _shadow_offset_for_height(height: float, card_center_x: float, viewport_width: float) -> Vector2:
