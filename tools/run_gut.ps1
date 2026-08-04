@@ -5,6 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $logPath = Join-Path $repoRoot "gut-test.log"
+$stderrPath = Join-Path $repoRoot "gut-test.stderr.log"
 
 if ([string]::IsNullOrWhiteSpace($GodotPath)) {
 	$localCandidate = "C:\Tools\Godot\4.7-stable\Godot_v4.7-stable_win64.exe"
@@ -28,20 +29,27 @@ if ([string]::IsNullOrWhiteSpace($GodotPath) -or -not (Test-Path -LiteralPath $G
 }
 
 Remove-Item -LiteralPath $logPath -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $stderrPath -Force -ErrorAction SilentlyContinue
 $process = Start-Process -FilePath $GodotPath -ArgumentList @(
 	"--headless", "--path", $repoRoot, "--log-file", $logPath,
 	"--script", "tools/run_gut.gd"
-) -Wait -PassThru
+) -Wait -PassThru -RedirectStandardError $stderrPath
 
 $engineErrors = @()
 $leakLines = @()
 $orphanFailures = @()
-if (Test-Path -LiteralPath $logPath) {
-	$engineErrors = Select-String -LiteralPath $logPath -Pattern '(^|\s)(SCRIPT ERROR:|ERROR:)' |
+# Godot prints exit-time leak/resource diagnostics to stderr after the log
+# file is closed; gate on both streams so the leak checks actually fire.
+$gateSources = @($logPath, $stderrPath)
+foreach ($gateSource in $gateSources) {
+	if (-not (Test-Path -LiteralPath $gateSource)) {
+		continue
+	}
+	$engineErrors += Select-String -LiteralPath $gateSource -Pattern '(^|\s)(SCRIPT ERROR:|ERROR:)' |
 		ForEach-Object { $_.Line }
-	$leakLines = Select-String -LiteralPath $logPath -Pattern 'RID allocations|ObjectDB instances leaked|resources still in use at exit' |
+	$leakLines += Select-String -LiteralPath $gateSource -Pattern 'RID allocations|ObjectDB instances leaked|resources still in use at exit|unclaimed string names' |
 		ForEach-Object { $_.Line }
-	$orphanFailures = Select-String -LiteralPath $logPath -Pattern '^\s*Orphans\s+[1-9][0-9]*\b' |
+	$orphanFailures += Select-String -LiteralPath $gateSource -Pattern '^\s*Orphans\s+[1-9][0-9]*\b' |
 		ForEach-Object { $_.Line }
 }
 

@@ -18,13 +18,16 @@ var _by_timing := {}
 # event_off. The source of truth is GameState.event_status.
 var _disabled: Dictionary = {}
 # Config + state refs for condition evaluation.
+# `_state` is a weak reference: GameState owns this runtime (and its lifetime),
+# so a strong back-reference would create a RefCounted reference cycle that
+# leaks the whole state object graph at process exit.
 var _db = null
 var _state = null
 
 
 func build(db, state) -> void:
 	_db = db
-	_state = state
+	_state = weakref(state) if state != null else null
 	_by_timing.clear()
 	_disabled.clear()
 	if db == null:
@@ -125,7 +128,10 @@ static func _is_any(trigger_value) -> bool:
 
 
 func _condition_holds(event_id: int, trigger_ctx: Dictionary = {}) -> bool:
-	if _db == null or _state == null:
+	if _db == null:
+		return true
+	var state = _state.get_ref() if _state is WeakRef else _state
+	if state == null:
 		return true
 	var event: Dictionary = _db.get_event(event_id)
 	var cond: Dictionary = event.get("condition", {})
@@ -133,7 +139,7 @@ func _condition_holds(event_id: int, trigger_ctx: Dictionary = {}) -> bool:
 		return true
 	var ctx := trigger_ctx.duplicate(true)
 	ctx["db"] = _db
-	ctx["state"] = _state
+	ctx["state"] = state
 	ctx["rng"] = null
 	if not ctx.has("rite_state"):
 		ctx["rite_state"] = {}
