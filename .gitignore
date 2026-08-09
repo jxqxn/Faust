@@ -16,3 +16,7 @@ gut-test.stderr.log
 .zcode/
 .reasonix/
 nul
+
+# Machine-specific MCP registration (Godot bridge + UI feedback bridge).
+# Paths point at local tool installs; keep per-machine, not in the repo.
+.mcp.json
