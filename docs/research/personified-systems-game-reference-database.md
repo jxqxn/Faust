@@ -206,6 +206,18 @@
 | 检索日期 | 2026-07-16 |
 | 可核验事实 | 该报道转述 Game Informer 对 P-Studio 负责人 Kazuhisa Wada 的采访；页面记录其关于 Persona 系列持续使用回合制，以及回合制与系列设计／叙事取向关系的发言。原始采访载体为 Game Informer，本条为二次报道。 |
 
+### P5R-INT-003
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 开发者访谈英译 |
+| 语言 | 英文 |
+| 链接 | [Persona 5 Director Katsura Hashino Interview About Development Process and Themes — Persona Central](https://personacentral.com/persona-5-director-hashino-development-interview/) |
+| 原始来源 | 4Gamer 对桥野桂的采访 |
+| 发布日期 | 2016-09-08 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 桥野桂将 P5 的游戏推进分为“日常生活”与“迷宫”两部分，并表示放学后的日常活动、怪盗训练与迷宫玩法彼此连接；协助关系会通过武器改造、舆论影响等能力扩展怪盗活动，前一晚的行为也可能影响第二天。 |
+
 ---
 
 ## B. 《苏丹的游戏》
@@ -499,7 +511,138 @@
 
 ---
 
-## G. 检索范围记录
+## G. 《火焰纹章：风花雪月》
+
+### FE3H-OF-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方玩法说明 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem: Three Houses 101 — Nintendo](https://www.nintendo.com/au/news-and-articles/fire-emblem-three-houses-101/) |
+| 发布日期 | 2019-11-13 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 游戏以月份组织学院生活，并在月底设置主线任务；周初可以个别指导学生，工作日按学生目标自动取得技能经验；休息日可以探索修道院、战斗、参加讲习或休息。探索中的部分活动消耗 Activity Points。支援等级会开放人物互动演出并提供战斗加成，部分人物条件会开放外传任务。 |
+
+### FE3H-INT-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 开发者访谈 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem: Three Houses Developers Are Unsure Why The Series Is Popular In The West — GameSpot](https://www.gamespot.com/articles/fire-emblem-three-houses-developers-are-unsure-why/1100-6468629/) |
+| 发布日期 | 2019-08-02 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 制作人草木原俊行表示，学院与时间跨度的直接灵感来自《火焰纹章：圣战之系谱》。开发早期没有日历；团队在多次原型后加入日历与 Activity Points，希望玩家感到一年中每一天的经过，并集中决定每天应做什么。 |
+
+### FE3H-INT-002
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 开发者访谈英译 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem: Three Houses devs on the game's origins, working with Koei Tecmo, Japanese title, Expansion Pass, more — Nintendo Everything](https://nintendoeverything.com/fire-emblem-three-houses-devs-on-the-games-origins-working-with-koei-tecmo-japanese-title-expansion-pass-more/) |
+| 原始来源 | Famitsu 对草木原俊行、横田弦纪的访谈 |
+| 发布日期 | 2019-07-27 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 开发者将士官学校的一项主题表述为共同学习一年并加深友谊；希望玩家关注同一批人物在学院相识、起初作为盟友，时间跳跃后在战争中不幸以敌人身份重逢的长篇人物戏剧。与《圣战之系谱》更换世代不同，本作通过同一批人物成熟来表现时间经过。 |
+
+### FE3H-INT-003
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 开发者访谈英译 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem: Three Houses devs on the game's difficulty, why there wasn't a Revelation-like route, Cindered Shadows, more — Nintendo Everything](https://nintendoeverything.com/fire-emblem-three-houses-devs-on-the-games-difficulty-why-there-wasnt-a-revelation-like-route-cindered-shadows-more/) |
+| 原始来源 | Famitsu 对草木原俊行、横田弦纪的访谈 |
+| 发布日期 | 2020-02-23 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 横田弦纪表示，大量训练要素使回避战略游戏的玩家也容易上手，战术不强的玩家可以依靠培养推进。开发者还表示，多路线分别代表各自的历史；若存在类似《if》透魔路线的总括路线，会被视为“正确路线”，从而削弱三位领主各自不可动摇的信念与现实困境。 |
+
+### FE3H-IR-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方经营方针说明会资料 |
+| 语言 | 英文 |
+| 链接 | [Financial Results Explanatory Material, 2nd Quarter of Fiscal Year Ending March 2020 — Nintendo](https://www.nintendo.co.jp/ir/pdf/2019/191101_2e.pdf) |
+| 发布日期 | 2019-11-01 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 任天堂称《风花雪月》发售十三周实销超过 170 万，创下当时系列最佳开局；北美占总实销超过 50%。资料同时指出，系列在《觉醒》以后已持续扩大日本以外的知名度，因此不能把海外增长全部单独归因于《风花雪月》。 |
+
+---
+
+## H. 《火焰纹章 Engage》
+
+### FEENG-INT-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方开发者访谈 |
+| 语言 | 英文 |
+| 链接 | [Ask the Developer Vol. 8: Fire Emblem Engage — Part 1 — Nintendo](https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-8-fire-emblem-engage-part-1/) |
+| 发布日期 | 2023-01-17 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 开发组明确对照《风花雪月》的学院历史剧和多路线结构，表示《Engage》采用一个主要目标来简化故事，使玩家集中享受战术玩法，并希望用视觉吸引尚不了解回合制战术 RPG 乐趣的受众。纹章士从第一关提供压倒性力量和华丽攻击，是为了让战棋的乐趣更早、更直观；戒指可以更换，以降低角色配对的试错成本。 |
+
+### FEENG-INT-002
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方开发者访谈 |
+| 语言 | 英文 |
+| 链接 | [Ask the Developer Vol. 8: Fire Emblem Engage — Part 3 — Nintendo](https://www.nintendo.com/au/news-and-articles/ask-the-developer-vol-8-fire-emblem-engage-chapter-3/) |
+| 发布日期 | 2023-01-19 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 普通难度允许玩家在一定程度上依靠强力的结合能力推进，高难度则要求更谨慎使用。羁绊等级可解锁技能继承、武器熟练度和职业选择。游戏约有 650 段角色对话和 1300 段纹章士羁绊对话；因故事不分支，开发者希望玩家通过选择配对和培养喜爱角色形成个性化。 |
+
+### FEENG-OF-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方玩法说明 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem Engage: Fight Together, Grow Together — Base — Nintendo](https://www.nintendo.com/ph/switch/ayfn/system/base.html) |
+| 发布日期 | 2023 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 索姆尼尔可随时返回并自由访问设施。餐厅会增加羁绊并可能提供下一场战斗的属性增益；小游戏、戒指之间、竞技场、支援对话和纹章士羁绊对话分别提供临时属性、经验、资源、技能继承与关系成长。标准训练有独立次数限制；纹章士训练消耗羁绊碎片但可反复进行。官方页面未显示一套由所有设施共同争夺的日历或共享行动点预算。 |
+
+### FEENG-IR-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方财年业绩说明资料 |
+| 语言 | 英文 |
+| 链接 | [Financial Results Explanatory Material, Fiscal Year Ended March 2023 — Nintendo](https://www.nintendo.co.jp/ir/pdf/2023/230509_4e.pdf) |
+| 发布日期 | 2023-05-09 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 截至 2023 年 3 月 31 日，《Engage》全球销量为 161 万，其中日本 43 万、海外 118 万。该数字只描述销售结果，不能证明具体机制造成销量差异。 |
+
+### FEENG-IR-002
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 官方股东大会问答记录 |
+| 语言 | 英文 |
+| 链接 | [The 83rd Annual General Meeting of Shareholders: Q&A Summary — Nintendo](https://www.nintendo.co.jp/ir/pdf/2023/qa2306e.pdf) |
+| 发布日期 | 2023-06-23 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 股东提问称《Engage》销量低于《风花雪月》，尤其在日本以外；古川俊太郎没有确认游戏设计层面的原因，而是回答应通过商品和外部接触点维持消费者对角色与 IP 的依恋。该条只能证明差距曾在官方问答中被提出，不能作为任天堂对因果的确认。 |
+
+### FEENG-REV-001
+
+| 字段 | 内容 |
+|---|---|
+| 来源类型 | 媒体评测 |
+| 语言 | 英文 |
+| 链接 | [Fire Emblem Engage Review — Rings Of Power — GameSpot](https://www.gamespot.com/reviews/fire-emblem-engage-review-rings-of-power/1900-6418017/) |
+| 发布日期 | 2023-01-17 |
+| 检索日期 | 2026-08-10 |
+| 可核验事实 | 评测肯定《Engage》的战斗、平衡与表现，同时批评其线性、可预测的故事以及索姆尼尔活动的重复劳动感。评测称多数活动会在战斗后重置并鼓励玩家返回基地。该条是单一媒体评价，不代表全体玩家统计。 |
+
+---
+
+## I. 检索范围记录
 
 | 范围 | 本次已检索的来源类别 |
 |---|---|
@@ -508,4 +651,6 @@
 | 《密教模拟器》 | GDC 开发者演讲、开发者采访文章、英文 Wiki、中文 Wiki |
 | 《极乐迪斯科》 | 开发者文章、英文 Wiki、英文采访/分析文章 |
 | 《异域镇魂曲》 | 官方手册、英文攻略、英文 Wiki |
+| 《火焰纹章：风花雪月》 | 任天堂官方玩法说明、制作人访谈 |
+| 《火焰纹章 Engage》 | 任天堂官方玩法说明、官方开发者访谈、官方财报与股东问答、英文媒体评测 |
 | 比较材料 | 中英文媒体评测与试玩文章索引 |

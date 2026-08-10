@@ -6,6 +6,8 @@
 >
 > 关联研究：[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)
 
+> 关于《风花雪月》与 P5 谁更接近本作人物日程结构的比较，见 [`three-houses-p5-sultan-schedule-comparison.md`](three-houses-p5-sultan-schedule-comparison.md)。
+
 ## 1. 核心结论
 
 《苏丹的游戏》确实完成了一次与《火焰纹章》相似的类型改造，但两者的方向不同：

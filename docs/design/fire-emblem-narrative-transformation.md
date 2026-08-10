@@ -10,6 +10,10 @@
 
 > 关于自走棋如何通过自动化降低《苏丹的游戏》式管理负担，见 [`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)。
 
+> 关于《风花雪月》与 P5 日程结构的分层比较，见 [`three-houses-p5-sultan-schedule-comparison.md`](three-houses-p5-sultan-schedule-comparison.md)。
+
+> 关于《风花雪月》的校园闭环、破圈机制与《Engage》对照，见 [`three-houses-campus-architecture-and-engage-contrast.md`](three-houses-campus-architecture-and-engage-contrast.md)。
+
 ## 1. 核心结论
 
 初代《火焰纹章》真正的创新，不是给战棋添加更多过场，而是把战棋中的“单位”改造成玩家会培养、会失去、会谈论其经历的具体人物，让战术操作本身产生叙事。
