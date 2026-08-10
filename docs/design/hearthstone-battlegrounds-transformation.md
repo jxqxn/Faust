@@ -4,7 +4,7 @@
 >
 > 用途：解释《酒馆战棋》如何通过高比例复用《炉石传说》的对象、表现、规则语言与产品入口，只集中改写少数高杠杆控制流，形成自走棋体验；并据此约束 Faust 对《苏丹的游戏》底座的改造方法。
 >
-> 关联研究：[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)
+> 关联研究：[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)、[`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)
 
 ## 1. 核心结论
 
@@ -140,6 +140,28 @@
 
 随机性的作用不是替玩家决定结果，而是持续向玩家提供不完全相同的问题。高手优势主要表现为识别当前资源的用途、衡量转型成本和及时放弃已经失效的预案。
 
+### 6.1 成型是成长引擎的启动点
+
+《酒馆战棋》中，找到核心单位或凑齐关键组合通常不表示阵容已经完成。争夺第一的阵容往往还需要把后续每一轮的金币、随从、法术和战斗触发转化为永久属性、经济或召唤能力。
+
+官方卡池长期反复使用“永久获得属性”“本局持续增强”“每回合继续成长”和“保留战斗增益”等设计。因此，许多阵容的核心不是七个最终单位，而是一台能够继续接收资源并提高产出效率的增长引擎。
+
+来源：
+
+- [暴雪 26.6 补丁中的永久成长设计](https://hearthstone.blizzard.com/en-gb/news/23973115/26-6-patch-notes)
+- [暴雪卡牌库：塔蕾苟萨保留战斗增益](https://hearthstone.blizzard.com/en-us/battlegrounds/72062-tarecgosa?tier=3&type=minion)
+
+这使玩家不仅比较当前战力，也比较：
+
+- 谁更早启动成长核心；
+- 谁能以更高效率把当轮资源变成下一轮强度；
+- 谁能在牺牲即时战力追求成长时保存足够生命；
+- 谁能在终局用圣盾、烈毒、亡语、攻击顺序等结构越过单纯数值。
+
+所以不能把酒馆战棋简化成纯粹的大数字竞赛。更准确的结构是：即时战力决定能否活到引擎启动，成长速度决定长期上限，终局针对防止结果完全退化成数值比较。
+
+这与四川麻将“血流成河”的相似之处，不是二者采用同一种数值成长，而是都让首次成型成为持续运转的开始：酒馆阵容继续成长，成型牌型继续接受牌流并反复结算。完整证据边界见 [`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)。
+
 ## 7. 为什么八人排名减轻了竞争挫败
 
 经典对战只有赢或输；酒馆战棋用第一至第八名表达表现，通常进入前四便能提升评分。
@@ -229,6 +251,7 @@
 5. **结果必须回写同一人物。** 对局或行动不能成为无后果的小玩法；成长、伤害、关系和死亡要继续改变校园生活及后续选择。
 6. **限制活跃决策面。** 不要求玩家同时理解全部卡牌和仪式，而是在每个决策窗口压缩出少量真正不同的行动方案。
 7. **优先改控制流，不机械复制表层机制。** 是否需要商店、合成、名次或多人淘汰，必须由本项目的问题决定，不能因为它们属于酒馆战棋就默认采用。
+8. **区分首次成型与真正结束。** 后续研究应确认 Faust 中什么结构会在首次成型后继续存在，以及它如何把新的输入转化成成长、收益与风险；这不等于预先批准持续阵容或持续仪式。
 
 ## 11. 后续原型的检验问题
 
@@ -243,4 +266,4 @@
 
 最终原则是：
 
-> 《酒馆战棋》没有靠增加更多系统完成创新，而是让《炉石传说》已有对象进入一种新的生命周期。Faust 的自走棋化同样应当让既有卡牌、人物和仪式进入新的决策与结算循环，而不是在它们旁边搭建另一款游戏。
+> 《酒馆战棋》没有靠增加更多系统完成创新，而是让《炉石传说》已有对象进入一种新的生命周期，并让阵容首次成型后继续成长和接受检验。Faust 的自走棋化同样应当让既有卡牌、人物和仪式进入新的决策与结算循环，而不是在它们旁边搭建另一款游戏。

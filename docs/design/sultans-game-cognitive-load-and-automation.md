@@ -4,7 +4,7 @@
 >
 > 用途：确认《苏丹的游戏》中后期手牌、仪式与重复操作问题的性质，并规定 Faust 引入自走棋和自动化时应当减少什么、保留什么。
 >
-> 关联研究：[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)
+> 关联研究：[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)、[`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)
 
 ## 1. 核心结论
 

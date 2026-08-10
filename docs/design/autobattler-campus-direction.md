@@ -14,6 +14,8 @@
 
 > 《酒馆战棋》如何复用《炉石传说》的对象与表现、集中改写少数高杠杆控制流，以及这一方法对 Faust 宿主系统改造的约束，见 [`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)。
 
+> 麻将如何为自走棋提供随机牌流、有限容量、共享资源与组合形成结构，《酒馆战棋》为何与四川麻将“血流成河”共享“首次成型后继续运转”的结构，以及为什么不能把酒馆战棋规则直接套入《苏丹的游戏》，见 [`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)。
+
 ## 1. 一句话定位
 
 在《苏丹的游戏》式卡牌流转与仪式投放框架上，创作一款发生于“魔力之都”的校园自走棋：让原本重玩法、轻叙事的阵容与自动对局，因具名角色、养成、关系与校园生活而成为玩家愿意共同经历的故事。
