@@ -6,6 +6,14 @@
 >
 > 本文确认产品方向与不可替代的规则语法，不等于批准具体角色、课程、剧情、数值、卡池或战斗规则。
 
+> 《火焰纹章》如何通过具名单位、持续养成、不可逆后果与战术选择产生人物叙事的研究结论，见 [`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)。
+
+> 《苏丹的游戏》如何把《密教模拟器》的抽象卡牌资源转译为具名、连续、关系化的人物叙事，以及这一结构对 Faust 的约束，见 [`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)。
+
+> 《苏丹的游戏》中后期为何会出现手牌、仪式与重复操作的认知超载，以及自走棋化应当替换哪些管理负担，见 [`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)。
+
+> 《酒馆战棋》如何复用《炉石传说》的对象与表现、集中改写少数高杠杆控制流，以及这一方法对 Faust 宿主系统改造的约束，见 [`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)。
+
 ## 1. 一句话定位
 
 在《苏丹的游戏》式卡牌流转与仪式投放框架上，创作一款发生于“魔力之都”的校园自走棋：让原本重玩法、轻叙事的阵容与自动对局，因具名角色、养成、关系与校园生活而成为玩家愿意共同经历的故事。
