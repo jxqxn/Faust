@@ -113,4 +113,3 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
   next content batch. It is a conservative static graph, not a replacement for
   source-backed runtime verification or a reason to mark every short-hop key
   supported.
-

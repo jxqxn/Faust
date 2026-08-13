@@ -83,4 +83,3 @@ presentation.
   `assets/third_party/kenney_new_platformer_subset/audio/`
 - Original procedural fog, grain, and vignette shader:
   `ui/shaders/thought_world_atmosphere.gdshader`
-

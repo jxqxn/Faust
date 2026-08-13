@@ -643,4 +643,3 @@ Faust 已建立两条对原创开发同样重要的边界：
 - `Faust-local-source/_unpack/data/config/loot/`
 
 逆向语料库只读。任何新的原作兼容性结论仍须遵循 `faust-clone-reference` 的证据层级、SRC 指针和高风险双信号规则。
-
