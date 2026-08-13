@@ -6,6 +6,10 @@
 >
 > 关联研究：[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)、[`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)
 
+> 关于《风花雪月》如何用周期目标和有限日程组织人物名册，以及对应的《苏丹的游戏》改造方向，见 [`three-houses-sultan-campus-loop-comparison.md`](three-houses-sultan-campus-loop-comparison.md)。
+
+> 定量证据与未决边界见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `SG-CFG-001`、`SG-UX-001`—`SG-UX-003`、`UX-METHOD-001` 与 `FAUST-HYP-001`。尤其注意：痛点存在已有外部证据，但失控阈值和最佳自动化层级仍无 Faust 玩家数据。
+
 ## 1. 核心结论
 
 《苏丹的游戏》成功地让人物卡、物品卡和事件后果都值得玩家在意，却在中后期要求玩家同时在意过多对象。

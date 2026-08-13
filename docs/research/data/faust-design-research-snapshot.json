@@ -1,0 +1,172 @@
+﻿{
+    "schema_version":  1,
+    "snapshot_date":  "2026-08-13",
+    "generator":  "tools/export_design_research_snapshot.ps1",
+    "corpus":  {
+                   "logical_root":  "Faust-local-source/_unpack/data/config",
+                   "included_directories":  [
+                                                "rite",
+                                                "after_story"
+                                            ],
+                   "fingerprint_algorithm":  "sha256(relative_path + tab + file_sha256, newline joined, sorted by file name within each directory)",
+                   "fingerprint":  "d3ca63b5c5d530a4b134b5c1ca45c2027bbbebe3accabaa10894b7ecc6f811fb",
+                   "input_file_count":  1561
+               },
+    "parsing":  {
+                    "successful_file_count":  1561,
+                    "error_count":  0,
+                    "errors":  [
+
+                               ]
+                },
+    "rite":  {
+                 "definition_file_count":  1495,
+                 "parsed_definition_count":  1495,
+                 "round_zero_count":  122,
+                 "round_positive_count":  1373,
+                 "auto_begin_count":  404,
+                 "auto_result_count":  18,
+                 "total_card_slot_definitions":  5393,
+                 "definitions_with_card_slots":  1494,
+                 "maximum_slots_in_one_definition":  17,
+                 "slot_count_histogram":  {
+                                              "0":  1,
+                                              "1":  208,
+                                              "2":  459,
+                                              "3":  241,
+                                              "4":  201,
+                                              "5":  144,
+                                              "6":  60,
+                                              "7":  48,
+                                              "8":  17,
+                                              "9":  40,
+                                              "10":  43,
+                                              "11":  19,
+                                              "12":  6,
+                                              "13":  3,
+                                              "14":  2,
+                                              "16":  1,
+                                              "17":  2
+                                          },
+                 "total_settlement_branch_entries":  8994,
+                 "definitions_with_settlement_branches":  1491,
+                 "maximum_settlement_branches_in_one_definition":  334,
+                 "maximum_slot_definitions":  [
+                                                  {
+                                                      "file":  "5006800.json",
+                                                      "id":  5006800,
+                                                      "name":  "游猎会",
+                                                      "round_number":  2,
+                                                      "auto_begin":  0,
+                                                      "auto_result":  0,
+                                                      "slot_count":  17,
+                                                      "settlement_branch_count":  19
+                                                  },
+                                                  {
+                                                      "file":  "5010058.json",
+                                                      "id":  5010058,
+                                                      "name":  "讨伐",
+                                                      "round_number":  3,
+                                                      "auto_begin":  0,
+                                                      "auto_result":  0,
+                                                      "slot_count":  17,
+                                                      "settlement_branch_count":  3
+                                                  },
+                                                  {
+                                                      "file":  "5010009.json",
+                                                      "id":  5010009,
+                                                      "name":  "誓师",
+                                                      "round_number":  1,
+                                                      "auto_begin":  0,
+                                                      "auto_result":  0,
+                                                      "slot_count":  16,
+                                                      "settlement_branch_count":  10
+                                                  },
+                                                  {
+                                                      "file":  "5006556.json",
+                                                      "id":  5006556,
+                                                      "name":  "连你也……",
+                                                      "round_number":  1,
+                                                      "auto_begin":  0,
+                                                      "auto_result":  0,
+                                                      "slot_count":  14,
+                                                      "settlement_branch_count":  6
+                                                  },
+                                                  {
+                                                      "file":  "5010014.json",
+                                                      "id":  5010014,
+                                                      "name":  "直面苏丹",
+                                                      "round_number":  0,
+                                                      "auto_begin":  1,
+                                                      "auto_result":  0,
+                                                      "slot_count":  14,
+                                                      "settlement_branch_count":  14
+                                                  }
+                                              ],
+                 "maximum_branch_definitions":  [
+                                                    {
+                                                        "file":  "5000002.json",
+                                                        "id":  5000002,
+                                                        "name":  "俺寻思",
+                                                        "round_number":  0,
+                                                        "auto_begin":  0,
+                                                        "auto_result":  0,
+                                                        "slot_count":  1,
+                                                        "settlement_branch_count":  334
+                                                    },
+                                                    {
+                                                        "file":  "5010087.json",
+                                                        "id":  5010087,
+                                                        "name":  "神与人",
+                                                        "round_number":  1,
+                                                        "auto_begin":  0,
+                                                        "auto_result":  0,
+                                                        "slot_count":  9,
+                                                        "settlement_branch_count":  166
+                                                    },
+                                                    {
+                                                        "file":  "5010023.json",
+                                                        "id":  5010023,
+                                                        "name":  "阶梯",
+                                                        "round_number":  1,
+                                                        "auto_begin":  0,
+                                                        "auto_result":  0,
+                                                        "slot_count":  11,
+                                                        "settlement_branch_count":  142
+                                                    },
+                                                    {
+                                                        "file":  "5010082.json",
+                                                        "id":  5010082,
+                                                        "name":  "神之天平（废弃）",
+                                                        "round_number":  1,
+                                                        "auto_begin":  0,
+                                                        "auto_result":  0,
+                                                        "slot_count":  11,
+                                                        "settlement_branch_count":  131
+                                                    },
+                                                    {
+                                                        "file":  "5010083.json",
+                                                        "id":  5010083,
+                                                        "name":  "神之天平（废弃）",
+                                                        "round_number":  1,
+                                                        "auto_begin":  0,
+                                                        "auto_result":  0,
+                                                        "slot_count":  11,
+                                                        "settlement_branch_count":  131
+                                                    }
+                                                ]
+             },
+    "after_story":  {
+                        "definition_file_count":  66,
+                        "parsed_definition_count":  66,
+                        "total_prior_entries":  0,
+                        "total_extra_entries":  7750,
+                        "definitions_with_prior_entries":  0,
+                        "definitions_with_extra_entries":  66
+                    },
+    "interpretation_guard":  [
+                                 "Counts describe static configuration definitions, not runtime instances or player-visible content.",
+                                 "auto_begin and auto_result are configuration fields and do not independently prove runtime timing.",
+                                 "after_story entry counts are conditional text entries, not a count of mutually exclusive player endings."
+                             ]
+}

@@ -8,6 +8,10 @@
 
 > 关于《风花雪月》与 P5 谁更接近本作人物日程结构的比较，见 [`three-houses-p5-sultan-schedule-comparison.md`](three-houses-p5-sultan-schedule-comparison.md)。
 
+> 关于《风花雪月》校园循环与本作基座的同构、差异和首要改造，见 [`three-houses-sultan-campus-loop-comparison.md`](three-houses-sultan-campus-loop-comparison.md)。
+
+> 证据状态、通用叙事测量方法与项目约束见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `NARR-SYN-001`、`FAUST-DES-001` 与 `FAUST-HYP-001`；本文的类型转译判断是用户确认的项目解释，不是已发表的单一因果结论。
+
 ## 1. 核心结论
 
 《苏丹的游戏》确实完成了一次与《火焰纹章》相似的类型改造，但两者的方向不同：

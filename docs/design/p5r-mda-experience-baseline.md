@@ -6,6 +6,8 @@
 
 > 关于 P5 与《火焰纹章：风花雪月》日程结构的分层比较，见 [`three-houses-p5-sultan-schedule-comparison.md`](three-houses-p5-sultan-schedule-comparison.md)。
 
+> P5R 日历资料与逐日全目标路线能够证明的范围，见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `P5R-RULE-001` 与 `P5R-MODEL-001`；它们不构成普通玩家行为或体验因果数据。
+
 ## 结论先行
 
 P5R 的“理想校园生活”感并不来自日历 UI，也不来自单独的一条好感度数值。它来自同一份不可逆时间预算同时被三类事情争夺：

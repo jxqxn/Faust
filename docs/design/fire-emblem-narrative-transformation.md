@@ -14,6 +14,8 @@
 
 > 关于《风花雪月》的校园闭环、破圈机制与《Engage》对照，见 [`three-houses-campus-architecture-and-engage-contrast.md`](three-houses-campus-architecture-and-engage-contrast.md)。
 
+> 相关销量、调查、开发意图及因果限制见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `FE3H-BEH-001`、`FE3H-MKT-001`、`FE3H-DES-001` 与 `FE3H-EXPL-001`。
+
 ## 1. 核心结论
 
 初代《火焰纹章》真正的创新，不是给战棋添加更多过场，而是把战棋中的“单位”改造成玩家会培养、会失去、会谈论其经历的具体人物，让战术操作本身产生叙事。

@@ -10,6 +10,8 @@
 
 > 关于《风花雪月》的校园闭环以及它与《Engage》索姆尼尔的结构差异，见 [`three-houses-campus-architecture-and-engage-contrast.md`](three-houses-campus-architecture-and-engage-contrast.md)。
 
+> 日历、招募、调查和构造性路线的证据边界见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `FE3H-RULE-001`、`FE3H-BEH-001`、`P5R-RULE-001` 与 `P5R-MODEL-001`。攻略只能证明至少存在一条可行路线，不能证明普通玩家的实际决策过程。
+
 ## 1. 明确结论
 
 如果比较的是《苏丹的游戏》整套“人物调度—时间推进—持续养成”骨架，《风花雪月》比 P5 更接近；但如果只比较“消耗一次日程机会，推进某个具名人物的一段连续剧情”，P5 更接近。

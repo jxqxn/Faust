@@ -12,6 +12,15 @@
 
 实现游戏逻辑时，使用 `$faust-clone-reference` skill。它提供：信任层级、SRC 指针验证、双信号规则、功能域 MANIFEST 导航、已知陷阱清单。该 skill 提供逆向方法论和验证流程。注意：skill 本身也是 .md 文档——语料库里的 .c 反编译和 dump.cs 才是事实本身，skill 教你怎么找到并验证它们。
 
+## 设计研究证据入口
+
+新会话在引用既往游戏设计研究或提出数值规则前，先读 `docs/research/README.md`，再按其中导航使用 `docs/research/faust-game-design-data-research.md` 的主张登记表、来源登记表和证据缺口。
+
+- 引用《苏丹的游戏》静态配置数字前，运行 `tools/export_design_research_snapshot.ps1 -Check`；配置存在不等于单局可见、运行时可达或玩家实际经历。
+- 判断原作运行时行为时仍必须使用 `$faust-clone-reference`，不能让研究总报告替代 `.c`、`dump.cs` 与独立信号。
+- 当前没有 Faust 正式玩家实验、逐局遥测、NASA-TLX/DRT 结果，也没有经验证的手牌上限、候选数量或自动化层级。后续智能体不得把研究方案、外部类比或用户确认的方向写成已测参数。
+- 修改研究总报告、快照或核心设计研究后，运行 `tools/check_design_research.ps1`。
+
 ## 当前进度
 
 Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢复、仪式浮层、事件队列、运行时卡牌/仪式实例、v5 存读档与第一批常驻仪式。卡牌 UID、运行时标签、数量和仪式槽位归属均由 `CardInstance` 维护；v4 及更早存档明确拒绝加载且不显示继续游戏。

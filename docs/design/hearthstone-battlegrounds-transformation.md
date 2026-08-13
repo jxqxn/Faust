@@ -6,6 +6,8 @@
 >
 > 关联研究：[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)、[`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)
 
+> 模拟器、聚合统计、官方分层数据和学术模型的来源与限制见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `BG-SIM-001`、`BG-SIM-002`、`BG-BEH-001` 与 `BG-METHOD-001`。可借鉴的是定量闭环，不是旧版本的具体平衡结论。
+
 ## 1. 核心结论
 
 《酒馆战棋》的低成本并不是“没有开发一套新游戏”，而是：

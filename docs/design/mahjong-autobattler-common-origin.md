@@ -6,6 +6,8 @@
 >
 > 关联研究：[`hearthstone-battlegrounds-transformation.md`](hearthstone-battlegrounds-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)、[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)
 
+> 四川麻将模型、缺牌数算法与血流成河类比的证据边界见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `MJ-MODEL-001`、`MJ-MODEL-002` 与 `MJ-HYP-001`。血流成河和《酒馆战棋》的共同结构是项目假说，尚无专门的节奏或爽感统计。
+
 ## 1. 核心修正
 
 《酒馆战棋》和 Faust 不应被理解为前后继承关系：
