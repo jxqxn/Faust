@@ -6,7 +6,7 @@
 >
 > 关联研究：[`fire-emblem-narrative-transformation.md`](fire-emblem-narrative-transformation.md)、[`sultans-game-narrative-transformation.md`](sultans-game-narrative-transformation.md)、[`sultans-game-cognitive-load-and-automation.md`](sultans-game-cognitive-load-and-automation.md)、[`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)
 
-> 模拟器、聚合统计、官方分层数据和学术模型的来源与限制见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `BG-SIM-001`、`BG-SIM-002`、`BG-BEH-001` 与 `BG-METHOD-001`。可借鉴的是定量闭环，不是旧版本的具体平衡结论。
+> 模拟器、聚合统计、官方分层数据、早期手牌拥塞原型和母游戏内新增模式研究的来源与限制，见[游戏设计数据研究总报告](../research/faust-game-design-data-research.md)中的 `BG-SIM-001`、`BG-SIM-002`、`BG-BEH-001`、`BG-PROT-001`、`TFT-DEV-001` 与 `AB-HOST-001`。可借鉴的是控制流改造与定量闭环，不是旧版本的具体平衡结论。
 
 ## 1. 核心结论
 
@@ -310,3 +310,4 @@
 最终原则是：
 
 > 《酒馆战棋》没有靠增加更多系统完成创新，而是让《炉石传说》已有对象进入一种新的生命周期，并让阵容首次成型后继续成长和接受检验。Faust 的自走棋化同样应当让既有卡牌、人物和仪式进入新的决策与结算循环，而不是在它们旁边搭建另一款游戏。
+

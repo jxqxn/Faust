@@ -4,6 +4,8 @@
 >
 > 最近整理：2026-08-13
 
+> 产品方向：[`autobattler-campus-direction.md`](../design/autobattler-campus-direction.md) 是唯一最高产品方向。各文档记录的“下一步”只表示当时的讨论检查点或研究建议；用户指导、新证据和原型发现可以随时改变顺序。
+
 ## 新会话必读
 
 1. 先读[游戏设计数据研究总报告](faust-game-design-data-research.md)的“主张登记表”，按主张 ID 区分外部事实、本地复现、本报告计算、用户确认的项目判断、研究解释、待验证假说和未知。
@@ -34,7 +36,7 @@
 - 《火焰纹章》人物化改造：[叙事转化](../design/fire-emblem-narrative-transformation.md)，对应 `FE3H-DES-001`、`FE3H-EXPL-001`。
 - 《风花雪月》校园架构与《Engage》：[校园架构](../design/three-houses-campus-architecture-and-engage-contrast.md)，对应 `FE3H-BEH-001`、`FE3H-MKT-001`、`FE3H-DES-001`、`FE3H-EXPL-001`。
 - 《风花雪月》、P5R 与《苏丹的游戏》日程比较：[日程比较](../design/three-houses-p5-sultan-schedule-comparison.md)与[校园循环对照](../design/three-houses-sultan-campus-loop-comparison.md)，对应 `FE3H-RULE-001`、`P5R-RULE-001`、`P5R-MODEL-001`。
-- 《酒馆战棋》的自走棋化：[改造研究](../design/hearthstone-battlegrounds-transformation.md)，对应 `BG-SIM-001`、`BG-BEH-001`、`BG-METHOD-001`。
+- 自走棋作为母游戏内新增模式及《酒馆战棋》的改造：[总报告 6A 节](faust-game-design-data-research.md#6a-自走棋作为母游戏内新增模式开发复用产品增量与证据边界)与[酒馆战棋改造研究](../design/hearthstone-battlegrounds-transformation.md)，对应 `TFT-DEV-001`—`TFT-METHOD-001`、`BG-PROT-001`、`AB-HOST-001`、`BG-SIM-001` 与 `BG-METHOD-001`。
 - 麻将、血流成河与自走棋共同结构：[共同结构](../design/mahjong-autobattler-common-origin.md)，对应 `MJ-MODEL-001`、`MJ-MODEL-002`、`MJ-HYP-001`。
 - P5R 体验与有限日程：[MDA 基线](../design/p5r-mda-experience-baseline.md)，对应 `P5R-RULE-001`、`P5R-MODEL-001`。
 
@@ -53,3 +55,4 @@
 ```
 
 检查器会验证静态快照未过期、总报告关键结构存在、入口文档可发现，以及各核心设计研究已链接到证据总报告。
+

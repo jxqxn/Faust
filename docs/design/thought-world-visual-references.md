@@ -17,13 +17,15 @@ Japanese 2D fantasy-game presentation while remaining project-original.
 
 The lateral scene is a presentation and interaction probe.
 It is not the project's innovation claim. Its job is to make embodiment,
-place and time legible. A visual match
-does not prove that the single-character simulation works.
+place and time legible. A visual match does not prove that the campus-
+autobattler direction or its persistent named-character loop works.
 
-The current working direction is defined in
-`docs/design/single-character-will-simulation.md`. Sultan rites and cards may
-continue to appear here as technical placeholders, but their presence only
-verifies the existing runtime chain.
+The sole highest-level product direction is defined in
+`docs/design/autobattler-campus-direction.md`.
+`docs/design/single-character-will-simulation.md` is subordinate research about
+character interiority and continuity. Sultan rites and cards may continue to
+appear here as technical placeholders, but their presence only verifies the
+existing runtime chain.
 
 ## Reference hierarchy
 
@@ -81,3 +83,4 @@ presentation.
   `assets/third_party/kenney_new_platformer_subset/audio/`
 - Original procedural fog, grain, and vignette shader:
   `ui/shaders/thought_world_atmosphere.gdshader`
+
