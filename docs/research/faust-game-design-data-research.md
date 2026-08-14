@@ -210,7 +210,15 @@
 | LH-RULE-002 | 地块之间存在组合（山脉→哥布林、宝库→石像鬼、草地邻接 +50% 治疗），放置因此是有代价的取舍 | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 组合是配置规则，不是玩家行为数据 |
 | LH-RULE-003 | 远征结算三档：战斗死亡保留 30%、非营地撤退 60%、营地格撤退 100%、击败 Boss 后 100% | 外部事实 | A | LH-GUIDE-001 | 攻略级数值，非官方文档，口径可能随版本调整 |
 | LH-RULE-004 | 营地是跨局 meta 成长；死亡仍带回 30% 资源，设计上不惩罚实验 | 外部事实 | A | LH-OFFICIAL-002、LH-GUIDE-001 | 开发者意图 + 攻略；无玩家实验数据 |
+| LH-RULE-005 | 怪物属性随圈数按公式 `base × n × (1+(n−1)×loopmod) × difficultymod` 成长（loopmod 第 1—4 章为 0.02/0.03/0.04/0.04，difficultymod 为 0.95/1/1.05/1.1）；第四章化简为 `y=(0.04n²+0.96n)×base×1.1`，怪物为二次成长而主角属性线性成长，因此战斗刷法存在极限圈数（社区算例：群伤沙漠贼约 1300 圈封顶） | 外部事实 | B | LH-GUIDE-007、LH-GUIDE-008 | 社区逆向公式（reddit 转载），非官方文档；未逐版本复核 |
+| LH-RULE-006 | 装备有等级和四档稀有度（普通/蓝/黄/橙），稀有度越高附加属性越多；未使用装备可分解为资源 | 外部事实 | B | LH-GUIDE-006 | 攻略级描述，非官方数值表 |
+| LH-RULE-007 | 地块组合带明确数值：山脉+岩石 3×3 变山巅（+120 HP、每 2 天生成鹰身女妖）、草地邻接非草地变开花草地（3 HP vs 2 HP）、村庄+吸血鬼公馆变洗劫村庄（每圈最多 4 食尸鬼、3 圈后变伯爵领地 `[15+5×loop]` HP）、血林变饥饿林（`[5+3×loop]` 伤害、击杀血量低于 20% 的敌人）、森林受风暴神殿雷击变燃烧森林（+0.5 魔法伤害）、宝库填满 8 格给资源装备（品质随圈数）、河流+沙漠变绿洲（英雄 −0.5% 攻速、其他生物 −1%）、河流+战场变沉船（每圈宝箱+海妖）、河流+荒地变桥或芦苇（每 3 天鱼人）、郊区 5 格十字变城镇（+2 经验）、战场内荒地变血径（每 4 天血凝块）、哥布林营地+沼泽变瞭望台 | 外部事实 | B | LH-GUIDE-002 | IGN wiki 攻略数值，非官方文档；数值可能随版本调整 |
+| LH-RULE-008 | Boss 按章节各一：第一章巫妖（Lich）、第二章女祭司（Priestess）、第三章猎人（Hunter）、第四章 Omega；另有秘密 Boss 蛙王 | 外部事实 | B | LH-GUIDE-004 | 攻略级结构描述，非官方数值表 |
+| LH-RULE-009 | 资源约 13 种（星界宝珠、记忆碎片、口粮、蜕变、来世/工艺/进化/扩张/不朽/统一宝珠、保存岩石、稳定金属、稳定木材），由碎片合成（10—20 碎片合 1 个完整资源），来源分为敌人掉落、卡牌掉落与地块转换三类 | 外部事实 | B | LH-GUIDE-003 | 攻略级清单，非官方掉落表 |
+| LH-RULE-010 | 营地建筑提供跨局能力并带具体数值：营火进入恢复 20% 最大 HP、草药屋药水恢复 4% 最大 HP 且最多携带 3 瓶（营火补 2 瓶）、农场每完成一圈给 1 口粮、野战厨房 +10% 营火治疗、体育馆解锁怪物击杀获得特质、墓穴解锁死灵法师 | 外部事实 | B | LH-GUIDE-005 | 攻略级数值，非官方文档 |
+| LH-RULE-011 | 耐力系统：主角基础耐力 100、每秒自然恢复 25；攻击/反击消耗 25、闪避消耗 10；耐力耗尽进入疲劳，攻速固定为默认（约 0.6667 次/秒）且闪避减半 | 外部事实 | B | LH-GUIDE-008 | 社区逆向数值，非官方文档 |
 | LH-MKT-001 | 首周销量超 50 万，约 9 个月后 Steam 版累计破 100 万 | 外部事实 | A | LH-OFFICIAL-004、LH-OFFICIAL-005 | 整体销量，不识别循环结构的单独因果贡献 |
+| LH-MKT-002 | 发售首个周末 Steam 同时在线峰值约 5 万 | 外部事实 | B | LH-PRESS-003 | 单点峰值，非留存或销量口径 |
 | LH-DEV-001 | 极简核心为“四个 Boss、一个营地、一个无限循环的英雄”；限制元素数量并打磨每个，平衡靠加法制衡而非删减 | 外部事实 | A | LH-OFFICIAL-001、LH-OFFICIAL-003 | 开发者方法论自述，非效果实验 |
 | LH-EXPL-001 | 循环结构是“首次成型后继续运转”的一个候选原型：自动循环持续接受地块输入并转化为战斗、资源与风险 | 研究解释 | C | LH-RULE-001—LH-RULE-004、MJ-HYP-001 | 结构类比；Loop Hero 是单主角，不含具名关系或阵容转换 |
 | LH-GAP-001 | 循环结构为何成立的逐局玩家行为（撤退时机、地块放置决策、死亡率）已有公开量化 | 未知 | U | 无 | 无公开玩家遥测，不得填入推测数值 |
@@ -1459,8 +1467,16 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | LH-OFFICIAL-004 | [gamesindustry.biz 首周销量报道](https://www.gamesindustry.biz/indie-breakout-loop-hero-sells-500-000-in-first-week) | 2021-03-11；引述 Devolver 公告 | 首周销量超 50 万；Devolver 史上最快售出原声带 | 二手行业媒体转述 |
 | LH-OFFICIAL-005 | [TechRaptor: Steam 破 100 万](https://techraptor.net/gaming/news/loop-hero-sales-hits-1-million-copies-on-steam) | 2021-12；Switch 版发布同期 | Steam 版累计销量超 100 万 | 二手行业媒体转述；Steam 销量不含其他平台 |
 | LH-GUIDE-001 | [IGN wiki: Risk Vs. Reward](https://www.ign.com/wikis/loop-hero/Risk_Vs._Reward) | 攻略持续维护；核对 2026-08-14 | 死亡/撤退三档结算精确数值（30%/60%/100%） | 攻略级数值，非官方文档 |
+| LH-GUIDE-002 | [IGN wiki: All Tile Combos and Synergies](https://www.ign.com/wikis/loop-hero/All_Tile_Combos_and_Synergies) | 攻略持续维护；核对 2026-08-14 | 地块组合完整清单与数值（山巅 +120 HP、伯爵领地 `[15+5×loop]` HP、绿洲攻速等） | 攻略级数值，非官方文档，口径可能随版本调整 |
+| LH-GUIDE-003 | [IGN wiki: All Resources](https://www.ign.com/wikis/loop-hero/All_Resources) | 攻略持续维护；核对 2026-08-14 | 约 13 种资源清单、碎片合成数量（10—20 碎片合一）与三类获取途径 | 攻略级清单，非官方掉落表 |
+| LH-GUIDE-004 | [IGN wiki: Bosses](https://www.ign.com/wikis/loop-hero/Bosses) | 攻略持续维护；核对 2026-08-14 | 四章 Boss 结构（巫妖/女祭司/猎人/Omega）与秘密 Boss 蛙王 | 攻略级结构描述，非官方数值表 |
+| LH-GUIDE-005 | [IGN wiki: All Camp Buildings](https://www.ign.com/wikis/loop-hero/All_Camp_Buildings) | 攻略持续维护；核对 2026-08-14 | 营地建筑清单与数值（营火 20% 治疗、药水 4% 最大 HP、农场口粮等） | 攻略级数值，非官方文档 |
+| LH-GUIDE-006 | [Kotaku: Tips For Playing Loop Hero](https://kotaku.com/tips-for-playing-loop-hero-1846432102) | 2021-03-08 | 装备四档稀有度、职业属性优先级（战士 Regen/Vampirism、盗贼 Evasion/Crit、死灵法师 Magic HP/额外骷髅） | 攻略体验文，非官方数值表 |
+| LH-GUIDE-007 | [游侠网：循环英雄怪物数值成长公式详解](https://gl.ali213.net/html/2021-3/583665.html) | 2021-03-17 | 转载 reddit 的怪物成长公式（loopmod/difficultymod）及沙漠贼极限圈数算例 | 社区逆向公式，非官方文档，未逐版本复核 |
+| LH-GUIDE-008 | [17173：极限LOOP与怪物数值成长计算](https://newgame.17173.com/content/03242021/173710058.shtml) | 2021-03-24 | 怪物成长公式、耐力系统数值（基础 100、恢复 25、攻击/反击 25、闪避 10、疲劳攻速 0.6667）与极限圈数推导 | 社区逆向数值，非官方文档 |
 | LH-PRESS-001 | [IGN: Loop Hero Review](https://www.ign.com/articles/loop-hero-review) | 2021 评测；核对 2026-08-14 | 归类为 deck-based rogue-like；强调玩家不直接控制英雄 | 评测级品类描述，非品类学术定义 |
 | LH-PRESS-002 | [Rock Paper Shotgun 预览](https://www.rockpapershotgun.com/loop-hero-looks-like-a-nifty-deck-based-rogue-like) | 2021 预览；核对 2026-08-14 | 标题与正文以 “deck-based rogue-like” 归类 | 预览非正式评测；媒体描述级 |
+| LH-PRESS-003 | [Kotaku: Tips For Playing Loop Hero](https://kotaku.com/tips-for-playing-loop-hero-1846432102) | 2021-03-08 | 以 “deck-building roguelite” 归类游戏；报道 Steam 周末同时在线峰值约 5 万 | 媒体描述级；并发为发售初期单点峰值 |
 
 ### 14.4 麻将与认知负荷
 
