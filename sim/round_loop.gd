@@ -294,6 +294,10 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 ##       (RVA 0x5b4850): RemoveRite after settlement; RiteExtensions.ReturnCards
 ##       (RVA 0x5016d0) for the timeout path.]
 static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, source_table_entries: Array = []) -> void:
+	# Both the headless batch path and the rite-view commit path funnel through
+	# here, so this is where a settled rite becomes "ended" for rite_end.<id>.
+	if state != null and state.has_method("record_rite_ended"):
+		state.record_rite_ended(instance.id)
 	var clean_rite := bool(deferred.get("clean_rite", false))
 	var clean_slots: Array = deferred.get("clean_slots", [])
 	var clean_card_ids: Array = deferred.get("clean_card_ids", [])

@@ -67,6 +67,13 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k == "enable_auto_gen_sudan_card":
 		return true
+	if k in ["delay_off", "steam_achievement", "debug", "error", "warn"]:
+		return true
+	var copy_slot := k.substr(5) if k.begins_with("copy.") else ""
+	if copy_slot.begins_with("s") and copy_slot.substr(1).is_valid_int():
+		return true
+	if _is_bare_uprare_key(k) or _is_bare_tag_key(k):
+		return true
 	return false
 
 
@@ -172,6 +179,36 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	if _is_supported_filtered_tag_op(k, "sudan_pool."):
 		_apply_sudan_pool_tag(k, val, state, db)
+		return
+	# Bare ModifyRare/ModifyTag: the original dispatches the same regex families
+	# without a scope prefix against the operation-context cards. The contextual
+	# card takes precedence; otherwise the current rite's placed cards.
+	# [SRC: engine_spec/operations.json: "([^\.]+)\.uprare" -> ModifyRare;
+	#       "(?!total)(?!sudan_pool)([^\+\-]+)([\+\-\=])(\b(?!equip\b).+)" -> ModifyTag]
+	if _is_bare_uprare_key(k):
+		_apply_bare_uprare(k, val, state, db, context)
+		return
+	if _is_bare_tag_key(k):
+		_apply_bare_tag(k, val, state, db, context)
+		return
+	# copy.s<n>: CopyCard filters the context cards by the slot selector and
+	# generates `value` new copies of each match.
+	# [SRC: engine_spec/operations.json: "copy\.(.+)" -> CopyCard;
+	#       decompiled/CopyCard.c @ ctor (RVA 0x4f54b0) builds the filter from
+	#       the slot selector]
+	if k.begins_with("copy.") and _is_slot_selector(k.substr(5)):
+		_apply_copy_slot(k, val, state, db, context)
+		return
+	# delay_off: value 1 clears every delay op; explicit ids remove by id.
+	# [SRC: decompiled/DelayOff.c @ Do (RVA 0x4f7eb0)]
+	if k == "delay_off":
+		_apply_delay_off(val, state, deferred)
+		return
+	# Platform/logging operations have no gameplay state in the clone.
+	# [SRC: engine_spec/operations.json: steam_achievement -> SteamAchievement,
+	#       debug/error/warn -> LogDebug/LogError/LogWarn]
+	if k == "steam_achievement" or k == "debug" or k == "error" or k == "warn":
+		deferred.logs.append("%s: %s" % [k, str(val)])
 		return
 	if k == "enable_auto_gen_sudan_card":
 		# The original stores a disable flag, so the operation's value itself is
@@ -444,6 +481,111 @@ static func _is_equip_slot_key(k: String) -> bool:
 		if k.ends_with(suffix):
 			return k.substr(1, k.length() - suffix.length() - 1).is_valid_int()
 	return false
+
+
+static func _is_slot_selector(selector: String) -> bool:
+	return selector.begins_with("s") and selector.substr(1).is_valid_int()
+
+
+## Bare `<selector>.uprare` with no s<n>/table./g. scope prefix.
+static func _is_bare_uprare_key(k: String) -> bool:
+	if not k.ends_with(".uprare") or k.begins_with("table.") or k.begins_with("g."):
+		return false
+	if k.begins_with("s") and _is_slot_selector(k.substr(0, k.find("."))):
+		return false
+	var selector := k.substr(0, k.length() - ".uprare".length())
+	return not selector.is_empty() and RuntimeOperationFilter.supports_selector(selector)
+
+
+## Bare `<selector><+|-|=><tag>` with no dot and no scope prefix. Slot ops,
+## counters and event keys are all claimed by earlier branches, so anything
+## left with an operator and a valid selector is a context ModifyTag.
+static func _is_bare_tag_key(k: String) -> bool:
+	if "." in k or ":" in k:
+		return false
+	var op_idx := maxi(k.rfind("+"), maxi(k.rfind("-"), k.rfind("=")))
+	if op_idx < 1:
+		return false
+	var selector := k.substr(0, op_idx)
+	var tag_name := k.substr(op_idx + 1)
+	if tag_name == "equip" or tag_name.begins_with("equip_slot"):
+		return false
+	if _is_slot_selector(selector):
+		return false
+	return not selector.is_empty() and not tag_name.is_empty() \
+		and RuntimeOperationFilter.supports_selector(selector)
+
+
+## Target cards for a bare ModifyTag/ModifyRare: the contextual card wins;
+## otherwise the current rite's placed cards (or, outside a rite, the surface
+## cards), filtered through the selector.
+static func _context_tag_targets(selector: String, state, db, context: Dictionary) -> Array[int]:
+	var targets: Array[int] = []
+	if state == null:
+		return targets
+	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+	var contextual_uid := int(context.get("card_uid", 0))
+	var entries: Array = state.cards_in_slot_entries_for_rite(rite_uid) if rite_uid > 0 else state.surface_card_entries()
+	for tc in entries:
+		var uid := int(tc.get("card_uid", 0))
+		if contextual_uid > 0:
+			if uid == contextual_uid:
+				targets.append(uid)
+			continue
+		if RuntimeOperationFilter.matches_card_data(int(tc.get("id", 0)), tc.get("tags", {}), db, selector):
+			targets.append(uid)
+	return targets
+
+
+static func _apply_bare_uprare(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	var selector := k.substr(0, k.length() - ".uprare".length())
+	for uid in _context_tag_targets(selector, state, db, context):
+		state.modify_card_rarity(uid, int(val), db)
+
+
+static func _apply_bare_tag(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	var op_idx := maxi(k.rfind("+"), maxi(k.rfind("-"), k.rfind("=")))
+	if op_idx < 1:
+		return
+	var selector := k.substr(0, op_idx)
+	var tag_name := k.substr(op_idx + 1)
+	var op := TagSystem.op_from_char(k[op_idx])
+	var amount := int(val)
+	if amount == 0 and op != TagSystem.Op.SET:
+		amount = 1
+	var can_add := _tag_can_add(db, tag_name)
+	for uid in _context_tag_targets(selector, state, db, context):
+		var instance = state.get_card_instance(uid)
+		if instance != null:
+			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+
+
+static func _apply_copy_slot(k: String, val: Variant, state, db, context: Dictionary) -> void:
+	# CopyCard generates fresh card copies per count unit. Whether the original
+	# clones runtime tags onto the copy is not yet source-confirmed; this clone
+	# creates a new instance from the card config, matching GenCard semantics.
+	# [SRC: decompiled/CopyCard.__c__DisplayClass4_0.c @ <Do>b__0 (RVA 0x507430)]
+	var selector := k.substr("copy.".length())
+	var copies := maxi(int(val), 1)
+	for uid in _slot_target_uids(selector, state, context):
+		var instance = state.get_card_instance(uid)
+		if instance == null:
+			continue
+		for i in copies:
+			state.add_card_to_hand(instance.card_id, db)
+
+
+static func _apply_delay_off(val: Variant, state, deferred: Dictionary) -> void:
+	if state == null or not state.has_method("clear_delay_ops"):
+		return
+	var ids: Array = val if val is Array else [val]
+	if ids.size() == 1 and int(ids[0]) == 1:
+		state.clear_delay_ops()
+		deferred.logs.append("delay_off: cleared all")
+		return
+	for raw_id in ids:
+		if state.remove_delay_op(int(raw_id)):
+			deferred.logs.append("delay_off: removed %d" % int(raw_id))
 
 
 static func _apply_modify_rare(k: String, val: Variant, state, db, context: Dictionary) -> void:

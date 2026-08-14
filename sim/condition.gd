@@ -93,10 +93,25 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		var card_rare: Dictionary = ctx.get("acting_card", {})
 		var parsed_rare := _split_name_op(k)
 		return apply_compare(int(card_rare.get("rare", 0)), int(val), parsed_rare.op)
-	# round
-	if k == "round":
+	# round (optional comparison suffix, e.g. "round<=")
+	# [SRC: conditions.json: "round" -> RoundNumber; config event/5310455 uses
+	#       the "round<=" form]
+	if k.begins_with("round"):
 		var st = ctx.get("state")
-		return st.round_number == int(val)
+		var suffix := k.substr("round".length())
+		if not suffix.is_empty() and not (suffix in OPS):
+			return false
+		var round_op := "=" if suffix.is_empty() else suffix
+		return apply_compare(st.round_number, int(val), round_op)
+	# rite_end.<id>: the referenced rite finished settlement at least once.
+	# [SRC: decompiled/RiteEnd.c @ IsSatisfied (RVA 0x405300)]
+	if k.begins_with("rite_end."):
+		var st_end = ctx.get("state")
+		return st_end != null and st_end.has_method("has_rite_ended") \
+			and st_end.has_rite_ended(int(k.substr("rite_end.".length())))
+	# rite_have.<rite_id>[.<card_id>][.<name-or-tag>]<op>
+	if k.begins_with("rite_have.") or k.begins_with("!rite_have.") or k.begins_with("~rite_have."):
+		return eval_rite_have(k, val, ctx)
 	# difficulty
 	if k == "difficulty":
 		var st2 = ctx.get("state")
@@ -145,6 +160,12 @@ static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	if k.begins_with("table_have.") or k.begins_with("!table_have."):
 		return true
 	if k.begins_with("sudan_pool_have") or k.begins_with("!sudan_pool_have"):
+		return true
+	if k.begins_with("rite_end.") or k.begins_with("!rite_end."):
+		return true
+	if k.begins_with("rite_have.") or k.begins_with("!rite_have.") or k.begins_with("~rite_have."):
+		return true
+	if k.begins_with("round") and (k.substr(5) == "" or k.substr(5) in OPS):
 		return true
 	return _is_known_generic_tag_condition(k, known_tags)
 
@@ -412,6 +433,40 @@ static func eval_hand_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	# hand_have behaves like have but explicit.
 	var r := eval_have(kk.replace("hand_have", "have"), val, ctx, true)
 	return r if not neg else not r
+
+
+## rite_have.<rite_id>[.<card_id>][.<name-or-tag>]<op> — count cards placed in
+## the referenced rite's slots that match the selector. rite id 0 means the
+## current rite. [SRC: conditions.json: RiteHaveCardCount regex
+## "([~!]?)rite_have\.(\d{7}|0)(\.\d{7})?(\..+[^<=>])?(>=|<=|<>|!=|=|[<>])?"]
+static func eval_rite_have(k: String, val: Variant, ctx: Dictionary) -> bool:
+	var neg := k.begins_with("!") or k.begins_with("~")
+	var kk := k.lstrip("!~")
+	var rest := kk.substr("rite_have.".length())
+	var parsed := _split_name_op(rest)
+	var selector_parts: PackedStringArray = str(parsed.name).split(".", false)
+	if selector_parts.is_empty() or not str(selector_parts[0]).is_valid_int():
+		push_warning("ConditionEval: malformed rite_have key '%s'" % k)
+		return false if not neg else true
+	var rite_id := int(selector_parts[0])
+	if rite_id == 0:
+		rite_id = int(ctx.get("rite_id", 0))
+	# Optional leading card-id segment narrows the selector before the tag.
+	var selector := ""
+	for i in range(1, selector_parts.size()):
+		selector = str(selector_parts[i]) if selector == "" else selector + "." + str(selector_parts[i])
+	var st = ctx.get("state")
+	var db = ctx.get("db")
+	var count := 0
+	if st != null and rite_id > 0:
+		var instance = st.find_rite_instance_by_id(rite_id)
+		if instance != null:
+			for tc in st.cards_in_slot_entries_for_rite(instance.uid):
+				var tags: Dictionary = tc.get("tags", {}) if tc.get("tags", {}) is Dictionary else {}
+				if RuntimeOperationFilter.matches_card_data(int(tc.get("id", 0)), tags, db, selector):
+					count += 1
+	var ok := apply_compare(count, int(val), parsed.op)
+	return ok if not neg else not ok
 
 
 static func eval_table_have(k: String, _val: Variant, ctx: Dictionary) -> bool:

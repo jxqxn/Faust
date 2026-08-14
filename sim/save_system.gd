@@ -99,6 +99,7 @@ static func serialize(state) -> Dictionary:
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
+		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
 		"delayed_operations": state.delayed_operations.duplicate(true),
 		"event_status": state.event_status.duplicate(true),
@@ -192,6 +193,11 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rid in data.get("auto_result_rites", []):
 		state.auto_result_rites.append(int(rid))
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
+	state.ended_rites.clear()
+	var saved_ended_rites = data.get("ended_rites", {})
+	if saved_ended_rites is Dictionary:
+		for rid in saved_ended_rites:
+			state.ended_rites[int(rid)] = int(saved_ended_rites[rid])
 	if state.has_method("_ensure_legacy_rite_instances"):
 		state._ensure_legacy_rite_instances()
 	if state.has_method("_sync_rite_instance_cards"):

@@ -46,14 +46,17 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
 
 已验收治理家业/俺寻思/淘书生成存读档链，以及“上朝 -> 权力的游戏 -> 标签移除”实例链。全配置中未支持的 DSL 键必须继续由 `tools/export_dsl_audit.gd` 按配置 ID、次数和位置报告，不得静默视为支持。
 
-## 项目阶段：复刻维护冻结 + 校园自走棋机制定义（2026-08-13 统一）
+2026-08-14 解冻后批次一已验收（310 测试 / 2221 断言全绿）：result 裸键族 `<选择器><+|-|=>标签`（ModifyTag）与 `<选择器>.uprare`（ModifyRare）、`copy.s<n>`（CopyCard）、`delay_off`（DelayOff）、`steam_achievement`/`debug`/`error`/`warn` 空实现；condition 的 `rite_end.<id>`、`rite_have.<id>.<sel><op>`、`round<op>`；`GameState.ended_rites` 记录并入 v5 存档。语义引用见 `sim/result.gd`、`sim/condition.gd` 内 SRC 注释与 `engine_spec/operations.json`、`conditions.json`。当前剩余审计缺口：result 仅 `rebirth.s<n>`（8 处，分支语义待双信号确认后再实现，勿猜测）；action 94 键，主体为新手引导 UI 族（`hand_pop.*`/`rite_pop.*`/`focus.*`/`close_*`/`begin_guide`/`slide` 等）加 `difficulty`、`magic_sudan`、`table.*~equip`、`total.change_card_*`。
 
-复刻的研究目的已基本达成：规则引擎、Condition/Result DSL 子集、分层结算、苏丹卡循环、CardInstance、v5 存读档与首周四链均成立。主工程现已接入横版场景、主角移动、近距交互与地图出口；最近一次完整验收为 305 个测试、3589 个断言全绿。剩余复刻缺口属于内容铺量与产品化，不再是默认开发方向。
+## 项目阶段：完全复刻冲刺 + 校园自走棋长期方向（2026-08-14 解冻）
+
+2026-08-13 曾将复刻置于维护冻结；2026-08-14 用户决定**完全解冻**：当前默认开发方向是尽可能完整地复刻《苏丹的游戏》，以实机游玩反馈驱动修改与验收。规则引擎、Condition/Result DSL 子集、分层结算、苏丹卡循环、CardInstance、v5 存读档与首周四链均已成立（最近一次完整验收为 310 个测试全绿），剩余工作是 DSL 键覆盖、内容链铺量与产品化。
 
 **默认行为：**
 
-- 复刻进入**维护冻结**。继续修复 bug、保持测试绿、保持 Queue/Save/DSL 审计边界不变，但**不再扩展苏丹的内容链、仪式与 DSL 覆盖**。不要把配置中的全部仪式或卡牌直接塞入正常开局。
-- `docs/design/autobattler-campus-direction.md` 是**唯一最高产品方向基线**。其他设计文档都是证据、比较研究或从属机制材料；发生冲突时以该文档为准。
+- 复刻**完全解冻**。按 DSL 审计、可达性元数据与实机游玩反馈持续扩展苏丹的内容链、仪式与 DSL 覆盖。每批内容须经过逆向验证（双信号）与 GUT 测试后才能接入正常开局；禁止把未验证配置一次性全量倾倒进正常开局。
+- 强约束不变：未支持的 DSL 键必须继续进入 `tools/export_dsl_audit.gd` 审计而不是被静默吞掉；Queue/Save 边界与 v5 存档语义不得隐式破坏；测试保持全绿。
+- `docs/design/autobattler-campus-direction.md` 仍是**长期产品方向基线**，约束原创设计与校园自走棋的目标形态；其第 7 节“不以补齐苏丹内容为默认工作”已被 2026-08-14 完全解冻决定取代（该文档已同步记录此变更）。
 - 项目**不设默认核心问题或强制讨论焦点**。`docs/design/mahjong-autobattler-common-origin.md` 第 9 节记录了“首次成型后继续运转”的候选结构研究（做牌/阵容成长/循环），仅作为可查阅的研究材料，不是必须回答的问题；用户的新问题、新证据或更有价值的切入点可随时改变讨论顺序。
 - `docs/design/single-character-will-simulation.md` 降为“角色内在状态与行动主体连续性”的从属研究材料。玩家与角色控制层、盲点、惯性等假说只有在服务于校园自走棋的具名角色养成、关系和后果时才能进入原型，不能取代队伍与校园方向。
 - “当前周期目标—有限活跃手牌—进行中人物”是解决手牌负担的候选架构，不是已批准答案；可以与其他问题并行比较或在更合适的时机讨论。
@@ -63,9 +66,9 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
 - `MethinksEngine`、`drop_card_on_methinks` 等命名属于复刻期兼容接口。玩家可见概念统一为“思考”；在机制方向确定前，不因命名不理想而破坏已验收的旧链。
 - 复刻期的强约束在创新期依然适用：未支持的规则要进入审计而不是被静默吞掉；存档/队列边界要保留；不要按配置数量机械安排内容。
 
-## 语料库在创新期的新角色
+## 语料库的角色
 
-复刻冻结后，逆向语料库（`Faust-local-source/_unpack/`）从"实现依据"变为"设计参考"。引用原作结构（如仪式字段、苏丹卡控制流）作为设计假说的证据时仍须遵循 `faust-clone-reference` 的信任层级与双信号规则，但不再以"逐字段复刻原作"为目标。
+2026-08-14 完全解冻后，逆向语料库（`Faust-local-source/_unpack/`）恢复为**实现依据**：复刻 DSL 键、内容链与运行时行为时，必须遵循 `faust-clone-reference` 的信任层级与双信号规则，以 `.c` 反编译、`dump.cs` 与配置数据为事实来源。它同时保留"设计参考"用途，供原创设计假说引用原作结构。
 
 ## 仪式时序模型（认知防坑指南，2026-07-19 建立）
 
@@ -106,10 +109,10 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
   `SaveSystem` archive APIs so index metadata and slot payloads stay together.
   Loading an archive refreshes the continue save; deletion removes both the
   index record and payload. Keep the 50-slot limit and the v5 player-save gate.
-- The accepted first-week clone-content batch is governance, the legacy
-  Methinks compatibility chain, book
-  shop/search, and tagged Sultan -> Power Game. Keep all other DSL gaps in the
-  machine-readable audit rather than silently marking them supported.
+- Every clone-content batch (rites, events, cards, DSL keys) must pass
+  reverse verification and green GUT tests before entering normal play.
+  Keep all remaining DSL gaps in the machine-readable audit rather than
+  silently marking them supported.
 - Use the reachability metadata in `tools/export_dsl_audit.gd` to choose the
   next content batch. It is a conservative static graph, not a replacement for
   source-backed runtime verification or a reason to mark every short-hop key

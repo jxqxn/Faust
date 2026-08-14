@@ -89,6 +89,11 @@ var available_rites: Array[int] = []
 # rite_auto_result flag separately from auto_begin.
 var auto_result_rites: Array[int] = []
 var rite_auto_result := false
+# Config ids of rites that finished settlement at least once, id -> times ended.
+# Backs the `rite_end.<id>` condition; the original keeps an ended-rite lookup
+# on the player object.
+# [SRC: decompiled/RiteEnd.c @ IsSatisfied (RVA 0x405300): player+0x110 lookup]
+var ended_rites: Dictionary = {}
 # Ordered runtime operation queue.  This is the single mutable presentation
 # boundary for events, narration and choices; every entry retains the context
 # of the occurrence that created it.
@@ -1047,6 +1052,38 @@ func take_due_delayed_operations() -> Array[Dictionary]:
 			pending.append(next_operation)
 	delayed_operations = pending
 	return due
+
+
+## DelayOff with value 1 clears every scheduled delay operation.
+## [SRC: decompiled/DelayOff.c @ Do (RVA 0x4f7eb0): value 1 calls
+##       PlayerExtensions.ClearDelayOp]
+func clear_delay_ops() -> void:
+	delayed_operations.clear()
+
+
+## DelayOff with explicit ids removes only the matching delay operations.
+## [SRC: decompiled/DelayOff.c @ Do: PlayerExtensions.RemoveDelayOp(player, id)]
+func remove_delay_op(op_id: int) -> bool:
+	var remaining: Array[Dictionary] = []
+	var removed := false
+	for operation in delayed_operations:
+		if int(operation.get("id", 0)) == op_id:
+			removed = true
+			continue
+		remaining.append(operation)
+	delayed_operations = remaining
+	return removed
+
+
+## Record that a rite finished settlement; feeds `rite_end.<id>` conditions.
+func record_rite_ended(rite_id: int) -> void:
+	if rite_id <= 0:
+		return
+	ended_rites[rite_id] = int(ended_rites.get(rite_id, 0)) + 1
+
+
+func has_rite_ended(rite_id: int) -> bool:
+	return ended_rites.has(rite_id)
 
 
 ## Enable and register an event. `event_on` requests start-trigger handling;
