@@ -206,6 +206,15 @@
 | FAUST-DES-001 | 同一具名人物应跨手牌、仪式、校园、自动行动和后果持续存在 | 用户确认的项目判断 | C | 相关设计文档与 AGENTS.md | 项目方向，不是外部研究结论 |
 | FAUST-HYP-001 | 保留“谁承担后果”的人工决定时，自动化可能降低负担而不损害责任感 | 待验证假说 | U | SG-UX-002、NARR-SYN-001 | 尚无 Faust 玩家实验 |
 | FAUST-DATA-001 | Faust 已测得合理手牌上限、候选数量或自动化层级 | 未知 | U | 当前没有这类结果 | 后续智能体不得声称已有答案 |
+| LH-RULE-001 | 循环是自动运转结构：英雄沿环形路径自动移动与战斗，玩家不直接控制；概念源自“零玩家游戏” | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
+| LH-RULE-002 | 地块之间存在组合（山脉→哥布林、宝库→石像鬼、草地邻接 +50% 治疗），放置因此是有代价的取舍 | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 组合是配置规则，不是玩家行为数据 |
+| LH-RULE-003 | 远征结算三档：战斗死亡保留 30%、非营地撤退 60%、营地格撤退 100%、击败 Boss 后 100% | 外部事实 | A | LH-GUIDE-001 | 攻略级数值，非官方文档，口径可能随版本调整 |
+| LH-RULE-004 | 营地是跨局 meta 成长；死亡仍带回 30% 资源，设计上不惩罚实验 | 外部事实 | A | LH-OFFICIAL-002、LH-GUIDE-001 | 开发者意图 + 攻略；无玩家实验数据 |
+| LH-MKT-001 | 首周销量超 50 万，约 9 个月后 Steam 版累计破 100 万 | 外部事实 | A | LH-OFFICIAL-004、LH-OFFICIAL-005 | 整体销量，不识别循环结构的单独因果贡献 |
+| LH-DEV-001 | 极简核心为“四个 Boss、一个营地、一个无限循环的英雄”；限制元素数量并打磨每个，平衡靠加法制衡而非删减 | 外部事实 | A | LH-OFFICIAL-001、LH-OFFICIAL-003 | 开发者方法论自述，非效果实验 |
+| LH-EXPL-001 | 循环结构是“首次成型后继续运转”的一个候选原型：自动循环持续接受地块输入并转化为战斗、资源与风险 | 研究解释 | C | LH-RULE-001—LH-RULE-004、MJ-HYP-001 | 结构类比；Loop Hero 是单主角，不含具名关系或阵容转换 |
+| LH-GAP-001 | 循环结构为何成立的逐局玩家行为（撤退时机、地块放置决策、死亡率）已有公开量化 | 未知 | U | 无 | 无公开玩家遥测，不得填入推测数值 |
+| LH-GENRE-001 | 主流游戏媒体在评测与预览中将《循环勇者》归类为 deck-building roguelite（地块构筑肉鸽）或“自己玩自己的 RPG”，未将其归入 autobattler / 自走棋品类 | 外部事实 | A | LH-PRESS-001、LH-PRESS-002 | 媒体描述级归类，非开发者正式品类声明；品类边界本身无严格学术定义，但“非自走棋”是稳定共识 |
 
 ### 2.6 本地统计的复现协议
 
@@ -1439,6 +1448,19 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | NAB-CASE-001 | [《Kilta》Steam 页面](https://store.steampowered.com/app/1401560/Kilta/) | 2022-07-10；核对 2026-08-13 | 自称单机自走棋策略 RPG，含故事、独特角色和物品管理；约 62 篇购买者评测、70% 好评 | 小样本、长期 Early Access 历史；不能代表类型上限或总体需求 |
 | NAB-CASE-002 | [《Legion Hearts》开发复盘](https://kaiwueest.com/insights/legion-hearts/) | 2024-06-20，2025-04-28 更新 | 具名角色牌组、确定性自动战斗、非线性人物故事；约 5200 原型下载、近 1000 订阅、约 50 万美元预算预期及停项原因 | 开发者单方复盘；未商业发行，融资环境与团队条件显著影响结果 |
 | NAB-CASE-003 | [《Kilta》开发日志](https://www.indiedb.com/games/kilta/news/devdiary1-the-mountain-that-is-accessibility) | 2020-11-12 | 物品/公会拖放、3×3 编队和自动战斗的信息可达性难题 | 重点是无障碍开发，不是完整商业复盘或玩家负担实验 |
+
+### 14.3B 《循环勇者》
+
+| 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
+| --- | --- | --- | --- | --- |
+| LH-OFFICIAL-001 | [Postmortem: Loop Hero](https://www.gamedeveloper.com/design/postmortem-loop-hero) | 2021-03；开发者复盘 | 4 人团队、约 1.5 年、零玩家游戏起源、极简核心、加法制衡、Mac/Linux 首发教训 | 开发者单方复盘，无玩家行为数据 |
+| LH-OFFICIAL-002 | [Destructoid: Closing the Loop 访谈](https://www.destructoid.com/closing-the-loop-four-quarters-on-the-making-of-loop-hero/) | 2021-03；Goreslavets 邮件访谈 | 循环概念起源、地块组合、营地 meta、死亡不惩罚实验 | 开发者自述，非实验 |
+| LH-OFFICIAL-003 | [Rock Paper Shotgun 访谈](https://www.rockpapershotgun.com/how-loop-heros-impossible-mishmash-of-ideas-came-to-exist) | 2021-03-17；blinch 访谈 | “零玩家游戏”定义、LD45 起源、平衡靠加法 | 开发者自述，非实验 |
+| LH-OFFICIAL-004 | [gamesindustry.biz 首周销量报道](https://www.gamesindustry.biz/indie-breakout-loop-hero-sells-500-000-in-first-week) | 2021-03-11；引述 Devolver 公告 | 首周销量超 50 万；Devolver 史上最快售出原声带 | 二手行业媒体转述 |
+| LH-OFFICIAL-005 | [TechRaptor: Steam 破 100 万](https://techraptor.net/gaming/news/loop-hero-sales-hits-1-million-copies-on-steam) | 2021-12；Switch 版发布同期 | Steam 版累计销量超 100 万 | 二手行业媒体转述；Steam 销量不含其他平台 |
+| LH-GUIDE-001 | [IGN wiki: Risk Vs. Reward](https://www.ign.com/wikis/loop-hero/Risk_Vs._Reward) | 攻略持续维护；核对 2026-08-14 | 死亡/撤退三档结算精确数值（30%/60%/100%） | 攻略级数值，非官方文档 |
+| LH-PRESS-001 | [IGN: Loop Hero Review](https://www.ign.com/articles/loop-hero-review) | 2021 评测；核对 2026-08-14 | 归类为 deck-based rogue-like；强调玩家不直接控制英雄 | 评测级品类描述，非品类学术定义 |
+| LH-PRESS-002 | [Rock Paper Shotgun 预览](https://www.rockpapershotgun.com/loop-hero-looks-like-a-nifty-deck-based-rogue-like) | 2021 预览；核对 2026-08-14 | 标题与正文以 “deck-based rogue-like” 归类 | 预览非正式评测；媒体描述级 |
 
 ### 14.4 麻将与认知负荷
 
