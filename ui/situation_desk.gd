@@ -1,15 +1,13 @@
 ## The primary tabletop-map play surface.
 ##
-## SituationDesk owns only presentation state. The pawn records the most
-## recently inspected action site for this node's lifetime; it never writes to
-## GameState, SaveSystem, Rite, Queue, RNG, or the lateral scene location.
+## SituationDesk owns only presentation state: the map sites, their available
+## action counts, and the think drop zone. It never writes to GameState,
+## SaveSystem, Rite, Queue, or RNG.
 class_name SituationDesk
 extends Control
 
 signal open_rite_selector(location_name: String)
 signal open_rite_instance(rite_uid: int)
-signal context_requested()
-signal site_navigation_active_changed(active: bool)
 
 
 class ThinkDropZone:
@@ -34,47 +32,27 @@ class ThinkDropZone:
 			owner_desk.call("_set_think_drop_highlight", false)
 
 
-const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 const RiteSelectorScript = preload("res://ui/rite_selector.gd")
 const MAP_TEXTURE = preload("res://assets/original/situation_desk/tabletop_campaign_map.png")
 const NODE_TEXTURE = preload("res://assets/original/situation_desk/map_node_token.png")
-const PAWN_TEXTURE = preload("res://assets/original/situation_desk/protagonist_pawn.png")
 
 const SITE_SPECS := [
-	{"id": "home", "name": "SiteHome", "label": "家", "location": "自宅", "position": Vector2(0.18, 0.67)},
-	{"id": "market", "name": "SiteMarket", "label": "商店街", "location": "商业区", "position": Vector2(0.40, 0.38)},
-	{"id": "palace", "name": "SitePalace", "label": "校舍", "location": "宫廷", "position": Vector2(0.57, 0.62)},
-	{"id": "temple", "name": "SiteTemple", "label": "旧校舍", "location": "神殿区", "position": Vector2(0.73, 0.31)},
-	{"id": "wild", "name": "SiteWild", "label": "河堤", "location": "野外", "position": Vector2(0.82, 0.72)},
-]
-const WAYPOINT_SPECS := [
-	{"id": "west", "position": Vector2(0.29, 0.55)},
-	{"id": "east", "position": Vector2(0.70, 0.60)},
-]
-const ROUTE_EDGES := [
-	["home", "west"],
-	["west", "market"],
-	["market", "palace"],
-	["palace", "temple"],
-	["palace", "east"],
-	["east", "wild"],
+	{"id": "home", "name": "SiteHome", "label": "自宅", "location": "自宅", "position": Vector2(0.18, 0.67)},
+	{"id": "market", "name": "SiteMarket", "label": "商业区", "location": "商业区", "position": Vector2(0.40, 0.38)},
+	{"id": "palace", "name": "SitePalace", "label": "宫廷", "location": "宫廷", "position": Vector2(0.57, 0.62)},
+	{"id": "temple", "name": "SiteTemple", "label": "神殿区", "location": "神殿区", "position": Vector2(0.73, 0.31)},
+	{"id": "wild", "name": "SiteWild", "label": "野外", "location": "野外", "position": Vector2(0.82, 0.72)},
 ]
 const SITE_NODE_SIZE := Vector2(72.0, 58.0)
-const WAYPOINT_NODE_SIZE := Vector2(34.0, 27.0)
-const PAWN_SIZE := Vector2(88.0, 112.0)
 const MAP_TOP_SCALE := 0.90
 const MAP_VERTICAL_SCALE := 0.94
-const EDGE_DURATION := 0.16
-const MAX_NAVIGATION_DURATION := 0.56
 
 const PAPER_LIGHT := Color("#ead79a")
 const PAPER_SHADOW := Color("#3c281a")
 const INK := Color("#251a13")
 const MUTED_INK := Color("#5d452f")
 const RED_WAX := Color("#8a3a31")
-const ROUTE_DARK := Color(0.15, 0.10, 0.07, 0.72)
-const ROUTE_LIGHT := Color(0.90, 0.76, 0.44, 0.72)
 
 var _state
 var _db
@@ -88,17 +66,11 @@ var _count_chits_by_id: Dictionary = {}
 
 var _title: Label
 var _subtitle: Label
-var _dossier: Button
 var _think_drop_zone: ThinkDropZone
 var _think_drop_label: Label
 var _site_buttons: Array[Button] = []
 var _selected_site_button: Button
 var _selected_site_location := ""
-var _pawn: TextureRect
-var _pawn_shadow: TextureRect
-var _pawn_location_id := "home"
-var _navigation_active := false
-var _navigation_tween: Tween
 
 
 func setup(state, db = null, rng = null) -> void:
@@ -142,21 +114,6 @@ func _build_chrome() -> void:
 	_subtitle.z_index = 7
 	add_child(_subtitle)
 
-	_dossier = Button.new()
-	_dossier.name = "CurrentSceneDossier"
-	_dossier.text = "进入现场"
-	_dossier.tooltip_text = "打开当前保存的现场"
-	_dossier.add_theme_font_size_override("font_size", 14)
-	_dossier.add_theme_color_override("font_color", INK)
-	_dossier.add_theme_color_override("font_hover_color", Color("#6b231d"))
-	_dossier.add_theme_stylebox_override("normal", _paper_prop_style(PAPER_SHADOW))
-	_dossier.add_theme_stylebox_override("hover", _paper_prop_style(RED_WAX, true))
-	_dossier.add_theme_stylebox_override("pressed", _paper_prop_style(Color("#b58e43"), true))
-	_dossier.pressed.connect(func(): context_requested.emit())
-	_dossier.z_index = 8
-	add_child(_dossier)
-	UiMotionScript.bind(_dossier, UiMotionScript.Profile.SITE)
-
 	_think_drop_zone = ThinkDropZone.new()
 	_think_drop_zone.name = "ThinkDropZone"
 	_think_drop_zone.owner_desk = self
@@ -179,25 +136,6 @@ func _build_chrome() -> void:
 
 	for spec in SITE_SPECS:
 		_build_site(spec)
-
-	_pawn_shadow = TextureRect.new()
-	_pawn_shadow.name = "TabletopPawnShadow"
-	_pawn_shadow.texture = PAWN_TEXTURE
-	_pawn_shadow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_pawn_shadow.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_pawn_shadow.modulate = Color(0.05, 0.035, 0.02, 0.34)
-	_pawn_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pawn_shadow.z_index = 10
-	add_child(_pawn_shadow)
-
-	_pawn = TextureRect.new()
-	_pawn.name = "TabletopProtagonistPawn"
-	_pawn.texture = PAWN_TEXTURE
-	_pawn.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_pawn.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_pawn.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pawn.z_index = 11
-	add_child(_pawn)
 
 
 func _build_site(spec: Dictionary) -> void:
@@ -275,118 +213,17 @@ func _build_site(spec: Dictionary) -> void:
 func refresh_context() -> void:
 	if _state == null:
 		return
-	var location_id := str(_state.world_location_id)
-	var location_data: Dictionary = WorldScenes.location(location_id)
-	var title := str(location_data.get("title", location_id))
 	_subtitle.text = "地图 · 行动档案"
-	_dossier.text = "进入现场\n现场档案"
-	_dossier.tooltip_text = "进入当前保存的%s现场；现场位置会继续写入当前存档" % title
 	_refresh_site_availability()
 	queue_redraw()
 
 
-func _on_site_pressed(button: Button, location_name: String, site_id: String) -> void:
-	if button == null or _navigation_active or is_scene_blocked():
+func _on_site_pressed(button: Button, location_name: String, _site_id: String) -> void:
+	if button == null or is_scene_blocked():
 		return
 	_selected_site_button = button
 	_selected_site_location = location_name
-	if site_id == _pawn_location_id:
-		open_rite_selector.emit(location_name)
-		return
-	_start_navigation(site_id, location_name)
-
-
-func _start_navigation(destination_id: String, location_name: String) -> void:
-	var path := _shortest_path(_pawn_location_id, destination_id)
-	if path.size() < 2:
-		_pawn_location_id = destination_id
-		_place_pawn_at_id(destination_id)
-		open_rite_selector.emit(location_name)
-		return
-	_set_navigation_active(true)
-	if UiMotionScript.reduced_motion:
-		_pawn_location_id = destination_id
-		_place_pawn_at_id(destination_id)
-		_finish_navigation(location_name)
-		return
-	var edge_count := path.size() - 1
-	var edge_duration := minf(EDGE_DURATION, MAX_NAVIGATION_DURATION / float(edge_count))
-	_navigation_tween = create_tween()
-	_navigation_tween.set_trans(Tween.TRANS_SINE)
-	_navigation_tween.set_ease(Tween.EASE_IN_OUT)
-	for path_index in range(1, path.size()):
-		var destination := _pawn_position_for_center(_point_for_id(str(path[path_index])))
-		_navigation_tween.tween_property(_pawn, "position", destination, edge_duration)
-		_navigation_tween.parallel().tween_property(
-			_pawn_shadow,
-			"position",
-			destination + Vector2(5.0, 7.0),
-			edge_duration
-		)
-	_pawn_location_id = destination_id
-	_navigation_tween.finished.connect(_finish_navigation.bind(location_name), CONNECT_ONE_SHOT)
-
-
-func _finish_navigation(location_name: String) -> void:
-	_navigation_tween = null
-	_place_pawn_at_id(_pawn_location_id)
-	# Open synchronously before releasing this blocker. The selector installs
-	# its own blocker during the emitted call, so no input-active frame exists
-	# between travel and the action list.
 	open_rite_selector.emit(location_name)
-	_set_navigation_active(false)
-
-
-func _set_navigation_active(active: bool) -> void:
-	if _navigation_active == active:
-		return
-	_navigation_active = active
-	_update_site_input_state()
-	site_navigation_active_changed.emit(active)
-
-
-func is_site_navigation_active() -> bool:
-	return _navigation_active
-
-
-func pawn_location_name() -> String:
-	for spec in SITE_SPECS:
-		if str(spec["id"]) == _pawn_location_id:
-			return str(spec["location"])
-	return ""
-
-
-func _shortest_path(start_id: String, destination_id: String) -> Array[String]:
-	if start_id == destination_id:
-		return [start_id]
-	var neighbours: Dictionary = {}
-	for edge in ROUTE_EDGES:
-		var from_id := str(edge[0])
-		var to_id := str(edge[1])
-		if not neighbours.has(from_id):
-			neighbours[from_id] = []
-		if not neighbours.has(to_id):
-			neighbours[to_id] = []
-		neighbours[from_id].append(to_id)
-		neighbours[to_id].append(from_id)
-	var queue: Array[String] = [start_id]
-	var previous := {start_id: ""}
-	while not queue.is_empty():
-		var current: String = queue.pop_front()
-		for neighbour_value in neighbours.get(current, []):
-			var neighbour := str(neighbour_value)
-			if previous.has(neighbour):
-				continue
-			previous[neighbour] = current
-			if neighbour == destination_id:
-				var path: Array[String] = [destination_id]
-				var cursor: String = current
-				while not cursor.is_empty():
-					path.push_front(cursor)
-					cursor = str(previous.get(cursor, ""))
-				return path
-			queue.append(neighbour)
-	return [start_id, destination_id]
 
 
 func site_action_anchor(location_name: String) -> Vector2:
@@ -457,7 +294,6 @@ func _update_site_input_state() -> void:
 		var button := _site_buttons_by_id[site_id] as Button
 		button.disabled = (
 			int(_site_action_counts.get(site_id, 0)) == 0
-			or _navigation_active
 			or blocked
 		)
 
@@ -523,10 +359,6 @@ func drop_card_on_think_button(data: Variant) -> void:
 		screen.drop_card_on_methinks(data)
 
 
-func protagonist_center() -> Vector2:
-	return _point_for_id(_pawn_location_id)
-
-
 func _layout() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
@@ -540,10 +372,6 @@ func _layout() -> void:
 	_title.add_theme_font_size_override("font_size", 20 if compact else 24)
 	_subtitle.add_theme_font_size_override("font_size", 10 if compact else 12)
 
-	_dossier.size = Vector2(142.0, 56.0) if compact else Vector2(158.0, 60.0)
-	# Match the scene's return control anchor so entering and leaving remains a
-	# spatially reversible action even though the map itself is projected.
-	_dossier.position = Vector2(36.0, 26.0)
 	var think_center := _project_ratio(Vector2(0.12, 0.79))
 	_think_drop_zone.size = Vector2(134.0, 54.0) if compact else Vector2(146.0, 58.0)
 	_think_drop_zone.position = think_center - _think_drop_zone.size * 0.5
@@ -562,7 +390,6 @@ func _layout() -> void:
 		var chit := _count_chits_by_id[site_id] as PanelContainer
 		chit.size = Vector2(26.0, 22.0)
 		chit.position = center + Vector2(SITE_NODE_SIZE.x * 0.30, -SITE_NODE_SIZE.y * 0.36)
-	_place_pawn_at_id(_pawn_location_id)
 	queue_redraw()
 
 
@@ -577,30 +404,11 @@ func _point_for_id(point_id: String) -> Vector2:
 	for spec in SITE_SPECS:
 		if str(spec["id"]) == point_id:
 			return _project_ratio(spec["position"] as Vector2)
-	for spec in WAYPOINT_SPECS:
-		if str(spec["id"]) == point_id:
-			return _project_ratio(spec["position"] as Vector2)
 	return _project_ratio(Vector2(0.5, 0.5))
-
-
-func _pawn_position_for_center(center: Vector2) -> Vector2:
-	# The contact point is near the bottom of the transparent square sprite.
-	return center - Vector2(PAWN_SIZE.x * 0.5, PAWN_SIZE.y * 0.84)
-
-
-func _place_pawn_at_id(point_id: String) -> void:
-	if _pawn == null or _pawn_shadow == null:
-		return
-	var pawn_position := _pawn_position_for_center(_point_for_id(point_id))
-	_pawn.size = PAWN_SIZE
-	_pawn.position = pawn_position
-	_pawn_shadow.size = PAWN_SIZE
-	_pawn_shadow.position = pawn_position + Vector2(5.0, 7.0)
 
 
 func _update_chrome_visibility() -> void:
 	var hide_chrome := is_scene_chrome_hidden()
-	_dossier.visible = not hide_chrome
 	_think_drop_zone.visible = not hide_chrome
 	_title.visible = not hide_chrome
 	_subtitle.visible = not hide_chrome
@@ -611,8 +419,6 @@ func _update_chrome_visibility() -> void:
 		(label as Control).visible = not hide_chrome
 	for chit in _count_chits_by_id.values():
 		(chit as Control).visible = not hide_chrome
-	_pawn.visible = not hide_chrome
-	_pawn_shadow.visible = not hide_chrome
 
 
 func _draw() -> void:
@@ -636,18 +442,6 @@ func _draw() -> void:
 	)
 	var border := PackedVector2Array([map_points[0], map_points[1], map_points[2], map_points[3], map_points[0]])
 	draw_polyline(border, Color(0.83, 0.68, 0.35, 0.74), 2.0, true)
-
-	for edge in ROUTE_EDGES:
-		var from := _point_for_id(str(edge[0]))
-		var to := _point_for_id(str(edge[1]))
-		draw_line(from + Vector2(0.0, 3.0), to + Vector2(0.0, 3.0), Color(0.02, 0.012, 0.008, 0.48), 9.0, true)
-		draw_line(from, to, ROUTE_DARK, 7.0, true)
-		draw_line(from, to, ROUTE_LIGHT, 3.0, true)
-	for spec in WAYPOINT_SPECS:
-		var point := _project_ratio(spec["position"] as Vector2)
-		var shadow_rect := Rect2(point - WAYPOINT_NODE_SIZE * 0.5 + Vector2(2.0, 4.0), WAYPOINT_NODE_SIZE)
-		draw_texture_rect(NODE_TEXTURE, shadow_rect, false, Color(0.04, 0.025, 0.015, 0.48))
-		draw_texture_rect(NODE_TEXTURE, Rect2(point - WAYPOINT_NODE_SIZE * 0.5, WAYPOINT_NODE_SIZE), false)
 
 
 func _paper_prop_style(border: Color, highlighted := false) -> StyleBoxFlat:

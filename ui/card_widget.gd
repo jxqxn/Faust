@@ -164,18 +164,15 @@ func set_hand_pose(target_position: Vector2, target_rotation: float, order: int)
 		z_index = order + HOVER_Z_INDEX if (_hovered or _selected) else order
 
 
-## Balatro offsets each idle sine with card.T.x, producing one spatial wave
-## across the hand rather than unrelated random motion. Convert our pixel x to
-## the same card-relative world units; the pose spring/reflow tween absorbs a
-## phase target change when a card moves to another slot.
+## The original hand has no idle sine wave; the Balatro port is disabled while
+## the hand presentation awaits its original-faithful restoration pass.
 func set_hand_idle(
-	enabled: bool,
+	_enabled: bool,
 	_order: int = 0,
 	idle_time_source: Callable = Callable()
 ) -> void:
-	_hand_idle_enabled = enabled
+	_hand_idle_enabled = false
 	_idle_time_source = idle_time_source
-	_hand_idle_phase = fposmod(position.x * BALATRO_CARD_WIDTH_UNITS / CARD_SIZE.x, TAU)
 	_refresh_presentation_processing()
 
 
@@ -571,18 +568,10 @@ func _step_interaction_motion(delta: float) -> void:
 		offset_transform_scale = target_scale
 		set_process(false)
 
-## Card:hover() starts one 0.4 second juice and Moveable immediately compresses
-## VT.scale by 0.6 * amount. Card:stop_hover() starts no second animation; the
-## existing entry juice simply finishes while hover zoom returns through the
-## same scale integrator.
+## The Balatro hover juice spring is disabled; hover feedback is the plain
+## lift/scale integrator until the original card presentation is restored.
 func _start_hover_juice() -> void:
-	_hover_juice_elapsed = 0.0
-	_hover_juice_mode = HoverJuiceMode.ENTER
-	_hover_juice_scale = 0.0
-	_hover_juice_rotation = 0.0
-	_hover_juice_direction = -1.0 if randf() < 0.5 else 1.0
-	offset_transform_scale = Vector2.ONE * (1.0 - HOVER_JUICE_COMPRESSION)
-	set_process(true)
+	pass
 
 
 func _step_hover_juice(delta: float) -> void:
@@ -856,10 +845,10 @@ func _shape_perspective_axis(value: float) -> float:
 	return signf(value) * pow(normalized, PERSPECTIVE_EXPONENT)
 
 
-func _set_perspective_tilt(value: Vector2) -> void:
-	_perspective_tilt = value
-	if is_instance_valid(_perspective_material):
-		_perspective_material.set_shader_parameter("tilt", value)
+func _set_perspective_tilt(_value: Vector2) -> void:
+	# The Balatro pointer-tilt shader layer is disabled; the original hand has
+	# no perspective tilt. Kept as a sink so drag payloads stay compatible.
+	_perspective_tilt = Vector2.ZERO
 
 
 func _request_visual_redraw() -> void:

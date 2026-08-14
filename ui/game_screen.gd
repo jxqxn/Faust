@@ -1,13 +1,10 @@
-﻿## Main in-game scene screen.
-## The screen defaults to a tabletop-map SituationDesk. ThoughtWorld is retained as
-## an optional local-context page while the shared rail, queue surfaces, and
-## day controls remain persistent.
+﻿## Main in-game desk screen.
+## The tabletop SituationDesk is the single play surface; the shared rail,
+## queue surfaces, and day controls remain persistent.
 extends Control
 
 ## Presentation contract:
-## - SituationDesk and ThoughtWorld are alternate play surfaces.
-## - Rite pins always belong to ThoughtWorld; they never move between surfaces.
-## - Only _set_presentation_state changes which surface is visible.
+## - The desk is the only surface; modals pause it via set_world_scene_blocker.
 
 signal open_rite(rite_id: int)
 signal open_rite_instance(rite_uid: int)
@@ -19,8 +16,6 @@ signal game_over_requested()
 
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 const SituationDeskScript = preload("res://ui/situation_desk.gd")
-const ThoughtWorldScript = preload("res://ui/thought_world.gd")
-const WorldScenes = preload("res://sim/world_scene_catalog.gd")
 
 class HandRailDrop:
 	extends Control
@@ -53,13 +48,8 @@ const HAND_MIN_VISIBLE_WIDTH := 20.0
 const HAND_RAIL_BOTTOM_GUTTER := 20.0
 # Rendering budget. Game owns the global menu above this entire screen.
 const SCENE_CONTENT_Z_MAX := 99
-const WORLD_MODAL_Z := 100
+const OVERLAY_LAYER_Z := 100
 const PERSISTENT_CONTROL_Z := 200
-
-enum PresentationState {
-	DESK,
-	SCENE,
-}
 
 var _state
 var _db
@@ -73,7 +63,6 @@ var _hud: PanelContainer
 var _menu_button: Button
 var _desk_map: PanelContainer
 var _desk_content: SituationDesk
-var _scene_world: ThoughtWorld
 var _overlay_layer: Control
 var _rail_label: VBoxContainer
 var _card_rail_view: Control
@@ -95,14 +84,8 @@ var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
 var _event_panel: Panel
-var _event_dialogue_line: Control
-var _event_dialogue_text: Label
-var _event_dialogue_marker: Label
-var _event_dialogue_actor_id := "protagonist"
 var _rename_input: LineEdit
 var _sleep_waiting := false
-var _event_is_dialogue := false
-var _presentation_state := PresentationState.DESK
 var _presentation_frozen := false
 var _presentation_blockers: Dictionary = {}
 var _persistent_action_locks: Dictionary = {}
@@ -119,7 +102,6 @@ func _ready() -> void:
 	theme = FaustTheme.get_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
-	_set_presentation_state(PresentationState.DESK)
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
 	refresh()
@@ -137,17 +119,6 @@ func _process(delta: float) -> void:
 
 func hand_idle_time_seconds() -> float:
 	return _hand_idle_clock_seconds
-
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not _event_is_dialogue or event is not InputEventKey:
-		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo:
-		return
-	if key_event.keycode in [KEY_ENTER, KEY_SPACE, KEY_E]:
-		_consume_event_display()
-		get_viewport().set_input_as_handled()
 
 
 func _build_ui() -> void:
@@ -195,21 +166,7 @@ func _build_ui() -> void:
 	_desk_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
 	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
-	_desk_content.context_requested.connect(_open_context_scene)
-	_desk_content.site_navigation_active_changed.connect(
-		_on_desk_site_navigation_active_changed
-	)
 	add_child(_desk_content)
-
-	_scene_world = ThoughtWorldScript.new()
-	_scene_world.name = "SceneWorld"
-	_scene_world.setup(_state)
-	_scene_world.set_context_mode(true)
-	_scene_world.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_scene_world.clip_contents = true
-	_scene_world.interaction_requested.connect(_on_world_interaction_requested)
-	_scene_world.return_requested.connect(_close_context_scene)
-	add_child(_scene_world)
 
 	_log_label = Label.new()
 	_log_label.name = "EventToast"
@@ -225,7 +182,7 @@ func _build_ui() -> void:
 	_overlay_layer = Control.new()
 	_overlay_layer.name = "OverlayLayer"
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_overlay_layer.z_index = WORLD_MODAL_Z
+	_overlay_layer.z_index = OVERLAY_LAYER_Z
 	add_child(_overlay_layer)
 
 	_rail_label = VBoxContainer.new()
@@ -334,15 +291,6 @@ func _apply_layout() -> void:
 		)
 	)
 	_set_rect(_desk_content, Rect2(_desk_map.position, _desk_map.size))
-	# The lateral scene remains an independent prototype with its established
-	# safe rectangle; expanding the board must not change its navigation space.
-	_set_rect(
-		_scene_world,
-		Rect2(
-			Vector2(34, 78) * s,
-			Vector2(view_size.x - 68 * s, view_size.y - (78 + 238) * s)
-		)
-	)
 	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
 	_set_rect(
@@ -384,18 +332,6 @@ func _layout_situation_desk(s: float) -> void:
 	if _desk_content == null:
 		return
 	var map_size := _desk_content.size
-	var dossier := _desk_content.get_node_or_null("CurrentSceneDossier") as Control
-	var return_button := (
-		_scene_world.get_node_or_null("ReturnToDeskButton") as Control
-		if _scene_world != null
-		else null
-	)
-	if dossier != null and return_button != null:
-		dossier.position = (
-			_scene_world.position
-			+ return_button.position
-			- _desk_content.position
-		)
 	_desk_content.refresh_context()
 	if _log_label != null:
 		_log_label.size = Vector2(520, 34) * s
@@ -444,16 +380,6 @@ func _scene_frame_style() -> StyleBoxFlat:
 
 func _on_desk_rite_selector_requested(location_name: String) -> void:
 	open_rite_selector.emit(location_name)
-
-
-func _on_desk_site_navigation_active_changed(active: bool) -> void:
-	set_world_scene_blocker(
-		"site_navigation",
-		active,
-		false,
-		true,
-		true
-	)
 
 
 func site_action_anchor(location_name: String) -> Vector2:
@@ -537,30 +463,6 @@ func _emit_open_rite_instance(rite_uid: int) -> void:
 	open_rite_instance.emit(rite_uid)
 
 
-
-
-func _on_world_interaction_requested(interaction: Dictionary) -> void:
-	if _state == null or str(interaction.get("type", "")) != "npc":
-		return
-	var dialogue_id := str(interaction.get("dialogue", ""))
-	var lines := WorldScenes.dialogue(dialogue_id)
-	for index in lines.size():
-		var line: Dictionary = lines[index]
-		var speaker := str(line.get("speaker", interaction.get("name", "")))
-		_state.queue_prompt({
-			"id": "world_dialogue.%s.%d" % [dialogue_id, index],
-			"title": speaker,
-			"speaker": speaker,
-			"speaker_actor_id": str(line.get("actor_id", "protagonist")),
-			"text": str(line.get("text", "")),
-			"presentation": "dialogue",
-			"context": {
-				"world_location_id": str(interaction.get("location_id", "")),
-				"npc_id": str(interaction.get("id", "")),
-			},
-		})
-	if not lines.is_empty():
-		refresh()
 
 
 func refresh() -> void:
@@ -830,7 +732,7 @@ func can_drop_card_to_hand(data: Variant) -> bool:
 	return source == "slot" or source == "hand" or source == "active_sudan"
 
 
-# Clone-era compatibility adapter. ThoughtWorld owns the player-facing
+# Clone-era compatibility adapter. The desk owns the player-facing
 # "思考" interaction; this method preserves the verified MethinksEngine chain
 # until a replacement mechanism has been prototyped and accepted.
 func can_drop_card_on_methinks(data: Variant) -> bool:
@@ -971,8 +873,6 @@ func set_world_scene_blocker(
 		_underlying_presentation_pauses.erase(source)
 	if _desk_content != null and _desk_content.has_method("set_scene_blocker"):
 		_desk_content.set_scene_blocker(source, blocking, hide_chrome)
-	if _scene_world != null and _scene_world.has_method("set_scene_blocker"):
-		_scene_world.set_scene_blocker(source, blocking, hide_chrome)
 	_update_persistent_action_availability()
 	_set_underlying_presentation_paused(not _underlying_presentation_pauses.is_empty())
 
@@ -1005,26 +905,6 @@ func _set_underlying_presentation_paused(paused: bool) -> void:
 			(child as CardWidget).set_presentation_paused(paused)
 
 
-func presentation_state() -> int:
-	return _presentation_state
-
-
-func is_scene_context_open() -> bool:
-	return _presentation_state != PresentationState.DESK
-
-
-func _set_presentation_state(next_state: int) -> void:
-	if _desk_content == null or _scene_world == null:
-		return
-	_presentation_state = next_state
-	var scene_active := next_state != PresentationState.DESK
-	if scene_active:
-		clear_site_focus()
-	_desk_content.visible = not scene_active
-	_scene_world.visible = scene_active
-	_update_persistent_action_availability()
-
-
 func _update_persistent_action_availability() -> void:
 	var chrome_hidden := false
 	for hide_chrome in _presentation_blockers.values():
@@ -1032,10 +912,7 @@ func _update_persistent_action_availability() -> void:
 			chrome_hidden = true
 			break
 	var persistent_actions_locked := not _persistent_action_locks.is_empty()
-	var actions_visible := (
-		_presentation_state == PresentationState.DESK
-		and not chrome_hidden
-	)
+	var actions_visible := not chrome_hidden
 	var actions_available := (
 		actions_visible
 		and not persistent_actions_locked
@@ -1049,36 +926,6 @@ func _update_persistent_action_availability() -> void:
 		_advance_button.disabled = not actions_available
 	if _redraw_button != null:
 		_redraw_button.disabled = not actions_available
-
-
-func open_scene_context() -> bool:
-	if _scene_world == null or _desk_content == null:
-		return false
-	if _event_overlay != null or _card_detail_overlay != null:
-		return false
-	_scene_world.reload_from_state()
-	_set_presentation_state(PresentationState.SCENE)
-	set_log("")
-	return true
-
-
-func _open_context_scene() -> void:
-	open_scene_context()
-
-
-func return_to_situation_desk() -> void:
-	if _scene_world == null or _desk_content == null:
-		return
-	_set_presentation_state(PresentationState.DESK)
-	_desk_content.refresh_context()
-	_layout_situation_desk(
-		minf(_desk_content.size.x / MOCKUP_SIZE.x, _effective_view_size().y / MOCKUP_SIZE.y)
-	)
-	set_log("")
-
-
-func _close_context_scene() -> void:
-	return_to_situation_desk()
 
 
 func _refresh_event_overlay() -> void:
@@ -1142,32 +989,13 @@ func _next_event_display() -> Dictionary:
 
 
 func _show_event_overlay(display: Dictionary) -> void:
-	var display_choices: Dictionary = (
-		display.get("choices", {})
-		if display.get("choices", {}) is Dictionary
-		else {}
-	)
-	var wants_scene_dialogue := (
-		str(display.get("presentation", "")) == "dialogue"
-		and str(display.get("kind", "")) == "prompt"
-		and display_choices.is_empty()
-	)
-	if wants_scene_dialogue and _event_overlay != null and _event_is_dialogue:
-		_update_scene_dialogue(display)
-		_apply_layout()
-		return
 	_clear_event_overlay()
 	set_world_scene_blocker("event_prompt", true)
-	_event_is_dialogue = wants_scene_dialogue
 	_event_overlay = Control.new()
 	_event_overlay.name = "EventPromptOverlay"
 	_event_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_event_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_overlay(_event_overlay)
-	if _event_is_dialogue:
-		_build_scene_dialogue(display)
-		_apply_layout()
-		return
 
 	_event_panel = Panel.new()
 	_event_panel.name = "EventPromptPanel"
@@ -1247,78 +1075,14 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_apply_layout()
 
 
-func _build_scene_dialogue(display: Dictionary) -> void:
-	var advance := Button.new()
-	advance.name = "EventPromptContinueButton"
-	advance.flat = true
-	advance.focus_mode = Control.FOCUS_NONE
-	advance.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	advance.self_modulate = Color(1, 1, 1, 0)
-	advance.tooltip_text = "点击任意位置或按 E 继续"
-	advance.pressed.connect(_consume_event_display)
-	_event_overlay.add_child(advance)
-	advance.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	_event_dialogue_line = Control.new()
-	_event_dialogue_line.name = "SceneDialogueLine"
-	_event_dialogue_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_event_overlay.add_child(_event_dialogue_line)
-
-	_event_dialogue_text = Label.new()
-	_event_dialogue_text.name = "SceneDialogueText"
-	_event_dialogue_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_event_dialogue_text.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	# Remembrance-style dialogue is deliberately delivered in short pieces.
-	# Keeping each beat to one floating line avoids turning it back into a box.
-	_event_dialogue_text.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_event_dialogue_text.add_theme_font_size_override("font_size", 20)
-	_event_dialogue_text.add_theme_color_override("font_color", Color("#fff7df"))
-	_event_dialogue_text.add_theme_color_override("font_outline_color", Color(0.015, 0.02, 0.045, 0.96))
-	_event_dialogue_text.add_theme_constant_override("outline_size", 6)
-	_event_dialogue_text.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.02, 0.88))
-	_event_dialogue_text.add_theme_constant_override("shadow_offset_x", 2)
-	_event_dialogue_text.add_theme_constant_override("shadow_offset_y", 3)
-	_event_dialogue_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_event_dialogue_line.add_child(_event_dialogue_text)
-
-	_event_dialogue_marker = Label.new()
-	_event_dialogue_marker.name = "SceneDialogueAdvance"
-	_event_dialogue_marker.text = "▼"
-	_event_dialogue_marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_event_dialogue_marker.add_theme_font_size_override("font_size", 12)
-	_event_dialogue_marker.add_theme_color_override("font_color", Color("#f4c66f"))
-	_event_dialogue_marker.add_theme_color_override("font_outline_color", Color(0.015, 0.02, 0.045, 0.92))
-	_event_dialogue_marker.add_theme_constant_override("outline_size", 4)
-	_event_dialogue_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_event_dialogue_line.add_child(_event_dialogue_marker)
-	_update_scene_dialogue(display)
-
-
-func _update_scene_dialogue(display: Dictionary) -> void:
-	if _event_dialogue_text == null:
-		return
-	_event_dialogue_text.text = str(display.get("text", ""))
-	_event_dialogue_actor_id = str(display.get("speaker_actor_id", "protagonist"))
-
-
 func _clear_event_overlay() -> void:
 	if _event_overlay == null:
 		set_world_scene_blocker("event_prompt", false)
-		_event_is_dialogue = false
-		_event_dialogue_line = null
-		_event_dialogue_text = null
-		_event_dialogue_marker = null
-		_event_dialogue_actor_id = "protagonist"
 		return
 	var old_overlay := _event_overlay
 	_event_overlay = null
 	_event_panel = null
-	_event_dialogue_line = null
-	_event_dialogue_text = null
-	_event_dialogue_marker = null
-	_event_dialogue_actor_id = "protagonist"
 	_rename_input = null
-	_event_is_dialogue = false
 	if old_overlay.get_parent() != null:
 		old_overlay.get_parent().remove_child(old_overlay)
 	set_world_scene_blocker("event_prompt", false)
@@ -1334,11 +1098,6 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		return
 	var kind := str(operation.get("kind", ""))
 	var payload: Dictionary = operation.get("payload", {}) if operation.get("payload", {}) is Dictionary else {}
-	var scene_dialogue_advance := (
-		kind == "prompt"
-		and str(payload.get("presentation", "")) == "dialogue"
-		and choice_key.is_empty()
-	)
 	var trigger_ctx: Dictionary = operation.get("context", {}).duplicate(true) if operation.get("context", {}) is Dictionary else {}
 	if kind in ["prompt", "choice"]:
 		if choice_key != "":
@@ -1366,12 +1125,7 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 	# An event whose action opens a rite should surface that rite to the player
 	# immediately (showing the rite's narration text), not silently park it.
 	# The original opens the rite as a UI surface when an event fires it.
-	if scene_dialogue_advance:
-		# A spoken line changes only the presentation queue. Rebuilding the
-		# card rail here makes unrelated cards visibly re-enter on every click.
-		_refresh_event_overlay()
-	else:
-		refresh()
+	refresh()
 	var opened_rite := int(merged.get("rite", 0))
 	if opened_rite > 0:
 		open_rite.emit(opened_rite)
@@ -1396,50 +1150,13 @@ func _event_body_text(event: Dictionary, event_id: int) -> String:
 
 
 func _layout_event_prompt(s: float, view_size: Vector2) -> void:
-	if _event_panel == null and _event_dialogue_line == null:
+	if _event_panel == null:
 		return
 	var scene_rect := (
 		Rect2(_desk_map.position, _desk_map.size)
 		if _desk_map != null
 		else Rect2(Vector2(16, 70) * s, view_size - Vector2(32, 320) * s)
 	)
-	if _event_dialogue_line != null:
-		var line_w := minf(390.0 * s, scene_rect.size.x * 0.54)
-		var line_h := 58.0 * s
-		var anchor := scene_rect.get_center()
-		if (
-			_scene_world != null
-			and _scene_world.visible
-			and _scene_world.has_method("dialogue_anchor_global")
-			and _event_overlay != null
-		):
-			var global_anchor: Vector2 = _scene_world.dialogue_anchor_global(_event_dialogue_actor_id)
-			anchor = _event_overlay.get_global_transform().affine_inverse() * global_anchor
-		var line_x := clampf(
-			anchor.x - line_w * 0.5,
-			scene_rect.position.x + 18.0 * s,
-			scene_rect.end.x - line_w - 18.0 * s
-		)
-		var line_y := clampf(
-			anchor.y - line_h - 18.0 * s,
-			scene_rect.position.y + 8.0 * s,
-			scene_rect.end.y - line_h - 18.0 * s
-		)
-		_set_rect(_event_dialogue_line, Rect2(Vector2(line_x, line_y), Vector2(line_w, line_h)))
-		_set_rect(
-			_event_dialogue_text,
-			Rect2(Vector2.ZERO, Vector2(line_w, line_h - 18.0 * s))
-		)
-		_set_rect(
-			_event_dialogue_marker,
-			Rect2(
-				Vector2(line_w * 0.5 - 18.0 * s, line_h - 18.0 * s),
-				Vector2(36.0, 18.0) * s
-			)
-		)
-		return
-	if _event_panel == null:
-		return
 	var panel_w: float = min(maxf(1.0, scene_rect.size.x - 220 * s), 760 * s)
 	var panel_h: float = 226 * s if _rename_input != null else 176 * s
 	panel_h = minf(panel_h, maxf(1.0, scene_rect.size.y - 36 * s))

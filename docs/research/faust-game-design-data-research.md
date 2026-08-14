@@ -193,6 +193,15 @@
 | AB-BAL-001 | 自动测试、全局搜索和环境多样性指标可以辅助自走棋卡牌参数平衡 | 外部事实 | B | AB-ACADEMIC-001 | LUDUS 使用研究用简化游戏和固定三牌阵容，未建模商店、经济和逐轮构筑 |
 | TFT-PRED-001 | 一项 Set 13 研究以 78412 条 Riot API 样本预测结果，XGBoost 报告准确率 85.25%、F1 为 0.85 | 外部事实 | B | TFT-ACADEMIC-001 | 结果预测不等于因果识别；总成本的重要性可能包含终局状态泄漏 |
 | UO-RULE-001 | 《圣兽之王》允许玩家组合具名人物、装备和条件式“作战”，接敌后的局部战斗按预设自动执行；关卡地图上的移动与指挥仍由玩家承担 | 外部事实 | A | UO-OFFICIAL-001、UO-OFFICIAL-002 | 自动化的是局部交战，不是完整战术地图；不能直接等同酒馆战棋式自走棋 |
+| UO-RULE-002 | 战术系统为三层结构：优先级（按序检查）→ 行动（主动技能红色/被动技能蓝色，被动有独立优先级）→ 条件（每个行动可设条件）；条件全部不满足时跳过该行动，所有行动条件都不满足时跳过该角色回合 | 外部事实 | B | UO-GUIDE-001 | 攻略级机制描述，非官方文档 |
+| UO-RULE-003 | 条件修饰语义分两类：“优先”（必然触发，作为目标选择）与“仅”（条件满足才触发）；组合规则：优先+仅最常见、仅+仅须同时满足、优先+优先按“1+2 优先于 2 优先于 1”判定；含【优先前排/优先后排】时最优先执行；“第 N 次行动”类技能判定为“仅” | 外部事实 | B | UO-GUIDE-001、UO-GUIDE-006 | 攻略级机制描述；玩家实测总结，非官方文档 |
+| UO-RULE-004 | 伤害公式：攻击力=（基础攻击+武器威力）×（加攻倍率+减攻倍率，直接代数叠加）；防御力同理；总伤害=[攻击力−防御力]×（技能威力/100）×兵种特性补正（骑兵对步兵、弓兵对飞行 2 倍），四舍五入；攻击力<防御力时保底伤害 1；暴击=总伤害×（150%+暴击增伤倍率）；格挡减伤分三档 25%/50%/75%（无盾/小盾/大盾） | 外部事实 | B | UO-GUIDE-006 | 玩家实测公式，非官方文档；仅覆盖物理/魔法基础结算 |
+| UO-RULE-005 | 命中率=（命中−回避）×技能命中倍率×兵种特性补正（如地面近战打飞行命中减半），向下取整；近战物理技能无法越过前排攻击后排 | 外部事实 | B | UO-GUIDE-006 | 玩家实测公式，非官方文档 |
+| UO-RULE-006 | 异常状态数值：燃烧固定 20 HP/层、中毒损失最大 HP 的 30%（下次行动时）、冰冻无法行动受击解除且回避变 0、黑暗下次攻击命中必为 0（必中不可抵消）、昏厥跳过一回合 | 外部事实 | B | UO-GUIDE-006 | 玩家实测，demo 版本数据，可能与正式版有出入 |
+| UO-RULE-007 | 职业系统约 60 种（基础+进阶）；角色只能沿固定的基础→进阶路径转职（如 Lord→High Lord、Wizard→Warlock），不能横向更换职业 | 外部事实 | B | UO-GUIDE-004 | 攻略级职业表；未逐职业核对数值 |
+| UO-RULE-008 | 转职门槛：声望等级 B（累计 1750 声望点）解锁，消耗 25（基础职业）—50（独特职业）荣誉；小队最大 5 人（满扩容），扩容需要荣誉+声望等级门槛 | 外部事实 | B | UO-GUIDE-002、UO-GUIDE-003 | 攻略级数值，非官方文档 |
+| UO-RULE-009 | Valor 系统：每场战斗 Valor 上限 10 点；部署新单位与使用 Valor 技能都消耗 Valor；通过击败敌人、解放城镇/堡垒等恢复 | 外部事实 | B | UO-GUIDE-005、UO-GUIDE-008 | 攻略级数值，非官方文档 |
+| UO-RULE-010 | 成长类型决定属性成长：HP 型（+HP/物防/魔防，−命中/暴击）、力量型（+HP/力量/魔力，−防御/魔抗）、防御型（+物防/魔抗/格挡，−力量/魔力）；同名职业同成长类型属性上限一致 | 外部事实 | B | UO-GUIDE-006 | 玩家实测的成长方向，具体数值未逐项测量 |
 | UO-MKT-001 | 《圣兽之王》全球累计销量已超过 100 万 | 外部事实 | A | UO-OFFICIAL-003 | 证明整款产品成功，不识别自动战斗、画面、品牌或叙事的单独因果贡献 |
 | UO-EXPL-001 | 《圣兽之王》证明完整单机叙事、长期具名人物与自动局部战斗可以共同成立 | 研究解释 | C | UO-RULE-001、UO-MKT-001 | 强相容性证据，不证明随机供给、出售替换和逐轮阵容转换已经解决 |
 | NAB-MKT-001 | 单机自走棋已有多个可见的独立游戏样本，自动战斗叙事 RPG 也有明确商业成功案例 | 外部事实 | B | NAB-STORE-001—NAB-STORE-005、NAB-OFFICIAL-001—NAB-OFFICIAL-003 | 作品定义和商业口径不同；Steam 评测数不是销量，不能相加估计市场规模 |
@@ -206,6 +215,27 @@
 | FAUST-DES-001 | 同一具名人物应跨手牌、仪式、校园、自动行动和后果持续存在 | 用户确认的项目判断 | C | 相关设计文档与 AGENTS.md | 项目方向，不是外部研究结论 |
 | FAUST-HYP-001 | 保留“谁承担后果”的人工决定时，自动化可能降低负担而不损害责任感 | 待验证假说 | U | SG-UX-002、NARR-SYN-001 | 尚无 Faust 玩家实验 |
 | FAUST-DATA-001 | Faust 已测得合理手牌上限、候选数量或自动化层级 | 未知 | U | 当前没有这类结果 | 后续智能体不得声称已有答案 |
+| CS-RULE-001 | 《密教模拟器》把世界对象（人物、地点、书籍、行动）统一制成卡牌，玩家通过组合与试验理解世界；卡牌是"有意义但可被处置"的对象 | 外部事实 | A | CS-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
+| CS-RULE-002 | Kennedy 的叙事设计术语经历三次演化：Choice/Complicity/Consequence（2012）→ Quality-Based Narrative（约 2015）→ Resource Narrative（2021），每次都有他本人原文定义 | 外部事实 | A | CS-OFFICIAL-001、CS-OFFICIAL-002 | 一手博客原文；术语语义随版本演化，引用需注明阶段 |
+| CS-RULE-003 | Resource Narrative（资源叙事）的定义与三条件：玩家通过策略性操控一组有限资源推进显式叙事；资源须**稀缺、可再生产、可替代**；事件从资源状态组合中自然涌现，不需要 AI 导演 | 外部事实 | A | CS-OFFICIAL-001 | Kennedy 本人定义；"最有效"是设计判断，不是效果实验 |
+| CS-RULE-004 | Kennedy 亲自划分 resource narrative 的 YES/NO 名单：YES 包括密教、Sunless Sea、Fallen London、Darkest Dungeon、FTL、XCOM、King of Dragon Pass、Stellaris 等；NO 包括 CRPG（龙腾世纪、老滚、辐射、质量效应、巫师）、Firewatch、Gone Home、分支叙事等 | 外部事实 | A | CS-OFFICIAL-001 | 设计师个人分类，非学术定义；边界案例有争议 |
+| CS-RULE-005 | 《苏丹的游戏》主创亲述玩法血统是《This Is the Police》（资源卡填入事件槽）+《文明》的"下一回合"节奏；从《密教模拟器》只借鉴地图叙事逻辑——"苏丹=密教之子"是部分错误的简化 | 外部事实 | A | CS-OFFICIAL-004、CS-OFFICIAL-005 | 开发者自述；只描述设计来源，不是效果证据 |
+| CS-RULE-006 | 《苏丹的游戏》与《密教模拟器》推出官方捆绑包，两家工作室认可两者设计理念相似 | 外部事实 | A | CS-PRESS-001 | 二手媒体转述；捆绑包存在是事实，不证明具体相似程度 |
+| CS-EXPL-001 | 密教/苏丹共享"组合式叙事引擎"的五个体验原子：桌面卡牌统一语言、投入组合产生意义、有限揭示下的发现、持续累积的状态、由系统组合生成的叙事；删除任一原子即不再继承该引擎 | 研究解释 | C | CS-RULE-001、CS-OFFICIAL-001—003 | 本文的分析框架，不是开发者声明 |
+| CS-EXPL-002 | 《苏丹的游戏》把密教的"开放炼金台"改造为"权力调度台"：目标来源从玩家自主寻找改为外部权力提出任务、时间结构从实时多线程改为离散日期、组合对象从知识概念改为具体人物、结果承载从资源进程改为人际后果 | 研究解释 | C | CS-RULE-005、CS-EXPL-001 | 分析解释，非开发者原话 |
+| CS-GAP-001 | Kennedy GDC 2019 演讲文字稿（"How Cultist Simulator works" 等）已有公开完整版本 | 未知 | U | 无 | 只确认演讲存在，未取得文字稿 |
+| GK-RULE-001 | 《大骑士物语》（2011，PSP，Vanillaware 开发）是战术 RPG：玩家带领最多 4 名自定义角色（骑士/弓箭手/法师三类）的佣兵团，效力于三国之一；探索阶段队伍以"棋子"形式在大棋盘上移动，每任务有有限步数，不同格位触发事件、物品或战斗 | 外部事实 | A | GK-OFFICIAL-001 | Wikipedia 级资料，机制为二手总结；无玩家行为数据 |
+| GK-RULE-002 | 战斗在凸网格战斗区（"Battle Sphere Reel"）进行，镜头随角色行动平移；回合制，每回合开始选择行动（普攻/技能/治疗），行动消耗 AP，AP 每回合补一定量或击败敌人补充 | 外部事实 | A | GK-OFFICIAL-001 | Wikipedia 级资料；AP 具体数值未公开 |
+| GK-RULE-003 | 角色成长：重复使用特定技能或武器解锁新技能；装备武器/防具/装饰提升属性并改变外观；死亡单位移出战斗、得一半 EXP、战后 1 HP 回归；全灭则游戏结束 | 外部事实 | A | GK-OFFICIAL-001 | Wikipedia 级资料；无经验曲线数值 |
+| GK-RULE-004 | 在线多人（已关服）：玩家代表三国之一进行领土扩张战，胜者投票决定下一攻击目标，个人角色可交由 AI 托管；服务器 2013-10-31 关闭 | 外部事实 | A | GK-OFFICIAL-001 | 关服日期已确认；在线时代的行为数据不可复得 |
+| GK-RULE-005 | 导演 Tomohiko Deguchi 将《大骑士物语》概念延续到 2014/2016 的《Grand Kingdom》：棋盘式地图 + 有限步数、17 种雇佣兵职业（三主类型 Fire Emblem 式克制）、侧视三层平面战斗、手动瞄准（远程类 Worms、近战类清版）、队友伤害（误射/扔错治疗）、派系在线 meta 战 | 外部事实 | B | GK-OFFICIAL-002 | 媒体评测转述；未逐项核对游戏内数值 |
+| GK-EXPL-001 | 大骑士物语验证"物理棋子走过插画桌游地图"的结构：队伍以单个棋子形态在大棋盘上移动，步数有限，位置即事件——这是 Faust 横版场景"图板棋子结构"的表现参考 | 研究解释 | C | GK-RULE-001、GK-OFFICIAL-001 | 项目视觉参考的既有判断（thought-world-visual-references.md），非机制结论 |
+| TIP-RULE-001 | 《这就是警察》（2016，Weappy Studio）是时间管理游戏：玩家扮演 Freeburg 警察局长 Jack Boyd，在 180 天倒计时内退休并攒够 50 万美元；每天处理 911 呼叫，派遣适当数量与技能水平的警员处理犯罪（走私/凶杀/绑架等） | 外部事实 | B | TIP-GUIDE-001、TIP-GUIDE-002 | 媒体评测转述；游戏内数值为体验描述 |
+| TIP-RULE-002 | 资源与状态：主要资源为警员和金钱；警员有"专业度"（Professionalism，平均值 150）与技能点（发命令需消耗技能点）；两班制轮换、每两天换班；警员会请假、醉酒等 | 外部事实 | B | TIP-GUIDE-002 | 媒体评测转述；平均值 150 为游戏内提示 |
+| TIP-RULE-003 | 人员管理：无故开除会引发法律纠纷；有正当理由（缺勤/醉酒/年龄/连续 3 次响应失败）才可开除，用于淘汰弱警员 | 外部事实 | B | TIP-GUIDE-002 | 媒体评测转述 |
+| TIP-RULE-004 | 风险升级与后果不透明：故事推进后单人出警更危险，玩家被迫权衡派多少警力；游戏不明确哪些选择有严重后果（警员可能无预警死亡），现场决策为有限选项 | 外部事实 | B | TIP-GUIDE-001 | 媒体评测转述；"后果不透明"是评测判断 |
+| TIP-RULE-005 | 关系管理：与黑手党、市政厅、警局等机构维持关系，通过特殊任务派遣获得奖励（隐藏账户、安全开除等） | 外部事实 | B | TIP-GUIDE-001 | 媒体评测转述 |
+| TIP-EXPL-001 | 《苏丹的游戏》主创亲述其玩法骨架来自《这就是警察》（"把资源卡填入各种事件内"）+《文明》的"下一回合"节奏；苏丹的仪式槽位投入卡牌结构由此而来，而非直接继承密教 | 外部事实 | A | CS-OFFICIAL-004、CS-OFFICIAL-005 | 主创自述，非实验；与 TIP-RULE-001 的结构对应是研究解释 |
 | LH-RULE-001 | 循环是自动运转结构：英雄沿环形路径自动移动与战斗，玩家不直接控制；概念源自“零玩家游戏” | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
 | LH-RULE-002 | 地块之间存在组合（山脉→哥布林、宝库→石像鬼、草地邻接 +50% 治疗），放置因此是有代价的取舍 | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 组合是配置规则，不是玩家行为数据 |
 | LH-RULE-003 | 远征结算三档：战斗死亡保留 30%、非营地撤退 60%、营地格撤退 100%、击败 Boss 后 100% | 外部事实 | A | LH-GUIDE-001 | 攻略级数值，非官方文档，口径可能随版本调整 |
@@ -1445,6 +1475,14 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | UO-OFFICIAL-001 | [《圣兽之王》官方英文系统页](https://unicornoverlord.atlus.com/index.html?lang=en) | 持续维护；核对 2026-08-13 | 超过 60 名角色、自由编队、实时关卡地图和按条件自动执行的局部战斗 | 产品说明，不提供配置表、操作轨迹或认知负荷数据 |
 | UO-OFFICIAL-002 | [《圣兽之王》官方日文系统页](https://unicorn-overlord.com/index.html) | 持续维护；核对 2026-08-13 | 明确区分关卡指挥与接敌后按“作战”自动进行的战斗 | 同一官方营销材料的语言版本，不是独立行为证据 |
 | UO-OFFICIAL-003 | [全球累计销量 100 万公告](https://www.atlus.co.jp/news/27826/) | 2024-09-24 | 全球实体出货与下载销量合计超过 100 万 | 整体销量，无法分离机制、品牌、美术、口碑和营销贡献 |
+| UO-GUIDE-001 | [TheGamer: The Complete Guide To Tactics](https://www.thegamer.com/unicorn-overlord-tactics-complete-guide/) | 2024-03-27；核对 2026-08-14 | 战术三层结构（优先级/行动/条件）、主动被动技能、条件不满足跳过回合的规则与优先级编排示例 | 攻略级机制描述，非官方文档 |
+| UO-GUIDE-002 | [GamerTweak: Expand Units](https://gamertweak.com/expand-units-unicorn-overlord/) | 2024-03-19；核对 2026-08-14 | 小队最大 5 人（满扩容）；扩容与解锁单位槽需荣誉+声望等级门槛 | 攻略级数值，非官方文档 |
+| UO-GUIDE-003 | [GamerTweak: How To Unlock Class Promotion](https://gamertweak.com/promote-classes-in-unicorn-overlord/) | 2024-03-19；核对 2026-08-14 | 声望等级 B=1750 声望点解锁转职；转职消耗 25—50 荣誉；基础→进阶职业对照表 | 攻略级数值，非官方文档 |
+| UO-GUIDE-004 | [GamerTweak: How To Change Class](https://gamertweak.com/change-class-in-unicorn-overlord/) | 2024-03-18；核对 2026-08-14 | 约 60 种职业（基础+进阶）；角色不能横向换职，只能基础→进阶转职 | 攻略级职业表；未逐职业核对数值 |
+| UO-GUIDE-005 | [GameRant: How to Restore Valor Points](https://gamerant.com/unicorn-overlord-how-to-restore-valor-points-skills-deploy-units/) | 2024-03-10；核对 2026-08-14 | 每场战斗 Valor 上限 10；部署单位与 Valor 技能消耗 Valor；击败敌人、解放城镇堡垒恢复 | 攻略级数值，非官方文档 |
+| UO-GUIDE-006 | [游民星空：圣兽之王伤害计算公式讲解](https://wap.gamersky.com/gl/Content-1718059.html) | 2024-03-11；核对 2026-08-14 | 玩家实测的伤害公式、命中率公式、暴击/格挡倍率、异常状态数值、技能判定顺序（优先/仅）、成长类型方向 | 玩家实测（demo 版本），非官方文档，部分数值可能与正式版有出入 |
+| UO-GUIDE-007 | [DualShockers: Best Early Game Unit Formations](https://www.dualshockers.com/unicorn-overlord-best-early-game-unit-formations/) | 2024-03-17；核对 2026-08-14 | 70+ 可招募角色、编队协同示例、Valor 技能示例（Valorous Order 先手+20% 防御攻击） | 攻略体验文，非官方数值表 |
+| UO-GUIDE-008 | [Ludo.guide: Item and Class Guide](https://www.ludo.guide/guide/unicorn-overlord/item-and-class-guide-ns-by-merqurial-5) | 2024-04-09；核对 2026-08-14 | 职业分类（步兵/远程/斥候/重装/骑兵/独特）、技能与物品表、示例编队 | 社区指南，非官方文档 |
 | NAB-OFFICIAL-001 | [《循环勇者》首周销量报道](https://www.gamedeveloper.com/business/-i-loop-hero-i-surpassed-500-000-sales-during-its-launch-week) | 2021-03-12；引述开发者公告 | 首周销量超过 50 万；自动战斗、地图/卡牌构筑与故事推进样本 | 二手行业媒体转述；不是典型多人阵容自走棋 |
 | NAB-OFFICIAL-002 | [《妖之乡》官方销量公告](https://steamcommunity.com/app/2816950/allnews/) | 2025-12-04 | 开发者公布全球销量超过 15 万 | 公告聚合页会继续更新；生物收集与玩家冒险是主要叙事主体 |
 | NAB-OFFICIAL-003 | [《妖之乡》Steam 页面](https://store.steampowered.com/app/2816950/Yaoling_Mythical_Journey/) | 1.0 于 2025-06-19；核对 2026-08-13 | 单机故事、300 余种妖灵、养成与自动战斗的产品结构 | 商店描述和用户标签不能证明各系统因果贡献 |
@@ -1477,6 +1515,32 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | LH-PRESS-001 | [IGN: Loop Hero Review](https://www.ign.com/articles/loop-hero-review) | 2021 评测；核对 2026-08-14 | 归类为 deck-based rogue-like；强调玩家不直接控制英雄 | 评测级品类描述，非品类学术定义 |
 | LH-PRESS-002 | [Rock Paper Shotgun 预览](https://www.rockpapershotgun.com/loop-hero-looks-like-a-nifty-deck-based-rogue-like) | 2021 预览；核对 2026-08-14 | 标题与正文以 “deck-based rogue-like” 归类 | 预览非正式评测；媒体描述级 |
 | LH-PRESS-003 | [Kotaku: Tips For Playing Loop Hero](https://kotaku.com/tips-for-playing-loop-hero-1846432102) | 2021-03-08 | 以 “deck-building roguelite” 归类游戏；报道 Steam 周末同时在线峰值约 5 万 | 媒体描述级；并发为发售初期单点峰值 |
+
+### 14.3C 《密教模拟器》与叙事卡牌谱系
+
+| 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
+| --- | --- | --- | --- | --- |
+| CS-OFFICIAL-001 | [Weather Factory: QBN to Resource Narratives](https://weatherfactory.biz/qbn-to-resource-narratives/) | 2021；Kennedy 本人博客 | resource narrative 定义、三条件（稀缺/可再生产/可替代）、YES/NO 名单 | 设计师自述，非效果实验 |
+| CS-OFFICIAL-002 | [Failbetter: Choice, Complicity and Consequence](https://www.failbettergames.com/news/choice-complicity-and-consequence) | 2012-09-20；Kennedy 团队官方博客 | 叙事设计三支柱原文定义；"Consequence 最贵"的判断 | 设计师自述；术语后续被 QBN/resource narrative 取代 |
+| CS-OFFICIAL-003 | [Game Developer: 密教模拟器创作者采访](https://www.gamedeveloper.com/design/why-the-i-cultist-simulator-i-devs-built-their-lovecraftian-game-on-a-house-of-cards) | 密教发售前后 | 卡牌作为"有意义但可被处置"对象的设计意图；组合与试验理解世界 | 开发者自述，非玩家行为数据 |
+| CS-OFFICIAL-004 | [网易：苏丹的游戏主创访谈](https://www.163.com/dy/article/K0BCUM2O0526JULF.html) | 2025 前后；主创远古之风 | 玩法血统（This Is the Police + 文明下一回合）、人 vs 世界观的内容取向 | 主创自述，非实验；媒体转载 |
+| CS-OFFICIAL-005 | [知乎/腾讯：赛博昏君专访](https://zhuanlan.zhihu.com/p/7588271698) | 2025 前后；主创远古之风 | 明确 This Is the Police 血统、从密教只借鉴地图叙事 | 主创自述，非实验；平台转载 |
+| CS-PRESS-001 | [苏丹与密教官方捆绑包报道](https://cngame-fnscore.com/news-20260429-1038-9352) | 2026-04-29；核对 2026-08-14 | 两家工作室推出官方捆绑包，认可设计理念相似 | 二手媒体转述；不证明具体相似程度 |
+| CS-GUIDE-001 | [知乎：隐秘而深邃-浅析密教模拟器的玩法叙事](https://zhuanlan.zhihu.com/p/595041832) | 知乎长期；核对 2026-08-14 | 中文社区对密教"卡牌=万物符号"的玩法叙事分析 | 社区分析，非官方文档 |
+
+### 14.3D 《大骑士物语》与《Grand Kingdom》
+
+| 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
+| --- | --- | --- | --- | --- |
+| GK-OFFICIAL-001 | [Wikipedia: Grand Knights History](https://en.wikipedia.org/wiki/Grand_Knights_History) | 持续维护；核对 2026-08-14 | 游戏结构（棋子式探索、Battle Sphere Reel、AP 系统、技能熟练度、死亡规则、在线领土战、2013 关服、Grand Kingdom 延续） | 维基级二手总结，非官方文档；无玩家行为数据 |
+| GK-OFFICIAL-002 | [Metro: Grand Kingdom review](https://metro.co.uk/2016/07/08/grand-kingdom-review-thousand-yard-strategy-5993642/) | 2016-07-08；核对 2026-08-14 | Grand Kingdom 机制描述（棋盘地图有限步数、17 职业三主类型克制、三层平面战斗、手动瞄准、队友伤害、派系在线 meta）；确认导演为 Deguchi | 媒体评测，非官方文档；机制为体验描述 |
+
+### 14.3E 《这就是警察》
+
+| 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
+| --- | --- | --- | --- | --- |
+| TIP-GUIDE-001 | [KeenGamer: This Is The Police Review](https://www.keengamer.com/articles/reviews/this-is-the-police-review/) | 2016；核对 2026-08-14 | 机制描述（180 天倒计时、50 万美元目标、两班制警力、911 派遣、风险升级、关系管理、后果不透明） | 媒体评测；"后果不透明"是评测判断，非官方设计声明 |
+| TIP-GUIDE-002 | [GameLuster: "This is the Police" PC Review](https://gameluster.com/this-is-the-police-review/) | 2016-07-28；核对 2026-08-14 | 机制细节（911 响应、技能点、专业度平均值 150、开除规则、请假/醉酒） | 媒体评测，非官方文档 |
 
 ### 14.4 麻将与认知负荷
 

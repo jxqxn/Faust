@@ -161,48 +161,6 @@ func _mcp_capture_compact_prompt() -> void:
 	_game_screen.refresh()
 
 
-func _mcp_capture_world_dialogue() -> void:
-	if state == null:
-		_on_difficulty_selected(0)
-	elif _game_screen == null:
-		_show_game()
-	if _game_screen == null:
-		return
-	_open_scene_context_for_capture()
-	var world := _game_screen.get_node_or_null("SceneWorld")
-	if world == null:
-		return
-	world.set_player_x_ratio_for_test(0.68)
-	world.interact_with_nearest()
-
-
-func _mcp_capture_world_dialogue_second_line() -> void:
-	_mcp_capture_world_dialogue()
-	if _game_screen == null:
-		return
-	var continue_button := _game_screen.find_child("EventPromptContinueButton", true, false) as Button
-	if continue_button != null:
-		continue_button.pressed.emit()
-
-
-func _mcp_capture_riverbank() -> void:
-	if state == null:
-		_on_difficulty_selected(0)
-	elif _game_screen == null:
-		_show_game()
-	if _game_screen == null:
-		return
-	_open_scene_context_for_capture()
-	var world := _game_screen.get_node_or_null("SceneWorld")
-	if world != null and world.has_method("change_location"):
-		world.change_location("riverbank", "default")
-
-
-func _open_scene_context_for_capture() -> void:
-	if _game_screen != null and _game_screen.has_method("open_scene_context"):
-		_game_screen.open_scene_context()
-
-
 func _on_open_rite_selector(location_filter: String = "") -> void:
 	var availability_rng = rng.duplicate_stream() if rng != null else null
 	var open_uids := RiteSelector.filter_open_rite_instance_uids(
@@ -211,8 +169,6 @@ func _on_open_rite_selector(location_filter: String = "") -> void:
 	if open_uids.is_empty():
 		if _game_screen != null and _game_screen.has_method("set_log"):
 			_game_screen.set_log("该地点当前没有可处理行动。")
-		if _game_screen != null and _game_screen.has_method("clear_site_focus"):
-			_game_screen.clear_site_focus()
 		return
 	_close_rite_selector_overlay(false)
 	var sel := RiteSelector.new()

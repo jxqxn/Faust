@@ -6,6 +6,11 @@
 >
 > 资料状态：2026-07-20。所有带 `[已查证]` 标签的断言都有可追溯的网络来源（文末附），关键引文来自作者本人博客或访谈。这份文档遵守 `docs/design/single-character-will-simulation.md §8` 的证据与阶段纪律。
 >
+> 证据入口：本研究的核心主张与一手来源已登记在
+> [`faust-game-design-data-research.md`](faust-game-design-data-research.md) 的
+> `CS-*` 主张与来源中（`CS-RULE-001`—`CS-RULE-006`、`CS-EXPL-001`—`CS-EXPL-002`、
+> `CS-GAP-001`、`CS-OFFICIAL-001`—`CS-OFFICIAL-005`、`CS-PRESS-001`、`CS-GUIDE-001`）。
+>
 > **追加（2026-07-20，第二轮辩证后）**：§八 追加了更广叙事游戏谱系的查证事实——Hocking 的 ludonarrative dissonance、Apocalypse World 的 fiction first/fail forward、Citizen Sleeper 的 Blades in the Dark 血统、极乐迪斯科的机制与 Planescape Torment 血统。**这些事实不连成系统**，详见 §八末尾的边界说明。本研究的过度系统化失败记录在 `docs/research/ai-over-systematization-track-record.md`。
 
 ---

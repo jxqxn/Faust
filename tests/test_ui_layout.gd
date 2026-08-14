@@ -157,60 +157,6 @@ func test_representative_main_screen_controls_share_ui_motion():
 			)
 
 
-func test_card_idle_clock_freezes_without_resume_pose_jump():
-	var stage := _stage()
-	var widget := CardWidget.make({
-		"id": 2000001,
-		"name": "Clock test",
-		"type": "char",
-		"rare": 1,
-		"tag": {},
-	})
-	stage.add_child(widget)
-	widget.set_hand_idle(true, 0)
-	widget.set_process(false)
-	widget._process(0.25)
-	widget.set_process(false)
-	var time_before := widget._idle_time_seconds()
-	var target_position_before := widget._idle_position_at(time_before)
-	var target_rotation_before := widget._idle_rotation_at(time_before)
-	var pose_position_before := widget.offset_transform_position
-	var pose_rotation_before := widget.offset_transform_rotation
-	var position_velocity_before := widget._pose_position_velocity
-	var rotation_velocity_before := widget._pose_rotation_velocity
-
-	widget.set_presentation_paused(true)
-	await wait_seconds(0.16)
-	assert_almost_eq(widget._idle_time_seconds(), time_before, 0.000001)
-	assert_eq(widget.offset_transform_position, pose_position_before)
-	assert_almost_eq(widget.offset_transform_rotation, pose_rotation_before, 0.000001)
-	assert_eq(widget._pose_position_velocity, position_velocity_before)
-	assert_almost_eq(widget._pose_rotation_velocity, rotation_velocity_before, 0.000001)
-
-	widget.set_presentation_paused(false)
-	widget.set_process(false)
-	assert_eq(widget._idle_position_at(widget._idle_time_seconds()), target_position_before)
-	assert_almost_eq(
-		widget._idle_rotation_at(widget._idle_time_seconds()),
-		target_rotation_before,
-		0.000001
-	)
-	var delta := 1.0 / 60.0
-	widget._process(delta)
-	widget.set_process(false)
-	assert_almost_eq(widget._idle_time_seconds(), time_before + delta, 0.000001)
-	assert_lt(
-		widget.offset_transform_position.distance_to(pose_position_before),
-		0.5,
-		"resuming should advance by one ordinary frame, not by the paused wall time"
-	)
-	assert_lt(
-		absf(widget.offset_transform_rotation - pose_rotation_before),
-		0.005,
-		"idle roll should continue smoothly from the frozen pose"
-	)
-
-
 func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
 	var rng := RNG.new(73)
 	var state := GameState.new()
@@ -414,7 +360,6 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	var market := _find_node_by_name(game, "SiteMarket") as Button
 	var desk := _find_node_by_name(game, "SituationDesk") as Control
 	var card_rail := _find_node_by_name(game, "CardRail") as Control
-	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
 	var think_drop := _find_node_by_name(game, "ThinkDropZone") as Control
 	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	var advance := _find_node_by_name(game, "AdvanceDayButton") as Button
@@ -425,13 +370,12 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	assert_not_null(market)
 	assert_not_null(desk)
 	assert_not_null(card_rail)
-	assert_not_null(dossier)
 	assert_not_null(think_drop)
 	assert_not_null(right_actions)
 	assert_not_null(advance)
 	assert_not_null(redraw)
 	assert_not_null(menu)
-	if screen == null or home == null or market == null or desk == null or card_rail == null or dossier == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
+	if screen == null or home == null or market == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
 		return
 	assert_false(home.disabled, "a site with available actions should be visibly enabled")
 	assert_string_contains(home.text, "·", "site labels should expose their action availability")
@@ -461,7 +405,6 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 		0.001,
 		"pausing a site menu must not fade or remove the other physical nodes"
 	)
-	assert_true(dossier.visible, "a compact site menu must not make the scene entry disappear")
 	assert_true(think_drop.visible, "a compact site menu must not make the thought drop target disappear")
 	if selector_panel != null:
 		var panel_rect := selector_panel.get_global_rect()
@@ -520,36 +463,6 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	assert_almost_eq(market.self_modulate.a, 1.0, 0.001)
 	await wait_process_frames(1)
 	assert_true(home.has_focus(), "returning from the local panel should restore the source site focus")
-
-
-func test_game_screen_current_scene_dossier_opens_local_world_without_advancing_simulation():
-	var rng := RNG.new(211)
-	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
-	var day_before := state.day
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, db, rng)
-	stage.add_child(screen)
-	await wait_process_frames(2)
-
-	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Button
-	var world := _find_node_by_name(screen, "SceneWorld")
-	var protagonist := _find_node_by_name(screen, "Protagonist") as Control
-	assert_not_null(dossier)
-	assert_not_null(world)
-	assert_not_null(protagonist)
-	if dossier == null or world == null or protagonist == null:
-		return
-	dossier.pressed.emit()
-	await wait_process_frames(1)
-	assert_true(world.visible, "current scene dossier should open the saved local scene")
-	var x_before := protagonist.position.x
-	world.set_player_x_ratio_for_test(0.8)
-	await wait_process_frames(1)
-
-	assert_gt(protagonist.position.x, x_before, "the protagonist should occupy a real position in the dossier scene")
-	assert_eq(state.day, day_before, "walking is presentation and must not advance the simulation")
 
 
 func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
@@ -636,17 +549,17 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 		assert_lte(
 			prompt_panel.position.y + prompt_panel.size.y,
 			scene.position.y + scene.size.y,
-			"event dialogue should stay inside the lateral scene"
+			"event prompts should stay inside the desk area"
 		)
 		assert_lt(
 			prompt_panel.position.y + prompt_panel.size.y,
 			rail.position.y,
-			"event dialogue must not cover the card rail"
+			"event prompts must not cover the card rail"
 		)
 		assert_lt(
 			prompt_panel.size.y,
 			scene.size.y * 0.6,
-			"ordinary prompts should be compact dialogue strips, not full-scene pages"
+			"ordinary prompts should stay compact, not full-screen pages"
 		)
 
 
@@ -865,41 +778,35 @@ func test_game_menu_button_opens_real_overlay():
 
 	var overlay := _find_node_by_name(game, "GameMenuOverlay") as Control
 	var rail := _find_node_by_name(game, "CardRail") as Control
-	var protagonist := _find_node_by_name(game, "Protagonist") as Control
-	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Control
 	var desk_think := _find_node_by_name(game, "ThinkDropZone") as Control
 	assert_not_null(overlay, "menu button should open an in-game menu overlay")
 	assert_not_null(rail)
-	assert_not_null(protagonist)
-	assert_not_null(dossier)
 	assert_not_null(desk_think)
 	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
 	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
 	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
 	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
-	if overlay != null and rail != null and protagonist != null:
+	if overlay != null and rail != null:
 		assert_gt(overlay.z_index, rail.z_index, "the menu must cover persistent hand cards")
-		assert_gt(overlay.z_index, protagonist.z_index, "the menu must cover the local scene protagonist")
 		assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "the global menu layer must block clicks behind it")
 		var shade := overlay.get_child(0) as Control
 		assert_not_null(shade)
 		if shade != null:
 			assert_eq(shade.mouse_filter, Control.MOUSE_FILTER_STOP, "the menu shade must absorb background input")
-	if dossier != null and desk_think != null:
-		assert_true(dossier.visible, "the global menu pauses the visible desk instead of hiding its dossier")
+	if desk_think != null:
 		assert_true(desk_think.visible, "the global menu pauses the visible desk instead of hiding its thought target")
 	assert_eq(
 		(game._game_screen as Node).process_mode,
 		Node.PROCESS_MODE_DISABLED,
 		"the global menu freezes the complete lower gameplay layer"
 	)
-	var world := _find_node_by_name(game, "SceneWorld")
-	assert_true(world.is_scene_blocked(), "the game menu should block lateral input")
+	var desk := _find_node_by_name(game, "SituationDesk")
+	assert_true(desk.is_scene_blocked(), "the game menu should block desk input")
 	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
 	if resume != null:
 		resume.pressed.emit()
 		await wait_process_frames(1)
-		assert_false(world.is_scene_blocked(), "resuming should release the menu blocker")
+		assert_false(desk.is_scene_blocked(), "resuming should release the menu blocker")
 		assert_eq(
 			(game._game_screen as Node).process_mode,
 			Node.PROCESS_MODE_INHERIT,
@@ -917,51 +824,19 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 
 	var screen := game._game_screen as Control
 	var desk := _find_node_by_name(game, "SituationDesk") as Control
-	var world := _find_node_by_name(game, "SceneWorld") as Control
-	var dossier := _find_node_by_name(game, "CurrentSceneDossier") as Button
 	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	assert_not_null(screen)
 	assert_not_null(desk)
-	assert_not_null(world)
-	assert_not_null(dossier)
 	assert_not_null(right_actions)
-	if screen == null or desk == null or world == null or dossier == null or right_actions == null:
+	if screen == null or desk == null or right_actions == null:
 		return
 
-	assert_eq(screen.presentation_state(), GameScreen.PresentationState.DESK)
-	assert_true(desk.visible, "the player starts on the situation desk")
-	assert_false(world.visible, "the local scene is closed until the dossier is chosen")
+	assert_true(desk.visible, "the player lives on the situation desk")
 	assert_eq(desk.get_parent(), screen, "the desk keeps GameScreen as its permanent parent")
-	assert_eq(world.get_parent(), screen, "the scene keeps GameScreen as its permanent parent")
-	assert_true(dossier.visible, "the visible dossier is the real route into the scene")
 	assert_true(right_actions.visible, "day controls belong to the desk commit surface")
-	var desk_navigation_position := dossier.global_position
-	dossier.pressed.emit()
-	await wait_process_frames(1)
-
-	var return_to_desk := world.get_node("ReturnToDeskButton") as Button
-	assert_not_null(return_to_desk)
-	if return_to_desk == null:
-		return
-	assert_eq(screen.presentation_state(), GameScreen.PresentationState.SCENE)
-	assert_true(world.visible)
-	assert_false(desk.visible)
-	assert_false(right_actions.visible, "scene exploration must not expose day-commit controls")
-	assert_almost_eq(
-		return_to_desk.global_position.x,
-		desk_navigation_position.x,
-		2.0,
-		"enter and return navigation should occupy the same horizontal anchor"
-	)
-	assert_almost_eq(
-		return_to_desk.global_position.y,
-		desk_navigation_position.y,
-		2.0,
-		"enter and return navigation should occupy the same vertical anchor"
-	)
-	for child in world.get_children():
+	for child in desk.get_children():
 		if child is CanvasItem:
-			assert_lte((child as CanvasItem).z_index, GameScreen.SCENE_CONTENT_Z_MAX, "scene content stays inside its layer budget: %s" % child.name)
+			assert_lte((child as CanvasItem).z_index, GameScreen.SCENE_CONTENT_Z_MAX, "desk content stays inside its layer budget: %s" % child.name)
 	var menu_button := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(menu_button)
 	if menu_button == null:
@@ -977,18 +852,15 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	if menu_overlay != null and rail != null:
 		assert_eq(menu_overlay.get_parent(), game, "the global menu keeps Game as its permanent parent")
 		assert_gt(menu_overlay.z_index, rail.z_index, "global menu outranks persistent hand cards")
-		for child in world.get_children():
-			if child is CanvasItem:
-				assert_lt((child as CanvasItem).z_index, menu_overlay.z_index, "global menu outranks scene content: %s" % child.name)
 		assert_eq(menu_overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "global menu blocks clicks behind its shade")
-	assert_true(world.is_scene_blocked(), "the global menu blocks all lower scene input")
+	assert_true(desk.is_scene_blocked(), "the global menu blocks all lower desk input")
 	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
 	assert_not_null(resume)
 	if resume == null:
 		return
 	resume.pressed.emit()
 	await wait_process_frames(1)
-	assert_false(world.is_scene_blocked(), "closing the global menu releases the scene input lock")
+	assert_false(desk.is_scene_blocked(), "closing the global menu releases the desk input lock")
 
 
 func test_game_menu_opens_manual_archive_picker():
@@ -1004,10 +876,10 @@ func test_game_menu_opens_manual_archive_picker():
 	assert_not_null(_find_node_by_name(game, "UserArchiveOverlay"), "manual save opens a separate archive picker")
 	assert_not_null(_find_node_by_name(game, "UserArchiveNameInput"), "archive picker accepts a player-specified name")
 	assert_not_null(_find_node_by_name(game, "SaveNewUserArchiveButton"), "archive picker can create a new slot")
-	var world := _find_node_by_name(game, "SceneWorld")
-	assert_true(world.is_scene_blocked(), "the archive picker should block lateral input")
+	var desk := _find_node_by_name(game, "SituationDesk")
+	assert_true(desk.is_scene_blocked(), "the archive picker should block desk input")
 	game._close_user_archive_overlay()
-	assert_false(world.is_scene_blocked(), "closing the archive picker should release its blocker")
+	assert_false(desk.is_scene_blocked(), "closing the archive picker should release its blocker")
 
 
 func test_test_start_entry_uses_test_card_profile():
@@ -1124,73 +996,6 @@ func test_card_widget_hover_raises_its_layer_and_scale():
 	assert_eq(widget.z_index, 0, "card should return to its normal rail layer after hover")
 
 
-func test_card_widget_hover_uses_mild_two_axis_perspective_and_center_dead_zone():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget._set_hovered(true)
-	for frame in 18:
-		widget._update_depth_layers(Vector2(0.8, -0.7), false, 1.0 / 60.0)
-
-	assert_true(widget._perspective_tilt.x > 0.65, "pointer x should drive yaw on the complete card face")
-	assert_true(widget._perspective_tilt.y < -0.5, "pointer y should drive pitch on the complete card face")
-	assert_true(widget._perspective_tilt.length() < 1.3, "normalized tilt must remain restrained")
-	assert_eq(widget._perspective_material.get_shader_parameter("tilt"), widget._perspective_tilt)
-	assert_almost_eq(widget._shape_perspective_axis(0.03), 0.0, 0.000001, "the card center should have no visible tilt jitter")
-	assert_almost_eq(widget._shape_perspective_axis(-0.03), 0.0, 0.000001)
-
-	widget._set_hovered(false)
-	for frame in 35:
-		widget._update_depth_layers(Vector2.ZERO, false, 1.0 / 60.0)
-	assert_true(widget._perspective_tilt.length() < 0.01, "both axes should spring back without snapping")
-
-
-func test_card_hover_juice_matches_original_damped_sine_envelope():
-	var early_pop := CardWidget._sample_hover_juice(0.016, 1.0)
-	var opposite_direction := CardWidget._sample_hover_juice(0.016, -1.0)
-	var settled := CardWidget._sample_hover_juice(CardWidget.HOVER_JUICE_DURATION, 1.0)
-	assert_true(early_pop.x > 0.0, "juice should start its sine rebound immediately after the hard compression")
-	assert_true(early_pop.y > 0.0, "positive random direction should produce positive rotational juice")
-	assert_almost_eq(opposite_direction.x, early_pop.x, 0.000001)
-	assert_almost_eq(opposite_direction.y, -early_pop.y, 0.000001)
-	assert_eq(settled, Vector2.ZERO, "the original 0.4 second envelope must end exactly at rest")
-
-
-func test_card_hover_entry_compresses_immediately_and_exit_starts_no_new_juice():
-	var card := {"id": 2000001, "instance_uid": 42, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget._set_hovered(true)
-	assert_almost_eq(
-		widget.offset_transform_scale.x,
-		1.0 - CardWidget.HOVER_JUICE_COMPRESSION,
-		0.000001,
-		"Moveable juice should immediately compress VT.scale"
-	)
-	widget._step_hover_juice(0.067)
-	var before_exit_scale := widget._hover_juice_scale
-	var before_exit_rotation := widget._hover_juice_rotation
-	var before_exit_elapsed := widget._hover_juice_elapsed
-	widget._set_hovered(false)
-	assert_eq(widget._hover_juice_mode, CardWidget.HoverJuiceMode.ENTER, "stop_hover must not create an exit envelope")
-	assert_almost_eq(widget._hover_juice_elapsed, before_exit_elapsed, 0.000001)
-	assert_almost_eq(widget._hover_juice_scale, before_exit_scale, 0.000001, "the entry juice should keep decaying")
-	assert_almost_eq(widget._hover_juice_rotation, before_exit_rotation, 0.000001)
-	widget._step_hover_juice(0.03)
-
-	widget.offset_transform_scale = Vector2.ONE * 1.04
-	widget.offset_transform_rotation = 0.02
-	assert_eq(widget._composed_visual_scale(), widget.offset_transform_scale)
-	assert_almost_eq(
-		widget._composed_visual_rotation(),
-		widget.offset_transform_rotation,
-		0.000001,
-		"drag pickup should inherit the already integrated visual rotation"
-	)
-
-
 func test_card_moveable_scale_uses_original_exponential_recurrence():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
@@ -1205,19 +1010,6 @@ func test_card_moveable_scale_uses_original_exponential_recurrence():
 	assert_almost_eq(widget._pose_scale_velocity.x, expected_velocity, 0.000001)
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0 + expected_velocity, 0.000001)
 	assert_true(widget.offset_transform_scale.x > 1.03, "the first frame should be crisp rather than a slow generic spring")
-
-
-func test_card_hover_keeps_idle_roll_as_pointer_tilt_layer_changes():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget.set_hand_idle(true, 0)
-	widget._hand_idle_phase = PI * 0.5 - widget._idle_time_seconds() * CardWidget.IDLE_SWAY_FREQUENCY
-	widget._set_hovered(true)
-	for frame in 5:
-		widget._step_interaction_motion(1.0 / 60.0)
-	assert_true(absf(widget.offset_transform_rotation) > 0.01, "hover must not replace CardArea's live idle roll")
 
 
 func test_card_shadow_uses_unwarped_alpha_and_height_parallax():
@@ -1269,7 +1061,6 @@ func test_card_drag_height_changes_shadow_without_reusing_perspective_material()
 		widget._update_depth_layers(Vector2(0.8, -0.7), true, 1.0 / 60.0)
 
 	assert_true(widget._shadow_height > 0.30, "held cards should raise their shadow toward the original drag height")
-	assert_true(widget._perspective_tilt.length() > 0.5, "the held card face should still receive pointer perspective")
 	assert_ne(widget._shadow_surface.material, widget._perspective_material)
 	assert_true(widget._shadow_surface.scale.x < 0.95, "a raised shadow should shrink slightly like the original 2D pass")
 
@@ -1300,19 +1091,6 @@ func test_card_selected_shadow_stays_on_the_table_plane_and_softens_overlap():
 	)
 
 
-func test_card_hover_shader_leans_toward_pointer_instead_of_away():
-	var shader: Shader = load("res://ui/card_hover_perspective.gdshader")
-	assert_not_null(shader)
-	assert_true(
-		shader.code.contains("pitch = radians(tilt.y * max_pitch_degrees)"),
-		"moving down should use positive X-axis pitch"
-	)
-	assert_true(
-		shader.code.contains("yaw = radians(-tilt.x * max_yaw_degrees)"),
-		"moving right should use negative Y-axis yaw"
-	)
-
-
 func test_card_widget_drag_preview_starts_from_selected_pose_without_angle_jump():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
@@ -1320,16 +1098,13 @@ func test_card_widget_drag_preview_starts_from_selected_pose_without_angle_jump(
 	var selected_position := Vector2(1.5, -11.0)
 	var selected_rotation := deg_to_rad(1.25)
 	var selected_scale := Vector2.ONE * 1.04
-	var selected_tilt := Vector2(0.32, -0.24)
 	widget.make_drag_preview(
 		selected_position,
 		selected_rotation,
-		selected_scale,
-		{"drag_visual_tilt": selected_tilt}
+		selected_scale
 	)
 	assert_eq(widget.offset_transform_position, selected_position, "drag preview must start at the selected lift")
 	assert_eq(widget.offset_transform_scale, selected_scale, "drag preview must start at the selected scale")
-	assert_eq(widget._perspective_tilt, selected_tilt, "drag preview must inherit the selected two-axis pose")
 	assert_almost_eq(
 		widget.offset_transform_rotation, selected_rotation, 0.000001,
 		"starting a drag must not add a fixed left tilt"
@@ -1463,66 +1238,6 @@ func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
 	await wait_seconds(0.34)
 	assert_almost_eq(widget.offset_transform_position.x, 0.0, 1.0, "remaining card should settle into the recentered hand")
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled remaining card should restore interaction")
-
-
-func test_card_widget_idle_phase_follows_spatial_slot_without_transform_snap():
-	var card := {
-		"id": 2000001,
-		"instance_uid": 420001,
-		"name": "Test",
-		"type": "char",
-		"rare": 1,
-		"tag": {},
-	}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	await wait_process_frames(1)
-
-	widget.set_hand_pose(Vector2(40.0, 0.0), 0.0, 0)
-	widget.set_hand_idle(true, 0)
-	var original_phase := widget._hand_idle_phase
-	var rendered_rotation := widget.offset_transform_rotation
-	widget.set_hand_pose(Vector2(264.0, 0.0), 0.0, 4)
-	widget.set_hand_idle(true, 4)
-
-	assert_ne(widget._hand_idle_phase, original_phase, "the idle wave phase should follow the card's horizontal slot")
-	assert_almost_eq(
-		widget._hand_idle_phase,
-		fposmod(264.0 * CardWidget.BALATRO_CARD_WIDTH_UNITS / CardWidget.CARD_SIZE.x, TAU),
-		0.000001,
-		"pixel positions should map to Balatro's card-relative phase units"
-	)
-	assert_almost_eq(
-		widget.offset_transform_rotation, rendered_rotation, 0.000001,
-		"changing the idle target phase must not directly overwrite the rendered angle"
-	)
-
-
-func test_card_widget_idle_motion_matches_balatro_dynamic_terms_without_fan():
-	var card := {"id": 2000001, "instance_uid": 42, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget._hand_idle_phase = 0.0
-	var rotation_peak_time := PI / (2.0 * CardWidget.IDLE_SWAY_FREQUENCY)
-	var bob_peak_time := PI / (2.0 * CardWidget.IDLE_BOB_FREQUENCY)
-
-	assert_almost_eq(
-		widget._idle_rotation_at(rotation_peak_time), CardWidget.IDLE_SWAY_RADIANS, 0.000001,
-		"idle roll should preserve Balatro's 0.02-radian dynamic term"
-	)
-	assert_almost_eq(
-		widget._idle_position_at(bob_peak_time).y, CardWidget.IDLE_BOB_HEIGHT, 0.000001,
-		"idle bob should preserve Balatro's card-relative 0.03-unit term"
-	)
-	assert_almost_eq(widget._idle_position_at(17.0).x, 0.0, 0.000001, "flat hand idle should not invent horizontal drift")
-	assert_almost_eq(
-		widget._idle_rotation_at(rotation_peak_time + PI),
-		widget._idle_rotation_at(rotation_peak_time),
-		0.000001,
-		"the roll period should remain PI seconds at 2 radians per second"
-	)
 
 
 func test_game_screen_card_rail_reserves_hover_lift_space():
@@ -1705,10 +1420,6 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 		assert_almost_eq(
 			returned_widget.offset_transform_rotation, deg_to_rad(1.25), 0.000001,
 			"returned card should begin from the drag preview angle without snapping"
-		)
-		assert_true(
-			returned_widget._perspective_tilt.distance_to(Vector2(0.4, -0.3)) < 0.001,
-			"returned card should begin from the drag preview pitch and yaw without snapping"
 		)
 
 
@@ -1916,26 +1627,26 @@ func test_game_screen_menu_entry_stays_above_local_rite_overlay():
 	var hud := _find_node_by_name(screen, "Hud") as Control
 	var menu := _find_node_by_name(screen, "MenuButton") as Control
 	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
-	var world := _find_node_by_name(screen, "SceneWorld") as Control
+	var desk := _find_node_by_name(screen, "SituationDesk") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	var right_actions := _find_node_by_name(screen, "RightActions") as Control
 	assert_not_null(hud, "HUD should exist")
 	assert_not_null(menu, "menu should exist")
 	assert_not_null(overlay, "rite overlay layer should exist")
-	assert_not_null(world)
+	assert_not_null(desk)
 	assert_not_null(rail)
 	assert_not_null(right_actions)
-	if hud == null or menu == null or overlay == null or world == null or rail == null or right_actions == null:
+	if hud == null or menu == null or overlay == null or desk == null or rail == null or right_actions == null:
 		return
 	assert_eq(menu.get_parent(), screen, "menu button should be separate from the HUD info panel")
 	assert_true(menu.get_index() < overlay.get_index(), "menu ordering must not be the source of its global priority")
 	assert_gt(menu.z_index, overlay.z_index, "the global menu entry must remain reachable over local modals")
-	for child in world.get_children():
+	for child in desk.get_children():
 		if child is CanvasItem:
 			assert_lt(
 				(child as CanvasItem).z_index,
 				overlay.z_index,
-				"every present and future world actor must remain below modal overlays: %s" % child.name
+				"every desk control must remain below modal overlays: %s" % child.name
 			)
 	assert_gt(rail.z_index, overlay.z_index, "the card rail must remain usable above the rite shade")
 	assert_gt(right_actions.z_index, overlay.z_index, "persistent actions retain their established layer")
@@ -2001,25 +1712,18 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	await wait_process_frames(2)
 
 	var desk := _find_node_by_name(screen, "SituationDesk") as Control
-	var dossier := _find_node_by_name(screen, "CurrentSceneDossier") as Control
 	var title := _find_node_by_name(screen, "SituationDeskTitle") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Control
 	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
 	assert_not_null(desk)
-	assert_not_null(dossier)
 	assert_not_null(title)
 	assert_not_null(rail)
 	assert_not_null(advance)
 	assert_not_null(overlay)
-	if desk == null or dossier == null or title == null or rail == null or advance == null or overlay == null:
+	if desk == null or title == null or rail == null or advance == null or overlay == null:
 		return
 	assert_true(desk.visible, "narrow layouts should still open on the desk")
-	assert_lte(
-		dossier.get_global_rect().end.x,
-		title.get_global_rect().position.x,
-		"the dossier should not cover the compact desk title"
-	)
 	assert_lt(rail.get_global_rect().end.x, advance.get_global_rect().position.x, "hand rail and next-day action should remain separate")
 	assert_gt(overlay.z_index, desk.z_index, "queue overlays should remain above the paper desk")
 
