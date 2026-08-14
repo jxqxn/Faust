@@ -37,6 +37,7 @@
 - 《风花雪月》校园架构与《Engage》：[校园架构](../design/three-houses-campus-architecture-and-engage-contrast.md)，对应 `FE3H-BEH-001`、`FE3H-MKT-001`、`FE3H-DES-001`、`FE3H-EXPL-001`。
 - 《风花雪月》、P5R 与《苏丹的游戏》日程比较：[日程比较](../design/three-houses-p5-sultan-schedule-comparison.md)与[校园循环对照](../design/three-houses-sultan-campus-loop-comparison.md)，对应 `FE3H-RULE-001`、`P5R-RULE-001`、`P5R-MODEL-001`。
 - 自走棋作为母游戏内新增模式及《酒馆战棋》的改造：[总报告 6A 节](faust-game-design-data-research.md#6a-自走棋作为母游戏内新增模式开发复用产品增量与证据边界)与[酒馆战棋改造研究](../design/hearthstone-battlegrounds-transformation.md)，对应 `TFT-DEV-001`—`TFT-METHOD-001`、`BG-PROT-001`、`AB-HOST-001`、`BG-SIM-001` 与 `BG-METHOD-001`。
+- 《圣兽之王》、自动战斗叙事与单机剧情自走棋市场边界：[核心机制参照](../design/unicorn-overlord-autobattle-narrative-reference.md)，对应 `UO-RULE-001`、`UO-MKT-001`、`UO-EXPL-001`、`NAB-MKT-001`、`NAB-GAP-001` 与 `NAB-RISK-001`。
 - 麻将、血流成河与自走棋共同结构：[共同结构](../design/mahjong-autobattler-common-origin.md)，对应 `MJ-MODEL-001`、`MJ-MODEL-002`、`MJ-HYP-001`。
 - P5R 体验与有限日程：[MDA 基线](../design/p5r-mda-experience-baseline.md)，对应 `P5R-RULE-001`、`P5R-MODEL-001`。
 

@@ -86,7 +86,8 @@ $requiredEntrypoints = @(
     (Join-Path $repoRoot "docs\design\sultans-game-narrative-transformation.md"),
     (Join-Path $repoRoot "docs\design\three-houses-campus-architecture-and-engage-contrast.md"),
     (Join-Path $repoRoot "docs\design\three-houses-p5-sultan-schedule-comparison.md"),
-    (Join-Path $repoRoot "docs\design\three-houses-sultan-campus-loop-comparison.md")
+    (Join-Path $repoRoot "docs\design\three-houses-sultan-campus-loop-comparison.md"),
+    (Join-Path $repoRoot "docs\design\unicorn-overlord-autobattle-narrative-reference.md")
 )
 
 foreach ($path in $requiredEntrypoints) {
@@ -100,7 +101,7 @@ $researchLinkedFiles = @($requiredEntrypoints | Where-Object { $_ -ne (Join-Path
 $knownRegistryIds = @($claimIds) + @($sourceIds)
 foreach ($path in $researchLinkedFiles) {
     $text = Get-Content -LiteralPath $path -Raw -Encoding UTF8
-    $referencedIds = @([regex]::Matches($text, '\b(?:SG|FE3H|P5R|BG|MJ|UX|NARR|FAUST|LOCAL|TEL)(?:-[A-Z0-9]+)*-\d{3}\b') | ForEach-Object {
+    $referencedIds = @([regex]::Matches($text, '\b(?:SG|FE3H|P5R|BG|MJ|UX|NARR|FAUST|LOCAL|TEL|UO|NAB)(?:-[A-Z0-9]+)*-\d{3}\b') | ForEach-Object {
             $_.Value
         } | Sort-Object -Unique)
     $unknownIds = @($referencedIds | Where-Object { $knownRegistryIds -notcontains $_ })

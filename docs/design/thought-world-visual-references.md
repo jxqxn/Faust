@@ -20,6 +20,11 @@ It is not the project's innovation claim. Its job is to make embodiment,
 place and time legible. A visual match does not prove that the campus-
 autobattler direction or its persistent named-character loop works.
 
+This document only governs the visual-reference role of *Unicorn Overlord*.
+Its substantially more important role as a reference for named characters,
+preconfigured tactics and automatic battle resolution is documented separately
+in [`unicorn-overlord-autobattle-narrative-reference.md`](unicorn-overlord-autobattle-narrative-reference.md).
+
 The sole highest-level product direction is defined in
 `docs/design/autobattler-campus-direction.md`.
 `docs/design/single-character-will-simulation.md` is subordinate research about

@@ -33,6 +33,7 @@
 - 引用《苏丹的游戏》静态配置数字前，运行 `tools/export_design_research_snapshot.ps1 -Check`；配置存在不等于单局可见、运行时可达或玩家实际经历。
 - 判断原作运行时行为时仍必须使用 `$faust-clone-reference`，不能让研究总报告替代 `.c`、`dump.cs` 与独立信号。
 - 当前没有 Faust 正式玩家实验、逐局遥测、NASA-TLX/DRT 结果，也没有经验证的手牌上限、候选数量或自动化层级。后续智能体不得把研究方案、外部类比或用户确认的方向写成已测参数。
+- 讨论具名人物、条件式战术和自动战斗叙事时，先读 `docs/design/unicorn-overlord-autobattle-narrative-reference.md`。不得把《圣兽之王》直接登记为酒馆战棋式自走棋；它验证的是完整叙事、长期人物与自动局部战斗可以共存，随机供给、出售替换和逐轮阵容转换仍是 Faust 自己的未决问题。
 - 修改研究总报告、快照或核心设计研究后，运行 `tools/check_design_research.ps1`。
 
 ## 当前进度

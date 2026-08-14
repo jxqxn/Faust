@@ -16,6 +16,8 @@
 
 > 麻将如何为自走棋提供随机牌流、有限容量、共享资源与组合形成结构，《酒馆战棋》为何与四川麻将“血流成河”共享“首次成型后继续运转”的结构，以及为什么不能把酒馆战棋规则直接套入《苏丹的游戏》，见 [`mahjong-autobattler-common-origin.md`](mahjong-autobattler-common-origin.md)。
 
+> 《圣兽之王》如何把具名人物、长期培养、条件式战术与自动局部战斗放进完整单机叙事，以及它为什么只能验证“叙事与自动战斗可以共存”、不能替代严格自走棋市场验证，见 [`unicorn-overlord-autobattle-narrative-reference.md`](unicorn-overlord-autobattle-narrative-reference.md)。
+
 ## 1. 一句话定位
 
 在《苏丹的游戏》式卡牌流转与仪式投放框架上，创作一款发生于“魔力之都”的校园自走棋：让原本重玩法、轻叙事的阵容与自动对局，因具名角色、养成、关系与校园生活而成为玩家愿意共同经历的故事。
