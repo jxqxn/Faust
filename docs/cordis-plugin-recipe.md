@@ -91,10 +91,10 @@ return {
 标准 preset 复制到用户根后编辑。目录结构：
 
 ```
-$HOME/.dsh/.agent-presets/faust/
-├── agent.cordis.yml                 # composition（= standard 的 + 追加的 faust-workflow 行）
-├── preset.yml                       # name: 浮士德工作流 / description
-└── plugins/faust-workflow/index.mjs # 插件本体（本地模块）
+$HOME/.dsh/.agent-presets/<id>/
+├── agent.cordis.yml                 # composition（= 基底预设的 + 追加的插件行）
+├── preset.yml                       # name: 显示名 / description
+└── plugins/<插件>/index.mjs         # 插件本体（本地模块）
 ```
 
 `agent.cordis.yml` 里追加一行（本插件只消费 host 服务、不发布服务，松散放置即可，无需 isolate realm）：
@@ -127,12 +127,12 @@ export default {
 
 ## 验证与交付
 
-- 挂载验证：临时插件注入 `agentPresets` 调 `standingKeyFor('faust')`，失败会抛错、成功返回。
+- 挂载验证：临时插件注入 `agentPresets` 调 `standingKeyFor('<id>')`，失败会抛错、成功返回。
   ```js
-  return { inject: ['agentPresets'], async apply(ctx) { await ctx.agentPresets.standingKeyFor('faust') } }
+  return { inject: ['agentPresets'], async apply(ctx) { await ctx.agentPresets.standingKeyFor('<id>') } }
   ```
   把结果写文件再读，拿确定性结论。
-- 真实会话验证：新开一个「浮士德工作流」预设的会话，问 agent「列出 faust 开头的工具」，能看到才算数。
+- 真实会话验证：按「动态加载」节加载后，直接问 agent「列出 faust 开头的工具」，能看到才算数；重建预设则开新会话验证。
 - GUI 操作：**删预设**可在「设置 → Agent 预设」卡片上点；**改内容**只能改文件（GUI 只读查看 + 打开位置）。
 
 ## 已踩的坑（重复者勿再踩）
@@ -142,21 +142,37 @@ export default {
 3. **`export_dsl_audit.gd` 的 `--out` 参数**：必须写成 `-- --out user://xxx`（`--` 之后才是 user args），裸传路径会被忽略、写回默认目录。
 4. **中文命名**：工具名/skill 名/预设 id 是机器标识符不能中文；描述、提示段、显示名（preset.yml 的 `name`）可以中文。
 5. **版本只增不改**：动态插件每个改动是新的不可变包（pkg-N），旧版留作回滚，不要覆盖。
+6. **host 层 patch 替换同名插件会回滚**：把 `cordis.patch.yml` 里已挂载的插件行直接替换成「同名工具的新插件」时，新树与旧树同名注册冲突 → 应用失败、回滚保留旧树（工具列表不变，看起来像没生效）。解法：**先删后加**——第一次 patch 只留新插件（旧树被替换卸载），等生效后再把其余插件加回去。
 
-## 现状盘点（2026-08-14）
+## 现状盘点（2026-08-14，最终版）
 
-「浮士德工作流」预设当前包含：
+两个插件已通过 `cordis.patch.yml` 挂到 host 层（全局，所有会话可用，实时生效）：
 
-| 类别 | 名称 | 干什么 |
+| 插件 | 能力 | 通用性 |
 |---|---|---|
-| 工具 | `faust_run_tests`（跑测试） | GUT 套件 + SCRIPT ERROR/orphan/leak 门禁（实测 299 测试 / 3452 断言全绿） |
-| 工具 | `faust_check_research`（查研究） | 设计研究一致性检查（实测通过，49 主张 / 63 来源） |
-| 工具 | `faust_audit_dsl`（审规则） | DSL 覆盖审计导出（实测生成 16MB JSON + 21KB md） |
-| 工具 | `faust_new_case`（新案例研究） | 生成竞争作品研究任务单 |
-| skill | `faust-clone-reference`（逆向对照） | 逆向验证方法论（从 Codex 移植） |
-| skill | `faust-case-study-method`（案例研究方法） | 竞争作品案例研究方法论 |
-| 提示段 | `faust:workflow-tools` | 各工具使用时机指引 |
+| `godot-gate` | 工具 `godot_run_tests`（跑测试） | **通用**——任何 Godot 项目可用，工作目录取当前会话 |
+| `faust-tools` | 工具 `faust_check_research`（查研究）、`faust_audit_dsl`（审规则）、`faust_new_case`（新案例研究）；skill `faust-clone-reference`（逆向对照）、`faust-case-study-method`（案例研究方法）；提示段 `faust:workflow-tools` | Faust 特定——硬编码 Faust 仓库路径 |
 
-此外，`agent.cordis.yml` 还合入了 shipped `code` 预设的 `tool-presentation`（`mode: code`）一行，所以「浮士德工作流」= 标准 + 浮士德插件 + **PTC/Code Mode（run_code）**，一个会话全都有。预设是插件行的集合，「二合一」只需把另一预设的独有行复制进来。
+源码在 `docs/cordis/godot-gate/index.mjs` 与 `docs/cordis/faust-tools/index.mjs`；运行时复制到 `$DSH_HOME/profiles/web/plugins/` 下同结构，由 `cordis.patch.yml` insert 引用。
+
+> **2026-08-14 决策**：不建任何浮士德预设（已删「浮士德工作流」）——改用 host 层 `cordis.patch.yml` 挂载，所有模式（含创造模式）直接有这些工具，实时生效。
+
+## host 层挂载（官方推荐，所有模式可用）
+
+官方文档（`dsh-agent-presets/README`）原话：「预设层没有 patch 语义来表达『standard 加一处改动』，**那是 bundle 层 `cordis.patch.yml` 的能力**」。用户自己的 `cordis.patch.yml`（profile 级与 home 级）就是挂在 **host composition（全局）** 上的 patch 层：
+
+1. 插件源码放 `$DSH_HOME/profiles/web/plugins/<插件>/index.mjs`（本地模块，零 import，见前文铁律）。
+2. `cordis.patch.yml` 里 insert：
+   ```yaml
+   - insert:
+       - id: godot-gate
+         name: ./plugins/godot-gate/index.mjs
+   - insert:
+       - id: faust-tools
+         name: ./plugins/faust-tools/index.mjs
+   ```
+3. **实时生效**：`watchUserPatches` 监视该文件，改动无需重启；应用失败会回滚到最后一个好树（stderr 有警告）。
+
+> 注：cordis（创造模式）预设的 `tool-cordis` 是进程级单例（Inspect Provider 全局只能注册一次），所以**同一进程内只有一个预设能含它**——这是「创造模式是特权模式」的设计；host 层全局插件不受此限（只要不注册单例服务）。
 
 > 注：`code` 预设的显示名就是「PTC 模式」（preset.yml 的 `name` 字段），这是「ptc」一词的来源。
