@@ -353,3 +353,50 @@ func test_slot_entries_split_by_is_enemy_flag() -> void:
 	entries = state.slot_entries_for_rite(local_db.rites[992001], 1)
 	assert_eq(entries.size(), 2)
 	assert_true(entries[1].get("is_enemy", false), "the s2 is_enemy flag marks the enemy side")
+
+
+func test_card_lifetime_dies_unsheltered_and_survives_in_slots() -> void:
+	# Every live card ages daily; card_vanishing death applies only outside
+	# rite slots (shelter ignores the rite's start state).
+	# [SRC: GameController.c @ DoCardUpdate (0x54d4c0); DisplayClass196_0
+	#       @ <UpdateSingleCard>b__1 (0x572420): flag from any rite.cards]
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {"s1": {"condition": {}}}
+	# 2000452 受欢迎的妆扮 has card_vanishing 3. Two independent instances.
+	var state := GameState.new()
+	var hand_uid: int = state.add_card_to_hand(2000452, local_db)
+	var slot_uid: int = state.add_card_to_hand(2000452, local_db)
+	var rite = state.create_rite_instance(992001)
+	state.remove_card_from_hand(slot_uid)
+	state.add_card_to_slot(slot_uid, 1, local_db, rite.uid)
+
+	RoundLoop.advance_day(state, local_db, RNG.new(31))
+	RoundLoop.advance_day(state, local_db, RNG.new(32))
+	assert_true(state.has_method("get_card_instance") and state.get_card_instance(hand_uid) != null,
+		"life 2 of 3 keeps the hand copy alive")
+	var day3 := RoundLoop.advance_day(state, local_db, RNG.new(33))
+	assert_false(day3.expired_cards.is_empty(), "the unsheltered copy dies on its vanishing day")
+	var dead_entry: Dictionary = day3.expired_cards[0]
+	assert_eq(int(dead_entry.get("card_uid", 0)), hand_uid, "only the hand copy dies")
+	assert_true(state.get_card_instance(slot_uid) != null and state.get_card_instance(slot_uid).zone == "slot",
+		"the slotted copy is sheltered even though its rite never started")
+
+
+func test_sudan_shelter_requires_any_slot_not_started_rite() -> void:
+	# The deadline execution gate is presence in any rite slot — no start or
+	# remaining-day conditions. [SRC: DoCardUpdate flag snapshot, report 1 A4]
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {"s1": {"condition": {}}}
+	local_db.rites[992001]["round_number"] = 0
+	var state := GameState.new()
+	var sudan = RoundLoop.ActiveSudan.new(2010001, 1, state.round_number, 0)
+	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	sudan.card_uid = inst.uid
+	state.active_sudan_cards.append(sudan)
+	var rite = state.create_rite_instance(992001)
+	state.add_card_to_slot(inst.uid, 1, local_db, rite.uid)
+	assert_false(rite.start, "precondition: the shelter rite is not started")
+
+	var day := RoundLoop.advance_day(state, local_db, RNG.new(34))
+	assert_false(day.game_over, "an unstarted rite still shelters the embedded Sultan")
+	assert_false(day.expired.is_empty() == false and day.expired.size() > 0, "sanity")

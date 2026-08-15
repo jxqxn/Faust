@@ -10,6 +10,10 @@ var uid := 0
 var card_id := 0
 var tags: Dictionary = {}
 var count := 1
+# Elapsed days toward the template's card_vanishing lifetime; counts up daily,
+# cards in any rite slot skip the death check (shelter). [SRC: Card.life @+0x24,
+# CardNode.card_vanishing @+0x60; GameController.c DoCardUpdate 0x54d4c0]
+var life := 0
 var is_lost := false
 var zone := "hand" # hand, slot, sudan, removed
 var rite_uid := 0
@@ -41,6 +45,7 @@ func to_save_dict() -> Dictionary:
 		"card_id": card_id,
 		"tags": tags.duplicate(true),
 		"count": count,
+		"life": life,
 		"is_lost": is_lost,
 		"zone": zone,
 		"rite_uid": rite_uid,
@@ -63,6 +68,7 @@ static func from_save_dict(data: Dictionary):
 		data.get("tags", {}) if data.get("tags", {}) is Dictionary else {}
 	)
 	instance.count = maxi(int(data.get("count", 1)), 1)
+	instance.life = int(data.get("life", 0))
 	instance.is_lost = bool(data.get("is_lost", false))
 	instance.zone = str(data.get("zone", "hand"))
 	instance.rite_uid = int(data.get("rite_uid", 0))
