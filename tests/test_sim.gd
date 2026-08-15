@@ -396,13 +396,17 @@ func test_settlement_extre_executes_all_results_before_actions():
 # ---- Game-loop integrity fixes ----
 
 func test_r1_funccompare_tolerates_malformed_scalar_value():
-	# A malformed r1 config (scalar value instead of [X, Y]) must fail the
-	# condition gracefully instead of crashing resolution.
+	# A single-element r1 value is the original's one-value form: roll
+	# expr-value dice and compare the expression total against the face sum.
+	# [SRC: FuncCompare.c @ IsSatisfied (0x3fc060) L249-251; report 3 A8]
 	var st := GameState.new()
 	st.difficulty_config = db.get_difficulty(1)
 	var ctx := _make_ctx(st, RNG.new(1))
-	assert_false(ConditionEval.eval_key("r1:智慧>=", 3, ctx), "scalar r1 value fails instead of crashing")
-	assert_false(ConditionEval.eval_key("r1:智慧>=", [3], ctx), "single-element r1 array fails instead of crashing")
+	# Bare-state 智慧 reads 0 through the legacy slot sum: 0 dice rolled, so
+	# the face sum is 0 and 0 >= 0 holds.
+	assert_true(ConditionEval.eval_key("r1:智慧>=", [3], ctx), "one-value r1 rolls expr dice and compares the face sum")
+	assert_false(ConditionEval.eval_key("r1:智慧>", [3], ctx), "a strict op fails on a zero face sum")
+	assert_false(ConditionEval.eval_key("r1:智慧>=", 3, ctx), "a bare scalar stays malformed and fails")
 	# A well-formed array still evaluates normally. Need 0 successes with
 	# empty slots so the comparison holds without slotted cards.
 	assert_true(ConditionEval.eval_key("r1:智慧>=", [0, 5], ctx), "well-formed r1 still works")

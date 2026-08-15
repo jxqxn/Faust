@@ -6,6 +6,7 @@ extends GutTest
 ## Semantics are source-cited in sim/result.gd and sim/condition.gd.
 
 const RNG = preload("res://core/rng.gd")
+const RiteView = preload("res://ui/rite_view.gd")
 
 
 func _db_with_batch_rites() -> ConfigDB:
@@ -152,9 +153,11 @@ func test_round_supports_comparison_suffix() -> void:
 	var state := GameState.new()
 	state.round_number = 15
 	var ctx := {"db": local_db, "state": state}
-	assert_false(ConditionEval.eval_key("round<=", 14, ctx), "round 15 does not satisfy round<=14")
-	assert_true(ConditionEval.eval_key("round<=", 15, ctx), "round 15 satisfies round<=15")
-	assert_true(ConditionEval.eval_key("round<=", 16, ctx), "round 15 satisfies round<=16")
+	# Original quirk: the non-regex `<=` operator degrades to Equal.
+	# [SRC: ConditionManager.c @ GetCondition (0x3872f0); report 3 A9]
+	assert_false(ConditionEval.eval_key("round<=", 14, ctx), "round<= degrades to equality: 15 != 14")
+	assert_true(ConditionEval.eval_key("round<=", 15, ctx), "round<= degrades to equality: 15 == 15")
+	assert_false(ConditionEval.eval_key("round<=", 16, ctx), "round<= degrades to equality: 15 != 16")
 	assert_true(ConditionEval.eval_key("round", 15, ctx), "plain round keeps equality semantics")
 
 
@@ -544,3 +547,38 @@ func test_think_settles_every_satisfied_branch() -> void:
 	assert_eq(state.coin_count, 2, "the first satisfied branch runs")
 	assert_eq(state.get_counter(7000002), 3, "the second satisfied branch also runs")
 	assert_ne(state.coin_count, 52, "the unsatisfied sudan branch stays silent")
+
+
+func test_is_without_acting_card_checks_slotted_cards() -> void:
+	# [SRC: IsCardId.c @ 0x402180: ctx.main first, otherwise any slot card;
+	#       report 3 A7]
+	var ctx_no_slots := {"state": null, "rite_state": {}, "attr_slots": [], "slot_entries": []}
+	assert_false(ConditionEval.eval_key("is", 2000005, ctx_no_slots), "no acting card and no slots -> false")
+	var ctx := {"state": null, "rite_state": {}, "attr_slots": [], "slot_entries": [
+		{"slot": "s1", "card_id": 2000005, "card_uid": 1, "tags": {}, "is_enemy": false},
+	]}
+	assert_true(ConditionEval.eval_key("is", 2000005, ctx), "a slotted card matches without an acting card")
+	assert_false(ConditionEval.eval_key("is", 2000001, ctx), "unmatched ids stay false")
+	var acting_ctx := ctx.duplicate()
+	acting_ctx["acting_card_id"] = 2000001
+	assert_false(ConditionEval.eval_key("is", 2000005, acting_ctx), "the acting card takes priority over slots")
+
+
+func test_drop_auto_routes_to_first_satisfied_slot() -> void:
+	# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0); report 8 A5]
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {
+		"s1": {"condition": {"type": "char"}, "open_adsorb": 0},
+		"s2": {"condition": {"type": "char"}},
+		"s3": {"condition": {"is": 2000001}},
+	}
+	local_db.rites[992001]["auto_begin"] = 0
+	var state := GameState.new()
+	state.add_card_to_hand(2000005, local_db) # char
+	var view := RiteView.new()
+	view.setup(state, local_db, RNG.new(81), 992001)
+	var card: Dictionary = state.card_data_for(int(state.hand[0]), local_db)
+	assert_eq(view._first_satisfied_slot(card), "s1", "the first accepting slot wins")
+	view._placed["s1"] = int(state.hand[0])
+	assert_eq(view._first_satisfied_slot(card), "s2", "filled slots are skipped")
+	view.free()

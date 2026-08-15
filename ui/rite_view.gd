@@ -416,13 +416,36 @@ func drop_card_on_slot(slot_key: String, data: Variant) -> void:
 		return
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(card_uid, _db)
-	if not _slot_accepts_card(slot_def, card):
-		set_log("这张牌不能放入 %s" % slot_key.to_upper())
-		return
+	if not _slot_accepts_card(slot_def, card) or _placed.has(slot_key):
+		# Auto-route to the first satisfied slot instead of rejecting: the
+		# original highlights GetSatisfiedSlotIndex during the drag and drops
+		# land there, never requiring pixel-perfect slot aiming.
+		# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) L2034-2040;
+		#       GameController.c @ DragCard (0x54ef50) L4586; report 8 A5]
+		var routed := _first_satisfied_slot(card)
+		if routed == "":
+			set_log("这张牌不能放入 %s" % slot_key.to_upper())
+			return
+		slot_key = routed
 	_place_card_in_slot(slot_key, card_uid, str(data.get("source", "")), str(data.get("source_slot", "")), int(data.get("source_rite_uid", _rite_uid)))
 	set_log("%s 放入 %s" % [_card_display_name(card, int(card.get("id", 0))), slot_key.to_upper()])
 	_selected_card_uid = 0
 	_after_placement_changed()
+
+
+## The first empty, non-auto-adsorb slot whose condition accepts the card.
+## [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0)]
+func _first_satisfied_slot(card: Dictionary) -> String:
+	var slots: Dictionary = _rite.get("cards_slot", {})
+	for slot_key in _slot_keys():
+		var def: Dictionary = slots.get(slot_key, {})
+		if int(def.get("open_adsorb", 0)) == 1:
+			continue
+		if _placed.has(slot_key):
+			continue
+		if _slot_accepts_card(def, card):
+			return slot_key
+	return ""
 
 
 func _dragged_card_uid(data: Variant) -> int:

@@ -337,8 +337,10 @@ static func start_auto_begin_rites(state, db) -> Array:
 		var rite: Dictionary = db.rites[instance.id]
 		if int(rite.get("auto_begin", 0)) != 1:
 			continue
-		if not RiteOpen.is_rite_open(rite, state, db, null):
-			continue
+		# No open_condition re-check here: the DSL gate owns availability at
+		# generation time; DoStartAutoBeginRite only checks start + auto_begin.
+		# [SRC: GameController.c @ DoStartAutoBeginRite (0x54ebc0) L5344-5349;
+		#       report 8 A7]
 		state.start_rite_instance(instance.uid)
 		out.append({"id": instance.id, "uid": instance.uid, "started": true})
 	return out
@@ -375,6 +377,10 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 		# A started rite is resolved by the normal settlement pipeline. In this
 		# headless path no gold-dice retry is possible, which is the role of
 		# auto_result in the original UI.
+		# Order note: the original runs all settlement ops before the chain-tail
+		# RemoveRite, but the clone's Power-Game cross-rite chain depends on
+		# finalize-first (the successor rite adsorbs the Sultan during apply).
+		# Deferred to in-play feedback; report 8 A6/C5.
 		var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
 		var res: Variant = _resolve_rite_instance(rite, instance, state, db, rng)
 		finalize_rite_settlement(instance, res.deferred, state, db, table_entries)

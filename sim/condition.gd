@@ -94,14 +94,17 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		var parsed_rare := _split_name_op(k)
 		return apply_compare(int(card_rare.get("rare", 0)), int(val), parsed_rare.op)
 	# round (optional comparison suffix, e.g. "round<=")
-	# [SRC: conditions.json: "round" -> RoundNumber; config event/5310455 uses
-	#       the "round<=" form]
 	if k.begins_with("round"):
 		var st = ctx.get("state")
 		var suffix := k.substr("round".length())
 		if not suffix.is_empty() and not (suffix in OPS):
 			return false
 		var round_op := "=" if suffix.is_empty() else suffix
+		# Original quirk: non-regex conditions only map = < > >= <>; <= and !=
+		# fall out of the chain and degrade to Equal. Kept for fidelity.
+		# [SRC: ConditionManager.c @ GetCondition (0x3872f0); report 3 A9]
+		if round_op == "<=" or round_op == "!=":
+			round_op = "="
 		return apply_compare(st.round_number, int(val), round_op)
 	# rite_end.<id>: the referenced rite finished settlement at least once.
 	# [SRC: decompiled/RiteEnd.c @ IsSatisfied (RVA 0x405300)]
@@ -252,9 +255,21 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 	# Evaluate the attribute expression against the slotted cards.
 	var attr_val := eval_attr_expr(expr, ctx)
 	if is_r:
-		# val is [X, Y]: X=needed successes, Y=success line.
-		# Defensive: a malformed r1 config may supply a scalar instead of a
-		# 2-element array. Fail the condition rather than crashing resolution.
+		# val is [X, Y]: X=needed successes, Y=success line. A single-element
+		# value rolls expr-value dice and compares the EXPRESSION total
+		# against the rolled face sum with the trailing op.
+		# [SRC: FuncCompare.c @ IsSatisfied (0x3fc060) L249-251: Values.Count
+		#       == 1 dice branch; report 3 A8]
+		if val is Array and val.size() == 1:
+			var st_single = ctx.get("state")
+			var weights_single: Array = GameModels.difficulty_weights(st_single.difficulty_config)
+			var rng_single = ctx.get("rng")
+			var face_sum := 0
+			for i in maxi(attr_val, 0):
+				face_sum += Dice.roll_weighted_face(rng_single, weights_single)
+			return Dice.apply_compare(attr_val, face_sum, op)
+		# Defensive: any other malformed r1 value fails the condition rather
+		# than crashing resolution.
 		if not (val is Array) or val.size() < 2:
 			push_warning("ConditionEval: r1 condition '%s' expects a 2-element array value" % k)
 			return false
@@ -744,11 +759,21 @@ static func eval_sudan_pool_have(k: String, _val: Variant, ctx: Dictionary) -> b
 
 
 static func eval_is(val: Variant, ctx: Dictionary) -> bool:
-	# 'is' matches the acting card id (the card being placed/checked).
+	# 'is' matches the acting card id first; without an acting card it checks
+	# any slotted card of the current rite (settlement conditions run with no
+	# acting card).
+	# [SRC: IsCardId.c @ 0x402180: ctx.main first, otherwise any slot card id
+	#       in the value set; report 3 A7]
+	var want := int(val)
 	var acting := int(ctx.get("acting_card_id", 0))
 	if acting == 0 and ctx.has("acting_card"):
 		acting = int((ctx.get("acting_card", {}) as Dictionary).get("id", 0))
-	return acting == int(val)
+	if acting > 0:
+		return acting == want
+	for entry in ctx.get("slot_entries", []):
+		if int(entry.get("card_id", 0)) == want:
+			return true
+	return false
 
 
 static func eval_type(val: Variant, ctx: Dictionary) -> bool:

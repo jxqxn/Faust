@@ -75,9 +75,12 @@ func test_auto_begin_respects_open_conditions():
 
 	var opened := RoundLoop.start_auto_begin_rites(state, fake_db)
 
-	assert_false(9001 in state.started_rites, "closed auto_begin rite should not start")
+	# auto_begin does not re-check open_conditions once an instance exists:
+	# the DSL gate owns availability at generation time.
+	# [SRC: DoStartAutoBeginRite (0x54ebc0) L5344-5349; report 8 A7]
+	assert_true(9001 in state.started_rites, "a generated auto_begin instance starts regardless of open_condition")
 	assert_true(9002 in state.started_rites, "open auto_begin rite should start")
-	assert_eq(opened.size(), 1)
+	assert_eq(opened.size(), 2)
 
 func test_auto_begin_ignores_uncreated_config_rites():
 	var fake_db := ConfigDB.new()

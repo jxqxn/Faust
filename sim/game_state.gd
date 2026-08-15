@@ -39,7 +39,7 @@ var rail_order: Array[int] = []
 var table_cards: Array:
 	get:
 		return table_card_entries()
-# Coin stack: the coin card (2000093) count. Gold = coin-card stack (spec 10.2).
+# Coin stack: the coin card (2000029 金币) count. Gold = coin-card stack (spec 10.2).
 var coin_count := 0
 
 # Round / calendar.
