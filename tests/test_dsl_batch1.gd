@@ -256,3 +256,51 @@ func test_rite_timing_sentinel_one_matches_any_rite() -> void:
 	state.enable_event(992011, local_db)
 	assert_eq(state.trigger_events("rite_end", {"rite": 5000001}), [992011], "sentinel 1 fires for any rite id")
 	assert_eq(state.trigger_events("rite_end", {"rite": 992001}), [992011], "sentinel 1 is not tied to a specific id")
+
+
+func test_have_family_counts_values_across_hand_and_slots() -> void:
+	# [SRC: BaseHaveCardCount.c @ GetCountFunc (0x3f55a0): tag-value sum with a
+	#       tag selector, stacking max(count,1) otherwise; HaveCardCount.c
+	#       0x3fed80 covers player.cards + every rite's cards]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	# 巴拉特 2000005: 智慧 2, 社交 2, 异国商人 1 — one copy in hand, one in a
+	# rite slot: `have` must see both zones, `hand_have` only the hand copy.
+	state.add_card_to_hand(2000005, local_db)
+	var instance = state.create_rite_instance(992001)
+	_place_in_slot(state, 2000005, 1, local_db, instance.uid)
+	var ctx := {"state": state, "db": local_db, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+	assert_true(ConditionEval.eval_key("have.智慧", 4, ctx), "have sums tag values across hand + slots")
+	assert_false(ConditionEval.eval_key("have.智慧", 5, ctx), "default compare is >=")
+	assert_true(ConditionEval.eval_key("hand_have.智慧", 2, ctx), "hand_have only sees the hand copy")
+	assert_false(ConditionEval.eval_key("hand_have.智慧", 3, ctx), "hand_have ignores rite slots")
+	assert_true(ConditionEval.eval_key("have.2000005", 2, ctx), "id selector counts stacked cards in both zones")
+	assert_true(ConditionEval.eval_key("table_have.2000005", 2, ctx), "the desk surface sees the hand rail and rite slots")
+	assert_false(ConditionEval.eval_key("table_have.2000005", 3, ctx), "table_have caps at the copies on the desk")
+
+
+func test_rite_have_zero_spans_every_rite_instance() -> void:
+	# [SRC: RiteHaveCardCount.c 0x405500: riteId < 1 -> SkipIsValidRite, i.e.
+	#       count across ALL rites, not just the current one]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	var first = state.create_rite_instance(992001)
+	var second = state.create_rite_instance(992002)
+	# One card instance lives in exactly one slot, so use two distinct cards.
+	_place_in_slot(state, 2000005, 1, local_db, first.uid)
+	_place_in_slot(state, 2000001, 1, local_db, second.uid)
+	var ctx := {"state": state, "db": local_db, "rite_id": 992001, "rite_state": {}, "attr_slots": ["s1"]}
+	assert_true(ConditionEval.eval_key("rite_have.0.2000005", 1, ctx), "rite 0 spans every rite instance")
+	assert_false(ConditionEval.eval_key("rite_have.0.2000024", 1, ctx), "cards nowhere on the table do not count")
+	assert_true(ConditionEval.eval_key("rite_have.992001.2000005", 1, ctx), "a specific id only counts its own instances")
+	assert_false(ConditionEval.eval_key("rite_have.992002.2000005", 1, ctx), "the second rite holds a different card")
+
+
+func test_sudan_pool_have_counts_pool_entries() -> void:
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.sudan_deck = [2010001, 2010001, 2010002]
+	var ctx := {"state": state, "db": local_db, "rite_state": {}, "attr_slots": []}
+	assert_true(ConditionEval.eval_key("sudan_pool_have.2010001", 2, ctx), "pool counts matched entries")
+	assert_false(ConditionEval.eval_key("sudan_pool_have.2010001", 3, ctx))
+	assert_true(ConditionEval.eval_key("sudan_pool_have.2010002", 1, ctx))

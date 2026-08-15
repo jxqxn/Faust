@@ -411,42 +411,110 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 	return present if not negate else not present
 
 
+## Have-family counting core, shared by have / hand_have / table_have /
+## rite_have. Domain modes: "all" = hand + every rite slot (player.cards plus
+## each Rite.cards in the original), "hand", "table" (slots), "rite" (slots of
+## the given rite id across all instances; <= 0 = every rite). Matching uses
+## the runtime operation filter; counting sums tag values when the selector
+## carries a tag, stacking count (max(count,1)) otherwise. Default compare >=.
+## [SRC: BaseHaveCardCount.c @ GetCountFunc 0x3f55a0 (tag sum via GetTagCount,
+##       stacking via GetCount max(count,1)), IsValidCard 0x3f57e0;
+##       HaveCardCount.c 0x3fed80 (player.cards + every rite.cards);
+##       HandHaveCardCount.c 0x3fd4f0; TableHaveCardCount.c 0x409b10;
+##       RiteHaveCardCount.c 0x405500 (all instances, id<1 = all rites)]
+static func _have_domain(st, mode: String, rite_id: int = 0) -> Array:
+	var out: Array = []
+	if st == null:
+		return out
+	for uid in st.card_instances.keys():
+		var inst = st.get_card_instance(int(uid))
+		if inst == null or inst.is_lost or inst.zone == "removed":
+			continue
+		var in_hand: bool = inst.zone == "hand"
+		var in_slot: bool = inst.zone == "slot"
+		match mode:
+			"hand":
+				if not in_hand: continue
+			"table":
+				# Desk-visible cards: hand rail, rite slots, and active Sultan
+				# cards on the rail (all sit on the table surface).
+				if not (in_hand or in_slot or inst.zone == "sudan"): continue
+			"rite":
+				if not in_slot: continue
+				if rite_id > 0 and inst.rite_uid > 0:
+					var owner = st.get_rite_instance(inst.rite_uid)
+					if owner == null or int(owner.id) != rite_id:
+						continue
+			_:
+				# "all": player.cards plus every rite's cards — every live card.
+				pass
+		out.append(inst)
+	return out
+
+
+static func _selector_value_tag(selector: String) -> String:
+	var normalized := selector.strip_edges()
+	if normalized == "" or normalized == "all" or normalized == "sudan" or normalized.is_valid_int():
+		return ""
+	var last := normalized
+	var dot := normalized.rfind(".")
+	if dot > 0:
+		last = normalized.substr(dot + 1)
+	# An embedded comparison keeps only its tag name for value summing.
+	for op in OPS:
+		var idx := last.find(op)
+		if idx > 0:
+			last = last.substr(0, idx)
+	return last
+
+
+static func _have_count(st, db, domain: Array, selector: String) -> int:
+	var total := 0
+	for inst in domain:
+		if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), inst.tags, db, selector):
+			continue
+		var value_tag := _selector_value_tag(selector)
+		if value_tag == "" or value_tag == "count":
+			total += maxi(int(inst.count), 1)
+		elif value_tag == "lifetime":
+			# Generic card life lands with the card-life shelter fix; until
+			# then lifetime reads as the instance's remaining life (0).
+			total += 0
+		else:
+			total += int(inst.tags.get(value_tag, 0))
+	return total
+
+
 static func eval_have(k: String, val: Variant, ctx: Dictionary, _is_hand: bool) -> bool:
 	var st = ctx.get("state")
 	var db = ctx.get("db")
-	# "have.妻子" -> hand has a card with tag 妻子.
-	# "have.2000005" -> hand has card id 2000005.
-	var rest := k.substr("have.".length() if k.begins_with("have.") else "have".length())
-	if rest.is_empty():
-		return st.hand.size() > 0
-	if "." in rest:
-		var parts := rest.split(".", false, 1)
-		if parts.size() == 2 and str(parts[0]).is_valid_int():
-			var want_id := str(parts[0]).to_int()
-			var tag_name := str(parts[1])
-			for card_uid in st.hand:
-				var card: Dictionary = st.card_data_for(int(card_uid), db)
-				if int(card.get("id", 0)) != want_id:
-					continue
-				return int(card.get("tag", {}).get(tag_name, 0)) >= int(val)
-			return false
-	if rest.is_valid_int():
-		return st.hand_has_card_id(rest.to_int())
-	return st.hand_has_tag(db, rest)
+	var rest := k.substr("have.".length()) if k.begins_with("have.") else ""
+	var parsed := _split_name_op(rest)
+	return apply_compare(
+		_have_count(st, db, _have_domain(st, "all"), parsed.name),
+		int(val), parsed.op
+	)
 
 
 static func eval_hand_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var neg := k.begins_with("!")
 	var kk := k.lstrip("!")
-	# hand_have behaves like have but explicit.
-	var r := eval_have(kk.replace("hand_have", "have"), val, ctx, true)
-	return r if not neg else not r
+	var st = ctx.get("state")
+	var db = ctx.get("db")
+	var rest := kk.substr("hand_have.".length()) if kk.begins_with("hand_have.") else ""
+	var parsed := _split_name_op(rest)
+	var ok := apply_compare(
+		_have_count(st, db, _have_domain(st, "hand"), parsed.name),
+		int(val), parsed.op
+	)
+	return ok if not neg else not ok
 
 
-## rite_have.<rite_id>[.<card_id>][.<name-or-tag>]<op> — count cards placed in
-## the referenced rite's slots that match the selector. rite id 0 means the
-## current rite. [SRC: conditions.json: RiteHaveCardCount regex
-## "([~!]?)rite_have\.(\d{7}|0)(\.\d{7})?(\..+[^<=>])?(>=|<=|<>|!=|=|[<>])?"]
+## rite_have.<rite_id>[.<card_id>][.<name-or-tag>]<op> — count matching cards
+## across ALL instances of the rite id; id 0 counts across every rite (not
+## just the current one). Counting follows the shared have-family rules.
+## [SRC: RiteHaveCardCount.c @ IsSatisfied (0x405500): iterates every
+##       player.rites instance, IsValidRite 0x4058c0 (id<1 -> SkipIsValidRite)]
 static func eval_rite_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var neg := k.begins_with("!") or k.begins_with("~")
 	var kk := k.lstrip("!~")
@@ -457,8 +525,6 @@ static func eval_rite_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 		push_warning("ConditionEval: malformed rite_have key '%s'" % k)
 		return false if not neg else true
 	var rite_id := int(selector_parts[0])
-	if rite_id == 0:
-		rite_id = int(ctx.get("rite_id", 0))
 	# Optional leading card-id segment narrows the selector before the tag.
 	var selector := ""
 	for i in range(1, selector_parts.size()):
@@ -466,43 +532,45 @@ static func eval_rite_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
 	var db = ctx.get("db")
 	var count := 0
-	if st != null and rite_id > 0:
-		var instance = st.find_rite_instance_by_id(rite_id)
-		if instance != null:
-			for tc in st.cards_in_slot_entries_for_rite(instance.uid):
-				var tags: Dictionary = tc.get("tags", {}) if tc.get("tags", {}) is Dictionary else {}
-				if RuntimeOperationFilter.matches_card_data(int(tc.get("id", 0)), tags, db, selector):
-					count += 1
+	if st != null:
+		count = _have_count(st, db, _have_domain(st, "rite", rite_id), selector)
 	var ok := apply_compare(count, int(val), parsed.op)
 	return ok if not neg else not ok
 
 
-static func eval_table_have(k: String, _val: Variant, ctx: Dictionary) -> bool:
+static func eval_table_have(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
+	var db = ctx.get("db")
 	var neg := k.begins_with("!")
 	var kk := k.substr(1) if neg else k
-	var rest := kk.substr("table_have.".length())
-	var want_id := rest.to_int()
-	# Card on the table (any slot)?
-	var found := false
-	for tc in st.surface_card_entries():
-		if int(tc.get("id",0)) == want_id:
-			found = true
-			break
-	return found if not neg else not found
+	var rest := kk.substr("table_have.".length()) if kk.begins_with("table_have.") else ""
+	var parsed := _split_name_op(rest)
+	var ok := apply_compare(
+		_have_count(st, db, _have_domain(st, "table"), parsed.name),
+		int(val), parsed.op
+	)
+	return ok if not neg else not ok
 
 
 static func eval_sudan_pool_have(k: String, _val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
+	var db = ctx.get("db")
 	var neg := k.begins_with("!")
 	var kk := k.substr(1) if neg else k
 	var rest := kk.substr("sudan_pool_have.".length() if "sudan_pool_have." in kk else "sudan_pool_have".length())
-	# Check sudan deck contains the card.
-	var want_id := rest.to_int() if rest.is_valid_int() else 0
-	if want_id == 0:
-		return false if not neg else true
-	var found: bool = want_id in st.sudan_deck
-	return found if not neg else not found
+	var parsed := _split_name_op(rest)
+	# The pool stays config ids until drawn; runtime tag overrides live in
+	# sudan_pool_tags, so count matched pool entries by id with tag overrides.
+	# [SRC: SudanPoolHaveCardCount.c @ 0x409760 iterates player.sudan_card_pool]
+	var total := 0
+	if st != null:
+		for pool_id in st.sudan_deck:
+			var cid := int(pool_id)
+			var pool_tags: Dictionary = st.sudan_pool_tags.get(cid, {}) if st.get("sudan_pool_tags") is Dictionary else {}
+			if RuntimeOperationFilter.matches_card_data(cid, pool_tags, db, parsed.name):
+				total += 1
+	var ok := apply_compare(total, int(_val), parsed.op)
+	return ok if not neg else not ok
 
 
 static func eval_is(val: Variant, ctx: Dictionary) -> bool:

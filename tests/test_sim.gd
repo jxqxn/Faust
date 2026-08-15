@@ -45,7 +45,7 @@ func test_slot_presence_and_is():
 
 func test_have_tag_and_card():
 	var st := GameState.new()
-	st.add_card_to_hand(2000005) # 异国商人
+	st.add_card_to_hand(2000005, db) # 异国商人
 	var ctx := _make_ctx(st, RNG.new(1))
 	assert_true(ConditionEval.eval_key("have.异国商人", 1, ctx))
 	assert_true(ConditionEval.eval_key("have.2000005", 1, ctx))
