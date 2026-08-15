@@ -67,7 +67,16 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
-**2026-08-15 修复批次三/四（319 测试全绿，审计修复全部收口）：** 批次三：
+**2026-08-15 完全复刻冲刺（表现层+DSL 收口，322 测试全绿）：** 原作表现层三件套
+接入：卡面 1190/1292（`assets/original/cards/`，无图 102 张回退自制纸面）；桌面双层底图
+（table.png + table-map.png）；音频系统 `GameAudio`（main/tutorial BGM + 下一日/确认/
+重抽/苏丹四族抽卡/骰子/金骰音效）。DSL 收口：`rebirth.s<n>`（槽卡倒计时重置，
+RebirthSudanCard）、`difficulty`（中途难度切换 apply_difficulty）、`magic_sudan`
+（引导演示指令，无向导宿主记 no-op）——result 2119/2119 全支持、condition 全支持，
+action 剩 92 键全部属于新手引导 UI 演示族。剩余路线图见
+`docs/GAP_FULL_GAME.md`（引导系统/结局后日谈/图钉对位/笔记图鉴/Live2D）。
+
+**2026-08-15 修复批次三/四（审计修复全部收口）：** 批次三：
 回退上一回合整链（`GameState.round_snapshots` 每日双快照、min_round/预算门控、整体恢复、
 `back_to_round_begin` 键、桌面"回退"按钮）；骰子重掷（配额 = 槽卡 重投 标签求和）；
 auto_result UI 静默结算；重抽三题（失败不回插不消耗/弃卡标签回写池/额外重抽 7100008）；
