@@ -23,6 +23,7 @@ var _user_archive_overlay: Control
 var _user_archive_name_input: LineEdit
 var _current_rite_id := 0
 var _current_rite_uid := 0
+var _audio: GameAudio
 
 
 func _ready() -> void:
@@ -31,6 +32,9 @@ func _ready() -> void:
 	db = ConfigDB.new()
 	db.load_all()
 	rng = GameRNG.new()
+	_audio = GameAudio.new()
+	_audio.name = "GameAudio"
+	add_child(_audio)
 	_show_menu()
 
 
@@ -99,6 +103,7 @@ func _show_game() -> void:
 	_clear_current()
 	if state != null and db != null:
 		RoundLoop.start_auto_begin_rites(state, db)
+	_audio.play_bgm("main")
 	var gs := GameScreen.new()
 	gs.setup(state, db, rng)
 	gs.open_rite.connect(_on_open_rite)
@@ -508,6 +513,7 @@ func _after_rite_resolution() -> void:
 
 
 func _on_advance() -> void:
+	_audio.play("button-next-day.ogg")
 	var result := RoundLoop.advance_day(state, db, rng)
 	var log_text := "第 %d 天。" % state.day
 	if result.game_over:
@@ -549,6 +555,7 @@ func _show_game_over() -> void:
 
 
 func _on_redraw() -> void:
+	_audio.play("button-confirm.ogg")
 	var new_id := RoundLoop.use_redraw(state, rng, db)
 	var log_text := ""
 	if new_id < 0:

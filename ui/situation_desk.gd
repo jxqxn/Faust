@@ -34,7 +34,10 @@ class ThinkDropZone:
 
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 const RiteSelectorScript = preload("res://ui/rite_selector.gd")
-const MAP_TEXTURE = preload("res://assets/original/situation_desk/tabletop_campaign_map.png")
+const MAP_TEXTURE = preload("res://assets/original/situation_desk/table-map.png")
+# The original desk renders the physical table first, then the pin map on
+# top. [SRC: MapController.c pin model; assets table.png / table-map.png]
+const TABLE_TEXTURE = preload("res://assets/original/situation_desk/table.png")
 const NODE_TEXTURE = preload("res://assets/original/situation_desk/map_node_token.png")
 
 const SITE_SPECS := [
@@ -424,6 +427,15 @@ func _update_chrome_visibility() -> void:
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
+	# The physical table renders first, aspect-fit across the whole desk;
+	# the pin map layer draws on top of it like the original.
+	# [SRC: assets table.png / table-map.png; MapController.c pin model]
+	var table_size: Vector2 = TABLE_TEXTURE.get_size()
+	if table_size.x > 0.0 and table_size.y > 0.0:
+		var fit_scale: float = min(size.x / table_size.x, size.y / table_size.y)
+		var fit: Vector2 = table_size * fit_scale
+		var origin: Vector2 = (size - fit) * 0.5
+		draw_texture_rect(TABLE_TEXTURE, Rect2(origin, fit), false, Color.WHITE)
 	var map_points := PackedVector2Array([
 		_project_ratio(Vector2(0.0, 0.0)),
 		_project_ratio(Vector2(1.0, 0.0)),

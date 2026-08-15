@@ -922,15 +922,38 @@ func _rebuild() -> void:
 	title.add_theme_color_override("font_color", Color("#2d2118"))
 	col.add_child(title)
 
-	var art := ColorRect.new()
-	art.name = "CardArt"
-	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	art.color = _card_art_color()
-	art.custom_minimum_size = Vector2(88, 112)
-	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	art.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(art)
+	# Prefer the original card art (extracted per card id); the authored
+	# paper style stays as the fallback for cards that ship without art.
+	var art_texture := _card_art_texture()
+	if art_texture != null:
+		var art_tex := TextureRect.new()
+		art_tex.name = "CardArt"
+		art_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art_tex.texture = art_texture
+		art_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		art_tex.custom_minimum_size = Vector2(88, 112)
+		art_tex.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		art_tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		col.add_child(art_tex)
+	else:
+		var art := ColorRect.new()
+		art.name = "CardArt"
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art.color = _card_art_color()
+		art.custom_minimum_size = Vector2(88, 112)
+		art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		art.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		col.add_child(art)
 	_set_card_style()
+
+
+## Original card art extracted from the game assets, keyed by card id.
+func _card_art_texture() -> Texture2D:
+	var art_path := "res://assets/original/cards/%d.png" % int(_card.get("id", 0))
+	if ResourceLoader.exists(art_path):
+		return load(art_path) as Texture2D
+	return null
 
 
 func _build_visual_surface() -> void:

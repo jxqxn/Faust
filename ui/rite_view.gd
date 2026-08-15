@@ -576,6 +576,7 @@ func _do_resolve() -> void:
 	_last_result = res
 	_apply_deferred_to_world(res.deferred)
 	_resolution_pending = true
+	GameAudio.cue("dice_show.ogg")
 	_display_result(res)
 	_update_gold_button()
 	_refresh_gold_label()
@@ -667,6 +668,7 @@ func _update_gold_button() -> void:
 func _use_gold_dice_reactive() -> void:
 	if not _resolution_pending or _state.gold_dice <= 0:
 		return
+	GameAudio.cue("drop_card_gold.ogg")
 	_gold_used_this_resolve += 1
 	var type_key := _gold_type_for_reactive_spend()
 	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + 1
