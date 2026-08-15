@@ -915,6 +915,21 @@ func start_rite_instance(rite_uid: int) -> bool:
 	return true
 
 
+## Stop a started rite: keep the instance and its placed cards, roll life back
+## to start_life, clear new_born so the panel no longer treats it as fresh.
+## [SRC: RitePanelController.c @ OnStop (RVA 0x5906e0): set_start(0),
+##       set_life(start_life @+0x28), new_born=false, then Show again]
+func stop_rite_instance(rite_uid: int) -> bool:
+	var instance := get_rite_instance(rite_uid)
+	if instance == null or not instance.start:
+		return false
+	instance.start = false
+	instance.life = instance.start_life
+	instance.new_born = false
+	_sync_rite_legacy_lists()
+	return true
+
+
 ## Return cards placed in one rite to the player's rail. This is the timeout
 ## path used by RiteExtensions.Dead; active Sudan cards stay active and simply
 ## become visible again once their table entries are removed.

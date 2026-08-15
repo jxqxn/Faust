@@ -399,3 +399,89 @@ func _tag_on_first_not_second(first: Dictionary, second: Dictionary) -> String:
 		if int(first_tags[tag]) != 0 and int(second_tags.get(tag, 0)) == 0:
 			return str(tag)
 	return str(first_tags.keys()[0])
+
+
+func _db_with_manual_rites() -> ConfigDB:
+	# Non-auto_begin stubs: setup_new_run leaves them unstarted so the panel's
+	# confirm path (start, not settle) can be exercised.
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.rites[992001] = {
+		"id": 992001, "name": "Manual multi-day", "open_conditions": [],
+		"cards_slot": {}, "round_number": 2, "waiting_round": 0,
+		"waiting_round_end_action": [],
+		"settlement_prior": [],
+		"settlement": [{"condition": {}, "result": {"coin": 6}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
+	local_db.rites[992002] = {
+		"id": 992002, "name": "Manual zero-day", "open_conditions": [],
+		"cards_slot": {}, "round_number": 0, "waiting_round": 0,
+		"waiting_round_end_action": [],
+		"settlement_prior": [],
+		"settlement": [{"condition": {}, "result": {"coin": 6}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
+	return local_db
+
+
+func test_confirm_on_multi_day_rite_only_starts_it():
+	# Confirm = CheckConfirm + set_start/start_round/start_life; the settlement
+	# happens on a later UpdateSingleRite pass, not in the panel.
+	# [SRC: RitePanelController.c OnConfirm chain, lines 1203-1239]
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(101)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992001)
+	# Lambdas capture locals by value in GDScript; count through an array.
+	var closed_count := [0]
+	view.closed.connect(func(): closed_count[0] += 1)
+
+	view._resolve()
+
+	var instance = state.get_rite_instance(view._rite_uid)
+	assert_not_null(instance, "the started instance stays on the table")
+	assert_true(instance.start, "confirm marks the rite started")
+	assert_eq(instance.start_round, state.round_number, "start_round records the current round")
+	assert_eq(instance.start_life, instance.life, "start_life records the pre-start life")
+	assert_eq(state.coin_count, 0, "multi-day rite does not settle on confirm")
+	assert_eq(closed_count[0], 1, "the panel closes after starting")
+
+
+func test_zero_day_rite_confirms_then_settles_in_one_press():
+	# round_number == 0: the same press starts and settles immediately.
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(102)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992002)
+	view._resolve()
+	view._commit_resolution()
+	assert_eq(state.coin_count, 6, "zero-day rite settles immediately after starting")
+	assert_null(state.get_rite_instance(view._rite_uid), "committed settlement removes the instance")
+
+
+func test_stop_started_rite_rolls_back_life_and_keeps_cards():
+	# [SRC: RitePanelController.c @ OnStop (0x5906e0): set_start(0),
+	#       set_life(start_life), new_born=false; cards stay in slots]
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(103)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992001)
+	view._resolve()
+	var instance = state.get_rite_instance(view._rite_uid)
+	assert_true(instance.start, "precondition: rite is started")
+
+	instance.life += 1
+	view._stop_started_rite()
+	assert_false(instance.start, "stop clears the started flag")
+	assert_eq(instance.life, instance.start_life, "life rolls back to start_life")
+	assert_false(instance.new_born, "a stopped rite is no longer new-born")

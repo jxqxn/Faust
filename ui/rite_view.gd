@@ -61,6 +61,7 @@ var _rite_panel: Panel
 var _gold_dice_label: Label
 var _gold_dice_btn: Button
 var _resolve_btn: Button
+var _stop_btn: Button
 var _close_btn: Button
 var _result_label: RichTextLabel
 var _log_label: Label
@@ -86,6 +87,7 @@ func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 		else:
 			_rite_uid = int(instance.uid)
 		_load_placements_from_instance()
+		_update_stop_button()
 
 
 func _load_placements_from_instance() -> void:
@@ -279,6 +281,14 @@ func _build_panel_content() -> void:
 	bottom_row.add_child(_close_btn)
 	UiMotionScript.bind(_close_btn)
 
+	_stop_btn = _round_button("⏸")
+	_stop_btn.name = "StopRiteButton"
+	_stop_btn.tooltip_text = "停止仪式"
+	_stop_btn.custom_minimum_size = Vector2(44, 42)
+	_stop_btn.pressed.connect(_stop_started_rite)
+	bottom_row.add_child(_stop_btn)
+	UiMotionScript.bind(_stop_btn)
+
 	_resolve_btn = _round_button("✓")
 	_resolve_btn.name = "ResolveRiteButton"
 	_resolve_btn.tooltip_text = "结算仪式"
@@ -286,6 +296,8 @@ func _build_panel_content() -> void:
 	_resolve_btn.pressed.connect(_resolve)
 	bottom_row.add_child(_resolve_btn)
 	UiMotionScript.bind(_resolve_btn, UiMotionScript.Profile.PRIMARY)
+
+	_update_stop_button()
 
 	_result_label.text = "[color=#a89880]从下方手牌选择卡牌后，点击左侧方块卡槽。[/color]"
 
@@ -446,6 +458,23 @@ func _resolve() -> void:
 		return
 	if _resolution_committed:
 		return
+	if _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
+		var instance = _state.get_rite_instance(_rite_uid)
+		if instance == null or not instance.start:
+			# The confirm button is CheckConfirm + set_start in the original:
+			# a multi-day rite only records start/start_round/start_life here
+			# and settles on a later UpdateSingleRite pass. Zero-day rites
+			# (round_number == 0) settle immediately after starting.
+			# [SRC: RitePanelController.c OnConfirm chain, lines 1203-1239;
+			#       GameController.c @ UpdateSingleRite (0x55ab10)]
+			if not _state.start_rite_instance(_rite_uid):
+				return
+			if int(_rite.get("round_number", 0)) > 0:
+				_log_label.text = "仪式开始，将在 %d 天后结算。" % int(_rite.get("round_number", 0))
+				_update_resolve_button()
+				_update_stop_button()
+				closed.emit()
+				return
 	# Fresh resolve: reset gold-dice-used, place cards, snapshot the pre-result
 	# state, then resolve. Gold-dice re-resolves restore this baseline before
 	# applying results, matching the original Promise.Reject unwind path.
@@ -578,11 +607,45 @@ func _use_gold_dice_reactive() -> void:
 	_do_resolve()
 
 
+## OnStop: a started multi-day rite can be halted. Cards stay in their slots,
+## life rolls back to start_life, and the panel returns to arrangement mode.
+## [SRC: RitePanelController.c @ OnStop (RVA 0x5906e0), lines 1442-1462]
+func _stop_started_rite() -> void:
+	if _state == null or _rite_uid <= 0 or not _state.has_method("stop_rite_instance"):
+		return
+	if _resolution_pending or _resolution_committed:
+		return
+	if _state.stop_rite_instance(_rite_uid):
+		_log_label.text = "仪式已停止，卡牌保留在槽位中。"
+		_update_resolve_button()
+		_update_stop_button()
+
+
+func _update_stop_button() -> void:
+	if _stop_btn == null:
+		return
+	var started := false
+	if _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
+		var instance = _state.get_rite_instance(_rite_uid)
+		started = instance != null and instance.start
+	_stop_btn.visible = started and int(_rite.get("round_number", 0)) > 0
+
+
 func _update_resolve_button() -> void:
 	if _resolve_btn == null:
 		return
 	_resolve_btn.disabled = _resolution_committed
-	_resolve_btn.tooltip_text = "确认结果" if _resolution_pending else "结算仪式"
+	if _resolution_pending:
+		_resolve_btn.tooltip_text = "确认结果"
+	elif _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
+		var instance = _state.get_rite_instance(_rite_uid)
+		if instance != null and not instance.start:
+			var days := int(_rite.get("round_number", 0))
+			_resolve_btn.tooltip_text = "开始仪式（%d 天）" % days if days > 0 else "开始仪式"
+		else:
+			_resolve_btn.tooltip_text = "结算仪式"
+	else:
+		_resolve_btn.tooltip_text = "结算仪式"
 
 
 func _refresh_gold_label() -> void:
