@@ -519,3 +519,28 @@ func test_back_to_round_begin_restores_today_start() -> void:
 	assert_true(RoundLoop.back_to_round_begin(state, local_db))
 	assert_eq(state.round_number, round_now, "the round_begin snapshot keeps the current round")
 	assert_eq(state.coin_count, coin_at_begin, "effects after the boundary roll back")
+
+
+func test_think_settles_every_satisfied_branch() -> void:
+	# Think runs ALL satisfied settlement branches of the think rite, not the
+	# first match. [SRC: ThinkController.c @ ProcessPop (0x5c38b0) L488-529;
+	#       report 1 A7]
+	var local_db := _db_with_batch_rites()
+	local_db.init_config["think_id"] = 992003
+	local_db.rites[992003] = {
+		"id": 992003, "cards_slot": {"s1": {"condition": {}}},
+		"settlement_prior": [],
+		"settlement": [
+			{"condition": {"s1.主角": 1}, "result": {"coin": 2}, "action": {}},
+			{"condition": {"s1.type": "char"}, "result": {"counter+7000002": 3}, "action": {}},
+			{"condition": {"s1.type": "sudan"}, "result": {"coin": 50}, "action": {}},
+		],
+		"settlement_extre": [],
+	}
+	var state := GameState.new()
+	state.add_card_to_hand(2000001, local_db) # 阿尔图: 主角 + char
+	var result: Dictionary = MethinksEngine.process_card(2000001, "hand", state, local_db, RNG.new(71))
+	assert_true(result.get("accepted", false))
+	assert_eq(state.coin_count, 2, "the first satisfied branch runs")
+	assert_eq(state.get_counter(7000002), 3, "the second satisfied branch also runs")
+	assert_ne(state.coin_count, 52, "the unsatisfied sudan branch stays silent")

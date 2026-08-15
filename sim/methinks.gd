@@ -42,8 +42,23 @@ static func process_card(card_or_uid: int, source: String, state, db, rng) -> Di
 	}
 	if state.has_method("with_player_actor_context"):
 		ctx = state.with_player_actor_context(ctx, db)
-	var resolved = RiteResolver.resolve(rite, ctx, 0)
-	var deferred: Dictionary = resolved.deferred
+	# Think settles EVERY satisfied branch of the think rite — an async
+	# multi-branch flow in the original, unlike the rite panel's first-match
+	# settlement. [SRC: ThinkController.c @ ProcessPop (0x5c38b0) L488-529;
+	#       OnDrop (0x5c3050) L206-253; report 1 A7 — GameEventSender.IThink
+	#       (0x4429a0) is PostHog telemetry only, not the rules path]
+	ctx["gold_dice_map"] = {"r1": 0, "f": 0}
+	var deferred := {
+		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+		"back_to_round_begin": false, "logs": [], "clean_slots": [], "clean_card_ids": [],
+		"clean_rite": false, "prompts": [], "loots": [], "delays": [], "sleeps": [],
+		"ordered_effects": [],
+	}
+	for entry in rite.get("settlement", []):
+		if not ConditionEval.evaluate(entry.get("condition", {}), ctx):
+			continue
+		RiteResolver._merge_deferred(deferred, ResultExec.execute(entry.get("result", {}), state, db, ctx))
+		RiteResolver._merge_deferred(deferred, ResultExec.execute(entry.get("action", {}), state, db, ctx))
 	DeferredEffects.apply(deferred, state, db, rng)
 
 	var consumes_card: bool = bool(deferred.get("clean_rite", false)) or (1 in deferred.get("clean_slots", [])) or (card_id in deferred.get("clean_card_ids", []))
@@ -56,26 +71,18 @@ static func process_card(card_or_uid: int, source: String, state, db, rng) -> Di
 
 	result.accepted = true
 	result.deferred = deferred
-	result.message = _message_from_result(resolved, deferred)
+	result.message = _message_from_result(deferred)
 	# No same-day round start after consuming a Sultan card: the next draw
 	# happens at the day boundary (TryGenSudanCard only runs in OnNextRound).
 	return result
 
 
-static func _message_from_result(resolved, deferred: Dictionary) -> String:
+static func _message_from_result(deferred: Dictionary) -> String:
 	if not deferred.get("choose", {}).is_empty():
 		return "思考产生了几个可选结果。"
 	if not deferred.get("prompts", []).is_empty():
 		var prompt: Dictionary = deferred.prompts[0]
 		return str(prompt.get("text", prompt.get("id", "思考有了结果。")))
-	var entry: Dictionary = resolved.normal_entry
-	if not entry.is_empty():
-		var title := str(entry.get("result_title", ""))
-		var text := str(entry.get("result_text", ""))
-		if title != "":
-			return title
-		if text != "":
-			return text
 	if int(deferred.get("rite", 0)) > 0:
 		return "思考产生了一个可执行事项。"
 	if not deferred.get("events", []).is_empty():

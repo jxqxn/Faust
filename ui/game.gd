@@ -556,6 +556,9 @@ func _on_redraw() -> void:
 	else:
 		var dec = SudanCards.decode(new_id)
 		log_text = "重抽苏丹卡: %s%s" % [dec.rank, dec.action]
+	# [SRC: WizardController.c:1285 -> OnSudanRedrawStart; report 6 A5]
+	if state != null and state.event_runtime != null:
+		state.trigger_events("sudan_redraw_start", {})
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
 	_current.refresh()

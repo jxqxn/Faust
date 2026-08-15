@@ -1109,6 +1109,8 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 	var payload: Dictionary = operation.get("payload", {}) if operation.get("payload", {}) is Dictionary else {}
 	var trigger_ctx: Dictionary = operation.get("context", {}).duplicate(true) if operation.get("context", {}) is Dictionary else {}
 	if kind in ["prompt", "choice"]:
+		# [SRC: PromptController.c:133 -> OnClosePrompt; report 6 A5]
+		_state.trigger_events("close_prompt", {})
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
@@ -1225,6 +1227,11 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_card_detail_card_id = card_id
 	_card_detail_card_uid = card_uid
 	_sync_card_selection_visuals(card_uid, card_id)
+	# Card-info timings fire when the detail panel opens.
+	# [SRC: GameController.c:4714 -> OnCardInfoOpen; CardInfoNewController.c:601
+	#       -> OnCardInfoOpenEnd on close; report 6 A5]
+	if _state != null and _state.has_method("trigger_events"):
+		_state.trigger_events("open_card_info", {"card": card_id, "card_uid": card_uid})
 	_card_detail_overlay = Control.new()
 	_card_detail_overlay.name = "CardDetailOverlay"
 	_card_detail_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -1345,6 +1352,11 @@ func close_card_detail() -> void:
 		_card_detail_card_uid = 0
 		_sync_card_selection_visuals()
 		return
+	# [SRC: CardInfoNewController.c:601 -> OnCardInfoOpenEnd; report 6 A5]
+	if _state != null and _state.has_method("trigger_events"):
+		_state.trigger_events("open_card_info_end", {
+			"card": _card_detail_card_id, "card_uid": _card_detail_card_uid,
+		})
 	var old_overlay := _card_detail_overlay
 	_card_detail_overlay = null
 	_card_detail_panel = null
