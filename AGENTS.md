@@ -67,6 +67,15 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-15 修复批次三（317 测试全绿）：** 回退上一回合整链（`GameState.round_snapshots`
+每日双快照、min_round/预算门控、整体恢复、`back_to_round_begin` 键、桌面"回退"按钮）；
+骰子重掷按钮（配额 = 槽卡 重投 标签求和，重掷全场）；auto_result 仪式 UI 静默结算；
+重抽三题（中途失败不回插不消耗、弃卡运行时标签回写池、额外重抽计数器 7100008）；
+counter 无后缀默认 >=；game over 保留继续存档；think 多分支全执行
+（`ThinkController.ProcessPop` 语义，非仪式面板首匹配）；open_card_info/close_prompt/
+sudan_redraw_start 时机钩子。**后置：** 事件日内阻塞模型（Promise 链，UI 架构级重构，
+实机反馈驱动）；向导类时机钩子（无宿主 UI）。剩余批次四（Low 打磨）见总修复清单。
+
 **默认行为：**
 
 - 复刻**完全解冻**。按 DSL 审计、可达性元数据与实机游玩反馈持续扩展苏丹的内容链、仪式与 DSL 覆盖。每批内容须经过逆向验证（双信号）与 GUT 测试后才能接入正常开局；禁止把未验证配置一次性全量倾倒进正常开局。
