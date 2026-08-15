@@ -778,12 +778,18 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 	var cond: Dictionary = slot_def.get("condition", {})
 	if cond.is_empty():
 		return true
+	# Slot conditions evaluate against the rite's currently placed cards too
+	# (e.g. `s1.xxx` references), not just the card being tried.
+	# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) lines
+	#       2038-2040: ConditionContext ctor carries the rite's cards]
 	var ctx := {
 		"db": _db,
 		"state": _state,
 		"rng": _rng,
-		"rite_state": {},
+		"rite_state": _rite_state_from_placements(),
 		"attr_slots": _slot_keys(),
+		"rite_uid": _rite_uid,
+		"rite_id": _rite_id,
 		"acting_card": card,
 		"acting_card_id": int(card.get("id", 0)),
 		"acting_card_only": true,

@@ -236,11 +236,12 @@ func _equipment_tag_contributes(tag_name: String, db) -> bool:
 	var code := str(db.tag_name_to_code.get(tag_name, ""))
 	if code.is_empty() or not db.tags_by_code.has(code):
 		return false
-	# GetTag includes attached-card values only for TagNode's offset 0x43,
-	# which dump.cs maps to can_nagative_and_zero (not can_inherit).
-	# [SRC: decompiled/CardExtensions.c @ GetTag (RVA 0x3814a0);
-	#  dump.cs:386944-386950 TagNode field layout.]
-	return int(db.tags_by_code[code].get("can_nagative_and_zero", 0)) != 0
+	# The equip recursion gate is TagNode+0x42 (can_inherit); +0x43
+	# (can_nagative_and_zero) only masks negative reported values in GetTag.
+	# [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0) line 1604 gate at +0x42,
+	#       negative mask at 1619-1622 via +0x43; dump.cs:386944-386950
+	#       (0x40 can_add / 0x42 can_inherit / 0x43 can_nagative_and_zero)]
+	return int(db.tags_by_code[code].get("can_inherit", 0)) != 0
 
 
 func set_card_custom_name(uid: int, value: String) -> bool:
