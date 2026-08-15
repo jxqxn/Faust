@@ -67,14 +67,17 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
-**2026-08-15 修复批次三（317 测试全绿）：** 回退上一回合整链（`GameState.round_snapshots`
-每日双快照、min_round/预算门控、整体恢复、`back_to_round_begin` 键、桌面"回退"按钮）；
-骰子重掷按钮（配额 = 槽卡 重投 标签求和，重掷全场）；auto_result 仪式 UI 静默结算；
-重抽三题（中途失败不回插不消耗、弃卡运行时标签回写池、额外重抽计数器 7100008）；
-counter 无后缀默认 >=；game over 保留继续存档；think 多分支全执行
-（`ThinkController.ProcessPop` 语义，非仪式面板首匹配）；open_card_info/close_prompt/
-sudan_redraw_start 时机钩子。**后置：** 事件日内阻塞模型（Promise 链，UI 架构级重构，
-实机反馈驱动）；向导类时机钩子（无宿主 UI）。剩余批次四（Low 打磨）见总修复清单。
+**2026-08-15 修复批次三/四（319 测试全绿，审计修复全部收口）：** 批次三：
+回退上一回合整链（`GameState.round_snapshots` 每日双快照、min_round/预算门控、整体恢复、
+`back_to_round_begin` 键、桌面"回退"按钮）；骰子重掷（配额 = 槽卡 重投 标签求和）；
+auto_result UI 静默结算；重抽三题（失败不回插不消耗/弃卡标签回写池/额外重抽 7100008）；
+counter 无后缀默认 >=；game over 保留继续存档；think 多分支全执行（ProcessPop 语义）；
+open_card_info/close_prompt/sudan_redraw_start 时机钩子。批次四：拖放自动路由到首个
+满足槽；`is` 无 acting 卡时查槽卡；r1 单数值形式；round<=/round!= 原作退化 Equal 怪癖；
+auto_begin 不复查 open_condition。**留档项**（实机反馈或新证据驱动，见总修复清单）：
+事件日内 Promise 阻塞模型、headless deferred 顺序（上朝链依赖 finalize-first）、
+parent/self 聚合选择器、EventOff 小值批量关闭、向导类时机钩子。审计八域的
+Critical/High/Medium/Low 修复建议至此全部落地或明确留档。
 
 **默认行为：**
 
