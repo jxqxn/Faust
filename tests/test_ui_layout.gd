@@ -354,6 +354,7 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	await wait_process_frames(2)
 	game._on_difficulty_selected(0)
 	await wait_process_frames(2)
+	_drain_intro_events(game)
 
 	var screen := game._game_screen as Control
 	var home := _find_node_by_name(game, "SiteHome") as Button
@@ -768,6 +769,7 @@ func test_game_menu_button_opens_real_overlay():
 
 	game._on_difficulty_selected(0)
 	await wait_process_frames(2)
+	_drain_intro_events(game)
 
 	var menu := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(menu, "menu button should exist in the in-game HUD")
@@ -821,6 +823,7 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	await wait_process_frames(2)
 	game._on_difficulty_selected(0)
 	await wait_process_frames(2)
+	_drain_intro_events(game)
 
 	var screen := game._game_screen as Control
 	var desk := _find_node_by_name(game, "SituationDesk") as Control
@@ -870,6 +873,7 @@ func test_game_menu_opens_manual_archive_picker():
 	await wait_process_frames(2)
 	game._on_difficulty_selected(0)
 	await wait_process_frames(2)
+	_drain_intro_events(game)
 	game._show_user_archive_overlay()
 	await wait_process_frames(1)
 
@@ -1746,6 +1750,15 @@ func test_rite_view_uses_wide_viewport_width():
 		assert_true(shade.size.x >= MIN_CONTENT_WIDTH, "rite modal shade should cover the wide viewport")
 	if slot_layer != null:
 		assert_true(slot_layer.size.x >= MIN_CONTENT_WIDTH, "rite slot layer should cover the wide viewport")
+
+
+## The real new-run entry fires the opening round_begin_ba chain (intro
+## events) like the original startup; UI tests drain it to reach the desk.
+func _drain_intro_events(game) -> void:
+	while not game.state.pending_operation().is_empty():
+		game.state.consume_pending_operation()
+	if game._game_screen != null:
+		game._game_screen.refresh()
 
 
 func _stage(view_size: Vector2 = WIDE_VIEWPORT) -> Control:

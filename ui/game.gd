@@ -84,6 +84,12 @@ func _start_new_run(index: int, use_test_cards: bool) -> void:
 	state = GameState.new()
 	state.setup_new_run(db, index, rng)
 	db.set_test_starting_cards_enabled(false)
+	# The original startup chain increments Player.round to 1, fires
+	# OnRoundBeginBa, then runs auto-begin and the first Sultan draw in that
+	# order. Opening round_begin_ba events (intro chain) display from here.
+	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (0x56f9c0)
+	#       lines 120-150]
+	state.trigger_events("round_begin_ba", {"round": state.round_number})
 	RoundLoop.start_auto_begin_rites(state, db)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	_show_game()

@@ -156,24 +156,113 @@ func test_next_day_orders_round_end_before_round_begin_auto_start_and_sudan_draw
 		"round_number": 99, "waiting_round": 0,
 		"settlement_prior": [], "settlement": [], "settlement_extre": [],
 	}
-	local_db.events[991901] = {"id": 991901, "on": {"round_end": 1}, "condition": {}}
-	local_db.events[991902] = {"id": 991902, "on": {"round_begin_ba": 2}, "condition": {}}
+	local_db.events[991901] = {"id": 991901, "on": {"round_end": 0}, "condition": {}}
+	local_db.events[991902] = {"id": 991902, "on": {"round_begin_ba": 1}, "condition": {}}
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(80))
 	var rite_uid := state.add_available_rite(991900, local_db, RNG.new(81))
 	assert_gt(rite_uid, 0)
+	# Enable mid-run at round 1: round timings arm as value + current round,
+	# so round_end:0 arms for outgoing round 1 and round_begin_ba:1 for round 2.
 	assert_true(state.enable_event(991901, local_db))
 	assert_true(state.enable_event(991902, local_db))
 
 	var result := RoundLoop.advance_day(state, local_db, RNG.new(82))
 	var rite = state.get_rite_instance(rite_uid)
-	assert_eq(result.round_end_events, [991901], "round_end observes outgoing round 1")
-	assert_eq(result.round_begin_events, [991902], "round_begin observes incremented round 2")
-	assert_lt(state.event_queue.find(991901), state.event_queue.find(991902), "display queue preserves transition order")
+	assert_true(991901 in result.round_end_events, "round_end observes outgoing round 1")
+	assert_true(991902 in result.round_begin_events, "round_begin observes incremented round 2")
+	assert_lt(
+		state.event_queue.find(991901), state.event_queue.find(991902),
+		"display queue preserves transition order"
+	)
 	assert_true(result.new_round)
 	assert_eq(state.round_number, 2)
 	assert_true(rite.start, "auto_begin starts only after the round-begin boundary")
 	assert_gt(int(result.drawn_sudan), 0, "new round draws Sudan after auto-start")
+
+
+func _db_with_round_timings() -> ConfigDB:
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[991910] = {"id": 991910, "text": "periodic", "is_replay": 1,
+		"on": {"round_begin_ba": 3}, "condition": {}}
+	local_db.events[991911] = {"id": 991911, "text": "once", "is_replay": 0,
+		"on": {"round_begin_ba": 2}, "condition": {}}
+	local_db.events[991912] = {"id": 991912, "text": "random period", "is_replay": 1,
+		"on": {"round_begin_ba": [1, 2]}, "condition": {}}
+	return local_db
+
+
+func test_round_timing_is_a_period_not_a_single_round():
+	# round_begin_ba: N on a replay event re-fires every N rounds; the armed
+	# next-fire round advances by N at each fire (NextRound = value + now).
+	# [SRC: TimingRoundBase.c @ IsValid (0x465d30) / NextRound (0x465f20)]
+	var local_db := _db_with_round_timings()
+	local_db.events[991910]["auto_start_init"] = [1]
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(90))
+	assert_eq(int(state.timing_rounds.get("round_begin_ba:991910", -1)), 3,
+		"armed at enable time as value + round 0")
+
+	state.round_number = 2
+	assert_false(991910 in state.trigger_events("round_begin_ba", {"round": 2}),
+		"round 2 is below the armed round 3")
+	state.round_number = 3
+	assert_true(991910 in state.trigger_events("round_begin_ba", {"round": 3}),
+		"fires when the armed round is reached")
+	assert_eq(int(state.timing_rounds["round_begin_ba:991910"]), 6,
+		"re-armed to fire again at round 6")
+	state.round_number = 5
+	assert_false(991910 in state.trigger_events("round_begin_ba", {"round": 5}),
+		"round 5 is below the re-armed round 6")
+	state.round_number = 6
+	assert_true(991910 in state.trigger_events("round_begin_ba", {"round": 6}),
+		"fires again on the second period")
+
+
+func test_non_replay_round_event_fires_once_then_loses_its_arm():
+	# A non-replay event unregisters on completion (OnEnd removes the
+	# timing_rounds entry), so its round timing never fires again.
+	var local_db := _db_with_round_timings()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(91))
+	state.enable_event(991911, local_db)
+	# Enabled at round 1: the period-2 timing arms for round 3.
+	state.round_number = 3
+	assert_true(991911 in state.trigger_events("round_begin_ba", {"round": 3}))
+	state.complete_event(991911, false)
+	assert_false(state.timing_rounds.has("round_begin_ba:991911"),
+		"completing a non-replay event removes its round-timing arm")
+	state.round_number = 4
+	assert_false(991911 in state.trigger_events("round_begin_ba", {"round": 4}),
+		"never fires again after completion")
+
+
+func test_two_value_round_timing_is_a_random_period():
+	# [a, b] arms at Unity Random.Range(a, b) [inclusive, exclusive) + base.
+	# [SRC: TimingRoundBase.c @ NextRound: Count==2 -> Random.Range(v0, v1)]
+	var local_db := _db_with_round_timings()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(92))
+	state.enable_event(991912, local_db)
+	# Enabled at round 1; Random.Range(1, 2) is always 1, so armed = 1 + 1.
+	var armed: int = int(state.timing_rounds.get("round_begin_ba:991912", -1))
+	assert_eq(armed, 2, "the drawn period (always 1) is added to the arming round")
+	state.round_number = armed
+	assert_true(991912 in state.trigger_events("round_begin_ba", {"round": armed}))
+
+
+func test_timing_rounds_survive_save_load_without_re_arming():
+	var local_db := _db_with_round_timings()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(93))
+	state.enable_event(991910, local_db)
+	state.timing_rounds["round_begin_ba:991910"] = 42
+	var saved := SaveSystem.serialize(state)
+	var restored := GameState.new()
+	SaveSystem.deserialize(saved, restored, local_db)
+	assert_eq(int(restored.timing_rounds.get("round_begin_ba:991910", -1)), 42,
+		"saved arms restore verbatim; re-enabling must not overwrite them")
 
 
 func test_book_search_loot_generates_one_runtime_rite_and_survives_save_load():

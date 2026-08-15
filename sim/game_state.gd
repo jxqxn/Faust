@@ -134,6 +134,12 @@ var event_prompts: Array[Dictionary]:
 # governing future trigger registration.
 var event_status: Dictionary = {}
 var event_done: Dictionary = {}
+# Per-(timing, event) next-fire round for round-based timings, mirroring the
+# original Player.timing_rounds dictionary (player+0x128). Armed when the
+# event is enabled (TimingRoundBase.OnStart), compared in IsValid, and
+# re-armed by NextRound at fire time; removed for non-replay events (OnEnd).
+# Key format: "round_begin_ba:5300009" -> 10 (next round this event may fire).
+var timing_rounds: Dictionary = {}
 # The original auto_start_init checks the current player/template id. The clone
 # currently has one normal opening template, id 1; keep it explicit so later
 # opening profiles can select a different set without registering all events.
@@ -514,8 +520,8 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
 	sudan_pool_tags.clear()
 	auto_gen_sudan_card = true
-	# Day/round.
-	round_number = 1
+	# Day/round. The first round begins after initial events are armed (see
+	# below); day counts start at 1.
 	day = 1
 	world_location_id = "school_rooftop"
 	world_spawn_id = "default"
@@ -537,9 +543,18 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	event_prompts.clear()
 	event_status.clear()
 	event_done.clear()
+	timing_rounds.clear()
 	event_init_profile_id = int(db.init_config.get("event_init_profile_id", 1))
+	# Arm initial events from round 0 like a fresh original Player, then leave
+	# the round at 1 for the caller. The actual round-1 OnRoundBeginBa fire
+	# belongs to the new-game entry (ui/game.gd _start_new_run), mirroring the
+	# original startup chain; sim-level callers reach it on the first advance.
+	# [SRC: TimingRoundBase.c @ OnStart arms next = value + player.round;
+	#       GameController.__c__DisplayClass141_0.c @ <Start>b__5 (0x56f9c0)]
+	round_number = 0
 	_rebuild_event_runtime(db)
 	_enable_initial_events(db)
+	round_number = 1
 
 
 func _redraws_per_round(db) -> int:

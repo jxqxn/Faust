@@ -104,6 +104,7 @@ static func serialize(state) -> Dictionary:
 		"delayed_operations": state.delayed_operations.duplicate(true),
 		"event_status": state.event_status.duplicate(true),
 		"event_done": state.event_done.duplicate(true),
+		"timing_rounds": state.timing_rounds.duplicate(true),
 		"event_init_profile_id": state.event_init_profile_id,
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
@@ -237,6 +238,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	var saved_event_done: Dictionary = data.get("event_done", {})
 	for event_id in saved_event_done:
 		state.event_done[int(event_id)] = bool(saved_event_done[event_id])
+	state.timing_rounds.clear()
+	var saved_timing_rounds: Dictionary = data.get("timing_rounds", {})
+	for key in saved_timing_rounds:
+		state.timing_rounds[str(key)] = int(saved_timing_rounds[key])
 	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))
 	state.local_counters = _restore_int_keyed_dictionary(data.get("local_counters", {}))
 	state.global_counters = _restore_int_keyed_dictionary(data.get("global_counters", {}))

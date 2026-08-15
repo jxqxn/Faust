@@ -523,19 +523,21 @@ func test_execute_event_real_5300002_jumps_rite():
 # ---- EventRuntime trigger tests ----
 
 func test_event_runtime_matches_round_begin_by_round_number():
-	# Events with on.round_begin_ba match only when the context round equals
-	# the trigger value. Use an isolated ConfigDB (no real data) for precision.
+	# Round timings arm at enable time (next = value + current round) and
+	# re-arm by the same period whenever they fire (TimingRoundBase IsValid /
+	# NextRound). Bare state sits at round 0 so armed rounds equal the value.
 	var local_db := ConfigDB.new()
 	local_db.events[990010] = {"id": 990010, "on": {"round_begin_ba": 2}, "condition": {}}
 	local_db.events[990011] = {"id": 990011, "on": {"round_begin_ba": 5}, "condition": {}}
 	var st := GameState.new()
+	st.round_number = 0
 	st.event_status[990010] = true
 	st.event_status[990011] = true
 	var rt := EventRuntime.new()
 	rt.build(local_db, st)
-	assert_eq(rt.fire("round_begin_ba", {"round": 2}), [990010], "only round-2 event fires on round 2")
-	assert_eq(rt.fire("round_begin_ba", {"round": 5}), [990011], "only round-5 event fires on round 5")
+	assert_eq(rt.fire("round_begin_ba", {"round": 2}), [990010], "event armed for round 2 fires on round 2")
 	assert_eq(rt.fire("round_begin_ba", {"round": 3}), [], "no event fires on round 3")
+	assert_eq(rt.fire("round_begin_ba", {"round": 5}), [990010, 990011], "the period-2 event re-armed to round 4 and fires again beside the period-5 event")
 
 
 func test_event_runtime_matches_rite_end_by_rite_id():
@@ -553,13 +555,17 @@ func test_event_runtime_gates_on_condition():
 	var local_db := ConfigDB.new()
 	local_db.events[990030] = {"id": 990030, "on": {"round_begin_ba": 1}, "condition": {"counter.7000001>=": 999}}
 	var st := GameState.new()
+	st.round_number = 0
 	st.event_status[990030] = true
-	# Condition requires a counter the state doesn't have (==0, so >=5 fails).
+	# Condition requires a counter the state doesn't have (==0, so >=999 fails).
 	var rt := EventRuntime.new()
 	rt.build(local_db, st)
 	assert_eq(rt.fire("round_begin_ba", {"round": 1}), [], "event with failing condition does not fire")
 	st.set_counter(7000001, 1000)
-	assert_eq(rt.fire("round_begin_ba", {"round": 1}), [990030], "event fires once condition holds")
+	# The original re-arms inside IsValid even when the condition then fails,
+	# so the retry opportunity moved to the next period boundary (round 2).
+	assert_eq(rt.fire("round_begin_ba", {"round": 1}), [], "a failed condition still consumed the armed round")
+	assert_eq(rt.fire("round_begin_ba", {"round": 2}), [990030], "event fires once condition holds at the next arm")
 
 
 func test_state_trigger_events_queues_matched_ids():
@@ -651,6 +657,7 @@ func test_event_off_disables_future_triggering():
 	var local_db := ConfigDB.new()
 	local_db.events[990070] = {"id": 990070, "on": {"round_begin_ba": 1}, "condition": {}}
 	var st := GameState.new()
+	st.round_number = 0
 	st.event_status[990070] = true
 	st._rebuild_event_runtime(local_db)
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990070], "event fires before event_off")
@@ -663,6 +670,7 @@ func test_inactive_event_never_fires_until_event_on_enables_it():
 	var local_db := ConfigDB.new()
 	local_db.events[990080] = {"id": 990080, "on": {"round_begin_ba": 1}, "condition": {}, "start_trigger": true}
 	var st := GameState.new()
+	st.round_number = 0
 	st._rebuild_event_runtime(local_db)
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [], "definitions are inactive by default")
 	var deferred := ResultExec.execute({"event_on": 990080}, st, local_db)
@@ -677,6 +685,7 @@ func test_event_on_without_start_trigger_registers_without_displaying():
 	var local_db := ConfigDB.new()
 	local_db.events[990082] = {"id": 990082, "on": {"round_begin_ba": 1}, "condition": {}, "start_trigger": false}
 	var st := GameState.new()
+	st.round_number = 0
 	ResultExec.execute({"event_on": 990082}, st, local_db)
 	assert_true(st.is_event_enabled(990082), "event_on enables events regardless of start_trigger")
 	assert_true(st.event_queue.is_empty(), "start_trigger=false does not display the event immediately")
@@ -716,6 +725,7 @@ func test_non_replay_event_unregisters_after_settlement():
 		"settlement": [{"action": {"coin": 2}}],
 	}
 	var st := GameState.new()
+	st.round_number = 0
 	st.enable_event(990081, local_db)
 	assert_eq(st.trigger_events("round_begin_ba", {"round": 1}), [990081], "enabled non-replay event fires")
 	DeferredEffects.execute_event(local_db.get_event(990081), st, local_db, RNG.new(1))
