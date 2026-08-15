@@ -225,18 +225,20 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var colon := k.find(":")
 	var type_key := k.substr(0, colon)
 	var after := k.substr(colon + 1)
-	# Find the op at the end of after.
-	var op := "="
+	# The op is the trailing suffix of the key ("r1:智慧+社交>="), so match
+	# the longest candidate at the end; picking by max find() position would
+	# split ">=" into "=" plus a stray ">" glued to the expression.
+	# [SRC: FuncCompare ctor 0x3fd360 receives type/expr/op pre-split by the
+	# JSON converter; content op domain is {">=", "<", "<=", ">", "="}]
+	var op := ""
 	var expr := after
-	var op_idx := -1
 	for cand in OPS:
-		var idx := after.find(cand)
-		if idx > 0:
-			if op_idx < 0 or idx > op_idx:
-				op_idx = idx
-				op = cand
-	if op_idx > 0:
-		expr = after.substr(0, op_idx)
+		if after.ends_with(cand) and cand.length() > op.length():
+			op = cand
+	if op.is_empty():
+		op = "="
+	else:
+		expr = after.substr(0, after.length() - op.length())
 	expr = expr.strip_edges()
 	# Evaluate the attribute expression against the slotted cards.
 	var attr_val := eval_attr_expr(expr, ctx)

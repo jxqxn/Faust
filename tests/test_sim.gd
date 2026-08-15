@@ -285,6 +285,19 @@ func test_funccompare_reuses_cached_dice_without_advancing_rng():
 	assert_true(ConditionEval.eval_key("r1:智慧>=", [99, 5], ctx), "cached dice plus gold can satisfy without reroll")
 	assert_eq(rng.get_state(), after_first, "cached FuncCompare does not advance RNG on re-evaluation")
 
+func test_funccompare_two_char_op_binds_from_expression_tail():
+	# Regression (report 3 A1): the op is the trailing suffix of the key.
+	# "智慧+社交>=" is expr "智慧+社交" + op ">=", not "=" with a stray ">"
+	# glued onto the last attribute (the old max-position parser did that).
+	var st := GameState.new()
+	st.difficulty_config = db.get_difficulty(1)
+	st.add_card_to_slot(2000005, 1, db) # 巴拉特: 智慧2 + 社交2 = 4
+	var ctx := _make_ctx(st, RNG.new(1))
+	assert_true(ConditionEval.eval_key("f:智慧+社交>=", 4, ctx), "compound expr keeps >= and sums to 4")
+	assert_false(ConditionEval.eval_key("f:智慧+社交>=", 5, ctx), "the summed attribute value drives the comparison")
+	assert_true(ConditionEval.eval_key("f:智慧+社交<=", 99, ctx), "compound expr keeps <= as the op")
+	assert_true(ConditionEval.eval_key("f:智慧+社交=", 4, ctx), "single-char = still parses from the tail")
+
 func test_settlement_extre_all_match():
 	# Find a rite whose settlement_extre has multiple entries that can match.
 	# 5000001 extre has many s4.is / s3.is entries; with no such cards none match,
