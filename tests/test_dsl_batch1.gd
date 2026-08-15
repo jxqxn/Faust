@@ -400,3 +400,38 @@ func test_sudan_shelter_requires_any_slot_not_started_rite() -> void:
 	var day := RoundLoop.advance_day(state, local_db, RNG.new(34))
 	assert_false(day.game_over, "an unstarted rite still shelters the embedded Sultan")
 	assert_false(day.expired.is_empty() == false and day.expired.size() > 0, "sanity")
+
+
+func test_counter_and_card_born_and_game_end_timings_fire() -> void:
+	# [SRC: GameController.c:9052/9116 OnCounterChanged/OnGlobalCounterChanged;
+	#       GenCard.c:298 OnCardBorn; GameController.c:2868 OnGameEnd with
+	#       GameEnd.c @ IsValid (0x45efe0) ending filter]
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.events[992021] = {"id": 992021, "on": {"counter": 7000001}, "condition": {}}
+	local_db.events[992022] = {"id": 992022, "on": {"global_counter": 8000001}, "condition": {}}
+	local_db.events[992023] = {"id": 992023, "on": {"card_born": 2000005}, "condition": {}}
+	local_db.events[992024] = {"id": 992024, "on": {"game_end": 12}, "condition": {}}
+	local_db.events[992025] = {"id": 992025, "on": {"game_end": -1}, "condition": {}}
+	var state := GameState.new()
+	state.round_number = 0
+	state._rebuild_event_runtime(local_db)
+	for eid in [992021, 992022, 992023, 992024, 992025]:
+		state.enable_event(eid, local_db)
+
+	state.set_counter(7000001, 2)
+	assert_true(992021 in state.event_queue, "counter timing fires on value change")
+	state.set_global_counter(8000001, 5)
+	assert_true(992022 in state.event_queue, "global_counter timing fires on value change")
+
+	state.pending_operations.clear()
+	ResultExec.execute({"card": 2000005}, state, local_db)
+	assert_true(992023 in state.event_queue, "card_born fires when a card is granted")
+	state.pending_operations.clear()
+	ResultExec.execute({"card": 2000001}, state, local_db)
+	assert_false(992023 in state.event_queue, "card_born matches only its configured id")
+
+	# GameEnd ending filter: 12 matches, [4,11] would not, -1 matches any.
+	assert_eq(state.trigger_events("game_end", {"ending": 12}), [992024, 992025])
+	assert_eq(state.trigger_events("game_end", {"ending": 4}), [992025])
+	assert_eq(state.trigger_events("game_end", {}), [], "no ending id means no game_end event")

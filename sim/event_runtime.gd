@@ -19,7 +19,7 @@ var _by_timing := {}
 # NextRound when they fire, removed for non-replay events (OnEnd).
 # [SRC: TimingRoundBase.c @ OnStart (0x4660d0) / IsValid (0x465d30) /
 #       NextRound (0x465f20) / OnEnd (0x466000); dump.cs Player +0x128]
-const ROUND_TIMINGS := ["round_begin_ba", "round_begin_fr", "round_end", "back_to_round_begin", "back_to_prev_round_end"]
+const ROUND_TIMINGS := ["round_begin_ba", "round_begin_fr", "round_end"]
 # Retained as a compatibility/debug view for callers that need to inspect
 # event_off. The source of truth is GameState.event_status.
 var _disabled: Dictionary = {}
@@ -166,6 +166,21 @@ static func next_round(trigger_value, base_round: int, ctx: Dictionary) -> int:
 ## Whether the event's `on` value matches the firing context for this timing.
 ## Round-based timings are handled by _round_timing_fires before this runs.
 static func _value_matches(timing: String, trigger_value, ctx: Dictionary) -> bool:
+	# GameEnd timings filter by ending id: the value set must contain the
+	# ending reached; single -1 = any ending.
+	# [SRC: GameEnd.c @ IsValid (0x45efe0): player+0x7c ending id vs the
+	#       timing's value set, -1 wildcard (report 6 A3)]
+	if timing == "game_end":
+		var ending := int(ctx.get("ending", -2147483648))
+		if ending == -2147483648:
+			return false
+		if trigger_value is Array:
+			return ending in trigger_value
+		return int(trigger_value) == -1 or int(trigger_value) == ending
+	# BackTo timings are value-less (TimingBase): fire on every dispatch.
+	# [SRC: dump.cs:426298/426318 BackTo* : TimingBase (report 6 A4)]
+	if timing in ["back_to_round_begin", "back_to_prev_round_end"]:
+		return true
 	# Rite-based timings: value is a rite id, or 1 = match any rite (rite
 	# config ids are all >= 5000000, so 1 is an unambiguous sentinel).
 	# [SRC: report 6 A2 — TimingRiteBase match-any sentinel, 10 config events]

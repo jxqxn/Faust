@@ -582,31 +582,63 @@ func get_global_counter(id: int) -> int:
 	return int(global_counters.get(id, 0))
 
 
+func set_counter(id: int, val: int) -> void:
+	# Clamp non-negative for gated counters (PlayerExtensions.SetCounter).
+	var clamped := CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
+	if int(local_counters.get(id, 0)) != clamped:
+		local_counters[id] = clamped
+		_notify_counter_changed(id, clamped)
+	else:
+		local_counters[id] = clamped
+
+
 func add_counter(id: int, delta: int) -> void:
-	local_counters[id] = int(local_counters.get(id, 0)) + delta
+	set_counter(id, int(local_counters.get(id, 0)) + delta)
 
 
 func sub_counter(id: int, delta: int) -> void:
-	# Clamp non-negative for gated counters, matching set_counter. SUB can drive
-	# a gated counter negative otherwise, violating the documented invariant.
-	local_counters[id] = CounterSystem.clamp_nonneg(id, int(local_counters.get(id, 0)) - delta, _nonneg_ids)
+	set_counter(id, int(local_counters.get(id, 0)) - delta)
 
 
-func set_counter(id: int, val: int) -> void:
-	# Clamp non-negative for gated counters (PlayerExtensions.SetCounter).
-	local_counters[id] = CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
+## Counter-timing events fire on actual value changes.
+## [SRC: GameController.c @ OnCounterChanged (0x4f9770 callers at 9052/9116)]
+func _notify_counter_changed(id: int, new_value: int) -> void:
+	if event_runtime != null:
+		queue_event_ids(event_runtime.fire("counter", {"counter_id": id, "value": new_value}))
 
 
 func add_global_counter(id: int, delta: int) -> void:
-	global_counters[id] = int(global_counters.get(id, 0)) + delta
+	var before := int(global_counters.get(id, 0))
+	global_counters[id] = before + delta
+	if before != int(global_counters[id]):
+		_notify_global_counter_changed(id, int(global_counters[id]))
 
 
 func sub_global_counter(id: int, delta: int) -> void:
-	global_counters[id] = CounterSystem.clamp_nonneg(id, int(global_counters.get(id, 0)) - delta, _nonneg_ids)
+	var before := int(global_counters.get(id, 0))
+	global_counters[id] = CounterSystem.clamp_nonneg(id, before - delta, _nonneg_ids)
+	if before != int(global_counters[id]):
+		_notify_global_counter_changed(id, int(global_counters[id]))
 
 
 func set_global_counter(id: int, val: int) -> void:
-	global_counters[id] = CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
+	var clamped := CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
+	if int(global_counters.get(id, 0)) != clamped:
+		global_counters[id] = clamped
+		_notify_global_counter_changed(id, clamped)
+	else:
+		global_counters[id] = clamped
+
+
+## [SRC: GameController.c @ OnGlobalCounterChanged (0x4f9a30, callers 9052/9116)]
+func _notify_global_counter_changed(id: int, new_value: int) -> void:
+	if event_runtime != null:
+		queue_event_ids(event_runtime.fire("global_counter", {"counter_id": id, "value": new_value}))
+
+
+func queue_event_ids(ids: Array) -> void:
+	for eid in ids:
+		queue_event(int(eid))
 
 
 # ---- Gold (coin-card stack) ----

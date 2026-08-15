@@ -530,6 +530,12 @@ func _on_advance() -> void:
 
 
 func _show_game_over() -> void:
+	# GameEnd events see the ending id before the run is torn down. The
+	# deadline ending id (12) matches vanish.over of Sultan cards; other
+	# paths pass 0 until over-reason plumbing lands.
+	# [SRC: GameController.c:2868 -> OnGameEnd; CardNode.vanish.over]
+	if state != null and state.event_runtime != null:
+		state.trigger_events("game_end", {"ending": 0})
 	SaveSystem.delete_save()
 	_clear_current()
 	var go := preload("res://ui/game_over.gd").new()

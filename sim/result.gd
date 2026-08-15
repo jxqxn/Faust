@@ -90,11 +90,18 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Card grant.
 	if k == "card":
+		var granted_id := 0
 		if val is Array:
 			if not val.is_empty():
-				state.add_card_to_hand(int(val[0]), db)
+				granted_id = int(val[0])
 		else:
-			state.add_card_to_hand(int(val), db)
+			granted_id = int(val)
+		if granted_id > 0:
+			var granted_uid: int = state.add_card_to_hand(granted_id, db)
+			# GenCard dispatches OnCardBorn after the card joins the player.
+			# [SRC: GenCard.c @ Do (line 298) -> EventTriggerExtensions.OnCardBorn]
+			if granted_uid > 0:
+				state.trigger_events("card_born", {"card": granted_id, "card_uid": granted_uid})
 		return
 	# ChooseOperations: shuffle the nested operations and execute N of them
 	# (default 1). This is a random settlement-text/branch pick, not a player
