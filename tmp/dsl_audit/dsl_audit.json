@@ -665812,6 +665812,8 @@
 			"pop.5008195_01.s2": 1,
 			"pop.5008195_02.s2": 1,
 			"prompt": 10,
+			"rebirth.s1": 7,
+			"rebirth.s2": 1,
 			"s1+equip": 81,
 			"s1+equip_slot": 5,
 			"s1+s2": 16,
@@ -666536,9 +666538,6 @@
 			"火焰大王2+魔力": 3,
 			"金币": 95
 		},
-		"unsupported": {
-			"rebirth.s1": 7,
-			"rebirth.s2": 1
-		}
+		"unsupported": {}
 	}
 }

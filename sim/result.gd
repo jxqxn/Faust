@@ -41,6 +41,8 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k.begins_with("case:"):
 		return true
+	if k.begins_with("rebirth.s") and k.substr("rebirth.s".length()).is_valid_int():
+		return true
 	if k.begins_with("loot."):
 		return true
 	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
@@ -191,6 +193,26 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# tag parser because equip/equip_slot are relationships, not ordinary tags.
 	if _is_modify_rare_key(k):
 		_apply_modify_rare(k, val, state, db, context)
+		return
+	# rebirth.s<n>: reset the slotted card's life countdown to full. Active
+	# Sultan cards restore the difficulty lifetime; ordinary vanishing cards
+	# restart from life 0. (The original's second branch aligns an immortal
+	# tag's life to card_vanishing - round; that tag name is unrecoverable
+	# from metadata and no rebirth config targets it.)
+	# [SRC: RebirthSudanCard.c @ Do (0x519d60): OperationFilter over the
+	#       slotted cards; <Do>b__4_0 (0x51dec0): Card.set_life(0);
+	#       GameController.c @ UpdateSudanLife (0x55aeb0) refresh]
+	if k.begins_with("rebirth.s") and k.substr("rebirth.s".length()).is_valid_int():
+		var rebirth_slot := int(k.substr("rebirth.s".length()))
+		var rebirth_uid := int(context.get("rite_uid", state.active_rite_uid))
+		for tc in state.cards_in_slot(rebirth_slot, rebirth_uid):
+			var rebirth_instance = state.get_card_instance(int(tc.get("card_uid", 0)))
+			if rebirth_instance == null:
+				continue
+			rebirth_instance.life = 0
+			for asc in state.active_sudan_cards:
+				if int(asc.card_uid) == int(rebirth_instance.uid):
+					asc.days_left = int(state.difficulty_config.get("sudan_life_time", 7))
 		return
 	if _is_change_card_copy_key(k):
 		_apply_change_card_copy(k, val, state, context)

@@ -8,9 +8,7 @@ Static roots and generation edges only; this is not a guarantee that a condition
 ## condition
 Unsupported unique keys: 0
 ## result
-Unsupported unique keys: 2
-- `rebirth.s1` (7): rite/5000576.json:settlement[6].result [not_reached_by_static_graph]
-- `rebirth.s2` (1): rite/5000158.json:settlement[0].result [not_reached_by_static_graph]
+Unsupported unique keys: 0
 ## action
 Unsupported unique keys: 94
 - `begin_guide` (17): rite/5002003.json:cards_slot.s4.pops[1].action [potentially_reachable h3]

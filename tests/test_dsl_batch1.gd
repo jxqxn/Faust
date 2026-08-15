@@ -178,7 +178,7 @@ func test_ended_rites_survive_save_roundtrip() -> void:
 func test_supported_key_coverage_for_batch1_families() -> void:
 	for key in ["2000082+晋升", "妻子+晋升", "2000370-奴隶", "2000082.uprare", "妻子.uprare", "copy.s3", "copy.s10", "delay_off", "steam_achievement", "debug", "error", "warn"]:
 		assert_true(ResultExec.is_supported_key(key), "result key supported: %s" % key)
-	assert_false(ResultExec.is_supported_key("rebirth.s1"), "rebirth stays audited until its semantics are source-confirmed")
+	assert_true(ResultExec.is_supported_key("rebirth.s1"), "rebirth.s<n> is source-confirmed and supported")
 	for key in ["rite_end.5000313", "rite_have.5008227.主角=", "rite_have.5008226.主角=", "round<="]:
 		assert_true(ConditionEval.is_supported_key(key), "condition key supported: %s" % key)
 
@@ -582,3 +582,25 @@ func test_drop_auto_routes_to_first_satisfied_slot() -> void:
 	view._placed["s1"] = int(state.hand[0])
 	assert_eq(view._first_satisfied_slot(card), "s2", "filled slots are skipped")
 	view.free()
+
+
+func test_rebirth_resets_slot_card_countdown() -> void:
+	# [SRC: RebirthSudanCard.c @ Do (0x519d60) + <Do>b__4_0 (0x51dec0):
+	#       Card.set_life(0); active Sultan deadlines restore to the
+	#       difficulty lifetime via UpdateSudanLife]
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {"s1": {"condition": {}}}
+	var state := GameState.new()
+	var sudan = RoundLoop.ActiveSudan.new(2010001, 2, state.round_number, 0)
+	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	sudan.card_uid = inst.uid
+	state.active_sudan_cards.append(sudan)
+	var rite = state.create_rite_instance(992001)
+	state.add_card_to_slot(inst.uid, 1, local_db, rite.uid)
+	inst.life = 5
+
+	ResultExec.execute({"rebirth.s1": 1}, state, local_db, {"rite_uid": rite.uid})
+
+	assert_eq(inst.life, 0, "the slotted card's life restarts from zero")
+	assert_eq(sudan.days_left, int(state.difficulty_config.get("sudan_life_time", 7)),
+		"the active Sultan deadline restores to the difficulty lifetime")
