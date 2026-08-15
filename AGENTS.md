@@ -52,15 +52,20 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
 
 2026-08-13 曾将复刻置于维护冻结；2026-08-14 用户决定**完全解冻**：当前默认开发方向是尽可能完整地复刻《苏丹的游戏》，以实机游玩反馈驱动修改与验收。规则引擎、Condition/Result DSL 子集、分层结算、苏丹卡循环、CardInstance、v5 存读档与首周四链均已成立，剩余工作是 DSL 键覆盖、内容链铺量与产品化。
 
-**2026-08-15 独立审计与修复批次一（295 测试全绿）：** 8 域逆向审计完成
-（`docs/AUDIT_2026-08-15.md` 及七份分报告，含总修复清单）。已落地修复：
-round 每天无条件 +1（仅抽苏丹卡受门控，删除"消耗即开新一轮"发明）；FuncCompare
-运算符改为键尾最长匹配（>=/<= 不再损坏）；玩家确认仪式 = 置 start/start_round/
-start_life（N 天仪式跨日结算，OnStop 可撤回）；timing_rounds 周期冷却重臂
-（`GameState.timing_rounds`，round_begin_ba:N = 周期，开局链在
-`ui/game.gd _start_new_run` 发射第 1 回合）。剩余批次见总修复清单（批次 2：rite
-条件正形式/clean.rite/choose/success-failed/have 族计数/槽位求值上下文/装备继承门/
-属性表达式文法/缺失触发时机；批次 3：回退链/骰子重掷/auto_result UI/重抽三题）。
+**2026-08-15 独立审计与修复批次一/二（307 测试全绿）：** 8 域逆向审计完成
+（`docs/AUDIT_2026-08-15.md` 及七份分报告，含总修复清单）。批次一（Critical）：
+round 每天无条件 +1（仅抽苏丹卡受门控）；FuncCompare 运算符键尾最长匹配；
+玩家确认仪式 = 置 start/start_round/start_life（N 天跨日结算，OnStop 撤回）；
+timing_rounds 周期冷却重臂（round_begin_ba:N = 周期，开局链在
+`ui/game.gd _start_new_run` 发射第 1 回合）。批次二（High）：通用卡牌寿命
+（card_vanishing）+ 仪式槽庇护收窄为"任一槽"；rite 条件 = 实例存在性 +
+rite 时机哨兵 1；clean.rite 删其他仪式实例；choose = 随机执行 N 个子操作；
+success/failed 按 last_op_status 互斥；have 族跨域计数（tag 值求和/堆叠）；
+槽位条件可见已放置卡；装备继承门改 can_inherit；属性表达式完整文法
+（递归下降：四则/e() 敌方/sN.tag/counter.N，`slot_entries` 按槽 is_enemy 分敌我）；
+counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤。
+剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
+与批次四（Low 打磨）见总修复清单。
 
 **默认行为：**
 
