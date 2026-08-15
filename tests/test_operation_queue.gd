@@ -54,8 +54,8 @@ func test_delay_survives_v5_save_and_executes_once_when_due() -> void:
 	assert_eq(int(restored.delayed_operations[0].get("context", {}).get("card_uid", 0)), 77)
 	var starting_round := restored.round_number
 	var day_result := RoundLoop.advance_day(restored, local_db, RNG.new(702))
-	assert_eq(restored.round_number, starting_round, "active Sultan keeps the game in the same round")
-	assert_eq(day_result.due_delays.size(), 1, "delay round=1 executes on the next day, not the next Sultan round")
+	assert_eq(restored.round_number, starting_round + 1, "round advances every day even with an active Sultan")
+	assert_eq(day_result.due_delays.size(), 1, "delay round=1 executes on the next day boundary")
 	assert_true(restored.is_event_enabled(990701))
 	assert_true(restored.delayed_operations.is_empty())
 	assert_true(DeferredEffects.execute_due_delays(restored, local_db, RNG.new(703)).is_empty(), "due delays are removed before execution")

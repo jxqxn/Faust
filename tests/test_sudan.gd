@@ -118,7 +118,7 @@ func test_start_round_draws_sudan_with_deadline():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var initial_active := state.active_sudan_cards.size()
-	var cid := RoundLoop.start_round(state, db, rng)
+	var cid := RoundLoop.draw_weekly_sudan(state, db, rng)
 	assert_true(cid >= 0, "drew a sudan card")
 	assert_eq(state.active_sudan_cards.size(), initial_active + 1)
 	# The drawn card has the difficulty life-time as days_left.
@@ -142,7 +142,7 @@ func test_advance_day_decrements_deadline():
 	var rng := RNG.new(2)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	RoundLoop.start_round(state, db, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
 	var before: int = state.active_sudan_cards.back().days_left
 	var r := RoundLoop.advance_day(state, db, rng)
 	assert_eq(state.active_sudan_cards.back().days_left, before - 1)
@@ -152,7 +152,7 @@ func test_expired_sudan_card_ends_game():
 	var rng := RNG.new(2)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	RoundLoop.start_round(state, db, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
 	# Force the deadline to 1 so the next day expires it.
 	state.active_sudan_cards.back().days_left = 1
 	var r := RoundLoop.advance_day(state, db, rng)
@@ -163,7 +163,7 @@ func test_consume_sudan_removes_card():
 	var rng := RNG.new(2)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var cid := RoundLoop.start_round(state, db, rng)
+	var cid := RoundLoop.draw_weekly_sudan(state, db, rng)
 	assert_true(RoundLoop.consume_sudan(state, cid))
 	assert_eq(state.active_sudan_cards.size(), 0)
 
@@ -207,19 +207,15 @@ func test_auto_generate_sudan_uses_original_operation_values_without_stalling_ro
 	state.setup_new_run(db, 1, RNG.new(47))
 	ResultExec.execute({"enable_auto_gen_sudan_card": false}, state, db)
 	assert_false(state.auto_gen_sudan_card, "false disables automatic Sultan generation")
-	var disabled_round := RoundLoop.start_round_if_no_sudan(state, db, RNG.new(48))
-	assert_true(disabled_round.new_round, "disabled generation still starts the next round")
-	assert_eq(disabled_round.drawn_sudan, -1, "disabled generation skips only the Sultan draw")
+	var disabled_day := RoundLoop.advance_day(state, db, RNG.new(48))
+	assert_true(disabled_day.new_round, "disabled generation still advances the round")
+	assert_eq(disabled_day.drawn_sudan, -1, "disabled generation skips only the Sultan draw")
 	assert_eq(state.round_number, 2, "round number still advances while Sultan generation is disabled")
-	var day_result := RoundLoop.advance_day(state, db, RNG.new(49))
-	assert_true(day_result.new_round, "day progression keeps the round lifecycle active")
-	assert_eq(day_result.drawn_sudan, -1)
-	assert_eq(RoundLoop.start_round(state, db, RNG.new(50)), -1, "explicit round draw follows the generation gate")
 	ResultExec.execute({"enable_auto_gen_sudan_card": true}, state, db)
 	assert_true(state.auto_gen_sudan_card, "true enables automatic Sultan generation")
-	var enabled_round := RoundLoop.start_round_if_no_sudan(state, db, RNG.new(51))
-	assert_true(enabled_round.new_round)
-	assert_true(enabled_round.drawn_sudan >= 0, "enabled generation draws a Sultan card")
+	var enabled_day := RoundLoop.advance_day(state, db, RNG.new(51))
+	assert_true(enabled_day.new_round)
+	assert_true(enabled_day.drawn_sudan >= 0, "enabled generation draws a Sultan card at the day boundary")
 
 
 func test_redraw_draws_sudan_redraw_count_cards():

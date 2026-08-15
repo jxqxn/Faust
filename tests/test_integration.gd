@@ -8,26 +8,36 @@ func before_all():
 	db = ConfigDB.new()
 	db.load_all()
 
-func test_waiting_with_active_sudan_does_not_start_round_by_day_modulo():
+func test_waiting_with_active_sudan_still_advances_round_each_day():
+	# round advances unconditionally every day; only the Sultan draw is gated
+	# on having no active Sultan card.
+	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__3: player.round += 1
+	#       unconditionally; TryGenSudanCard gate is draw-only]
 	var rng := RNG.new(100)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	for i in range(5):
 		var result := RoundLoop.advance_day(state, db, rng)
-		assert_false(result.new_round, "active sudan card blocks new round")
-	assert_eq(state.round_number, 1, "round does not advance on day modulo")
+		assert_true(result.new_round, "round advances every day")
+		assert_eq(result.drawn_sudan, -1, "active sudan card blocks only the draw")
+	assert_eq(state.round_number, 6, "round advanced once per day")
 	assert_eq(state.active_sudan_cards.size(), 1, "still the same active sudan card")
 
-func test_consumed_sudan_allows_event_driven_next_round_draw():
+func test_consumed_sudan_waits_for_day_boundary_to_draw_next():
+	# Consuming the last Sultan card does not draw a replacement the same day;
+	# TryGenSudanCard runs only at the day boundary.
+	# [SRC: TryGenSudanCard callers: DisplayClass141_0.c:307 (startup chain),
+	#       DisplayClass142_0.c:395 (OnNextRound chain); no other callers]
 	var rng := RNG.new(200)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var first_cid := RoundLoop.draw_weekly_sudan(state, db, rng)
 	assert_true(RoundLoop.consume_sudan(state, first_cid))
-	var result := RoundLoop.start_round_if_no_sudan(state, db, rng)
-	assert_true(result.new_round, "no active sudan starts a new round")
-	assert_true(result.drawn_sudan >= 0, "new sudan card drawn")
+	assert_true(state.active_sudan_cards.is_empty(), "no active sudan after consuming")
+	var result := RoundLoop.advance_day(state, db, rng)
+	assert_true(result.new_round)
+	assert_true(result.drawn_sudan >= 0, "next sudan drawn at the day boundary")
 	assert_eq(state.round_number, 2, "round incremented")
 	assert_eq(state.active_sudan_cards.size(), 1, "one new active sudan card")
 

@@ -56,7 +56,12 @@ static func advance_day(state, db, rng) -> Dictionary:
 		else:
 			still_active.append(asc)
 	state.active_sudan_cards = still_active
-	if not result.game_over and state.active_sudan_cards.is_empty():
+	# round advances unconditionally every day; only the Sultan draw is gated
+	# on having no active Sultan card (inside _begin_round).
+	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__3 (0x570790): player.round
+	#       (player+0x2c) += 1 unconditionally; TryGenSudanCard (0x559730)
+	#       checks HasSudanCard separately]
+	if not result.game_over:
 		_begin_round(state, db, rng, result)
 	return result
 
@@ -73,15 +78,6 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 	if state.has_method("insert_card_to_rail"):
 		state.insert_card_to_rail(card_uid, 0)
 	return cid
-
-
-## Start a new round explicitly and draw a sudan card if the pool still has one.
-static func start_round(state, db, rng) -> int:
-	state.round_number += 1
-	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
-	if state.round_number % recovery == 0:
-		state.redraws_left = _redraws_per_round(state, db)
-	return draw_weekly_sudan(state, db, rng) if state.auto_gen_sudan_card else -1
 
 
 ## Original redraw: draw sudan_redraw_count new cards from the finite pool
@@ -137,8 +133,11 @@ static func use_redraw(state, rng, db = null) -> int:
 	return first_new
 
 
-## Consume a sudan card. The caller may then call start_round_if_no_sudan to
-## match TryGenSudanCard's "draw when none active" behavior.
+## Consume a sudan card. The next Sultan draw happens at the following day
+## boundary (TryGenSudanCard runs only in the startup chain and the daily
+## OnNextRound chain); there is no same-day replacement draw.
+## [SRC: TryGenSudanCard callers: DisplayClass141_0.c:307 (startup),
+##       DisplayClass142_0.c:395 (OnNextRound); no other callers exist]
 static func consume_sudan(state, card_or_uid: int) -> bool:
 	for i in state.active_sudan_cards.size():
 		var active = state.active_sudan_cards[i]
@@ -155,17 +154,6 @@ static func consume_sudan(state, card_or_uid: int) -> bool:
 			state.trigger_events("card_clean", {"card": active.card_id, "card_uid": active.card_uid})
 			return true
 	return false
-
-
-## Start a new round only if the player currently has no active sudan card.
-static func start_round_if_no_sudan(state, db, rng) -> Dictionary:
-	var result := {
-		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
-		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [],
-	}
-	if state.active_sudan_cards.is_empty():
-		_begin_round(state, db, rng, result)
-	return result
 
 
 ## Pool tags are copied only when an ID becomes a runtime Sultan instance.
@@ -185,7 +173,10 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
 	state.round_number += 1
 	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
-	if state.round_number % recovery == 0:
+	# The original guards against a zero-remainder divisor: recovery < 2 resets
+	# every day instead of dividing by zero.
+	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__9 (0x571000) lines 465-473]
+	if recovery < 2 or state.round_number % recovery == 0:
 		state.redraws_left = _redraws_per_round(state, db)
 	# The original increments Player.round then runs OnRoundBeginBa before its
 	# follow-up round pipeline. Auto-start only changes Rite.start; it belongs
@@ -194,11 +185,12 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	#       lines 120-150; GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
 	result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
 	result.auto_rites = start_auto_begin_rites(state, db)
-	# The original always advances the round pipeline, then its final callback
-	# skips TryGenSudanCard when automatic generation is disabled.
-	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (RVA 0x56f9c0)
-	# and <Start>b__10 (RVA 0x56f780)]
-	result.drawn_sudan = draw_weekly_sudan(state, db, rng) if state.auto_gen_sudan_card else -1
+	# Only the Sultan draw is gated on having no active Sultan card; the round
+	# itself always advances. The disabled-generation flag skips only the draw.
+	# [SRC: GameController.c @ TryGenSudanCard (0x559730) lines 3563-3566:
+	#       HasSudanCard gate + player+0x161 disable flag]
+	if state.auto_gen_sudan_card and state.active_sudan_cards.is_empty():
+		result.drawn_sudan = draw_weekly_sudan(state, db, rng)
 
 
 ## Open/start auto-begin rites. Do not resolve them: the original

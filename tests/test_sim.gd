@@ -443,10 +443,15 @@ func test_methinks_consume_last_sudan_triggers_new_round():
 	var round_before := state.round_number
 	var result := MethinksEngine.process_card(2010001, "active_sudan", state, local_db, rng)
 	assert_true(result.get("accepted", false), "methinks accepts the sudan card")
-	assert_true(result.get("new_round", false), "consuming the last sudan starts a new round")
-	assert_true(result.drawn_sudan >= 0, "a new sudan is drawn")
-	assert_eq(state.round_number, round_before + 1, "round number incremented")
-	assert_false(state.active_sudan_cards.is_empty(), "a new sudan is now active")
+	# Consuming the last Sultan does not start a new round or draw a
+	# replacement the same day; both happen at the next day boundary.
+	# [SRC: TryGenSudanCard runs only in the startup/OnNextRound chains]
+	assert_eq(state.round_number, round_before, "no same-day round start")
+	assert_false(result.has("new_round"), "no same-day new-round report")
+	assert_true(state.active_sudan_cards.is_empty(), "no replacement sudan until the day boundary")
+	var day := RoundLoop.advance_day(state, local_db, rng)
+	assert_true(day.new_round, "the next day boundary starts the next round")
+	assert_true(day.drawn_sudan >= 0, "and draws the next sudan")
 
 func test_deferred_effects_execute_event_applies_result_and_action():
 	# execute_event runs an event's result and action payloads through

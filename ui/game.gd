@@ -494,23 +494,10 @@ func _after_rite_resolution() -> void:
 	# [SRC: RiteResultPanelController.c:1289 -> OnRiteEnd]
 	if state != null and _current_rite_id != 0:
 		state.trigger_events("rite_end", {"rite": _current_rite_id})
-	var result := RoundLoop.start_round_if_no_sudan(state, db, rng)
+	# No same-day round start: consuming a Sultan card does not draw the next
+	# one until the next day boundary (TryGenSudanCard lives in OnNextRound).
 	if _game_screen != null:
 		_game_screen.refresh()
-	if not result.get("new_round", false):
-		return
-	if _rite_overlay and _rite_overlay.has_method("set_log"):
-		_rite_overlay.set_log(_round_result_log(result))
-
-
-func _round_result_log(result: Dictionary) -> String:
-	var log_text := "—— 第 %d 回合开始 ——" % state.round_number
-	if int(result.get("drawn_sudan", -1)) >= 0:
-		var dec = SudanCards.decode(int(result.drawn_sudan))
-		log_text += "\n新苏丹卡: %s%s" % [dec.rank, dec.action]
-	if not result.get("auto_rites", []).is_empty():
-		log_text += "\n自动开启仪式: %d 个" % result.auto_rites.size()
-	return log_text
 
 
 func _on_advance() -> void:
