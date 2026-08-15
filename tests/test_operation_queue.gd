@@ -115,14 +115,13 @@ func test_no_prompt_sleep_and_choose_all_are_explicitly_handled() -> void:
 	}, state, db)
 	assert_eq(state.coin_count, 3)
 	assert_eq(float(deferred.sleeps[0].get("seconds", 0.0)), 0.25)
-	assert_true(deferred.choose.has("all"))
-	assert_true(deferred.choose.all is Dictionary)
 	DeferredEffects.apply(deferred, state, db, RNG.new(705))
 	assert_true(state.pending_operations.any(func(operation): return str(operation.get("kind", "")) == "sleep"))
-	var group: Dictionary = deferred.choose.all
-	DeferredEffects.execute_choice("all", group.get("value", {}), state, db, RNG.new(706))
+	# ChooseOperations executes its nested operation directly: the `all`
+	# subtree starts both pop operations instead of exposing a choice.
+	# [SRC: ChooseOperations.c @ Do (0x4f3750); AllOperations.c @ Do]
 	var group_prompts := state.pending_operations.filter(func(operation): return str(operation.get("kind", "")) == "prompt")
-	assert_eq(group_prompts.size(), 2, "all starts each nested pop operation instead of exposing them as alternatives")
+	assert_eq(group_prompts.size(), 2, "choose executes `all`, which starts each nested pop operation")
 
 
 func test_ordered_effects_keep_prompt_before_start_trigger_event() -> void:

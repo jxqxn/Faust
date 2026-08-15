@@ -166,8 +166,12 @@ static func next_round(trigger_value, base_round: int, ctx: Dictionary) -> int:
 ## Whether the event's `on` value matches the firing context for this timing.
 ## Round-based timings are handled by _round_timing_fires before this runs.
 static func _value_matches(timing: String, trigger_value, ctx: Dictionary) -> bool:
-	# Rite-based timings: value is a rite id.
+	# Rite-based timings: value is a rite id, or 1 = match any rite (rite
+	# config ids are all >= 5000000, so 1 is an unambiguous sentinel).
+	# [SRC: report 6 A2 — TimingRiteBase match-any sentinel, 10 config events]
 	if timing in ["rite_end", "rite_start", "rite_begin", "rite_cancel", "rite_clean", "open_rite", "open_rite_end", "rite_can_start", "rite_can_stop", "rite_can_fill", "rite_settlement"]:
+		if _is_any(trigger_value):
+			return true
 		return _int_or_list_includes(trigger_value, int(ctx.get("rite", 0)))
 	# Card-based timings: value is a card id, or 1 = match-any.
 	if timing in ["card_clean", "card_born", "card_dead", "open_card_info", "open_card_info_end"]:

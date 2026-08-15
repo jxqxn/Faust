@@ -178,3 +178,81 @@ func test_supported_key_coverage_for_batch1_families() -> void:
 	assert_false(ResultExec.is_supported_key("rebirth.s1"), "rebirth stays audited until its semantics are source-confirmed")
 	for key in ["rite_end.5000313", "rite_have.5008227.主角=", "rite_have.5008226.主角=", "round<="]:
 		assert_true(ConditionEval.is_supported_key(key), "condition key supported: %s" % key)
+
+
+func test_clean_rite_removes_other_instances_not_cards() -> void:
+	# CleanRite removes OTHER rite instances (by config id; 1 = all except the
+	# settling rite). It never cleans the settling rite's own slotted cards.
+	# [SRC: CleanRite.c @ Do (0x4f3ae0); report 4 A1]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	var settle = state.create_rite_instance(992001)
+	var other_same = state.create_rite_instance(992001)
+	var other_diff = state.create_rite_instance(992002)
+	_place_in_slot(state, 2000001, 1, local_db, settle.uid)
+	state.active_rite_uid = settle.uid
+
+	var removed := state.remove_rite_instances_by_id(992002, settle.uid)
+	assert_eq(removed, 1, "targeted clean removes the matching other instance")
+	assert_null(state.get_rite_instance(other_diff.uid))
+	assert_not_null(state.get_rite_instance(other_same.uid), "other config ids survive a targeted clean")
+
+	state.active_rite_uid = settle.uid
+	removed = state.remove_rite_instances_by_id(1, settle.uid)
+	assert_eq(removed, 1, "sentinel 1 removes every other instance")
+	assert_not_null(state.get_rite_instance(settle.uid), "the settling rite is always skipped")
+	assert_eq(state.cards_in_slot(1, settle.uid).size(), 1, "the settling rite keeps its slotted cards")
+
+
+func test_choose_executes_one_random_nested_operation() -> void:
+	# [SRC: ChooseOperations.c @ GetOperations (0x4f3830): Shuffle + GetRange]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	var rng := RNG.new(7)
+	var deferred: Dictionary = ResultExec.execute(
+		{"choose": {"coin": 3, "counter+7000001": 2}},
+		state, local_db, {"rng": rng}
+	)
+	var coin_settled: bool = state.coin_count == 3 and state.get_counter(7000001) == 0
+	var counter_settled: bool = state.coin_count == 0 and state.get_counter(7000001) == 2
+	assert_true(coin_settled or counter_settled, "exactly one nested operation executed")
+	assert_false(coin_settled and counter_settled, "choose does not run both branches")
+
+
+func test_success_failed_branches_are_mutually_exclusive() -> void:
+	# [SRC: SuccessOperations.c @ Do (0x3a7930) / FailedOperations.c @ Do
+	#       (0x39d5a0): keyed on last_op_status, whichever reads it resets]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	ResultExec.execute({"success": {"coin": 5}, "failed": {"coin": 9}}, state, local_db)
+	assert_eq(state.coin_count, 5, "default status 0 runs success only")
+	assert_ne(state.coin_count, 9, "failed must not double-apply in the same result")
+
+	var state2 := GameState.new()
+	ResultExec.execute({"failed": {"coin": 9}}, state2, local_db)
+	assert_eq(state2.coin_count, 0, "failed stays inert while no confirm wrote a failure status")
+
+
+func test_rite_condition_is_instance_existence() -> void:
+	# [SRC: HasRite.c @ IsSatisfiedInternal (0x3fdef0): any player.rites
+	#       instance with r.id == Value (report 3 A3)]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	var ctx := {"state": state, "rite_state": {}, "attr_slots": ["s1", "s2"]}
+	assert_false(ConditionEval.eval_key("rite", 992001, ctx), "no instance -> false")
+	var instance = state.create_rite_instance(992001)
+	assert_true(ConditionEval.eval_key("rite", 992001, ctx), "instance exists -> true")
+	state.remove_rite_instance(instance.uid)
+	assert_false(ConditionEval.eval_key("rite", 992001, ctx), "removed instance -> false again")
+	assert_true(ConditionEval.eval_key("!rite", 992001, ctx), "negative form stays existence-based")
+
+
+func test_rite_timing_sentinel_one_matches_any_rite() -> void:
+	# [SRC: report 6 A2 — rite timing value 1 = match any (10 config events)]
+	var local_db := _db_with_batch_rites()
+	local_db.events[992011] = {"id": 992011, "on": {"rite_end": 1}, "condition": {}}
+	var state := GameState.new()
+	state.round_number = 0
+	state.enable_event(992011, local_db)
+	assert_eq(state.trigger_events("rite_end", {"rite": 5000001}), [992011], "sentinel 1 fires for any rite id")
+	assert_eq(state.trigger_events("rite_end", {"rite": 992001}), [992011], "sentinel 1 is not tied to a specific id")

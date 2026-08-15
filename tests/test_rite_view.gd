@@ -200,7 +200,10 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "rite result creates a fresh runtime rite entry")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "p1", "prompt should enter the runtime prompt queue")
 
-func test_rite_resolution_deferred_choose_reaches_prompt_queue():
+func test_rite_resolution_choose_executes_one_random_suboperation():
+	# ChooseOperations randomly executes N (default 1) nested operations —
+	# it is not a player choice (that is `option`).
+	# [SRC: ChooseOperations.c @ GetOperations (0x4f3830): Shuffle + GetRange]
 	var rng := RNG.new(95)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
@@ -220,8 +223,9 @@ func test_rite_resolution_deferred_choose_reaches_prompt_queue():
 
 	view._resolve()
 
-	assert_eq(str(state.event_prompts[0].get("id", "")), "choose", "choose results should become a visible prompt")
-	assert_eq(str(state.event_prompts[0].get("choices", {}).get("pop.test", "")), "hello")
+	assert_eq(state.event_prompts.size(), 1, "choose executes its single nested operation")
+	assert_eq(str(state.event_prompts[0].get("id", "")), "pop.test", "the nested pop operation runs as-is")
+	assert_eq(str(state.event_prompts[0].get("text", "")), "hello")
 
 func test_drop_card_moves_between_hand_slot_and_back():
 	var rng := RNG.new(92)

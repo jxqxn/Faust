@@ -974,6 +974,23 @@ func return_rite_cards(rite_uid: int, _db) -> void:
 ## returned or consumed. PlayerExtensions.RemoveRite removes by runtime uid,
 ## so duplicate config ids remain independent.
 ## [SRC: PlayerExtensions.c @ RemoveRite (RVA 0x38f040)]
+## Remove rite instances by config id (CleanRite). rite_id <= 1 removes every
+## instance except `except_uid` (the settling rite); otherwise only instances
+## of that config id are removed. Cards placed in removed rites go with them.
+## [SRC: CleanRite.c @ Do (RVA 0x4f3ae0): player.rites(+0x90) RemoveAll with
+##       the settling-rite exclusion; single value 1 = all others]
+func remove_rite_instances_by_id(rite_id: int, except_uid: int = 0) -> int:
+	var removed := 0
+	for uid in rite_instances.keys().duplicate():
+		var instance: RiteInstance = rite_instances[uid]
+		if int(instance.uid) == except_uid:
+			continue
+		if rite_id <= 1 or int(instance.id) == rite_id:
+			remove_rite_instance(int(instance.uid))
+			removed += 1
+	return removed
+
+
 func remove_rite_instance(rite_uid: int) -> bool:
 	if rite_uid <= 0 or not rite_instances.has(rite_uid):
 		return false

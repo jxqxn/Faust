@@ -137,12 +137,13 @@ func test_result_slot_tag_op():
 
 func test_result_deferred_events_and_choose():
 	var st := GameState.new()
-	var d := ResultExec.execute({"event_on": 5300601, "choose": {"a": "x"}}, st, db)
+	var d := ResultExec.execute({"event_on": 5300601, "choose": {"pop.z": "x"}}, st, db)
 	assert_true(st.is_event_enabled(5300601), "event_on enables the target event")
 	DeferredEffects.apply(d, st, db, RNG.new(1))
 	assert_true(5300601 in st.event_queue, "start_trigger event queues its settlement")
 	assert_true(d.events.is_empty(), "event_on display is carried by the ordered effect, not the legacy event list")
-	assert_eq(d.choose, {"a": "x"})
+	assert_eq(d.prompts.size(), 1, "choose executes its nested operation directly")
+	assert_eq(str(d.prompts[0].get("id", "")), "pop.z")
 
 func test_result_deferred_prompts_and_rite_generation_keys():
 	var st := GameState.new()
@@ -425,12 +426,13 @@ func test_methinks_consume_last_sudan_triggers_new_round():
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.init_config["think_id"] = 999001
-	# A think rite that consumes the slotted card (clean.rite).
+	# A think rite that consumes the slotted card (clean.s1, matching the real
+	# think rite 5000002 which uses clean.s1, never clean.rite).
 	local_db.rites[999001] = {
 		"id": 999001,
 		"cards_slot": {"s1": {"condition": {}}},
 		"settlement_prior": [],
-		"settlement": [{"condition": {}, "result": {"clean.rite": 1}}],
+		"settlement": [{"condition": {}, "result": {"clean.s1": 1}}],
 		"settlement_extre": [],
 	}
 	var rng := RNG.new(7)

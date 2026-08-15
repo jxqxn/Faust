@@ -121,8 +121,14 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return st_coin != null and int(st_coin.coin_count) >= int(val)
 	if k.begins_with("cost."):
 		return eval_cost(k, val, ctx)
-	# rite (current rite id)
-	if k == "rite" or k == "is_rite":
+	# rite = runtime instance existence (any instance whose config id equals
+	# the value); is_rite = the current rite's id comparison (IsRiteId).
+	# [SRC: HasRite.c @ IsSatisfiedInternal 0x3fdef0 + b__6_0 0x3fe1c0:
+	#       any player.rites instance with r.id == Value; IsRiteId.c 0x403070]
+	if k == "rite":
+		var rite_state = ctx.get("state")
+		return rite_state != null and rite_state.find_rite_instance_by_id(int(val)) != null
+	if k == "is_rite":
 		return int(ctx.get("rite_id", 0)) == int(val)
 	if _can_eval_acting_tag(k, ctx):
 		return eval_acting_tag(k, val, ctx)

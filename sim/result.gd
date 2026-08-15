@@ -96,10 +96,33 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		else:
 			state.add_card_to_hand(int(val), db)
 		return
-	# Choose (pop options).
-	if k == "choose" and val is Dictionary:
-		deferred.choose = _prepare_choose(val)
-		_record_effect(deferred, "choice", {"choices": deferred.choose}, context)
+	# ChooseOperations: shuffle the nested operations and execute N of them
+	# (default 1). This is a random settlement-text/branch pick, not a player
+	# choice (player choices are `option`).
+	# [SRC: ChooseOperations.c @ GetOperations (0x4f3830): copy + Shuffle +
+	#       GetRange(0, N); Do (0x4f3750) executes in order; ctor (0x4f3a20)
+	#       clamps N < 1 to 1]
+	if (k == "choose" or k.begins_with("choose:")) and val is Dictionary and not val.is_empty():
+		var pick_n := 1
+		if k != "choose":
+			var suffix := k.substr("choose:".length())
+			if suffix.is_valid_int():
+				pick_n = maxi(int(suffix), 1)
+		var keys: Array = val.keys().duplicate()
+		var rng = context.get("rng", null)
+		if rng != null and rng.has_method("randi_range"):
+			# Fisher-Yates with the settlement RNG keeps replays deterministic.
+			for i in range(keys.size() - 1, 0, -1):
+				var j: int = rng.randi_range(0, i)
+				var tmp = keys[i]
+				keys[i] = keys[j]
+				keys[j] = tmp
+		else:
+			keys.shuffle()
+		var take := mini(pick_n, keys.size())
+		for i in take:
+			var sub_key: String = str(keys[i])
+			_apply_key(sub_key, val[sub_key], state, db, deferred, context)
 		return
 	if k == "all" and val is Dictionary:
 		# AllOperations starts every nested operation in source order.
@@ -126,10 +149,21 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.sleeps.append(sleep_effect)
 		_record_effect(deferred, "sleep", {"seconds": float(val)}, context)
 		return
-	# Clean slot / clean rite.
+	# CleanRite removes OTHER rite instances from the table by config id;
+	# value 1 removes every rite except the currently settling one. Cards in
+	# removed rites go with them; the settling rite is always skipped.
+	# [SRC: CleanRite.c @ Do (RVA 0x4f3ae0): player.rites RemoveAll with the
+	#       settling-rite exclusion (report 4 A1 — was inverted to card-clean)]
 	if k == "clean.rite":
-		state.clear_rite_cards(int(state.active_rite_uid))
-		deferred.clean_rite = true
+		var clean_target := 1
+		if val is bool:
+			clean_target = 1 if val else 0
+		elif not (val is Dictionary or val is Array):
+			clean_target = int(val)
+		if state.has_method("remove_rite_instances_by_id"):
+			var removed: int = state.remove_rite_instances_by_id(clean_target, int(state.active_rite_uid))
+			if removed > 0:
+				deferred.logs.append("clean.rite removed %d rite instance(s)" % removed)
 		return
 	if k.begins_with("clean."):
 		var slot := _clean_slot_from_key(k)
@@ -275,15 +309,23 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		# Merge the case's effects into the current deferred (in-place).
 		_merge_case(deferred, case_deferred)
 		return
-	# success/failed: terminal branch markers (usually carry event_off).
-	# Execute their subtree like a case; for confirm both branches are treated
-	# the same initially (the tutorial's success/failed converge).
+	# success/failed are mutually exclusive branches keyed on last_op_status:
+	# success runs when status != 1, failed when status == 1; whichever reads
+	# it resets the status. The clone's `confirm` is a no-op, so status stays 0
+	# and success runs until confirm UI writes real results.
+	# [SRC: SuccessOperations.c @ Do (0x3a7930): != 1 then reset;
+	#       FailedOperations.c @ Do (0x39d5a0): == 1 then reset;
+	#       OperationContext.c @ SetLastOpState (0x3a0230)]
 	if (k == "success" or k == "failed") and val is Dictionary:
-		var branch_deferred := execute(val, state, db, context)
-		_merge_case(deferred, branch_deferred)
+		var status := int(deferred.get("last_op_status", 0))
+		deferred["last_op_status"] = 0
+		var should_run := (status != 1) if k == "success" else (status == 1)
+		if should_run:
+			var branch_deferred := execute(val, state, db, context)
+			_merge_case(deferred, branch_deferred)
 		return
 	# Unhandled: log, don't crash.
-	deferred.logs.append("UNHANDLED result key: %s=%v" % [k, val])
+	deferred.logs.append("UNHANDLED result key: %s=%s" % [k, str(val)])
 
 
 static func _event_ids(value: Variant) -> Array[int]:
