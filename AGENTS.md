@@ -71,25 +71,36 @@ Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢
 
 2026-08-14 完全解冻后，逆向语料库（`Faust-local-source/_unpack/`）恢复为**实现依据**：复刻 DSL 键、内容链与运行时行为时，必须遵循 `faust-clone-reference` 的信任层级与双信号规则，以 `.c` 反编译、`dump.cs` 与配置数据为事实来源。它同时保留"设计参考"用途，供原创设计假说引用原作结构。
 
-## 仪式时序模型（认知防坑指南，2026-07-19 建立）
+## 仪式时序模型（2026-08-15 按反编译证据重写；旧版社区资料结论已废止）
 
-这一节是为了防止后续读者（包括 AI 会话）重犯两类已确认的错误：(1) 把所有仪式都当成"立即结算的事件"，(2) 误判"苏丹卡在仪式槽里时 deadline 怎么走"。
+2026-07-19 旧版基于社区攻略（知乎/巴哈姆特/BWIKI）的部分结论已被 2026-08-15
+独立审计的反编译证据推翻。本节为现行依据；完整证据见
+`docs/AUDIT_2026-08-15.md` 及其分报告（报告一 A1/A2/A4、报告八）。
 
-**两条时序轴必须分开：**
+**创建与开始是两个动作（RitePanelController.c OnConfirm 链，行 1203-1239）：**
 
-- **0 天仪式**（`round_number == 0`）：玩家在 UI 点"开始"后**立即结算**，`RiteInstance.life` 永远 ≥ `round_number`。事件驱动。
-- **N 天仪式**（`round_number >= 1`）：玩家 start 后，`RiteInstance.life` 在每次 `RoundLoop.advance_day` 的 `_update_rite_instances` 里递增；只有 `life >= round_number` 时才结算。时间驱动（跨日批量结算）。**这才是"点下一天批量掷骰"节奏的真正发生地。**
+- DSL `rite` 键（`StartRite.c @ Do 0x51bcf0`）只**创建实例**（含吸附，失败中止），不置 start、不校验槽满。
+- 玩家按下"开始"= 校验（CheckConfirm）→ `set_start(1)` → `start_round=player.round` → `start_life=life`；可通过 OnStop（0x5906e0）撤回：`start=false`、life 回滚 start_life、卡留槽。
+- **结算只发生在** `UpdateSingleRite`（0x55ab10）：已 start 且 `life >= round_number` 才 Settlement。`round_number==0` 仪式在 start 后当日结算。
 
-读代码时如果只看 `_resolve_rite_instance` + `RiteResolver.resolve`，会误以为所有仪式都"被调用即结算"。真正的时序控制在 `_update_rite_instances`（`sim/round_loop.gd`）的 `life < round_number` gate 上——0 天仪式因为 life 初始为 0、round_number 也是 0，所以"立即结算"，但这不是事件驱动，是时间驱动在 round_number=0 时的退化情形。
+**round 推进（GameController OnNextRound 链，b__3）：**
 
-**苏丹卡安全期规则（2026-07-19 修复并写入测试）：**
+- round **每天无条件 +1**（`player+0x2c`），与是否持有苏丹卡无关；只有**抽新苏丹卡**受 `HasSudanCard` 门控（`TryGenSudanCard 0x559730`）。
+- 事件 `round_begin_ba` 每天触发；周期事件的"下次触发回合"记在 `player+0x128`（timing_rounds 字典），触发后重臂（`TimingRoundBase.c`）——`round_begin_ba: 5` = 每 5 回合复发，不是"仅第 5 回合"。
 
-苏丹卡倒计时**无条件每天递减**，但**处刑检查会被跳过**——只要这张卡当前 `zone == "slot"` 且 `rite_uid` 指向一个 `start == true` 且 `life < round_number` 的仪式。即：嵌入在进行中的 N 天仪式槽里时，倒计时照减（甚至可降到 0 或更低），但不 game_over。一旦仪式结算（卡被放回 sudan zone 或被消耗），同一次 `advance_day` 的后续 deadline 检查会立即抓到它。
+**卡牌生命庇护（DoCardUpdate 0x54d4c0，行 5139-5231）：**
 
-- 实现在 `RoundLoop._is_sudan_embedded_in_open_rite`（`sim/round_loop.gd`）。
-- 测试在 `tests/test_rite_lifecycle.gd` 的 `test_sudan_card_in_started_rite_does_not_trigger_execution` 和 `test_sudan_card_executes_again_after_shelter_rite_settles`。
-- 规则来源：知乎专栏 p/1909509257005831882、巴哈姆特 snA=111、BWIKI 新手指南（三源交叉确认）。
-- 仍不确定：shelter 结算当天 vs 次日才处刑，资料未明确；当前实现是结算当天（settlement 先于 deadline 检查）。
+- 庇护条件是"身处**任一**仪式槽（`rite.cards`）"，**不看该仪式是否 start、不看到没到 round_number**。
+- 卡寿命（模板 `life` 上限）是**通用系统**，非苏丹卡专属：手中卡每天 life+1，到上限未受庇护即消散；在槽中当天跳过递增检查。
+
+**苏丹卡安全期（克隆现行实现，待按上行修正）：**
+
+克隆 `RoundLoop._is_sudan_embedded_in_open_rite`（`sim/round_loop.gd`）要求
+`start==true 且 life<round_number`，比原作窄——原作只要卡在任一仪式槽即跳过处刑
+检查。修正方向见总修复清单 2.1。测试在 `tests/test_rite_lifecycle.gd`。
+
+**旧版遗留的不确定项**（"shelter 结算当天 vs 次日"）已被反编译证据替代：
+处刑检查在结算管线之后（b__6），结算当天庇护失效即当日可处刑。
 
 ## 技术栈
 
