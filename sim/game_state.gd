@@ -574,6 +574,26 @@ func _redraws_per_round(db) -> int:
 	))
 
 
+## Mid-run difficulty switch (event `difficulty` action). The original opens
+## the difficulty panel and applies the pick; the value here is the target
+## index. Per-round redraws refresh; the back-to-prev budget adjusts by the
+## new difficulty's allowance like the global-side rebalance.
+## [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then-apply;
+##       PlayerExtensions.c @ SetDifficulty (0x38f530); report 7 B3]
+func apply_difficulty(index: int, db) -> void:
+	if db == null or db.get_difficulty(index).is_empty():
+		return
+	var old_back := int(difficulty_config.get("back_to_prev_round_count", 0)) if not difficulty_config.is_empty() else 0
+	difficulty_index = index
+	difficulty_config = db.get_difficulty(index)
+	redraws_left = _redraws_per_round(db)
+	var new_back := int(difficulty_config.get("back_to_prev_round_count", 0))
+	if old_back >= 9999 and new_back < 9999:
+		back_to_prev_left = new_back
+	elif new_back >= 9999:
+		back_to_prev_left = 9999
+
+
 # ---- Counter access ----
 func register_nonneg(id: int) -> void:
 	_nonneg_ids[id] = true

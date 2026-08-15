@@ -7,10 +7,11 @@
 ## 1. 规则引擎（DSL）
 
 - ✅ result 2117/2119 键、condition 3988/3988 全支持、action 2191/2285（`tmp/dsl_audit`）
-- ⬜ `rebirth.s1/s2`（8 处）——语义需双信号确认（Rebirth.c）
+- ✅ `rebirth.s1/s2`（8 处）——槽卡倒计时重置（RebirthSudanCard 0x519d60 + b__4_0 set_life(0)）
 - ⬜ action 94 键：新手引导 UI 演示族（hand_pop 60、rite_pop 8、focus 7、slide、begin_guide、
   close_* 族、hand_pop_gamepad/normal）、`difficulty`、`magic_sudan`、`change_desk_bg`、
   `change_location_icon`、`table.change_card_name.<rite>_<seq>.<id>`（报告五 A5）
+- ✅ `difficulty`（中途难度切换：apply_difficulty）与 `magic_sudan`（引导演示指令，无向导宿主记 no-op）
 
 ## 2. 表现层
 
@@ -25,10 +26,10 @@
 
 ## 3. 系统
 
-- ⬜ **新手引导**（begin_guide/wizard/close_begin_guide/close_wizard/show_wizard_option——
+- ⬜ **新手引导**（begin_guide/wizard/close_begin_guide/close_wizard/show_wizard_option/magic_sudan——
   同时是 action 引导族的宿主；原作 WizardController/BeginGuideController）
 - ⬜ 难度"魔法苏丹"（difficulty、magic_sudan 键；原作高难度变体）
-- ⬜ 结局展示：over reason 枚举 → game_over 界面文案/立绘（原作 over id 语义表）
+- ⬜ 结局展示：over reason 枚举 → game_over 界面文案/立绘 + after_story 后日谈播放（StreamingAssets/config/after_story/）
 - ⬜ 笔记系统（原作 add_note.ogg 暗示；NoteController 类未审）
 - ⬜ 图鉴/画廊（Gallery* 类族未审）
 - ⬜ 成就面板（steam_achievement 保持空实现，面板可选）

@@ -604,3 +604,18 @@ func test_rebirth_resets_slot_card_countdown() -> void:
 	assert_eq(inst.life, 0, "the slotted card's life restarts from zero")
 	assert_eq(sudan.days_left, int(state.difficulty_config.get("sudan_life_time", 7)),
 		"the active Sultan deadline restores to the difficulty lifetime")
+
+
+func test_difficulty_action_switches_mid_run() -> void:
+	# [SRC: SetDifficulty.c @ Do (0x51b5b0); GameState.apply_difficulty]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(91))
+	state.redraws_left = 0
+	state.back_to_prev_left = 9999 # easy allowance
+	ResultExec.execute({"difficulty": 1}, state, local_db)
+	assert_eq(state.difficulty_index, 1, "the event action switches the difficulty")
+	assert_eq(state.redraws_left, int(state.difficulty_config.get("sudan_redraw_times_per_round", 0)),
+		"per-round redraws refresh from the new difficulty")
+	assert_eq(state.back_to_prev_left, int(state.difficulty_config.get("back_to_prev_round_count", 0)),
+		"leaving the free-rollback difficulty drops the budget to its allowance")

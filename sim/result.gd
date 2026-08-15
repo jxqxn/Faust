@@ -43,6 +43,8 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k.begins_with("rebirth.s") and k.substr("rebirth.s".length()).is_valid_int():
 		return true
+	if k == "difficulty" or k == "magic_sudan" or k.begins_with("magic_sudan."):
+		return true
 	if k.begins_with("loot."):
 		return true
 	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
@@ -298,6 +300,20 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "rite":
 		deferred.rite = int(val)
 		_record_effect(deferred, "rite", {"id": int(val)}, context)
+		return
+	# Mid-run difficulty switch: the original opens the difficulty panel and
+	# applies the chosen index; the config value is that target index.
+	# [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then;
+	#       GameState.apply_difficulty mirrors the apply callback]
+	if k == "difficulty":
+		if state != null and state.has_method("apply_difficulty"):
+			state.apply_difficulty(int(val), db)
+			deferred.logs.append("difficulty -> %d" % int(val))
+		return
+	# magic_sudan is a wizard-demo cue (ShowDrawSudan): it drives the tutorial
+	# presentation, not the rules layer. No wizard host yet -> audited no-op.
+	# [SRC: MagicSudan.c @ Do (0x515160) -> WizardController.ShowDrawSudan]
+	if k == "magic_sudan" or k.begins_with("magic_sudan."):
 		return
 	# End / back.
 	if k == "over":
