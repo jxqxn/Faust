@@ -499,6 +499,7 @@ func _do_resolve() -> void:
 		"rite_state": _rite_state_from_placements(), "rite_uid": _rite_uid,
 		"attr_slots": _slot_keys(), "rite_id": _rite_id,
 		"dice_cache": _resolve_dice_cache,
+		"slot_entries": _slot_entries_from_placements(),
 	}
 	if _state != null and _state.has_method("with_player_actor_context"):
 		ctx = _state.with_player_actor_context(ctx, _db)
@@ -793,8 +794,27 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 		"acting_card": card,
 		"acting_card_id": int(card.get("id", 0)),
 		"acting_card_only": true,
+		"slot_entries": _slot_entries_from_placements(),
 	}
 	return ConditionEval.evaluate(cond, ctx)
+
+
+func _slot_entries_from_placements() -> Array:
+	var out: Array = []
+	if _state == null:
+		return out
+	var slots: Dictionary = _rite.get("cards_slot", {})
+	for slot_key in _placed:
+		var uid := int(_placed[slot_key])
+		var card: Dictionary = _state.card_data_for(uid, _db)
+		out.append({
+			"slot": slot_key,
+			"card_id": int(card.get("id", 0)),
+			"card_uid": uid,
+			"tags": card.get("tag", {}),
+			"is_enemy": int(slots.get(slot_key, {}).get("is_enemy", 0)) == 1,
+		})
+	return out
 
 
 func _apply_deferred_to_world(deferred: Dictionary) -> void:

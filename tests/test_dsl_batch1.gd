@@ -304,3 +304,52 @@ func test_sudan_pool_have_counts_pool_entries() -> void:
 	assert_true(ConditionEval.eval_key("sudan_pool_have.2010001", 2, ctx), "pool counts matched entries")
 	assert_false(ConditionEval.eval_key("sudan_pool_have.2010001", 3, ctx))
 	assert_true(ConditionEval.eval_key("sudan_pool_have.2010002", 1, ctx))
+
+
+func test_attr_expr_arithmetic_and_references() -> void:
+	# [SRC: FuncCompare.c @ SplitToken (0x3fc810): ( ) + - * / precedence;
+	#       GetOpValue (0x3fbcb0): sN.tag slot refs + counter.<id>;
+	#       Execute (0x3f9b20): e() iterates enemy-side cards]
+	var st := GameState.new()
+	st.set_counter(7000001, 6)
+	var ctx := {
+		"state": st, "rite_state": {}, "attr_slots": [],
+		"counter": 1,
+		"slot_entries": [
+			{"slot": "s1", "card_id": 2000005, "card_uid": 1,
+				"tags": {"战斗": 3, "体魄": 2}, "is_enemy": false},
+			{"slot": "s5", "card_id": 2001187, "card_uid": 2,
+				"tags": {"战斗": 1, "体魄": 4}, "is_enemy": true},
+		],
+	}
+	# Parentheses and precedence: (3+2)*2 = 10 via s1 refs.
+	assert_eq(ConditionEval.eval_attr_expr("(s1.战斗+s1.体魄)*2", ctx), 10)
+	assert_eq(ConditionEval.eval_attr_expr("s1.战斗-s5.战斗", ctx), 2, "slot refs read their own slot card")
+	# counter.<id> resolves through the state.
+	assert_eq(ConditionEval.eval_attr_expr("counter.7000001*2", ctx), 12)
+	# Bare tags sum the friend side; e() sums the enemy side.
+	assert_eq(ConditionEval.eval_attr_expr("战斗", ctx), 3)
+	assert_eq(ConditionEval.eval_attr_expr("e(战斗)", ctx), 1)
+	assert_eq(ConditionEval.eval_attr_expr("e(战斗+体魄)", ctx), 5, "e() evaluates its inner expression per enemy card")
+	# The classic combat check: friend side minus enemy side.
+	assert_eq(ConditionEval.eval_attr_expr("战斗+体魄-e(战斗+体魄)", ctx), 0)
+
+
+func test_slot_entries_split_by_is_enemy_flag() -> void:
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {
+		"s1": {"condition": {}}, "s2": {"condition": {}, "is_enemy": 1},
+	}
+	var state := GameState.new()
+	state.add_card_to_hand(2000005, local_db)
+	state.remove_card_from_hand(2000005)
+	state.add_card_to_slot(2000005, 1, local_db, 1)
+	var entries: Array = state.slot_entries_for_rite(local_db.rites[992001], 1)
+	assert_eq(entries.size(), 1)
+	assert_false(entries[0].get("is_enemy", true), "s1 stays on the friend side")
+	state.add_card_to_hand(2000001, local_db)
+	state.remove_card_from_hand(2000001)
+	state.add_card_to_slot(2000001, 2, local_db, 1)
+	entries = state.slot_entries_for_rite(local_db.rites[992001], 1)
+	assert_eq(entries.size(), 2)
+	assert_true(entries[1].get("is_enemy", false), "the s2 is_enemy flag marks the enemy side")

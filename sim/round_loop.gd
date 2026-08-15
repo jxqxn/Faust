@@ -270,6 +270,7 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 	var ctx := {
 		"db": db, "state": state, "rng": rng, "rite_state": rite_state,
 		"attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
+		"slot_entries": state.slot_entries_for_rite(rite, instance.uid),
 	}
 	if state.has_method("with_player_actor_context"):
 		ctx = state.with_player_actor_context(ctx, db)

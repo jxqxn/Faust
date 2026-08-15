@@ -291,62 +291,229 @@ static func eval_funccompare(k: String, val: Variant, ctx: Dictionary) -> bool:
 		return apply_compare(attr_val, int(val), op)
 
 
-## Evaluate an attribute expression like "智慧+社交" or "体魄" against the
-## slotted cards in ctx. Sum the named attributes across the acting slot cards.
-## (Full infix parser is a future refinement; rite configs use name+name sums.)
+## Evaluate an attribute expression against ctx. Grammar (recursive descent):
+##   expr   := term (('+'|'-') term)*
+##   term   := factor (('*'|'/') factor)*
+##   factor := number | '(' expr ')' | '-' factor | func '(' expr ')' | ref
+##   ref    := 'counter.<id>' | '<slot>.<tag>' (e.g. s5.战斗, s1.rare) | tag
+## A bare tag reads ctx.main (the acting card); when main is absent it sums
+## across the friend-side cards. `e(expr)` sums expr over every enemy-side
+## card (slot is_enemy), other function names sum over friend-side cards.
+## Legacy ctx without slot_entries falls back to the old attr_slots sum.
+## [SRC: FuncCompare.c @ SplitToken (0x3fc810) shunting-yard with ( ) + - * /;
+##       GetOpValue (0x3fbcb0): s-prefix slot refs + counter.<id>;
+##       Execute (0x3f9b20) line 624: 'e'-prefixed names iterate ctx.enemys,
+##       otherwise ctx.friends, skipping ctx.main; bare tags read ctx.main
+##       (friends sum only when main is null) — lines 1103-1136]
 static func eval_attr_expr(expr: String, ctx: Dictionary) -> int:
-	var st = ctx.get("state")
-	var rite_uid := int(ctx.get("rite_uid", 0))
-	# Collect attribute names split on +/-/*.
-	var tokens: Array = []
-	var signs: Array = []
-	var cur := ""
-	var current_sign := 1
-	for ch in expr:
-		if ch == "+":
-			tokens.append(cur)
-			signs.append(current_sign)
-			cur = ""
-			current_sign = 1
-		elif ch == "-":
-			tokens.append(cur)
-			signs.append(current_sign)
-			cur = ""
-			current_sign = -1
-		elif ch == "*":
-			# Multiplication not common in rite configs; treat separator.
-			tokens.append(cur)
-			signs.append(current_sign)
-			cur = ""
-			current_sign = 1
-		else:
-			cur += ch
-	tokens.append(cur)
-	signs.append(current_sign)
-	if bool(ctx.get("acting_card_only", false)):
-		var acting_card: Dictionary = ctx.get("acting_card", {})
-		var acting_tags: Dictionary = acting_card.get("tag", {})
-		var acting_total := 0
-		for i in tokens.size():
-			var attr_name2: String = tokens[i].strip_edges()
-			if attr_name2.is_empty():
-				continue
-			acting_total += signs[i] * int(acting_tags.get(attr_name2, 0))
-		return acting_total
-	# Sum across acting slots (s1, s2 by default; ctx may specify slot list).
-	var slots: Array = ctx.get("attr_slots", ["s1", "s2"])
-	var total := 0
-	for i in tokens.size():
-		var attr_name: String = tokens[i].strip_edges()
-		if attr_name.is_empty():
-			continue
-		var s := 0
-		for slot_key in slots:
-			for tc in st.cards_in_slot(_slot_num(slot_key), rite_uid):
-				var effective: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), ctx.get("db"))
-				s += int(effective.get("tag", {}).get(attr_name, 0))
-		total += signs[i] * s
-	return total
+	var parser := AttrExprParser.new(expr, ctx)
+	return int(parser.parse())
+
+
+class AttrExprParser:
+	var _s: String
+	var _i := 0
+	var _ctx: Dictionary
+
+	func _init(source: String, ctx: Dictionary) -> void:
+		_s = source
+		_ctx = ctx
+
+	func parse() -> float:
+		var value := _expr()
+		return value
+
+	func _expr() -> float:
+		var value := _term()
+		while true:
+			_skip_ws()
+			var c := _peek()
+			if c == "+":
+				_i += 1
+				value += _term()
+			elif c == "-":
+				_i += 1
+				value -= _term()
+			else:
+				break
+		return value
+
+	func _term() -> float:
+		var value := _factor()
+		while true:
+			_skip_ws()
+			var c := _peek()
+			if c == "*":
+				_i += 1
+				value *= _factor()
+			elif c == "/":
+				_i += 1
+				var divisor := _factor()
+				value = value / divisor if absf(divisor) > 0.0001 else 0.0
+			else:
+				break
+		return value
+
+	func _factor() -> float:
+		_skip_ws()
+		var c := _peek()
+		if c == "(":
+			_i += 1
+			var value := _expr()
+			_skip_ws()
+			if _peek() == ")":
+				_i += 1
+			return value
+		if c == "-":
+			_i += 1
+			return -_factor()
+		if c == "+" :
+			_i += 1
+			return _factor()
+		if _at_digit():
+			return _number()
+		var ident := _ident()
+		if ident.is_empty():
+			if _i < _s.length():
+				_i += 1
+			return 0.0
+		_skip_ws()
+		if _peek() == "(" and _is_func_name(ident):
+			_i += 1
+			var inner := _balanced_body()
+			return _func_sum(ident, inner)
+		return _resolve_ref(ident)
+
+	func _at_digit() -> bool:
+		return _i < _s.length() and (_s[_i].is_valid_float() or (_s[_i] == "." and _i + 1 < _s.length() and _s[_i + 1].is_valid_float()))
+
+	func _number() -> float:
+		var start := _i
+		while _i < _s.length() and (_s[_i].is_valid_float() or _s[_i] == "."):
+			_i += 1
+		return _s.substr(start, _i - start).to_float()
+
+	func _ident() -> String:
+		var start := _i
+		while _i < _s.length():
+			var ch := _s[_i]
+			if ch == "+" or ch == "-" or ch == "*" or ch == "/" or ch == "(" or ch == ")" or ch == " " or ch == "\t":
+				break
+			_i += 1
+		return _s.substr(start, _i - start)
+
+	func _balanced_body() -> String:
+		# Caller consumed the '('; capture through its matching ')'.
+		var depth := 1
+		var start := _i
+		while _i < _s.length() and depth > 0:
+			var ch := _s[_i]
+			if ch == "(":
+				depth += 1
+			elif ch == ")":
+				depth -= 1
+				if depth == 0:
+					var body := _s.substr(start, _i - start)
+					_i += 1
+					return body
+			_i += 1
+		return _s.substr(start, _i - start)
+
+	func _peek() -> String:
+		return _s[_i] if _i < _s.length() else ""
+
+	func _skip_ws() -> void:
+		while _i < _s.length() and (_s[_i] == " " or _s[_i] == "\t"):
+			_i += 1
+
+	static func _is_func_name(ident: String) -> bool:
+		# The original recognizes 7 function names; content only uses e().
+		return ident == "e" or ident == "friend" or ident == "f" \
+			or ident == "enemy" or ident == "enemys" or ident == "friends" or ident == "main"
+
+	func _func_sum(name: String, inner_expr: String) -> float:
+		var is_enemy := name.begins_with("e")
+		var total := 0.0
+		for entry in _card_set(is_enemy):
+			var sub := AttrExprParser.new(inner_expr, _scoped_ctx(entry))
+			total += sub.parse()
+		return total
+
+	func _scoped_ctx(entry: Dictionary) -> Dictionary:
+		var scoped := _ctx.duplicate()
+		scoped["main_card"] = entry
+		return scoped
+
+	func _card_set(is_enemy: bool) -> Array:
+		var entries: Array = _ctx.get("slot_entries", [])
+		if not entries.is_empty():
+			var out: Array = []
+			for entry in entries:
+				if bool(entry.get("is_enemy", false)) == is_enemy:
+					out.append(entry)
+			return out
+		# Legacy ctx: the friend side is the acting card when present.
+		if not is_enemy:
+			var acting: Dictionary = _ctx.get("acting_card", {})
+			if not acting.is_empty():
+				return [{"tags": acting.get("tag", {}), "card_id": int(acting.get("id", 0))}]
+		return []
+
+	func _resolve_ref(ident: String) -> float:
+		# counter.<id>
+		if ident.begins_with("counter.") and ident.substr(8).is_valid_int():
+			var st = _ctx.get("state")
+			if st != null:
+				return float(st.get_counter(ident.substr(8).to_int()))
+			return 0.0
+		# <slot>.<tag> — slot refs read that slot's card tag (or rare).
+		var dot := ident.find(".")
+		if dot > 0 and ident.substr(0, dot).begins_with("s") and ident.substr(1, dot - 1).is_valid_int():
+			var slot_key := ident.substr(0, dot)
+			var field := ident.substr(dot + 1)
+			for entry in _ctx.get("slot_entries", []):
+				if str(entry.get("slot", "")) == slot_key:
+					if field == "rare":
+						var rare_card: Dictionary = _card_data(int(entry.get("card_id", 0)))
+						return float(rare_card.get("rare", 0))
+					return float(entry.get("tags", {}).get(field, 0))
+			return 0.0
+		# Bare tag: ctx.main first, friend-side sum when main is absent.
+		if _ctx.has("main_card") and not (_ctx.get("main_card") is Dictionary and _ctx["main_card"].is_empty()):
+			var main_entry: Dictionary = _ctx.get("main_card", {})
+			return float(main_entry.get("tags", {}).get(ident, 0))
+		var entries := _card_set(false)
+		if not entries.is_empty():
+			var total := 0.0
+			for entry in entries:
+				total += float(entry.get("tags", {}).get(ident, 0))
+			return total
+		return _legacy_slot_sum(ident)
+
+	# Pre-slot_entries contexts: sum the tag across the acting attr_slots
+	# (test/legacy callers); acting_card_only narrows to the acting card.
+	func _legacy_slot_sum(ident: String) -> float:
+		var st = _ctx.get("state")
+		if st == null:
+			return 0.0
+		if bool(_ctx.get("acting_card_only", false)):
+			var acting: Dictionary = _ctx.get("acting_card", {})
+			return float(acting.get("tag", {}).get(ident, 0))
+		var total := 0.0
+		var rite_uid := int(_ctx.get("rite_uid", 0))
+		for slot_key in _ctx.get("attr_slots", ["s1", "s2"]):
+			var key := str(slot_key)
+			var num := key.substr(1).to_int() if key.begins_with("s") else 0
+			for tc in st.cards_in_slot(num, rite_uid):
+				var card: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), _ctx.get("db"))
+				total += float(card.get("tag", {}).get(ident, 0))
+		return total
+
+	func _card_data(card_id: int) -> Dictionary:
+		var db = _ctx.get("db")
+		if db != null:
+			return db.get_card(card_id)
+		return {}
 
 
 static func _slot_num(slot_key: String) -> int:

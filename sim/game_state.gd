@@ -992,6 +992,28 @@ func remove_rite_instances_by_id(rite_id: int, except_uid: int = 0) -> int:
 	return removed
 
 
+## Slot entries for condition contexts: every slotted card annotated with its
+## slot key and is_enemy side. FuncCompare expressions split friend/enemy card
+## sets from this (e() iterates the enemy side, bare tags the friend side).
+## [SRC: RiteNode cards_slot is_enemy flags; FuncCompare.c @ Execute 0x3f9b20
+##       iterates ctx.friends / ctx.enemys]
+func slot_entries_for_rite(rite: Dictionary, rite_uid: int) -> Array:
+	var out: Array = []
+	var slots: Dictionary = rite.get("cards_slot", {})
+	for slot_key in slots:
+		var key := str(slot_key)
+		var num := key.substr(1).to_int() if key.begins_with("s") else 0
+		for tc in cards_in_slot(num, rite_uid):
+			out.append({
+				"slot": key,
+				"card_id": int(tc.get("id", 0)),
+				"card_uid": int(tc.get("card_uid", 0)),
+				"tags": tc.get("tags", {}),
+				"is_enemy": int(slots[key].get("is_enemy", 0)) == 1,
+			})
+	return out
+
+
 func remove_rite_instance(rite_uid: int) -> bool:
 	if rite_uid <= 0 or not rite_instances.has(rite_uid):
 		return false

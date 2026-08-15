@@ -35,6 +35,10 @@ static func process_card(card_or_uid: int, source: String, state, db, rng) -> Di
 		"rite_id": think_id,
 		"focus_card_uid": card_uid,
 		"focus_card_id": card_id,
+		"slot_entries": [{
+			"slot": "s1", "card_id": card_id, "card_uid": card_uid,
+			"tags": card.get("tag", {}), "is_enemy": false,
+		}],
 	}
 	if state.has_method("with_player_actor_context"):
 		ctx = state.with_player_actor_context(ctx, db)
