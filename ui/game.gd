@@ -536,7 +536,9 @@ func _show_game_over() -> void:
 	# [SRC: GameController.c:2868 -> OnGameEnd; CardNode.vanish.over]
 	if state != null and state.event_runtime != null:
 		state.trigger_events("game_end", {"ending": 0})
-	SaveSystem.delete_save()
+	# The original keeps the continue save at its last SaveRoundEnd point so
+	# the player can retry the fatal round; DoGameOver only reads the reason.
+	# [SRC: GameController.c @ DoGameOver (0x54dbd0); report 7 A6]
 	_clear_current()
 	var go := preload("res://ui/game_over.gd").new()
 	go.setup(state, db)

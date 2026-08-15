@@ -53,6 +53,8 @@ var _resolve_dice_cache: Dictionary = {}
 var _last_result = null  # last RiteResult
 var _pending_table_entries: Array = []
 var _resolution_pending := false
+var _rerolls_left := 0
+var _reroll_btn: Button
 var _resolution_committed := false
 
 var _shade: ColorRect
@@ -255,6 +257,22 @@ func _build_panel_content() -> void:
 	_gold_dice_btn.pressed.connect(_use_gold_dice_reactive)
 	action_row.add_child(_gold_dice_btn)
 	UiMotionScript.bind(_gold_dice_btn)
+
+	# Reroll: rejects the settlement with RetryException semantics — every
+	# die of the check re-rolls (unlike gold dice which add successes). The
+	# quota is the 重投 tag sum across the slotted cards.
+	# [SRC: RiteResultDiceCountPromptController.c @ OnRedraw (0x59dc40):
+	#       +0xd8 count -1, confirm gate; OnRedrawConfirm (0x59db60):
+	#       Promise.Reject(RetryException); RiteExtensions.c @ GetRerollCount
+	#       (0x392990) reads rite.cards]
+	_reroll_btn = Button.new()
+	_reroll_btn.text = "重掷"
+	_reroll_btn.tooltip_text = "重新掷出本场全部检定骰"
+	_reroll_btn.disabled = true
+	_reroll_btn.custom_minimum_size = Vector2(64, 34)
+	_reroll_btn.pressed.connect(_use_reroll)
+	action_row.add_child(_reroll_btn)
+	UiMotionScript.bind(_reroll_btn)
 
 	_result_label = RichTextLabel.new()
 	_result_label.name = "RiteResult"
@@ -469,6 +487,28 @@ func _resolve() -> void:
 			#       GameController.c @ UpdateSingleRite (0x55ab10)]
 			if not _state.start_rite_instance(_rite_uid):
 				return
+			if int(_rite.get("auto_result", 0)) == 1:
+				# auto_result rites settle without player interaction.
+				# [SRC: GameController.c @ Settlement (0x556ae0) lines 4520-4526
+				#       IsRiteAutoResult -> RiteResultPanelController stays
+				#       inactive (lines 640-644); multi-day ones resolve at the
+				#       day boundary, zero-day ones resolve right here.]
+				if int(_rite.get("round_number", 0)) > 0:
+					_log_label.text = "仪式已开始，将自动结算。"
+					_update_resolve_button()
+					_update_stop_button()
+					closed.emit()
+					return
+				_gold_used_this_resolve = 0
+				_gold_dice_map.clear()
+				_resolve_dice_cache.clear()
+				_prepare_table_from_placements()
+				_resolve_baseline = SaveSystem.serialize(_state)
+				_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
+				_do_resolve()
+				_commit_resolution()
+				closed.emit()
+				return
 			if int(_rite.get("round_number", 0)) > 0:
 				_log_label.text = "仪式开始，将在 %d 天后结算。" % int(_rite.get("round_number", 0))
 				_update_resolve_button()
@@ -482,6 +522,7 @@ func _resolve() -> void:
 	_gold_used_this_resolve = 0
 	_gold_dice_map.clear()
 	_resolve_dice_cache.clear()
+	_rerolls_left = _reroll_count()
 	_prepare_table_from_placements()
 	_resolve_baseline = SaveSystem.serialize(_state)
 	_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
@@ -516,6 +557,7 @@ func _do_resolve() -> void:
 	_update_gold_button()
 	_refresh_gold_label()
 	_update_resolve_button()
+	_update_reroll_button()
 
 
 ## Commit the already-previewed settlement after any gold-dice retries are
@@ -606,6 +648,34 @@ func _use_gold_dice_reactive() -> void:
 	var type_key := _gold_type_for_reactive_spend()
 	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + 1
 	_do_resolve()
+
+
+## Reroll spends one 重投 charge and re-rolls every die of the settlement
+## (dice cache cleared; the baseline rollback in _do_resolve unwinds the
+## previous result first). [SRC: OnRedrawConfirm (0x59db60) rejects the
+## settlement promise with RetryException; dice re-roll, gold dice do not]
+func _use_reroll() -> void:
+	if not _resolution_pending or _rerolls_left <= 0:
+		return
+	_rerolls_left -= 1
+	_resolve_dice_cache.clear()
+	_do_resolve()
+	_update_reroll_button()
+
+
+## The reroll quota is the 重投 tag sum across the slotted cards.
+## [SRC: RiteExtensions.c @ GetRerollCount (0x392990) reads rite.cards]
+func _reroll_count() -> int:
+	var total := 0
+	for entry in _slot_entries_from_placements():
+		total += int(entry.get("tags", {}).get("重投", 0))
+	return total
+
+
+func _update_reroll_button() -> void:
+	if _reroll_btn == null:
+		return
+	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0)
 
 
 ## OnStop: a started multi-day rite can be halted. Cards stay in their slots,

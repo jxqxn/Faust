@@ -123,14 +123,20 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 
 ## Original redraw: draw sudan_redraw_count new cards from the finite pool
 ## (each inheriting the discarded card's remaining life), then insert the
-## discarded card back at Random.Range(0,count). Gate: pool must have at least
-## sudan_redraw_count cards. Returns the first new card id (or -1 on failure).
+## discarded card (with its runtime tags) back at Random.Range(0,count).
+## Quota: the per-round allowance first, then the extra-redraw counter
+## 7100008. A mid-loop generation failure aborts WITHOUT reinserting the
+## discarded card or consuming a redraw.
 ## [SRC: GameController.c @ RedrawSudanCard (0x5558b0): loops sudan_redraw_count
-##  times (player+0x68), each inheriting discarded life; pre-loop pool gate]
+##       times, GenSudanCard failure -> error goto (no reinsert, no consume,
+##       L3823-3834); PlayerExtensions.c @ GetSudanRedrawCount (0x38dda0)
+##       per-round + counter 7100008; UseSudanExtraRedraw (0x38fb60)]
 static func use_redraw(state, rng, db = null) -> int:
-	if state.redraws_left <= 0:
-		return -1
 	if state.active_sudan_cards.is_empty():
+		return -1
+	var uses_per_round: bool = state.redraws_left > 0
+	var extra_left: int = state.get_counter(7100008) if state.has_method("get_counter") else 0
+	if not uses_per_round and extra_left <= 0:
 		return -1
 	var draw_count := maxi(state.sudan_redraw_count, 1)
 	# Pre-loop gate: pool must hold at least draw_count cards.
@@ -144,12 +150,17 @@ static func use_redraw(state, rng, db = null) -> int:
 	var first_new := -1
 	var rail_index: int = state.rail_order.find(discarded_uid) if state.has_method("replace_card_in_rail") else -1
 	var old_instance = state.get_card_instance(discarded_uid) if state.has_method("get_card_instance") else null
+	var old_tags: Dictionary = old_instance.tags.duplicate(true) if old_instance != null else {}
 	if old_instance != null:
 		old_instance.zone = "removed"
 		old_instance.is_lost = true
+	var generation_failed := false
 	for i in draw_count:
 		var new_id: int = SudanCards.draw(state.sudan_deck)
 		if new_id < 0:
+			# Error path: partially drawn cards stay out, the discarded card is
+			# NOT reinserted and no redraw is consumed.
+			generation_failed = true
 			break
 		if i == 0:
 			first_new = new_id
@@ -164,13 +175,22 @@ static func use_redraw(state, rng, db = null) -> int:
 					state.insert_card_to_rail(new_uid, state.rail_order.size())
 			else:
 				state.insert_card_to_rail(new_uid, state.rail_order.size())
-	# Insert the discarded card back into the pool.
+	if generation_failed:
+		return first_new
+	# Insert the discarded card back into the pool, carrying its runtime tag
+	# overrides so the next draw of this id keeps them (the original reinserts
+	# the Card object itself).
+	# [SRC: RedrawSudanCard L3840-3842: List.Insert(Random.Range(0,count), card)]
+	if not old_tags.is_empty():
+		state.sudan_pool_tags[discarded] = old_tags
 	if not state.sudan_deck.is_empty():
 		SudanCards.redraw(rng, state.sudan_deck, discarded)
 	else:
 		state.sudan_deck.append(discarded)
-	if first_new >= 0:
+	if uses_per_round:
 		state.redraws_left -= 1
+	else:
+		state.set_counter(7100008, extra_left - 1)
 	return first_new
 
 

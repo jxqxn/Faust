@@ -212,7 +212,10 @@ static func _split_num_op(k: String, prefix: String) -> Dictionary:
 	var num_str := rest.substr(0, i)
 	var op_str := rest.substr(i)
 	if op_str.is_empty():
-		op_str = "="
+		# No-op-suffix counter keys default to >= in the original.
+		# [SRC: HasCounter.c @ ctor (0x3fd8b0) -> Compare.Update(inv, cmp=null)
+		#       -> Compare.c @ Update (0x384eb0) default 0xA = GreaterEqual]
+		op_str = ">="
 	return {"num": num_str.to_int(), "op": op_str}
 
 

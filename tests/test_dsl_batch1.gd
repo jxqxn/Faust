@@ -435,3 +435,49 @@ func test_counter_and_card_born_and_game_end_timings_fire() -> void:
 	assert_eq(state.trigger_events("game_end", {"ending": 12}), [992024, 992025])
 	assert_eq(state.trigger_events("game_end", {"ending": 4}), [992025])
 	assert_eq(state.trigger_events("game_end", {}), [], "no ending id means no game_end event")
+
+
+func test_counter_without_op_suffix_defaults_to_gte() -> void:
+	# [SRC: HasCounter.c @ ctor (0x3fd8b0) -> Compare.Update default >=]
+	var state := GameState.new()
+	state.set_counter(7000001, 2)
+	var ctx := {"state": state, "rite_state": {}, "attr_slots": []}
+	assert_false(ConditionEval.eval_key("counter.7000001", 3, ctx), "2 >= 3 is false")
+	assert_true(ConditionEval.eval_key("counter.7000001", 2, ctx), "2 >= 2 is true")
+	assert_true(ConditionEval.eval_key("counter.7000001", 1, ctx), "2 >= 1 is true")
+
+
+func test_redraw_writes_discarded_runtime_tags_back_to_pool() -> void:
+	# The original reinserts the discarded Card object itself, so its runtime
+	# tag overrides ride back into the pool for the next draw.
+	# [SRC: RedrawSudanCard L3840-3842 List.Insert(card); report 7 A3]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.sudan_redraw_count = 1
+	state.redraws_left = 1
+	state.sudan_deck = [2010002, 2010003]
+	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(45))
+	var active_uid: int = int(state.active_sudan_cards[0].card_uid)
+	state.get_card_instance(active_uid).tags["重抽回写"] = 5
+	var discarded_id := int(state.active_sudan_cards[0].card_id)
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), local_db), 2010002)
+	assert_eq(int(state.sudan_pool_tags.get(discarded_id, {}).get("重抽回写", 0)), 5,
+		"the discarded card's runtime tags ride back into the pool")
+
+
+func test_redraw_spends_extra_counter_when_per_round_is_exhausted() -> void:
+	# Quota order: per-round allowance first, then counter 7100008.
+	# [SRC: PlayerExtensions.c @ GetSudanRedrawCount (0x38dda0) per-round +
+	#       counter 7100008; UseSudanExtraRedraw (0x38fb60); report 7 A4]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.sudan_redraw_count = 1
+	state.redraws_left = 0
+	state.set_counter(7100008, 1)
+	state.sudan_deck = [2010002, 2010003]
+	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(47))
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(48), local_db), 2010002,
+		"the extra redraw counter funds a redraw")
+	assert_eq(state.get_counter(7100008), 0, "the extra redraw counter is spent")
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(49), local_db), -1,
+		"no allowance and no extra counter leaves the redraw rejected")
