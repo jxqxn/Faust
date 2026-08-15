@@ -146,6 +146,15 @@ var timing_rounds: Dictionary = {}
 var event_init_profile_id := 1
 # Event trigger dispatcher: indexes enabled event definitions for this run.
 var event_runtime = null
+# Daily full-state snapshots for the back-to-prev-round flow, kept in memory
+# for the latest two rounds only (the original Datapool keeps round-formatted
+# SavePlayer payloads; not persisted in the v5 player save — they rebuild
+# from the current round after loading).
+# [SRC: GameController.c @ OnNextRound (0x554540) L1936 SaveRoundEnd at the
+#       chain head and b__9 (0x571000) L490 SaveRoundBegin at the tail;
+#       DatapoolExtensions.c @ SaveRoundEnd (0x3f9120) / SaveRoundBegin
+#       (0x3f9050); report 7 A1]
+var round_snapshots := {"round_end": {}, "round_begin": {}}
 
 
 func _init() -> void:

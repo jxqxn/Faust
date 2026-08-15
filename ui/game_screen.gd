@@ -10,6 +10,7 @@ signal open_rite(rite_id: int)
 signal open_rite_instance(rite_uid: int)
 signal advance_pressed()
 signal redraw_pressed()
+signal back_to_prev_pressed()
 signal open_rite_selector(location_name: String)
 signal menu_pressed()
 signal game_over_requested()
@@ -78,6 +79,7 @@ var _known_rail_card_uids: Dictionary = {}
 var _right_actions: VBoxContainer
 var _advance_button: Button
 var _redraw_button: Button
+var _back_to_prev_button: Button
 var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
@@ -270,6 +272,13 @@ func _build_ui() -> void:
 	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(_redraw_button)
 	UiMotionScript.bind(_redraw_button)
+
+	_back_to_prev_button = _icon_button("回退")
+	_back_to_prev_button.name = "BackToPrevButton"
+	_back_to_prev_button.tooltip_text = "回到上一回合结束（消耗一次回退机会）"
+	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
+	_right_actions.add_child(_back_to_prev_button)
+	UiMotionScript.bind(_back_to_prev_button)
 
 
 func _apply_layout() -> void:

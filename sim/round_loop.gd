@@ -32,6 +32,7 @@ static func advance_day(state, db, rng) -> Dictionary:
 	#       GameController @ UpdateSingleRite (RVA 0x55ab10) updates instances
 	#       in that transition; EventTriggerExtensions @ OnRoundEnd.]
 	result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
+	_snapshot_round(state, "round_end")
 	state.day += 1
 	_update_rite_instances(state, db, rng, result)
 	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
@@ -64,6 +65,7 @@ static func advance_day(state, db, rng) -> Dictionary:
 	#       checks HasSudanCard separately]
 	if not result.game_over:
 		_begin_round(state, db, rng, result)
+	_snapshot_round(state, "round_begin")
 	return result
 
 
@@ -105,6 +107,68 @@ static func _update_card_lives(state, db, rng) -> Array:
 		inst.zone = "removed"
 		inst.is_lost = true
 	return dead
+
+
+## Keep a full-state snapshot for one boundary, pruning to the latest two
+## rounds. [SRC: DatapoolExtensions.c @ SaveRoundEnd (0x3f9120) writes the
+## round-formatted key plus the main ""; memory-only in the clone]
+static func _snapshot_round(state, kind: String) -> void:
+	if not state.has_method("get") or state.get("round_snapshots") == null:
+		return
+	state.round_snapshots[kind][state.round_number] = SaveSystem.serialize(state)
+	while state.round_snapshots[kind].size() > 2:
+		var keys: Array = state.round_snapshots[kind].keys()
+		keys.sort()
+		state.round_snapshots[kind].erase(keys[0])
+
+
+## Back to the previous round's end (retry the current round): gate on
+## round-1 >= max(1, min_round) and the back-to-prev budget (9999 = free),
+## consume one budget AFTER the gates pass, then restore the round_end
+## snapshot wholesale. Returns false when gated.
+## [SRC: GameController.c @ OnPrevRound (0x554f80) L2149-2174 gates;
+##       PrevRoundInternal (0x555570) L2246-2261 consume-then-restore;
+##       LoadController.c @ LoadRoundEnd (0x3f8e70); report 7 A1]
+static func back_to_prev_round_end(state, db) -> bool:
+	if state == null:
+		return false
+	var min_round := 1
+	if state.difficulty_config != null:
+		min_round = maxi(1, int(state.difficulty_config.get("min_round", 1)))
+	if state.round_number - 1 < min_round:
+		return false
+	var budget: int = int(state.get("back_to_prev_left"))
+	if budget < 1:
+		return false
+	var snapshot: Dictionary = state.round_snapshots["round_end"].get(state.round_number - 1, {})
+	if snapshot.is_empty():
+		return false
+	# The original stores the budget on the global object so the rollback
+	# itself cannot restore it; the clone re-applies the decremented budget
+	# after the snapshot overwrite.
+	var budget_after: int = budget if budget == 9999 else budget - 1
+	SaveSystem.deserialize(snapshot, state, db)
+	state.back_to_prev_left = budget_after
+	if state.event_runtime != null:
+		state.queue_event_ids(state.event_runtime.fire("back_to_prev_round_end", {}))
+	return true
+
+
+## Back to the current round's beginning: restore the round_begin snapshot
+## taken at the end of the previous day transition (all of yesterday's
+## settlements applied, today untouched).
+## [SRC: DoBackToRoundBegin.c @ Do (operations.json); DatapoolExtensions.c
+##       @ LoadRoundBegin; report 7 A1]
+static func back_to_round_begin(state, db) -> bool:
+	if state == null:
+		return false
+	var snapshot: Dictionary = state.round_snapshots["round_begin"].get(state.round_number, {})
+	if snapshot.is_empty():
+		return false
+	SaveSystem.deserialize(snapshot, state, db)
+	if state.event_runtime != null:
+		state.queue_event_ids(state.event_runtime.fire("back_to_round_begin", {}))
+	return true
 
 
 ## Draw one sudan card into the active set.

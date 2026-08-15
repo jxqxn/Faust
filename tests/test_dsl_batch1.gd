@@ -481,3 +481,41 @@ func test_redraw_spends_extra_counter_when_per_round_is_exhausted() -> void:
 	assert_eq(state.get_counter(7100008), 0, "the extra redraw counter is spent")
 	assert_eq(RoundLoop.use_redraw(state, RNG.new(49), local_db), -1,
 		"no allowance and no extra counter leaves the redraw rejected")
+
+
+func test_back_to_prev_round_restores_snapshot_and_spends_budget() -> void:
+	# Daily round_end snapshots + gated rollback: min_round, budget (9999 =
+	# free), and wholesale state restore; the budget survives the restore.
+	# [SRC: OnPrevRound (0x554f80) gates; PrevRoundInternal (0x555570);
+	#       report 7 A1]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(61))
+	state.back_to_prev_left = 2
+	var coin_before := state.coin_count
+	var round_before := state.round_number
+	RoundLoop.advance_day(state, local_db, RNG.new(62))
+	state.add_coin(9)
+	assert_eq(state.round_number, round_before + 1)
+
+	assert_true(RoundLoop.back_to_prev_round_end(state, local_db))
+	assert_eq(state.round_number, round_before, "the round_end snapshot restores the prior round")
+	assert_eq(state.coin_count, coin_before, "world effects after the snapshot are rolled back")
+	assert_eq(state.back_to_prev_left, 1, "the budget decrement survives the restore")
+	assert_false(RoundLoop.back_to_prev_round_end(state, local_db),
+		"round 0 is below min_round 1 after the first rollback")
+	assert_eq(state.back_to_prev_left, 1, "a gated rollback does not consume the budget")
+
+
+func test_back_to_round_begin_restores_today_start() -> void:
+	# [SRC: DoBackToRoundBegin.c @ Do; LoadRoundBegin; report 7 A1]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(63))
+	RoundLoop.advance_day(state, local_db, RNG.new(64))
+	var round_now := state.round_number
+	var coin_at_begin := state.coin_count
+	state.add_coin(7)
+	assert_true(RoundLoop.back_to_round_begin(state, local_db))
+	assert_eq(state.round_number, round_now, "the round_begin snapshot keeps the current round")
+	assert_eq(state.coin_count, coin_at_begin, "effects after the boundary roll back")

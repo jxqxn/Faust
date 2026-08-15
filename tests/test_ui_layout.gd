@@ -1612,9 +1612,10 @@ func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	assert_not_null(right_actions, "right action column should exist")
 	if right_actions == null:
 		return
-	assert_eq(_count_buttons(right_actions), 2, "right actions should only contain next-day and redraw controls")
+	assert_eq(_count_buttons(right_actions), 3, "right actions contain next-day, redraw, and back-to-prev controls")
 	assert_not_null(_find_node_by_name(right_actions, "AdvanceDayButton"), "next-day action remains in the right column")
 	assert_not_null(_find_node_by_name(right_actions, "RedrawSudanButton"), "redraw action remains in the right column")
+	assert_not_null(_find_node_by_name(right_actions, "BackToPrevButton"), "back-to-prev action stays in the right column")
 	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
 
 

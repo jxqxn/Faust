@@ -105,6 +105,7 @@ func _show_game() -> void:
 	gs.open_rite_instance.connect(_on_open_rite_instance)
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
+	gs.back_to_prev_pressed.connect(_on_back_to_prev)
 	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
 	gs.game_over_requested.connect(_show_game_over)
@@ -557,7 +558,27 @@ func _on_redraw() -> void:
 		log_text = "重抽苏丹卡: %s%s" % [dec.rank, dec.action]
 	if _current and _current.has_method("set_log"):
 		_current.set_log(log_text)
-		_current.refresh()
+	_current.refresh()
+
+
+## Back to the previous round's end: consumes one back-to-prev charge (9999
+## means free), restores the round_end snapshot, and reopens the retried
+## round. [SRC: GameController.c @ OnPrevRound (0x554f80); report 7 A1]
+func _on_back_to_prev() -> void:
+	if state == null:
+		return
+	var log_text := ""
+	if RoundLoop.back_to_prev_round_end(state, db):
+		log_text = "已回到上一回合结束（第 %d 回合）。剩余回退次数: %s" % [
+			state.round_number,
+			"∞" if state.back_to_prev_left >= 9999 else str(state.back_to_prev_left),
+		]
+	else:
+		log_text = "无法回退（次数耗尽、回合过早或没有当日快照）。"
+	if _game_screen != null:
+		_game_screen.refresh()
+	if _current and _current.has_method("set_log"):
+		_current.set_log(log_text)
 
 
 func _clear_current() -> void:

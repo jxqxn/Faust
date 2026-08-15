@@ -18,7 +18,7 @@ const RuntimeOperationFilter = preload("res://sim/operation_filter.gd")
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
 	var deferred := {
-		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 	}
@@ -37,7 +37,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "all", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
+	if k in ["coin", "金币", "g.coin", "card", "choose", "all", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "back_to_round_begin", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
 		return true
 	if k.begins_with("case:"):
 		return true
@@ -283,6 +283,11 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	if k == "back_to_prev_round_end":
 		deferred.back_to_prev = true
+		return
+	# Back to the current round's beginning (retry today with yesterday's
+	# settlements kept). [SRC: DoBackToRoundBegin.c @ Do; report 7 A1]
+	if k == "back_to_round_begin":
+		deferred.back_to_round_begin = true
 		return
 	if k == "confirm":
 		return

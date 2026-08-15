@@ -20,7 +20,7 @@ class RiteResult:
 	var dice_types_seen: Array = []
 	func _init() -> void:
 		deferred = {
-			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+			"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
 			"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 			"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 		}

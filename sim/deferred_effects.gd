@@ -46,6 +46,14 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 		state.add_available_rite(next_rite, db, rng)
 	for loot_ref in deferred.get("loots", []):
 		_apply_loot_ref(loot_ref, state, db, rng)
+	# Rollback requests execute at the end of the deferred batch: the current
+	# settlement's effects land first, then the snapshot restores the world.
+	# [SRC: DoBackToPrevRoundEnd.c @ Do (0x4f89a0) calls OnPrevRound;
+	#       DoBackToRoundBegin.c @ Do; report 7 A1]
+	if bool(deferred.get("back_to_prev", false)):
+		RoundLoop.back_to_prev_round_end(state, db)
+	if bool(deferred.get("back_to_round_begin", false)):
+		RoundLoop.back_to_round_begin(state, db)
 
 
 static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
@@ -115,7 +123,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 		if not ConditionEval.evaluate(cond, ctx):
 			return {}
 	var merged := {
-		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false,
+		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
 	}
@@ -173,6 +181,8 @@ static func _merge(into: Dictionary, src: Dictionary) -> void:
 		into["over"] = true
 	if src.has("back_to_prev") and bool(src["back_to_prev"]):
 		into["back_to_prev"] = true
+	if src.has("back_to_round_begin") and bool(src["back_to_round_begin"]):
+		into["back_to_round_begin"] = true
 	if src.has("logs"):
 		into["logs"].append_array(src["logs"])
 	if src.has("clean_slots"):
