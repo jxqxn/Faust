@@ -67,7 +67,17 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
-**2026-08-15 完全复刻冲刺（表现层+DSL 收口，322 测试全绿）：** 原作表现层三件套
+**2026-08-16 完全复刻冲刺二（DSL 全归零+引导+结局，330 测试全绿）：**
+新手引导系统：`BeginGuideBar`（15 类指引文案+手柄绑定提示，点击关闭）、
+`begin_guide`/`close_begin_guide` 安装清除指令、92 个引导表现键（hand_pop/rite_pop/
+focus/slide/close_* 等）入 `guide_cues` 队列，全部进存档。**DSL 三类全支持归零**：
+result 2119/2119、condition 3988/3988、action 2285/2285（最后补齐 table/total 域
+equip、scoped change_card_name/text）。结局系统：over.json 159 结局表接入，
+处刑（苏丹 vanish.over）与事件 over 值驱动 ending id，结局屏显示名/副题/文本/
+后日谈标记。剩余路线图见 `docs/GAP_FULL_GAME.md`（向导剧情流、after_story 后日谈
+播放、图钉对位、笔记/图鉴、Live2D、实机验收）。
+
+**2026-08-15 完全复刻冲刺一（表现层，322 测试全绿）：** 原作表现层三件套
 接入：卡面 1190/1292（`assets/original/cards/`，无图 102 张回退自制纸面）；桌面双层底图
 （table.png + table-map.png）；音频系统 `GameAudio`（main/tutorial BGM + 下一日/确认/
 重抽/苏丹四族抽卡/骰子/金骰音效）。DSL 收口：`rebirth.s<n>`（槽卡倒计时重置，
