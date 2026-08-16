@@ -163,6 +163,10 @@ var round_snapshots := {"round_end": {}, "round_begin": {}}
 #       GetBeginGuideItem (0x525630); CloseBeginGuide.c]
 var begin_guide: Dictionary = {}
 var guide_cues: Array = []
+# Ending id from the fatal operation's `over` value (Sultan cards carry
+# their execution ending in vanish.over). The game-over screen maps it to
+# the over.json ending table entry.
+var over_reason := 0
 
 
 func _init() -> void:

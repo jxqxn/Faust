@@ -365,6 +365,8 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# End / back.
 	if k == "over":
 		deferred.over = bool(val) if val is bool else true
+		if val is float or val is int:
+			state.over_reason = int(val)
 		return
 	if k == "back_to_prev_round_end":
 		deferred.back_to_prev = true

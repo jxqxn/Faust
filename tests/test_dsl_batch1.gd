@@ -640,3 +640,26 @@ func test_begin_guide_family_installs_and_clears_directive() -> void:
 	var restored := GameState.new()
 	SaveSystem.deserialize(SaveSystem.serialize(state), restored, local_db)
 	assert_eq(str(restored.begin_guide.get("type", "")), "BACK_ROUND", "guide directives survive save/load")
+
+
+func test_sudan_execution_records_its_ending_id() -> void:
+	# The executed Sultan's vanish.over id becomes the ending shown on the
+	# game-over screen (over.json is indexed by it).
+	# [SRC: 2010001 vanish {"over":12}; data/config/over.json entry 12]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(111))
+	var sudan = RoundLoop.ActiveSudan.new(2010001, 1, state.round_number, 0)
+	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	sudan.card_uid = inst.uid
+	state.active_sudan_cards.append(sudan)
+	var day := RoundLoop.advance_day(state, local_db, RNG.new(112))
+	assert_true(day.game_over, "the deadline executes")
+	assert_eq(state.over_reason, 12, "the ending id comes from the card's vanish.over")
+
+
+func test_over_action_value_sets_ending_id() -> void:
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	ResultExec.execute({"over": 7}, state, local_db)
+	assert_eq(state.over_reason, 7, "a numeric over value selects the ending")

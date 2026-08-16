@@ -542,7 +542,7 @@ func _show_game_over() -> void:
 	# paths pass 0 until over-reason plumbing lands.
 	# [SRC: GameController.c:2868 -> OnGameEnd; CardNode.vanish.over]
 	if state != null and state.event_runtime != null:
-		state.trigger_events("game_end", {"ending": 0})
+		state.trigger_events("game_end", {"ending": state.over_reason})
 	# The original keeps the continue save at its last SaveRoundEnd point so
 	# the player can retry the fatal round; DoGameOver only reads the reason.
 	# [SRC: GameController.c @ DoGameOver (0x54dbd0); report 7 A6]

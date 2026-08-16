@@ -1,21 +1,41 @@
-## Game over screen: shows when a sudan card expires unfulfilled.
-## Displays the final stats and offers a restart.
+## Game over screen: maps the fatal operation's ending id to the original
+## ending table (content/over.json: name/sub_name/text/open_after_story) and
+## shows the final stats with a restart entry.
+## [SRC: data/config/over.json (159 endings); vanish.over ids index it]
 extends Control
 
 signal restart()
 
 var _state
 var _db
+var _endings: Array = []
 
 
 func setup(state, db) -> void:
 	_state = state
 	_db = db
+	_load_endings()
+
+
+func _load_endings() -> void:
+	var path := "res://content/over.json"
+	if ResourceLoader.exists(path) or FileAccess.file_exists(path):
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if parsed is Array:
+			_endings = parsed
 
 
 func _ready() -> void:
 	theme = FaustTheme.get_theme()
 	_build_ui()
+
+
+func _ending_entry() -> Dictionary:
+	var idx := int(_state.over_reason) if _state != null else 0
+	if idx >= 0 and idx < _endings.size():
+		var entry = _endings[idx]
+		return entry if entry is Dictionary else {}
+	return {}
 
 
 func _build_ui() -> void:
@@ -31,21 +51,36 @@ func _build_ui() -> void:
 	col.add_theme_constant_override("separation", 16)
 	col.custom_minimum_size = Vector2(520, 0)
 	center.add_child(col)
-	# Title.
+	var ending := _ending_entry()
+	# Title: the ending's name, or the generic header when unmapped.
 	var title := Label.new()
-	title.text = "游戏结束"
+	title.text = str(ending.get("name", "游戏结束"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", 42)
 	title.add_theme_color_override("font_color", FaustTheme.DANGER_LIGHT)
 	col.add_child(title)
-	# Reason.
+	if str(ending.get("sub_name", "")) != "":
+		var sub := Label.new()
+		sub.text = str(ending.get("sub_name"))
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		sub.add_theme_font_size_override("font_size", 20)
+		sub.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+		col.add_child(sub)
+	# Reason: the ending text, falling back to the generic execution line.
 	var reason := Label.new()
-	reason.text = "一张苏丹卡到期未完成。苏丹的怒火降临了。"
+	reason.text = str(ending.get("text", "一张苏丹卡到期未完成。苏丹的怒火降临了。"))
 	reason.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	reason.add_theme_font_size_override("font_size", 16)
 	reason.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	col.add_child(reason)
+	if int(ending.get("open_after_story", 0)) == 1:
+		var after := Label.new()
+		after.text = "（后日谈待开放）"
+		after.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		after.add_theme_font_size_override("font_size", 13)
+		after.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
+		col.add_child(after)
 	col.add_child(_spacer(12))
 	# Stats.
 	var stats := Label.new()

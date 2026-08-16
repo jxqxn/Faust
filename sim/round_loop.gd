@@ -49,6 +49,11 @@ static func advance_day(state, db, rng) -> Dictionary:
 		if asc.days_left <= 0 and not _is_sudan_embedded_in_open_rite(state, db, asc):
 			result.expired.append(asc.card_id)
 			result.game_over = true
+			# The executed Sultan's ending id comes from its vanish.over ops
+			# (e.g. 2010001 -> over 12) and drives the ending screen.
+			var dead_card: Dictionary = db.get_card(int(asc.card_id)) if db != null else {}
+			var vanish: Dictionary = dead_card.get("vanish", {})
+			state.over_reason = int(vanish.get("over", 0))
 			if state.has_method("remove_card_from_rail"):
 				state.remove_card_from_rail(int(asc.card_uid))
 			var expired_instance = state.get_card_instance(int(asc.card_uid)) if state.has_method("get_card_instance") else null
