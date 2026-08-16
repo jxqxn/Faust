@@ -45,6 +45,16 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k == "difficulty" or k == "magic_sudan" or k.begins_with("magic_sudan."):
 		return true
+	if k == "begin_guide" or k == "close_begin_guide" or k == "slide" or k == "change_desk_bg":
+		return true
+	if k.begins_with("table.change_card_name.") or k.begins_with("total.change_card_name.") \
+			or k.begins_with("table.change_card_text.") or k.begins_with("total.change_card_text."):
+		return true
+	if _is_domain_equip_key(k) and (k.begins_with("table.") or k.begins_with("g.")):
+		return true
+	if k.begins_with("hand_pop") or k.begins_with("rite_pop") or k.begins_with("focus.") \
+			or k.begins_with("close_") or k.begins_with("change_location_icon"):
+		return true
 	if k.begins_with("loot."):
 		return true
 	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
@@ -235,6 +245,21 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k.begins_with("table.clean."):
 		_apply_table_clean(k, val, state, context)
 		return
+	# Scoped renames: table/total.change_card_name.<rite>_<seq>.<card_id>
+	# sets the matching card's custom name (change_card_text its text); the
+	# rite_seq infix only keeps repeated directives in one payload distinct.
+	# [SRC: operations.json change_card_name/change_card_text families;
+	#       ChangeCardName.c @ Do (report 5 A5)]
+	if k.begins_with("table.change_card_name.") or k.begins_with("total.change_card_name.") \
+			or k.begins_with("table.change_card_text.") or k.begins_with("total.change_card_text."):
+		_apply_scoped_card_text(k, val, state, k.begins_with("total."))
+		return
+	# Table/g equip ops: table.<selector>(+|-|~)equip / g.<selector>...
+	# [SRC: dump.cs:313833 "table\\.([^\\+\\-~]+)([\\+\\-~])equip" ->
+	#       TableModifyEquip (same for g.)]
+	if (k.begins_with("table.") or k.begins_with("g.")) and _is_domain_equip_key(k):
+		_apply_domain_equip(k, val, state, db)
+		return
 	# Table/g tag ops: table.<x>+/-<tag>, g.<x>+/-<tag>.
 	if k.begins_with("table.") or k.begins_with("g."):
 		_apply_table_tag(k, val, state, db, context)
@@ -314,6 +339,28 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# presentation, not the rules layer. No wizard host yet -> audited no-op.
 	# [SRC: MagicSudan.c @ Do (0x515160) -> WizardController.ShowDrawSudan]
 	if k == "magic_sudan" or k.begins_with("magic_sudan."):
+		return
+	# Beginner-guide family: `begin_guide` installs the on-screen directive,
+	# `close_begin_guide` clears it; the remaining cues (focus/hand_pop/
+	# rite_pop/slide/close_box/close_deadline/close_helpbtn/close_prestige/
+	# close_story/change_desk_bg/change_location_icon) accumulate for the
+	# overlay presentation only.
+	# [SRC: BeginGuide.c / CloseBeginGuide.c (DSL ops);
+	#       BeginGuideController.c @ ShowBeginGuide (0x526220)]
+	if k == "begin_guide":
+		if val is Dictionary:
+			state.begin_guide = val.duplicate(true)
+		return
+	if k == "close_begin_guide":
+		state.begin_guide = {}
+		state.guide_cues.clear()
+		return
+	if k.begins_with("hand_pop") or k.begins_with("rite_pop") or k.begins_with("focus.") \
+			or k == "slide" or k.begins_with("close_") \
+			or k == "change_desk_bg" or k.begins_with("change_location_icon"):
+		state.guide_cues.append({"key": k, "value": val})
+		if state.guide_cues.size() > 32:
+			state.guide_cues.remove_at(0)
 		return
 	# End / back.
 	if k == "over":
@@ -938,3 +985,76 @@ static func _tag_can_add(db, tag_name: String) -> bool:
 	if code != "" and db.get("tags_by_code") != null and db.tags_by_code.has(code):
 		return int(db.tags_by_code[code].get("can_add", 1)) != 0
 	return true
+
+
+static func _is_domain_equip_key(k: String) -> bool:
+	return k.ends_with("+equip") or k.ends_with("-equip") or k.ends_with("~equip")
+
+
+## table.<selector>(+|-|~)equip and g.<selector>... — equip operations over a
+## whole domain instead of one rite slot. `+` grants and attaches the value
+## card to every matched host; `-`/`~` detach matching equipment (the tilde
+## recovers it to the hand like the slot form).
+## [SRC: dump.cs:313833-313834 "table/g\.<selector>([\+\-~])equip";
+##       ModifyEquip.c @ HandleCard (0x516ab0) attach path]
+static func _apply_domain_equip(k: String, val: Variant, state, db) -> void:
+	var dot := k.find(".")
+	var op_index := maxi(k.rfind("+equip"), maxi(k.rfind("-equip"), k.rfind("~equip")))
+	if dot < 0 or op_index <= dot:
+		return
+	var scope := k.substr(0, dot)
+	var selector := k.substr(dot + 1, op_index - dot - 1)
+	var op := k[op_index]
+	var hosts: Array[int] = []
+	if scope == "g":
+		for inst in RuntimeOperationFilter.select_total(state, db, selector):
+			hosts.append(int(inst.uid))
+	else:
+		for tc in state.surface_card_entries():
+			var inst = state.get_card_instance(int(tc.get("card_uid", 0)))
+			if inst == null:
+				continue
+			if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), inst.tags, db, selector):
+				continue
+			hosts.append(int(inst.uid))
+	for host_uid in hosts:
+		var host = state.get_card_instance(host_uid)
+		if host == null:
+			continue
+		if op == "+":
+			var equipment_id := int(val[0]) if val is Array and not val.is_empty() else int(val)
+			var equipment = state.create_card_instance(equipment_id, db, "removed")
+			if equipment != null:
+				state.attach_equipment(host_uid, equipment.uid, db, false, false)
+			continue
+		var equipped_snapshot: Array[int] = host.equipped_uids.duplicate()
+		for equipment_uid in equipped_snapshot:
+			var equipment = state.get_card_instance(int(equipment_uid))
+			if equipment == null or not _equipment_matches(equipment, val, db):
+				continue
+			state.detach_equipment(host_uid, equipment.uid, op == "~")
+
+
+## table/total.change_card_name|text.<rite>_<seq>.<card_id> — apply the value
+## as the custom name/text of the matching card in the domain.
+static func _apply_scoped_card_text(k: String, val: Variant, state, whole_domain: bool) -> void:
+	var last_dot := k.rfind(".")
+	if last_dot < 0:
+		return
+	var card_id := k.substr(last_dot + 1)
+	if not card_id.is_valid_int():
+		return
+	var want_id := card_id.to_int()
+	var is_name := k.find("change_card_name") >= 0
+	var new_value := str(val).strip_edges()
+	for uid in state.card_instances.keys():
+		var inst = state.get_card_instance(int(uid))
+		if inst == null or inst.card_id != want_id:
+			continue
+		if not whole_domain and inst.zone != "hand" and inst.zone != "slot" and inst.zone != "sudan":
+			continue
+		if is_name:
+			state.set_card_custom_name(int(uid), new_value)
+		else:
+			state.set_card_custom_text(int(uid), new_value)
+		return

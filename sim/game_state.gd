@@ -155,6 +155,14 @@ var event_runtime = null
 #       DatapoolExtensions.c @ SaveRoundEnd (0x3f9120) / SaveRoundBegin
 #       (0x3f9050); report 7 A1]
 var round_snapshots := {"round_end": {}, "round_begin": {}}
+# Active on-screen beginner-guide directive from the last `begin_guide`
+# action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
+# it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
+# in guide_cues for the overlay; the rules layer never reads them.
+# [SRC: BeginGuideController.c @ ShowBeginGuide (0x526220) /
+#       GetBeginGuideItem (0x525630); CloseBeginGuide.c]
+var begin_guide: Dictionary = {}
+var guide_cues: Array = []
 
 
 func _init() -> void:

@@ -619,3 +619,24 @@ func test_difficulty_action_switches_mid_run() -> void:
 		"per-round redraws refresh from the new difficulty")
 	assert_eq(state.back_to_prev_left, int(state.difficulty_config.get("back_to_prev_round_count", 0)),
 		"leaving the free-rollback difficulty drops the budget to its allowance")
+
+
+func test_begin_guide_family_installs_and_clears_directive() -> void:
+	# [SRC: BeginGuide.c / CloseBeginGuide.c; BeginGuideController.c
+	#       @ ShowBeginGuide (0x526220) / OnCloseBtnClick (0x525fa0)]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(101))
+	assert_true(state.begin_guide.is_empty(), "no directive at start")
+	ResultExec.execute({"begin_guide": {"type": "NEXT_DAY", "bind": "UI/Submit"}}, state, local_db)
+	assert_eq(str(state.begin_guide.get("type", "")), "NEXT_DAY", "begin_guide installs the directive")
+	ResultExec.execute({"hand_pop.1_1.主角": "看这里", "focus.2": 1}, state, local_db)
+	assert_eq(state.guide_cues.size(), 2, "presentation cues accumulate")
+	ResultExec.execute({"close_begin_guide": 1}, state, local_db)
+	assert_true(state.begin_guide.is_empty(), "close_begin_guide clears the directive")
+	assert_true(state.guide_cues.is_empty(), "and drops the cue queue")
+	# The guide state round-trips through the save.
+	ResultExec.execute({"begin_guide": {"type": "BACK_ROUND"}}, state, local_db)
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, local_db)
+	assert_eq(str(restored.begin_guide.get("type", "")), "BACK_ROUND", "guide directives survive save/load")

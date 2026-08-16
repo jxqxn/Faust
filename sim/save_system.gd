@@ -105,6 +105,8 @@ static func serialize(state) -> Dictionary:
 		"event_status": state.event_status.duplicate(true),
 		"event_done": state.event_done.duplicate(true),
 		"timing_rounds": state.timing_rounds.duplicate(true),
+		"begin_guide": state.begin_guide.duplicate(true),
+		"guide_cues": state.guide_cues.duplicate(true),
 		"event_init_profile_id": state.event_init_profile_id,
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
@@ -242,6 +244,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	var saved_timing_rounds: Dictionary = data.get("timing_rounds", {})
 	for key in saved_timing_rounds:
 		state.timing_rounds[str(key)] = int(saved_timing_rounds[key])
+	state.begin_guide = data.get("begin_guide", {}).duplicate(true) if data.get("begin_guide", {}) is Dictionary else {}
+	state.guide_cues = data.get("guide_cues", []).duplicate(true) if data.get("guide_cues", []) is Array else []
 	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))
 	state.local_counters = _restore_int_keyed_dictionary(data.get("local_counters", {}))
 	state.global_counters = _restore_int_keyed_dictionary(data.get("global_counters", {}))

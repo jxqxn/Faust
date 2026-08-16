@@ -60,6 +60,7 @@ var _round_label: Label
 var _gold_label: Label
 var _log_label: Label
 var _background: ColorRect
+var _begin_guide_bar: BeginGuideBar
 var _hud: PanelContainer
 var _menu_button: Button
 var _desk_map: PanelContainer
@@ -128,6 +129,11 @@ func _build_ui() -> void:
 	_background.name = "ScreenBackground"
 	_background.color = Color("#17120e")
 	add_child(_background)
+	_begin_guide_bar = BeginGuideBar.new()
+	_begin_guide_bar.name = "BeginGuideBarRoot"
+	_begin_guide_bar.setup(_state)
+	_begin_guide_bar.z_index = PERSISTENT_CONTROL_Z + 2
+	add_child(_begin_guide_bar)
 	# The screen uses an explicit scaled layout; keep the background on the
 	# same top-left coordinate system so resizing it does not fight anchors.
 	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -477,6 +483,8 @@ func _emit_open_rite_instance(rite_uid: int) -> void:
 func refresh() -> void:
 	if _state == null or _card_items == null:
 		return
+	if _begin_guide_bar != null:
+		_begin_guide_bar.refresh(_state)
 	_round_label.text = "第 %d 天" % _state.day
 	_gold_label.text = "金骰 %d    重抽 %d" % [_state.gold_dice, _state.redraws_left]
 	var previous_positions := _capture_hand_visual_positions()

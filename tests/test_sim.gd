@@ -169,9 +169,15 @@ func test_deferred_effects_apply_choice_and_loot_to_world():
 	assert_gt(st.event_prompts.size(), 1, "loot grants should be visible to the player")
 
 func test_dsl_audit_exposes_unsupported_rite_keys():
+	# All configured rite keys are supported now; the audit must still make a
+	# genuinely unknown key visible instead of silently accepting it.
 	var report := DslAudit.audit_rites(db.rites, db)
 	var unsupported_total: int = report.result.unsupported.size() + report.action.unsupported.size() + report.condition.unsupported.size()
-	assert_true(unsupported_total > 0, "audit should make unsupported DSL keys visible")
+	assert_eq(unsupported_total, 0, "every configured rite key is supported")
+	var probe := DslAudit.audit_rites({
+		999999: {"settlement": [{"condition": {}, "result": {"definitely_unknown_key": 1}, "action": {}}]},
+	}, db)
+	assert_true(probe.result.unsupported.has("definitely_unknown_key"), "audit should make unsupported DSL keys visible")
 
 func test_dsl_audit_scans_loot_conditions_and_choose_operations():
 	var report := DslAudit.audit_configs(db.rites, db.events, db.loots, db)
