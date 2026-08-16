@@ -96,6 +96,19 @@ static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:
 	if choice_key == "":
 		return
+	# Confirm dialogs only record which button the player pressed; the
+	# branches were selected during settlement execution.
+	# [SRC: Confirm.c @ Do (0x4f4e30) writes SetLastOpState]
+	if choice_key == "confirm_ok" or choice_key == "confirm_cancel":
+		if state != null:
+			state.last_confirm_cancelled = choice_key == "confirm_cancel"
+		return
+	# Difficulty picks apply the chosen narrator.
+	# [SRC: SetDifficulty.c @ Do (0x51b5b0) Then-apply callback]
+	if choice_key.begins_with("diff_") and choice_key.substr(5).is_valid_int():
+		if state != null and state.has_method("apply_difficulty"):
+			state.apply_difficulty(int(choice_key.substr(5)), db)
+		return
 	var result := {choice_key: choice_value}
 	var deferred := ResultExec.execute(result, state, db, context)
 	apply(deferred, state, db, rng)

@@ -1,5 +1,7 @@
-## Main menu / new-game screen. Lets the player pick a difficulty and start.
-## Uses a full-anchor layout with a centered VBox so it fills any window.
+## Main menu: title page first (new game / continue / archives), then the
+## difficulty picker as its own page — matching the original's two-stage
+## flow where difficulty is chosen after entering a new game, not on the
+## title screen. Uses a full-anchor layout with a centered VBox.
 extends Control
 
 signal difficulty_selected(index: int)
@@ -12,15 +14,11 @@ signal user_archive_delete_requested(index: int)
 const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
-const DIFF_DESC := [
-	"温柔的苏丹者。骰子成功率 60%，可无限倒回，初始 3 枚金骰。",
-	"严谨的诗翰。骰子成功率 50%，可倒回 10 次，初始 2 枚金骰。",
-	"以窥察你的苦痛为乐。骰子成功率 40%，无倒回，初始 1 枚金骰。",
-]
 
 const CONTENT_WIDTH := 960
 
 var _db = null
+var _column: VBoxContainer
 
 
 func setup(db = null) -> void:
@@ -36,32 +34,43 @@ func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Dark background.
 	var bg := ColorRect.new()
+	bg.name = "Background"
 	bg.color = FaustTheme.BG_DEEP
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
-	# Centered content column.
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 18)
-	vbox.custom_minimum_size = Vector2(CONTENT_WIDTH, 0)
-	center.add_child(vbox)
-	# Title.
+	_build_title_view()
+
+
+## Title page: the game's front door. Difficulty is NOT chosen here.
+func _build_title_view() -> void:
+	_clear_dynamic()
+	_center_column()
 	var title := Label.new()
+	title.name = "MenuTitle"
 	title.text = "苏丹的游戏"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 56)
+	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	vbox.add_child(title)
-	# Subtitle.
+	_column.add_child(title)
 	var sub := Label.new()
 	sub.text = "Godot 克隆版 · 请选择你的苏丹"
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_size_override("font_size", 16)
 	sub.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
-	vbox.add_child(sub)
-	vbox.add_child(_spacer(12))
+	_column.add_child(sub)
+	_column.add_child(_spacer(20))
+	var new_game := Button.new()
+	new_game.name = "NewGameButton"
+	new_game.text = "新的游戏"
+	new_game.custom_minimum_size = Vector2(0, 54)
+	new_game.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	new_game.add_theme_font_size_override("font_size", 24)
+	# The original starts the run right away; the opening show (event
+	# 5310006) presents the narrator/difficulty pick in-game.
+	new_game.pressed.connect(func(): difficulty_selected.emit(0))
+	_column.add_child(new_game)
+	UiMotionScript.bind(new_game, UiMotionScript.Profile.PRIMARY)
+	_column.add_child(_spacer(10))
 	# Continue button (only if a valid save exists).
 	if _has_continue_save():
 		var cont := Button.new()
@@ -71,13 +80,13 @@ func _build_ui() -> void:
 		cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cont.add_theme_font_size_override("font_size", 22)
 		cont.pressed.connect(func(): continue_pressed.emit())
-		vbox.add_child(cont)
+		_column.add_child(cont)
 		UiMotionScript.bind(cont, UiMotionScript.Profile.PRIMARY)
-		vbox.add_child(_spacer(8))
+		_column.add_child(_spacer(10))
 	var archives := SaveSystem.list_user_archives(_db) if _db != null else []
 	if not archives.is_empty():
-		vbox.add_child(_make_archive_section(archives))
-		vbox.add_child(_spacer(8))
+		_column.add_child(_make_archive_section(archives))
+		_column.add_child(_spacer(10))
 	if OS.is_debug_build():
 		var test_btn := Button.new()
 		test_btn.name = "TestStartButton"
@@ -85,19 +94,52 @@ func _build_ui() -> void:
 		test_btn.custom_minimum_size = Vector2(0, 42)
 		test_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		test_btn.pressed.connect(func(): test_start_requested.emit(1))
-		vbox.add_child(test_btn)
+		_column.add_child(test_btn)
 		UiMotionScript.bind(test_btn)
-	# Difficulty cards.
+
+
+## Difficulty page: the three narrators, shown after "新的游戏".
+## [SRC: DifficultyPanelController.c / DifficultyItemController.c;
+##       difficulty desc text from content/init/1.json]
+func _build_difficulty_view() -> void:
+	_clear_dynamic()
+	_center_column()
+	var head := Label.new()
+	head.text = "选择你的叙事者"
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	head.add_theme_font_size_override("font_size", 30)
+	head.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_column.add_child(head)
+	_column.add_child(_spacer(12))
 	for i in 3:
-		vbox.add_child(_make_diff_card(i))
-	# Footer note.
-	vbox.add_child(_spacer(8))
-	var foot := Label.new()
-	foot.text = "选择难度后游戏开始。原作数值已由逆向语料库校准。"
-	foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	foot.add_theme_font_size_override("font_size", 12)
-	foot.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
-	vbox.add_child(foot)
+		_column.add_child(_make_diff_card(i))
+		_column.add_child(_spacer(8))
+	var back := Button.new()
+	back.name = "BackToTitleButton"
+	back.text = "返回标题"
+	back.custom_minimum_size = Vector2(0, 40)
+	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back.pressed.connect(_build_title_view)
+	_column.add_child(back)
+	UiMotionScript.bind(back)
+
+
+func _clear_dynamic() -> void:
+	for child in get_children():
+		if child.name != "Background":
+			child.queue_free()
+	_column = null
+
+
+func _center_column() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.custom_minimum_size = Vector2(CONTENT_WIDTH, 0)
+	center.add_child(vbox)
+	_column = vbox
 
 
 func _make_diff_card(index: int) -> Control:
@@ -123,7 +165,7 @@ func _make_diff_card(index: int) -> Control:
 	UiMotionScript.bind(btn, UiMotionScript.Profile.PRIMARY)
 	col.add_child(row)
 	var desc := Label.new()
-	desc.text = DIFF_DESC[index]
+	desc.text = _difficulty_desc(index)
 	desc.add_theme_font_size_override("font_size", 13)
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -131,6 +173,20 @@ func _make_diff_card(index: int) -> Control:
 	col.add_child(desc)
 	panel.add_child(col)
 	return panel
+
+
+## The original narrator intro from init/1.json with its rich-text tags
+## stripped, plus the die-success rate line.
+func _difficulty_desc(index: int) -> String:
+	var raw := ""
+	if _db != null:
+		var conf: Dictionary = _db.get_difficulty(index)
+		raw = str(conf.get("desc", ""))
+	if raw == "":
+		return "叙事者尚未就位。"
+	var cleaned := raw.replace("<sprite=0>", "·").replace("<indent=10%>", " ").replace("</indent>", "")
+	cleaned = cleaned.replace("<size=85%>", "").replace("</size>", "")
+	return cleaned.strip_edges()
 
 
 func _make_archive_section(archives: Array) -> Control:

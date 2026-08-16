@@ -326,14 +326,23 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.rite = int(val)
 		_record_effect(deferred, "rite", {"id": int(val)}, context)
 		return
-	# Mid-run difficulty switch: the original opens the difficulty panel and
-	# applies the chosen index; the config value is that target index.
-	# [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then;
-	#       GameState.apply_difficulty mirrors the apply callback]
+	# Difficulty selection opens a choice panel like the original's
+	# ShowDifficulty (the opening show "开场演出" uses it to let the player
+	# pick a narrator); the pick applies via apply_difficulty.
+	# [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then-apply;
+	#       event 5310006 开场演出1-最开始]
 	if k == "difficulty":
-		if state != null and state.has_method("apply_difficulty"):
-			state.apply_difficulty(int(val), db)
-			deferred.logs.append("difficulty -> %d" % int(val))
+		if state != null and state.has_method("queue_choice_prompt"):
+			state.queue_choice_prompt(
+				{
+					"diff_0": {"text": "梅姬（简单）：骰子 60%，无限回退"},
+					"diff_1": {"text": "哈桑（普通）：骰子 50%，10 次回退"},
+					"diff_2": {"text": "女术士（困难）：骰子 40%，无回退"},
+				},
+				"选择你的叙事者",
+				"故事将由此开始。",
+				_queue_context(context)
+			)
 		return
 	# magic_sudan is a wizard-demo cue (ShowDrawSudan): it drives the tutorial
 	# presentation, not the rules layer. No wizard host yet -> audited no-op.
@@ -377,6 +386,19 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.back_to_round_begin = true
 		return
 	if k == "confirm":
+		# Confirm renders an OK/Cancel dialog from its payload; the choice is
+		# recorded on the state for later success/failed consumers.
+		# [SRC: Confirm.c @ Do (0x4f4e30): ShowConfirm promise writes
+		#       SetLastOpState; report 4 A2]
+		if val is Dictionary:
+			var prompt: Dictionary = val.duplicate(true)
+			prompt["kind"] = "confirm"
+			prompt["choices"] = {
+				"confirm_ok": {"text": _strip_rich(str(val.get("confirm_text", "确定")))},
+				"confirm_cancel": {"text": _strip_rich(str(val.get("cancel_text", "取消")))},
+			}
+			deferred.prompts.append(prompt)
+			_record_effect(deferred, "prompt", prompt, context)
 		return
 	if k == "prompt" and val is Dictionary:
 		deferred.prompts.append(val.duplicate(true))
@@ -1060,3 +1082,11 @@ static func _apply_scoped_card_text(k: String, val: Variant, state, whole_domain
 		else:
 			state.set_card_custom_text(int(uid), new_value)
 		return
+
+
+static func _strip_rich(s: String) -> String:
+	var open := s.find(">")
+	var close := s.rfind("<")
+	if open >= 0 and close > open:
+		return s.substr(open + 1, close - open - 1)
+	return s

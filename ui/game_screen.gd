@@ -1131,16 +1131,19 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 			return
 		set_log("卡牌已命名")
 	elif kind == "event":
+		# The settlement already ran when the event fired (trigger_events
+		# settles immediately and only queues interaction-bearing events);
+		# consuming must not execute it a second time. Choice branches still
+		# run their subtree here.
 		var event_id := int(operation.get("id", 0))
-		var event: Dictionary = _db.get_event(event_id) if _db != null and _db.has_method("get_event") else {}
 		if choice_key != "":
-			# A chosen branch overrides the event's default result/action.
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
-		else:
-			merged = DeferredEffects.execute_event(event, _state, _db, _rng, trigger_ctx)
-			if bool(merged.get("over", false)):
-				game_over_requested.emit()
+	# A silently-settled event chain may have requested game over.
+	if _state != null and bool(_state.get("over_pending")):
+		_state.over_pending = false
+		game_over_requested.emit()
+		return
 	# An event whose action opens a rite should surface that rite to the player
 	# immediately (showing the rite's narration text), not silently park it.
 	# The original opens the rite as a UI surface when an event fires it.

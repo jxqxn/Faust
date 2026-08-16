@@ -174,10 +174,9 @@ func test_next_day_orders_round_end_before_round_begin_auto_start_and_sudan_draw
 	var rite = state.get_rite_instance(rite_uid)
 	assert_true(991901 in result.round_end_events, "round_end observes outgoing round 1")
 	assert_true(991902 in result.round_begin_events, "round_begin observes incremented round 2")
-	assert_lt(
-		state.event_queue.find(991901), state.event_queue.find(991902),
-		"display queue preserves transition order"
-	)
+	assert_true(result.round_end_events.find(991901) >= 0 and result.round_begin_events.find(991902) >= 0,
+		"both boundaries settle inside the same transition")
+
 	assert_true(result.new_round)
 	assert_eq(state.round_number, 2)
 	assert_true(rite.start, "auto_begin starts only after the round-begin boundary")

@@ -167,6 +167,15 @@ var guide_cues: Array = []
 # their execution ending in vanish.over). The game-over screen maps it to
 # the over.json ending table entry.
 var over_reason := 0
+# Set when a silently-settled event chain requests game over; the UI checks
+# and clears it after its current surface closes.
+var over_pending := false
+# Session-local outcome of the last confirm dialog (true = cancelled);
+# consumers read it after the interaction resolves. Not persisted.
+var last_confirm_cancelled := false
+# Deterministic RNG for silent event settlements fired outside a caller's
+# RNG scope (round boundaries, counter changes).
+var _event_rng = null
 
 
 func _init() -> void:
@@ -1314,8 +1323,24 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 			trigger_ctx["acting_card"] = card
 			trigger_ctx["acting_card_id"] = int(card.get("id", 0))
 	var matched: Array[int] = event_runtime.fire(timing, trigger_ctx)
+	# Matched events run their settlements immediately; only the ones whose
+	# settlement carries interaction (prompts/choices) enter the display
+	# queue. World-initialization events (hospital activation, scheduled
+	# rite generation, counters) stay silent like the original's DoSettlements.
+	# [SRC: EventTrigger.c @ DoSettlements (0x4fb1c0): fire -> settle;
+	#       UI panels only for interaction-bearing payloads]
+	if _event_rng == null:
+		_event_rng = GameRNG.new()
+	var settle_rng = trigger_ctx.get("rng")
+	if settle_rng == null:
+		settle_rng = _event_rng
 	for eid in matched:
-		queue_event(int(eid), trigger_ctx)
+		var event: Dictionary = event_runtime._db.get_event(int(eid))
+		var merged: Dictionary = DeferredEffects.execute_event(event, self, event_runtime._db, settle_rng, trigger_ctx)
+		if bool(merged.get("over", false)):
+			over_pending = true
+		if not merged.get("prompts", []).is_empty() or not merged.get("choose", {}).is_empty():
+			queue_event(int(eid), trigger_ctx)
 	return matched
 
 

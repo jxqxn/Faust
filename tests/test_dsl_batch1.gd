@@ -258,7 +258,7 @@ func test_rite_timing_sentinel_one_matches_any_rite() -> void:
 	state.round_number = 0
 	state.enable_event(992011, local_db)
 	assert_eq(state.trigger_events("rite_end", {"rite": 5000001}), [992011], "sentinel 1 fires for any rite id")
-	assert_eq(state.trigger_events("rite_end", {"rite": 992001}), [992011], "sentinel 1 is not tied to a specific id")
+	assert_eq(state.trigger_events("rite_end", {"rite": 992001}), [], "a settled non-replay event does not fire again")
 
 
 func test_have_family_counts_values_across_hand_and_slots() -> void:
@@ -413,7 +413,8 @@ func test_counter_and_card_born_and_game_end_timings_fire() -> void:
 	local_db.load_all()
 	local_db.events[992021] = {"id": 992021, "on": {"counter": 7000001}, "condition": {}}
 	local_db.events[992022] = {"id": 992022, "on": {"global_counter": 8000001}, "condition": {}}
-	local_db.events[992023] = {"id": 992023, "on": {"card_born": 2000005}, "condition": {}}
+	local_db.events[992023] = {"id": 992023, "on": {"card_born": 2000005}, "condition": {},
+		"settlement": [{"action": {"counter+7000003": 1}}]}
 	local_db.events[992024] = {"id": 992024, "on": {"game_end": 12}, "condition": {}}
 	local_db.events[992025] = {"id": 992025, "on": {"game_end": -1}, "condition": {}}
 	var state := GameState.new()
@@ -429,14 +430,14 @@ func test_counter_and_card_born_and_game_end_timings_fire() -> void:
 
 	state.pending_operations.clear()
 	ResultExec.execute({"card": 2000005}, state, local_db)
-	assert_true(992023 in state.event_queue, "card_born fires when a card is granted")
-	state.pending_operations.clear()
+	assert_eq(state.get_counter(7000003), 1, "card_born settles its payload when a card is granted")
 	ResultExec.execute({"card": 2000001}, state, local_db)
-	assert_false(992023 in state.event_queue, "card_born matches only its configured id")
+	assert_eq(state.get_counter(7000003), 1, "card_born matches only its configured id")
 
 	# GameEnd ending filter: 12 matches, [4,11] would not, -1 matches any.
+	# Settled non-replay events unregister, so only -1 survives a second fire.
 	assert_eq(state.trigger_events("game_end", {"ending": 12}), [992024, 992025])
-	assert_eq(state.trigger_events("game_end", {"ending": 4}), [992025])
+	assert_eq(state.trigger_events("game_end", {"ending": 4}), [], "settled non-replay events do not fire again")
 	assert_eq(state.trigger_events("game_end", {}), [], "no ending id means no game_end event")
 
 
@@ -614,7 +615,13 @@ func test_difficulty_action_switches_mid_run() -> void:
 	state.redraws_left = 0
 	state.back_to_prev_left = 9999 # easy allowance
 	ResultExec.execute({"difficulty": 1}, state, local_db)
-	assert_eq(state.difficulty_index, 1, "the event action switches the difficulty")
+	var pick: Dictionary = {}
+	for prompt in state.event_prompts:
+		if str(prompt.get("title", "")) == "选择你的叙事者":
+			pick = prompt
+	assert_false(pick.get("choices", {}).is_empty(), "the difficulty action opens the narrator choice")
+	DeferredEffects.execute_choice("diff_1", pick["choices"]["diff_1"], state, local_db, RNG.new(1))
+	assert_eq(state.difficulty_index, 1, "the chosen narrator switches the difficulty")
 	assert_eq(state.redraws_left, int(state.difficulty_config.get("sudan_redraw_times_per_round", 0)),
 		"per-round redraws refresh from the new difficulty")
 	assert_eq(state.back_to_prev_left, int(state.difficulty_config.get("back_to_prev_round_count", 0)),

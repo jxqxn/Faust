@@ -589,7 +589,7 @@ func test_state_trigger_events_queues_matched_ids():
 	st._rebuild_event_runtime(local_db)
 	var matched := st.trigger_events("game_end", {"ending": 3})
 	assert_eq(matched, [990040], "game_end trigger fires the registered event")
-	assert_eq(st.event_queue, [990040], "matched event is queued for display")
+	assert_true(st.pending_operations.is_empty(), "interaction-free events settle silently without entering the display queue")
 
 
 func test_card_trigger_event_keeps_the_runtime_card_context():

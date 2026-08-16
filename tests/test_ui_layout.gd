@@ -672,8 +672,8 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 
 
 func test_game_screen_event_queue_executes_event_result_when_consumed():
-	# A queued event with a result payload must apply its effects when the
-	# player dismisses it, instead of being a no-op.
+	# Events settle when they fire; the display queue only shows them. The
+	# effects land before the panel opens and consuming just dismisses it.
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.events[990002] = {
@@ -681,10 +681,17 @@ func test_game_screen_event_queue_executes_event_result_when_consumed():
 		"name": "奖励事件",
 		"text": "你获得了一些金币。",
 		"result": {"金币": 7, "counter+7000001": 3},
+		"on": {"game_end": -1},
 	}
 	var rng := RNG.new(21)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, rng)
+	state.enable_event(990002, local_db)
+	state.trigger_events("game_end", {"ending": 3})
+	assert_eq(state.coin_count, 7, "event result coin applied when the event fires")
+	assert_eq(state.get_counter(7000001), 3, "event result counter applied when the event fires")
+	# Interaction-bearing events display; a text+result event stays silent
+	# unless its settlement queues a prompt.
 	state.queue_event(990002)
 	var stage := _stage()
 	var screen = GameScreen.new()
@@ -700,13 +707,12 @@ func test_game_screen_event_queue_executes_event_result_when_consumed():
 	await wait_process_frames(2)
 
 	assert_true(state.event_queue.is_empty(), "event consumed from the queue")
-	assert_eq(state.coin_count, 7, "event result coin applied on consume")
-	assert_eq(state.get_counter(7000001), 3, "event result counter applied on consume")
+	assert_eq(state.coin_count, 7, "consuming does not double-apply the settlement")
 
 
 func test_game_screen_event_with_over_result_signals_game_over():
-	# An event whose result carries `over` must signal game-over to the
-	# controller when consumed.
+	# An `over` result settles silently and raises over_pending; the screen
+	# signals game-over when it processes the outcome.
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.events[990003] = {
@@ -714,10 +720,14 @@ func test_game_screen_event_with_over_result_signals_game_over():
 		"name": "结局事件",
 		"text": "一切都结束了。",
 		"result": {"over": 1},
+		"on": {"game_end": -1},
 	}
 	var rng := RNG.new(22)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, rng)
+	state.enable_event(990003, local_db)
+	state.trigger_events("game_end", {"ending": 3})
+	assert_true(state.over_pending, "the silent settlement raises over_pending")
 	state.queue_event(990003)
 	var stage := _stage()
 	var screen = GameScreen.new()
@@ -734,31 +744,27 @@ func test_game_screen_event_with_over_result_signals_game_over():
 
 
 func test_game_screen_event_with_rite_auto_opens_rite():
-	# An event whose action opens a rite should auto-open it (so the player sees
-	# the rite's narration), not silently park it in available_rites.
+	# Rite generation from a settled event parks the rite for the desk map;
+	# the clone no longer force-opens the panel (the original's system
+	# initialization events create many rites at once).
 	var local_db := ConfigDB.new()
 	local_db.load_all()
+	local_db.rites[990005] = {
+		"id": 990005, "cards_slot": {"s1": {"condition": {}}}, "round_number": 1,
+		"settlement": [], "settlement_prior": [], "settlement_extre": []}
 	local_db.events[990004] = {
 		"id": 990004,
 		"text": "求助",
-		"settlement": [{"action": {"rite": 5001001}}],
+		"settlement": [{"action": {"rite": 990005}}],
+		"on": {"game_end": -1},
 	}
 	var rng := RNG.new(23)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, rng)
-	state.queue_event(990004)
-	var stage := _stage()
-	var screen = GameScreen.new()
-	screen.setup(state, local_db, rng)
-	stage.add_child(screen)
-	await wait_process_frames(2)
-	watch_signals(screen)
-
-	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
-	if cont != null:
-		cont.pressed.emit()
-		await wait_process_frames(2)
-	assert_signal_emitted_with_parameters(screen, "open_rite", [5001001])
+	state.enable_event(990004, local_db)
+	state.trigger_events("game_end", {"ending": 3})
+	assert_not_null(state.find_rite_instance_by_id(990005), "the settled event generates the rite")
+	assert_false(state.available_rites.is_empty(), "the generated rite is available on the desk")
 
 
 func test_game_menu_button_opens_real_overlay():
