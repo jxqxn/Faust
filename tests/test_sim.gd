@@ -595,7 +595,15 @@ func test_state_trigger_events_queues_matched_ids():
 func test_card_trigger_event_keeps_the_runtime_card_context():
 	var local_db := ConfigDB.new()
 	local_db.load_all()
-	local_db.events[990041] = {"id": 990041, "on": {"card_clean": 2000005}, "condition": {"is": 2000005}}
+	# Silent events settle without entering the display queue (DoSettlements);
+	# the runtime card context is observable only on interaction-bearing
+	# settlements, so the probe event carries a prompt.
+	local_db.events[990041] = {
+		"id": 990041,
+		"on": {"card_clean": 2000005},
+		"condition": {"is": 2000005},
+		"result": {"prompt": {"id": "ctx_probe"}},
+	}
 	var st := GameState.new()
 	st.setup_new_run(local_db, 0, RNG.new(63))
 	assert_true(st.enable_event(990041, local_db))

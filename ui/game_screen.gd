@@ -15,7 +15,6 @@ signal open_rite_selector(location_name: String)
 signal menu_pressed()
 signal game_over_requested()
 
-const UiMotionScript = preload("res://ui/ui_motion.gd")
 const SituationDeskScript = preload("res://ui/situation_desk.gd")
 
 class HandRailDrop:
@@ -140,7 +139,10 @@ func _build_ui() -> void:
 	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	_hud = _panel("Hud")
-	_hud.add_theme_stylebox_override("panel", _chrome_panel_style())
+	# The original floats the gold/round readouts over the desk painting with
+	# no chrome strip; the host panel stays only as a layout node.
+	# [SRC: GameScene.unity TopLeft cluster - no background Image]
+	_hud.add_theme_stylebox_override("panel", _hud_panel_style())
 	add_child(_hud)
 	var hud_row := HBoxContainer.new()
 	hud_row.add_theme_constant_override("separation", 24)
@@ -195,7 +197,6 @@ func _build_ui() -> void:
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
 	_menu_button.z_index = PERSISTENT_CONTROL_Z
 	add_child(_menu_button)
-	UiMotionScript.bind(_menu_button)
 
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
@@ -288,37 +289,49 @@ func _build_ui() -> void:
 
 	_advance_button = Button.new()
 	_advance_button.name = "AdvanceDayButton"
-	_advance_button.text = "下一天"
-	# Texture-first: next_day.png (512x512 stamp) IS the button — no
-	# circular chrome behind it. [SRC: main_new/next_day.png + hover]
-	if ResourceLoader.exists("res://assets/original/ui/main/next_day.png"):
-		_advance_button.text = ""
-		_advance_button.tooltip_text = "下一天"
-		var next_icon := TextureRect.new()
-		next_icon.name = "NextDayIcon"
-		next_icon.texture = preload("res://assets/original/ui/main/next_day.png")
-		next_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
-		next_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		next_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		next_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_advance_button.add_child(next_icon)
-		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
-			_advance_button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
-	_advance_button.custom_minimum_size = Vector2(132, 132)
-	_advance_button.add_theme_font_size_override("font_size", 23)
-	_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
-	_advance_button.add_theme_color_override("font_hover_color", Color("#681f1b"))
-	_advance_button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.52))
-	_advance_button.add_theme_stylebox_override("normal", _round_button_style())
-	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")))
-	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")))
+	_advance_button.tooltip_text = "下一天"
+	_advance_button.custom_minimum_size = Vector2(150, 160)
+	# Pocket-watch composite: the clock_bg watch IS the button face with the
+	# next_day_0 stamp riding in its center — no circular chrome of our own.
+	# [SRC: GameScene.unity "Next Round" -> clock_bg 596x634 + Image 305x306
+	#       sprite=next_day_0; Texture2D/clock_bg.png + next_day_0.png]
+	if ResourceLoader.exists("res://assets/original/ui/clock_bg.png"):
+		var watch := TextureRect.new()
+		watch.name = "NextDayWatch"
+		watch.texture = preload("res://assets/original/ui/clock_bg.png")
+		watch.set_anchors_preset(Control.PRESET_FULL_RECT)
+		watch.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		watch.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		watch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_advance_button.add_child(watch)
+	if ResourceLoader.exists("res://assets/original/ui/next_day_0.png"):
+		var stamp := TextureRect.new()
+		stamp.name = "NextDayStamp"
+		stamp.texture = load("res://assets/original/ui/next_day_0.png") as Texture2D
+		stamp.set_anchors_preset(Control.PRESET_CENTER)
+		stamp.custom_minimum_size = Vector2(74, 74)
+		stamp.size = Vector2(74, 74)
+		stamp.position = Vector2(-37, -42)
+		stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		stamp.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_advance_button.add_child(stamp)
+	else:
+		_advance_button.text = "下一天"
+		_advance_button.add_theme_font_size_override("font_size", 23)
+		_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
+		_advance_button.add_theme_color_override("font_hover_color", Color("#681f1b"))
+		_advance_button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.52))
+	var advance_style := _round_button_style()
+	_advance_button.add_theme_stylebox_override("normal", advance_style if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
+	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
+	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	# Disabled is a distinct theme state. Without this explicit style Godot falls
 	# back to a rectangular default, making the paused primary action look
 	# malformed even though its layout rectangle has not changed.
 	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)))
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
-	UiMotionScript.bind(_advance_button, UiMotionScript.Profile.PRIMARY)
 
 	_redraw_button = _icon_button("重抽")
 	_redraw_button.name = "RedrawSudanButton"
@@ -335,13 +348,15 @@ func _build_ui() -> void:
 		_redraw_button.add_child(redraw_icon)
 	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(_redraw_button)
-	UiMotionScript.bind(_redraw_button)
 
 	_back_to_prev_button = _icon_button("回退")
 	_back_to_prev_button.name = "BackToPrevButton"
-	if ResourceLoader.exists("res://assets/original/ui/reset.png"):
+	# Original return-to-previous-round stamp.
+	# [SRC: GameScene.unity Next Round/PrevRound -> return_last_round;
+	#       Texture2D/return_last_round.png 160x140]
+	if ResourceLoader.exists("res://assets/original/ui/return_last_round.png"):
 		var back_icon := TextureRect.new()
-		back_icon.texture = preload("res://assets/original/ui/reset.png")
+		back_icon.texture = load("res://assets/original/ui/return_last_round.png") as Texture2D
 		back_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		back_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		back_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -351,7 +366,6 @@ func _build_ui() -> void:
 		_back_to_prev_button.add_child(back_icon)
 	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
 	_right_actions.add_child(_back_to_prev_button)
-	UiMotionScript.bind(_back_to_prev_button)
 
 
 func _apply_layout() -> void:
@@ -439,15 +453,9 @@ func _panel(node_name: String) -> PanelContainer:
 	return panel
 
 
-func _chrome_panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.12, 0.085, 0.055, 0.92)
-	style.border_color = Color(0.82, 0.66, 0.34, 0.48)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(2)
-	style.shadow_color = Color(0.015, 0.008, 0.004, 0.58)
-	style.shadow_size = 7
-	style.shadow_offset = Vector2(3.0, 4.0)
+func _hud_panel_style() -> StyleBox:
+	# Transparent host: the readouts sit directly on the table painting.
+	var style := StyleBoxEmpty.new()
 	return style
 
 
@@ -508,7 +516,24 @@ func _icon_button(label: String) -> Button:
 	return button
 
 
-func _small_action_style(border: Color = Color(0.43, 0.28, 0.15, 0.68)) -> StyleBoxFlat:
+## Texture-first: the original parchment strip IS the small-button surface.
+## [SRC: Texture2D/button_bg.png 516x140]
+func _small_action_style(border: Color = Color(0.43, 0.28, 0.15, 0.68)) -> StyleBox:
+	var art_path := "res://assets/original/ui/button_bg.png"
+	if ResourceLoader.exists(art_path):
+		var tex := load(art_path) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 150
+			style.texture_margin_right = 150
+			style.texture_margin_top = 40
+			style.texture_margin_bottom = 40
+			style.content_margin_left = 158
+			style.content_margin_right = 158
+			style.content_margin_top = 46
+			style.content_margin_bottom = 46
+			return style
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#dfc886")
 	style.border_color = border
@@ -1088,7 +1113,6 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_event_panel.clip_contents = true
 	_event_panel.add_theme_stylebox_override("panel", _event_panel_style())
 	_event_overlay.add_child(_event_panel)
-	UiMotionScript.bind(_event_panel, UiMotionScript.Profile.PANEL, true)
 	var root := VBoxContainer.new()
 	root.name = "EventPromptContent"
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1310,7 +1334,6 @@ func _event_button(label: String) -> Button:
 	button.add_theme_stylebox_override("normal", _small_action_style())
 	button.add_theme_stylebox_override("hover", _small_action_style(Color("#efc46e")))
 	button.add_theme_stylebox_override("pressed", _small_action_style(Color("#fff1bc")))
-	UiMotionScript.bind(button, UiMotionScript.Profile.PRIMARY)
 	return button
 
 
@@ -1386,7 +1409,6 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_card_detail_panel.clip_contents = true
 	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
 	_card_detail_overlay.add_child(_card_detail_panel)
-	UiMotionScript.bind(_card_detail_panel, UiMotionScript.Profile.PANEL, true)
 	# Texture-first: the per-type cardinfo art drives the 9-slice surface
 	# (see _detail_panel_style / _detail_backdrop_texture).
 	# [SRC: Texture2D/cardinfo_bg_char.png / cardinfo_bg_item.png / cardinfo_bg.png]
@@ -1458,17 +1480,18 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 
 	var close := Button.new()
 	close.name = "CloseCardDetailButton"
-	close.text = "×"
+	close.text = ""
+	close.tooltip_text = "关闭"
 	close.custom_minimum_size = Vector2(42, 42)
 	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	close.add_theme_font_size_override("font_size", 24)
-	close.add_theme_stylebox_override("normal", _round_close_style())
-	close.add_theme_stylebox_override("hover", _round_close_style(FaustTheme.GOLD_BRIGHT))
-	close.add_theme_stylebox_override("pressed", _round_close_style(FaustTheme.BORDER))
+	# The original close_1 stamp IS the button face.
+	# [SRC: Texture2D/close_1.png 80x80; GameScene Close -> close_1]
+	var close_style := _close_button_style()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		close.add_theme_stylebox_override(state_name, close_style)
 	close.pressed.connect(close_card_detail)
 	top_row.add_child(close)
-	UiMotionScript.bind(close)
 
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 16)
@@ -1482,10 +1505,23 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_add_detail_section(info, "标签", _tag_lines(card))
 	_add_detail_section(info, "装备", _equipment_lines(card))
 
-	var portrait := ColorRect.new()
-	portrait.name = "CardDetailPortraitPlaceholder"
-	portrait.color = Color("#101820")
+	# Card art fills the portrait side; the original cardinfo popup shows the
+	# full card painting, with the type icon standing in when the card ships
+	# without art. [SRC: Texture2D/cards/<id>.png; card_type_char/item/sudan]
+	var portrait := TextureRect.new()
+	portrait.name = "CardDetailPortrait"
 	portrait.custom_minimum_size = Vector2(140, 150)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var art_path := "res://assets/original/cards/%d.png" % int(card.get("id", 0))
+	if ResourceLoader.exists(art_path):
+		portrait.texture = load(art_path) as Texture2D
+	elif ResourceLoader.exists("res://assets/original/ui/card_type_%s.png" % str(card.get("type", "item"))):
+		portrait.texture = load(
+			"res://assets/original/ui/card_type_%s.png" % str(card.get("type", "item"))
+		) as Texture2D
+	if portrait.texture == null:
+		portrait.texture = load("res://assets/original/ui/card_type_item.png") as Texture2D
 	body.add_child(portrait)
 
 	_apply_layout()
@@ -1648,7 +1684,24 @@ func _detail_backdrop_texture() -> Texture2D:
 	return null
 
 
-func _badge_style() -> StyleBoxFlat:
+func _badge_style() -> StyleBox:
+	# The original card-info tag plate IS the badge surface.
+	# [SRC: Texture2D/card_info_tag.png 52x56]
+	var art_path := "res://assets/original/ui/card_info_tag.png"
+	if ResourceLoader.exists(art_path):
+		var tex := load(art_path) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 14
+			style.texture_margin_right = 14
+			style.texture_margin_top = 14
+			style.texture_margin_bottom = 14
+			style.content_margin_left = 16
+			style.content_margin_right = 16
+			style.content_margin_top = 16
+			style.content_margin_bottom = 16
+			return style
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#e9edf1")
 	style.border_color = FaustTheme.GOLD
@@ -1658,11 +1711,24 @@ func _badge_style() -> StyleBoxFlat:
 	return style
 
 
-func _round_close_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#17110d")
-	style.border_color = border
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(24)
-	style.set_content_margin_all(4)
-	return style
+## The shared original close stamp (close_1) as a button surface.
+## [SRC: Texture2D/close_1.png 80x80; GameScene Close -> close_1]
+func _close_button_style() -> StyleBox:
+	var art_path := "res://assets/original/ui/close_1.png"
+	if ResourceLoader.exists(art_path):
+		var tex := load(art_path) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 26
+			style.texture_margin_right = 26
+			style.texture_margin_top = 26
+			style.texture_margin_bottom = 26
+			return style
+	var flat := StyleBoxFlat.new()
+	flat.bg_color = Color("#17110d")
+	flat.border_color = FaustTheme.GOLD
+	flat.set_border_width_all(2)
+	flat.set_corner_radius_all(24)
+	flat.set_content_margin_all(4)
+	return flat

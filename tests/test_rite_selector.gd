@@ -1,7 +1,6 @@
 extends GutTest
 
 const RiteSelector = preload("res://ui/rite_selector.gd")
-const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 
 func _owned(node: Node) -> Node:
@@ -10,7 +9,7 @@ func _owned(node: Node) -> Node:
 
 
 func after_each():
-	UiMotionScript.reduced_motion = false
+	RiteSelector.reduced_motion = false
 
 
 func test_selector_shows_rite_when_open_conditions_are_satisfied():
@@ -243,7 +242,7 @@ func test_overlay_panel_is_a_compact_site_menu_inside_its_safe_area():
 
 
 func test_compact_site_menu_closes_from_backdrop_or_escape_without_return_button():
-	UiMotionScript.reduced_motion = true
+	RiteSelector.reduced_motion = true
 	var db := ConfigDB.new()
 	db.rites = {9005: _rite_with_location("Home")}
 	for close_kind in ["backdrop", "escape"]:

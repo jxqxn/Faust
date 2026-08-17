@@ -32,7 +32,6 @@ class ThinkDropZone:
 			owner_desk.call("_set_think_drop_highlight", false)
 
 
-const UiMotionScript = preload("res://ui/ui_motion.gd")
 const RiteSelectorScript = preload("res://ui/rite_selector.gd")
 const MAP_TEXTURE = preload("res://assets/original/situation_desk/table-map.png")
 # The original desk renders the physical table first, then the pin map on
@@ -203,7 +202,6 @@ func _build_site(spec: Dictionary) -> void:
 	token.size = SITE_NODE_SIZE if area_texture == null else SITE_NODE_SIZE * Vector2(1.7, 1.7)
 	token.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(token)
-	UiMotionScript.bind(button, UiMotionScript.Profile.SITE)
 
 	var ink_label := Label.new()
 	ink_label.name = "MapLabel_%s" % site_id

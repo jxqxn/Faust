@@ -15,18 +15,30 @@
 
 ## 2. 表现层
 
-- ✅ 卡面：1190/1292 原作卡画接入（102 张原作无独立图，自制纸面回退）
+- ✅ 卡面：1190/1292 原作卡画接入（102 张原作无独立图，显示 card_type_* 类型图标——原作数据本身无这些卡的立绘）
 - ✅ 桌面：原作双层底图（table.png + table-map.png）
 - ✅ 音频：GameAudio（main/tutorial BGM + 下一日/确认/重抽/苏丹四族抽卡/骰子/金骰）
 - ✅ UI 原作化六波：四波 + 事件弹窗羊皮纸底图（prompt.png）、卡牌详情背景（cardinfo_bg 按类型）、
   卡面稀有度边框（铜/银/金/石）、仪式卡槽底图、思考区 IThink 图、七个区域站点按钮原画（含新增上城区/黑街站点）
 - ✅ 原 UI 原作化四波：主菜单 logo、下一天/重抽/回退原画按钮、HUD 金币徽章、仪式图钉图集（rites.png 49 帧）、
   卡面属性图标（tags 图集）、事件立绘（130 张）、仪式背景（mapping_id→模板→bg 链，1418/1495）、结局背景
+- ✅ **UI 原作化第七波（2026-08-17，场景树证据驱动）**：主菜单按 StartScene/StartPanel 1:1
+  （bg_new_0 背景 + logo + 668x140 button_bg_new 按钮列 + 退出游戏）；下一天 = 原作怀表组合
+  （clock_bg 表盘 + next_day_0 印章，修复样式盒覆盖顺序 bug）；回退按钮换 return_last_round 原画；
+  引导条 = text_bg_2 条 + close_1 关闭钮 + begin_guide 图集鼠标图标；仪式选择器紧凑菜单与事件按钮
+  接 prompt.png/button_bg.png 九宫；ESC 菜单与存档面板接 common_operation_bg；卡牌详情关闭钮 close_1、
+  稀有度徽章 card_info_tag、立绘位显示卡面或类型图标；HUD 去掉自制 chrome 条（原作为悬浮读数）
+- ✅ **卡牌呈现去 Balatro（2026-08-17）**：删除弹簧积分器、透视/阴影双 shader、SubViewport 双通道渲染、
+  拖拽指针速度摆动与 ui_motion.gd 全局动效层；悬停/选中 = CardArea 高亮抬升，发牌/回流 = eased tween，
+  拖拽预览精确跟随指针；CardWidget 根改 Control 阻断容器最小尺寸传播（手牌居中回归）
 - ⬜ 仪式图钉与原作点位精确对位（MapController 布局参数，需实机对照微调）
+- ⬜ 桌面地图计数小牌（count chit）仍为样式盒，待原作对位
 - ⬜ 卡片拖放音（card-begin/end-drag、drop_card_copper/silver）、事件弹窗出现音
 - ⬜ BGM 分层切换（main_game_level2/3 的切换条件）、结局 BGM
 - ⬜ Live2D（原作卡面 Live2D 模型，语料库 live2d/ 目录已有提取；第一版静态图的既定策略）
 - ⬜ 苏丹卡特殊视觉（稀有边框、倒计时红光等原作细节）
+- ⬜ 命名清理：set_world_scene_blocker（世界场景时代命名）、world_spawn_id/world_position_ratio
+  死存档字段（删除需评估 v5 存档兼容）
 
 ## 3. 系统
 

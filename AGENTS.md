@@ -67,6 +67,20 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-17 表现层原作化第七波 + 去 Balatro（311 测试全绿）：** 场景树证据
+（StartScene/GameScene.unity 解析）驱动的最后一批"自制表现"清理。主菜单按
+StartPanel 1:1（bg_new_0 背景 + button_bg_new 668x140 按钮列 + 退出游戏）；
+下一天 = 怀表组合（clock_bg 表盘 + next_day_0 印章，修掉样式盒覆盖顺序 bug）；
+回退按钮换 return_last_round；引导条 = text_bg_2 + close_1 + begin_guide 图集
+图标；仪式选择器紧凑菜单/事件按钮接 prompt.png/button_bg.png；ESC 菜单与存档
+面板接 common_operation_bg；卡牌详情关闭钮/徽章/立绘位全部原作化；HUD 去掉
+自制 chrome 条。**卡牌去 Balatro**：删除弹簧积分器、透视/阴影双 shader、
+SubViewport 双通道渲染、拖拽速度摆动与 `ui_motion.gd` 全局动效层；悬停/选中 =
+CardArea 高亮抬升，发牌/回流 = eased tween，拖拽预览精确跟指针；CardWidget
+根改 Control 阻断容器最小尺寸传播。缺图卡（102 张，原作数据本身无立绘）显示
+card_type_* 类型图标。遗留：地图计数小牌样式盒、图钉精确对位、
+set_world_scene_blocker/world_spawn_id 命名清理（存档兼容需评估）。
+
 **2026-08-16 完全复刻冲刺二（DSL 全归零+引导+结局，330 测试全绿）：**
 新手引导系统：`BeginGuideBar`（15 类指引文案+手柄绑定提示，点击关闭）、
 `begin_guide`/`close_begin_guide` 安装清除指令、92 个引导表现键（hand_pop/rite_pop/

@@ -7,14 +7,16 @@ signal rite_chosen(rite_id: int)
 signal rite_chosen_instance(rite_uid: int)
 signal closed()
 
-const UiMotionScript = preload("res://ui/ui_motion.gd")
-
 const OVERLAY_SHADE_ALPHA := 0.38
 const OPEN_DURATION := 0.16
 const CLOSE_DURATION := 0.12
 const CONTEXT_MENU_MIN_WIDTH := 288.0
 const CONTEXT_MENU_MAX_WIDTH := 432.0
 const CONTEXT_MENU_MAX_HEIGHT := 224.0
+
+## Accessibility gate for the overlay reveal/close tweens (tests also force
+## it to keep close paths synchronous).
+static var reduced_motion := false
 
 var _db
 var _state = null
@@ -154,15 +156,21 @@ func _layout_overlay_panel() -> void:
 			26.0 + 8.0 + 44.0 * action_rows + 8.0 * (action_rows - 1) + 40.0
 		)
 	)
-	var panel_size := Vector2(panel_width, panel_height)
+	# The parchment stylebox pads the content: a PanelContainer cannot shrink
+	# below its combined minimum, so the layout target must respect it or the
+	# container re-expands past the safe rect after clamping.
+	var panel_min := _overlay_panel.get_combined_minimum_size()
+	panel_height = minf(maxf(panel_height, panel_min.y), safe_rect.size.y)
+	var panel_width_final := minf(maxf(panel_width, panel_min.x), safe_rect.size.x)
+	var panel_size := Vector2(panel_width_final, panel_height)
 	var panel_position := safe_rect.get_center() - panel_size * 0.5
 	if _overlay_anchor.x >= 0.0 and _overlay_anchor.y >= 0.0:
 		var right_x := _overlay_anchor.x + 26.0
-		var left_x := _overlay_anchor.x - panel_width - 26.0
+		var left_x := _overlay_anchor.x - panel_width_final - 26.0
 		var place_right := _overlay_anchor.x <= safe_rect.get_center().x
-		if place_right and right_x + panel_width > safe_rect.end.x and left_x >= safe_rect.position.x:
+		if place_right and right_x + panel_width_final > safe_rect.end.x and left_x >= safe_rect.position.x:
 			place_right = false
-		elif not place_right and left_x < safe_rect.position.x and right_x + panel_width <= safe_rect.end.x:
+		elif not place_right and left_x < safe_rect.position.x and right_x + panel_width_final <= safe_rect.end.x:
 			place_right = true
 		panel_position.x = right_x if place_right else left_x
 
@@ -177,7 +185,7 @@ func _layout_overlay_panel() -> void:
 	panel_position.x = clampf(
 		panel_position.x,
 		safe_rect.position.x,
-		maxf(safe_rect.position.x, safe_rect.end.x - panel_width)
+		maxf(safe_rect.position.x, safe_rect.end.x - panel_width_final)
 	)
 	panel_position.y = clampf(
 		panel_position.y,
@@ -228,7 +236,7 @@ func _play_open_motion() -> void:
 		clampf(pivot.x, 0.0, 1.0),
 		clampf(pivot.y, 0.0, 1.0)
 	)
-	if UiMotionScript.reduced_motion:
+	if reduced_motion:
 		_overlay_backdrop.color.a = OVERLAY_SHADE_ALPHA
 		_overlay_panel.offset_transform_position = Vector2.ZERO
 		_overlay_panel.offset_transform_scale = Vector2.ONE
@@ -274,7 +282,7 @@ func _request_close() -> void:
 	_closing = true
 	if _overlay_backdrop != null:
 		_overlay_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if not _overlay_mode or _overlay_panel == null or UiMotionScript.reduced_motion:
+	if not _overlay_mode or _overlay_panel == null or reduced_motion:
 		_finish_close()
 		return
 	var tween := create_tween()
@@ -427,7 +435,6 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		btn.add_theme_stylebox_override("focus", _rite_button_style(Color("#b98736"), true))
 		btn.pressed.connect(_on_rite_instance.bind(instance.uid))
 		grid.add_child(btn)
-		UiMotionScript.bind(btn, UiMotionScript.Profile.SITE)
 		if _first_rite_button == null:
 			_first_rite_button = btn
 	_list_container.add_child(grid)
@@ -447,7 +454,27 @@ static func _rite_pin_texture(rite: Dictionary) -> Texture2D:
 	return _rites_atlas.frame(icon_id + ".png")
 
 
-func _parchment_panel_style() -> StyleBoxFlat:
+func _parchment_panel_style() -> StyleBox:
+	# Texture-first: the original prompt parchment IS the context-menu surface
+	# (9-slice via StyleBoxTexture), same art family as the event prompts.
+	# [SRC: Texture2D/prompt.png 632x444; GameScene PromptBG -> prompt_bg]
+	var art_path := "res://assets/original/ui/prompt.png"
+	if ResourceLoader.exists(art_path):
+		var tex := load(art_path) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			# Compact-menu proportions: the same parchment corners without the
+			# full-panel padding that would outgrow the context-menu bounds.
+			style.texture_margin_left = 40
+			style.texture_margin_right = 40
+			style.texture_margin_top = 36
+			style.texture_margin_bottom = 36
+			style.content_margin_left = 46
+			style.content_margin_right = 46
+			style.content_margin_top = 42
+			style.content_margin_bottom = 42
+			return style
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#e4cc8e")
 	style.border_color = Color("#8a6238")

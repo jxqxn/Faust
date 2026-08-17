@@ -1,7 +1,14 @@
-## Main menu: title page first (new game / continue / archives), then the
+## Main menu: title page (new game / continue / archives / quit), then the
 ## difficulty picker as its own page — matching the original's two-stage
 ## flow where difficulty is chosen after entering a new game, not on the
-## title screen. Uses a full-anchor layout with a centered VBox.
+## title screen.
+##
+## Visual layout mirrors StartScene's StartPanel: the bg_new_0 backdrop
+## painting, the centered logo, and 668x140 button_bg_new stamps for the
+## primary actions. The story/shop/collect meta row is a platform feature
+## with no clone counterpart and is not reproduced.
+## [SRC: StartScene.unity StartPanel/MainGroup -> bg_new_0, button_bg_new,
+##       logo; button column NewGame/LoadGame/UserArchiveLoadGame/QuitGame]
 extends Control
 
 signal difficulty_selected(index: int)
@@ -11,11 +18,11 @@ signal continue_pressed()
 signal user_archive_load_requested(index: int)
 signal user_archive_delete_requested(index: int)
 
-const UiMotionScript = preload("res://ui/ui_motion.gd")
-
 const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
 
-const CONTENT_WIDTH := 960
+const CONTENT_WIDTH := 980
+const TITLE_BG_PATH := "res://assets/original/ui/bg_new_0.png"
+const BUTTON_BG_PATH := "res://assets/original/ui/button_bg_new.png"
 
 var _db = null
 var _column: VBoxContainer
@@ -32,10 +39,16 @@ func _ready() -> void:
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Dark background.
-	var bg := ColorRect.new()
+	# Original title painting as the full-bleed backdrop.
+	# [SRC: Texture2D/bg_new_0.png 2048x1076 -> StartPanel background]
+	var bg := TextureRect.new()
 	bg.name = "Background"
-	bg.color = FaustTheme.BG_DEEP
+	if ResourceLoader.exists(TITLE_BG_PATH):
+		bg.texture = load(TITLE_BG_PATH) as Texture2D
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	else:
+		bg.texture = null
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	_build_title_view()
@@ -45,66 +58,85 @@ func _build_ui() -> void:
 func _build_title_view() -> void:
 	_clear_dynamic()
 	_center_column()
-	var title := Label.new()
-	title.name = "MenuTitle"
-	title.text = "苏丹的游戏"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 64)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	_column.add_child(title)
 	var logo := TextureRect.new()
 	logo.name = "MenuLogo"
 	logo.texture = preload("res://assets/original/ui/logo/logo_zhCN.png")
 	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	logo.custom_minimum_size = Vector2(560, 220)
+	# [SRC: StartPanel/MainGroup logo 730x458 within the 2200x1800 group]
+	logo.custom_minimum_size = Vector2(620, 389)
 	logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_column.add_child(logo)
-	_column.add_child(_spacer(6))
-	var sub := Label.new()
-	sub.text = "Godot 克隆版 · 请选择你的苏丹"
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sub.add_theme_font_size_override("font_size", 16)
-	sub.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
-	_column.add_child(sub)
-	_column.add_child(_spacer(12))
-	var new_game := Button.new()
-	new_game.name = "NewGameButton"
-	new_game.text = "新的游戏"
-	new_game.custom_minimum_size = Vector2(0, 54)
-	new_game.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	new_game.add_theme_font_size_override("font_size", 24)
+	_column.add_child(_spacer(34))
+	var new_game := _title_button("新的游戏", "NewGameButton")
 	# The original starts the run right away; the opening show (event
 	# 5310006) presents the narrator/difficulty pick in-game.
 	new_game.pressed.connect(func(): difficulty_selected.emit(0))
 	_column.add_child(new_game)
-	UiMotionScript.bind(new_game, UiMotionScript.Profile.PRIMARY)
-	_column.add_child(_spacer(10))
+	_column.add_child(_spacer(14))
 	# Continue button (only if a valid save exists).
 	if _has_continue_save():
-		var cont := Button.new()
-		cont.name = "ContinueGameButton"
-		cont.text = "继续游戏"
-		cont.custom_minimum_size = Vector2(0, 50)
-		cont.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cont.add_theme_font_size_override("font_size", 22)
+		var cont := _title_button("继续游戏", "ContinueGameButton")
 		cont.pressed.connect(func(): continue_pressed.emit())
 		_column.add_child(cont)
-		UiMotionScript.bind(cont, UiMotionScript.Profile.PRIMARY)
-		_column.add_child(_spacer(10))
+		_column.add_child(_spacer(14))
 	var archives := SaveSystem.list_user_archives(_db) if _db != null else []
 	if not archives.is_empty():
 		_column.add_child(_make_archive_section(archives))
-		_column.add_child(_spacer(10))
+		_column.add_child(_spacer(14))
+	var quit := _title_button("退出游戏", "QuitGameButton")
+	quit.pressed.connect(func(): get_tree().quit())
+	_column.add_child(quit)
 	if OS.is_debug_build():
-		var test_btn := Button.new()
-		test_btn.name = "TestStartButton"
-		test_btn.text = "测试开始"
-		test_btn.custom_minimum_size = Vector2(0, 42)
-		test_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_column.add_child(_spacer(10))
+		var test_btn := _title_button("测试开始", "TestStartButton")
 		test_btn.pressed.connect(func(): test_start_requested.emit(1))
 		_column.add_child(test_btn)
-		UiMotionScript.bind(test_btn)
+
+
+## A 668x140 button_bg_new stamp with centered text — the original title
+## button. [SRC: StartPanel NewGame/Image 668x140 sprite=button_bg_new]
+func _title_button(label: String, node_name: String) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.text = label
+	button.custom_minimum_size = Vector2(560, 104)
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	button.add_theme_font_size_override("font_size", 28)
+	button.add_theme_color_override("font_color", Color("#f2e3b0"))
+	button.add_theme_color_override("font_hover_color", Color("#fff3c4"))
+	button.add_theme_color_override("font_pressed_color", Color("#e7d193"))
+	button.add_theme_color_override("font_disabled_color", Color(0.62, 0.56, 0.44, 0.6))
+	var style := _title_button_style()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state_name, style)
+	return button
+
+
+func _title_button_style() -> StyleBox:
+	# Texture-first: the original stamp IS the button surface.
+	# [SRC: Texture2D/button_bg_new.png 668x140]
+	if ResourceLoader.exists(BUTTON_BG_PATH):
+		var tex := load(BUTTON_BG_PATH) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 180
+			style.texture_margin_right = 180
+			style.texture_margin_top = 46
+			style.texture_margin_bottom = 46
+			style.content_margin_left = 190
+			style.content_margin_right = 190
+			style.content_margin_top = 52
+			style.content_margin_bottom = 52
+			return style
+	var fallback := StyleBoxFlat.new()
+	fallback.bg_color = Color("#3a2b1a")
+	fallback.border_color = Color("#d4ad5a")
+	fallback.set_border_width_all(2)
+	fallback.set_corner_radius_all(6)
+	fallback.set_content_margin_all(18)
+	return fallback
 
 
 ## Difficulty page: the three narrators, shown after "新的游戏".
@@ -123,14 +155,9 @@ func _build_difficulty_view() -> void:
 	for i in 3:
 		_column.add_child(_make_diff_card(i))
 		_column.add_child(_spacer(8))
-	var back := Button.new()
-	back.name = "BackToTitleButton"
-	back.text = "返回标题"
-	back.custom_minimum_size = Vector2(0, 40)
-	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var back := _title_button("返回标题", "BackToTitleButton")
 	back.pressed.connect(_build_title_view)
 	_column.add_child(back)
-	UiMotionScript.bind(back)
 
 
 func _clear_dynamic() -> void:
@@ -182,7 +209,6 @@ func _make_diff_card(index: int) -> Control:
 	btn.custom_minimum_size = Vector2(90, 40)
 	btn.pressed.connect(_on_difficulty.bind(index))
 	row.add_child(btn)
-	UiMotionScript.bind(btn, UiMotionScript.Profile.PRIMARY)
 	col.add_child(row)
 	var desc := Label.new()
 	desc.text = _difficulty_desc(index)
@@ -215,6 +241,7 @@ func _make_archive_section(archives: Array) -> Control:
 	section.add_theme_constant_override("separation", 6)
 	var title := Label.new()
 	title.text = "存档"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 20)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	section.add_child(title)
@@ -239,6 +266,7 @@ func _make_archive_row(archive: Dictionary) -> Control:
 		int(archive.get("round_number", 1)),
 		str(archive.get("save_time", "")),
 	]
+	summary.add_theme_color_override("font_color", FaustTheme.TEXT)
 	row.add_child(summary)
 	var load := Button.new()
 	load.name = "LoadUserArchiveButton_%d" % int(archive.get("index", -1))
@@ -246,7 +274,6 @@ func _make_archive_row(archive: Dictionary) -> Control:
 	load.custom_minimum_size = Vector2(72, 42)
 	load.pressed.connect(func(): user_archive_load_requested.emit(int(archive.get("index", -1))))
 	row.add_child(load)
-	UiMotionScript.bind(load)
 	var delete := Button.new()
 	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
 	delete.text = "删除"
@@ -254,7 +281,6 @@ func _make_archive_row(archive: Dictionary) -> Control:
 	delete.custom_minimum_size = Vector2(72, 42)
 	delete.pressed.connect(_confirm_delete_archive.bind(int(archive.get("index", -1))))
 	row.add_child(delete)
-	UiMotionScript.bind(delete)
 	return panel
 
 

@@ -5,7 +5,6 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
-const UiMotionScript = preload("res://ui/ui_motion.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -38,107 +37,7 @@ func test_main_menu_uses_wide_viewport_width():
 	assert_true(_widest_content(menu) >= MIN_CONTENT_WIDTH, "main menu content should use the wide viewport")
 
 
-func test_ui_motion_animates_visuals_without_moving_layout_or_hit_rect():
-	var stage := _stage()
-	var button := Button.new()
-	button.position = Vector2(80, 60)
-	button.size = Vector2(160, 48)
-	stage.add_child(button)
-	var layout_position := button.position
-	var layout_size := button.size
-	var motion = UiMotionScript.bind(button, UiMotionScript.Profile.PRIMARY)
-
-	motion.set_hovered_for_test(true)
-	for frame in 18:
-		motion._process(1.0 / 60.0)
-
-	assert_eq(button.position, layout_position, "motion must not change Container or anchor layout")
-	assert_eq(button.size, layout_size, "motion must not change the hit rectangle")
-	assert_true(button.offset_transform_visual_only, "interaction motion should be visual-only")
-	assert_true(button.offset_transform_scale.x > 1.0, "hover should lightly enlarge the visual")
-	assert_almost_eq(
-		button.offset_transform_position.y,
-		0.0,
-		0.001,
-		"ordinary UI hover should remain vertically anchored"
-	)
-
-
-func test_ui_motion_press_interrupts_hover_without_resetting_the_pose():
-	var stage := _stage()
-	var button := Button.new()
-	stage.add_child(button)
-	var motion = UiMotionScript.bind(button)
-	motion.set_hovered_for_test(true)
-	for frame in 12:
-		motion._process(1.0 / 60.0)
-	var hover_scale := button.offset_transform_scale.x
-
-	motion.set_pressed_for_test(true)
-	motion._process(1.0 / 60.0)
-	var first_pressed_scale := button.offset_transform_scale.x
-
-	assert_true(
-		absf(first_pressed_scale - hover_scale) < 0.08,
-		"press should retarget the active spring instead of snapping to a new Tween"
-	)
-	for frame in 18:
-		motion._process(1.0 / 60.0)
-	assert_true(
-		button.offset_transform_scale.x < hover_scale,
-		"held buttons should settle toward a compact pressed pose"
-	)
-
-
-func test_ui_motion_panel_reveal_is_bounded_and_settles():
-	var stage := _stage()
-	var panel := PanelContainer.new()
-	panel.position = Vector2(180, 90)
-	panel.size = Vector2(320, 240)
-	stage.add_child(panel)
-	var layout_position := panel.position
-	var motion = UiMotionScript.bind(panel, UiMotionScript.Profile.PANEL, true)
-
-	assert_true(panel.offset_transform_position.y > 0.0, "panel reveal should start slightly below rest")
-	assert_true(panel.self_modulate.a < 1.0, "panel reveal should begin transparent")
-	for frame in 90:
-		motion._process(1.0 / 60.0)
-
-	assert_eq(panel.position, layout_position, "panel reveal must preserve its anchored rectangle")
-	assert_almost_eq(panel.offset_transform_position.y, 0.0, 0.01)
-	assert_almost_eq(panel.offset_transform_scale.x, 1.0, 0.001)
-	assert_almost_eq(panel.self_modulate.a, 1.0, 0.001)
-
-
-func test_ui_motion_selected_site_survives_hover_exit_and_reduced_motion_snaps():
-	var stage := _stage()
-	var button := Button.new()
-	stage.add_child(button)
-	var motion = UiMotionScript.bind(button, UiMotionScript.Profile.SITE)
-
-	motion.set_hovered_for_test(true)
-	motion.set_selected(true)
-	motion.set_hovered_for_test(false)
-	for frame in 90:
-		motion._process(1.0 / 60.0)
-
-	assert_almost_eq(button.offset_transform_position.y, -6.0, 0.02)
-	assert_almost_eq(button.offset_transform_scale.x, 1.05, 0.002)
-	motion.set_selected(false)
-	for frame in 90:
-		motion._process(1.0 / 60.0)
-	assert_almost_eq(button.offset_transform_position.y, 0.0, 0.02)
-
-	UiMotionScript.reduced_motion = true
-	motion.set_selected(true)
-	assert_almost_eq(button.offset_transform_position.y, -6.0, 0.001)
-	assert_almost_eq(button.offset_transform_scale.x, 1.05, 0.001)
-	motion.set_selected(false)
-	assert_almost_eq(button.offset_transform_position.y, 0.0, 0.001)
-	UiMotionScript.reduced_motion = false
-
-
-func test_representative_main_screen_controls_share_ui_motion():
+func test_representative_main_screen_controls_exist():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(71))
 	var stage := _stage()
@@ -150,11 +49,6 @@ func test_representative_main_screen_controls_share_ui_motion():
 	for node_name in ["MenuButton", "SiteHome", "AdvanceDayButton"]:
 		var control := _find_node_by_name(screen, node_name)
 		assert_not_null(control, "%s should exist" % node_name)
-		if control != null:
-			assert_not_null(
-				control.get_node_or_null(UiMotionScript.DRIVER_NAME),
-				"%s should use the shared interaction motion" % node_name
-			)
 
 
 func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
@@ -430,7 +324,7 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	assert_not_null(disabled_advance_style, "the disabled primary action must retain an authored shape")
 	if disabled_advance_style != null:
 		assert_eq(disabled_advance_style.corner_radius_top_left, 72, "the disabled primary action must retain its round silhouette")
-	var disabled_redraw_style := redraw.get_theme_stylebox("disabled") as StyleBoxFlat
+	var disabled_redraw_style := redraw.get_theme_stylebox("disabled") as StyleBox
 	assert_not_null(disabled_redraw_style, "the disabled secondary action must retain an authored shape")
 	if selector != null:
 		assert_gt(selector.z_index, card_rail.z_index, "the contextual pause shade must cover the card rail")
@@ -958,21 +852,19 @@ func test_card_widget_hides_source_while_dragging_and_restores_on_failed_drop():
 
 	widget._set_hovered(true)
 	widget._drag_selected_position = Vector2(2.0, -12.0)
-	widget._drag_selected_rotation = deg_to_rad(1.4)
-	widget._drag_selected_scale = Vector2.ONE * CardWidget.HOVER_SCALE
 	widget._hide_source_for_drag()
 	assert_false(widget.visible, "source card should disappear from hand while dragging")
 	assert_eq(widget.z_index, 0, "hidden drag source should release its temporary hover layer")
 
 	widget._restore_source_after_failed_drag()
 	assert_true(widget.visible, "source card should reappear if drop fails")
-	assert_almost_eq(
-		widget.offset_transform_rotation, widget._drag_selected_rotation, 0.000001,
-		"a failed drop should return from the selected angle without snapping"
+	assert_true(
+		widget.is_hand_motion_active(),
+		"a failed drop should tween back from the release point instead of snapping"
 	)
 
 
-func test_card_widget_hover_raises_its_layer_and_scale():
+func test_card_widget_hover_lifts_without_scale_or_perspective():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
 	var widget := CardWidget.make(card)
@@ -981,206 +873,47 @@ func test_card_widget_hover_raises_its_layer_and_scale():
 
 	widget._set_hovered(true)
 	assert_true(widget.z_index >= CardWidget.HOVER_Z_INDEX, "hovered card should render above neighbouring cards")
-	await wait_process_frames(8)
-	assert_true(widget.offset_transform_scale.x > 1.0, "hovered card should gain visual scale")
-	assert_almost_eq(widget.offset_transform_position.y, 0.0, 0.5, "hover alone should not invent a selected-card lift")
+	assert_almost_eq(
+		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.001,
+		"hover should use CardArea's highlighted lift"
+	)
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001, "hover must not add clone-era zoom")
+	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001, "hover must not tilt the card")
 	assert_true(widget.offset_transform_visual_only, "hover transform should not distort the card's mouse hit rectangle")
-	assert_not_null(_find_node_by_name(widget, "CardVisualSurface"), "the dynamic card face should render as one shader-ready surface")
-	assert_not_null(_find_node_by_name(widget, "CardShadowSurface"), "cards should render a separate table-plane shadow pass")
-	assert_not_null(_find_node_by_name(widget, "CardRenderRoot"), "face and shadow should live below one container-managed render root")
-	assert_eq(widget._shadow_surface.get_parent(), widget._render_root)
-	assert_eq(widget._visual_surface.get_parent(), widget._render_root)
-	assert_false(widget._render_root is Container, "projection offsets must not be rewritten by container layout")
-	var shadow_style := widget._style_for_card()
-	assert_eq(shadow_style.shadow_size, 0, "the perspective face texture must not contain a baked shadow")
-	assert_eq(shadow_style.shadow_offset, Vector2.ZERO)
-	assert_eq(widget._shadow_surface.texture, widget._visual_surface.texture, "shadow and face should sample the same pre-perspective card texture")
-	assert_ne(widget._shadow_surface.material, widget._visual_surface.material, "shadow must not inherit the face perspective material")
-	assert_almost_eq(widget._shadow_height, CardWidget.SHADOW_IDLE_HEIGHT, 0.001, "hover alone should not raise the table shadow")
+	assert_not_null(_find_node_by_name(widget, "CardVisualFace"), "the card face should render as one flat surface")
+	assert_null(
+		_find_node_by_name(widget, "CardVisualSurface"),
+		"the clone-era shader surface must stay removed"
+	)
+	assert_null(
+		_find_node_by_name(widget, "CardShadowSurface"),
+		"the clone-era shadow pass must stay removed"
+	)
 
-	# The headless test pointer is fixed over the top-left corner of the stage;
-	# take it out of hit testing before asserting the explicit leave transition.
 	widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	widget._set_hovered(false)
-	await wait_process_frames(12)
+	await wait_process_frames(2)
 	assert_eq(widget.z_index, 0, "card should return to its normal rail layer after hover")
+	assert_almost_eq(widget.offset_transform_position.y, 0.0, 0.001)
 
 
-func test_card_moveable_scale_uses_original_exponential_recurrence():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget.offset_transform_scale = Vector2.ONE
-	widget._pose_scale_velocity = Vector2.ZERO
-	var delta := 1.0 / 60.0
-	var target := Vector2.ONE * CardWidget.HOVER_SCALE
-	widget._step_moveable_pose(Vector2.ZERO, 0.0, target, delta)
-	var expected_velocity := (1.0 - exp(-CardWidget.MOVEABLE_SCALE_DECAY_RATE * delta)) * 0.05
-	assert_almost_eq(widget._pose_scale_velocity.x, expected_velocity, 0.000001)
-	assert_almost_eq(widget.offset_transform_scale.x, 1.0 + expected_velocity, 0.000001)
-	assert_true(widget.offset_transform_scale.x > 1.03, "the first frame should be crisp rather than a slow generic spring")
-
-
-func test_card_shadow_uses_unwarped_alpha_and_height_parallax():
-	var shadow_shader: Shader = load("res://ui/card_shadow.gdshader")
-	assert_not_null(shadow_shader)
-	assert_true(shadow_shader.code.contains("texture(TEXTURE, UV).a"), "shadow should reuse the unwarped card alpha")
-	assert_true(shadow_shader.code.contains("blur_radius_px"), "overlapping cards need a compact silhouette-edge blur")
-	assert_true(shadow_shader.code.contains("min(card_alpha, 1.0) * shadow_color.a"), "shadow should tint only the blurred card silhouette")
-	assert_false(shadow_shader.code.contains("tilt"), "the table shadow must not accept pointer perspective")
-
-	var left_idle := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_IDLE_HEIGHT, 0.0, 1000.0)
-	var right_idle := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_IDLE_HEIGHT, 1000.0, 1000.0)
-	var left_drag := CardWidget._shadow_offset_for_height(CardWidget.SHADOW_DRAG_HEIGHT, 0.0, 1000.0)
-	assert_true(left_idle.x > 0.0, "a card left of screen center should cast inward to the right")
-	assert_true(right_idle.x < 0.0, "a card right of screen center should cast inward to the left")
-	assert_true(left_idle.y > 0.0, "the overhead-light shadow should fall below the card")
-	assert_true(left_drag.length() > left_idle.length() * 1.5, "drag height should separate the shadow without changing its silhouette")
-	var idle_exposure := CardWidget._shadow_bottom_exposure_for_height(CardWidget.SHADOW_IDLE_HEIGHT)
-	var drag_exposure := CardWidget._shadow_bottom_exposure_for_height(CardWidget.SHADOW_DRAG_HEIGHT)
-	assert_true(
-		idle_exposure >= CardWidget.CARD_SIZE.y * 0.04,
-		"idle shadow must retain a visible contact strip after scale compensation"
-	)
-	assert_true(
-		idle_exposure <= CardWidget.CARD_SIZE.y * 0.055,
-		"idle shadow should stay compact rather than becoming a halo"
-	)
-	assert_true(
-		drag_exposure >= CardWidget.CARD_SIZE.y * 0.07,
-		"drag shadow should visibly separate from the raised card"
-	)
-	assert_true(
-		drag_exposure <= CardWidget.CARD_SIZE.y * 0.09,
-		"drag shadow should remain proportional to card size"
-	)
-	assert_true(
-		drag_exposure < idle_exposure * 2.0,
-		"drag emphasis must not make the idle shadow comparatively disappear"
-	)
-
-
-func test_card_drag_height_changes_shadow_without_reusing_perspective_material():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget.make_drag_preview(Vector2.ZERO, 0.0, Vector2.ONE)
-	for frame in 18:
-		widget._update_depth_layers(Vector2(0.8, -0.7), true, 1.0 / 60.0)
-
-	assert_true(widget._shadow_height > 0.30, "held cards should raise their shadow toward the original drag height")
-	assert_ne(widget._shadow_surface.material, widget._perspective_material)
-	assert_true(widget._shadow_surface.scale.x < 0.95, "a raised shadow should shrink slightly like the original 2D pass")
-
-
-func test_card_selected_shadow_stays_on_the_table_plane_and_softens_overlap():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget.set_selected(true)
-	widget.offset_transform_position = Vector2(0.0, -CardWidget.SELECTED_LIFT)
-	widget._update_shadow_projection(false, 1.0)
-	var projection := widget._shadow_surface.position + Vector2.ONE * CardWidget.VISUAL_MARGIN
-	assert_almost_eq(
-		projection.y,
-		CardWidget._shadow_offset_for_height(
-			CardWidget.SHADOW_SELECTED_HEIGHT,
-			widget.get_global_rect().get_center().x,
-			widget.get_viewport_rect().size.x
-		).y + CardWidget.SELECTED_LIFT,
-		0.001,
-		"selected-face lift must be cancelled so the shadow remains on lower cards"
-	)
-	assert_almost_eq(widget._shadow_height, CardWidget.SHADOW_SELECTED_HEIGHT, 0.001)
-	assert_true(
-		float(widget._shadow_material.get_shader_parameter("blur_radius_px")) > 1.35,
-		"selected cards should soften the silhouette edge where cards overlap"
-	)
-
-
-func test_card_widget_drag_preview_starts_from_selected_pose_without_angle_jump():
+func test_card_widget_drag_preview_tracks_cursor_without_own_motion():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
 	var widget := CardWidget.make(card)
 	var selected_position := Vector2(1.5, -11.0)
-	var selected_rotation := deg_to_rad(1.25)
-	var selected_scale := Vector2.ONE * 1.04
-	widget.make_drag_preview(
-		selected_position,
-		selected_rotation,
-		selected_scale
-	)
-	assert_eq(widget.offset_transform_position, selected_position, "drag preview must start at the selected lift")
-	assert_eq(widget.offset_transform_scale, selected_scale, "drag preview must start at the selected scale")
-	assert_almost_eq(
-		widget.offset_transform_rotation, selected_rotation, 0.000001,
-		"starting a drag must not add a fixed left tilt"
-	)
-	stage.add_child(widget)
-	# The first drag sample only establishes the pointer baseline.  Calling the
-	# step directly keeps this visual contract independent of GUT's scene-tree
-	# scheduling, which can otherwise advance a newly attached preview beyond
-	# its initial pointer baseline before this coroutine resumes in a full run.
-	widget._step_drag_motion(Vector2.ZERO, 1.0 / 60.0)
+	widget.make_drag_preview(selected_position, 0.0, Vector2.ONE)
 
+	assert_eq(widget.offset_transform_position, selected_position, "drag preview must start at the pickup pose")
+	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001, "the held card must not carry an angle")
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.000001, "the held card must not scale")
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "drag preview should not intercept drop targets")
-	assert_true(
-		widget.offset_transform_position.distance_to(selected_position) < 0.1,
-		"the first spring step should remain visually continuous with the selected pose"
-	)
-	assert_true(
-		absf(widget.offset_transform_rotation - selected_rotation) < deg_to_rad(0.1),
-		"the first spring step should not create an angle pop"
-	)
-
-
-func test_card_widget_drag_motion_stays_with_pointer_swings_and_updates_drop_pose():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var payload: Dictionary = {}
-	var widget := CardWidget.make(card)
 	stage.add_child(widget)
-	widget.make_drag_preview(Vector2(0, -12), 0.0, Vector2.ONE * CardWidget.HOVER_SCALE, payload)
-	widget._step_drag_motion(Vector2(100, 100), 1.0 / 60.0)
-	widget._step_drag_motion(Vector2(124, 100), 1.0 / 60.0)
-
-	assert_true(
-		absf(widget._drag_rest_position.x - widget.offset_transform_position.x) < 0.25,
-		"the drag preview root already follows the cursor, so its visual must not add a second positional delay"
+	await wait_process_frames(6)
+	assert_eq(
+		widget.offset_transform_position, selected_position,
+		"the preview root follows the drag cursor; the card must not add motion of its own"
 	)
-	assert_true(widget.offset_transform_rotation > 0.0, "rightward movement should swing the held card clockwise")
-	assert_eq(payload.get("drag_visual_position"), widget.offset_transform_position)
-	assert_almost_eq(
-		float(payload.get("drag_visual_rotation")), widget.offset_transform_rotation, 0.000001,
-		"drop data must track the live held-card angle, not the pickup snapshot"
-	)
-	assert_eq(payload.get("drag_visual_scale"), widget.offset_transform_scale)
-
-
-func test_card_widget_drag_direction_reversal_is_smooth_then_changes_swing():
-	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
-	var stage := _stage()
-	var widget := CardWidget.make(card)
-	stage.add_child(widget)
-	widget.make_drag_preview(Vector2(0, -12), 0.0, Vector2.ONE * CardWidget.HOVER_SCALE)
-	widget._step_drag_motion(Vector2(100, 100), 1.0 / 60.0)
-	for x in [112.0, 124.0, 136.0, 148.0]:
-		widget._step_drag_motion(Vector2(x, 100), 1.0 / 60.0)
-	var right_angle := widget.offset_transform_rotation
-	assert_true(right_angle > 0.0)
-
-	widget._step_drag_motion(Vector2(124, 100), 1.0 / 60.0)
-	var first_reverse_angle := widget.offset_transform_rotation
-	assert_true(
-		absf(first_reverse_angle - right_angle) < deg_to_rad(5.0),
-		"reversing the mouse must not snap the card to the opposite angle in one frame"
-	)
-	for x in [104.0, 84.0, 64.0, 44.0, 24.0, 4.0]:
-		widget._step_drag_motion(Vector2(x, 100), 1.0 / 60.0)
-	assert_true(widget.offset_transform_rotation < 0.0, "continued leftward movement should smoothly reverse the swing")
 
 
 func test_card_widget_selected_pose_uses_original_highlight_height_without_scale_impulse():
@@ -1189,27 +922,18 @@ func test_card_widget_selected_pose_uses_original_highlight_height_without_scale
 	var widget := CardWidget.make(card)
 	stage.add_child(widget)
 	widget.set_selected(true)
-	for frame in 30:
-		widget._step_interaction_motion(1.0 / 60.0)
 	assert_true(widget.is_selected())
 	assert_almost_eq(
-		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.5,
+		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.001,
 		"highlighted cards should use CardArea's 0.2-card-height lift"
 	)
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001, "selection alone must not add hover zoom")
+	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001)
 
-	var selected_rotation := widget.offset_transform_rotation
 	widget.set_selected(false)
-	widget._step_interaction_motion(1.0 / 60.0)
-	assert_true(
-		absf(widget.offset_transform_rotation - selected_rotation) < deg_to_rad(5.0),
-		"deselecting should begin from the current angle without a transform reset"
-	)
-	for frame in 45:
-		widget._step_interaction_motion(1.0 / 60.0)
 	assert_false(widget.is_selected())
-	assert_true(widget.offset_transform_position.length() < 0.5, "deselected cards should spring back to their base pose")
-	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.01)
+	assert_almost_eq(widget.offset_transform_position.y, 0.0, 0.001, "deselected cards should return flat to the rail")
+	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001)
 
 
 func test_card_widget_deal_in_uses_visual_offset_and_settles():
