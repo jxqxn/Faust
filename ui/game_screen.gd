@@ -1187,15 +1187,69 @@ func _show_event_overlay(display: Dictionary) -> void:
 		cont.pressed.connect(_consume_event_display)
 		buttons.add_child(cont)
 	else:
+		var desc_label: RichTextLabel = null
+		var has_desc := false
+		for key in choices.keys():
+			var entry = choices[key]
+			if entry is Dictionary and str(entry.get("desc", "")) != "":
+				has_desc = true
+				break
+		if has_desc:
+			# DifficultyPanel-style live description: hovering a choice
+			# updates the desc area like UpdateShow swaps portrait+desc.
+			# [SRC: DifficultyPanelController.c UpdateShow/OnItemSelect]
+			desc_label = RichTextLabel.new()
+			desc_label.name = "EventPromptChoiceDesc"
+			desc_label.bbcode_enabled = true
+			desc_label.fit_content = true
+			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			desc_label.custom_minimum_size = Vector2(0, 74)
+			desc_label.add_theme_font_size_override("font_size", 13)
+			desc_label.add_theme_color_override("default_color", Color("#e8dcb8"))
+			desc_label.scroll_active = true
+			root.add_child(desc_label)
 		for key in choices.keys():
 			var choice_entry = choices[key]
 			var choice_text := str(choice_entry.get("text", key)) if choice_entry is Dictionary and choice_entry.has("value") else str(choice_entry)
 			var choice_value = choice_entry.get("value") if choice_entry is Dictionary and choice_entry.has("value") else choice_entry
 			var choice := _event_button(choice_text)
 			choice.name = "EventPromptChoiceButton"
+			var choice_icon: Texture2D = (
+				_choice_icon_texture(choice_entry.get("icon", ""))
+				if choice_entry is Dictionary
+				else null
+			)
+			if choice_icon != null:
+				var icon_rect := TextureRect.new()
+				icon_rect.texture = choice_icon
+				icon_rect.custom_minimum_size = Vector2(56, 56)
+				icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				choice.add_child(icon_rect)
+			if desc_label != null and choice_entry is Dictionary:
+				var entry_desc := str(choice_entry.get("desc", ""))
+				choice.mouse_entered.connect(func():
+					desc_label.text = entry_desc
+				)
 			choice.pressed.connect(_consume_event_display.bind(str(key), choice_value))
 			buttons.add_child(choice)
 	_apply_layout()
+
+
+## Resolve a choice icon resource reference ("cards/<id>" from event
+## configs, "ui/<name>" for panel art) to its extracted texture.
+func _choice_icon_texture(resource_ref: String) -> Texture2D:
+	if str(resource_ref) == "":
+		return null
+	var path := ""
+	if str(resource_ref).begins_with("cards/"):
+		path = "res://assets/original/cards/%s.png" % str(resource_ref).split("/")[-1]
+	elif str(resource_ref).begins_with("ui/"):
+		path = "res://assets/original/ui/%s.png" % str(resource_ref).split("/")[-1]
+	if path != "" and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
 
 
 func _clear_event_overlay() -> void:

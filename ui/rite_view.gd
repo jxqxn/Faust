@@ -599,7 +599,7 @@ func _commit_resolution() -> void:
 		return
 	var instance = _state.get_rite_instance(_rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
 	if instance != null:
-		RoundLoop.finalize_rite_settlement(instance, _last_result.deferred, _state, _db, _pending_table_entries)
+		RoundLoop.finalize_rite_settlement(instance, _last_result.deferred, _state, _db, _pending_table_entries, _rng)
 	_resolution_pending = false
 	_resolution_committed = true
 	_pending_table_entries.clear()
@@ -637,8 +637,10 @@ func _display_result(res) -> void:
 	if entry.is_empty():
 		txt = "[color=#a89880]（没有匹配的结算分支）[/color]"
 	else:
-		var t1: String = entry.get("result_title", "")
-		var t2: String = entry.get("result_text", "")
+		# Display texts carry config placeholders ([sudan_life_time] etc.)
+		# substituted with live run values like the original formatter.
+		var t1: String = _state.substitute_text(str(entry.get("result_title", ""))) if _state != null and _state.has_method("substitute_text") else str(entry.get("result_title", ""))
+		var t2: String = _state.substitute_text(str(entry.get("result_text", ""))) if _state != null and _state.has_method("substitute_text") else str(entry.get("result_text", ""))
 		if t1 != "":
 			txt += "[color=#e0c486]" + t1 + "[/color]\n"
 		if t2 != "":

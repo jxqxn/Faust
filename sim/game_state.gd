@@ -1096,6 +1096,75 @@ func slot_entries_for_rite(rite: Dictionary, rite_uid: int) -> Array:
 	return out
 
 
+## The card this equipment instance is attached to (0 when unattached).
+## Equipment relationships live on the host's equipped_uids.
+func host_uid_of_equipment(equipment_uid: int) -> int:
+	if equipment_uid <= 0:
+		return 0
+	for uid in card_instances:
+		var inst = get_card_instance(int(uid))
+		if inst != null and equipment_uid in inst.equipped_uids:
+			return int(uid)
+	return 0
+
+
+## Record a tag exercised by an attribute check during settlement; HasTagTips
+## conditions read this in post_rite. [SRC: HasTagTips.c @ IsSatisfied]
+func record_tag_tip(card_uid: int, tag_name: String) -> void:
+	if tag_name == "":
+		return
+	var inst = get_card_instance(card_uid)
+	if inst == null or tag_name in inst.tag_tips:
+		return
+	inst.tag_tips.append(tag_name)
+
+
+## Clear the per-rite tag exercise records for the rite's cards before its
+## settlement starts fresh.
+func clear_tag_tips(rite_uid: int) -> void:
+	for uid in card_instances:
+		var inst = get_card_instance(int(uid))
+		if inst != null and (rite_uid <= 0 or int(inst.rite_uid) == rite_uid):
+			inst.tag_tips.clear()
+
+
+## Every card instance currently sitting in the given rite's slots.
+func rite_slot_card_uids(rite_uid: int) -> Array[int]:
+	var out: Array[int] = []
+	for uid in card_instances:
+		var inst = get_card_instance(int(uid))
+		if inst != null and inst.zone == "slot" and int(inst.rite_uid) == rite_uid:
+			out.append(int(uid))
+	return out
+
+
+## Remove a card instance from play wherever it sits (hand, rite slot, active
+## Sultan, or equipped). Selector-cleaned cards funnel through here.
+func remove_card_instance_from_play(uid: int) -> bool:
+	var instance = get_card_instance(uid)
+	if instance == null or instance.zone == "removed":
+		return false
+	var host_uid := host_uid_of_equipment(uid)
+	if host_uid > 0 and has_method("detach_equipment"):
+		detach_equipment(host_uid, uid, false)
+	match instance.zone:
+		"hand":
+			var idx := hand.find(uid)
+			if idx >= 0:
+				hand.remove_at(idx)
+				_erase_one_from_rail(uid)
+		"slot":
+			_unlink_slot_instance(instance)
+			instance.rite_uid = 0
+			instance.slot_key = ""
+		"sudan":
+			for active_sudan in active_sudan_cards.duplicate():
+				if int(active_sudan.card_uid) == uid:
+					active_sudan_cards.erase(active_sudan)
+	instance.zone = "removed"
+	return true
+
+
 func remove_rite_instance(rite_uid: int) -> bool:
 	if rite_uid <= 0 or not rite_instances.has(rite_uid):
 		return false
@@ -1344,10 +1413,37 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 	return matched
 
 
+## Substitute config-value placeholders in display texts. The original
+## formats prompt/result texts with live run values before display.
+## [SRC: event/5300066.json "[sudan_life_time]天时间", event/5300339.json
+##       "[sudan_redraw_total_left_times]次重抽"; init difficulty configs
+##       carry the substituted values]
+func substitute_text(text: String) -> String:
+	var out := text
+	if out.contains("[sudan_life_time]"):
+		out = out.replace("[sudan_life_time]", str(int(difficulty_config.get("sudan_life_time", 7))))
+	if out.contains("[sudan_redraw_total_left_times]"):
+		out = out.replace("[sudan_redraw_total_left_times]", str(int(redraws_left)))
+	return out
+
+
 func queue_prompt(prompt: Dictionary) -> void:
 	if not prompt.is_empty():
 		var context: Dictionary = prompt.get("context", {}) if prompt.get("context", {}) is Dictionary else {}
-		queue_operation("choice" if prompt.has("choices") else "prompt", prompt.get("id", "prompt"), prompt, context)
+		var formatted: Dictionary = prompt.duplicate(true)
+		formatted["text"] = substitute_text(str(formatted.get("text", "")))
+		if formatted.has("title"):
+			formatted["title"] = substitute_text(str(formatted["title"]))
+		if formatted.has("choices") and formatted["choices"] is Dictionary:
+			var choices: Dictionary = {}
+			for choice_key in formatted["choices"]:
+				var choice = formatted["choices"][choice_key]
+				if choice is Dictionary and choice.has("text"):
+					choice = choice.duplicate(true)
+					choice["text"] = substitute_text(str(choice.get("text", "")))
+				choices[choice_key] = choice
+			formatted["choices"] = choices
+		queue_operation("choice" if formatted.has("choices") else "prompt", formatted.get("id", "prompt"), formatted, context)
 
 
 func queue_choice_prompt(choices: Dictionary, title: String = "选择", text: String = "请选择回应。", context: Dictionary = {}) -> void:

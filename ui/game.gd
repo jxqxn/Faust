@@ -41,7 +41,7 @@ func _show_menu() -> void:
 	_game_screen = null
 	var menu := MainMenu.new()
 	menu.setup(db)
-	menu.difficulty_selected.connect(_on_difficulty_selected)
+	menu.new_game_pressed.connect(_on_new_game_pressed)
 	menu.continue_pressed.connect(_on_continue)
 	menu.user_archive_load_requested.connect(_on_user_archive_load)
 	menu.user_archive_delete_requested.connect(_on_user_archive_delete)
@@ -73,8 +73,10 @@ func _on_user_archive_delete(index: int) -> void:
 	_show_menu()
 
 
-func _on_difficulty_selected(index: int) -> void:
-	_start_new_run(index, false)
+func _on_new_game_pressed() -> void:
+	# The pre-pick difficulty is the default slot; the opening show's
+	# SetDifficulty op (event 5310006) applies the narrator the player picks.
+	_start_new_run(0, false)
 
 
 func _on_test_start_requested(index: int) -> void:
@@ -122,7 +124,7 @@ func _show_game() -> void:
 ## normal player-reachable presentation state.
 func _mcp_capture_situation_desk() -> void:
 	if state == null:
-		_on_difficulty_selected(0)
+		_on_new_game_pressed()
 	elif _game_screen == null:
 		_show_game()
 	if _game_screen != null and _game_screen.has_method("return_to_situation_desk"):
@@ -155,7 +157,7 @@ func _mcp_capture_tabletop_market_actions() -> void:
 
 func _mcp_capture_compact_prompt() -> void:
 	if state == null:
-		_on_difficulty_selected(0)
+		_on_new_game_pressed()
 	elif _game_screen == null:
 		_show_game()
 	if state == null or _game_screen == null:

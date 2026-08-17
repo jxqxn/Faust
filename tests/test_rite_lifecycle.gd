@@ -260,3 +260,147 @@ func test_sudan_card_executes_again_after_shelter_rite_settles():
 	assert_null(state.get_rite_instance(instance.uid), "shelter rite has settled")
 	assert_true(r2.game_over, "Sultan card executes once the shelter settles and the card leaves the slot")
 	assert_eq(r2.expired.size(), 1)
+
+
+# ---- post_rite: card-carried settlements after a rite settles ----
+# [SRC: RiteResultPanelController.c:1268 -> CardExtensions.DoPostRite per rite
+#       card; card config post_rite dump.cs:389811]
+
+func _db_with_post_rite_cards() -> ConfigDB:
+	var local_db := ConfigDB.new()
+	local_db.load_all()
+	local_db.cards[992001] = {
+		"id": 992001, "name": "消耗测试", "type": "item", "tag": {"战斗": 2},
+		"post_rite": [{"condition": {}, "result": {"clean.self": 1}, "action": {}}],
+	}
+	local_db.cards[992002] = {
+		"id": 992002, "name": "宿主", "type": "char", "tag": {"体魄": 3},
+		"post_rite": [],
+	}
+	local_db.cards[992003] = {
+		"id": 992003, "name": "印记测试", "type": "char", "tag": {"战斗": 1},
+		"post_rite": [{
+			"condition": {"tag_tips.战斗": 1},
+			"result": {"self+战斗的痕迹": 1}, "action": {},
+		}],
+	}
+	local_db.cards[992004] = {
+		"id": 992004, "name": "食客", "type": "char", "tag": {"战斗": 1},
+		"post_rite": [{
+			"condition": {"!is_rite": 991099},
+			"result": {"parent-equip": 992004}, "action": {},
+		}],
+	}
+	local_db.rites[991098] = {
+		"id": 991098, "name": "post_rite test", "open_conditions": [],
+		"cards_slot": {"s1": {}},
+		"round_number": 0, "waiting_round": 0, "waiting_round_end_action": [],
+		"settlement_prior": [], "settlement": [{"condition": {}, "result": {}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
+	local_db.rites[991099] = {
+		"id": 991099, "name": "post_rite exempt", "open_conditions": [],
+		"cards_slot": {"s1": {}},
+		"round_number": 0, "waiting_round": 0, "waiting_round_end_action": [],
+		"settlement_prior": [], "settlement": [{"condition": {}, "result": {}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
+	return local_db
+
+
+func test_post_rite_consumable_cleans_itself_after_settlement():
+	var local_db := _db_with_post_rite_cards()
+	var state := GameState.new()
+	var instance = state.create_rite_instance(991098)
+	state.add_card_to_hand(992001)
+	state.remove_card_from_hand(992001)
+	state.add_card_to_slot(992001, 1, local_db, instance.uid)
+	state.start_rite_instance(instance.uid)
+
+	RoundLoop.advance_day(state, local_db, RNG.new(3))
+
+	assert_null(state.get_rite_instance(instance.uid), "rite settled and removed")
+	var consumed = state.get_card_instance(state.card_uid_for(992001))
+	assert_true(consumed == null or consumed.zone == "removed",
+		"clean.self post_rite removes the consumable from play")
+
+
+func test_post_rite_tag_tips_and_self_tag_op():
+	var local_db := _db_with_post_rite_cards()
+	local_db.rites[991098].settlement = [{
+		"condition": {"r1:战斗>=": 1}, "result": {}, "action": {},
+	}]
+	var state := GameState.new()
+	var instance = state.create_rite_instance(991098)
+	state.add_card_to_hand(992003)
+	state.remove_card_from_hand(992003)
+	state.add_card_to_slot(992003, 1, local_db, instance.uid)
+	state.start_rite_instance(instance.uid)
+
+	RoundLoop.advance_day(state, local_db, RNG.new(4))
+
+	var marked = state.get_card_instance(state.card_uid_for(992003))
+	assert_not_null(marked, "card returns to hand after settlement")
+	if marked != null:
+		assert_true(int(marked.tags.get("战斗的痕迹", 0)) >= 1,
+			"tag_tips.战斗 condition passes after a 战斗 check and self+tag applies")
+
+
+func test_post_rite_parent_equip_detaches_from_host():
+	var local_db := _db_with_post_rite_cards()
+	var state := GameState.new()
+	var instance = state.create_rite_instance(991098)
+	state.add_card_to_hand(992002)
+	state.remove_card_from_hand(992002)
+	state.add_card_to_slot(992002, 1, local_db, instance.uid)
+	state.start_rite_instance(instance.uid)
+	# The retainer is equipped on the host before the rite settles.
+	var retainer = state.create_card_instance(992004, local_db, "removed")
+	state.attach_equipment(state.card_uid_for(992002), retainer.uid, local_db, false, false)
+
+	RoundLoop.advance_day(state, local_db, RNG.new(5))
+
+	var host = state.get_card_instance(state.card_uid_for(992002))
+	assert_not_null(host)
+	if host != null:
+		assert_false(retainer.uid in host.equipped_uids,
+			"parent-equip post_rite detaches the retainer from its host")
+
+
+func test_post_rite_condition_can_exempt_a_specific_rite():
+	var local_db := _db_with_post_rite_cards()
+	var state := GameState.new()
+	var instance = state.create_rite_instance(991099)
+	state.add_card_to_hand(992002)
+	state.remove_card_from_hand(992002)
+	state.add_card_to_slot(992002, 1, local_db, instance.uid)
+	state.start_rite_instance(instance.uid)
+	var retainer = state.create_card_instance(992004, local_db, "removed")
+	state.attach_equipment(state.card_uid_for(992002), retainer.uid, local_db, false, false)
+
+	RoundLoop.advance_day(state, local_db, RNG.new(6))
+
+	var host = state.get_card_instance(state.card_uid_for(992002))
+	assert_not_null(host)
+	if host != null:
+		assert_true(retainer.uid in host.equipped_uids,
+			"!is_rite keeps the post_rite silent inside the exempt rite")
+
+
+func test_selector_family_conditions_and_ops():
+	var local_db := _db_with_post_rite_cards()
+	var state := GameState.new()
+	state.add_card_to_hand(2000005)
+	var host_uid := state.card_uid_for(2000005)
+	assert_gt(host_uid, 0)
+	state.record_tag_tip(host_uid, "战斗")
+
+	# self selector ops and conditions run against the acting card context.
+	var ctx := {"state": state, "db": local_db, "rite_uid": 0, "card_uid": host_uid}
+	assert_true(ConditionEval.evaluate({"self.社交>=": 1}, ctx), "self.<tag> reads the acting card")
+	assert_true(ConditionEval.evaluate({"tag_tips.战斗": 1}, ctx), "tag_tips sees recorded exercises")
+	assert_true(ConditionEval.evaluate({"!tag_tips.体魄": 1}, ctx), "negated tag_tips")
+	ResultExec.execute({"self+印记": 1}, state, local_db, ctx)
+	var host = state.get_card_instance(host_uid)
+	assert_eq(int(host.tags.get("印记", 0)), 1, "self+<tag> applies to the acting card")
+

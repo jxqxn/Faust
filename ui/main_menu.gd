@@ -1,7 +1,6 @@
-## Main menu: title page (new game / continue / archives / quit), then the
-## difficulty picker as its own page — matching the original's two-stage
-## flow where difficulty is chosen after entering a new game, not on the
-## title screen.
+## Main menu: title page only (new game / continue / archives / quit). The
+## narrator/difficulty pick happens in-game via the opening show, matching
+## the original's flow.
 ##
 ## Visual layout mirrors StartScene's StartPanel: the bg_new_0 backdrop
 ## painting, the centered logo, and 668x140 button_bg_new stamps for the
@@ -11,14 +10,12 @@
 ##       logo; button column NewGame/LoadGame/UserArchiveLoadGame/QuitGame]
 extends Control
 
-signal difficulty_selected(index: int)
+signal new_game_pressed()
 signal test_start_requested(index: int)
 
 signal continue_pressed()
 signal user_archive_load_requested(index: int)
 signal user_archive_delete_requested(index: int)
-
-const DIFF_NAMES := ["梅姬（简单）", "哈桑（普通）", "女术士（困难）"]
 
 const CONTENT_WIDTH := 980
 const TITLE_BG_PATH := "res://assets/original/ui/bg_new_0.png"
@@ -69,9 +66,10 @@ func _build_title_view() -> void:
 	_column.add_child(logo)
 	_column.add_child(_spacer(34))
 	var new_game := _title_button("新的游戏", "NewGameButton")
-	# The original starts the run right away; the opening show (event
-	# 5310006) presents the narrator/difficulty pick in-game.
-	new_game.pressed.connect(func(): difficulty_selected.emit(0))
+	# The original starts the run right away: the opening show (event
+	# 5310006) presents the narrator/difficulty pick in-game via the
+	# SetDifficulty op. [SRC: SetDifficulty.c @ Do -> ShowDifficulty]
+	new_game.pressed.connect(func(): new_game_pressed.emit())
 	_column.add_child(new_game)
 	_column.add_child(_spacer(14))
 	# Continue button (only if a valid save exists).
@@ -139,27 +137,6 @@ func _title_button_style() -> StyleBox:
 	return fallback
 
 
-## Difficulty page: the three narrators, shown after "新的游戏".
-## [SRC: DifficultyPanelController.c / DifficultyItemController.c;
-##       difficulty desc text from content/init/1.json]
-func _build_difficulty_view() -> void:
-	_clear_dynamic()
-	_center_column()
-	var head := Label.new()
-	head.text = "选择你的叙事者"
-	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	head.add_theme_font_size_override("font_size", 30)
-	head.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	_column.add_child(head)
-	_column.add_child(_spacer(12))
-	for i in 3:
-		_column.add_child(_make_diff_card(i))
-		_column.add_child(_spacer(8))
-	var back := _title_button("返回标题", "BackToTitleButton")
-	back.pressed.connect(_build_title_view)
-	_column.add_child(back)
-
-
 func _clear_dynamic() -> void:
 	for child in get_children():
 		if child.name != "Background":
@@ -176,63 +153,6 @@ func _center_column() -> void:
 	vbox.custom_minimum_size = Vector2(CONTENT_WIDTH, 0)
 	center.add_child(vbox)
 	_column = vbox
-
-
-func _make_diff_card(index: int) -> Control:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 4)
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	# Original narrator portrait (common/710000N.png keyed by index).
-	# [SRC: Resources/image/common difficulty portraits]
-	var portrait_path := "res://assets/original/ui/710000%d.png" % (index + 1)
-	if ResourceLoader.exists(portrait_path):
-		var portrait := TextureRect.new()
-		portrait.texture = load(portrait_path) as Texture2D
-		portrait.custom_minimum_size = Vector2(72, 72)
-		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		row.add_child(portrait)
-	var name_lbl := Label.new()
-	name_lbl.text = DIFF_NAMES[index]
-	name_lbl.add_theme_font_size_override("font_size", 22)
-	name_lbl.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(name_lbl)
-	var btn := Button.new()
-	btn.text = "开始"
-	btn.custom_minimum_size = Vector2(90, 40)
-	btn.pressed.connect(_on_difficulty.bind(index))
-	row.add_child(btn)
-	col.add_child(row)
-	var desc := Label.new()
-	desc.text = _difficulty_desc(index)
-	desc.add_theme_font_size_override("font_size", 13)
-	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(desc)
-	panel.add_child(col)
-	return panel
-
-
-## The original narrator intro from init/1.json with its rich-text tags
-## stripped, plus the die-success rate line.
-func _difficulty_desc(index: int) -> String:
-	var raw := ""
-	if _db != null:
-		var conf: Dictionary = _db.get_difficulty(index)
-		raw = str(conf.get("desc", ""))
-	if raw == "":
-		return "叙事者尚未就位。"
-	var cleaned := raw.replace("<sprite=0>", "·").replace("<indent=10%>", " ").replace("</indent>", "")
-	cleaned = cleaned.replace("<size=85%>", "").replace("</size>", "")
-	return cleaned.strip_edges()
 
 
 func _make_archive_section(archives: Array) -> Control:
@@ -300,8 +220,6 @@ func _spacer(h: int) -> Control:
 	return c
 
 
-func _on_difficulty(index: int) -> void:
-	difficulty_selected.emit(index)
 
 
 func _has_continue_save() -> bool:

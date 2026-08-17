@@ -388,7 +388,7 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 		# Deferred to in-play feedback; report 8 A6/C5.
 		var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
 		var res: Variant = _resolve_rite_instance(rite, instance, state, db, rng)
-		finalize_rite_settlement(instance, res.deferred, state, db, table_entries)
+		finalize_rite_settlement(instance, res.deferred, state, db, table_entries, rng)
 		DeferredEffects.apply(res.deferred, state, db, rng)
 		state.trigger_events("rite_end", {"rite": instance.id})
 		result.settled_rites.append({"id": instance.id, "uid": instance.uid, "auto_result": int(rite.get("auto_result", 0)) == 1})
@@ -403,6 +403,10 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 		if not cards.is_empty():
 			rite_state[key] = int(cards[0].get("id", 0))
 		attr_slots.append(key)
+	# Fresh tag-exercise records for this settlement; post_rite's HasTagTips
+	# reads them right after resolution.
+	if state.has_method("clear_tag_tips"):
+		state.clear_tag_tips(instance.uid)
 	var ctx := {
 		"db": db, "state": state, "rng": rng, "rite_state": rite_state,
 		"attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid,
@@ -422,7 +426,7 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 ## [SRC: RiteResultPanelController.__c__DisplayClass56_0.c @ <Settlement>b__8
 ##       (RVA 0x5b4850): RemoveRite after settlement; RiteExtensions.ReturnCards
 ##       (RVA 0x5016d0) for the timeout path.]
-static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, source_table_entries: Array = []) -> void:
+static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, source_table_entries: Array = [], rng = null) -> void:
 	# Both the headless batch path and the rite-view commit path funnel through
 	# here, so this is where a settled rite becomes "ended" for rite_end.<id>.
 	if state != null and state.has_method("record_rite_ended"):
@@ -452,7 +456,67 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 				sudan_instance.slot_key = ""
 		elif not state.has_card_in_hand(int(table_card.get("card_uid", card_id))):
 			state.add_card_to_hand(int(table_card.get("card_uid", card_id)), db)
+	var post_rng = rng if rng != null else state.get("_event_rng")
+	_run_post_rites(table_entries, instance, state, db, post_rng)
 	state.remove_rite_instance(instance.uid)
+
+
+## Card-carried post-rite settlements run when the settled rite's result panel
+## shows: every card that joined the rite — plus each card equipped on those
+## cards — executes its config `post_rite` entries with itself as the acting
+## context, so consumables clean themselves and equipped retainers detach
+## from their hosts.
+## [SRC: RiteResultPanelController.c:1268 -> CardExtensions.DoPostRite per
+##       rite card; CardExtensions.c @ DoPostRite runs the card's post_rite
+##       settlements after its equip relationships are stripped; card config
+##       post_rite field dump.cs:389811 (RiteNode.Settlement[])]
+static func _run_post_rites(table_entries: Array, instance, state, db, rng) -> void:
+	if state == null or db == null or not state.has_method("get_card_instance"):
+		return
+	for table_card in table_entries:
+		var owner_uids: Array[int] = []
+		var host_uid := int(table_card.get("card_uid", 0))
+		if host_uid > 0:
+			owner_uids.append(host_uid)
+			var host = state.get_card_instance(host_uid)
+			if host != null:
+				for equipped_uid in host.equipped_uids:
+					owner_uids.append(int(equipped_uid))
+		for card_uid in owner_uids:
+			var inst = state.get_card_instance(card_uid)
+			if inst == null or inst.zone == "removed":
+				continue
+			var definition: Dictionary = db.get_card(int(inst.card_id)) if db.has_method("get_card") else {}
+			var post_rites: Array = definition.get("post_rite", [])
+			if post_rites.is_empty():
+				continue
+			var ctx := {
+				"db": db, "state": state, "rng": rng,
+				"rite_id": instance.id, "rite_uid": instance.uid,
+				"card_uid": card_uid, "card": int(inst.card_id),
+				"acting_card": state.card_data_for(card_uid, db) if state.has_method("card_data_for") else {},
+				"acting_card_id": int(inst.card_id),
+			}
+			if state.has_method("with_player_actor_context"):
+				ctx = state.with_player_actor_context(ctx, db)
+			state.active_rite_uid = instance.uid
+			for entry in post_rites:
+				if not (entry is Dictionary):
+					continue
+				if not ConditionEval.evaluate(entry.get("condition", {}), ctx):
+					continue
+				var deferred := ResultExec.execute(entry.get("result", {}), state, db, ctx)
+				_merge_deferred(deferred, ResultExec.execute(entry.get("action", {}), state, db, ctx))
+				DeferredEffects.apply(deferred, state, db, rng)
+				var pr_title := str(entry.get("result_title", ""))
+				var pr_text := str(entry.get("result_text", ""))
+				if (pr_title != "" or pr_text != "") and state.has_method("queue_prompt"):
+					state.queue_prompt({
+						"id": "post_rite.%d.%d" % [card_uid, state.day],
+						"title": pr_title,
+						"text": pr_text,
+					})
+			state.active_rite_uid = 0
 
 
 ## waiting_round_end_action is a conditional sequence. It runs before cards

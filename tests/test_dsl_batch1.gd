@@ -670,3 +670,73 @@ func test_over_action_value_sets_ending_id() -> void:
 	var state := GameState.new()
 	ResultExec.execute({"over": 7}, state, local_db)
 	assert_eq(state.over_reason, 7, "a numeric over value selects the ending")
+
+
+func test_difficulty_choices_carry_narrator_presentation() -> void:
+	# The choice entries are built from the init difficulty configs with the
+	# narrator portrait + desc the DifficultyPanel shows per item.
+	# [SRC: DifficultyPanelController.c UpdateShow portrait+desc; init/1.json]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(92))
+	ResultExec.execute({"difficulty": 1}, state, local_db)
+	var pick: Dictionary = {}
+	for prompt in state.event_prompts:
+		if str(prompt.get("title", "")) == "选择你的叙事者":
+			pick = prompt
+	assert_false(pick.get("choices", {}).is_empty(), "the difficulty action opens the narrator choice")
+	var first: Dictionary = pick["choices"].get("diff_0", {})
+	assert_eq(int(first.get("value", -1)), 0, "each narrator choice carries its difficulty index")
+	assert_true(str(first.get("text", "")).contains("梅姬"), "choice text names the narrator from the config")
+	assert_true(str(first.get("icon", "")).begins_with("ui/710000"), "choice icon points at the narrator portrait art")
+	assert_true(str(first.get("desc", "")).length() > 10, "choice desc carries the narrator introduction")
+
+
+func test_hand_card_refresh_is_a_presentation_noop() -> void:
+	# [SRC: HandCardRefresh.c @ Do (0x513e40) -> GameController.UpdateHandCards]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(93))
+	var hand_size := state.hand.size()
+	var coin := state.coin_count
+	var deferred: Dictionary = ResultExec.execute({"hand_card_refresh": 1}, state, local_db)
+	assert_eq(state.hand.size(), hand_size, "hand refresh must not mutate the hand")
+	assert_eq(state.coin_count, coin, "hand refresh must not mutate gold")
+	assert_false(deferred.get("ordered_effects", []).is_empty(), "the refresh records its effect for the UI layer")
+
+
+func test_display_text_placeholders_substitute_live_values() -> void:
+	# Prompt/result texts carry config placeholders the original formats with
+	# live run values before display. [SRC: event/5300066.json
+	#       "[sudan_life_time]天时间"; event/5300339.json
+	#       "[sudan_redraw_total_left_times]次重抽"]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(94))
+	state.redraws_left = 2
+	state.queue_prompt({"id": "probe", "text": "你有[sudan_life_time]天时间，[sudan_redraw_total_left_times]次重抽。"})
+	var queued: Dictionary = {}
+	for prompt in state.event_prompts:
+		if str(prompt.get("id", "")) == "probe":
+			queued = prompt
+	assert_eq(str(queued.get("text", "")), "你有%s天时间，%d次重抽。" % [
+		str(int(state.difficulty_config.get("sudan_life_time", 7))), 2,
+	], "queued prompt text substitutes the live run values")
+
+
+func test_dsl_audit_scans_case_subtree_interiors() -> void:
+	# case:opN subtrees execute real result ops after a choice; their keys
+	# must reach the audit (hand_card_refresh once hid inside one).
+	var local_db := _db_with_batch_rites()
+	local_db.events[990042] = {
+		"id": 990042,
+		"on": {"round_begin_ba": 1},
+		"settlement": [{"action": {
+			"option": {"id": "probe_opt", "text": "选", "items": [{"text": "a", "tag": "op1"}]},
+			"case:op1": {"hand_card_refresh": 1, "coin": 3},
+		}}],
+	}
+	var report: Dictionary = DslAudit.audit_configs({}, local_db.events, {}, local_db)
+	assert_true(report.action.supported.has("hand_card_refresh"), "case subtree keys are audited")
+	assert_true(report.action.supported.has("coin"), "case subtree ops are audited")
+	assert_false(report.action.unsupported.has("items"), "option display payloads stay opaque")

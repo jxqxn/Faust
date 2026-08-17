@@ -33,7 +33,7 @@ static func audit_rites(rites: Dictionary, db = null) -> Dictionary:
 	return out
 
 
-static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dictionary = {}, db = null) -> Dictionary:
+static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dictionary = {}, db = null, cards: Dictionary = {}) -> Dictionary:
 	var out := audit_rites(rites, db)
 	var known_tags := _known_tag_names(db)
 	for eid in events:
@@ -50,6 +50,23 @@ static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dic
 				_scan_condition_dict(settlement.get("condition", {}), out.condition, _with_field(settlement_source, "condition"), known_tags)
 				_scan_result_dict(settlement.get("result", {}), out.result, _with_field(settlement_source, "result"))
 				_scan_result_dict(settlement.get("action", {}), out.action, _with_field(settlement_source, "action"))
+	# Card-carried settlements: post_rite runs when a joined rite settles
+	# (DoPostRite); vanish runs when the card disintegrates.
+	# [SRC: dump.cs:389811 post_rite / :389787 vanish on the card config]
+	for cid in cards:
+		var card: Dictionary = cards[cid]
+		var card_source := _source("card", int(cid), "cards.json#%d" % int(cid))
+		var post_rites: Array = card.get("post_rite", [])
+		for index in post_rites.size():
+			var entry = post_rites[index]
+			if entry is Dictionary:
+				var entry_source := _with_field(card_source, "post_rite[%d]" % index)
+				_scan_condition_dict(entry.get("condition", {}), out.condition, _with_field(entry_source, "condition"), known_tags)
+				_scan_result_dict(entry.get("result", {}), out.result, _with_field(entry_source, "result"))
+				_scan_result_dict(entry.get("action", {}), out.action, _with_field(entry_source, "action"))
+		var vanish: Dictionary = card.get("vanish", {})
+		if not vanish.is_empty():
+			_scan_result_dict(vanish, out.result, _with_field(card_source, "vanish"))
 	_scan_loots(loots, out, known_tags)
 	return out
 
@@ -59,8 +76,8 @@ static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dic
 ## start roots through known rite/event/loot/card generation operations. This
 ## intentionally does not evaluate every branch condition, so it is a planning
 ## aid rather than a claim that a source fires in every playthrough.
-static func audit_potentially_reachable_configs(rites: Dictionary, events: Dictionary, loots: Dictionary, db) -> Dictionary:
-	var report := audit_configs(rites, events, loots, db)
+static func audit_potentially_reachable_configs(rites: Dictionary, events: Dictionary, loots: Dictionary, db, cards: Dictionary = {}) -> Dictionary:
+	var report := audit_configs(rites, events, loots, db, cards)
 	var reachability := _potential_reachability(rites, events, loots, db)
 	_annotate_reachability(report, reachability)
 	return report
@@ -287,18 +304,40 @@ static func _scan_result_dict(result: Variant, bucket: Dictionary, source: Dicti
 		var k := str(key)
 		_record(bucket, k, ResultExec.is_supported_key(k), source)
 		if k == "choose" and result[key] is Dictionary:
-			for choose_key in result[key]:
-				var choose_op := str(choose_key)
-				# `all` is a ChooseOperations candidate-list wrapper, not a
-				# standalone label. It is an AllOperations subtree and runs each
-				# concrete nested operation.
-				if choose_op == "all" and result[key][choose_key] is Dictionary:
-					_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.all"))
-					for nested_key in result[key][choose_key]:
-						var nested_op := str(nested_key)
-						_record(bucket, nested_op, ResultExec.is_supported_key(nested_op), _with_field(source, "choose.all.%s" % nested_op))
-					continue
-				_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.%s" % choose_op))
+			_scan_choose_labels(result[key], bucket, source)
+		# `case:opN` labels hold full operation subtrees executed after an
+		# `option` choice; their interior keys are real result ops and must
+		# not silently escape the audit (hand_card_refresh once hid here).
+		# Display payloads inside the subtree (prompt/option/delay bodies)
+		# stay opaque — only nested op subtrees recurse.
+		if k.begins_with("case:") and result[key] is Dictionary:
+			_scan_case_dict(result[key], bucket, _with_field(source, k))
+
+
+static func _scan_case_dict(ops: Dictionary, bucket: Dictionary, source: Dictionary) -> void:
+	for case_key in ops:
+		var case_op := str(case_key)
+		var case_value = ops[case_key]
+		_record(bucket, case_op, ResultExec.is_supported_key(case_op), source)
+		if case_op.begins_with("case:") and case_value is Dictionary:
+			_scan_case_dict(case_value, bucket, _with_field(source, case_op))
+		elif case_op == "choose" and case_value is Dictionary:
+			_scan_choose_labels(case_value, bucket, source)
+
+
+static func _scan_choose_labels(choose: Dictionary, bucket: Dictionary, source: Dictionary) -> void:
+	for choose_key in choose:
+		var choose_op := str(choose_key)
+		# `all` is a ChooseOperations candidate-list wrapper, not a
+		# standalone label. It is an AllOperations subtree and runs each
+		# concrete nested operation.
+		if choose_op == "all" and choose[choose_key] is Dictionary:
+			_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.all"))
+			for nested_key in choose[choose_key]:
+				var nested_op := str(nested_key)
+				_record(bucket, nested_op, ResultExec.is_supported_key(nested_op), _with_field(source, "choose.all.%s" % nested_op))
+			continue
+		_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.%s" % choose_op))
 
 
 static func _scan_loots(loots: Dictionary, out: Dictionary, known_tags: Dictionary) -> void:

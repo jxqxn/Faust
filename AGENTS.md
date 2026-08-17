@@ -67,6 +67,24 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-17/18 逻辑层第八波（规则引擎 post_rite/选择器族/审计域扩展，320 测试全绿）：**
+**post_rite 执行链**：卡牌定义 post_rite 在所属仪式结算后执行（参战卡+其装备逐张以
+自身为上下文）——消耗品 clean.self 自毁、食客 parent-equip 离场、条件计数/结局/事件
+全部走通（RiteResultPanelController.c:1268 → CardExtensions.DoPostRite 双信号）。
+**选择器族补全**：`<selector>`=s<n>/self/parent/all/enemy/friend/卡牌id 通用于槽标签
+操作、装备操作、clean 与 SlotHasTag 条件（OperationFilter.c Filter 0x3a15c0 +
+conditions.json selector 组双信号）。**tag_tips**：属性检定求值时记录各卡用过的标签
+（运行时、不进存档），HasTagTips 条件读取；`!is_rite` 否定形补齐。**审计域扩展**：
+case:opN 子树内部键纳入扫描（hand_card_refresh 曾藏匿）+ cards.json 的
+post_rite/vanish 入审计（card 域）；扩域后 result 2134 / condition 4001 / action 2522
+全部支持。**文本占位符**：`[sudan_life_time]`/`[sudan_redraw_total_left_times]` 在
+prompt/choice/仪式结算文本替换为运行值。**难度选择入游戏内**：difficulty 操作按 init
+配置构建叙事者选项（头像+描述+骰率），标题页直接开局、难度页死代码删除。GameState
+新增 host_uid_of_equipment/rite_slot_card_uids/remove_card_instance_from_play/
+record_tag_tip/clear_tag_tips；CardInstance 新增运行时 tag_tips（不进存档）。
+留档项更新：原"parent/self 聚合选择器语义未确认"已由双信号确认并实现；EventOff
+小值批量关闭与 headless deferred 顺序仍留档。
+
 **2026-08-17 表现层原作化第七波 + 去 Balatro（311 测试全绿）：** 场景树证据
 （StartScene/GameScene.unity 解析）驱动的最后一批"自制表现"清理。主菜单按
 StartPanel 1:1（bg_new_0 背景 + button_bg_new 668x140 按钮列 + 退出游戏）；

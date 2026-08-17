@@ -31,6 +31,11 @@ var removed_equip_slots: Array[String] = []
 var equipped_uids: Array[int] = []
 var equipped_to_uid := 0
 var equipped_slot := ""
+# Tags exercised by attribute checks during the current rite settlement
+# (runtime-only, never saved). HasTagTips reads this in post_rite.
+# [SRC: HasTagTips.c @ IsSatisfied (0x3fe3c0): card+0x50 -> tag tips list
+#       contains the translated tag]
+var tag_tips: Array[String] = []
 
 
 func _init(instance_uid: int = 0, definition_id: int = 0, initial_tags: Dictionary = {}) -> void:

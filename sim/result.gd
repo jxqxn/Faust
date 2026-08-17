@@ -83,6 +83,8 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k in ["delay_off", "steam_achievement", "debug", "error", "warn"]:
 		return true
+	if k == "hand_card_refresh":
+		return true
 	var copy_slot := k.substr(5) if k.begins_with("copy.") else ""
 	if copy_slot.begins_with("s") and copy_slot.substr(1).is_valid_int():
 		return true
@@ -197,7 +199,32 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			if state.has_method("remove_table_card_id"):
 				state.remove_table_card_id(card_id, int(state.active_rite_uid))
 			deferred.clean_card_ids.append(card_id)
-		elif _clean_all_from_key(k):
+			return
+		# Selector cleans (clean.self / clean.parent / clean.all ...) remove
+		# the filtered cards from play; each removal fires card_clean.
+		# [SRC: CleanSlot.c @ Do (0x4f3fe0) runs the same OperationFilter
+		#       Filter(rite, selfIndex); __c__DisplayClass4_0.c <Do>b__0
+		#       (0x507570) decrements remove_count and sends CardClean]
+		var clean_selector := k.substr("clean.".length())
+		if _is_slot_op_selector(clean_selector) and clean_selector != "rite":
+			var cleaned_any := false
+			for target_uid in _slot_target_uids(clean_selector, state, context):
+				var target = (
+					state.get_card_instance(target_uid)
+					if state.has_method("get_card_instance")
+					else null
+				)
+				if target == null:
+					continue
+				if state.remove_card_instance_from_play(target_uid):
+					cleaned_any = true
+					state.trigger_events("card_clean", {
+						"card": int(target.card_id), "card_uid": target_uid,
+					})
+			if cleaned_any:
+				deferred.logs.append("clean.%s removed card(s)" % clean_selector)
+			return
+		if _clean_all_from_key(k):
 			state.clear_rite_cards(int(state.active_rite_uid))
 			deferred.clean_rite = true
 		return
@@ -300,6 +327,13 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "steam_achievement" or k == "debug" or k == "error" or k == "warn":
 		deferred.logs.append("%s: %s" % [k, str(val)])
 		return
+	# Pure presentation: the original re-syncs the hand display with state.
+	# The clone's hand view already rebuilds from state every refresh, so the
+	# op records its effect and changes no rules.
+	# [SRC: HandCardRefresh.c @ Do (0x513e40) -> GameController.UpdateHandCards]
+	if k == "hand_card_refresh":
+		_record_effect(deferred, "hand_card_refresh", {"value": val}, context)
+		return
 	if k == "enable_auto_gen_sudan_card":
 		# The original stores a disable flag, so the operation's value itself is
 		# the public "automatic generation enabled" state in this clone.
@@ -328,17 +362,16 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Difficulty selection opens a choice panel like the original's
 	# ShowDifficulty (the opening show "开场演出" uses it to let the player
-	# pick a narrator); the pick applies via apply_difficulty.
+	# pick a narrator); the pick applies via apply_difficulty. Choices are
+	# built from the init difficulty configs, each carrying the narrator
+	# portrait and desc like DifficultyPanelController.UpdateShow.
 	# [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then-apply;
+	#       DifficultyPanelController.c UpdateShow portrait+desc;
 	#       event 5310006 开场演出1-最开始]
 	if k == "difficulty":
 		if state != null and state.has_method("queue_choice_prompt"):
 			state.queue_choice_prompt(
-				{
-					"diff_0": {"text": "梅姬（简单）：骰子 60%，无限回退"},
-					"diff_1": {"text": "哈桑（普通）：骰子 50%，10 次回退"},
-					"diff_2": {"text": "女术士（困难）：骰子 40%，无回退"},
-				},
+				_difficulty_choices(db),
 				"选择你的叙事者",
 				"故事将由此开始。",
 				_queue_context(context)
@@ -447,6 +480,35 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Unhandled: log, don't crash.
 	deferred.logs.append("UNHANDLED result key: %s=%s" % [k, str(val)])
+
+
+## Narrator choices for the in-game difficulty panel, built from the init
+## difficulty configs (name/title/desc) with the portrait resource the
+## DifficultyPanel shows per item. [SRC: DifficultyPanelController.c
+##       UpdateShow: portrait sprite + desc with dice rate;
+##       Resources/image/common 710000N.png portraits]
+static func _difficulty_choices(db) -> Dictionary:
+	var picks: Dictionary = {}
+	for index in 3:
+		var conf: Dictionary = db.get_difficulty(index) if db != null and db.has_method("get_difficulty") else {}
+		if conf.is_empty():
+			continue
+		picks["diff_%d" % index] = {
+			"text": "%s（%s）" % [str(conf.get("name", "?")), str(conf.get("title", "?"))],
+			"desc": _clean_rich_text(str(conf.get("desc", ""))),
+			"icon": "ui/710000%d" % (index + 1),
+			"value": index,
+		}
+	return picks
+
+
+## Strip the rich-text markup the original's TMP labels interpret; plain
+## labels in the clone would show the tags verbatim.
+static func _clean_rich_text(raw: String) -> String:
+	var cleaned := raw.replace("<sprite=0>", "·")
+	for tag in ["<indent=10%>", "</indent>", "<size=85%>", "</size>"]:
+		cleaned = cleaned.replace(tag, "")
+	return cleaned.strip_edges()
 
 
 static func _event_ids(value: Variant) -> Array[int]:
@@ -607,10 +669,23 @@ static func _clean_all_from_key(k: String) -> bool:
 
 
 static func _is_slot_tag_op(k: String) -> bool:
-	# s<n>[+\-=]<tag> OR s<n>+回收. Must start with s and contain an op char.
-	if not k.begins_with("s"):
+	# <selector>[+\-=]<tag> where the selector is a slot (s4+回收), the
+	# context cards (self+tag), or the aggregate family. Must contain an op
+	# char. [SRC: operations.json "(?!total)(?!sudan_pool)([^\\+\\-]+)
+	#       ([\\+\\-\\=])(\\b(?!equip\\b).+)" -> ModifyTag via OperationFilter]
+	if ("+" not in k and "-" not in k and "=" not in k) or k.begins_with("sudan"):
 		return false
-	return ("+" in k or "-" in k or "=" in k) and not k.begins_with("sudan")
+	var op_idx := _first_tag_op_index(k)
+	if op_idx < 1:
+		return false
+	return _is_slot_op_selector(k.substr(0, op_idx))
+
+
+static func _first_tag_op_index(k: String) -> int:
+	for i in range(1, k.length()):
+		if k[i] == "+" or k[i] == "-" or k[i] == "=":
+			return i
+	return -1
 
 
 static func _is_modify_rare_key(k: String) -> bool:
@@ -629,21 +704,28 @@ static func _is_change_card_copy_key(k: String) -> bool:
 
 
 static func _is_equip_key(k: String) -> bool:
-	if not k.begins_with("s"):
-		return false
 	for suffix in ["+equip", "-equip", "~equip"]:
 		if k.ends_with(suffix):
-			return k.substr(1, k.length() - suffix.length() - 1).is_valid_int()
+			return _is_slot_op_selector(k.substr(0, k.length() - suffix.length()))
 	return false
 
 
 static func _is_equip_slot_key(k: String) -> bool:
-	if not k.begins_with("s"):
-		return false
 	for suffix in ["+equip_slot", "-equip_slot"]:
 		if k.ends_with(suffix):
-			return k.substr(1, k.length() - suffix.length() - 1).is_valid_int()
+			return _is_slot_op_selector(k.substr(0, k.length() - suffix.length()))
 	return false
+
+
+## Selectors accepted by slot-targeting operations: s<n> slots, the context
+## cards (self/parent), whole-rite sets (all/enemy/friend), and raw card ids.
+## [SRC: OperationFilter.c @ Filter (0x3a15c0): s<n> -> slot list; id -> rite
+##       cards by id; self -> self_card_index card; parent; friend/enemy via
+##       GetEnemyCardsWithIndex; all -> every rite card; dump.cs:394469]
+static func _is_slot_op_selector(selector: String) -> bool:
+	if selector.begins_with("s") and selector.substr(1).is_valid_int():
+		return true
+	return selector in ["self", "parent", "all", "friend", "enemy"] or selector.is_valid_int()
 
 
 static func _is_slot_selector(selector: String) -> bool:
@@ -859,11 +941,49 @@ static func _apply_equip_slot(k: String, val: Variant, state, db, context: Dicti
 
 static func _slot_target_uids(selector: String, state, context: Dictionary) -> Array[int]:
 	var targets: Array[int] = []
-	if not selector.begins_with("s") or not selector.substr(1).is_valid_int():
+	if selector.begins_with("s") and selector.substr(1).is_valid_int():
+		var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
+		for entry in state.cards_in_slot(selector.substr(1).to_int(), rite_uid):
+			targets.append(int(entry.get("card_uid", 0)))
+		return targets
+	# Context/aggregate selectors from OperationFilter's family.
+	# [SRC: OperationFilter.c @ Filter (0x3a15c0) self/parent/friend/enemy/all;
+	#       dump.cs:394469 ctx self_card_index(+0x14)/rite(+0x20)]
+	var self_uid := int(context.get("card_uid", context.get("self_card_uid", 0)))
+	if selector == "self":
+		if self_uid > 0 and state.get_card_instance(self_uid) != null:
+			targets.append(self_uid)
+		return targets
+	if selector == "parent":
+		var host_uid: int = (
+			state.host_uid_of_equipment(self_uid)
+			if self_uid > 0 and state.has_method("host_uid_of_equipment")
+			else 0
+		)
+		if host_uid > 0:
+			targets.append(host_uid)
 		return targets
 	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
-	for entry in state.cards_in_slot(selector.substr(1).to_int(), rite_uid):
-		targets.append(int(entry.get("card_uid", 0)))
+	if selector == "all":
+		if state.has_method("rite_slot_card_uids"):
+			return state.rite_slot_card_uids(rite_uid)
+		return targets
+	if selector == "friend" or selector == "enemy":
+		var want_enemy := selector == "enemy"
+		if state.has_method("cards_in_slot_entries_for_rite"):
+			for entry in state.cards_in_slot_entries_for_rite(rite_uid):
+				if bool(entry.get("is_enemy", false)) == want_enemy:
+					var uid := int(entry.get("card_uid", 0))
+					if uid > 0:
+						targets.append(uid)
+		return targets
+	if selector.is_valid_int():
+		var want_id := selector.to_int()
+		if state.has_method("rite_slot_card_uids"):
+			for uid in state.rite_slot_card_uids(rite_uid):
+				var inst = state.get_card_instance(uid)
+				if inst != null and int(inst.card_id) == want_id:
+					targets.append(uid)
 	return targets
 
 
@@ -887,26 +1007,20 @@ static func _is_supported_filtered_tag_op(k: String, prefix: String) -> bool:
 
 
 static func _apply_slot_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:
-	# Parse "s4+回收" -> slot=4, op=+, tag=回收.
-	var op_idx := -1
-	var op_char := ""
-	for i in range(1, k.length()):
-		if k[i] == "+" or k[i] == "-" or k[i] == "=":
-			op_idx = i
-			op_char = k[i]
-			break
-	if op_idx < 0:
+	# Parse "<selector>[+\-=]<tag>" (s4+回收, self+战斗的痕迹).
+	var op_idx := _first_tag_op_index(k)
+	if op_idx < 1:
 		return
-	var slot_num := k.substr(1, op_idx - 1).to_int()
+	var op_char := k[op_idx]
+	var selector := k.substr(0, op_idx)
 	var tag_name := k.substr(op_idx + 1)
 	var op := TagSystem.op_from_char(op_char)
 	var amount := int(val)
 	if amount == 0 and op != TagSystem.Op.SET:
 		amount = 1
 	var can_add := _tag_can_add(db, tag_name)
-	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
-	for tc in state.cards_in_slot(slot_num, rite_uid):
-		var instance = state.get_card_instance(int(tc.get("card_uid", 0)))
+	for host_uid in _slot_target_uids(selector, state, context):
+		var instance = state.get_card_instance(host_uid)
 		if instance != null:
 			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
 

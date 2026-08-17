@@ -246,7 +246,7 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	var game = Game.new()
 	stage.add_child(game)
 	await wait_process_frames(2)
-	game._on_difficulty_selected(0)
+	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
 
@@ -667,7 +667,7 @@ func test_game_menu_button_opens_real_overlay():
 	stage.add_child(game)
 	await wait_process_frames(2)
 
-	game._on_difficulty_selected(0)
+	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
 
@@ -721,7 +721,7 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	var game = Game.new()
 	stage.add_child(game)
 	await wait_process_frames(2)
-	game._on_difficulty_selected(0)
+	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
 
@@ -771,7 +771,7 @@ func test_game_menu_opens_manual_archive_picker():
 	var game = Game.new()
 	stage.add_child(game)
 	await wait_process_frames(2)
-	game._on_difficulty_selected(0)
+	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
 	game._show_user_archive_overlay()

@@ -49,6 +49,12 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return eval_slot(k, val, ctx)
 	if (k.begins_with("!s") or k.begins_with("~s")) and (k.length() > 2 and k[2].is_valid_int()):
 		return eval_slot(k, val, ctx)
+	# SlotHasTag selector family: the context cards and rite aggregates share
+	# the s<n> grammar (presence / .is / .type / .rare / .<tag>).
+	# [SRC: conditions.json "([~!]?)(s\\d+|parent|self|all|enemy|friend)\\.
+	#       ((?!is|type|rare)[^!<=>]+)(>=|<=|<>|!=|=|[<>])?" -> SlotHasTag]
+	if _is_selector_family_key(k):
+		return eval_slot(k, val, ctx)
 	# have / !have
 	if k.begins_with("have.") or k == "have":
 		return eval_have(k, val, ctx, false)
@@ -131,8 +137,24 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 	if k == "rite":
 		var rite_state = ctx.get("state")
 		return rite_state != null and rite_state.find_rite_instance_by_id(int(val)) != null
-	if k == "is_rite":
-		return int(ctx.get("rite_id", 0)) == int(val)
+	if k == "is_rite" or k == "!is_rite" or k == "~is_rite":
+		var matches := int(ctx.get("rite_id", 0)) == int(val)
+		return not matches if k.length() > 6 else matches
+	# tag_tips.<tag>: the acting card exercised that tag in this rite's checks.
+	# [SRC: conditions.json "(!~)?tag_tips\\.(.+)" -> HasTagTips;
+	#       HasTagTips.c @ IsSatisfied (0x3fe3c0) list-contains, ctor negation]
+	if k.begins_with("tag_tips.") or k.begins_with("!tag_tips.") or k.begins_with("~tag_tips."):
+		var negate_tip := k.begins_with("!") or k.begins_with("~")
+		var tip_tag := k.lstrip("!~").substr("tag_tips.".length())
+		var tip_state = ctx.get("state")
+		var tip_uid := int(ctx.get("card_uid", 0))
+		var tip_inst = (
+			tip_state.get_card_instance(tip_uid)
+			if tip_state != null and tip_uid > 0 and tip_state.has_method("get_card_instance")
+			else null
+		)
+		var has_tip: bool = tip_inst != null and tip_tag in tip_inst.tag_tips
+		return (not has_tip) if negate_tip else has_tip
 	if _can_eval_acting_tag(k, ctx):
 		return eval_acting_tag(k, val, ctx)
 	if _can_eval_state_tag(k, ctx):
@@ -148,7 +170,9 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 ## such as an unimplemented control key out of the supported bucket.
 static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	var k := key.strip_edges()
-	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
+	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "!is_rite", "~is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
+		return true
+	if k.begins_with("tag_tips.") or k.begins_with("!tag_tips.") or k.begins_with("~tag_tips."):
 		return true
 	if k.begins_with("rare"):
 		return true
@@ -161,6 +185,8 @@ static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	if k.begins_with("s") and (k.length() > 1 and k[1].is_valid_int()):
 		return true
 	if (k.begins_with("!s") or k.begins_with("~s")) and (k.length() > 2 and k[2].is_valid_int()):
+		return true
+	if _is_selector_family_key(k):
 		return true
 	if k.begins_with("have.") or k.begins_with("!have."):
 		return true
@@ -494,19 +520,32 @@ class AttrExprParser:
 					if field == "rare":
 						var rare_card: Dictionary = _card_data(int(entry.get("card_id", 0)))
 						return float(rare_card.get("rare", 0))
+					_record_tag_tip(entry, field)
 					return float(entry.get("tags", {}).get(field, 0))
 			return 0.0
 		# Bare tag: ctx.main first, friend-side sum when main is absent.
 		if _ctx.has("main_card") and not (_ctx.get("main_card") is Dictionary and _ctx["main_card"].is_empty()):
 			var main_entry: Dictionary = _ctx.get("main_card", {})
+			_record_tag_tip(main_entry, ident)
 			return float(main_entry.get("tags", {}).get(ident, 0))
-		var entries := _card_set(false)
+		# Bare tags sum the FRIEND side only; e() covers the enemy side.
+		var entries: Array = _card_set(false)
 		if not entries.is_empty():
 			var total := 0.0
 			for entry in entries:
+				_record_tag_tip(entry, ident)
 				total += float(entry.get("tags", {}).get(ident, 0))
 			return total
 		return _legacy_slot_sum(ident)
+
+	# Attribute checks record which tags were exercised so post_rite's
+	# HasTagTips can see them. [SRC: HasTagTips.c @ IsSatisfied reads the
+	#       card's tag tips list]
+	func _record_tag_tip(entry: Dictionary, tag_name: String) -> void:
+		var st = _ctx.get("state")
+		var card_uid := int(entry.get("card_uid", 0))
+		if st != null and card_uid > 0 and st.has_method("record_tag_tip"):
+			st.record_tag_tip(card_uid, tag_name)
 
 	# Pre-slot_entries contexts: sum the tag across the acting attr_slots
 	# (test/legacy callers); acting_card_only narrows to the acting card.
@@ -540,17 +579,74 @@ static func _slot_num(slot_key: String) -> int:
 	return 0
 
 
+## SlotHasTag keys for the aggregate selector family (parent/self/all/
+## enemy/friend, with optional !/~ negation).
+## [SRC: conditions.json selector group -> SlotHasTag]
+static func _is_selector_family_key(k: String) -> bool:
+	var kk := k.lstrip("!~")
+	for prefix in ["parent.", "self.", "all.", "enemy.", "friend."]:
+		if kk.begins_with(prefix):
+			return true
+	return false
+
+
+## Resolve a SlotHasTag selector (s<n>/parent/self/all/enemy/friend) to its
+## card entries for condition evaluation.
+## [SRC: OperationFilter.c @ Filter (0x3a15c0) selector family;
+##       dump.cs:394469 ctx self_card_index/rite]
+static func _selector_condition_cards(selector: String, st, ctx: Dictionary) -> Array:
+	var out: Array = []
+	if st == null:
+		return out
+	if selector.begins_with("s") and selector.substr(1).is_valid_int():
+		if st.has_method("cards_in_slot"):
+			return st.cards_in_slot(selector.substr(1).to_int(), int(ctx.get("rite_uid", 0)))
+		return out
+	var self_uid := int(ctx.get("card_uid", 0))
+	if selector == "self":
+		var inst = st.get_card_instance(self_uid) if self_uid > 0 and st.has_method("get_card_instance") else null
+		if inst != null:
+			out.append({"id": int(inst.card_id), "card_uid": self_uid})
+		return out
+	if selector == "parent":
+		var host_uid: int = (
+			st.host_uid_of_equipment(self_uid)
+			if self_uid > 0 and st.has_method("host_uid_of_equipment")
+			else 0
+		)
+		var host = st.get_card_instance(host_uid) if host_uid > 0 and st.has_method("get_card_instance") else null
+		if host != null:
+			out.append({"id": int(host.card_id), "card_uid": host_uid})
+		return out
+	var rite_uid := int(ctx.get("rite_uid", 0))
+	if selector == "all":
+		if st.has_method("rite_slot_card_uids"):
+			for uid in st.rite_slot_card_uids(rite_uid):
+				var inst_a = st.get_card_instance(uid)
+				if inst_a != null:
+					out.append({"id": int(inst_a.card_id), "card_uid": uid})
+		return out
+	if selector == "friend" or selector == "enemy":
+		var want_enemy := selector == "enemy"
+		if st.has_method("cards_in_slot_entries_for_rite"):
+			for entry in st.cards_in_slot_entries_for_rite(rite_uid):
+				if bool(entry.get("is_enemy", false)) == want_enemy and int(entry.get("card_uid", 0)) > 0:
+					out.append(entry)
+		return out
+	return out
+
+
 static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var st = ctx.get("state")
-	var rite_uid := int(ctx.get("rite_uid", 0))
 	var negate := k.begins_with("!") or k.begins_with("~")
 	var kk := k.lstrip("!~")
-	# "s1" presence, "s1.is <id>", "s1.<tag>"
+	# "s1" presence, "s1.is <id>", "s1.<tag>"; parent/self/all/enemy/friend
+	# share the grammar.
 	if "." in kk:
 		var dot := kk.find(".")
-		var slot_num := kk.substr(1, dot - 1).to_int()
+		var selector := kk.substr(0, dot)
 		var rest := kk.substr(dot + 1)
-		var cards: Array = st.cards_in_slot(slot_num, rite_uid)
+		var cards: Array = _selector_condition_cards(selector, st, ctx)
 		if rest == "is":
 			var want_id := int(val)
 			var found := false
@@ -590,10 +686,13 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 				ok = true
 				break
 		return ok if not negate else not ok
-	# plain "s1" -> presence.
-	var slot_num2 := kk.substr(1).to_int()
-	var present: bool = st.slot_has_cards(slot_num2)
-	return present if not negate else not present
+	# plain "s1" -> presence (rite-agnostic, like the original SlotHasTag
+	# presence check); the aggregate selectors use their own resolution.
+	if kk.begins_with("s") and kk.length() > 1 and kk.substr(1).is_valid_int():
+		var present: bool = st.slot_has_cards(kk.substr(1).to_int())
+		return present if not negate else not present
+	var selector_present := not _selector_condition_cards(kk, st, ctx).is_empty()
+	return selector_present if not negate else not selector_present
 
 
 ## Have-family counting core, shared by have / hand_have / table_have /

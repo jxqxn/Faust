@@ -6,12 +6,27 @@
 
 ## 1. 规则引擎（DSL）
 
-- ✅ **DSL 三类全支持归零**（result 2119、condition 3988、action 2285，`tmp/dsl_audit`）：引导键族（begin_guide/close/cues）、table/total 域 equip、scoped 改名/改文全部落地
+- ✅ **DSL 三类全支持归零**（result 2119、condition 3988、action 2285 → 2026-08-17 扩域后 result 2134、condition 4001、action 2522，`tmp/dsl_audit`）
+- ✅ **审计域扩展（2026-08-17）**：`case:opN` 子树内部键纳入扫描（hand_card_refresh 曾藏匿于此）；
+  cards.json 的 `post_rite` 与 `vanish` 结算入审计（card 域）
+- ✅ **post_rite 执行链（2026-08-17）**：卡牌定义的 post_rite 在所属仪式结算后执行——
+  参战卡+其装备逐张以自身为上下文跑结算（消耗品 clean.self 自毁、食客 parent-equip 离场、
+  条件计数器/结局/事件）；[SRC: RiteResultPanelController.c:1268 → CardExtensions.DoPostRite]
+- ✅ **选择器族补全（2026-08-17）**：`<selector>` = s<n>/self/parent/all/enemy/friend/卡牌id
+  通用于槽标签操作（self+战斗的痕迹）、装备操作（parent-equip）、clean（clean.self）与
+  SlotHasTag 条件（self.<tag>/parent.<tag>）；[SRC: OperationFilter.c @ Filter 0x3a15c0;
+  conditions.json selector 组 → SlotHasTag]
+- ✅ **tag_tips/<tag> 条件（2026-08-17）**：属性检定求值时记录各卡用过的标签（运行时、不进存档），
+  post_rite 的 HasTagTips 读取（阿迪莱"战斗的痕迹"）；`!is_rite` 否定形补齐
+- ✅ `hand_card_refresh`（表现层刷新手牌，HandCardRefresh.c → UpdateHandCards）
+- ✅ **文本占位符替换（2026-08-17）**：`[sudan_life_time]`/`[sudan_redraw_total_left_times]`
+  在 prompt/choice/仪式结算文本处替换为运行值
+- ✅ **难度选择入游戏内（2026-08-17）**：difficulty 操作按 init 配置构建叙事者选项（头像+描述+
+  骰率），标题页直接开局；标题难度页死代码删除
 - ✅ `rebirth.s1/s2`（8 处）——槽卡倒计时重置（RebirthSudanCard 0x519d60 + b__4_0 set_life(0)）
 - （原 action 94 键条目已完成，见上）：新手引导 UI 演示族（hand_pop 60、rite_pop 8、focus 7、slide、begin_guide、
   close_* 族、hand_pop_gamepad/normal）、`difficulty`、`magic_sudan`、`change_desk_bg`、
   `change_location_icon`、`table.change_card_name.<rite>_<seq>.<id>`（报告五 A5）
-- ✅ `difficulty`（中途难度切换：apply_difficulty）与 `magic_sudan`（引导演示指令，无向导宿主记 no-op）
 
 ## 2. 表现层
 
@@ -43,8 +58,10 @@
 ## 3. 系统
 
 - ✅ 新手引导：BeginGuideBar（15 类指引文案+绑定键提示）、begin_guide/close_begin_guide/cue 键族、存档往返
-- ⬜ 向导剧情流（WizardController 完整流程、魔法苏丹演示）
-- ⬜ 难度"魔法苏丹"（difficulty、magic_sudan 键；原作高难度变体）
+- 🔨 向导剧情流：开场演出链 5310006→5310000+（叙事者选择/出身/能力/倾向/妻子）已由事件系统
+  承载并全部走通（2026-08-17 难度选择入游戏内）；剩余 = WizardController 完整演示宿主与
+  magic_sudan 引导演出、5310004 后的引导序列实机校对
+- ⬜ 难度"魔法苏丹"（magic_sudan 键；原作高难度变体，difficulty 键已完整）
 - ✅ 结局展示：over.json 159 结局表接入（名/副题/文本/后日谈标记），处刑与事件 over 值驱动 ending id
 - ⬜ after_story 后日谈播放（StreamingAssets/config/after_story/ 配置已定位）
 - ⬜ 笔记系统（原作 add_note.ogg 暗示；NoteController 类未审）
