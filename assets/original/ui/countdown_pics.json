@@ -1,0 +1,76 @@
+{"frames": [
+
+{
+	"filename": "人.png",
+	"frame": {"x":0,"y":346,"w":100,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":100,"h":116},
+	"sourceSize": {"w":100,"h":116}
+},
+{
+	"filename": "刀.png",
+	"frame": {"x":0,"y":80,"w":94,"h":133},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":94,"h":133},
+	"sourceSize": {"w":94,"h":133}
+},
+{
+	"filename": "暗色点点.png",
+	"frame": {"x":36,"y":0,"w":38,"h":40},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":38,"h":40},
+	"sourceSize": {"w":38,"h":40}
+},
+{
+	"filename": "染血的刀.png",
+	"frame": {"x":0,"y":213,"w":94,"h":133},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":94,"h":133},
+	"sourceSize": {"w":94,"h":133}
+},
+{
+	"filename": "红色的人‘.png",
+	"frame": {"x":0,"y":462,"w":100,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":100,"h":116},
+	"sourceSize": {"w":100,"h":116}
+},
+{
+	"filename": "进度条（亮.png",
+	"frame": {"x":0,"y":40,"w":38,"h":40},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":38,"h":40},
+	"sourceSize": {"w":38,"h":40}
+},
+{
+	"filename": "进度条（红色.png",
+	"frame": {"x":38,"y":40,"w":38,"h":40},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":38,"h":40},
+	"sourceSize": {"w":38,"h":40}
+},
+{
+	"filename": "进度条暗点.png",
+	"frame": {"x":0,"y":0,"w":36,"h":37},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":36,"h":37},
+	"sourceSize": {"w":36,"h":37}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "countdown_pics.png",
+	"format": "RGBA8888",
+	"size": {"w":100,"h":580},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:f2182101ed0d76ce17d0f4cfd0723ec2:03344689210b35e7256a7d951df31565:a78fc4b697aa11c77b64618e9af5215b$"
+}
+}
