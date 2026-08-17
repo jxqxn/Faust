@@ -85,6 +85,7 @@ var _card_detail_overlay: Control
 var _card_detail_panel: Panel
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
+var _detail_card_type := ""
 var _event_overlay: Control
 var _event_panel: Panel
 var _rename_input: LineEdit
@@ -148,8 +149,30 @@ func _build_ui() -> void:
 	hud_row.offset_right = -18
 	_hud.add_child(hud_row)
 
-	_round_label = _stat_label()
-	hud_row.add_child(_round_label)
+	# Round display beside a compact crop of the original pocket-watch
+	# dial (56x56 icon; the HUD strip stays thin so the map sits below).
+	# [SRC: Texture2D/clock_bg.png 596x636]
+	if ResourceLoader.exists("res://assets/original/ui/clock_bg.png"):
+		var clock_box := HBoxContainer.new()
+		clock_box.name = "RoundClock"
+		clock_box.add_theme_constant_override("separation", 6)
+		var clock_icon := TextureRect.new()
+		var clock_atlas := AtlasTexture.new()
+		clock_atlas.atlas = preload("res://assets/original/ui/clock_bg.png")
+		clock_atlas.region = Rect2(96, 96, 404, 404)
+		clock_icon.texture = clock_atlas
+		clock_icon.custom_minimum_size = Vector2(36, 36)
+		clock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		clock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		clock_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		clock_box.add_child(clock_icon)
+		_round_label = _stat_label()
+		_round_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		clock_box.add_child(_round_label)
+		hud_row.add_child(clock_box)
+	else:
+		_round_label = _stat_label()
+		hud_row.add_child(_round_label)
 	# Original gold-coin badge art beside the gold count.
 	if ResourceLoader.exists("res://assets/original/ui/coin.png"):
 		var coin_icon := TextureRect.new()
@@ -266,6 +289,21 @@ func _build_ui() -> void:
 	_advance_button = Button.new()
 	_advance_button.name = "AdvanceDayButton"
 	_advance_button.text = "下一天"
+	# Texture-first: next_day.png (512x512 stamp) IS the button — no
+	# circular chrome behind it. [SRC: main_new/next_day.png + hover]
+	if ResourceLoader.exists("res://assets/original/ui/main/next_day.png"):
+		_advance_button.text = ""
+		_advance_button.tooltip_text = "下一天"
+		var next_icon := TextureRect.new()
+		next_icon.name = "NextDayIcon"
+		next_icon.texture = preload("res://assets/original/ui/main/next_day.png")
+		next_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+		next_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		next_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		next_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_advance_button.add_child(next_icon)
+		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+			_advance_button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 	_advance_button.custom_minimum_size = Vector2(132, 132)
 	_advance_button.add_theme_font_size_override("font_size", 23)
 	_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
@@ -1051,7 +1089,6 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_event_panel.add_theme_stylebox_override("panel", _event_panel_style())
 	_event_overlay.add_child(_event_panel)
 	UiMotionScript.bind(_event_panel, UiMotionScript.Profile.PANEL, true)
-
 	var root := VBoxContainer.new()
 	root.name = "EventPromptContent"
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1277,16 +1314,34 @@ func _event_button(label: String) -> Button:
 	return button
 
 
-func _event_panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.032, 0.075, 0.90)
-	style.border_color = Color(0.86, 0.88, 0.91, 0.34)
-	style.set_content_margin_all(16)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.shadow_color = Color(0.01, 0.012, 0.03, 0.62)
-	style.shadow_size = 10
-	return style
+func _event_panel_style() -> StyleBox:
+	# Texture-first: the original prompt parchment IS the panel surface
+	# (9-slice via StyleBoxTexture); the authored dark box only survives
+	# when the art is missing. [SRC: Texture2D/prompt.png 632x444]
+	var art_path := "res://assets/original/ui/prompt.png"
+	if ResourceLoader.exists(art_path):
+		var tex := load(art_path) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 70
+			style.texture_margin_right = 70
+			style.texture_margin_top = 60
+			style.texture_margin_bottom = 60
+			style.content_margin_left = 76
+			style.content_margin_right = 76
+			style.content_margin_top = 66
+			style.content_margin_bottom = 66
+			return style
+	var fallback := StyleBoxFlat.new()
+	fallback.bg_color = Color(0.025, 0.032, 0.075, 0.90)
+	fallback.border_color = Color(0.86, 0.88, 0.91, 0.34)
+	fallback.set_content_margin_all(16)
+	fallback.set_border_width_all(1)
+	fallback.set_corner_radius_all(3)
+	fallback.shadow_color = Color(0.01, 0.012, 0.03, 0.62)
+	fallback.shadow_size = 10
+	return fallback
 
 
 func show_card_detail(card_or_uid: int) -> void:
@@ -1332,6 +1387,11 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
 	_card_detail_overlay.add_child(_card_detail_panel)
 	UiMotionScript.bind(_card_detail_panel, UiMotionScript.Profile.PANEL, true)
+	# Texture-first: the per-type cardinfo art drives the 9-slice surface
+	# (see _detail_panel_style / _detail_backdrop_texture).
+	# [SRC: Texture2D/cardinfo_bg_char.png / cardinfo_bg_item.png / cardinfo_bg.png]
+	_detail_card_type = str(card.get("type", ""))
+	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
 
 	var root := VBoxContainer.new()
 	root.name = "CardDetailContent"
@@ -1549,15 +1609,43 @@ func _rarity_badge(card: Dictionary) -> String:
 	return "星"
 
 
-func _detail_panel_style() -> StyleBoxFlat:
-	var style := FaustTheme.card_style(FaustTheme.GOLD)
-	style.bg_color = Color(0.05, 0.045, 0.035, 0.94)
-	style.set_content_margin_all(18)
-	style.border_width_left = 2
-	style.border_width_right = 2
-	style.border_width_top = 2
-	style.border_width_bottom = 2
-	return style
+func _detail_panel_style() -> StyleBox:
+	# Texture-first: original cardinfo art is the surface (set per card type
+	# by the caller); authored dark box only without art.
+	var art := _detail_backdrop_texture()
+	if art != null:
+		var style := StyleBoxTexture.new()
+		style.texture = art
+		style.texture_margin_left = 90
+		style.texture_margin_right = 90
+		style.texture_margin_top = 70
+		style.texture_margin_bottom = 70
+		style.content_margin_left = 96
+		style.content_margin_right = 96
+		style.content_margin_top = 76
+		style.content_margin_bottom = 76
+		return style
+	var flat := FaustTheme.card_style(FaustTheme.GOLD)
+	flat.bg_color = Color(0.05, 0.045, 0.035, 0.94)
+	flat.set_content_margin_all(18)
+	flat.border_width_left = 2
+	flat.border_width_right = 2
+	flat.border_width_top = 2
+	flat.border_width_bottom = 2
+	return flat
+
+
+func _detail_backdrop_texture() -> Texture2D:
+	# Current card's type backdrop for the 9-slice detail surface.
+	# [SRC: Texture2D/cardinfo_bg_char.png / cardinfo_bg_item.png / cardinfo_bg.png]
+	var name := "cardinfo_bg"
+	match str(_detail_card_type):
+		"char": name = "cardinfo_bg_char"
+		"item": name = "cardinfo_bg_item"
+	var path := "res://assets/original/ui/%s.png" % name
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
 
 
 func _badge_style() -> StyleBoxFlat:

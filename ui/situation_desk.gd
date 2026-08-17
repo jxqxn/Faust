@@ -41,11 +41,13 @@ const TABLE_TEXTURE = preload("res://assets/original/situation_desk/table.png")
 const NODE_TEXTURE = preload("res://assets/original/situation_desk/map_node_token.png")
 
 const SITE_SPECS := [
-	{"id": "home", "name": "SiteHome", "label": "自宅", "location": "自宅", "position": Vector2(0.18, 0.67)},
-	{"id": "market", "name": "SiteMarket", "label": "商业区", "location": "商业区", "position": Vector2(0.40, 0.38)},
-	{"id": "palace", "name": "SitePalace", "label": "宫廷", "location": "宫廷", "position": Vector2(0.57, 0.62)},
-	{"id": "temple", "name": "SiteTemple", "label": "神殿区", "location": "神殿区", "position": Vector2(0.73, 0.31)},
-	{"id": "wild", "name": "SiteWild", "label": "野外", "location": "野外", "position": Vector2(0.82, 0.72)},
+	{"id": "home", "name": "SiteHome", "label": "自宅", "location": "自宅", "position": Vector2(0.18, 0.67), "area": "SelfHome"},
+	{"id": "market", "name": "SiteMarket", "label": "商业区", "location": "商业区", "position": Vector2(0.40, 0.38), "area": "Downtown_1"},
+	{"id": "palace", "name": "SitePalace", "label": "宫廷", "location": "宫廷", "position": Vector2(0.57, 0.62), "area": "Palace"},
+	{"id": "temple", "name": "SiteTemple", "label": "神殿区", "location": "神殿区", "position": Vector2(0.73, 0.31), "area": "Parish_1"},
+	{"id": "wild", "name": "SiteWild", "label": "野外", "location": "野外", "position": Vector2(0.82, 0.72), "area": "Outside_1"},
+	{"id": "uptown", "name": "SiteUptown", "label": "上城区", "location": "上城区", "position": Vector2(0.30, 0.22), "area": "Uptown"},
+	{"id": "black", "name": "SiteBlack", "label": "黑街", "location": "黑街", "position": Vector2(0.66, 0.80), "area": "Blackstreet_1"},
 ]
 const SITE_NODE_SIZE := Vector2(72.0, 58.0)
 const MAP_TOP_SCALE := 0.90
@@ -122,7 +124,18 @@ func _build_chrome() -> void:
 	_think_drop_zone.owner_desk = self
 	_think_drop_zone.tooltip_text = "将手牌或苏丹卡拖到这里，触发既有思考事件"
 	_think_drop_zone.mouse_default_cursor_shape = Control.CURSOR_CAN_DROP
-	_think_drop_zone.add_theme_stylebox_override("panel", _paper_prop_style(PAPER_SHADOW))
+	# Texture-first: the IThink art IS the drop-zone surface; the paper
+	# prop style only survives without art.
+	if ResourceLoader.exists("res://assets/original/ui/IThink_01.png"):
+		var think_style := StyleBoxTexture.new()
+		think_style.texture = preload("res://assets/original/ui/IThink_01.png")
+		think_style.texture_margin_left = 30
+		think_style.texture_margin_right = 30
+		think_style.texture_margin_top = 24
+		think_style.texture_margin_bottom = 24
+		_think_drop_zone.add_theme_stylebox_override("panel", think_style)
+	else:
+		_think_drop_zone.add_theme_stylebox_override("panel", _paper_prop_style(PAPER_SHADOW))
 	_think_drop_zone.mouse_exited.connect(_set_think_drop_highlight.bind(false))
 	_think_drop_zone.z_index = 8
 	add_child(_think_drop_zone)
@@ -174,10 +187,20 @@ func _build_site(spec: Dictionary) -> void:
 
 	var token := TextureRect.new()
 	token.name = "NodeToken"
-	token.texture = NODE_TEXTURE
+	# Prefer the original area art (Palace, Downtown, ...) keyed by the
+	# site's area field; the authored node token stays as fallback.
+	# [SRC: Texture2D/Palace.png, Downtown_1.png, Parish_1.png, Outside_1.png,
+	#       SelfHome.png, Uptown.png, Blackstreet_1.png]
+	var area_texture: Texture2D = null
+	var area_name := str(spec.get("area", ""))
+	if area_name != "":
+		var area_path := "res://assets/original/ui/areas/%s.png" % area_name
+		if ResourceLoader.exists(area_path):
+			area_texture = load(area_path) as Texture2D
+	token.texture = area_texture if area_texture != null else NODE_TEXTURE
 	token.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	token.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	token.size = SITE_NODE_SIZE
+	token.size = SITE_NODE_SIZE if area_texture == null else SITE_NODE_SIZE * Vector2(1.7, 1.7)
 	token.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(token)
 	UiMotionScript.bind(button, UiMotionScript.Profile.SITE)
@@ -218,6 +241,7 @@ func refresh_context() -> void:
 		return
 	_subtitle.text = "地图 · 行动档案"
 	_refresh_site_availability()
+	refresh_rite_pins()
 	queue_redraw()
 
 
@@ -480,3 +504,120 @@ func _count_chit_style() -> StyleBoxFlat:
 	style.shadow_offset = Vector2(2.0, 2.0)
 	style.set_content_margin_all(2)
 	return style
+
+
+## ---- Original desk pin model ----
+## Available rites render directly as pins on the desk (original MapController
+## model: one pin per available rite at its location grid slot; clicking the
+## pin opens the rite). Area chips stay as map markers/labels.
+## [SRC: MapController.c @ AddPin (0x5670b0) / SetPos (0x569cd0):
+##       location "name:[x,y]" grid fields drive pin placement]
+
+const AREA_ANCHORS := {
+	"自宅": Vector2(0.16, 0.72),
+	"上城区": Vector2(0.30, 0.22),
+	"商业区": Vector2(0.42, 0.36),
+	"宫廷": Vector2(0.57, 0.60),
+	"神殿区": Vector2(0.74, 0.28),
+	"野外": Vector2(0.84, 0.70),
+	"黑街": Vector2(0.68, 0.84),
+	"结局": Vector2(0.5, 0.5),
+	"大敌": Vector2(0.5, 0.4),
+}
+const AREA_SPAN := Vector2(0.11, 0.16)
+
+var _rite_pins: Dictionary = {}
+static var _pin_atlas: OriginalAtlas = null
+
+
+func refresh_rite_pins() -> void:
+	if _state == null or _db == null:
+		return
+	if _pin_atlas == null:
+		_pin_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/rites.png")
+	for pin in _rite_pins.values():
+		if is_instance_valid(pin):
+			pin.queue_free()
+	_rite_pins.clear()
+	var instances: Array = []
+	if _state.has_method("available_rite_instances"):
+		instances = _state.available_rite_instances()
+	for instance in instances:
+		var rite: Dictionary = _db.rites.get(instance.id, {})
+		if not RiteOpen.is_interactive(rite):
+			continue
+		var icon_id := str(rite.get("icon", ""))
+		if icon_id == "" or _pin_atlas == null:
+			continue
+		var texture := _pin_atlas.frame(icon_id + ".png")
+		if texture == null:
+			continue
+		var pin := RitePinButton.new()
+		pin.name = "RitePin_%d" % instance.uid
+		pin.rite_uid = instance.uid
+		pin.rite_id = instance.id
+		pin.tooltip_text = str(rite.get("name", instance.id))
+		var art := TextureRect.new()
+		art.texture = texture
+		art.set_anchors_preset(Control.PRESET_FULL_RECT)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pin.add_child(art)
+		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+			pin.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+		pin.pressed.connect(_on_rite_pin_pressed.bind(instance.uid, instance.id))
+		pin.z_index = 6
+		add_child(pin)
+		_rite_pins[instance.uid] = {"node": pin, "location": str(rite.get("location", ""))}
+	_layout_rite_pins()
+
+
+func _on_rite_pin_pressed(rite_uid: int, rite_id: int) -> void:
+	if is_scene_blocked():
+		return
+	open_rite_instance.emit(rite_uid)
+
+
+func _layout_rite_pins() -> void:
+	var map_size := size
+	if map_size.x <= 0 or map_size.y <= 0:
+		return
+	var pin_size := Vector2(64, 70)
+	for uid in _rite_pins:
+		var entry: Dictionary = _rite_pins[uid]
+		var pin := entry["node"] as Control
+		var loc := str(entry["location"])
+		var anchor: Vector2 = AREA_ANCHORS.get(_area_name(loc), Vector2(0.5, 0.5))
+		var grid := _area_grid(loc)
+		var offset := Vector2(
+			(grid.x - 6.5) / 12.0 * AREA_SPAN.x,
+			-(grid.y - 12.0) / 15.0 * AREA_SPAN.y
+		)
+		var center := (anchor + offset) * map_size
+		pin.size = pin_size
+		pin.position = (center - pin_size * 0.5).round()
+
+
+static func _area_name(location: String) -> String:
+	var idx := location.find(":[")
+	if idx > 0:
+		return location.substr(0, idx)
+	return location
+
+
+static func _area_grid(location: String) -> Vector2:
+	var open := location.find("[")
+	var close := location.rfind("]")
+	if open < 0 or close <= open:
+		return Vector2(6.5, 12.0)
+	var parts := location.substr(open + 1, close - open - 1).split(",")
+	if parts.size() < 2:
+		return Vector2(6.5, 12.0)
+	return Vector2(float(parts[0]), float(parts[1]))
+
+
+class RitePinButton:
+	extends Button
+	var rite_uid := 0
+	var rite_id := 0

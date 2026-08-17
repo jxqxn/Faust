@@ -344,9 +344,21 @@ func _apply_layout() -> void:
 	_set_rect(_shade, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_slot_layer, Rect2(Vector2.ZERO, view_size))
 	var hand_top := view_size.y - 222 * s
-	var panel_pos := Vector2(760, 62) * s
-	var panel_height: float = clampf(hand_top - panel_pos.y - 18 * s, 260 * s, 404 * s)
-	_set_rect(_rite_panel, Rect2(panel_pos, Vector2(376 * s, panel_height)))
+	# The panel takes the original template's aspect (its bg art), sized to
+	# the free area right of the hand rail like the original rite surface.
+	# [SRC: rite_template bg art aspect ratios (~1.73..2.14)]
+	var canvas := _template_canvas_size(_rite_template_data())
+	var panel_area_width: float = view_size.x - 760 * s
+	var panel_area_height: float = hand_top - 80 * s
+	var panel_size := Vector2(panel_area_width, panel_area_height)
+	if canvas.x > 0 and canvas.y > 0:
+		var aspect: float = canvas.x / canvas.y
+		if panel_size.x / panel_size.y > aspect:
+			panel_size.x = panel_size.y * aspect
+		else:
+			panel_size.y = panel_size.x / aspect
+	var panel_pos := Vector2(view_size.x - panel_size.x - 36 * s, view_size.y * 0.5 - panel_size.y * 0.5)
+	_set_rect(_rite_panel, Rect2(panel_pos, panel_size))
 	_set_rect(_log_label, Rect2(Vector2(386, 488) * s, Vector2(500, 26) * s))
 
 	var slot_size := CardWidget.CARD_SIZE * s
@@ -930,8 +942,66 @@ func set_log(text: String) -> void:
 func _panel(node_name: String) -> Panel:
 	var panel := Panel.new()
 	panel.name = node_name
-	panel.add_theme_stylebox_override("panel", FaustTheme.card_style())
+	# Texture-first: the rite's template background IS the panel surface —
+	# no paper chrome may frame it. The authored style only survives when
+	# no art resolved.
+	# [SRC: rite_template_mappings.json -> rite_template bg fields;
+	#       assets/original/ui/rite_bg/]
+	var bg_texture := _rite_bg_texture()
+	if bg_texture != null:
+		var style := StyleBoxTexture.new()
+		style.texture = bg_texture
+		style.texture_margin_left = 40
+		style.texture_margin_right = 40
+		style.texture_margin_top = 36
+		style.texture_margin_bottom = 36
+		style.content_margin_left = 46
+		style.content_margin_right = 46
+		style.content_margin_top = 42
+		style.content_margin_bottom = 42
+		panel.add_theme_stylebox_override("panel", style)
+	else:
+		panel.add_theme_stylebox_override("panel", FaustTheme.card_style())
 	return panel
+
+
+static var _rite_bg_cache: Dictionary = {}
+
+
+## rite.mapping_id -> rite_template_mappings.json entry -> template bg name
+## -> assets/original/ui/rite_bg/<name>.png.
+static func _rite_bg_texture_for(rite: Dictionary) -> Texture2D:
+	var mapping_id := int(rite.get("mapping_id", 0))
+	var cache_key := "m%d" % mapping_id
+	if _rite_bg_cache.has(cache_key):
+		return _rite_bg_cache[cache_key]
+	var bg_name := "nomal_rite_bg"
+	var mapping: Variant = _load_json("res://content/rite_template_mappings.json")
+	if mapping is Dictionary:
+		var entry = mapping.get(str(mapping_id))
+		if not (entry is Dictionary) or entry.is_empty():
+			entry = mapping.get("0")
+		if entry is Dictionary:
+			var template_id := int(entry.get("template_id", 8000001))
+			var template = _load_json("res://content/rite_template/%d.json" % template_id)
+			if template is Dictionary and str(template.get("bg", "")) != "":
+				bg_name = str(template["bg"])
+	var path := "res://assets/original/ui/rite_bg/%s.png" % bg_name
+	var texture: Texture2D = null
+	if ResourceLoader.exists(path):
+		texture = load(path) as Texture2D
+	_rite_bg_cache[cache_key] = texture
+	return texture
+
+
+func _rite_bg_texture() -> Texture2D:
+	return _rite_bg_texture_for(_rite)
+
+
+static func _load_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	return JSON.parse_string(FileAccess.get_file_as_string(path))
 
 
 func _round_button(label: String) -> Button:
@@ -954,14 +1024,32 @@ func _round_button_style(border: Color = FaustTheme.GOLD) -> StyleBoxFlat:
 	return style
 
 
-func _slot_style(border: Color = Color("#585345"), filled: bool = false) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#302d18") if filled else Color("#11120c")
-	style.border_color = border
-	style.set_border_width_all(4)
-	style.set_corner_radius_all(4)
-	style.set_content_margin_all(6)
-	return style
+func _slot_style(border: Color = Color("#585345"), filled: bool = false) -> StyleBox:
+	# Texture-first: the original slot backdrop IS the button surface; the
+	# authored flat border only survives when the art is missing.
+	# [SRC: rite/template slot_bg nomal_slot_bg.png]
+	var slot_art := "res://assets/original/ui/rite_slot/nomal_slot_bg.png"
+	if ResourceLoader.exists(slot_art) and not filled:
+		var tex := load(slot_art) as Texture2D
+		if tex != null:
+			var style := StyleBoxTexture.new()
+			style.texture = tex
+			style.texture_margin_left = 24
+			style.texture_margin_right = 24
+			style.texture_margin_top = 20
+			style.texture_margin_bottom = 20
+			style.content_margin_left = 28
+			style.content_margin_right = 28
+			style.content_margin_top = 24
+			style.content_margin_bottom = 24
+			return style
+	var flat := StyleBoxFlat.new()
+	flat.bg_color = Color("#302d18") if filled else Color("#11120c")
+	flat.border_color = border
+	flat.set_border_width_all(4)
+	flat.set_corner_radius_all(4)
+	flat.set_content_margin_all(6)
+	return flat
 
 
 func _card_display_name(card: Dictionary, card_id: int) -> String:
@@ -987,6 +1075,34 @@ func _slot_rects_for_keys(keys: Array[String], s: float, slot_size: Vector2) -> 
 	var rects := {}
 	if keys.is_empty():
 		return rects
+	# Template-driven placement: slot centers come from the original
+	# rite_template coordinates (localPosition relative to the panel center,
+	# y-up) mapped onto the rendered panel rect; rotation and per-slot scale
+	# ride on the buttons. [SRC: RitePanelShowController.c L675-680
+	# set_localPosition/set_localScale from the template slots]
+	var template := _rite_template_data()
+	var panel_rect := _rite_panel.get_rect()
+	var canvas := _template_canvas_size(template)
+	if canvas.x > 0 and canvas.y > 0:
+		var fit := _template_fit(canvas, panel_rect)
+		for slot_key in keys:
+			var slot_def: Dictionary = template.get("slots", {}).get(slot_key, {})
+			var pos: Dictionary = slot_def.get("pos", {}) if slot_def.get("pos", {}) is Dictionary else {}
+			if pos.is_empty():
+				continue
+			# Unity center-origin y-up -> Godot panel-local y-down.
+			var cx: float = panel_rect.position.x + (canvas.x * 0.5 + float(pos.get("x", 0))) * fit
+			var cy: float = panel_rect.position.y + (canvas.y * 0.5 - float(pos.get("y", 0))) * fit
+			var sc: Dictionary = slot_def.get("scale", {}) if slot_def.get("scale", {}) is Dictionary else {}
+			var scale_xy := Vector2(float(sc.get("x", 1)), float(sc.get("y", 1)))
+			var btn := _slot_buttons.get(slot_key) as Control
+			if btn != null:
+				btn.rotation_degrees = -float(slot_def.get("rotation_z", 0))
+				btn.scale = scale_xy
+			rects[slot_key] = _slot_rect_from_center(Vector2(cx, cy), slot_size * scale_xy)
+		if not rects.is_empty():
+			return rects
+	# Fallback: authored grid for templates without resolvable art/coords.
 	if keys.size() <= 4:
 		var centers := [
 			Vector2(332, 179),
@@ -1010,6 +1126,40 @@ func _slot_rects_for_keys(keys: Array[String], s: float, slot_size: Vector2) -> 
 			center.x += float(cols - last_count) * gap.x * 0.5
 		rects[keys[i]] = _slot_rect_from_center(center, slot_size)
 	return rects
+
+
+## The resolved rite_template entry driving this panel's layout.
+func _rite_template_data() -> Dictionary:
+	var mapping: Variant = _load_json("res://content/rite_template_mappings.json")
+	if not (mapping is Dictionary):
+		return {}
+	var entry = mapping.get(str(int(_rite.get("mapping_id", 0))))
+	if not (entry is Dictionary) or entry.is_empty():
+		entry = mapping.get("0")
+	if not (entry is Dictionary):
+		return {}
+	var template: Variant = _load_json("res://content/rite_template/%d.json" % int(entry.get("template_id", 8000001)))
+	return template if template is Dictionary else {}
+
+
+## Canvas size = the resolved bg art's pixel size (the template's own frame).
+func _template_canvas_size(template: Dictionary) -> Vector2:
+	var bg_name := str(template.get("bg", ""))
+	if bg_name == "":
+		return Vector2.ZERO
+	var path := "res://assets/original/ui/rite_bg/%s.png" % bg_name
+	if not ResourceLoader.exists(path):
+		return Vector2.ZERO
+	var tex := load(path) as Texture2D
+	if tex == null:
+		return Vector2.ZERO
+	return tex.get_size()
+
+
+func _template_fit(canvas: Vector2, panel_rect: Rect2) -> float:
+	if canvas.x <= 0 or canvas.y <= 0:
+		return 1.0
+	return min(panel_rect.size.x / canvas.x, panel_rect.size.y / canvas.y)
 
 
 func _slot_brief(slot_def: Dictionary) -> String:

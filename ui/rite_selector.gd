@@ -391,30 +391,39 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		# Original rite pin art from the rites atlas, keyed by the rite's
 		# `icon` field (e.g. "rite_1" for 治理家业); name stays as tooltip.
 		# [SRC: assets/original/ui/rites.png + rites.json; rite icon fields]
+		# Texture-first: the original pin IS the button surface — no paper
+		# chrome around it. Name rides as the tooltip.
+		# [SRC: rites.png atlas via the rite icon field]
 		var pin := _rite_pin_texture(r)
 		if pin != null:
+			btn.custom_minimum_size = Vector2(0, 84)
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			var icon_rect := TextureRect.new()
 			icon_rect.texture = pin
-			icon_rect.custom_minimum_size = Vector2(40, 44)
 			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon_rect.custom_minimum_size = Vector2(72, 80)
 			icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			icon_rect.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			btn.add_child(icon_rect)
-			btn.tooltip_text = "%s\n%s" % [str(r.get("name", instance.id)), str(r.get("text", ""))]
+			btn.tooltip_text = "%s
+%s" % [str(r.get("name", instance.id)), str(r.get("text", ""))]
+			for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+				btn.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 		else:
 			btn.text = str(r.get("name", str(instance.id)))
 			btn.tooltip_text = str(r.get("text", ""))
-		btn.custom_minimum_size = Vector2(0, 44)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 15)
-		btn.add_theme_color_override("font_color", Color("#2d2017"))
-		btn.add_theme_color_override("font_hover_color", Color("#681f1b"))
-		btn.add_theme_color_override("font_pressed_color", Color("#421713"))
-		btn.add_theme_color_override("font_focus_color", Color("#2d2017"))
-		btn.add_theme_stylebox_override("normal", _rite_button_style())
-		btn.add_theme_stylebox_override("hover", _rite_button_style(Color("#9a4335"), true))
-		btn.add_theme_stylebox_override("pressed", _rite_button_style(Color("#6f281f"), true))
+			btn.custom_minimum_size = Vector2(0, 44)
+			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			btn.add_theme_font_size_override("font_size", 15)
+			btn.add_theme_color_override("font_color", Color("#2d2017"))
+			btn.add_theme_color_override("font_hover_color", Color("#681f1b"))
+			btn.add_theme_color_override("font_pressed_color", Color("#421713"))
+			btn.add_theme_color_override("font_focus_color", Color("#2d2017"))
+			btn.add_theme_stylebox_override("normal", _rite_button_style())
+			btn.add_theme_stylebox_override("hover", _rite_button_style(Color("#9a4335"), true))
+			btn.add_theme_stylebox_override("pressed", _rite_button_style(Color("#6f281f"), true))
 		btn.add_theme_stylebox_override("focus", _rite_button_style(Color("#b98736"), true))
 		btn.pressed.connect(_on_rite_instance.bind(instance.uid))
 		grid.add_child(btn)

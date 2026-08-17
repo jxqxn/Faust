@@ -306,10 +306,16 @@ func is_hand_motion_active() -> bool:
 
 
 func _style_for_card() -> StyleBoxFlat:
+	# Texture-first: when original card art or a rarity frame is present the
+	# art IS the face — no paper chrome may frame it. The authored paper
+	# style survives only for the ~100 cards without extracted art.
+	if _card_art_texture() != null or _rarity_frame_texture() != null:
+		var empty := StyleBoxFlat.new()
+		empty.bg_color = Color.TRANSPARENT
+		empty.set_border_width_all(0)
+		empty.set_content_margin_all(0)
+		return empty
 	var accent := _rarity_color(int(_card.get("rare", 0)), str(_card.get("type", "")))
-	# Hand cards share the desk's paper language, while their accent still
-	# carries rarity/type information. The face remains authored locally so no
-	# external texture or historical-reference asset is required.
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("#ead69a")
 	style.border_color = accent.darkened(0.24)
@@ -883,7 +889,54 @@ func _set_card_style() -> void:
 	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	if is_instance_valid(_visual_face):
 		_visual_face.add_theme_stylebox_override("panel", _style_for_card())
+		# Original rarity frame overlay: copper/silver/gold card borders
+		# painted over the face (stone for the lowest tier).
+		# [SRC: Texture2D/card_bg_copper.png / card_bg_silver.png /
+		#       card_bg_gold.png / card_bg_stone.png]
+		var frame := _rarity_frame_texture()
+		if frame != null:
+			var frame_rect := _find_or_add_frame("RarityFrame")
+			frame_rect.texture = frame
 		_request_visual_redraw()
+
+
+static var _rarity_frames: Dictionary = {}
+
+
+func _rarity_frame_texture() -> Texture2D:
+	var rare := int(_card.get("rare", 0))
+	var tier := "card_bg_stone"
+	if rare >= 4:
+		tier = "card_bg_gold"
+	elif rare >= 3:
+		tier = "card_bg_silver"
+	elif rare >= 2:
+		tier = "card_bg_copper"
+	if _rarity_frames.has(tier):
+		return _rarity_frames[tier]
+	var path := "res://assets/original/ui/%s.png" % tier
+	var texture: Texture2D = null
+	if ResourceLoader.exists(path):
+		texture = load(path) as Texture2D
+	_rarity_frames[tier] = texture
+	return texture
+
+
+func _find_or_add_frame(node_name: String) -> TextureRect:
+	if is_instance_valid(_visual_face):
+		var existing := _visual_face.get_node_or_null(NodePath(node_name))
+		if existing is TextureRect:
+			return existing
+		var rect := TextureRect.new()
+		rect.name = node_name
+		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		rect.stretch_mode = TextureRect.STRETCH_SCALE
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_visual_face.add_child(rect)
+		return rect
+	var stub := TextureRect.new()
+	return stub
 
 
 func _rebuild() -> void:

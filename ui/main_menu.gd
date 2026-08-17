@@ -160,6 +160,17 @@ func _make_diff_card(index: int) -> Control:
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
+	# Original narrator portrait (common/710000N.png keyed by index).
+	# [SRC: Resources/image/common difficulty portraits]
+	var portrait_path := "res://assets/original/ui/710000%d.png" % (index + 1)
+	if ResourceLoader.exists(portrait_path):
+		var portrait := TextureRect.new()
+		portrait.texture = load(portrait_path) as Texture2D
+		portrait.custom_minimum_size = Vector2(72, 72)
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(portrait)
 	var name_lbl := Label.new()
 	name_lbl.text = DIFF_NAMES[index]
 	name_lbl.add_theme_font_size_override("font_size", 22)
