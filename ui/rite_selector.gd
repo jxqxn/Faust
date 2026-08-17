@@ -388,10 +388,25 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 	for instance in rids:
 		var r: Dictionary = _db.rites.get(instance.id, {})
 		var btn := Button.new()
-		btn.text = str(r.get("name", str(instance.id)))
+		# Original rite pin art from the rites atlas, keyed by the rite's
+		# `icon` field (e.g. "rite_1" for 治理家业); name stays as tooltip.
+		# [SRC: assets/original/ui/rites.png + rites.json; rite icon fields]
+		var pin := _rite_pin_texture(r)
+		if pin != null:
+			var icon_rect := TextureRect.new()
+			icon_rect.texture = pin
+			icon_rect.custom_minimum_size = Vector2(40, 44)
+			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			btn.add_child(icon_rect)
+			btn.tooltip_text = "%s\n%s" % [str(r.get("name", instance.id)), str(r.get("text", ""))]
+		else:
+			btn.text = str(r.get("name", str(instance.id)))
+			btn.tooltip_text = str(r.get("text", ""))
 		btn.custom_minimum_size = Vector2(0, 44)
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.tooltip_text = str(r.get("text", ""))
 		btn.add_theme_font_size_override("font_size", 15)
 		btn.add_theme_color_override("font_color", Color("#2d2017"))
 		btn.add_theme_color_override("font_hover_color", Color("#681f1b"))
@@ -407,6 +422,20 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 		if _first_rite_button == null:
 			_first_rite_button = btn
 	_list_container.add_child(grid)
+
+
+static var _rites_atlas: OriginalAtlas = null
+
+
+static func _rite_pin_texture(rite: Dictionary) -> Texture2D:
+	var icon_id := str(rite.get("icon", ""))
+	if icon_id == "":
+		return null
+	if _rites_atlas == null:
+		_rites_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/rites.png")
+	if _rites_atlas == null:
+		return null
+	return _rites_atlas.frame(icon_id + ".png")
 
 
 func _parchment_panel_style() -> StyleBoxFlat:

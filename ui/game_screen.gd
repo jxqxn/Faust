@@ -150,6 +150,15 @@ func _build_ui() -> void:
 
 	_round_label = _stat_label()
 	hud_row.add_child(_round_label)
+	# Original gold-coin badge art beside the gold count.
+	if ResourceLoader.exists("res://assets/original/ui/coin.png"):
+		var coin_icon := TextureRect.new()
+		coin_icon.texture = preload("res://assets/original/ui/coin.png")
+		coin_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		coin_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		coin_icon.custom_minimum_size = Vector2(54, 18)
+		coin_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hud_row.add_child(coin_icon)
 	_gold_label = _stat_label()
 	hud_row.add_child(_gold_label)
 
@@ -275,13 +284,33 @@ func _build_ui() -> void:
 
 	_redraw_button = _icon_button("重抽")
 	_redraw_button.name = "RedrawSudanButton"
+	# Original redraw coin art when present.
+	if ResourceLoader.exists("res://assets/original/ui/redraw_active.png"):
+		var redraw_icon := TextureRect.new()
+		redraw_icon.texture = preload("res://assets/original/ui/redraw_active.png")
+		redraw_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		redraw_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		redraw_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		redraw_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_redraw_button.text = ""
+		_redraw_button.tooltip_text = "重抽苏丹卡"
+		_redraw_button.add_child(redraw_icon)
 	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(_redraw_button)
 	UiMotionScript.bind(_redraw_button)
 
 	_back_to_prev_button = _icon_button("回退")
 	_back_to_prev_button.name = "BackToPrevButton"
-	_back_to_prev_button.tooltip_text = "回到上一回合结束（消耗一次回退机会）"
+	if ResourceLoader.exists("res://assets/original/ui/reset.png"):
+		var back_icon := TextureRect.new()
+		back_icon.texture = preload("res://assets/original/ui/reset.png")
+		back_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		back_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		back_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		back_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		_back_to_prev_button.text = ""
+		_back_to_prev_button.tooltip_text = "回到上一回合结束（消耗一次回退机会）"
+		_back_to_prev_button.add_child(back_icon)
 	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
 	_right_actions.add_child(_back_to_prev_button)
 	UiMotionScript.bind(_back_to_prev_button)
@@ -1001,6 +1030,7 @@ func _next_event_display() -> Dictionary:
 			"title": str(event.get("name", event.get("title", "事件 %d" % event_id))),
 			"text": _event_body_text(event, event_id),
 			"choices": event.get("choose", {}),
+			"icon": _event_portrait(event),
 		}
 	return {}
 
@@ -1039,6 +1069,21 @@ func _show_event_overlay(display: Dictionary) -> void:
 	title.add_theme_font_size_override("font_size", 21)
 	title.add_theme_color_override("font_color", Color("#fff1c3"))
 	root.add_child(title)
+
+	# Original portrait art beside the event text (event configs carry an
+	# `icon` resource like "cards/2000012"; art lands in assets/original/cards
+	# keyed by the resource basename). [SRC: event icon fields; heads.png
+	# atlas is the live2D fallback in the original]
+	var portrait: Texture2D = display.get("icon", null)
+	if portrait != null:
+		var portrait_rect := TextureRect.new()
+		portrait_rect.name = "EventPortrait"
+		portrait_rect.texture = portrait
+		portrait_rect.custom_minimum_size = Vector2(96, 120)
+		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		root.add_child(portrait_rect)
 
 	var body := RichTextLabel.new()
 	body.name = "EventPromptBody"
@@ -1160,6 +1205,36 @@ func _wait_for_queued_sleep(seconds: float) -> void:
 			_state.consume_pending_operation()
 	_sleep_waiting = false
 	_refresh_event_overlay()
+
+
+## Original portrait for an event: its first `icon` resource (like
+## "cards/2000012") resolved against assets/original/cards by basename.
+## [SRC: event settlement icon fields (1211 uses, 130 distinct resources)]
+func _event_portrait(event: Dictionary) -> Texture2D:
+	var icon_res := _first_icon_resource(event)
+	if icon_res == "":
+		return null
+	var name := icon_res.split("/")[-1]
+	var path := "res://assets/original/cards/%s.png" % name
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+
+static func _first_icon_resource(node: Variant) -> String:
+	if node is Dictionary:
+		if typeof(node.get("icon")) == TYPE_STRING and str(node.get("icon")) != "":
+			return str(node["icon"])
+		for key in node:
+			var found: String = _first_icon_resource(node[key])
+			if found != "":
+				return found
+	elif node is Array:
+		for item in node:
+			var found_a: String = _first_icon_resource(item)
+			if found_a != "":
+				return found_a
+	return ""
 
 
 func _event_body_text(event: Dictionary, event_id: int) -> String:

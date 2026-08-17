@@ -945,6 +945,26 @@ func _rebuild() -> void:
 		art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		art.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		col.add_child(art)
+	# Attribute row: the original tag icons for the six attribute tags
+	# (tags atlas, keyed by tag.json `resource` like "tag_1" for 体魄).
+	var attr_row := HBoxContainer.new()
+	attr_row.name = "CardAttrRow"
+	attr_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	attr_row.add_theme_constant_override("separation", 2)
+	attr_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(attr_row)
+	for tag_name in ["体魄", "魅力", "智慧", "隐匿", "战斗", "社交", "生存", "魔力"]:
+		var icon := _attribute_icon(tag_name)
+		if icon == null:
+			continue
+		var icon_rect := TextureRect.new()
+		icon_rect.texture = icon
+		icon_rect.custom_minimum_size = Vector2(16, 16)
+		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon_rect.tooltip_text = tag_name
+		attr_row.add_child(icon_rect)
 	_set_card_style()
 
 
@@ -954,6 +974,34 @@ func _card_art_texture() -> Texture2D:
 	if ResourceLoader.exists(art_path):
 		return load(art_path) as Texture2D
 	return null
+
+
+static var _tags_atlas: OriginalAtlas = null
+
+
+## Attribute icons come from the original tags atlas via tag.json resource
+## ids ("tag_1" 体魄, ...). [SRC: assets/original/ui/tags.png + tags.json;
+##       content/tag.json resource fields]
+static func _attribute_icon(tag_name: String) -> Texture2D:
+	if _tags_atlas == null:
+		_tags_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/tags.png")
+	if _tags_atlas == null:
+		return null
+	var resource_id := _attribute_tag_resource(tag_name)
+	if resource_id == "":
+		return null
+	return _tags_atlas.frame(resource_id + ".png")
+
+
+const ATTRIBUTE_TAG_RESOURCES := {
+	"体魄": "tag_1", "魅力": "tag_2", "智慧": "tag_3",
+	"隐匿": "tag_4", "战斗": "tag_5", "社交": "tag_6",
+	"生存": "tag_8", "魔力": "tag_9",
+}
+
+
+static func _attribute_tag_resource(tag_name: String) -> String:
+	return str(ATTRIBUTE_TAG_RESOURCES.get(tag_name, ""))
 
 
 func _build_visual_surface() -> void:

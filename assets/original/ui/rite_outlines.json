@@ -1,0 +1,565 @@
+{
+  "frames": [
+    {
+      "filename": "rite_title_line.png",
+      "frame": {
+        "x": 2,
+        "y": 2,
+        "w": 380,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 380,
+        "h": 40
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_title_short.png",
+      "frame": {
+        "x": 386,
+        "y": 2,
+        "w": 108,
+        "h": 48
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 108,
+        "h": 48
+      },
+      "sourceSize": {
+        "w": 108,
+        "h": 48
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_title.png",
+      "frame": {
+        "x": 498,
+        "y": 2,
+        "w": 380,
+        "h": 56
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 380,
+        "h": 56
+      },
+      "sourceSize": {
+        "w": 380,
+        "h": 56
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite.png",
+      "frame": {
+        "x": 882,
+        "y": 2,
+        "w": 195,
+        "h": 273
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 195,
+        "h": 273
+      },
+      "sourceSize": {
+        "w": 195,
+        "h": 273
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5006718.png",
+      "frame": {
+        "x": 1081,
+        "y": 2,
+        "w": 412,
+        "h": 293
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 412,
+        "h": 293
+      },
+      "sourceSize": {
+        "w": 412,
+        "h": 293
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2001182.png",
+      "frame": {
+        "x": 1497,
+        "y": 2,
+        "w": 226,
+        "h": 345
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 226,
+        "h": 345
+      },
+      "sourceSize": {
+        "w": 226,
+        "h": 345
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000783.png",
+      "frame": {
+        "x": 1727,
+        "y": 2,
+        "w": 282,
+        "h": 370
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 282,
+        "h": 370
+      },
+      "sourceSize": {
+        "w": 282,
+        "h": 370
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000302.png",
+      "frame": {
+        "x": 2,
+        "y": 62,
+        "w": 600,
+        "h": 355
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 600,
+        "h": 355
+      },
+      "sourceSize": {
+        "w": 600,
+        "h": 355
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000811.png",
+      "frame": {
+        "x": 606,
+        "y": 279,
+        "w": 445,
+        "h": 392
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 445,
+        "h": 392
+      },
+      "sourceSize": {
+        "w": 445,
+        "h": 392
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000812.png",
+      "frame": {
+        "x": 1055,
+        "y": 299,
+        "w": 370,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 370,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 370,
+        "h": 396
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000540.png",
+      "frame": {
+        "x": 1429,
+        "y": 376,
+        "w": 504,
+        "h": 380
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 504,
+        "h": 380
+      },
+      "sourceSize": {
+        "w": 504,
+        "h": 380
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5006676.png",
+      "frame": {
+        "x": 2,
+        "y": 421,
+        "w": 479,
+        "h": 384
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 479,
+        "h": 384
+      },
+      "sourceSize": {
+        "w": 479,
+        "h": 384
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "enemy.png",
+      "frame": {
+        "x": 485,
+        "y": 675,
+        "w": 560,
+        "h": 396
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 560,
+        "h": 396
+      },
+      "sourceSize": {
+        "w": 560,
+        "h": 396
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000304.png",
+      "frame": {
+        "x": 1049,
+        "y": 699,
+        "w": 352,
+        "h": 400
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 352,
+        "h": 400
+      },
+      "sourceSize": {
+        "w": 352,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000402.png",
+      "frame": {
+        "x": 1405,
+        "y": 760,
+        "w": 321,
+        "h": 401
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 321,
+        "h": 401
+      },
+      "sourceSize": {
+        "w": 321,
+        "h": 401
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000139.png",
+      "frame": {
+        "x": 1730,
+        "y": 760,
+        "w": 280,
+        "h": 425
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 280,
+        "h": 425
+      },
+      "sourceSize": {
+        "w": 280,
+        "h": 425
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_ex_1.png",
+      "frame": {
+        "x": 2,
+        "y": 809,
+        "w": 411,
+        "h": 432
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 411,
+        "h": 432
+      },
+      "sourceSize": {
+        "w": 411,
+        "h": 432
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000141.png",
+      "frame": {
+        "x": 417,
+        "y": 1075,
+        "w": 482,
+        "h": 458
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 482,
+        "h": 458
+      },
+      "sourceSize": {
+        "w": 482,
+        "h": 458
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_ex_2.png",
+      "frame": {
+        "x": 903,
+        "y": 1103,
+        "w": 372,
+        "h": 470
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 372,
+        "h": 470
+      },
+      "sourceSize": {
+        "w": 372,
+        "h": 470
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_5000131.png",
+      "frame": {
+        "x": 1279,
+        "y": 1165,
+        "w": 377,
+        "h": 484
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 377,
+        "h": 484
+      },
+      "sourceSize": {
+        "w": 377,
+        "h": 484
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000388.png",
+      "frame": {
+        "x": 1660,
+        "y": 1189,
+        "w": 311,
+        "h": 495
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 311,
+        "h": 495
+      },
+      "sourceSize": {
+        "w": 311,
+        "h": 495
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "rite_2000001.png",
+      "frame": {
+        "x": 2,
+        "y": 1537,
+        "w": 512,
+        "h": 464
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 464
+      },
+      "sourceSize": {
+        "w": 512,
+        "h": 464
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "meta": {
+    "app": "http://free-tex-packer.com",
+    "version": "0.6.7",
+    "image": "rite_outlines.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 2048
+    },
+    "scale": 1
+  }
+}

@@ -52,13 +52,22 @@ func _build_title_view() -> void:
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	_column.add_child(title)
+	var logo := TextureRect.new()
+	logo.name = "MenuLogo"
+	logo.texture = preload("res://assets/original/ui/logo/logo_zhCN.png")
+	logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	logo.custom_minimum_size = Vector2(560, 220)
+	logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_column.add_child(logo)
+	_column.add_child(_spacer(6))
 	var sub := Label.new()
 	sub.text = "Godot 克隆版 · 请选择你的苏丹"
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.add_theme_font_size_override("font_size", 16)
 	sub.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
 	_column.add_child(sub)
-	_column.add_child(_spacer(20))
+	_column.add_child(_spacer(12))
 	var new_game := Button.new()
 	new_game.name = "NewGameButton"
 	new_game.text = "新的游戏"

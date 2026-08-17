@@ -1,0 +1,240 @@
+{
+  "frames": [
+    {
+      "filename": "touch_swipe_left_right_2.png",
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 391,
+        "h": 367
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 26,
+        "w": 391,
+        "h": 367
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_swipe_up_down_1.png",
+      "frame": {
+        "x": 391,
+        "y": 0,
+        "w": 387,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 7,
+        "w": 387,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_swipe_up_down_2.png",
+      "frame": {
+        "x": 0,
+        "y": 367,
+        "w": 387,
+        "h": 376
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 12,
+        "y": 7,
+        "w": 387,
+        "h": 376
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_long_press_1.png",
+      "frame": {
+        "x": 778,
+        "y": 0,
+        "w": 382,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 42,
+        "w": 382,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_long_press_2.png",
+      "frame": {
+        "x": 1160,
+        "y": 0,
+        "w": 382,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 42,
+        "w": 382,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_long_press_3.png",
+      "frame": {
+        "x": 1542,
+        "y": 0,
+        "w": 382,
+        "h": 328
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 14,
+        "y": 42,
+        "w": 382,
+        "h": 328
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_swipe_left_right_1.png",
+      "frame": {
+        "x": 778,
+        "y": 328,
+        "w": 374,
+        "h": 367
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 9,
+        "y": 26,
+        "w": 374,
+        "h": 367
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_click_1.png",
+      "frame": {
+        "x": 387,
+        "y": 376,
+        "w": 336,
+        "h": 286
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 52,
+        "y": 70,
+        "w": 336,
+        "h": 286
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    },
+    {
+      "filename": "touch_click_2.png",
+      "frame": {
+        "x": 387,
+        "y": 662,
+        "w": 323,
+        "h": 323
+      },
+      "rotated": false,
+      "trimmed": true,
+      "spriteSourceSize": {
+        "x": 65,
+        "y": 33,
+        "w": 323,
+        "h": 323
+      },
+      "sourceSize": {
+        "w": 400,
+        "h": 400
+      },
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      }
+    }
+  ],
+  "meta": {
+    "app": "http://free-tex-packer.com",
+    "version": "0.6.7",
+    "image": "touch.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 2048,
+      "h": 1024
+    },
+    "scale": 1
+  }
+}
