@@ -18,6 +18,10 @@
 - ✅ 卡面：1190/1292 原作卡画接入（102 张原作无独立图，自制纸面回退）
 - ✅ 桌面：原作双层底图（table.png + table-map.png）
 - ✅ 音频：GameAudio（main/tutorial BGM + 下一日/确认/重抽/苏丹四族抽卡/骰子/金骰）
+- ✅ UI 原作化六波：四波 + 事件弹窗羊皮纸底图（prompt.png）、卡牌详情背景（cardinfo_bg 按类型）、
+  卡面稀有度边框（铜/银/金/石）、仪式卡槽底图、思考区 IThink 图、七个区域站点按钮原画（含新增上城区/黑街站点）
+- ✅ 原 UI 原作化四波：主菜单 logo、下一天/重抽/回退原画按钮、HUD 金币徽章、仪式图钉图集（rites.png 49 帧）、
+  卡面属性图标（tags 图集）、事件立绘（130 张）、仪式背景（mapping_id→模板→bg 链，1418/1495）、结局背景
 - ⬜ 仪式图钉与原作点位精确对位（MapController 布局参数，需实机对照微调）
 - ⬜ 卡片拖放音（card-begin/end-drag、drop_card_copper/silver）、事件弹窗出现音
 - ⬜ BGM 分层切换（main_game_level2/3 的切换条件）、结局 BGM
