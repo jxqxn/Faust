@@ -46,6 +46,16 @@
 
 ## 当前进度
 
+**2026-08-18 生成计数器（批次 J，377 测试 / 2355 断言全绿）：**
+`Player.gen_cards`@0x118 / `gen_tags`@0x120 已落地为新建卡的历史计数（不因移回手牌、
+消耗或删卡回退），进入 v7 存读档和原作导入桥。`MarkCardGen` 对卡 id +1，并对
+`CardExtensions.GetTags` 的去重结果逐 tag +1；配置原始中文 tag 名在该**持久化边界**
+转换为原作稳定 code（如 `体魄 → physique`），不改 `content/`。独立的苏丹抽卡在
+复制池标签后显式登记；装备生成沿 `AddCard(..., 1, 0)` 非玩家卡支路不计入。
+证据：`PlayerExtensions.c` MarkCardGen 0x38e450 / MarkTagGen 0x38e6e0 +
+`GameController.c` GenSudanCard L3656-3666 / `ModifyEquip.c` HandleCard +
+dump.cs Player@0x118/@0x120；语料 auto_save 导入桥 **31/31** 全过（新增两项）。
+
 **2026-08-18 唯一性登记（批次 I，376 测试 / 2323 断言全绿）：**
 `Player.only_cards`@0xF0 / `only_rites`@0xF8 的 HashSet 语义已落地并进入 v7
 存读档与原作导入桥。卡登记精确落在 `GenCard → PutCardOnTable` 后，只有
@@ -55,7 +65,7 @@
 PutCardOnTable 0x5556c0 + `PlayerExtensions.c` InitRite 0x38e140 + `GenLoot.c`
 ExcludeAlreadyHave/IsCardExists/IsRiteExists + dump.cs Player@0xF0/@0xF8；样本中
 105 个 only_cards 均为配置 is_only 子集、4 个 only_rites 均为成功创建仪式。语料导入
-对拍扩至 **29/29** 全过。
+对拍随后扩至 **31/31** 全过。
 
 **2026-08-18 玩家级改名表（批次 H，375 测试 / 2306 断言全绿）：**
 `custom_rite_name`@Player+0x168 与 `player_card_name`@+0x170 已从实例字段中拆出：

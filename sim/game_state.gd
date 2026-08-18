@@ -227,6 +227,13 @@ var player_card_names: Dictionary = {}
 # each successfully initialized rite id to player.only_rites]
 var only_cards: Dictionary = {}
 var only_rites: Dictionary = {}
+# Historical generation counters. They are event history rather than current
+# ownership: a card's id increments once when PlayerExtensions.AddCard creates
+# it, and every distinct effective tag increments once at that same boundary.
+# [SRC: Player.gen_cards @0x118 / gen_tags @0x120 (dump.cs:391580-391582);
+#       PlayerExtensions.c @ MarkCardGen (0x38e450), MarkTagGen (0x38e6e0)]
+var gen_cards: Dictionary = {}
+var gen_tags: Dictionary = {}
 # Active on-screen beginner-guide directive from the last `begin_guide`
 # action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
 # it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
@@ -265,6 +272,37 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 	instance.zone = zone
 	card_instances[instance.uid] = instance
 	return instance
+
+
+func record_card_generation(instance, db = null) -> void:
+	if instance == null or int(instance.card_id) <= 0:
+		return
+	var card_id := int(instance.card_id)
+	gen_cards[card_id] = int(gen_cards.get(card_id, 0)) + 1
+	# CardExtensions.GetTags returns a HashSet. CardInstance.tags is the
+	# clone's flattened equivalent for a newly-created player card, so each
+	# key is counted once regardless of its numerical tag value.
+	# [SRC: CardExtensions.c @ GetTags (0x381940); PlayerExtensions.c
+	#       @ MarkCardGen (0x38e450)]
+	var effective_tags: Dictionary = {}
+	for raw_tag in instance.tags:
+		effective_tags[_generation_tag_code(raw_tag, db)] = true
+	for tag_code in effective_tags:
+		record_tag_generation(str(tag_code), db)
+
+
+func record_tag_generation(raw_tag: Variant, db = null) -> void:
+	var tag_code := _generation_tag_code(raw_tag, db)
+	if tag_code.is_empty():
+		return
+	gen_tags[tag_code] = int(gen_tags.get(tag_code, 0)) + 1
+
+
+func _generation_tag_code(raw_tag: Variant, db = null) -> String:
+	var tag_name := str(raw_tag)
+	if db != null and db.has_method("tag_code_for"):
+		return str(db.tag_code_for(tag_name))
+	return tag_name
 
 
 func record_only_card(card_id: int, db) -> void:
@@ -639,6 +677,8 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	card_instances.clear()
 	only_cards.clear()
 	only_rites.clear()
+	gen_cards.clear()
+	gen_tags.clear()
 	next_card_uid = 1
 	player_actor_uid = 0
 	rail_order.clear()
@@ -942,11 +982,13 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 	# creates a newly granted card; return paths must pass the uid they removed.
 	var uid := card_or_uid if card_instances.has(card_or_uid) else 0
 	var instance = get_card_instance(uid)
+	var is_new_instance := false
 	if instance == null:
 		instance = create_card_instance(card_or_uid, db, "hand")
 		if instance == null:
 			return 0
 		uid = instance.uid
+		is_new_instance = true
 	instance.zone = "hand"
 	instance.rite_uid = 0
 	instance.slot_key = ""
@@ -955,10 +997,13 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 	if uid not in rail_order:
 		rail_order.append(uid)
 	_sync_hand_order_from_rail()
-	# GenCard creates through AddCard, then PutCardOnTable records the
-	# definition only after it reaches the visible hand/table boundary. Moving
-	# an existing uid is idempotent against the HashSet; fresh grants record it.
-	# [SRC: GameController.c @ GenCard (0x54f650) -> PutCardOnTable (0x5556c0)]
+	# AddCard counts only newly-created player cards; returning/moving an
+	# existing uid must not inflate history. The is_only registry is independent
+	# and remains idempotent at the visible-table boundary.
+	# [SRC: PlayerExtensions.c @ AddCard (0x38b620) -> MarkCardGen (0x38e450);
+	#       GameController.c @ GenCard (0x54f650) -> PutCardOnTable (0x5556c0)]
+	if is_new_instance:
+		record_card_generation(instance, db)
 	record_only_card(instance.card_id, db)
 	return uid
 

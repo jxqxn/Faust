@@ -57,8 +57,6 @@ const DROPPED_FIELDS := {
 	"sudan_card_show_times": "苏丹卡展示计数",
 	"sudan_remove_count": "苏丹移除计数",
 	"random_cache": "RNG 续航缓存",
-	"gen_cards": "卡生成计数",
-	"gen_tags": "标签生成计数",
 	"notes": "笔记系统",
 	"once_new_rites_is_show": "新仪式首见标志",
 	"cached_event": "事件缓存",
@@ -261,6 +259,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"player_card_names": player_card_names,
 		"only_cards": only_cards,
 		"only_rites": only_rites,
+		"gen_cards": _norm_int_dict(original.get("gen_cards", {})),
+		"gen_tags": _norm_string_int_dict(original.get("gen_tags", {})),
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
 		"pending_operations": [],
 		"delayed_operations": [],
@@ -327,6 +327,8 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("player_card_name", _nonempty_string_map(original.get("player_card_name", {})), state.player_card_names))
 	rows.append(_row("only_cards", _sorted_int_list(original.get("only_cards", [])), _state_only_ids(state.only_cards)))
 	rows.append(_row("only_rites", _sorted_int_list(original.get("only_rites", [])), _state_only_ids(state.only_rites)))
+	rows.append(_row("gen_cards", _norm_int_dict(original.get("gen_cards", {})), _norm_int_dict(state.gen_cards)))
+	rows.append(_row("gen_tags", _norm_string_int_dict(original.get("gen_tags", {})), _norm_string_int_dict(state.gen_tags)))
 	return rows
 
 
@@ -756,6 +758,17 @@ static func _norm_int_dict(value: Dictionary) -> Dictionary:
 	var normalized := {}
 	for key in value:
 		normalized[int(key)] = int(value[key])
+	return normalized
+
+
+static func _norm_string_int_dict(value: Variant) -> Dictionary:
+	var normalized := {}
+	if not (value is Dictionary):
+		return normalized
+	for key in value:
+		var text := str(key)
+		if not text.is_empty():
+			normalized[text] = int(value[key])
 	return normalized
 
 

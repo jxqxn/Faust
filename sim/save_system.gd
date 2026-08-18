@@ -140,6 +140,8 @@ static func serialize(state) -> Dictionary:
 		"player_card_names": state.player_card_names.duplicate(true),
 		"only_cards": _sorted_set_keys(state.only_cards),
 		"only_rites": _sorted_set_keys(state.only_rites),
+		"gen_cards": state.gen_cards.duplicate(true),
+		"gen_tags": state.gen_tags.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -246,6 +248,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.player_card_names = _restore_nonempty_string_map(data.get("player_card_names", {}))
 	state.only_cards = _restore_positive_id_set(data.get("only_cards", []))
 	state.only_rites = _restore_positive_id_set(data.get("only_rites", []))
+	state.gen_cards = _restore_int_count_dictionary(data.get("gen_cards", {}))
+	state.gen_tags = _restore_string_count_dictionary(data.get("gen_tags", {}))
 	state.last_round_rite_data.clear()
 	var saved_last_rite_data = data.get("last_round_rite_data", {})
 	if saved_last_rite_data is Dictionary:
@@ -348,6 +352,28 @@ static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
 		return restored
 	for raw_key in value:
 		restored[int(raw_key)] = value[raw_key]
+	return restored
+
+
+static func _restore_int_count_dictionary(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Dictionary):
+		return restored
+	for raw_key in value:
+		var id := int(raw_key)
+		if id > 0:
+			restored[id] = int(value[raw_key])
+	return restored
+
+
+static func _restore_string_count_dictionary(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Dictionary):
+		return restored
+	for raw_key in value:
+		var key := str(raw_key)
+		if not key.is_empty():
+			restored[key] = int(value[raw_key])
 	return restored
 
 

@@ -19,7 +19,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 
 ## Player 存档 60 字段（dump.cs 偏移序）
 
-状态：**mapped 11**（同名同义）/ **semantic 11**（有对应但结构或语义漂移）/ **missing 38**（克隆无）。
+状态：**mapped 19**（同名同义）/ **semantic 9**（有对应但结构或语义漂移）/ **missing 32**（克隆无）。
 
 | 字段 | 类型 | 克隆 v5 | 状态 | 备注 |
 | --- | --- | --- | --- | --- |
@@ -67,8 +67,8 @@ godot --headless --script tools/export_save_diff.gd -- \
 | event_status | Dict\<int,bool\> | event_status | mapped | |
 | delay_ops | List\<DelayOp\> | delayed_operations | mapped | {id, round} |
 | end_rites | Dict\<int,int\> | ended_rites | mapped | |
-| gen_cards | Dict\<int,int\> | — | missing | 生成计数 |
-| gen_tags | Dict\<string,int\> | — | missing | 标签生成计数 |
+| gen_cards | Dict\<int,int\> | gen_cards | mapped | 新建玩家卡 id 生成次数 |
+| gen_tags | Dict\<string,int\> | gen_tags | mapped | 稳定 tag code 生成次数 |
 | timing_rounds | Dict\<int,int\> | timing_rounds | mapped | player+0x128 |
 | auto_result_rites | HashSet\<int\> | auto_result_rites | mapped | |
 | notes | List\<List\<Note\>\> | — | missing | 笔记分页流水账 |
@@ -116,7 +116,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **29/29 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/两张玩家级名称覆盖表/两组唯一性登记等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **31/31 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
 
 导入桥当场抓到并修复的结构偏差：
 
@@ -125,7 +125,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 - **min_round**：原作显式持久化 player+0x30 且 OnPrevRound 直读；克隆补 `GameState.min_round`（v7 序列化）作回退门。
 - **仪式槽位映射**：原作 `Rite.cards[i]`（0 基数组，长度=配置 s 槽数）↔ 克隆 `s{i+1}`。
 
-报告三类防静默登记：**converted**（含玩家级覆盖与唯一性登记等标量/结构转换）、**approximated**（active_sudan 的 drawn_round 无法在难度中途切换后反推；每抽前 Shuffle 使牌堆顺序无语义，按多重集对拍）、**dropped**（仅列本存档携带非默认值的克隆缺口字段，如 notes/gen_cards）。
+报告三类防静默登记：**converted**（含玩家级覆盖与唯一性登记等标量/结构转换）、**approximated**（active_sudan 的 drawn_round 无法在难度中途切换后反推；每抽前 Shuffle 使牌堆顺序无语义，按多重集对拍）、**dropped**（仅列本存档携带非默认值的克隆缺口字段，如 notes）。
 
 ### 阶段二遗留（续局对拍前置）
 

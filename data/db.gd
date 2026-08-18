@@ -99,6 +99,26 @@ func get_card(id: int) -> Dictionary:
 	return cards.get(id, {})
 
 
+## Runtime config loading in the original replaces localized tag names with
+## their stable codes. Most clone gameplay still consumes the raw original
+## config names, but persisted engine-facing registries (such as gen_tags)
+## must use that same code identity.
+## [SRC: Datapool._LoadConfig_d__154.c @ tag dictionary/list translation;
+##       Datapool.c @ TranslateTag (0x41bc20)]
+func tag_code_for(raw_tag: Variant) -> String:
+	var tag_name := str(raw_tag)
+	if tag_name.is_empty() or tags_by_code.has(tag_name):
+		return tag_name
+	if tag_name_to_code.has(tag_name):
+		return str(tag_name_to_code[tag_name])
+	# The original recursively translates either side of a compound tag key.
+	if tag_name.contains(":"):
+		var parts := tag_name.split(":", false)
+		if parts.size() == 2:
+			return "%s:%s" % [tag_code_for(parts[0]), tag_code_for(parts[1])]
+	return tag_name
+
+
 func get_rite(id: int) -> Dictionary:
 	return rites.get(id, {})
 

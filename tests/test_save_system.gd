@@ -49,6 +49,8 @@ func test_save_load_round_trip_preserves_state():
 	state.player_card_names = {2000001: "自定义角色"}
 	state.only_cards = {2000001: true, 2000005: true}
 	state.only_rites = {5000001: true, 5000003: true}
+	state.gen_cards = {2000001: 3, 2000029: 2}
+	state.gen_tags = {"physique": 3, "money": 2, "custom_runtime_tag": 1}
 	var first_instance = state.find_rite_instance_by_id(5000001)
 	var second_instance = state.create_rite_instance(5000003)
 	state.start_rite_instance(first_instance.uid)
@@ -109,6 +111,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.player_card_names, state.player_card_names, "card-name overrides survive JSON")
 	assert_eq(state2.only_cards, state.only_cards, "unique-card registry survives JSON")
 	assert_eq(state2.only_rites, state.only_rites, "unique-rite registry survives JSON")
+	assert_eq(state2.gen_cards, state.gen_cards, "card generation history survives JSON")
+	assert_eq(state2.gen_tags, state.gen_tags, "tag generation history survives JSON")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)
 	var loaded_second = state2.get_rite_instance(second_instance.uid)
 	assert_not_null(loaded_first, "first rite instance uid preserved")
@@ -189,6 +193,38 @@ func test_unique_registries_follow_generated_boundaries_not_current_ownership() 
 	if not sudan_state.active_sudan_cards.is_empty():
 		assert_true(sudan_state.only_cards.has(int(sudan_state.active_sudan_cards[0].card_id)),
 			"the separate Sultan draw path registers its is_only CardNode id")
+
+
+func test_generation_counters_follow_new_card_and_tag_code_boundaries() -> void:
+	var state := GameState.new()
+	var first_uid := state.add_card_to_hand(2000001, db)
+	assert_eq(int(state.gen_cards.get(2000001, 0)), 1,
+		"normal AddCard creates one card-generation record")
+	var first = state.get_card_instance(first_uid)
+	for raw_tag in first.tags:
+		var tag_code := db.tag_code_for(raw_tag)
+		assert_eq(int(state.gen_tags.get(tag_code, 0)), 1,
+			"each effective tag records once under its original stable code")
+	state.remove_card_from_hand(first_uid)
+	state.add_card_to_hand(first_uid, db)
+	assert_eq(int(state.gen_cards.get(2000001, 0)), 1,
+		"moving a previously-created uid never records a second generation")
+	state.add_card_to_hand(2000001, db)
+	assert_eq(int(state.gen_cards.get(2000001, 0)), 2,
+		"a second fresh object records a second generation")
+	for raw_tag in first.tags:
+		assert_eq(int(state.gen_tags.get(db.tag_code_for(raw_tag), 0)), 2,
+			"tag generation tracks card objects, not tag values")
+	state.record_tag_generation("体魄", db)
+	assert_eq(int(state.gen_tags.get("physique", 0)), 3,
+		"the Common.MarkTagGen-equivalent accepts localized config names")
+	var sultan_state := GameState.new()
+	sultan_state.sudan_pool_tags[2010001] = {"体魄": 9}
+	RoundLoop._create_sudan_instance(sultan_state, db, 2010001)
+	assert_eq(int(sultan_state.gen_cards.get(2010001, 0)), 1,
+		"GenSudanCard's separate creation path records its card object")
+	assert_eq(int(sultan_state.gen_tags.get("physique", 0)), 1,
+		"Sultan pool tags are present before the generation record")
 
 
 func test_continue_load_rejects_unmarked_legacy_save():

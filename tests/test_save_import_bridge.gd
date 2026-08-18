@@ -57,7 +57,8 @@ func _synthetic_original() -> Dictionary:
 		"counter": {"7100006": 2, "7000060": 5}, "global_counter_cacher": {},
 		"random_cache": {}, "only_cards": [2000001], "only_rites": [5001001],
 		"event_status": {"5310000": true, "5310001": false},
-		"delay_ops": [], "end_rites": {"6": 3}, "gen_cards": {}, "gen_tags": {},
+		"delay_ops": [], "end_rites": {"6": 3},
+		"gen_cards": {"2000001": 3, "2000029": 2}, "gen_tags": {"physique": 3, "money": 2},
 		"timing_rounds": {"531000000": 6}, "auto_result_rites": [],
 		"notes": [[{"type": 1, "id": 5001001, "uid": 7, "count": 0}]],
 		"once_new_rites_is_show": {}, "cached_event": [], "BagIndex": 0,
@@ -116,6 +117,8 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.player_card_names, {2000005: "旧卡名"})
 	assert_eq(state.only_cards, {2000001: true}, "unique-card registration imports as a set")
 	assert_eq(state.only_rites, {5001001: true}, "successful rite registrations import as a set")
+	assert_eq(state.gen_cards, {2000001: 3, 2000029: 2}, "card generation history imports verbatim")
+	assert_eq(state.gen_tags, {"physique": 3, "money": 2}, "tag generation codes import verbatim")
 	assert_eq(state.rite_display_name(5001001, local_db), "旧仪式名", "rite names resolve from the player map")
 	assert_eq(str(state.card_data_for(30, local_db).get("name", "")), "旧卡名",
 		"player card-name map overrides the per-card/config name")
@@ -145,6 +148,8 @@ func test_report_flags_approximations_and_value_drops() -> void:
 	assert_has(dropped_with_value, "notes", "non-empty dropped fields are listed")
 	assert_false("only_cards" in dropped_with_value, "unique-card registration is converted, not dropped")
 	assert_false("only_rites" in dropped_with_value, "unique-rite registration is converted, not dropped")
+	assert_false("gen_cards" in dropped_with_value, "card generation history is mapped, not dropped")
+	assert_false("gen_tags" in dropped_with_value, "tag generation history is mapped, not dropped")
 	assert_has(dropped_with_value, "name")
 
 
