@@ -31,6 +31,8 @@ func _synthetic_original() -> Dictionary:
 		"difficulty": 2, "round": 3, "min_round": 3,
 		"saveTime": "2026-06-26T15:37:37+08:00",
 		"card_uid_index": 208, "rite_uid_index": 9,
+		"sudan_box_show": true, "story_unshow": true, "prestige_unshow": false,
+		"deadline_unshow": true, "helpbtn_unshow": false,
 		"sudan_card_init_life": 4, "sudan_redraw_count": 1,
 		"sudan_redraw_times_per_round": 3, "sudan_redraw_times": 1,
 		"sudan_redraw_times_recovery_round": 5,
@@ -62,7 +64,7 @@ func _synthetic_original() -> Dictionary:
 		"gen_cards": {"2000001": 3, "2000029": 2}, "gen_tags": {"physique": 3, "money": 2},
 		"timing_rounds": {"531000000": 6}, "auto_result_rites": [],
 		"notes": [[{"type": 1, "id": 5001001, "uid": 7, "count": 0}]],
-		"once_new_rites_is_show": {}, "cached_event": [5310000], "BagIndex": 0,
+		"once_new_rites_is_show": {"5001001": false, "5001002": true}, "cached_event": [5310000], "BagIndex": 0,
 		"last_round_rite_data": {"5001001": {"s2": {"id": 2000010, "count": 1}}}, "rite_auto_result": false,
 		"disable_auto_gen_sudan_card": false, "custom_rite_name": {"5001001": "旧仪式名"},
 		"player_card_name": {"2000005": "旧卡名"}, "end_open": false, "is_armageddon": false,
@@ -86,6 +88,11 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.redraws_left, 2, "UI remainder derives from allowance minus used redraws")
 	assert_false(state.success, "terminal success flag imports")
 	assert_eq(state.over_reason, -2147483648, "unended runs keep the original int.MinValue reason")
+	assert_true(state.sudan_box_show, "Sudan box visibility preference imports")
+	assert_true(state.story_unshow, "story hidden preference imports")
+	assert_false(state.prestige_unshow, "prestige hidden preference imports")
+	assert_true(state.deadline_unshow, "deadline hidden preference imports")
+	assert_false(state.helpbtn_unshow, "help-button hidden preference imports")
 	assert_eq(state.gold_total(), 2, "stacked gold card objects sum through 7000105")
 	assert_eq(state.get_counter(7100006), 2, "counters import verbatim")
 	assert_true(bool(state.event_status.get(5310000, false)), "event status imports")
@@ -127,6 +134,8 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.gen_cards, {2000001: 3, 2000029: 2}, "card generation history imports verbatim")
 	assert_eq(state.gen_tags, {"physique": 3, "money": 2}, "tag generation codes import verbatim")
 	assert_eq(state.cached_event, [5310000], "cached event notices import in source order")
+	assert_eq(state.once_new_rites_is_show, {5001001: false, 5001002: true},
+		"new-rite first-seen flags import with integer ids")
 	assert_eq(state.rite_display_name(5001001, local_db), "旧仪式名", "rite names resolve from the player map")
 	assert_eq(str(state.card_data_for(30, local_db).get("name", "")), "旧卡名",
 		"player card-name map overrides the per-card/config name")

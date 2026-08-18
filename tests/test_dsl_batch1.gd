@@ -650,6 +650,31 @@ func test_begin_guide_family_installs_and_clears_directive() -> void:
 	assert_eq(str(restored.begin_guide.get("type", "")), "BACK_ROUND", "guide directives survive save/load")
 
 
+func test_close_guide_operations_update_persisted_hud_visibility_preferences() -> void:
+	# close_* uses value 0 to ShowX(true), and non-zero to hide. The four
+	# `*_unshow` Player fields therefore have the inverse polarity.
+	# [SRC: CloseBox.c Do (0x4f44c0), CloseDeadline.c Do (0x4f46b0),
+	#       CloseHelpBtn.c Do (0x4f48a0), ClosePrestige.c Do (0x4f4a90),
+	#       CloseStory.c Do (0x4f4c80); GameController.c Show* methods]
+	var local_db := _db_with_batch_rites()
+	var state := GameState.new()
+	state.setup_new_run(local_db, 0, RNG.new(102))
+	ResultExec.execute({"close_box": 1, "close_story": 1, "close_prestige": 1,
+		"close_deadline": 1, "close_helpbtn": 1}, state, local_db)
+	assert_false(state.sudan_box_show, "non-zero close_box hides the box")
+	assert_true(state.story_unshow, "non-zero close_story records hidden")
+	assert_true(state.prestige_unshow, "non-zero close_prestige records hidden")
+	assert_true(state.deadline_unshow, "non-zero close_deadline records hidden")
+	assert_true(state.helpbtn_unshow, "non-zero close_helpbtn records hidden")
+	ResultExec.execute({"close_box": 0, "close_story": 0, "close_prestige": 0,
+		"close_deadline": 0, "close_helpbtn": 0}, state, local_db)
+	assert_true(state.sudan_box_show, "zero close_box shows the box")
+	assert_false(state.story_unshow, "zero close_story records visible")
+	assert_false(state.prestige_unshow, "zero close_prestige records visible")
+	assert_false(state.deadline_unshow, "zero close_deadline records visible")
+	assert_false(state.helpbtn_unshow, "zero close_helpbtn records visible")
+
+
 func test_sudan_execution_records_its_ending_id() -> void:
 	# The executed Sultan's vanish.over id becomes the ending shown on the
 	# game-over screen (over.json is indexed by it).

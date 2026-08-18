@@ -36,11 +36,6 @@ const DROPPED_FIELDS := {
 	"configVersion": "配置版本戳",
 	"name": "玩家名",
 	"saveTime": "存档时间戳",
-	"sudan_box_show": "UI 首见标志族",
-	"story_unshow": "UI 首见标志族",
-	"prestige_unshow": "UI 首见标志族",
-	"deadline_unshow": "UI 首见标志族",
-	"helpbtn_unshow": "UI 首见标志族",
 	"location_icon_show": "change_location_icon 持久化",
 	"change_desk_bg": "change_desk_bg 持久化",
 	"after_round_auto_sort": "日终自动整理开关",
@@ -53,7 +48,6 @@ const DROPPED_FIELDS := {
 	"sudan_remove_count": "苏丹移除计数",
 	"random_cache": "RNG 续航缓存",
 	"notes": "笔记系统",
-	"once_new_rites_is_show": "新仪式首见标志",
 	"BagIndex": "背包索引",
 	"end_open": "终局开启",
 	"is_armageddon": "末日决战态",
@@ -243,6 +237,11 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"sudan_redraw_times_recovery_round": redraw_recovery_round,
 		"success": bool(original.get("success", false)),
 		"over_reason": int(original.get("over_reason", -2147483648)),
+		"sudan_box_show": bool(original.get("sudan_box_show", false)),
+		"story_unshow": bool(original.get("story_unshow", false)),
+		"prestige_unshow": bool(original.get("prestige_unshow", false)),
+		"deadline_unshow": bool(original.get("deadline_unshow", false)),
+		"helpbtn_unshow": bool(original.get("helpbtn_unshow", false)),
 		"hand": ordered_hand,
 		"rail_order": rail_order,
 		"sudan_deck": sudan_deck,
@@ -265,6 +264,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"only_cards": only_cards,
 		"only_rites": only_rites,
 		"cached_event": _unique_int_list(original.get("cached_event", [])),
+		"once_new_rites_is_show": _norm_bool_dict(original.get("once_new_rites_is_show", {})),
 		"gen_cards": _norm_int_dict(original.get("gen_cards", {})),
 		"gen_tags": _norm_string_int_dict(original.get("gen_tags", {})),
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
@@ -317,6 +317,11 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("sudan_redraw_times_recovery_round", int(original.get("sudan_redraw_times_recovery_round", 7)), int(state.sudan_redraw_times_recovery_round)))
 	rows.append(_row("success", bool(original.get("success", false)), bool(state.success)))
 	rows.append(_row("over_reason", int(original.get("over_reason", -2147483648)), int(state.over_reason)))
+	rows.append(_row("sudan_box_show", bool(original.get("sudan_box_show", false)), bool(state.sudan_box_show)))
+	rows.append(_row("story_unshow", bool(original.get("story_unshow", false)), bool(state.story_unshow)))
+	rows.append(_row("prestige_unshow", bool(original.get("prestige_unshow", false)), bool(state.prestige_unshow)))
+	rows.append(_row("deadline_unshow", bool(original.get("deadline_unshow", false)), bool(state.deadline_unshow)))
+	rows.append(_row("helpbtn_unshow", bool(original.get("helpbtn_unshow", false)), bool(state.helpbtn_unshow)))
 	rows.append(_row("card_object_count", original_cards.size(), state.card_instances.size()))
 	rows.append(_row("per_id_counts", _per_id_counts(original_cards), _clone_per_id_counts(state)))
 	rows.append(_row("gold_total_7000105", _original_gold_total(original), state.gold_total()))
@@ -340,6 +345,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("only_cards", _sorted_int_list(original.get("only_cards", [])), _state_only_ids(state.only_cards)))
 	rows.append(_row("only_rites", _sorted_int_list(original.get("only_rites", [])), _state_only_ids(state.only_rites)))
 	rows.append(_row("cached_event", _unique_int_list(original.get("cached_event", [])), state.cached_event))
+	rows.append(_row("once_new_rites_is_show", _norm_bool_dict(original.get("once_new_rites_is_show", {})), state.once_new_rites_is_show))
 	rows.append(_row("gen_cards", _norm_int_dict(original.get("gen_cards", {})), _norm_int_dict(state.gen_cards)))
 	rows.append(_row("gen_tags", _norm_string_int_dict(original.get("gen_tags", {})), _norm_string_int_dict(state.gen_tags)))
 	return rows

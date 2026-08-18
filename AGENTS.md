@@ -46,6 +46,15 @@
 
 ## 当前进度
 
+**2026-08-18 HUD 引导标志族（批次 N，380 测试 / 2403 断言全绿）：**
+`Player.sudan_box_show`@0x48、`story_unshow`@0x49、`prestige_unshow`@0x4A、
+`deadline_unshow`@0x4B、`helpbtn_unshow`@0x4C 与 `once_new_rites_is_show`@0x140
+进入 v7 存读档及导入桥。五个 `Close*` DSL 操作按原作 `value==0` 显示、非零隐藏
+更新字段（`*_unshow` 为反极性）；现有提示 cue 仍保留。原作桌面 HUD 和新仪式首见提示
+UI 未接，故明确为 semantic 而非宣称全量 UI 复刻。证据：dump.cs Player offsets +
+GameController.c ShowSudanBox/Story/Prestige/SudanLife/HelpBtn + Close*.c Do；语料
+auto_save 导入桥 **44/44** 全过。
+
 **2026-08-18 事件缓存结构承载（批次 M，379 测试 / 2381 断言全绿）：**
 `Player.cached_event`@0x148 已落地为有序、去重的可点击提示 id 列表，进入 v7 存读档与导入桥；
 它不是 `pending_operations` 或剧情重放队列。`AddCacheEvent`（0x38b580）在未存在时尾插，

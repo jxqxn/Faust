@@ -242,6 +242,18 @@ var only_rites: Dictionary = {}
 # [SRC: dump.cs Player.cached_event @0x148; PlayerExtensions.c
 #       AddCacheEvent (0x38b580) / RemoveCacheEvent (0x38ecb0)]
 var cached_event: Array[int] = []
+# Player-owned visibility preferences for the original desktop HUD. The
+# `*_unshow` fields are true when their corresponding element is hidden;
+# sudan_box_show uses the inverse wording and is true when visible.
+# [SRC: dump.cs Player @0x48-0x4C/@0x140; Player.c field accessors;
+#       GameController.c ShowSudanBox (0x557af0), ShowStory (0x5578f0),
+#       ShowPrestige (0x557390), ShowSudanLife (0x557c50), ShowHelpBtn (0x5571e0)]
+var sudan_box_show := false
+var story_unshow := false
+var prestige_unshow := false
+var deadline_unshow := false
+var helpbtn_unshow := false
+var once_new_rites_is_show: Dictionary = {}
 # Historical generation counters. They are event history rather than current
 # ownership: a card's id increments once when PlayerExtensions.AddCard creates
 # it, and every distinct effective tag increments once at that same boundary.
@@ -696,6 +708,12 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	only_cards.clear()
 	only_rites.clear()
 	cached_event.clear()
+	sudan_box_show = false
+	story_unshow = false
+	prestige_unshow = false
+	deadline_unshow = false
+	helpbtn_unshow = false
+	once_new_rites_is_show.clear()
 	gen_cards.clear()
 	gen_tags.clear()
 	next_card_uid = 1

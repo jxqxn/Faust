@@ -19,7 +19,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 
 ## Player 存档 60 字段（dump.cs 偏移序）
 
-状态：**mapped 25**（同名同义）/ **semantic 9**（有对应但结构或语义漂移）/ **missing 26**（克隆无）。
+状态：**mapped 25**（同名同义）/ **semantic 15**（有对应但结构或语义漂移）/ **missing 20**（克隆无）。
 
 | 字段 | 类型 | 克隆 v5 | 状态 | 备注 |
 | --- | --- | --- | --- | --- |
@@ -32,11 +32,11 @@ godot --headless --script tools/export_save_diff.gd -- \
 | saveTime | DateTime | — | missing | 时间戳 |
 | card_uid_index | int | next_card_uid | mapped | |
 | rite_uid_index | int | next_rite_uid | mapped | |
-| sudan_box_show | bool | — | missing | 苏丹卡盒首见 |
-| story_unshow | bool | — | missing | 剧情 UI 标志 |
-| prestige_unshow | bool | — | missing | 声望 UI 标志 |
-| deadline_unshow | bool | — | missing | 死线 UI 标志 |
-| helpbtn_unshow | bool | — | missing | 帮助按钮 |
+| sudan_box_show | bool | sudan_box_show | semantic | 苏丹卡盒可见标志；原作桌面 HUD 未接 |
+| story_unshow | bool | story_unshow | semantic | 剧情 HUD 隐藏标志；原作桌面 HUD 未接 |
+| prestige_unshow | bool | prestige_unshow | semantic | 声望 HUD 隐藏标志；原作桌面 HUD 未接 |
+| deadline_unshow | bool | deadline_unshow | semantic | 死线 HUD 隐藏标志；原作桌面 HUD 未接 |
+| helpbtn_unshow | bool | helpbtn_unshow | semantic | 帮助按钮隐藏标志；原作桌面 HUD 未接 |
 | location_icon_show | int | — | missing | change_location_icon 持久化 |
 | change_desk_bg | string | — | missing | change_desk_bg 持久化 |
 | after_round_auto_sort | bool | — | missing | 日终自动整理 |
@@ -72,7 +72,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 | timing_rounds | Dict\<int,int\> | timing_rounds | mapped | player+0x128 |
 | auto_result_rites | HashSet\<int\> | auto_result_rites | mapped | |
 | notes | List\<List\<Note\>\> | — | missing | 笔记分页流水账 |
-| once_new_rites_is_show | Dict\<int,bool\> | — | missing | 新仪式首见 |
+| once_new_rites_is_show | Dict\<int,bool\> | once_new_rites_is_show | semantic | 新仪式首见提示；仪式面板提示 UI 未接 |
 | cached_event | List\<int\> | cached_event | semantic | 可点击缓存提示的去重列表；提示 UI/缓存结算未接 |
 | BagIndex | int | — | missing | 背包索引 |
 | last_round_rite_data | Dict\<int,Dict\> | last_round_rite_data | mapped | 按仪式配置 id + 手动槽 guid 保存 LastCardData{id,count}，用于面板恢复上次投放；不是回退快照 |
@@ -108,7 +108,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 4. **金币/门客总额是派生读**：`GetCounter 0x38ce70` 对 7000105（金币）/7000104（门客数）特殊分支——从 player.cards + player.rites 按谓词求和，**仪式槽内的金币卡计入总额**；克隆 gold_total 已扩展 hand+slot。
 5. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
 6. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
-7. **原作 UI Promise 队列不持久化**：只存 delay_ops + cached_event。后者是已触发的可点击提示 id 去重列表，不是重放队列：触发时 AddCacheEvent，点击结算完成（或找不到配置）后 RemoveCacheEvent。克隆现已准确持久化/导入该列表；cached settlement 提示 UI 尚未接入，pending_operations 仍是语义更重的临时宿主。
+7. **原作 UI Promise 队列不持久化**：只存 delay_ops + cached_event。后者是已触发的可点击提示 id 去重列表，不是重放队列：触发时 AddCacheEvent，点击结算完成（或找不到配置）后 RemoveCacheEvent。克隆现已准确持久化/导入该列表；cached settlement 提示 UI 尚未接入，pending_operations 仍是语义更重的临时宿主。Player 另存五个 HUD 可见性偏好与每仪式首见标志；克隆已原样承载，`close_*` 会按原作 0=显示/非零=隐藏更新标志，但桌面 HUD/首见提示尚未接入。
 8. **回退与仪式恢复已拆清**：① global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007）已迁入 `GlobalState`；② Datapool 轮次 Player 文件已于 **2026-08-18 批次 F** 落地：SaveRoundBegin/End 先刷新 continue，再写 `round_{N}.json` / `round_{N}_end.json`，LoadRound/End 从磁盘恢复并刷新 continue，档案恢复删除旧时间线的 `round_*.json`；③ player.last_round_rite_data 是独立的仪式面板“恢复上次投放”缓存：`OnConfirm` 按 Rite.id 记录每个**手动槽** guid 的 `LastCardData{id,count}`，`OnLastState` 按卡牌可用性和当前槽条件逐槽恢复；它不是回退快照。消耗顺序保持 `UseBackToPrev → Global.roundRollback=2 → SaveGlobal → LoadRound`，故玩家重启后仍可回退且配额不会随 Player 快照回滚。
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 10. **苏丹期限 = 卡寿命模型**（2026-08-18 批次 D 解出）：激活苏丹卡无独立期限字段——`GenSudanCard` L3656-3662 出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)`（抢跑量），每日 life+1（老化无条件），`life >= card_vanishing` 且不在任一仪式槽即 DoVanish 处刑（vanish.over 驱动结局）；可见倒计时 = `card_vanishing − life`（UpdateSudanLife 0x55aeb0，庇护期间可为负）。样本 uid11 life=0=7−7 ✓；困难档 7−5=2 抢跑=5 天。重抽新卡 `set_life(弃卡 life)` 继承剩余；抽牌 = sudan_card_pool 先 Shuffle 再 RemoveLast（顺序无意义）。克隆：`_update_card_lives` 苏丹并入通用死亡，days_left 为镜像；导入桥 days_left 精确恢复。
@@ -116,7 +116,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **38/38 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **44/44 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
 
 导入桥当场抓到并修复的结构偏差：
 

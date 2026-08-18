@@ -57,6 +57,12 @@ func test_save_load_round_trip_preserves_state():
 	state.only_cards = {2000001: true, 2000005: true}
 	state.only_rites = {5000001: true, 5000003: true}
 	state.cached_event = [5310008, 5310009]
+	state.sudan_box_show = true
+	state.story_unshow = true
+	state.prestige_unshow = false
+	state.deadline_unshow = true
+	state.helpbtn_unshow = false
+	state.once_new_rites_is_show = {5000001: true, 5000003: false}
 	state.gen_cards = {2000001: 3, 2000029: 2}
 	state.gen_tags = {"physique": 3, "money": 2, "custom_runtime_tag": 1}
 	var first_instance = state.find_rite_instance_by_id(5000001)
@@ -127,6 +133,13 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.only_cards, state.only_cards, "unique-card registry survives JSON")
 	assert_eq(state2.only_rites, state.only_rites, "unique-rite registry survives JSON")
 	assert_eq(state2.cached_event, [5310008, 5310009], "cached event notices survive JSON")
+	assert_true(state2.sudan_box_show, "Sudan box visibility survives JSON")
+	assert_true(state2.story_unshow, "story visibility survives JSON")
+	assert_false(state2.prestige_unshow, "prestige visibility survives JSON")
+	assert_true(state2.deadline_unshow, "deadline visibility survives JSON")
+	assert_false(state2.helpbtn_unshow, "help-button visibility survives JSON")
+	assert_eq(state2.once_new_rites_is_show, {5000001: true, 5000003: false},
+		"new-rite first-seen preferences survive JSON")
 	assert_eq(state2.gen_cards, state.gen_cards, "card generation history survives JSON")
 	assert_eq(state2.gen_tags, state.gen_tags, "tag generation history survives JSON")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)

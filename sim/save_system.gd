@@ -147,6 +147,12 @@ static func serialize(state) -> Dictionary:
 		"only_cards": _sorted_set_keys(state.only_cards),
 		"only_rites": _sorted_set_keys(state.only_rites),
 		"cached_event": state.cached_event.duplicate(),
+		"sudan_box_show": state.sudan_box_show,
+		"story_unshow": state.story_unshow,
+		"prestige_unshow": state.prestige_unshow,
+		"deadline_unshow": state.deadline_unshow,
+		"helpbtn_unshow": state.helpbtn_unshow,
+		"once_new_rites_is_show": state.once_new_rites_is_show.duplicate(true),
 		"gen_cards": state.gen_cards.duplicate(true),
 		"gen_tags": state.gen_tags.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
@@ -272,6 +278,12 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.cached_event.clear()
 	for raw_event_id in data.get("cached_event", []):
 		state.add_cached_event(int(raw_event_id))
+	state.sudan_box_show = bool(data.get("sudan_box_show", false))
+	state.story_unshow = bool(data.get("story_unshow", false))
+	state.prestige_unshow = bool(data.get("prestige_unshow", false))
+	state.deadline_unshow = bool(data.get("deadline_unshow", false))
+	state.helpbtn_unshow = bool(data.get("helpbtn_unshow", false))
+	state.once_new_rites_is_show = _restore_int_bool_dictionary(data.get("once_new_rites_is_show", {}))
 	state.gen_cards = _restore_int_count_dictionary(data.get("gen_cards", {}))
 	state.gen_tags = _restore_string_count_dictionary(data.get("gen_tags", {}))
 	state.last_round_rite_data.clear()
@@ -376,6 +388,15 @@ static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
 		return restored
 	for raw_key in value:
 		restored[int(raw_key)] = value[raw_key]
+	return restored
+
+
+static func _restore_int_bool_dictionary(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Dictionary):
+		return restored
+	for raw_key in value:
+		restored[int(raw_key)] = bool(value[raw_key])
 	return restored
 
 

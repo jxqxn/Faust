@@ -404,6 +404,22 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		state.begin_guide = {}
 		state.guide_cues.clear()
 		return
+	# The close_* guide operations also mutate Player's persisted visibility
+	# preferences. A zero operation value requests ShowX(true); non-zero hides
+	# it. The `*_unshow` fields use the inverse polarity in their names.
+	# [SRC: CloseBox.c Do (0x4f44c0), CloseDeadline.c Do (0x4f46b0),
+	#       CloseHelpBtn.c Do (0x4f48a0), ClosePrestige.c Do (0x4f4a90),
+	#       CloseStory.c Do (0x4f4c80)]
+	if k == "close_box":
+		state.sudan_box_show = int(val) == 0
+	elif k == "close_story":
+		state.story_unshow = int(val) != 0
+	elif k == "close_prestige":
+		state.prestige_unshow = int(val) != 0
+	elif k == "close_deadline":
+		state.deadline_unshow = int(val) != 0
+	elif k == "close_helpbtn":
+		state.helpbtn_unshow = int(val) != 0
 	if k.begins_with("hand_pop") or k.begins_with("rite_pop") or k.begins_with("focus.") \
 			or k == "slide" or k.begins_with("close_") \
 			or k == "change_desk_bg" or k.begins_with("change_location_icon"):
