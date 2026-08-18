@@ -111,6 +111,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 7. **原作 UI 队列不持久化**：只存 delay_ops + cached_event；克隆持久化全量 pending_operations（语义更重，导入桥需裁剪）。
 8. **回退双轨**（配额侧已修复）：原作 global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007 的全局侧）+ player.last_round_rite_data（按仪式卡数据）。完整链已双信号定位并于 **2026-08-18 迁移**：`GetCounter/SetCounter` 7100007 分支读写 `Global.backToPrevRound`（无条件非负 clamp）；新局 `Datapool.StartGame` L4497 重置 9999 后由难度选择 `PlayerExtensions.SetDifficulty` 0x38f530 落地公式（配额 = 当前 − 9999 + 新难度 back_to_prev_round_count：离开无限档=重置、有限切有限=归零、切回无限档=保留余量；金骰同函数为**加法** 当前 + 新难度值）；消耗在 `GameController.PrevRoundInternal` 0x555570（UseBackToPrev 先消耗 → Global.roundRollback=2 → SaveGlobal → LoadRound）；档案恢复 `CorrectPlayerData` L4130-4134 以档案槽记录值覆写全局并 SaveGlobal。克隆落地：`sim/global_state.gd`（user://global.json 承载 backToPrevRound/roundRollback）+ counter 路由 + v6→v7 局内存档迁移（payload 不再携带配额）。player.last_round_rite_data 侧与快照持久化（Datapool 轮次文件）仍为 ⬜。
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
+10. **苏丹期限 = 卡寿命模型**（2026-08-18 批次 D 解出）：激活苏丹卡无独立期限字段——`GenSudanCard` L3656-3662 出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)`（抢跑量），每日 life+1（老化无条件），`life >= card_vanishing` 且不在任一仪式槽即 DoVanish 处刑（vanish.over 驱动结局）；可见倒计时 = `card_vanishing − life`（UpdateSudanLife 0x55aeb0，庇护期间可为负）。样本 uid11 life=0=7−7 ✓；困难档 7−5=2 抢跑=5 天。重抽新卡 `set_life(弃卡 life)` 继承剩余；抽牌 = sudan_card_pool 先 Shuffle 再 RemoveLast（顺序无意义）。克隆：`_update_card_lives` 苏丹并入通用死亡，days_left 为镜像；导入桥 days_left 精确恢复。
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 

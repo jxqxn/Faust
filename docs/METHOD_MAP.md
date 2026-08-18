@@ -42,6 +42,8 @@
 | `PlayerExtensions.SetDifficulty` 0x38f530（金骰 = 当前 + 新难度 gold_dice_count **加法**；回退配额 = 当前 − 9999 + 新难度 back_to_prev_round_count；redraws 重置） | `game_state._apply_difficulty_resources()`（新局与中途切换共用；`apply_difficulty`） | 离开无限档=重置为新配额；有限切有限=clamp 归零；切回无限档=保留余量（防刷） |
 | `TimingRoundBase` 键 = 实例 +0x20 **int**（player+0x128 字典键；样本全部 = 事件 id×100，TimingRoundBase.c IsValid 0x465d30/OnStart 0x4660d0） | `event_runtime._timing_key` = event_id*100（2026-08-18 由导入桥发现偏差后修正；1381 个回合时机事件全单桶序号 0；旧字符串键 deserialize 迁移） | 多桶事件的序号分配未验证（当前无此配置） |
 | 原作存档 Player 60 字段（dump.cs:391488 × save_samples 双信号） | `sim/original_save_importer.gd` 导入桥（difficulty 1 基 -1；cards[i]↔s{i+1}；装备嵌套→扁平 equipped 链；min_round 显式持久化） | 同刻对拍 23/23；苏丹期限字段/牌堆顺序近似登记 |
+| `GameController.GenSudanCard` 0x54f6f0 L3656-3662（出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)` 抢跑）+ `UpdateSingleCard` b__1 0x572420（每日 life+1，`life>=card_vanishing` 且无槽位庇护即 DoVanish 处刑）+ `UpdateSudanLife` 0x55aeb0（倒计时显示 = vanish − life，可负） | `round_loop.draw_weekly_sudan`（头起步）+ `_update_card_lives`（苏丹并入通用死亡，days_left 为 vanish−life 镜像）+ rebirth 按模板 | 2026-08-18 批次 D；困难档 7−5=2 抢跑=5 天；b__1 老化豁免标签字面量未反查（无配置命中） |
+| `RedrawSudanCard` 0x5558b0 L3823-3842（循环 player+0x68 次 GenSudanCard；新卡 `set_life(弃卡 life)` 继承剩余期限；弃卡 life 归 0 后 `Insert(Random.Range(0,count))` 回池）+ `GenSudanCard` 抽取 = sudan_card_pool **先 Shuffle（sudan_shuffle）再 RemoveLast** | `round_loop.use_redraw`（carried_life = 弃卡实例 life）+ `SudanCards.draw` pop_back 尾抽 | 2026-08-18 批次 D；牌序因每次 Shuffle 无意义，多重集对拍为正确粒度 |
 
 ## B. 近似 🟡（行为近似承载，缺背书或部分覆盖）
 
@@ -84,8 +86,8 @@
 | 背包/手牌位系统（bag/bagpos/BagIndex） | 存档字段双信号（`docs/ORIGINAL_SAVE_SCHEMA.md`） | 中（与金币卡/手牌模型联动） |
 | 末日决战（end_open/is_armageddon/armageddon_rite_id） | 存档字段双信号；控制器未审 | 未知，需普查 |
 | RNG 续航（random_cache） | 存档字段双信号 | 小-中 |
-| 激活苏丹卡的期限存档承载（原作 Player 无显式字段；导入桥现按 sudan_card_init_life 近似 days_left） | 待逆向 TryGenSudanCard/处刑检查链定位期限真源 | 小 |
-| 原作苏丹抽牌序（sudan_pool_cards 顺序语义） | sudan_pool_cards/sudan_card_pool 双列表 + sudan_shuffle | 小（导入桥暂仅多重集对拍） |
+| ~~激活苏丹卡的期限存档承载~~ | 已解（2026-08-18 批次 D）：期限 = 卡寿命模型（出生抢跑 + 每日 life+1 + 模板 card_vanishing 死亡），存档承载即 Card.life 本身；导入桥 days_left = vanish−life 精确恢复，仅 drawn_round 仍近似（难度中途切换后不可反推） | — |
+| ~~原作苏丹抽牌序（sudan_pool_cards 顺序语义）~~ | 已解（2026-08-18 批次 D）：sudan_shuffle 开启时每次抽取先 Shuffle 再 RemoveLast，顺序无意义；克隆 pop_back 尾抽对齐 | — |
 | 唯一性登记（only_cards/only_rites） | 存档字段双信号 | 小 |
 | 生成计数（gen_cards/gen_tags） | 存档字段双信号 | 小 |
 | 改名持久化（custom_rite_name/player_card_name） | 存档字段双信号（DSL 键已支持，持久化缺） | 小 |

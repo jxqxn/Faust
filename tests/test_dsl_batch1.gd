@@ -394,6 +394,7 @@ func test_sudan_shelter_requires_any_slot_not_started_rite() -> void:
 	var state := GameState.new()
 	var sudan = RoundLoop.ActiveSudan.new(2010001, 1, state.round_number, 0)
 	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	inst.life = 6 # template deadline 7 -> 1 day left
 	sudan.card_uid = inst.uid
 	state.active_sudan_cards.append(sudan)
 	var rite = state.create_rite_instance(992001)
@@ -658,6 +659,7 @@ func test_sudan_execution_records_its_ending_id() -> void:
 	state.setup_new_run(local_db, 0, RNG.new(111))
 	var sudan = RoundLoop.ActiveSudan.new(2010001, 1, state.round_number, 0)
 	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	inst.life = 6 # template deadline 7 -> 1 day left
 	sudan.card_uid = inst.uid
 	state.active_sudan_cards.append(sudan)
 	var day := RoundLoop.advance_day(state, local_db, RNG.new(112))

@@ -86,6 +86,21 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：~~7100007（需全局域）~~
 （2026-08-18 批次 B 已迁移）、7100008（随重抽族）。
 
+**2026-08-18 苏丹期限真源逆向 + 卡寿命模型统一（批次 D，363 测试全绿）：**
+导入桥声明的"苏丹期限近似"升级为**精确**：期限 = 卡寿命通用系统（`GenSudanCard`
+L3656-3662 出生抢跑 `模板 card_vanishing − sudan_card_init_life` + 每日 life+1 +
+槽位庇护只挡死亡 + `life>=card_vanishing` 处刑走 DoVanish/vanish.over），样本
+life=0=7−7 四信号吻合（困难档 7−5=2 抢跑=5 天）。克隆落地：draw_weekly_sudan
+出生头起步；`_update_card_lives` 移除苏丹跳过——处刑并入通用死亡（结果 expired/
+game_over 由 sudan 旗标映射，over_reason 来自 vanish.over）；days_left 变为
+`card_vanishing − life` 的同步镜像（庇护期间可为负，社区"倒计时退到负数"得到
+解释）；重抽新卡继承弃卡 **life**（非 days_left）；rebirth 倒计时改按模板
+card_vanishing 而非难度值；`_is_sudan_embedded_in_open_rite` 窄门删除（并入通用
+庇护）。顺带解出抽牌机制：sudan_card_pool **先 Shuffle 再 RemoveLast**（顺序无
+意义，多重集对拍即正确粒度）、重抽 `set_life(旧卡 life)` + 弃卡归 0 随机位回插。
+导入桥 days_left 精确化，仅 drawn_round 仍登记近似（难度中途切换后无法反推）。
+测试：test_sudan 新增头起步/庇护过期两用例，既有四测试按 life 模型重写 fixture。
+
 **2026-08-18 对拍台阶段二导入桥（批次 C，361 测试全绿）：**
 `sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常
 deserialize 路径载入；`tools/export_save_diff.gd --bridge` 产出同刻对拍报告。
@@ -98,7 +113,7 @@ TimingRoundBase+0x20 直址 player+0x128），克隆旧自制字符串键已改 
 （converted/approximated/dropped）：苏丹期限字段与牌堆顺序为登记近似，
 notes/only_cards/gen_cards 等为登记丢弃。测试 `tests/test_save_import_bridge.gd`
 （合成 fixture + 语料真存档 + 旧键迁移）。遗留：续局行为对拍待实机样本；
-多桶事件序号分配与激活苏丹期限真源未逆向（METHOD_MAP ⬜）。
+多桶事件序号分配未逆向（METHOD_MAP ⬜）；~~激活苏丹期限真源~~（批次 D 已解）。
 
 **2026-08-18 回退配额全局化 + 全局域承载（批次 B，355 测试全绿）：**
 `sim/global_state.gd` GlobalState 落地（user://global.json，对应原作 Global；
@@ -240,16 +255,24 @@ Critical/High/Medium/Low 修复建议至此全部落地或明确留档。
 - round **每天无条件 +1**（`player+0x2c`），与是否持有苏丹卡无关；只有**抽新苏丹卡**受 `HasSudanCard` 门控（`TryGenSudanCard 0x559730`）。
 - 事件 `round_begin_ba` 每天触发；周期事件的"下次触发回合"记在 `player+0x128`（timing_rounds 字典），触发后重臂（`TimingRoundBase.c`）——`round_begin_ba: 5` = 每 5 回合复发，不是"仅第 5 回合"。
 
-**卡牌生命庇护（DoCardUpdate 0x54d4c0，行 5139-5231）：**
+**卡牌生命庇护与苏丹期限（2026-08-18 按反编译证据定型）：**
 
-- 庇护条件是"身处**任一**仪式槽（`rite.cards`）"，**不看该仪式是否 start、不看到没到 round_number**。
-- 卡寿命（模板 `life` 上限）是**通用系统**，非苏丹卡专属：手中卡每天 life+1，到上限未受庇护即消散；在槽中当天跳过递增检查。
-
-**苏丹卡安全期（克隆现行实现，待按上行修正）：**
-
-克隆 `RoundLoop._is_sudan_embedded_in_open_rite`（`sim/round_loop.gd`）要求
-`start==true 且 life<round_number`，比原作窄——原作只要卡在任一仪式槽即跳过处刑
-检查。修正方向见总修复清单 2.1。测试在 `tests/test_rite_lifecycle.gd`。
+- 通用系统（DoCardUpdate 0x54d4c0 → UpdateSingleCard b__1 0x572420）：每张活卡
+  每天 life+1（**老化无条件，庇护只挡死亡**）；`life >= 模板 card_vanishing`
+  且未受庇护即死亡（vanish 操作 + card_dead）。
+- 庇护条件是"身处**任一**仪式槽（`rite.cards`，即 (Card, flag) 快照 flag=1）"，
+  **不看该仪式是否 start、不看到没到 round_number**。
+- **苏丹卡走同一系统**：`GenSudanCard 0x54f6f0` L3656-3662 出生时
+  `set_life(模板 card_vanishing − player.sudan_card_init_life)`（抢跑量；困难档
+  7−5=2，故期限 5 天）；死亡即处刑（vanish.over 驱动结局屏）。庇护期间 life 照常
+  递增，可见倒计时（UpdateSudanLife 0x55aeb0：`card_vanishing − life`）可为负。
+  难度切换经 SetDifficulty 更新 sudan_card_init_life，只影响**之后**的抽卡。
+- 抽卡：`TryGenSudanCard`（HasSudanCard 门控）→ `GenSudanCard` 从
+  player.sudan_card_pool **先 Shuffle（sudan_shuffle）再 RemoveLast**；重抽
+  `RedrawSudanCard 0x5558b0`：新卡 `set_life(弃卡 life)`（继承剩余期限）、弃卡
+  life 归 0 后 `Insert(Random.Range(0,count))` 回池。
+- 留档：b__1 的老化豁免标签（DAT_1825ac9e8，非苏丹卡；疑为"不朽"类标签，
+  RebirthSudanCard 第二分支也引用同类）字面量无法从元数据反查，无配置命中。
 
 **旧版遗留的不确定项**（"shelter 结算当天 vs 次日"）已被反编译证据替代：
 处刑检查在结算管线之后（b__6），结算当天庇护失效即当日可处刑。

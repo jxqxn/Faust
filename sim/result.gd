@@ -253,7 +253,12 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			rebirth_instance.life = 0
 			for asc in state.active_sudan_cards:
 				if int(asc.card_uid) == int(rebirth_instance.uid):
-					asc.days_left = int(state.difficulty_config.get("sudan_life_time", 7))
+					# The countdown refreshes to the template deadline
+					# (UpdateSudanLife: card_vanishing − life), not the
+					# difficulty's init value.
+					# [SRC: GameController.c @ UpdateSudanLife 0x55aeb0 L6363-6372]
+					var rebirth_lifetime: int = int(db.get_card(int(asc.card_id)).get("card_vanishing", 7)) if db != null else 7
+					asc.days_left = rebirth_lifetime
 		return
 	if _is_change_card_copy_key(k):
 		_apply_change_card_copy(k, val, state, context)

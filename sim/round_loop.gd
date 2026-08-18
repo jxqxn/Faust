@@ -37,32 +37,18 @@ static func advance_day(state, db, rng) -> Dictionary:
 	_update_rite_instances(state, db, rng, result)
 	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
 	result.expired_cards = _update_card_lives(state, db, rng)
-	# Sultan deadline decrements unconditionally. Execution is suppressed only
-	# while the card is embedded in an in-progress started rite (zone=slot, the
-	# rite is started, and life has not yet reached its round_number). The
-	# countdown can run to zero or below; only the game-over trigger is gated.
-	# [SRC: 知乎专栏 p/1909509257005831882 "已被嵌入仪式中的苏丹卡倒计时哪怕退到负数
-	#       都不会触发处刑"; 巴哈姆特 snA=111; BWIKI 新手指南]
-	var still_active: Array = []
-	for asc in state.active_sudan_cards:
-		asc.days_left -= 1
-		if asc.days_left <= 0 and not _is_sudan_embedded_in_open_rite(state, db, asc):
-			result.expired.append(asc.card_id)
+	# Sudan deadlines share the generic card-life system: cards age daily and
+	# die at the template's card_vanishing (vanish.over drives the ending)
+	# unless they sit in any rite slot. A sudan death is the execution.
+	# [SRC: GameController.__c__DisplayClass196_0.c @ <UpdateSingleCard>b__1
+	#       (0x572420): life+1, death at life >= data.card_vanishing(+0x60)
+	#       unless the any-slot shelter flag; GameController.c @ GenSudanCard
+	#       (0x54f6f0) L3656-3662 births sudan cards with the head start
+	#       card_vanishing - sudan_card_init_life]
+	for entry in result.expired_cards:
+		if bool(entry.get("sudan", false)):
+			result.expired.append(int(entry["id"]))
 			result.game_over = true
-			# The executed Sultan's ending id comes from its vanish.over ops
-			# (e.g. 2010001 -> over 12) and drives the ending screen.
-			var dead_card: Dictionary = db.get_card(int(asc.card_id)) if db != null else {}
-			var vanish: Dictionary = dead_card.get("vanish", {})
-			state.over_reason = int(vanish.get("over", 0))
-			if state.has_method("remove_card_from_rail"):
-				state.remove_card_from_rail(int(asc.card_uid))
-			var expired_instance = state.get_card_instance(int(asc.card_uid)) if state.has_method("get_card_instance") else null
-			if expired_instance != null:
-				expired_instance.zone = "removed"
-				expired_instance.is_lost = true
-		else:
-			still_active.append(asc)
-	state.active_sudan_cards = still_active
 	# round advances unconditionally every day; only the Sultan draw is gated
 	# on having no active Sultan card (inside _begin_round).
 	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__3 (0x570790): player.round
@@ -81,13 +67,18 @@ static func advance_day(state, db, rng) -> Dictionary:
 
 ## DoCardUpdate: every live card ages one day; a card whose life reaches its
 ## template's card_vanishing dies (vanish ops + card_dead) UNLESS it currently
-## sits in any rite slot (shelter, regardless of the rite's start state) or is
-## an active Sultan card (their death is the deadline check below, not this).
-## Equipped cards age with their host.
+## sits in any rite slot (shelter, regardless of the rite's start state).
+## Sudan cards run the same system — they are born with the head start
+## (card_vanishing − sudan_card_init_life) so the difficulty shortens only the
+## window; their death is the Sultan execution (vanish.over ending) and the
+## visible countdown mirrors card_vanishing − life (it can go negative while
+## sheltered). Equipped cards age with their host.
 ## [SRC: GameController.c @ DoCardUpdate (0x54d4c0) lines 5139-5231: snapshot
 ##       (Card, flag) with flag=1 for every card in any rite.cards;
 ##       DisplayClass196_0 @ <UpdateSingleCard>b__1 (0x572420): life+1, death
-##       when life >= data.card_vanishing(+0x60) and flag == 0]
+##       when life >= data.card_vanishing(+0x60) and flag == 0;
+##       GameController.c @ UpdateSudanLife (0x55aeb0) L6363-6372 shows the
+##       countdown as data.card_vanishing − card.life]
 static func _update_card_lives(state, db, rng) -> Array:
 	var dead: Array = []
 	if state == null or db == null or not state.has_method("get_card_instance"):
@@ -97,22 +88,35 @@ static func _update_card_lives(state, db, rng) -> Array:
 		var inst = state.get_card_instance(int(uid))
 		if inst == null or inst.is_lost or inst.zone == "removed":
 			continue
-		if state.is_active_sudan_card(int(uid)):
-			continue # Sultan deadline path owns these.
+		var is_sudan: bool = state.is_active_sudan_card(int(uid))
 		var card: Dictionary = db.get_card(int(inst.card_id))
 		var lifetime := int(card.get("card_vanishing", 0))
 		if lifetime < 1:
 			continue
 		inst.life += 1
+		if is_sudan:
+			for asc in state.active_sudan_cards:
+				if int(asc.card_uid) == int(uid):
+					asc.days_left = lifetime - inst.life
 		var sheltered: bool = inst.zone == "slot" and inst.rite_uid > 0
 		if sheltered or inst.life < lifetime:
 			continue
-		dead.append({"id": int(inst.card_id), "card_uid": int(uid)})
+		dead.append({"id": int(inst.card_id), "card_uid": int(uid), "sudan": is_sudan})
 		var vanish: Dictionary = card.get("vanish", {})
 		if not vanish.is_empty():
 			DeferredEffects.apply(ResultExec.execute(vanish, state, db), state, db, rng)
 		state.trigger_events("card_dead", {"card": int(inst.card_id), "card_uid": int(uid)})
-		if inst.zone == "hand" and state.has_method("remove_card_from_hand"):
+		if is_sudan:
+			# The execution: retire the rail widget and the active-sudan entry
+			# (over_reason comes from the vanish.over op above).
+			if state.has_method("remove_card_from_rail"):
+				state.remove_card_from_rail(int(uid))
+			var still_active: Array = []
+			for asc in state.active_sudan_cards:
+				if int(asc.card_uid) != int(uid):
+					still_active.append(asc)
+			state.active_sudan_cards = still_active
+		elif inst.zone == "hand" and state.has_method("remove_card_from_hand"):
 			state.remove_card_from_hand(int(uid))
 		inst.zone = "removed"
 		inst.is_lost = true
@@ -182,15 +186,26 @@ static func back_to_round_begin(state, db) -> bool:
 	return true
 
 
-## Draw one sudan card into the active set.
+## Draw one sudan card into the active set. The card is born with a head
+## start: life = template card_vanishing − the difficulty's sudan_life_time;
+## the generic daily aging then counts up to the template deadline, so hard
+## mode shortens the window purely through the head start.
+## [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3656-3662:
+##       Card.set_life(data.card_vanishing − player.sudan_card_init_life);
+##       PlayerExtensions.c SetDifficulty (0x38f530) L2296 keeps
+##       sudan_card_init_life in sync with the current difficulty]
 static func draw_weekly_sudan(state, db, _rng) -> int:
-	var life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	var cid: int = SudanCards.draw(state.sudan_deck)
 	if cid < 0:
 		return -1
 	var instance = _create_sudan_instance(state, db, cid)
 	var card_uid := int(instance.uid) if instance != null else cid
-	state.active_sudan_cards.append(ActiveSudan.new(cid, life, state.round_number, card_uid))
+	var lifetime: int = int(db.get_card(cid).get("card_vanishing", 7)) if db != null else 7
+	var init_life: int = int(state.difficulty_config.get("sudan_life_time", 7))
+	if instance != null:
+		instance.life = maxi(lifetime - init_life, 0)
+	state.active_sudan_cards.append(
+		ActiveSudan.new(cid, mini(init_life, lifetime), state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
 		state.insert_card_to_rail(card_uid, 0)
 	return cid
@@ -221,11 +236,15 @@ static func use_redraw(state, rng, db = null) -> int:
 	var old_card = state.active_sudan_cards.pop_back()
 	var discarded: int = old_card.card_id
 	var discarded_uid: int = old_card.card_uid
-	var carried_life: int = old_card.days_left
 	var first_new := -1
 	var rail_index: int = state.rail_order.find(discarded_uid) if state.has_method("replace_card_in_rail") else -1
 	var old_instance = state.get_card_instance(discarded_uid) if state.has_method("get_card_instance") else null
 	var old_tags: Dictionary = old_instance.tags.duplicate(true) if old_instance != null else {}
+	# New cards carry the discarded card's elapsed life, so the visible
+	# deadline (card_vanishing − life) stays unchanged.
+	# [SRC: GameController.c @ RedrawSudanCard (0x5558b0) L3830-3832:
+	#       new = GenSudanCard(...); Card.set_life(new, discarded.life)]
+	var carried_life: int = int(old_instance.life) if old_instance != null else 0
 	if old_instance != null:
 		old_instance.zone = "removed"
 		old_instance.is_lost = true
@@ -241,7 +260,11 @@ static func use_redraw(state, rng, db = null) -> int:
 			first_new = new_id
 		var instance = _create_sudan_instance(state, db, new_id)
 		var new_uid := int(instance.uid) if instance != null else new_id
-		state.active_sudan_cards.append(ActiveSudan.new(new_id, carried_life, state.round_number, new_uid))
+		var new_lifetime: int = int(db.get_card(new_id).get("card_vanishing", 7)) if db != null else 7
+		if instance != null:
+			instance.life = carried_life
+		state.active_sudan_cards.append(
+			ActiveSudan.new(new_id, new_lifetime - carried_life, state.round_number, new_uid))
 		if state.has_method("replace_card_in_rail"):
 			if i == 0:
 				if rail_index >= 0:
@@ -576,19 +599,15 @@ static func _redraws_per_round(state, db) -> int:
 	))
 
 
-## A Sultan card is "embedded" (safe from execution) when it currently sits in
-## the slot zone of a started rite that has not yet reached its round_number.
-## This covers multi-day rites whose lifetime window shelters the card; a
-## settled or 0-day rite no longer qualifies because life >= round_number.
-## Defensive against missing state APIs and partially-built instances.
-## [SRC: 知乎专栏 p/1909509257005831882; 巴哈姆特 snA=111]
-static func _is_sudan_embedded_in_open_rite(state, _db, asc) -> bool:
-	# Shelter is presence in ANY rite slot: the original death check receives
-	# flag=1 for every card in any rite.cards without inspecting rite.start or
-	# remaining days. The countdown itself is unconditional.
-	# [SRC: GameController.c @ DoCardUpdate (0x54d4c0) lines 5175-5231]
-	if asc == null or not state.has_method("get_card_instance"):
+## Shelter for ANY card (sudan execution included) is presence in any rite
+## slot, regardless of the rite's start state — the generic death check reads
+## the any-slot flag directly.
+## [SRC: GameController.c @ DoCardUpdate (0x54d4c0) lines 5139-5231:
+##       (Card, flag) snapshot with flag=1 for every card in any rite.cards;
+##       DisplayClass196_0 @ <UpdateSingleCard>b__1 (0x572420) gates only the
+##       death branch on the flag while aging stays unconditional]
+static func is_sheltered_in_rite_slot(state, uid: int) -> bool:
+	if state == null or not state.has_method("get_card_instance"):
 		return false
-	var sudan_uid := int(asc.card_uid)
-	var instance = state.get_card_instance(sudan_uid)
+	var instance = state.get_card_instance(int(uid))
 	return instance != null and instance.zone == "slot" and instance.rite_uid > 0

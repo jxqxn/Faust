@@ -186,20 +186,23 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	for cid in original.get("sudan_pool_cards", []):
 		sudan_deck.append(int(cid))
 	var active_sudan: Array = []
-	var init_life := int(original.get("sudan_card_init_life",
-		_original_difficulty_value(db, difficulty_index, "sudan_life_time", 7)))
 	for uid in sudan_uids:
 		var row = by_uid.get(uid)
 		if row == null:
 			continue
+		# The deadline is the card-life model: remaining = template
+		# card_vanishing − the persisted card.life (exact — GenSudanCard births
+		# the card with the difficulty head start and the generic aging counts
+		# up to the template).
+		var lifetime := int(db.get_card(int(row["card_id"])).get("card_vanishing", 7)) if db != null else 7
 		active_sudan.append({
 			"card_id": int(row["card_id"]),
 			"card_uid": uid,
-			"days_left": init_life,
+			"days_left": lifetime - int(row["life"]),
 			"drawn_round": round_number,
 		})
-	approximated.append("active_sudan days_left/drawn_round：原作存档无显式期限字段，按 sudan_card_init_life 与当前回合近似")
-	approximated.append("sudan_deck 顺序：原作抽牌序未定位（随机模型 ⬜），仅多重集对拍")
+	approximated.append("active_sudan drawn_round：期限可由 card_vanishing−life 精确恢复，但出生回合在难度中途切换后无法反推")
+	approximated.append("sudan_deck 顺序：sudan_shuffle 开启时每次抽取先 Shuffle 再 RemoveLast，顺序无意义，仅多重集对拍")
 
 	# ---- Rail: sudan at the front like draw_weekly_sudan, then hand ----
 	var rail_order: Array[int] = []

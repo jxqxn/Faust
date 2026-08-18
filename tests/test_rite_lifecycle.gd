@@ -201,13 +201,17 @@ func test_deferred_rite_generation_uses_the_same_open_adsorb_gate():
 # Helper: build a minimal state with one active Sultan card placed in the s1
 # slot of an in-progress started rite. Avoids setup_new_run's heavy allocation
 # (which would leak across tests). `rite_id` selects the shelter rite config,
-# `days_left` sets the deadline on the active Sultan card.
+# `days_left` sets the deadline: the card instance is born with the matching
+# elapsed life (template card_vanishing − days_left) so the life-based death
+# check sees the same deadline the countdown shows.
 func _state_with_embedded_sudan(local_db, rite_id: int, days_left: int) -> Dictionary:
 	var state := GameState.new()
 	var instance = state.create_rite_instance(rite_id)
 	state.start_rite_instance(instance.uid)
 	# Create a runtime Sultan card instance and register it as active.
 	var sudan_instance = state.create_card_instance(2010001, local_db, "sudan")
+	var lifetime: int = int(local_db.get_card(2010001).get("card_vanishing", 7))
+	sudan_instance.life = lifetime - days_left
 	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(
 		2010001, days_left, state.round_number, int(sudan_instance.uid)))
 	# Place it into the rite's s1 slot. add_card_to_slot expects the uid.
@@ -218,7 +222,9 @@ func _state_with_embedded_sudan(local_db, rite_id: int, days_left: int) -> Dicti
 # A Sultan card placed in an in-progress started rite does NOT trigger execution
 # when its deadline reaches zero. The deadline still decrements (it can even go
 # negative); only the game-over trigger is suppressed while the card is embedded.
-# [SRC: 知乎专栏 p/1909509257005831882; 巴哈姆特 snA=111; BWIKI 新手指南]
+# [SRC: GameController.__c__DisplayClass196_0.c @ <UpdateSingleCard>b__1
+#       (0x572420): aging unconditional, death gated on the any-slot flag;
+#       GameController.c @ UpdateSudanLife (0x55aeb0) shows vanish − life]
 func test_sudan_card_in_started_rite_does_not_trigger_execution():
 	var local_db := _db_with_lifecycle_rites()
 	var ctx := _state_with_embedded_sudan(local_db, 991006, 1)  # round_number=3

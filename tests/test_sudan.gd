@@ -121,21 +121,76 @@ func test_start_round_draws_sudan_with_deadline():
 	var cid := RoundLoop.draw_weekly_sudan(state, db, rng)
 	assert_true(cid >= 0, "drew a sudan card")
 	assert_eq(state.active_sudan_cards.size(), initial_active + 1)
-	# The drawn card has the difficulty life-time as days_left.
+	# The drawn card shows the difficulty life-time as its countdown, born at
+	# the head start (template 7 - init 7 = 0 elapsed life).
 	assert_eq(state.active_sudan_cards.back().days_left, 7)
+	var drawn_instance = state.get_card_instance(int(state.active_sudan_cards.back().card_uid))
+	assert_eq(int(drawn_instance.life), 0, "easy/normal difficulty births the card with zero elapsed life")
+
+func test_hard_difficulty_births_sudan_with_head_start():
+	# GenSudanCard births the card at template card_vanishing minus the
+	# difficulty's sudan_life_time: hard mode (5 days) starts the card at
+	# life 2 toward the template deadline 7.
+	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3656-3662]
+	var rng := RNG.new(4)
+	var state := GameState.new()
+	state.setup_new_run(db, 2, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var drawn_instance = state.get_card_instance(int(state.active_sudan_cards.back().card_uid))
+	assert_eq(int(drawn_instance.life), 2, "hard mode births the card with a 2-day head start")
+	assert_eq(state.active_sudan_cards.back().days_left, 5, "the visible countdown is the difficulty window")
+
+func test_sheltered_sudan_ages_past_deadline_without_executing():
+	# While sheltered in a rite slot the card keeps aging past the template
+	# deadline (countdown goes negative); execution fires the day it leaves.
+	var shelter_db := ConfigDB.new()
+	shelter_db.load_all()
+	shelter_db.rites[993006] = {
+		"id": 993006, "name": "长庇护", "open_conditions": [],
+		"cards_slot": {"s1": {}},
+		"round_number": 9, "waiting_round": 0, "waiting_round_end_action": [],
+		"settlement_prior": [], "settlement": [], "settlement_extre": [],
+		"auto_begin": 0, "auto_result": 0,
+	}
+	var state := GameState.new()
+	state.setup_new_run(shelter_db, 1, RNG.new(6))
+	RoundLoop.draw_weekly_sudan(state, shelter_db, RNG.new(61))
+	var sudan_uid := int(state.active_sudan_cards.back().card_uid)
+	var instance = state.get_card_instance(sudan_uid)
+	var rite = state.create_rite_instance(993006)
+	state.start_rite_instance(rite.uid)
+	state.add_card_to_slot(sudan_uid, 1, shelter_db, rite.uid)
+	instance.life = 7 # already at the template deadline inside the slot
+	for i in 2:
+		var sheltered := RoundLoop.advance_day(state, shelter_db, RNG.new(62 + i))
+		assert_false(sheltered.game_over, "a slotted card never executes regardless of the deadline")
+	assert_true(instance.life > 7, "the sheltered card keeps aging")
+	assert_true(state.active_sudan_cards.back().days_left < 0, "the visible countdown goes negative")
+	# Unslot like the settlement path does (back to the sudan zone, not a hard
+	# removal): the past-deadline card executes on the very next day.
+	instance.zone = "sudan"
+	instance.rite_uid = 0
+	instance.slot_key = ""
+	var freed := RoundLoop.advance_day(state, shelter_db, RNG.new(65))
+	assert_true(freed.game_over, "the past-deadline card executes the day it leaves the slot")
+	assert_eq(freed.expired.size(), 1)
 
 func test_redraw_preserves_visible_deadline():
-	# Original copies Card.life (elapsed days) from old card to new card; the
-	# visible countdown is config_life - life. This clone stores the inverse
-	# value directly as days_left, so preserving the visible countdown means
-	# copying days_left to the replacement sudan card.
+	# The original copies Card.life (elapsed days) from old card to new card;
+	# the visible countdown is card_vanishing − life. The fixture ages the
+	# card to elapsed 4 (3 left) like real play would.
+	# [SRC: GameController.c @ RedrawSudanCard (0x5558b0) L3830-3832]
 	var rng := RNG.new(9)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
+	var aged = state.get_card_instance(int(state.active_sudan_cards.back().card_uid))
+	aged.life = 4
 	state.active_sudan_cards.back().days_left = 3
 	var new_id := RoundLoop.use_redraw(state, rng)
 	assert_true(new_id >= 0, "redrew a replacement sudan card")
+	assert_eq(int(state.get_card_instance(int(state.active_sudan_cards.back().card_uid)).life), 4,
+		"the replacement inherits the discarded card's elapsed life")
 	assert_eq(state.active_sudan_cards.back().days_left, 3, "redraw keeps the visible deadline unchanged")
 
 func test_advance_day_decrements_deadline():
@@ -153,11 +208,14 @@ func test_expired_sudan_card_ends_game():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
-	# Force the deadline to 1 so the next day expires it.
-	state.active_sudan_cards.back().days_left = 1
+	# Force the deadline to 1 (elapsed life 6 of the template 7) so the next
+	# day expires it.
+	state.get_card_instance(int(state.active_sudan_cards.back().card_uid)).life = 6
 	var r := RoundLoop.advance_day(state, db, rng)
 	assert_true(r.game_over, "expired sudan -> game over")
 	assert_eq(r.expired.size(), 1)
+	assert_eq(state.over_reason, int(db.get_card(int(r.expired[0])).get("vanish", {}).get("over", 0)),
+		"the execution ending id comes from the sudan vanish.over op")
 
 func test_consume_sudan_removes_card():
 	var rng := RNG.new(2)
@@ -220,19 +278,22 @@ func test_auto_generate_sudan_uses_original_operation_values_without_stalling_ro
 
 func test_redraw_draws_sudan_redraw_count_cards():
 	# Redraw draws sudan_redraw_count new cards (each inheriting the discarded
-	# card's life), not just one.
-	# [SRC: GameController.c @ RedrawSudanCard: loops player+0x68 times]
+	# card's elapsed life), not just one.
+	# [SRC: GameController.c @ RedrawSudanCard (0x5558b0): loops player+0x68
+	#       times; set_life(new, discarded.life) at L3832]
 	var rng := RNG.new(40)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	state.active_sudan_cards.clear()
-	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1))
+	var discarded_instance = state.create_card_instance(2010001, db, "sudan")
+	discarded_instance.life = 2 # template 7 - 2 = 5 remaining
+	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1, int(discarded_instance.uid)))
 	state.sudan_redraw_count = 2
 	state.sudan_deck = [2010002, 2010003, 2010004, 2010005]
-	var new_id := RoundLoop.use_redraw(state, rng)
+	var new_id := RoundLoop.use_redraw(state, rng, db)
 	assert_true(new_id >= 0, "redraw succeeds")
 	assert_eq(state.active_sudan_cards.size(), 2, "redraw draws 2 cards for count=2")
-	# Each new card inherits the discarded card's life (5 days).
+	# Each new card inherits the discarded card's elapsed life (5 days left).
 	for asc in state.active_sudan_cards:
 		assert_eq(asc.days_left, 5, "new card inherits discarded life")
 
