@@ -86,6 +86,20 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：~~7100007（需全局域）~~
 （2026-08-18 批次 B 已迁移）、7100008（随重抽族）。
 
+**2026-08-18 对拍台阶段二导入桥（批次 C，361 测试全绿）：**
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常
+deserialize 路径载入；`tools/export_save_diff.gd --bridge` 产出同刻对拍报告。
+语料 auto_save.json 实测 **23/23 项全过**（回合/难度/uid 指针/counter/事件状态/
+时机臂/仪式槽位/装备链接/手牌/苏丹/per-id/金币派生读）。导入桥当场抓到并修复
+三个结构偏差：① timing_rounds 键 = 原作 **int**（事件 id×100，
+TimingRoundBase+0x20 直址 player+0x128），克隆旧自制字符串键已改 + 旧键迁移；
+② difficulty **1 基**（样本四信号同指简单档），导入 -1；③ min_round
+（player+0x30）克隆补显式字段并作回退门。报告三档防静默登记
+（converted/approximated/dropped）：苏丹期限字段与牌堆顺序为登记近似，
+notes/only_cards/gen_cards 等为登记丢弃。测试 `tests/test_save_import_bridge.gd`
+（合成 fixture + 语料真存档 + 旧键迁移）。遗留：续局行为对拍待实机样本；
+多桶事件序号分配与激活苏丹期限真源未逆向（METHOD_MAP ⬜）。
+
 **2026-08-18 回退配额全局化 + 全局域承载（批次 B，355 测试全绿）：**
 `sim/global_state.gd` GlobalState 落地（user://global.json，对应原作 Global；
 先行承接 backToPrevRound/roundRollback/saveTime，其余 26 字段见 METHOD_MAP ⬜）。

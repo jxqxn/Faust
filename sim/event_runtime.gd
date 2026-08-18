@@ -112,12 +112,20 @@ func disable_event(event_id: int) -> void:
 	var state = _state.get_ref() if _state is WeakRef else _state
 	if state != null:
 		for key in state.timing_rounds.keys():
-			if str(key).ends_with(":%d" % event_id):
+			if int(int(key) / 100) == event_id:
 				state.timing_rounds.erase(key)
 
 
-static func _timing_key(timing: String, event_id: int) -> String:
-	return "%s:%d" % [timing, event_id]
+## Dictionary key for a round-timing arm. The original keys player+0x128 by an
+## int on the TimingRoundBase instance; every corpus timing entry is exactly
+## event_id*100 (ordinal 00) and no config carries two round timings on one
+## event, so the ordinal stays 0. If a multi-bucket event ever appears, the
+## ordinal allocation needs original-side verification first.
+## [SRC: TimingRoundBase.c IsValid 0x465d30 / OnStart 0x4660d0 use the int at
+##       +0x20 as the dictionary key; save_samples timing_rounds keys are all
+##       eventId*100 (e.g. 5300067 -> 530006700)]
+static func _timing_key(_timing: String, event_id: int) -> int:
+	return event_id * 100
 
 
 ## IsValid for round-based timings: fire when the current round reaches the

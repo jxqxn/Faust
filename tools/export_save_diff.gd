@@ -1,10 +1,13 @@
 extends SceneTree
 
 ## Save diff harness runner: analyze an original (corpus) save against the
-## decoded Player schema and, optionally, compare it with a clone v5 save.
+## decoded Player schema, optionally compare it with a clone v5 save, and run
+## the phase-2 import bridge (original -> clone GameState -> same-instant
+## diff + markdown report).
 ## Usage:
 ##   godot --headless --script tools/export_save_diff.gd -- \
-##     --original <corpus_save.json> [--compare <clone_v5.json>] [--out <dir>]
+##     --original <corpus_save.json> [--compare <clone_v5.json>]
+##     [--bridge] [--out <dir>]
 
 const DEFAULT_ORIGINAL := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/save_samples/auto_save.json"
 
@@ -13,6 +16,7 @@ func _init() -> void:
 	var original_path := _arg_value(args, "--original", DEFAULT_ORIGINAL)
 	var compare_path := _arg_value(args, "--compare", "")
 	var output_dir := _arg_value(args, "--out", "user://save_diff")
+	var bridge := args.has("--bridge")
 
 	var original := _load_json(original_path)
 	if original.is_empty():
@@ -31,6 +35,26 @@ func _init() -> void:
 		compare_rows = OriginalSaveSchema.compare_clone(original, clone)
 
 	var markdown: String = OriginalSaveSchema.to_markdown(analysis, compare_rows)
+	var exit_code := 0 if analysis["unknown_fields"].is_empty() and analysis["type_mismatches"].is_empty() else 1
+
+	if bridge:
+		var db := ConfigDB.new()
+		db.load_all()
+		var imported: Dictionary = OriginalSaveImporter.import_save(original, db)
+		var report: Dictionary = imported["report"]
+		markdown += "\n\n---\n\n" + OriginalSaveImporter.summary_markdown(report, original_path)
+		var payload_file := FileAccess.open("%s/bridge_payload_v7.json" % output_dir, FileAccess.WRITE)
+		if payload_file != null:
+			payload_file.store_string(JSON.stringify(imported["payload"], "\t"))
+			payload_file.close()
+		var failed_rows: Array = []
+		for row in report["diff"]:
+			if not bool(row["pass"]):
+				failed_rows.append(row["check"])
+		if not failed_rows.is_empty():
+			push_error("Bridge diff failed checks: %s" % ", ".join(failed_rows))
+			exit_code = 1
+
 	var absolute_dir := ProjectSettings.globalize_path(output_dir)
 	DirAccess.make_dir_recursive_absolute(absolute_dir)
 	var file := FileAccess.open("%s/save_diff.md" % output_dir, FileAccess.WRITE)
@@ -42,7 +66,7 @@ func _init() -> void:
 	file.close()
 	print(markdown)
 	print("Save diff report exported to %s" % absolute_dir)
-	quit(0 if analysis["unknown_fields"].is_empty() and analysis["type_mismatches"].is_empty() else 1)
+	quit(exit_code)
 
 
 func _arg_value(args: PackedStringArray, flag: String, fallback: String) -> String:

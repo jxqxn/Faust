@@ -144,10 +144,10 @@ static func _snapshot_round(state, kind: String) -> void:
 static func back_to_prev_round_end(state, db) -> bool:
 	if state == null:
 		return false
-	var min_round := 1
-	if state.difficulty_config != null:
-		min_round = maxi(1, int(state.difficulty_config.get("min_round", 1)))
-	if state.round_number - 1 < min_round:
+	# The lower bound is the persisted player field, clamped to >= 1.
+	# [SRC: GameController.c OnPrevRound (0x554f80) L2149-2156 reads
+	#       player+0x30 (min_round) directly]
+	if state.round_number - 1 < maxi(1, int(state.get("min_round"))):
 		return false
 	var budget: int = int(state.get("back_to_prev_left"))
 	if budget < 1:

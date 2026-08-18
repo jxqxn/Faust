@@ -56,6 +56,11 @@ var coin_count: int:
 # Round / calendar.
 var round_number := 1
 var day := 1
+# Lower bound for the back-to-prev rollback (original persists it on the
+# player; OnPrevRound reads it directly and clamps to >= 1).
+# [SRC: dump.cs Player min_round @0x30; GameController.c OnPrevRound
+#       (0x554f80) L2149-2156: if player.round <= max(1, min_round) reject]
+var min_round := 1
 
 # Lateral-scene progress is run state, not UI state. Keeping only a location,
 # spawn and normalized position makes saves independent from viewport size and
@@ -639,6 +644,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	# [SRC: TimingRoundBase.c @ OnStart arms next = value + player.round;
 	#       GameController.__c__DisplayClass141_0.c @ <Start>b__5 (0x56f9c0)]
 	round_number = 0
+	min_round = 1
 	_rebuild_event_runtime(db)
 	_enable_initial_events(db)
 	round_number = 1

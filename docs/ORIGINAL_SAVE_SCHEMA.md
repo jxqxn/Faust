@@ -112,6 +112,20 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 8. **回退双轨**（配额侧已修复）：原作 global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007 的全局侧）+ player.last_round_rite_data（按仪式卡数据）。完整链已双信号定位并于 **2026-08-18 迁移**：`GetCounter/SetCounter` 7100007 分支读写 `Global.backToPrevRound`（无条件非负 clamp）；新局 `Datapool.StartGame` L4497 重置 9999 后由难度选择 `PlayerExtensions.SetDifficulty` 0x38f530 落地公式（配额 = 当前 − 9999 + 新难度 back_to_prev_round_count：离开无限档=重置、有限切有限=归零、切回无限档=保留余量；金骰同函数为**加法** 当前 + 新难度值）；消耗在 `GameController.PrevRoundInternal` 0x555570（UseBackToPrev 先消耗 → Global.roundRollback=2 → SaveGlobal → LoadRound）；档案恢复 `CorrectPlayerData` L4130-4134 以档案槽记录值覆写全局并 SaveGlobal。克隆落地：`sim/global_state.gd`（user://global.json 承载 backToPrevRound/roundRollback）+ counter 路由 + v6→v7 局内存档迁移（payload 不再携带配额）。player.last_round_rite_data 侧与快照持久化（Datapool 轮次文件）仍为 ⬜。
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 
-## 下一步（阶段二：导入桥）
+## 阶段二：导入桥（2026-08-18 已落地）
 
-原作存档 → 克隆 GameState 内存态（mapped/semantic 字段全转换，missing 字段登记丢弃清单）→ 立即导出 v5 → 语义对拍报告。达成后，「同刻双存档值对拍」与「续局行为对拍」才可用。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **23/23 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员/苏丹多重集/per-id 计数/金币 7000105 派生读等）。
+
+导入桥当场抓到并修复的结构偏差：
+
+- **timing_rounds 键格式**：原作键 = TimingRoundBase 实例 +0x20 的 **int**（样本全部 = 事件 id×100，如 5300067→530006700；TimingRoundBase.c IsValid 0x465d30/OnStart 0x4660d0 直接以该 int 寻址 player+0x128）。克隆旧自制格式 `"round_begin_ba:5310000"` 已改为 `event_id*100`（全部 1381 个带回合时机的事件均单桶，序号恒 0；多桶序号分配留待原作侧验证），旧字符串键在 deserialize 迁移。
+- **difficulty 基数**：1 基确认（样本 difficulty=1 与 counter 7100006=3、per_round=3、global backToPrevRound=9999 四信号同指简单档）；导入时 -1。
+- **min_round**：原作显式持久化 player+0x30 且 OnPrevRound 直读；克隆补 `GameState.min_round`（v7 序列化）作回退门。
+- **仪式槽位映射**：原作 `Rite.cards[i]`（0 基数组，长度=配置 s 槽数）↔ 克隆 `s{i+1}`。
+
+报告三类防静默登记：**converted**（8 项标量/结构转换）、**approximated**（苏丹期限字段与牌堆顺序——原作存档无显式期限，按 sudan_card_init_life 近似；抽牌序未定位仅多重集对拍）、**dropped**（仅列本存档携带非默认值的克隆缺口字段，如 notes/only_cards/gen_cards）。
+
+### 阶段二遗留（续局对拍前置）
+
+- 4 个 cloned 探针字段（world_* 等）在导入时取默认值，报告未列（原作无对应物）。
+- 续局行为对拍（导入后继续玩 N 天与原作存档互证）待实机样本。

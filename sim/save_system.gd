@@ -79,6 +79,7 @@ static func serialize(state) -> Dictionary:
 		"difficulty_index": state.difficulty_index,
 		"round_number": state.round_number,
 		"day": state.day,
+		"min_round": state.min_round,
 		"world_location_id": state.world_location_id,
 		"world_spawn_id": state.world_spawn_id,
 		"world_position_ratio": state.world_position_ratio,
@@ -121,6 +122,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.difficulty_config = db.get_difficulty(state.difficulty_index)
 	state.round_number = int(data.get("round_number", 1))
 	state.day = int(data.get("day", 1))
+	state.min_round = maxi(1, int(data.get("min_round", 1)))
 	state.world_location_id = str(data.get("world_location_id", "school_rooftop"))
 	state.world_spawn_id = str(data.get("world_spawn_id", "default"))
 	state.world_position_ratio = clampf(float(data.get("world_position_ratio", 0.5)), 0.04, 0.96)
@@ -249,7 +251,14 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.timing_rounds.clear()
 	var saved_timing_rounds: Dictionary = data.get("timing_rounds", {})
 	for key in saved_timing_rounds:
-		state.timing_rounds[str(key)] = int(saved_timing_rounds[key])
+		# Keys are the original int form (event_id*100); migrate the clone's old
+		# string "timing:id" form. No config carries two round timings on one
+		# event, so the string timing name maps unambiguously to ordinal 0.
+		if str(key).contains(":"):
+			var parts := str(key).split(":")
+			state.timing_rounds[int(parts[parts.size() - 1]) * 100] = int(saved_timing_rounds[key])
+		else:
+			state.timing_rounds[int(key)] = int(saved_timing_rounds[key])
 	state.begin_guide = data.get("begin_guide", {}).duplicate(true) if data.get("begin_guide", {}) is Dictionary else {}
 	state.guide_cues = data.get("guide_cues", []).duplicate(true) if data.get("guide_cues", []) is Array else []
 	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))

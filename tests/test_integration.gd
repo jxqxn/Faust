@@ -203,7 +203,7 @@ func test_round_timing_is_a_period_not_a_single_round():
 	local_db.events[991910]["auto_start_init"] = [1]
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(90))
-	assert_eq(int(state.timing_rounds.get("round_begin_ba:991910", -1)), 3,
+	assert_eq(int(state.timing_rounds.get(991910 * 100, -1)), 3,
 		"armed at enable time as value + round 0")
 
 	state.round_number = 2
@@ -212,7 +212,7 @@ func test_round_timing_is_a_period_not_a_single_round():
 	state.round_number = 3
 	assert_true(991910 in state.trigger_events("round_begin_ba", {"round": 3}),
 		"fires when the armed round is reached")
-	assert_eq(int(state.timing_rounds["round_begin_ba:991910"]), 6,
+	assert_eq(int(state.timing_rounds[991910 * 100]), 6,
 		"re-armed to fire again at round 6")
 	state.round_number = 5
 	assert_false(991910 in state.trigger_events("round_begin_ba", {"round": 5}),
@@ -233,7 +233,7 @@ func test_non_replay_round_event_fires_once_then_loses_its_arm():
 	state.round_number = 3
 	assert_true(991911 in state.trigger_events("round_begin_ba", {"round": 3}))
 	state.complete_event(991911, false)
-	assert_false(state.timing_rounds.has("round_begin_ba:991911"),
+	assert_false(state.timing_rounds.has(991911 * 100),
 		"completing a non-replay event removes its round-timing arm")
 	state.round_number = 4
 	assert_false(991911 in state.trigger_events("round_begin_ba", {"round": 4}),
@@ -248,7 +248,7 @@ func test_two_value_round_timing_is_a_random_period():
 	state.setup_new_run(local_db, 0, RNG.new(92))
 	state.enable_event(991912, local_db)
 	# Enabled at round 1; Random.Range(1, 2) is always 1, so armed = 1 + 1.
-	var armed: int = int(state.timing_rounds.get("round_begin_ba:991912", -1))
+	var armed: int = int(state.timing_rounds.get(991912 * 100, -1))
 	assert_eq(armed, 2, "the drawn period (always 1) is added to the arming round")
 	state.round_number = armed
 	assert_true(991912 in state.trigger_events("round_begin_ba", {"round": armed}))
@@ -259,11 +259,11 @@ func test_timing_rounds_survive_save_load_without_re_arming():
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(93))
 	state.enable_event(991910, local_db)
-	state.timing_rounds["round_begin_ba:991910"] = 42
+	state.timing_rounds[991910 * 100] = 42
 	var saved := SaveSystem.serialize(state)
 	var restored := GameState.new()
 	SaveSystem.deserialize(saved, restored, local_db)
-	assert_eq(int(restored.timing_rounds.get("round_begin_ba:991910", -1)), 42,
+	assert_eq(int(restored.timing_rounds.get(991910 * 100, -1)), 42,
 		"saved arms restore verbatim; re-enabling must not overwrite them")
 
 

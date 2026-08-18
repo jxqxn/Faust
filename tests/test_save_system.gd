@@ -54,7 +54,7 @@ func test_save_load_round_trip_preserves_state():
 	state.enable_event(5310008, db)
 	# Arm the period-1 timing for round 1 explicitly (enable at round 1 would
 	# arm round 2), so the loaded-state trigger assertion below is meaningful.
-	state.timing_rounds["round_begin_ba:5310008"] = 1
+	state.timing_rounds[5310008 * 100] = 1
 	state.disable_event(5300601)
 	state.event_done[5310008] = true
 	state.set_counter(7000001, 12)
