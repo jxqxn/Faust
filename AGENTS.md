@@ -86,6 +86,19 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：~~7100007（需全局域）~~
 （2026-08-18 批次 B 已迁移）、7100008（随重抽族）。
 
+**2026-08-18 手牌位系统（bag/bagpos/BagIndex，批次 E，369 测试全绿）：**
+`Card.bag`@0x48 = 包页 id、`bagpos`@0x4c = 页内 1 基位置（0=未摆放）、
+`Player.BagIndex`@0x150 = 当前查看页（IsCurrentHandCard 0x3826a0 = bag==BagIndex
+且三标签）；`UpdateHandCardPos` 0x559a70 在 b__6 链（回合开始事件之后）把当前页
+手牌排序压缩为 1..N；GenCoin `set_bagpos(1)` 金币前置、GenSudanCard
+`set_bag(BagIndex)` 新卡入当前页。样本证据：仅 6 张卡有位置（玩家手动摆放，
+bagpos 非类型成员）。克隆落地：`CardInstance.bag/bag_pos`（v7 持久化，向后兼容）、
+`round_loop.update_hand_card_pos` 日终压缩（克隆单页 bag=0，不变式 bag_pos=手牌序+1）、
+金币/抽卡写点对齐、导入桥 bag/bagpos 透传 + **bag_positions 对拍行（24 项全过）**。
+`hand`/`rail_order` 数组部分收敛（字段已承载并维护）；彻底退役阻塞于 IsHandCard
+三标签名（字面量间接寻址无法反查，留档）与包页 UI。新增
+`tests/test_hand_positions.gd`（6 测试：前置/压缩/跨页保留/往返/抽卡/导入）。
+
 **2026-08-18 苏丹期限真源逆向 + 卡寿命模型统一（批次 D，363 测试全绿）：**
 导入桥声明的"苏丹期限近似"升级为**精确**：期限 = 卡寿命通用系统（`GenSudanCard`
 L3656-3662 出生抢跑 `模板 card_vanishing − sudan_card_init_life` + 每日 life+1 +

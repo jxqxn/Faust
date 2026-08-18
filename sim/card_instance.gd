@@ -26,6 +26,16 @@ var slot_key := ""
 var rare_up := 0
 var custom_name := ""
 var custom_text := ""
+# Bag placement (original Card bag@0x48 / bagpos@0x4c): bag = bag page id
+# (player.BagIndex marks the page being viewed; new sudan cards enter it),
+# bag_pos = 1-based position within the page, 0 = unplaced (bag listing).
+# UpdateHandCardPos compacts the current page's hand cards to 1..N; GenCoin
+# pins fresh gold at position 1.
+# [SRC: dump.cs Card bag/bagpos; CardExtensions.c IsCurrentHandCard
+#       (0x3826a0): bag == player+0x150 BagIndex; GameController.c
+#       UpdateHandCardPos (0x559a70) L1086-1097 set_bagpos(i + 1)]
+var bag := 0
+var bag_pos := 0
 var equip_slots: Array[String] = []
 var removed_equip_slots: Array[String] = []
 var equipped_uids: Array[int] = []
@@ -58,6 +68,8 @@ func to_save_dict() -> Dictionary:
 		"rare_up": rare_up,
 		"custom_name": custom_name,
 		"custom_text": custom_text,
+		"bag": bag,
+		"bag_pos": bag_pos,
 		"equip_slots": equip_slots.duplicate(),
 		"removed_equip_slots": removed_equip_slots.duplicate(),
 		"equipped_uids": equipped_uids.duplicate(),
@@ -81,6 +93,8 @@ static func from_save_dict(data: Dictionary):
 	instance.rare_up = int(data.get("rare_up", 0))
 	instance.custom_name = str(data.get("custom_name", ""))
 	instance.custom_text = str(data.get("custom_text", ""))
+	instance.bag = int(data.get("bag", 0))
+	instance.bag_pos = int(data.get("bag_pos", 0))
 	for slot in data.get("equip_slots", []):
 		instance.equip_slots.append(str(slot))
 	for slot in data.get("removed_equip_slots", []):

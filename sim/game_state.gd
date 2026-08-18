@@ -841,6 +841,7 @@ func _grant_gold(amount: int, db = null) -> void:
 	instance.count = amount
 	# GenCoin pins the gold stack to the front of the hand (set_bagpos(1)).
 	insert_card_to_hand(uid, 0)
+	instance.bag_pos = 1
 	trigger_events("card_born", {"card": GOLD_CARD_ID, "card_uid": uid})
 
 

@@ -307,6 +307,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("player_actor_uid", _original_protagonist_uid(original_cards), int(state.player_actor_uid)))
 	rows.append(_row("rites", _original_rites_summary(original), _clone_rites_summary(state)))
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
+	rows.append(_row("bag_positions", _original_bag_positions(original_cards), _clone_bag_positions(state)))
 	return rows
 
 
@@ -386,6 +387,8 @@ static func _base_card_row(card: Dictionary, zone: String, rite_uid: int, slot_k
 		"rare_up": int(card.get("rareup", 0)),
 		"custom_name": str(card.get("custom_name", "")),
 		"custom_text": str(card.get("custom_text", "")),
+		"bag": int(card.get("bag", 0)),
+		"bag_pos": int(card.get("bagpos", 0)),
 		"equip_slots": equip_slots,
 		"removed_equip_slots": [],
 		"equipped_uids": [],
@@ -584,6 +587,21 @@ static func _original_equipment_links(cards: Array) -> Array:
 				links.append([int(card.get("uid", 0)), int(equip.get("uid", 0))])
 	links.sort()
 	return links
+
+
+static func _original_bag_positions(cards: Array) -> Dictionary:
+	var positions := {}
+	for card in cards:
+		positions[int(card.get("uid", 0))] = [int(card.get("bag", 0)), int(card.get("bagpos", 0))]
+	return positions
+
+
+static func _clone_bag_positions(state) -> Dictionary:
+	var positions := {}
+	for uid in state.card_instances:
+		var instance = state.card_instances[uid]
+		positions[int(uid)] = [int(instance.bag), int(instance.bag_pos)]
+	return positions
 
 
 static func _clone_equipment_links(state) -> Array:

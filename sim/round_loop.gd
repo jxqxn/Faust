@@ -61,6 +61,12 @@ static func advance_day(state, db, rng) -> Dictionary:
 		# [SRC: GameController.c @ OnBeginRound (0x5537b0) L2314-2316:
 		#       Global.roundRollback = 1]
 		state.global_state.round_rollback = GlobalState.ROLLBACK_TO_BEGIN
+	# Hand compaction runs in the post-settlement b__6 chain, after the
+	# round-begin events: positions on the current bag page re-normalize to
+	# 1..N in hand order, so cards granted by today's events get slots too.
+	# [SRC: GameController.c @ UpdateHandCardPos (0x559a70) L1060-1097;
+	#       DisplayClass142_0.c @ <OnNextRound>b__6 (0x570b00) L318-320]
+	update_hand_card_pos(state)
 	_snapshot_round(state, "round_begin")
 	return result
 
@@ -204,6 +210,10 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 	var init_life: int = int(state.difficulty_config.get("sudan_life_time", 7))
 	if instance != null:
 		instance.life = maxi(lifetime - init_life, 0)
+		# New sudan cards enter the bag page the player currently views
+		# (set_bag(player.BagIndex); the clone has a single page, bag 0).
+		# [SRC: GameController.c @ GenSudanCard 0x54f6f0 L3657]
+		instance.bag = 0
 	state.active_sudan_cards.append(
 		ActiveSudan.new(cid, mini(init_life, lifetime), state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
@@ -597,6 +607,21 @@ static func _redraws_per_round(state, db) -> int:
 		"sudan_redraw_times_per_round",
 		db.init_config.get("sudan_redraw_times_per_round", 1)
 	))
+
+
+## UpdateHandCardPos: normalize bag positions on the current page to 1..N in
+## hand order. The original collects IsCurrentHandCard (bag == BagIndex plus
+## the unresolved three-tag hand test), sorts, and writes bagpos = i + 1; the
+## clone keeps one page (bag 0) and the hand array as its order source, so the
+## invariant is bag_pos == hand index + 1. Cards on other pages keep theirs.
+## [SRC: GameController.c @ UpdateHandCardPos (0x559a70) L1060-1097]
+static func update_hand_card_pos(state) -> void:
+	if state == null or not state.has_method("get_card_instance"):
+		return
+	for index in state.hand.size():
+		var inst = state.get_card_instance(int(state.hand[index]))
+		if inst != null and inst.bag == 0:
+			inst.bag_pos = index + 1
 
 
 ## Shelter for ANY card (sudan execution included) is presence in any rite

@@ -44,6 +44,7 @@
 | 原作存档 Player 60 字段（dump.cs:391488 × save_samples 双信号） | `sim/original_save_importer.gd` 导入桥（difficulty 1 基 -1；cards[i]↔s{i+1}；装备嵌套→扁平 equipped 链；min_round 显式持久化） | 同刻对拍 23/23；苏丹期限字段/牌堆顺序近似登记 |
 | `GameController.GenSudanCard` 0x54f6f0 L3656-3662（出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)` 抢跑）+ `UpdateSingleCard` b__1 0x572420（每日 life+1，`life>=card_vanishing` 且无槽位庇护即 DoVanish 处刑）+ `UpdateSudanLife` 0x55aeb0（倒计时显示 = vanish − life，可负） | `round_loop.draw_weekly_sudan`（头起步）+ `_update_card_lives`（苏丹并入通用死亡，days_left 为 vanish−life 镜像）+ rebirth 按模板 | 2026-08-18 批次 D；困难档 7−5=2 抢跑=5 天；b__1 老化豁免标签字面量未反查（无配置命中） |
 | `RedrawSudanCard` 0x5558b0 L3823-3842（循环 player+0x68 次 GenSudanCard；新卡 `set_life(弃卡 life)` 继承剩余期限；弃卡 life 归 0 后 `Insert(Random.Range(0,count))` 回池）+ `GenSudanCard` 抽取 = sudan_card_pool **先 Shuffle（sudan_shuffle）再 RemoveLast** | `round_loop.use_redraw`（carried_life = 弃卡实例 life）+ `SudanCards.draw` pop_back 尾抽 | 2026-08-18 批次 D；牌序因每次 Shuffle 无意义，多重集对拍为正确粒度 |
+| 手牌位系统：Card `bag`@0x48（包页 id）/`bagpos`@0x4c（页内 1 基位置，0=未摆放）+ `Player.BagIndex`@0x150（当前查看页）+ `IsCurrentHandCard` 0x3826a0（bag==BagIndex 且三标签）+ `UpdateHandCardPos` 0x559a70 L1060-1097（b__6 链内、回合开始事件后：收集当前页手牌→排序→`set_bagpos(i+1)` 压缩 1..N）+ GenCoin `set_bagpos(1)` 金币前置 + GenSudanCard `set_bag(BagIndex)` | `CardInstance.bag/bag_pos`（v7 起持久化）+ `round_loop.update_hand_card_pos`（日终压缩，克隆单页 bag=0）+ `_grant_gold` 前置 + 抽卡 set_bag | 2026-08-18 批次 E；三标签名无法从元数据反查（字面量间接寻址），留档 |
 
 ## B. 近似 🟡（行为近似承载，缺背书或部分覆盖）
 
@@ -68,7 +69,7 @@
 | ~~`GameState.gold_dice` 标量骰子~~ | 已消灭（2026-08-17）：金骰 = counter 7100006（dump.cs:542529 + Add/SubCounter + 存档样本三重信号），计算属性落地 |
 | ~~`GameState.back_to_prev_left` 局内回退配额标量~~ | 已消灭（2026-08-18）：配额 = counter 7100007 存全局域 GlobalState（原作 Global.backToPrevRound），v7 局内存档不再携带；快照恢复后"补回预算"hack 一并删除（配额天然在恢复范围外） |
 | ~~`event_runtime._timing_key` 字符串键 `"timing:event_id"`~~ | 已消灭（2026-08-18，导入桥发现）：改为原作 int 键 event_id×100（TimingRoundBase+0x20 int 直址 player+0x128），旧键加载时迁移 |
-| `GameState.hand`/`rail_order` 独立手牌数组 | 原作手牌 = cards 中 bag=0 按 bagpos 排序；随金币卡批次一并评估 |
+| `GameState.hand`/`rail_order` 独立手牌数组 | 部分收敛（2026-08-18 批次 E）：CardInstance 已承载 bag/bag_pos 并由日终压缩维护（bag_pos = 手牌序+1 不变式）；数组彻底退役仍阻塞于 IsHandCard 三标签名未反查（成员资格判据）与包页 UI 缺失 |
 | `MethinksEngine` / `drop_card_on_methinks` 命名族 | 复刻期兼容接口；玩家可见概念统一为"思考"，方向定后重命名 |
 | ~~弹簧积分器、透视/阴影 shader、SubViewport 双通道、ui_motion.gd~~ | 已于 2026-08-17 去 Balatro 批次删除（git 历史可恢复） |
 
@@ -83,7 +84,7 @@
 | 音频全量 | `sfx_config.json`、`sfx_settle_card_new.json`、`sfx_npc_role_dub.json`、`over_music_config.json` | 小-中（配置在语料库未接） |
 | 未接配置域 | `quest.json`、`upgrade.json`、`variable.json`、`ui.json`、`textstyle.json`、`imagestyle.json`、`dt`、`credits.json`、`mobile_help.json` | 逐域判断用途后接入或说明 |
 | Live2D | 语料库 `live2d/` 已提取 | 大（既定策略：第一版静态图） |
-| 背包/手牌位系统（bag/bagpos/BagIndex） | 存档字段双信号（`docs/ORIGINAL_SAVE_SCHEMA.md`） | 中（与金币卡/手牌模型联动） |
+| ~~背包/手牌位系统（bag/bagpos/BagIndex）~~ | 已落地（2026-08-18 批次 E）：CardInstance.bag/bag_pos 持久化 + 日终压缩 + 导入桥透传与对拍（24 项）；三标签资格判据与多页包 UI 未做（三标签名留档） | — |
 | 末日决战（end_open/is_armageddon/armageddon_rite_id） | 存档字段双信号；控制器未审 | 未知，需普查 |
 | RNG 续航（random_cache） | 存档字段双信号 | 小-中 |
 | ~~激活苏丹卡的期限存档承载~~ | 已解（2026-08-18 批次 D）：期限 = 卡寿命模型（出生抢跑 + 每日 life+1 + 模板 card_vanishing 死亡），存档承载即 Card.life 本身；导入桥 days_left = vanish−life 精确恢复，仅 drawn_round 仍近似（难度中途切换后不可反推） | — |
