@@ -119,6 +119,10 @@ static func serialize(state) -> Dictionary:
 		"visited_world_locations": state.visited_world_locations.duplicate(),
 		"redraws_left": state.redraws_left,
 		"sudan_redraw_count": state.sudan_redraw_count,
+		"sudan_card_init_life": state.sudan_card_init_life,
+		"sudan_redraw_times_per_round": state.sudan_redraw_times_per_round,
+		"sudan_redraw_times": state.sudan_redraw_times,
+		"sudan_redraw_times_recovery_round": state.sudan_redraw_times_recovery_round,
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
@@ -180,7 +184,19 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	var legacy_gold_dice: int = int(data.get("gold_dice", 0)) if data.has("gold_dice") else -1
 	var legacy_back_to_prev: int = int(data.get("back_to_prev_left", 0)) if data.has("back_to_prev_left") else -1
 	state.gold_dice = int(data.get("gold_dice", 0))
-	state.redraws_left = int(data.get("redraws_left", 0))
+	var fallback_redraw_per_round := int(state.difficulty_config.get("sudan_redraw_times_per_round", 1))
+	state.sudan_redraw_times_per_round = int(data.get("sudan_redraw_times_per_round", fallback_redraw_per_round))
+	var legacy_redraws_left := int(data.get("redraws_left", state.sudan_redraw_times_per_round))
+	state.sudan_redraw_times = maxi(0, int(data.get("sudan_redraw_times",
+		maxi(0, state.sudan_redraw_times_per_round - legacy_redraws_left))))
+	state.sudan_redraw_times_recovery_round = int(data.get("sudan_redraw_times_recovery_round",
+		db.init_config.get("sudan_redraw_times_recovery_round", 7)))
+	state.sudan_card_init_life = int(data.get("sudan_card_init_life",
+		state.difficulty_config.get("sudan_life_time", 7)))
+	if state.has_method("_sync_redraws_left"):
+		state._sync_redraws_left()
+	else:
+		state.redraws_left = maxi(0, state.sudan_redraw_times_per_round - state.sudan_redraw_times)
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
 	state.hand.clear()
 	state.card_instances.clear()

@@ -44,9 +44,6 @@ const DROPPED_FIELDS := {
 	"location_icon_show": "change_location_icon 持久化",
 	"change_desk_bg": "change_desk_bg 持久化",
 	"after_round_auto_sort": "日终自动整理开关",
-	"sudan_card_init_life": "难度中途切换后的苏丹初始寿命",
-	"sudan_redraw_times_per_round": "克隆按难度配置重derive",
-	"sudan_redraw_times_recovery_round": "重抽恢复模型未迁移（7100008 族）",
 	"success": "通关标志",
 	"over_reason": "结局原因持久化",
 	"ithink_card": "思考卡实例",
@@ -83,11 +80,16 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 			"rite_uid_index", "sudan_redraw_count"]:
 		converted.append(scalar_field)
 
-	# Original records used redraws; the clone keeps the remainder.
+	# Player stores the actual profile plus ordinary redraws already used. Keep
+	# all four source fields; redraws_left is only the clone's derived UI view.
 	var per_round := int(original.get("sudan_redraw_times_per_round",
 		_original_difficulty_value(db, difficulty_index, "sudan_redraw_times_per_round", 1)))
-	var redraws_left := maxi(0, per_round - int(original.get("sudan_redraw_times", 0)))
-	converted.append("sudan_redraw_times(已用 -> 剩余)")
+	var redraws_used := maxi(0, int(original.get("sudan_redraw_times", 0)))
+	var redraws_left := maxi(0, per_round - redraws_used)
+	var redraw_recovery_round := int(original.get("sudan_redraw_times_recovery_round",
+		db.init_config.get("sudan_redraw_times_recovery_round", 7)))
+	var sudan_card_init_life := int(original.get("sudan_card_init_life",
+		_original_difficulty_value(db, difficulty_index, "sudan_life_time", 7)))
 
 	# ---- Cards: top-level (hand/bag), nested equips, rite slots ----
 	var card_rows: Array = []
@@ -238,6 +240,10 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"min_round": min_round,
 		"redraws_left": redraws_left,
 		"sudan_redraw_count": int(original.get("sudan_redraw_count", 1)),
+		"sudan_card_init_life": sudan_card_init_life,
+		"sudan_redraw_times_per_round": per_round,
+		"sudan_redraw_times": redraws_used,
+		"sudan_redraw_times_recovery_round": redraw_recovery_round,
 		"hand": ordered_hand,
 		"rail_order": rail_order,
 		"sudan_deck": sudan_deck,
@@ -305,6 +311,10 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("sudan_redraw_count", int(original.get("sudan_redraw_count", 1)), int(state.sudan_redraw_count)))
 	var per_round := int(original.get("sudan_redraw_times_per_round", 1))
 	rows.append(_row("redraws_left", maxi(0, per_round - int(original.get("sudan_redraw_times", 0))), int(state.redraws_left)))
+	rows.append(_row("sudan_card_init_life", int(original.get("sudan_card_init_life", 7)), int(state.sudan_card_init_life)))
+	rows.append(_row("sudan_redraw_times_per_round", per_round, int(state.sudan_redraw_times_per_round)))
+	rows.append(_row("sudan_redraw_times", int(original.get("sudan_redraw_times", 0)), int(state.sudan_redraw_times)))
+	rows.append(_row("sudan_redraw_times_recovery_round", int(original.get("sudan_redraw_times_recovery_round", 7)), int(state.sudan_redraw_times_recovery_round)))
 	rows.append(_row("card_object_count", original_cards.size(), state.card_instances.size()))
 	rows.append(_row("per_id_counts", _per_id_counts(original_cards), _clone_per_id_counts(state)))
 	rows.append(_row("gold_total_7000105", _original_gold_total(original), state.gold_total()))

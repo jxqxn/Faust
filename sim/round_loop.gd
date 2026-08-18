@@ -216,7 +216,7 @@ static func back_to_round_begin(state, db) -> bool:
 
 
 ## Draw one sudan card into the active set. The card is born with a head
-## start: life = template card_vanishing − the difficulty's sudan_life_time;
+## start: life = template card_vanishing − Player.sudan_card_init_life;
 ## the generic daily aging then counts up to the template deadline, so hard
 ## mode shortens the window purely through the head start.
 ## [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3656-3662:
@@ -230,7 +230,7 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 	var instance = _create_sudan_instance(state, db, cid)
 	var card_uid := int(instance.uid) if instance != null else cid
 	var lifetime: int = int(db.get_card(cid).get("card_vanishing", 7)) if db != null else 7
-	var init_life: int = int(state.difficulty_config.get("sudan_life_time", 7))
+	var init_life: int = int(state.sudan_card_init_life)
 	if instance != null:
 		instance.life = maxi(lifetime - init_life, 0)
 		# New sudan cards enter the bag page the player currently views
@@ -319,7 +319,10 @@ static func use_redraw(state, rng, db = null) -> int:
 	else:
 		state.sudan_deck.append(discarded)
 	if uses_per_round:
-		state.redraws_left -= 1
+		if state.has_method("use_sudan_per_round_redraw"):
+			state.use_sudan_per_round_redraw()
+		else:
+			state.redraws_left -= 1
 	else:
 		state.set_counter(7100008, extra_left - 1)
 	return first_new
@@ -377,12 +380,15 @@ static func _create_sudan_instance(state, db, card_id: int):
 static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
 	state.round_number += 1
-	var recovery := int(db.init_config.get("sudan_redraw_times_recovery_round", 7))
+	var recovery := int(state.sudan_redraw_times_recovery_round)
 	# The original guards against a zero-remainder divisor: recovery < 2 resets
 	# every day instead of dividing by zero.
 	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__9 (0x571000) lines 465-473]
 	if recovery < 2 or state.round_number % recovery == 0:
-		state.redraws_left = _redraws_per_round(state, db)
+		if state.has_method("reset_sudan_redraw_usage"):
+			state.reset_sudan_redraw_usage()
+		else:
+			state.redraws_left = _redraws_per_round(state, db)
 	# The original increments Player.round then runs OnRoundBeginBa before its
 	# follow-up round pipeline. Auto-start only changes Rite.start; it belongs
 	# after that event boundary and before the next Sudan draw.
@@ -639,10 +645,7 @@ static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:
 
 
 static func _redraws_per_round(state, db) -> int:
-	return int(state.difficulty_config.get(
-		"sudan_redraw_times_per_round",
-		db.init_config.get("sudan_redraw_times_per_round", 1)
-	))
+	return int(state.sudan_redraw_times_per_round)
 
 
 ## UpdateHandCardPos: normalize bag positions on the current page to 1..N in

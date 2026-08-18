@@ -31,8 +31,9 @@ func _synthetic_original() -> Dictionary:
 		"difficulty": 2, "round": 3, "min_round": 3,
 		"saveTime": "2026-06-26T15:37:37+08:00",
 		"card_uid_index": 208, "rite_uid_index": 9,
-		"sudan_card_init_life": 7, "sudan_redraw_count": 1,
-		"sudan_redraw_times_per_round": 1, "sudan_redraw_times": 1,
+		"sudan_card_init_life": 4, "sudan_redraw_count": 1,
+		"sudan_redraw_times_per_round": 3, "sudan_redraw_times": 1,
+		"sudan_redraw_times_recovery_round": 5,
 		"wizard_first_show": true, "success": false, "over_reason": -2147483648,
 		"ithink_card": null,
 		"cards": [
@@ -78,7 +79,11 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.difficulty_index, 1, "original difficulty is 1-based (2 -> normal)")
 	assert_eq(state.next_card_uid, 208, "card uid index imports")
 	assert_eq(state.next_rite_uid, 9, "rite uid index imports")
-	assert_eq(state.redraws_left, 0, "used redraws subtract from the per-round allowance")
+	assert_eq(state.sudan_card_init_life, 4, "Player-owned Sultan birth head start imports")
+	assert_eq(state.sudan_redraw_times_per_round, 3, "per-round redraw allowance imports")
+	assert_eq(state.sudan_redraw_times, 1, "ordinary redraw usage imports")
+	assert_eq(state.sudan_redraw_times_recovery_round, 5, "Init-owned recovery period imports")
+	assert_eq(state.redraws_left, 2, "UI remainder derives from allowance minus used redraws")
 	assert_eq(state.gold_total(), 2, "stacked gold card objects sum through 7000105")
 	assert_eq(state.get_counter(7100006), 2, "counters import verbatim")
 	assert_true(bool(state.event_status.get(5310000, false)), "event status imports")

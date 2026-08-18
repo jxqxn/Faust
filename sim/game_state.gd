@@ -111,7 +111,16 @@ var back_to_prev_left: int:
 # (GlobalState.load_default()) for persistence.
 var global_state := GlobalState.new()
 
-var redraws_left := 0         # sudan card redraws left this round
+# Original Player stores the redraw profile and how many ordinary redraws
+# have already been used separately. `redraws_left` remains a clone/UI
+# compatibility view and is always synchronized from the two source fields.
+# [SRC: dump.cs Player @0x64/0x6C/0x70/0x74; PlayerExtensions.c
+#       SetDifficulty (0x38f530), GetSudanRedrawCount (0x38dda0)]
+var sudan_card_init_life := 7
+var sudan_redraw_times_per_round := 1
+var sudan_redraw_times := 0
+var sudan_redraw_times_recovery_round := 7
+var redraws_left := 0         # compatibility/UI: max(0, per_round - used)
 # How many new sudan cards a redraw draws (original player+0x68).
 # [SRC: GameController.c @ RedrawSudanCard: loop bound = sudan_redraw_count]
 var sudan_redraw_count := 1
@@ -696,9 +705,16 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	if apply_resources:
 		_apply_difficulty_resources()
 	global_state.save()
-	# Redraws per round (sudan_redraw_times_per_round) recovered every
-	# sudan_redraw_times_recovery_round rounds.
-	redraws_left = _redraws_per_round(db)
+	# The new Player starts with its Init recovery period and a difficulty-owned
+	# per-round allowance/head-start. SetDifficulty mutates only the latter two.
+	# [SRC: dump.cs Player @0x64/0x6C/0x70/0x74; PlayerExtensions.c
+	#       SetDifficulty (0x38f530) L2289-2296]
+	sudan_redraw_times_per_round = _configured_redraws_per_round(db)
+	sudan_redraw_times = 0
+	sudan_redraw_times_recovery_round = int(db.init_config.get(
+		"sudan_redraw_times_recovery_round", 7))
+	sudan_card_init_life = int(difficulty_config.get("sudan_life_time", 7))
+	_sync_redraws_left()
 	# How many new sudan cards each redraw produces (init_config sudan_redraw_count).
 	# [SRC: GameController.c @ RedrawSudanCard: loops sudan_redraw_count times]
 	sudan_redraw_count = int(db.init_config.get("sudan_redraw_count", 1))
@@ -748,11 +764,27 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	round_number = 1
 
 
-func _redraws_per_round(db) -> int:
+func _configured_redraws_per_round(db) -> int:
 	return int(difficulty_config.get(
 		"sudan_redraw_times_per_round",
 		db.init_config.get("sudan_redraw_times_per_round", 1)
 	))
+
+
+func _sync_redraws_left() -> void:
+	redraws_left = maxi(0, sudan_redraw_times_per_round - sudan_redraw_times)
+
+
+func reset_sudan_redraw_usage() -> void:
+	sudan_redraw_times = 0
+	_sync_redraws_left()
+
+
+func use_sudan_per_round_redraw() -> void:
+	if redraws_left <= 0:
+		return
+	sudan_redraw_times += 1
+	_sync_redraws_left()
 
 
 ## Difficulty pick resource rebalance, shared by new-run setup and mid-run
@@ -773,14 +805,19 @@ func _apply_difficulty_resources() -> void:
 		+ int(difficulty_config.get("back_to_prev_round_count", 0)))
 
 
-## Mid-run difficulty switch. Per-round redraws refresh; resource counters
-## rebalance through _apply_difficulty_resources.
+## Mid-run difficulty switch. The original replaces the allowance and future
+## Sultan head-start, but retains the current round's already-used redraw
+## count and the Init-owned recovery period.
+## [SRC: PlayerExtensions.c @ SetDifficulty (0x38f530) writes Player+0x6C and
+##       +0x64 only; Player+0x70/+0x74 are untouched]
 func apply_difficulty(index: int, db) -> void:
 	if db == null or db.get_difficulty(index).is_empty():
 		return
 	difficulty_index = index
 	difficulty_config = db.get_difficulty(index)
-	redraws_left = _redraws_per_round(db)
+	sudan_redraw_times_per_round = _configured_redraws_per_round(db)
+	sudan_card_init_life = int(difficulty_config.get("sudan_life_time", 7))
+	_sync_redraws_left()
 	_apply_difficulty_resources()
 
 

@@ -113,6 +113,25 @@ func test_easy_difficulty_uses_difficulty_redraw_count():
 	state.setup_new_run(db, 0, rng)
 	assert_eq(state.redraws_left, 3, "easy difficulty has 3 redraws per round")
 
+
+func test_redraw_profile_retains_used_count_across_difficulty_switch_and_resets_on_recovery():
+	# SetDifficulty replaces Player+0x6C/+0x64 but not Player+0x70/+0x74.
+	# OnNextRound b__9 clears only +0x70 at the configured period boundary.
+	# [SRC: PlayerExtensions.c SetDifficulty (0x38f530); GameController
+	#       DisplayClass142_0.c <OnNextRound>b__9 (0x571000)]
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(23)) # easy: 3 ordinary redraws
+	state.use_sudan_per_round_redraw()
+	state.sudan_redraw_times_recovery_round = 2
+	state.apply_difficulty(1, db) # normal: 1 ordinary redraw
+	assert_eq(state.sudan_redraw_times, 1, "difficulty switch retains already-used redraws")
+	assert_eq(state.redraws_left, 0, "used count consumes the replacement allowance")
+	assert_eq(state.sudan_redraw_times_recovery_round, 2, "difficulty switch retains Init recovery period")
+	var result := {}
+	RoundLoop._begin_round(state, db, RNG.new(24), result) # round 1 -> 2
+	assert_eq(state.sudan_redraw_times, 0, "recovery boundary resets ordinary usage")
+	assert_eq(state.redraws_left, 1, "reset restores the active difficulty allowance")
+
 func test_start_round_draws_sudan_with_deadline():
 	var rng := RNG.new(3)
 	var state := GameState.new()

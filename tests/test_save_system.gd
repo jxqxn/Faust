@@ -29,6 +29,11 @@ func test_save_load_round_trip_preserves_state():
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	state.sudan_pool_tags[2010001] = {"存档牌池标签": 2}
 	state.auto_gen_sudan_card = false
+	state.sudan_card_init_life = 4
+	state.sudan_redraw_times_per_round = 3
+	state.sudan_redraw_times = 1
+	state.sudan_redraw_times_recovery_round = 5
+	state._sync_redraws_left()
 	state.add_coin(15)
 	state.gold_dice = 1
 	state.day = 3
@@ -95,6 +100,11 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
 	assert_eq(state2.sudan_pool_tags, state.sudan_pool_tags, "Sultan pool runtime tags preserved")
 	assert_eq(state2.auto_gen_sudan_card, state.auto_gen_sudan_card, "Sultan auto-generation flag preserved")
+	assert_eq(state2.sudan_card_init_life, 4, "Player-owned Sultan birth head start preserved")
+	assert_eq(state2.sudan_redraw_times_per_round, 3, "redraw allowance preserved")
+	assert_eq(state2.sudan_redraw_times, 1, "ordinary redraw usage preserved")
+	assert_eq(state2.sudan_redraw_times_recovery_round, 5, "redraw recovery period preserved")
+	assert_eq(state2.redraws_left, 2, "redraw UI remainder is restored from source fields")
 	assert_eq(state2.active_sudan_cards.size(), 1, "active sudan card preserved")
 	assert_eq(state2.table_cards.size(), 2, "global and instance-owned table cards preserved")
 	if state2.table_cards.size() > 0:

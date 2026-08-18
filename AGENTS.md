@@ -46,6 +46,17 @@
 
 ## 当前进度
 
+**2026-08-18 苏丹重抽 profile（批次 K，378 测试 / 2369 断言全绿）：**
+`Player.sudan_card_init_life`@0x64、`sudan_redraw_times_per_round`@0x6C、
+`sudan_redraw_times`@0x70、`sudan_redraw_times_recovery_round`@0x74 已从
+`redraws_left` 兼容视图拆出，进入 v7 存读档与导入桥；实际剩余数始终为
+`max(0, per_round - used)`。`SetDifficulty` 只换 per_round/未来抽卡 head start，
+不清已用数或 Init 恢复周期；每日开始按 recovery 周期清已用数。`RedrawSudanCard`
+普通额度耗尽后才扣 counter 7100008。证据：`PlayerExtensions.c` SetDifficulty
+0x38f530 / GetSudanRedrawCount 0x38dda0 / UseSudanExtraRedraw 0x38fb60 +
+`GameController.c` RedrawSudanCard 0x5558b0 / `<OnNextRound>b__9` 0x571000 +
+dump.cs Player@0x64/@0x6C/@0x70/@0x74；语料 auto_save 导入桥 **35/35** 全过。
+
 **2026-08-18 生成计数器（批次 J，377 测试 / 2355 断言全绿）：**
 `Player.gen_cards`@0x118 / `gen_tags`@0x120 已落地为新建卡的历史计数（不因移回手牌、
 消耗或删卡回退），进入 v7 存读档和原作导入桥。`MarkCardGen` 对卡 id +1，并对
