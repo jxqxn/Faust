@@ -46,6 +46,23 @@
 
 ## 当前进度
 
+**2026-08-18 UI 布局对拍基建 + 主菜单 1:1（批次 P，385 测试 / 2421 断言全绿）：**
+用户指令转向"先修已有偏差，最明显是 UI 位置与缩放"。三支柱落到表现层：①新裁判工具
+`tools/export_ui_layout.gd` 解析语料 AssetRipper YAML（RectTransform 锚点/位置/尺寸/
+pivot/缩放 + CanvasScaler + LayoutGroup/ContentSizeFitter 参数 + sprite guid→路径），
+产出 `docs/ui_layout/{StartScene,GameScene,StartPanel}.{json,md}` 真值表；②**设计空间
+发现：原作主 UI 画布 = 3840×2160**（StartScene MainUI Expand / GameScene 同参考），
+克隆视口 1280×800 从根上错误，且旧的 `window/size/viewport=Vector2i(...)` 键**从未
+生效**（Godot 4 合法键为 `viewport_width/viewport_height`）——游戏一直跑在引擎默认
+1152×648 窗口，这是位置/缩放全面偏差的直接来源；③克隆切到 3840×2160 canvas_items
+expand，未迁移屏幕进 `ui/game.gd` 的 LegacyLayer（1280×800×2.7 居中，登记淘汰标准）；
+④主菜单按 StartScene 真值 1:1 重摆：MainGroup 2200×1800 居中 + VerticalLayoutGroup
+spacing 30 顶对齐、logo 730×458×1.1、四主按钮 668×174（button_bg_new 668×140 +
+TMP fs60 + rite_title 404×56 装饰）、rite_log_sperator 分隔线；ButtonsGroup（图鉴/
+商店/剧情行）与 Contacts 行因面板未复刻暂缺（METHOD_MAP 登记）。视觉验收：截图
+`docs/ui_layout/menu_screenshot.png`。证据：StartScene.unity MainUI CanvasScaler +
+StartPanel 层级 + unity_export guid 索引；GUT 385/385 + 桥 45/45 + parity 3808/0。
+
 **2026-08-18 笔记系统普查+结构承载（批次 O，385 测试 / 2420 断言全绿）：**
 `Player.notes`@0x138 = List<List<Note>> **按回合分页**（页索引 = round−1，AddNote
 0x38c130 自动增长空页）；Note={type,id,uid,count}（dump.cs:391430）。type 常量全解：

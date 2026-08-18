@@ -21,3 +21,4 @@ nul
 # Paths point at local tool installs; keep per-machine, not in the repo.
 .mcp.json
 tmp/
+docs/ui_layout/*.json

@@ -59,6 +59,7 @@
 | `ui/game_screen.gd` 仪式图钉点位 | 结构依据 MapController；精确坐标需实机对照微调 |
 | 桌面地图计数小牌（count chit） | 仍为样式盒，待原作对位 |
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
+| `ui/*.gd` 旧屏坐标（game_screen / rite_view / situation_desk / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648），这些屏幕仍为 1280×800 手感坐标，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载；**每屏按 `docs/ui_layout/` 对应真值表逐个重摆后移出**（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
 
 ## C. 自制 ❌（原作无对应，待消灭/降级）
 
@@ -101,6 +102,7 @@
 | ~~仪式面板“恢复上次投放”（Player.last_round_rite_data）~~ | 已落地（2026-08-18 批次 G）：`OnConfirm` 按 Rite.id 记录手动槽 guid 的 `{id,count}`，`OnLastState` 按卡牌可用量与当前槽条件逐槽恢复；存读档与原作导入桥均承载。证据：RitePanelController.c 0x58f1c0 / 0x58fdf0 + dump.cs Player@0x158、LastCardData@0x10/@0x14、RiteNode.Slot.open_adsorb@0x20 | — |
 | RoundRollbackType.BACK_TO_PREV_BEGIN(3) 的写点 | dump.cs:6186 枚举存在，写点未定位（LoadRoundBegin 疑似） | 小（待双信号） |
 | 成就面板 | steam_achievement 空实现 | 可选 |
+| 主菜单 ButtonsGroup 三键行（图鉴/商店/剧情，405×174 间距 240）+ Contacts 行 + Version 文本 | `docs/ui_layout/StartScene.md` 真值已备；图鉴/商店/剧情面板本体未复刻（D 表各行），社交链接对克隆无意义 | 随各面板批次接入 |
 
 ## 普查程序（如何扩展本表）
 
@@ -115,3 +117,4 @@
 - **阶段 1 ✅（2026-08-17）**：schema 全解码——Player 60 字段与 dump.cs 双信号吻合，零未知零类型不符；映射表与工具落地（`sim/original_save_schema.gd` + `tools/export_save_diff.gd` + `tests/test_save_diff_harness.gd`，mapped 11 / semantic 11 / missing 38）；快照文档 `docs/ORIGINAL_SAVE_SCHEMA.md`。结构发现：金币=卡 2000029 堆叠（双信号）、骰子疑 counter、手牌=bag/bagpos、仪式槽位内嵌嵌套、UI 队列不持久化、回退双轨、random_cache。
 - **阶段 2 ✅（2026-08-18）**：导入桥——原作存档 → 克隆 GameState → v7 payload → 同刻值对拍；语料 auto_save **44/44** 全过（含 only_cards / only_rites / gen_cards / gen_tags / 苏丹重抽 profile / 终局结果 / cached_event / HUD 标志族），差异按 converted / approximated / dropped 防静默登记。此后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
 - **远期**：固定种子 trace 对拍（同一操作脚本下原作 vs 克隆的事件/结算日志序列）。
+- **UI 布局对拍 ✅（2026-08-18 批次 P）**：`tools/export_ui_layout.gd` 解析语料 AssetRipper 场景/prefab YAML，产出 RectTransform 真值表（锚点/位置/尺寸/pivot/缩放 + CanvasScaler + LayoutGroup 参数 + sprite guid→语料路径）至 `docs/ui_layout/`；主画布设计空间 = **3840×2160**。表现层批次的验收 = 每个摆位数字能回指真值表行；视觉证据用 `tools/dev_screenshot_runner.tscn` 截图。

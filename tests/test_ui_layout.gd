@@ -136,6 +136,10 @@ func test_main_menu_lists_named_archives_with_load_and_delete_actions():
 	menu.setup(db)
 	stage.add_child(menu)
 	await wait_process_frames(2)
+	var archive_toggle := _find_node_by_name(menu, "UserArchiveLoadGameButton")
+	assert_not_null(archive_toggle, "archives are reachable from the title menu")
+	archive_toggle.pressed.emit()
+	await wait_process_frames(2)
 
 	assert_not_null(_find_node_by_name(menu, "UserArchiveList"), "manual archives should be visible on the title menu")
 	assert_not_null(_find_node_by_name(menu, "LoadUserArchiveButton_0"), "an archive row should load its selected slot")
@@ -753,7 +757,7 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	assert_not_null(menu_overlay)
 	assert_not_null(rail)
 	if menu_overlay != null and rail != null:
-		assert_eq(menu_overlay.get_parent(), game, "the global menu keeps Game as its permanent parent")
+		assert_eq(menu_overlay.get_parent().get_parent(), game, "the global menu keeps the Game-owned legacy layer as its permanent parent")
 		assert_gt(menu_overlay.z_index, rail.z_index, "global menu outranks persistent hand cards")
 		assert_eq(menu_overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "global menu blocks clicks behind its shade")
 	assert_true(desk.is_scene_blocked(), "the global menu blocks all lower desk input")

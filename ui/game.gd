@@ -9,6 +9,14 @@ const RiteView = preload("res://ui/rite_view.gd")
 const RiteSelector = preload("res://ui/rite_selector.gd")
 const GLOBAL_MODAL_Z := 1000
 
+# Transitional compat layer: screens not yet re-emitted in the original
+# 3840x2160 canvas space still lay out in the old 1280x800 mockup space.
+# They are uniformly scaled to fill the design height and centered; every
+# migrated screen (main menu first) attaches to the root instead.
+# Kill criterion: all ui/*.gd screens re-emitted from docs/ui_layout manifests.
+const LEGACY_DESIGN := Vector2(1280, 800)
+const DESIGN_SPACE := Vector2(3840, 2160)
+
 var db: ConfigDB
 var state: GameState
 var rng: GameRNG
@@ -18,10 +26,24 @@ var _rite_overlay: Control
 var _rite_selector_overlay: Control
 var _menu_overlay: Control
 var _user_archive_overlay: Control
+var _legacy_root: Control
 var _user_archive_name_input: LineEdit
 var _current_rite_id := 0
 var _current_rite_uid := 0
 var _audio: GameAudio
+
+
+func _legacy_layer() -> Control:
+	if _legacy_root == null or not is_instance_valid(_legacy_root):
+		_legacy_root = Control.new()
+		_legacy_root.name = "LegacyLayer"
+		_legacy_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var scale_factor := DESIGN_SPACE.y / LEGACY_DESIGN.y
+		_legacy_root.size = LEGACY_DESIGN
+		_legacy_root.scale = Vector2(scale_factor, scale_factor)
+		_legacy_root.position = (DESIGN_SPACE - LEGACY_DESIGN * scale_factor) * 0.5
+		add_child(_legacy_root)
+	return _legacy_root
 
 
 func _ready() -> void:
@@ -119,7 +141,7 @@ func _show_game() -> void:
 	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
 	gs.game_over_requested.connect(_show_game_over)
-	add_child(gs)
+	_legacy_layer().add_child(gs)
 	_current = gs
 	_game_screen = gs
 	gs.refresh()
@@ -201,7 +223,7 @@ func _on_open_rite_selector(location_filter: String = "") -> void:
 		# instead of leaving those controls visually floating in front of it.
 		sel.z_index = GameScreen.PERSISTENT_CONTROL_Z + 1
 	else:
-		add_child(sel)
+		_legacy_layer().add_child(sel)
 	_rite_selector_overlay = sel
 	# A site menu preserves the desk as a dimmed snapshot. Its own overlay stays
 	# live, while every underlying persistent control is locked and paused.
@@ -242,7 +264,7 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	if _game_screen != null and _game_screen.has_method("add_overlay"):
 		_game_screen.add_overlay(rv)
 	else:
-		add_child(rv)
+		_legacy_layer().add_child(rv)
 	_rite_overlay = rv
 	_set_world_scene_blocker("rite", true)
 
@@ -264,8 +286,7 @@ func _show_game_menu() -> void:
 	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_menu_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_menu_overlay.z_index = GLOBAL_MODAL_Z
-	add_child(_menu_overlay)
-	move_child(_menu_overlay, get_child_count() - 1)
+	_legacy_layer().add_child(_menu_overlay)
 
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.48)
@@ -365,7 +386,7 @@ func _show_user_archive_overlay() -> void:
 	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_user_archive_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_user_archive_overlay.z_index = GLOBAL_MODAL_Z
-	add_child(_user_archive_overlay)
+	_legacy_layer().add_child(_user_archive_overlay)
 
 	var shade := ColorRect.new()
 	shade.color = Color(0, 0, 0, 0.56)
@@ -567,7 +588,7 @@ func _show_game_over() -> void:
 	var go := preload("res://ui/game_over.gd").new()
 	go.setup(state, db)
 	go.restart.connect(_show_menu)
-	add_child(go)
+	_legacy_layer().add_child(go)
 	_current = go
 
 

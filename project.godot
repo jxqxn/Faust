@@ -19,7 +19,9 @@ config/features=PackedStringArray("4.7")
 [display]
 
 window/stretch/mode="canvas_items"
-window/size/viewport=Vector2i(1280, 800)
+window/stretch/aspect="expand"
+window/size/viewport_width=3840
+window/size/viewport_height=2160
 
 [dotnet]
 
