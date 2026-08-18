@@ -457,6 +457,10 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 				state.return_rite_cards(instance.uid, db)
 				state.remove_rite_instance(instance.uid)
 				result.expired_rites.append({"id": instance.id, "uid": instance.uid})
+				# Journal: the rite expired without starting.
+				# [SRC: GameController.c L5867 NoteRiteDead -> AddNote type 2]
+				if state.has_method("add_note"):
+					state.add_note(2, instance.id, instance.uid)
 			continue
 		if instance.life < int(rite.get("round_number", 0)):
 			continue
@@ -473,6 +477,12 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 		DeferredEffects.apply(res.deferred, state, db, rng)
 		state.trigger_events("rite_end", {"rite": instance.id})
 		result.settled_rites.append({"id": instance.id, "uid": instance.uid, "auto_result": int(rite.get("auto_result", 0)) == 1})
+		# Journal: the rite settled. The original notes from the result panel
+		# after settlement completes.
+		# [SRC: RiteResultPanelController.__c__DisplayClass56_0 ->
+		#       NoteRiteDone (0x38ec30) -> AddNote type 3]
+		if state.has_method("add_note"):
+			state.add_note(3, instance.id, instance.uid)
 
 
 static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):

@@ -78,7 +78,7 @@
 | 原作系统 | 证据入口 | 规模评估 |
 | --- | --- | --- |
 | after_story 后日谈播放 | `data/config/after_story/` + `AfterStoryNode` + `OverNewAfterStoryItemController.c` | 中（配置已定位，未审流程） |
-| 笔记系统 | `Player_Note_JsonHandler.c` + NoteController 族（未审） | 未知，需普查 |
+| ~~笔记系统（普查+结构承载）~~ | 已落地（2026-08-18 批次 O）：`Player.notes` List<List<Note>>@0x138 按回合分页（页=round−1），Note={type,id,uid,count}；type 1=仪式创建/2=消亡/3=结算/4=吸附卡(count 存卡 id)/10001=成为随从/10002=获得奖励卡。克隆 `GameState.notes`+`add_note` 进 v7 存读档与导入桥（对拍行过）；运行时写点 1/2/3 已接（StartRite.c L133 / GameController.c L5867 / RiteResultPanelController 链），4/10001 调用方不在反编译子集、10002 的手牌标签门未解——三写点留档 | 中（笔记 UI 未做） |
 | 图鉴/画廊 | `gallery_cards.json` / `gallery_cg.json` + Gallery*Controller 族 | 中 |
 | 向导演示宿主 | `wizard/` 配置 + WizardController（未审） | 中 |
 | 音频全量 | `sfx_config.json`、`sfx_settle_card_new.json`、`sfx_npc_role_dub.json`、`over_music_config.json` | 小-中（配置在语料库未接） |

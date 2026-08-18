@@ -43,7 +43,7 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 		state.queue_operation("sleep", "sleep", {"seconds": float(sleep_entry.get("seconds", 0.0))}, sleep_context)
 	var next_rite := int(deferred.get("rite", 0))
 	if next_rite > 0 and state.has_method("add_available_rite"):
-		state.add_available_rite(next_rite, db, rng)
+		_add_rite_and_note(next_rite, state, db, rng)
 	for loot_ref in deferred.get("loots", []):
 		_apply_loot_ref(loot_ref, state, db, rng)
 	# Rollback requests execute at the end of the deferred batch: the current
@@ -88,9 +88,22 @@ static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 				context
 			)
 		"rite":
-			state.add_available_rite(int(payload.get("id", 0)), db, rng)
+			_add_rite_and_note(int(payload.get("id", 0)), state, db, rng)
 		"loot":
 			_apply_loot_ref(payload.get("value", 0), state, db, rng)
+
+
+## Create the rite instance, then journal the creation (type 1) with the
+## instance's id and uid like StartRite's chain.
+## [SRC: StartRite.c L120-133 -> NoteRiteStart (0x38ec70) -> AddNote type 1]
+static func _add_rite_and_note(rite_id: int, state, db, rng) -> void:
+	if not state.has_method("add_available_rite"):
+		return
+	var new_rite_uid: int = state.add_available_rite(rite_id, db, rng)
+	if new_rite_uid > 0 and state.has_method("add_note"):
+		var new_rite = state.get_rite_instance(new_rite_uid)
+		if new_rite != null:
+			state.add_note(1, new_rite.id, new_rite.uid)
 
 
 static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:

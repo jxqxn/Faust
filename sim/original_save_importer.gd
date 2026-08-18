@@ -47,7 +47,8 @@ const DROPPED_FIELDS := {
 	"sudan_card_show_times": "苏丹卡展示计数",
 	"sudan_remove_count": "苏丹移除计数",
 	"random_cache": "RNG 续航缓存",
-	"notes": "笔记系统",
+	# notes 已承载（批次 O）：结构/分页/六个 type 语义 + 1/2/3 写点；
+	# 4/10001/10002 运行时写点待调用方反编译或标签门解出（见 METHOD_MAP）。
 	"BagIndex": "背包索引",
 	"end_open": "终局开启",
 	"is_armageddon": "末日决战态",
@@ -264,6 +265,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"only_cards": only_cards,
 		"only_rites": only_rites,
 		"cached_event": _unique_int_list(original.get("cached_event", [])),
+		"notes": _notes_payload(original.get("notes", [])),
 		"once_new_rites_is_show": _norm_bool_dict(original.get("once_new_rites_is_show", {})),
 		"gen_cards": _norm_int_dict(original.get("gen_cards", {})),
 		"gen_tags": _norm_string_int_dict(original.get("gen_tags", {})),
@@ -345,6 +347,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("only_cards", _sorted_int_list(original.get("only_cards", [])), _state_only_ids(state.only_cards)))
 	rows.append(_row("only_rites", _sorted_int_list(original.get("only_rites", [])), _state_only_ids(state.only_rites)))
 	rows.append(_row("cached_event", _unique_int_list(original.get("cached_event", [])), state.cached_event))
+	rows.append(_row("notes", _notes_summary(original.get("notes", [])), _notes_summary(state.notes)))
 	rows.append(_row("once_new_rites_is_show", _norm_bool_dict(original.get("once_new_rites_is_show", {})), state.once_new_rites_is_show))
 	rows.append(_row("gen_cards", _norm_int_dict(original.get("gen_cards", {})), _norm_int_dict(state.gen_cards)))
 	rows.append(_row("gen_tags", _norm_string_int_dict(original.get("gen_tags", {})), _norm_string_int_dict(state.gen_tags)))
@@ -722,6 +725,43 @@ static func _value_equals(av, bv) -> bool:
 	if (av is int or av is float) and (bv is int or bv is float):
 		return float(av) == float(bv)
 	return str(av) == str(bv)
+
+
+## Journal pages import verbatim (page index = round - 1; note fields are
+## plain ints on both sides).
+static func _notes_payload(value) -> Array:
+	var pages: Array = []
+	if not (value is Array):
+		return pages
+	for raw_page in value:
+		var page: Array = []
+		if raw_page is Array:
+			for raw_note in raw_page:
+				if raw_note is Dictionary:
+					page.append({
+						"type": int(raw_note.get("type", 0)),
+						"id": int(raw_note.get("id", 0)),
+						"uid": int(raw_note.get("uid", 0)),
+						"count": int(raw_note.get("count", 0)),
+					})
+		pages.append(page)
+	return pages
+
+
+static func _notes_summary(value) -> Array:
+	var summary: Array = []
+	for page in (value as Array):
+		var page_rows: Array = []
+		for note in (page as Array):
+			if note is Dictionary:
+				page_rows.append([
+					int(note.get("type", 0)),
+					int(note.get("id", 0)),
+					int(note.get("uid", 0)),
+					int(note.get("count", 0)),
+				])
+		summary.append(page_rows)
+	return summary
 
 
 static func _int_keyed(value) -> Dictionary:

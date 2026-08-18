@@ -147,6 +147,7 @@ static func serialize(state) -> Dictionary:
 		"only_cards": _sorted_set_keys(state.only_cards),
 		"only_rites": _sorted_set_keys(state.only_rites),
 		"cached_event": state.cached_event.duplicate(),
+		"notes": state.notes.duplicate(true),
 		"sudan_box_show": state.sudan_box_show,
 		"story_unshow": state.story_unshow,
 		"prestige_unshow": state.prestige_unshow,
@@ -278,6 +279,21 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.cached_event.clear()
 	for raw_event_id in data.get("cached_event", []):
 		state.add_cached_event(int(raw_event_id))
+	# Journal pages restore with int-normalized fields (JSON parses numbers
+	# as floats).
+	state.notes.clear()
+	for raw_page in data.get("notes", []):
+		var page: Array = []
+		if raw_page is Array:
+			for raw_note in raw_page:
+				if raw_note is Dictionary:
+					page.append({
+						"type": int(raw_note.get("type", 0)),
+						"id": int(raw_note.get("id", 0)),
+						"uid": int(raw_note.get("uid", 0)),
+						"count": int(raw_note.get("count", 0)),
+					})
+		state.notes.append(page)
 	state.sudan_box_show = bool(data.get("sudan_box_show", false))
 	state.story_unshow = bool(data.get("story_unshow", false))
 	state.prestige_unshow = bool(data.get("prestige_unshow", false))

@@ -46,6 +46,18 @@
 
 ## 当前进度
 
+**2026-08-18 笔记系统普查+结构承载（批次 O，385 测试 / 2420 断言全绿）：**
+`Player.notes`@0x138 = List<List<Note>> **按回合分页**（页索引 = round−1，AddNote
+0x38c130 自动增长空页）；Note={type,id,uid,count}（dump.cs:391430）。type 常量全解：
+1=仪式创建（StartRite.c L133）、2=仪式消亡（GameController.c L5867）、3=仪式结算
+（RiteResultPanelController 链）、4=仪式吸附卡（count 存被吸卡 id 的怪癖）、
+10001=成为随从、10002=获得奖励卡（GenCard/GenLoot/GenCoin 三调用点，带手牌标签门）。
+样本 1 页 7 条与开局剧情精确吻合（10002 主角专属服装、10001 法拉杰/梅姬、1×4 初始
+仪式）。克隆落地：`GameState.notes` + `add_note`（分页增长语义）进 v7 存读档与导入桥
+（**notes 对拍行**，45/45 全过）；运行时写点 1/2/3 已接（仪式创建/消亡/结算）。
+留档：4/10001 的调用方不在反编译子集（推断级），10002 的标签门挂 IsHandCard
+三标签缺口（名字未反查）；笔记 UI 未做（结构先行）。
+
 **2026-08-18 HUD 引导标志族（批次 N，380 测试 / 2403 断言全绿）：**
 `Player.sudan_box_show`@0x48、`story_unshow`@0x49、`prestige_unshow`@0x4A、
 `deadline_unshow`@0x4B、`helpbtn_unshow`@0x4C 与 `once_new_rites_is_show`@0x140

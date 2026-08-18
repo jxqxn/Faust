@@ -113,10 +113,11 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 10. **苏丹期限 = 卡寿命模型**（2026-08-18 批次 D 解出）：激活苏丹卡无独立期限字段——`GenSudanCard` L3656-3662 出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)`（抢跑量），每日 life+1（老化无条件），`life >= card_vanishing` 且不在任一仪式槽即 DoVanish 处刑（vanish.over 驱动结局）；可见倒计时 = `card_vanishing − life`（UpdateSudanLife 0x55aeb0，庇护期间可为负）。样本 uid11 life=0=7−7 ✓；困难档 7−5=2 抢跑=5 天。重抽新卡 `set_life(弃卡 life)` 继承剩余；抽牌 = sudan_card_pool 先 Shuffle 再 RemoveLast（顺序无意义）。克隆：`_update_card_lives` 苏丹并入通用死亡，days_left 为镜像；导入桥 days_left 精确恢复。
 11. **手牌位 = bag/bagpos 双字段**（2026-08-18 批次 E 解出）：`Card.bag`@0x48 = 包页 id（`Player.BagIndex`@0x150 = 当前查看页，GenSudanCard 把新苏丹卡 set_bag 进当前页）；`bagpos`@0x4c = 页内 **1 基**位置，0 = 未摆放（背包列表）；`UpdateHandCardPos` 0x559a70 在 b__6 链（回合开始事件**之后**）收集 `IsCurrentHandCard`（bag==BagIndex 且三标签资格）卡排序后压缩为 1..N；GenCoin `set_bagpos(1)` 金币前置。样本仅 6 张卡有位置（主角/苏丹/妻子/法拉杰/已装备/乙太堆）——bagpos 是玩家手动摆放，非类型成员。克隆：CardInstance.bag/bag_pos 落地 + 日终压缩 + 导入桥透传（bag_positions 对拍行）；三标签名（IsHandCard 资格判据）无法从元数据反查，留档。
+12. **笔记 = 按回合分页的日志**（2026-08-18 批次 O 解出）：`Player.notes`@0x138 = List<List<Note>>，**页索引 = round−1**（AddNote 0x38c130 自动增长空页至当前回合）；Note={type@0x10,id@0x14,uid@0x18,count@0x1C}（dump.cs:391430）。type 常量：1=仪式创建（StartRite.c L133）、2=仪式消亡（GameController.c L5867）、3=仪式结算（RiteResultPanelController 链）、4=仪式吸附卡（**count 存被吸卡 id** 的怪癖，NoteRiteAdsorbCard 0x38eb10）、10001=成为随从（0x38e9c0）、10002=获得奖励卡（0x38ea40，GenCard/GenLoot/GenCoin 三调用点，带手牌标签门）。样本 1 页 7 条与开局剧情吻合（10002 乙太服装、10001 法拉杰/梅姬、1×4 初始仪式）。克隆：GameState.notes/add_note 进 v7 与导入桥；写点 1/2/3 已接，4/10001/10002 留档。
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **44/44 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **45/45 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器/notes 日志等）。
 
 导入桥当场抓到并修复的结构偏差：
 

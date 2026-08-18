@@ -162,7 +162,7 @@ func test_report_flags_approximations_and_value_drops() -> void:
 	for entry in report["dropped"]:
 		if bool(entry["has_value"]):
 			dropped_with_value.append(str(entry["field"]))
-	assert_has(dropped_with_value, "notes", "non-empty dropped fields are listed")
+	assert_false("notes" in dropped_with_value, "the notes journal is carried, not dropped")
 	assert_false("only_cards" in dropped_with_value, "unique-card registration is converted, not dropped")
 	assert_false("only_rites" in dropped_with_value, "unique-rite registration is converted, not dropped")
 	assert_false("gen_cards" in dropped_with_value, "card generation history is mapped, not dropped")

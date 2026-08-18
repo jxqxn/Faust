@@ -242,6 +242,17 @@ var only_rites: Dictionary = {}
 # [SRC: dump.cs Player.cached_event @0x148; PlayerExtensions.c
 #       AddCacheEvent (0x38b580) / RemoveCacheEvent (0x38ecb0)]
 var cached_event: Array[int] = []
+# Per-round journal pages (original Player.notes List<List<Note>> @0x138).
+# Page index = round - 1; AddNote grows the page list up to the current round.
+# A note is {type, id, uid, count}: type 1 = rite created, 2 = rite expired,
+# 3 = rite settled, 4 = rite adsorbed a card (count carries that card's id),
+# 10001 = card became a follower, 10002 = reward card gained (tag-gated).
+# [SRC: dump.cs:391430 Player.Note {type@0x10,id@0x14,uid@0x18,count@0x1C};
+#       PlayerExtensions.c AddNote (0x38c130) pages by round-1; StartRite.c
+#       L133 type 1; GameController.c L5867 type 2; NoteRiteDone 0x38ec30
+#       type 3; NoteRiteAdsorbCard 0x38eb10 type 4; NoteCardBeFollower
+#       0x38e9c0 type 10001; NoteCardBeReward 0x38ea40 type 10002]
+var notes: Array = []
 # Player-owned visibility preferences for the original desktop HUD. The
 # `*_unshow` fields are true when their corresponding element is hidden;
 # sudan_box_show uses the inverse wording and is true when visible.
@@ -708,6 +719,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	only_cards.clear()
 	only_rites.clear()
 	cached_event.clear()
+	notes.clear()
 	sudan_box_show = false
 	story_unshow = false
 	prestige_unshow = false
@@ -835,6 +847,21 @@ func remove_cached_event(event_id: int) -> void:
 	# [SRC: PlayerExtensions.c RemoveCacheEvent (0x38ecb0); GameController.c
 	#       OnCachedEventClicked; GameController.__c__DisplayClass243_0.c (0x5728d0)]
 	cached_event.erase(event_id)
+
+
+## Append one journal entry to the current round's page, growing the page
+## list like the original AddNote (pages are indexed by round - 1).
+## [SRC: PlayerExtensions.c AddNote (0x38c130) L1868-1933]
+func add_note(note_type: int, entry_id: int, entry_uid: int, entry_count: int = 0) -> void:
+	var page_index := maxi(round_number - 1, 0)
+	while notes.size() <= page_index:
+		notes.append([])
+	notes[page_index].append({
+		"type": note_type,
+		"id": entry_id,
+		"uid": entry_uid,
+		"count": entry_count,
+	})
 
 
 ## Difficulty pick resource rebalance, shared by new-run setup and mid-run
