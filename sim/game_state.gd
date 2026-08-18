@@ -84,8 +84,29 @@ var gold_dice: int:
 	set(value):
 		set_counter(COUNTER_GOLD_DICE, maxi(value, 0))
 
+# Back-to-prev-round quota. Stored on the global object (original Global,
+# global.json), not the run payload, so the rollback restore cannot refund the
+# spend; 9999 = UNLIMIT_BACK_TO_PREV_TIMES and never decrements.
+# [SRC: dump.cs:542530 COUNTER_BACK_TO_PREV = 7100007, :542532
+#       UNLIMIT_BACK_TO_PREV_TIMES = 9999; PlayerExtensions.c GetCounter
+#       0x38ce70 L1103-1108 / SetCounter 0x38f2d0 L941-966 route the id to
+#       Global.backToPrevRound with an unconditional non-negative clamp;
+#       GameController.c OnPrevRound 0x554f80 L2169-2174 consume flag]
+const COUNTER_BACK_TO_PREV := 7100007
+const UNLIMIT_BACK_TO_PREV_TIMES := 9999
+
+var back_to_prev_left: int:
+	get:
+		return get_counter(COUNTER_BACK_TO_PREV)
+	set(value):
+		set_counter(COUNTER_BACK_TO_PREV, value)
+
+# Cross-run global domain. Fresh instances own a detached GlobalState so tests
+# stay isolated; the UI/save layer attaches the disk-backed default
+# (GlobalState.load_default()) for persistence.
+var global_state := GlobalState.new()
+
 var redraws_left := 0         # sudan card redraws left this round
-var back_to_prev_left := 0    # back-to-prev-round uses left
 # How many new sudan cards a redraw draws (original player+0x68).
 # [SRC: GameController.c @ RedrawSudanCard: loop bound = sudan_redraw_count]
 var sudan_redraw_count := 1
@@ -552,7 +573,7 @@ func card_perspective_role(card_or_uid: int, db) -> String:
 	return "当前对象"
 
 
-func setup_new_run(db, diff_index: int, rng) -> void:
+func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	hand.clear()
 	card_instances.clear()
 	next_card_uid = 1
@@ -560,9 +581,18 @@ func setup_new_run(db, diff_index: int, rng) -> void:
 	rail_order.clear()
 	difficulty_index = diff_index
 	difficulty_config = db.get_difficulty(diff_index)
-	# Resources from difficulty.
-	gold_dice = int(difficulty_config.get("gold_dice_count", 0))
-	back_to_prev_left = int(difficulty_config.get("back_to_prev_round_count", 0))
+	# A fresh run starts from fresh counters (new Player) and the unlimited
+	# back-to-prev baseline. The original grants no resources until the narrator
+	# pick (StartGame only resets the quota); menu new games therefore pass
+	# apply_resources=false and let the intro panel's SetDifficulty grant.
+	# [SRC: Datapool.c @ StartGame L4497: Global.backToPrevRound = 9999, no
+	#       counter writes before the pick; PlayerExtensions.c SetDifficulty
+	#       L2268-2294 is the first (and additive) gold-dice grant]
+	local_counters.clear()
+	global_state.back_to_prev_round = UNLIMIT_BACK_TO_PREV_TIMES
+	if apply_resources:
+		_apply_difficulty_resources()
+	global_state.save()
 	# Redraws per round (sudan_redraw_times_per_round) recovered every
 	# sudan_redraw_times_recovery_round rounds.
 	redraws_left = _redraws_per_round(db)
@@ -621,24 +651,33 @@ func _redraws_per_round(db) -> int:
 	))
 
 
-## Mid-run difficulty switch (event `difficulty` action). The original opens
-## the difficulty panel and applies the pick; the value here is the target
-## index. Per-round redraws refresh; the back-to-prev budget adjusts by the
-## new difficulty's allowance like the global-side rebalance.
+## Difficulty pick resource rebalance, shared by new-run setup and mid-run
+## switches (event `difficulty` action opens the narrator choice; the pick
+## applies here). Gold dice ADD the difficulty's allowance to what the player
+## still holds; the back-to-prev budget rebalances against the unlimited
+## baseline (old - 9999 + new), so leaving the free-rollback difficulty resets
+## to the new allowance and any finite-to-finite switch drains to zero.
 ## [SRC: SetDifficulty.c @ Do (0x51b5b0) -> ShowDifficulty + Then-apply;
-##       PlayerExtensions.c @ SetDifficulty (0x38f530); report 7 B3]
+##       PlayerExtensions.c @ SetDifficulty (0x38f530) L2246-2296: SetCounter
+##       (7100006, diff.gold_dice_count + current) and SetCounter(7100007,
+##       Global.backToPrevRound - 9999 + diff.back_to_prev_round_count)]
+func _apply_difficulty_resources() -> void:
+	set_counter(COUNTER_GOLD_DICE, get_counter(COUNTER_GOLD_DICE)
+		+ int(difficulty_config.get("gold_dice_count", 0)))
+	set_counter(COUNTER_BACK_TO_PREV, get_counter(COUNTER_BACK_TO_PREV)
+		- UNLIMIT_BACK_TO_PREV_TIMES
+		+ int(difficulty_config.get("back_to_prev_round_count", 0)))
+
+
+## Mid-run difficulty switch. Per-round redraws refresh; resource counters
+## rebalance through _apply_difficulty_resources.
 func apply_difficulty(index: int, db) -> void:
 	if db == null or db.get_difficulty(index).is_empty():
 		return
-	var old_back := int(difficulty_config.get("back_to_prev_round_count", 0)) if not difficulty_config.is_empty() else 0
 	difficulty_index = index
 	difficulty_config = db.get_difficulty(index)
 	redraws_left = _redraws_per_round(db)
-	var new_back := int(difficulty_config.get("back_to_prev_round_count", 0))
-	if old_back >= 9999 and new_back < 9999:
-		back_to_prev_left = new_back
-	elif new_back >= 9999:
-		back_to_prev_left = 9999
+	_apply_difficulty_resources()
 
 
 # ---- Counter access ----
@@ -651,6 +690,10 @@ func is_nonneg_gated(id: int) -> bool:
 
 
 func get_counter(id: int) -> int:
+	# COUNTER_BACK_TO_PREV lives on the global object, not the run's counter
+	# dict. [SRC: PlayerExtensions.c GetCounter 0x38ce70 L1103-1108]
+	if id == COUNTER_BACK_TO_PREV:
+		return global_state.back_to_prev_round
 	return int(local_counters.get(id, 0))
 
 
@@ -659,6 +702,15 @@ func get_global_counter(id: int) -> int:
 
 
 func set_counter(id: int, val: int) -> void:
+	if id == COUNTER_BACK_TO_PREV:
+		# Dedicated branch: unconditional non-negative clamp, write the global
+		# object; the run's counter dict is never touched.
+		# [SRC: PlayerExtensions.c SetCounter 0x38f2d0 L941-966]
+		var clamped_back := maxi(val, 0)
+		if global_state.back_to_prev_round != clamped_back:
+			global_state.back_to_prev_round = clamped_back
+			_notify_counter_changed(id, clamped_back)
+		return
 	# Clamp non-negative for gated counters (PlayerExtensions.SetCounter).
 	var clamped := CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
 	if int(local_counters.get(id, 0)) != clamped:
@@ -669,11 +721,11 @@ func set_counter(id: int, val: int) -> void:
 
 
 func add_counter(id: int, delta: int) -> void:
-	set_counter(id, int(local_counters.get(id, 0)) + delta)
+	set_counter(id, get_counter(id) + delta)
 
 
 func sub_counter(id: int, delta: int) -> void:
-	set_counter(id, int(local_counters.get(id, 0)) - delta)
+	set_counter(id, get_counter(id) - delta)
 
 
 ## Counter-timing events fire on actual value changes.

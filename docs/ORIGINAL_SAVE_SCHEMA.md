@@ -94,7 +94,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 ## global.json（29 字段，跨局全局）
 
 saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgradeState / questState / upgrade{} / quest{} / counter{6} / mods[] / hasEnterSudanBox / hasEnterQuest / **backToPrevRound（回退配额，9999=未用）** / roundRollback / overRecord[] / overID[]（结局图鉴）/ gameStatistics{} / doneRite[] / doneEvent[] / **showedGalleryCards[]（图鉴解锁）** / showedPrompt[] / choosedOption[] / isAutoClassify / autoClassifyBagTags{} / version。
-克隆对应：几乎全缺（归 METHOD_MAP D：全局域）。
+克隆对应：承载容器已落地（`sim/global_state.gd` → user://global.json），backToPrevRound / roundRollback / saveTime 三字段已接；其余仍缺（归 METHOD_MAP D：global.json 其余字段）。
 
 ## user_archive.json
 
@@ -103,13 +103,13 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 ## 关键结构发现（驱动后续批次）
 
 1. **金币 = 手牌金币卡对象（id 2000029）的 count 之和（多对象模型）**。双信号：`GenCoin.c Do 0x510b40`（`GameController.GenCard(0x1E849D)` → `PlayerExtensions.AddCard`（**每次新建对象**，无堆叠合并分支）→ `Card.set_count(操作值)` → `set_bagpos(1)` → `OnCardBorn`）× cards.json 2000029（金币/可堆叠/消耗品/已拥有）+ 存档样本旁证（神的乙太 2001090 × 20 个对象各 count=1）。操作值**可为负**（set_count 直写）；花费判定 `CostCondition.IsSatisfied 0x3f6160` 读卡对象 count。克隆原 `coin_count` 标量为结构偏差——**2026-08-17 已修复**：`coin_count` 改为金币卡对象求和的计算属性，`coin` 操作按原作生成卡对象（前置手牌位、发 card_born），v5→v6 存档迁移（标量→单对象）；扣除顺序已按发现 3 的枚举序对齐。
-2. **金骰 = counter 7100006**（已修复）。三重信号：dump.cs:542529 `COUNTER_GOLD_DICE = 7100006` 常量 + PlayerExtensions Add/SubCounter 写点 + 存档样本（difficulty=1 → counter 7100006=3，与 init 难度表 gold_dice_count 精确吻合）。克隆 `gold_dice` 现为该 counter 的计算属性。**常量表顺带解出**：回退配额 = COUNTER_BACK_TO_PREV 7100007（存 global.json backToPrevRound，9999=UNLIMIT_BACK_TO_PREV_TIMES）、苏丹额外重抽 = COUNTER_SUDAN_EXTRA_REDRAW 7100008（均待克隆迁移）。
+2. **金骰 = counter 7100006**（已修复）。三重信号：dump.cs:542529 `COUNTER_GOLD_DICE = 7100006` 常量 + PlayerExtensions Add/SubCounter 写点 + 存档样本（difficulty=1 → counter 7100006=3，与 init 难度表 gold_dice_count 精确吻合）。克隆 `gold_dice` 现为该 counter 的计算属性。**常量表顺带解出**：回退配额 = COUNTER_BACK_TO_PREV 7100007（存 global.json backToPrevRound，**2026-08-18 已迁移**，见发现 8）、苏丹额外重抽 = COUNTER_SUDAN_EXTRA_REDRAW 7100008（待克隆迁移）。
 3. **cost 支付链**（部分留档）：`CostCondition.IsSatisfied 0x3f6160` 判定时即按 player.cards 枚举序选定付款卡清单（累计 count 覆盖花费即停）记入 `ConditionContext.need_cost_cards`（dump.cs:383873）+ `cost_count`——支付顺序=卡列表顺序（最旧优先），克隆 `_remove_gold` 已按 uid 升序对齐；实际扣款执行体未包含在反编译子集（留档）。
 4. **金币/门客总额是派生读**：`GetCounter 0x38ce70` 对 7000105（金币）/7000104（门客数）特殊分支——从 player.cards + player.rites 按谓词求和，**仪式槽内的金币卡计入总额**；克隆 gold_total 已扩展 hand+slot。
 5. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
 6. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
 7. **原作 UI 队列不持久化**：只存 delay_ops + cached_event；克隆持久化全量 pending_operations（语义更重，导入桥需裁剪）。
-8. **回退双轨**：原作 global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007 的全局侧）+ player.last_round_rite_data（按仪式卡数据）；克隆 back_to_prev_left（player 侧标量）+ round_snapshots（整日快照）。
+8. **回退双轨**（配额侧已修复）：原作 global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007 的全局侧）+ player.last_round_rite_data（按仪式卡数据）。完整链已双信号定位并于 **2026-08-18 迁移**：`GetCounter/SetCounter` 7100007 分支读写 `Global.backToPrevRound`（无条件非负 clamp）；新局 `Datapool.StartGame` L4497 重置 9999 后由难度选择 `PlayerExtensions.SetDifficulty` 0x38f530 落地公式（配额 = 当前 − 9999 + 新难度 back_to_prev_round_count：离开无限档=重置、有限切有限=归零、切回无限档=保留余量；金骰同函数为**加法** 当前 + 新难度值）；消耗在 `GameController.PrevRoundInternal` 0x555570（UseBackToPrev 先消耗 → Global.roundRollback=2 → SaveGlobal → LoadRound）；档案恢复 `CorrectPlayerData` L4130-4134 以档案槽记录值覆写全局并 SaveGlobal。克隆落地：`sim/global_state.gd`（user://global.json 承载 backToPrevRound/roundRollback）+ counter 路由 + v6→v7 局内存档迁移（payload 不再携带配额）。player.last_round_rite_data 侧与快照持久化（Datapool 轮次文件）仍为 ⬜。
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 
 ## 下一步（阶段二：导入桥）

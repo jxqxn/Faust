@@ -9,9 +9,11 @@ extends RefCounted
 const CardInstanceData = preload("res://sim/card_instance.gd")
 
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 # v6 moved gold from the coin_count scalar to stacked gold card objects
-# (GenCard 2000029). v5 saves migrate on load; anything older stays rejected.
+# (GenCard 2000029). v7 moved the back-to-prev quota off the run payload onto
+# the global domain (user://global.json, COUNTER_BACK_TO_PREV 7100007).
+# v5/v6 saves migrate on load; anything older stays rejected.
 const MIN_LOADABLE_SAVE_VERSION := 5
 const SAVE_KIND_PLAYER := "player"
 const USER_ARCHIVE_ROOT := "user://user_archives"
@@ -83,7 +85,6 @@ static func serialize(state) -> Dictionary:
 		"visited_world_locations": state.visited_world_locations.duplicate(),
 		"redraws_left": state.redraws_left,
 		"sudan_redraw_count": state.sudan_redraw_count,
-		"back_to_prev_left": state.back_to_prev_left,
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
@@ -131,13 +132,14 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	if state.world_location_id not in state.visited_world_locations:
 		state.visited_world_locations.append(state.world_location_id)
 	# Gold lives in gold card instances since v6 (see deserialize migration);
-	# gold dice live in the counter dict (COUNTER_GOLD_DICE) since v6.
+	# gold dice live in the counter dict (COUNTER_GOLD_DICE) since v6; the
+	# back-to-prev quota lives on the global domain since v7.
 	var legacy_coin: int = int(data.get("coin_count", 0)) if data.has("coin_count") else -1
 	var legacy_gold_dice: int = int(data.get("gold_dice", 0)) if data.has("gold_dice") else -1
+	var legacy_back_to_prev: int = int(data.get("back_to_prev_left", 0)) if data.has("back_to_prev_left") else -1
 	state.gold_dice = int(data.get("gold_dice", 0))
 	state.redraws_left = int(data.get("redraws_left", 0))
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
-	state.back_to_prev_left = int(data.get("back_to_prev_left", 0))
 	state.hand.clear()
 	state.card_instances.clear()
 	for card_data in data.get("card_instances", []):
@@ -264,6 +266,12 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	# v5 migration: scalar gold_dice becomes the COUNTER_GOLD_DICE counter.
 	if legacy_gold_dice >= 0 and not state.local_counters.has(state.COUNTER_GOLD_DICE):
 		state.set_counter(state.COUNTER_GOLD_DICE, legacy_gold_dice)
+	# v7 migration: the run payload's recorded quota seeds the attached global
+	# object (the archive index's snapshot overrides it afterwards, like the
+	# original's archive restore). [SRC: Datapool.c @ CorrectPlayerData
+	# L4130-4134 restores Global.backToPrevRound from the archive slot's value]
+	if legacy_back_to_prev >= 0:
+		state.global_state.back_to_prev_round = legacy_back_to_prev
 
 
 static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
@@ -341,13 +349,21 @@ static func next_user_archive_index() -> int:
 
 
 ## Restoring an archive also refreshes the current-player continue file, as the
-## original LoadUserArchive restores Player and then calls SavePlayer.
-## [SRC: Datapool.c @ LoadUserArchive (RVA 0x417350)]
+## original LoadUserArchive restores Player and then calls SavePlayer. The
+## archive index's recorded quota wins over the payload/global, mirroring the
+## original's archive restore into Global + SaveGlobal.
+## [SRC: Datapool.c @ LoadUserArchive (RVA 0x417350) -> CorrectPlayerData
+##       L4130-4134: Global.backToPrevRound = archive slot value; SaveGlobal]
 static func load_user_archive(db, index: int) -> Variant:
 	if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
 		return null
 	var state = _load_from_path(db, user_archive_save_path(index), true)
 	if state != null:
+		for entry in _read_user_archives():
+			if int(entry.get("index", -1)) == index and entry.has("back_to_prev_round"):
+				state.global_state.back_to_prev_round = int(entry["back_to_prev_round"])
+				state.global_state.save()
+				break
 		save(state)
 	return state
 
@@ -427,6 +443,11 @@ static func _load_from_path(db, path: String, require_player_save := false) -> V
 		push_warning("SaveSystem: save version %d outside loadable range [%d, %d]; refusing to load" % [v, MIN_LOADABLE_SAVE_VERSION, SAVE_VERSION])
 		return null
 	var state = preload("res://sim/game_state.gd").new()
+	# The quota lives on the global domain: attach the process-wide disk-backed
+	# global before deserializing so v5/v6 migration seeds land there and v7
+	# payloads keep the persisted quota. [SRC: original Global/global.json is a
+	# separate file loaded once per process, GameApplication.get_global]
+	state.global_state = GlobalState.load_default()
 	deserialize(parsed, state, db)
 	return state
 

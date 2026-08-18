@@ -93,7 +93,7 @@ const CLONE_ONLY_FIELDS := {
 	"world_spawn_id": "横版世界探针遗留（METHOD_MAP C）",
 	"world_position_ratio": "横版世界探针遗留（METHOD_MAP C）",
 	"visited_world_locations": "横版世界探针遗留（METHOD_MAP C）",
-	"back_to_prev_left": "原作回退配额在 global.json backToPrevRound（9999=未用）",
+	"back_to_prev_left": "已修复（2026-08-18）：原作回退配额 = counter COUNTER_BACK_TO_PREV 7100007 存全局域 Global.backToPrevRound（PlayerExtensions GetCounter 0x38ce70 / SetCounter 0x38f2d0 专用分支；9999=UNLIMIT_BACK_TO_PREV_TIMES）；克隆配额已迁 global_state，v7 局内存档不再持久化该键",
 	"available_rites": "原作 rites 自带 start 标志，无平行列表",
 	"started_rites": "原作 rites 自带 start 标志，无平行列表",
 	"active_rite_uid": "表现层字段",

@@ -83,8 +83,25 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 判定时按 player.cards 枚举序选定付款卡清单记入 need_cost_cards（支付顺序=
 最旧优先；扣款执行体未反编译留档）。克隆落地：`gold_dice` 改为 counter 7100006
 计算属性（含非负门 + v6 去标量 + 旧值迁移）；`_remove_gold` 扣除顺序改 uid
-升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：7100007（需全局域）、
-7100008（随重抽族）。
+升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：~~7100007（需全局域）~~
+（2026-08-18 批次 B 已迁移）、7100008（随重抽族）。
+
+**2026-08-18 回退配额全局化 + 全局域承载（批次 B，355 测试全绿）：**
+`sim/global_state.gd` GlobalState 落地（user://global.json，对应原作 Global；
+先行承接 backToPrevRound/roundRollback/saveTime，其余 26 字段见 METHOD_MAP ⬜）。
+回退配额迁移为 counter COUNTER_BACK_TO_PREV 7100007 存全局域（GetCounter
+0x38ce70 / SetCounter 0x38f2d0 专用分支：读直通、写无条件非负 clamp；9999=
+UNLIMIT_BACK_TO_PREV_TIMES 不消耗）。新局链：`Datapool.StartGame` L4497 重置
+9999 → 难度选择 `PlayerExtensions.SetDifficulty` 0x38f530 公式（配额 = 当前 −
+9999 + 新难度 back_to_prev_round_count：离开无限档重置、有限切有限归零、切回
+无限档保留余量；金骰同函数为**加法**——克隆 `apply_difficulty` 两处偏差一并
+修正；菜单新局 setup_new_run(apply_resources=false) 延迟到叙事者选择，杜绝双发）。
+消耗链 `PrevRoundInternal` 0x555570：先消耗 → Global.roundRollback=2 → SaveGlobal
+→ 快照恢复；配额在恢复范围外，克隆"恢复后补回预算"hack 删除。档案恢复
+CorrectPlayerData L4130-4134：档案槽记录值覆写全局。v6→v7 局内存档迁移
+（payload 去掉 back_to_prev_left，旧值种入全局域）。留档：快照仍为内存态
+（原作 Datapool 轮次文件，重启后不可跨日回退）；BACK_TO_PREV_BEGIN(3) 写点
+与 last_round_rite_data 未定位。
 
 **2026-08-17 金币卡多对象模型（批次 A，337 测试全绿）：** 对拍台发现的首个结构
 偏差修复。原作金币 = 手牌金币卡 2000029 **多对象** count 之和：`GenCoin.c Do

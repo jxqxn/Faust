@@ -70,6 +70,11 @@ static func advance_day(state, db, rng) -> Dictionary:
 	#       checks HasSudanCard separately]
 	if not result.game_over:
 		_begin_round(state, db, rng, result)
+		# The global rollback kind marks a normal begin boundary (the
+		# back-to-prev restore marks BACK_TO_PREV_END).
+		# [SRC: GameController.c @ OnBeginRound (0x5537b0) L2314-2316:
+		#       Global.roundRollback = 1]
+		state.global_state.round_rollback = GlobalState.ROLLBACK_TO_BEGIN
 	_snapshot_round(state, "round_begin")
 	return result
 
@@ -129,10 +134,12 @@ static func _snapshot_round(state, kind: String) -> void:
 
 ## Back to the previous round's end (retry the current round): gate on
 ## round-1 >= max(1, min_round) and the back-to-prev budget (9999 = free),
-## consume one budget AFTER the gates pass, then restore the round_end
-## snapshot wholesale. Returns false when gated.
+## then consume first, mark the rollback kind on the global object, persist
+## the global side, and restore the round_end snapshot wholesale. The quota
+## survives the restore because it lives outside the run payload.
 ## [SRC: GameController.c @ OnPrevRound (0x554f80) L2149-2174 gates;
-##       PrevRoundInternal (0x555570) L2246-2261 consume-then-restore;
+##       PrevRoundInternal (0x555570) L2246-2284: UseBackToPrev ->
+##       Global.roundRollback = 2 -> Datapool.SaveGlobal -> LoadRound;
 ##       LoadController.c @ LoadRoundEnd (0x3f8e70); report 7 A1]
 static func back_to_prev_round_end(state, db) -> bool:
 	if state == null:
@@ -148,12 +155,11 @@ static func back_to_prev_round_end(state, db) -> bool:
 	var snapshot: Dictionary = state.round_snapshots["round_end"].get(state.round_number - 1, {})
 	if snapshot.is_empty():
 		return false
-	# The original stores the budget on the global object so the rollback
-	# itself cannot restore it; the clone re-applies the decremented budget
-	# after the snapshot overwrite.
-	var budget_after: int = budget if budget == 9999 else budget - 1
+	if budget < state.UNLIMIT_BACK_TO_PREV_TIMES:
+		state.back_to_prev_left = budget - 1
+	state.global_state.round_rollback = GlobalState.ROLLBACK_TO_PREV_END
+	state.global_state.save()
 	SaveSystem.deserialize(snapshot, state, db)
-	state.back_to_prev_left = budget_after
 	if state.event_runtime != null:
 		state.queue_event_ids(state.event_runtime.fire("back_to_prev_round_end", {}))
 	return true

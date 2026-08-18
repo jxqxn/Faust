@@ -86,7 +86,12 @@ func _on_test_start_requested(index: int) -> void:
 func _start_new_run(index: int, use_test_cards: bool) -> void:
 	db.set_test_starting_cards_enabled(use_test_cards)
 	state = GameState.new()
-	state.setup_new_run(db, index, rng)
+	# Bind the disk-backed global domain so the new-game quota reset persists.
+	state.global_state = GlobalState.load_default()
+	# Menu new games defer difficulty resources to the intro narrator pick
+	# (the original grants nothing before the pick); test starts chose the
+	# difficulty directly and take its resources here.
+	state.setup_new_run(db, index, rng, use_test_cards)
 	db.set_test_starting_cards_enabled(false)
 	# The original startup chain increments Player.round to 1, fires
 	# OnRoundBeginBa, then runs auto-begin and the first Sultan draw in that
