@@ -415,7 +415,13 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "over":
 		deferred.over = bool(val) if val is bool else true
 		if val is float or val is int:
-			state.over_reason = int(val)
+			# GameOver.Do forwards its operation value to SetGameOver(false, reason),
+			# which writes the two persisted Player terminal fields together.
+			# [SRC: GameOver.c Do (0x50ff10); GameController.c SetGameOver (0x556a50)]
+			if state.has_method("set_game_over"):
+				state.set_game_over(false, int(val))
+			else:
+				state.over_reason = int(val)
 		return
 	if k == "back_to_prev_round_end":
 		deferred.back_to_prev = true

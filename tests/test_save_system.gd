@@ -34,6 +34,8 @@ func test_save_load_round_trip_preserves_state():
 	state.sudan_redraw_times = 1
 	state.sudan_redraw_times_recovery_round = 5
 	state._sync_redraws_left()
+	state.success = true
+	state.over_reason = 16
 	state.add_coin(15)
 	state.gold_dice = 1
 	state.day = 3
@@ -105,6 +107,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.sudan_redraw_times, 1, "ordinary redraw usage preserved")
 	assert_eq(state2.sudan_redraw_times_recovery_round, 5, "redraw recovery period preserved")
 	assert_eq(state2.redraws_left, 2, "redraw UI remainder is restored from source fields")
+	assert_true(state2.success, "terminal success flag survives the JSON boundary")
+	assert_eq(state2.over_reason, 16, "terminal ending reason survives the JSON boundary")
 	assert_eq(state2.active_sudan_cards.size(), 1, "active sudan card preserved")
 	assert_eq(state2.table_cards.size(), 2, "global and instance-owned table cards preserved")
 	if state2.table_cards.size() > 0:

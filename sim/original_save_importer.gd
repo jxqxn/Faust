@@ -44,8 +44,6 @@ const DROPPED_FIELDS := {
 	"location_icon_show": "change_location_icon 持久化",
 	"change_desk_bg": "change_desk_bg 持久化",
 	"after_round_auto_sort": "日终自动整理开关",
-	"success": "通关标志",
-	"over_reason": "结局原因持久化",
 	"ithink_card": "思考卡实例",
 	"pins": "桌面图钉",
 	"sudan_pool": "池变体字符串",
@@ -244,6 +242,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"sudan_redraw_times_per_round": per_round,
 		"sudan_redraw_times": redraws_used,
 		"sudan_redraw_times_recovery_round": redraw_recovery_round,
+		"success": bool(original.get("success", false)),
+		"over_reason": int(original.get("over_reason", -2147483648)),
 		"hand": ordered_hand,
 		"rail_order": rail_order,
 		"sudan_deck": sudan_deck,
@@ -315,6 +315,8 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("sudan_redraw_times_per_round", per_round, int(state.sudan_redraw_times_per_round)))
 	rows.append(_row("sudan_redraw_times", int(original.get("sudan_redraw_times", 0)), int(state.sudan_redraw_times)))
 	rows.append(_row("sudan_redraw_times_recovery_round", int(original.get("sudan_redraw_times_recovery_round", 7)), int(state.sudan_redraw_times_recovery_round)))
+	rows.append(_row("success", bool(original.get("success", false)), bool(state.success)))
+	rows.append(_row("over_reason", int(original.get("over_reason", -2147483648)), int(state.over_reason)))
 	rows.append(_row("card_object_count", original_cards.size(), state.card_instances.size()))
 	rows.append(_row("per_id_counts", _per_id_counts(original_cards), _clone_per_id_counts(state)))
 	rows.append(_row("gold_total_7000105", _original_gold_total(original), state.gold_total()))

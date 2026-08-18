@@ -123,6 +123,8 @@ static func serialize(state) -> Dictionary:
 		"sudan_redraw_times_per_round": state.sudan_redraw_times_per_round,
 		"sudan_redraw_times": state.sudan_redraw_times,
 		"sudan_redraw_times_recovery_round": state.sudan_redraw_times_recovery_round,
+		"success": state.success,
+		"over_reason": state.over_reason,
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
 		"sudan_deck": state.sudan_deck.duplicate(),
@@ -197,6 +199,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		state._sync_redraws_left()
 	else:
 		state.redraws_left = maxi(0, state.sudan_redraw_times_per_round - state.sudan_redraw_times)
+	state.success = bool(data.get("success", false))
+	state.over_reason = int(data.get("over_reason", -2147483648))
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
 	state.hand.clear()
 	state.card_instances.clear()

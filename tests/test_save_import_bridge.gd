@@ -84,6 +84,8 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.sudan_redraw_times, 1, "ordinary redraw usage imports")
 	assert_eq(state.sudan_redraw_times_recovery_round, 5, "Init-owned recovery period imports")
 	assert_eq(state.redraws_left, 2, "UI remainder derives from allowance minus used redraws")
+	assert_false(state.success, "terminal success flag imports")
+	assert_eq(state.over_reason, -2147483648, "unended runs keep the original int.MinValue reason")
 	assert_eq(state.gold_total(), 2, "stacked gold card objects sum through 7000105")
 	assert_eq(state.get_counter(7100006), 2, "counters import verbatim")
 	assert_true(bool(state.event_status.get(5310000, false)), "event status imports")

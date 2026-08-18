@@ -671,6 +671,7 @@ func test_over_action_value_sets_ending_id() -> void:
 	var local_db := _db_with_batch_rites()
 	var state := GameState.new()
 	ResultExec.execute({"over": 7}, state, local_db)
+	assert_false(state.success, "GameOver operation writes the original failure flag")
 	assert_eq(state.over_reason, 7, "a numeric over value selects the ending")
 
 

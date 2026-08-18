@@ -251,10 +251,13 @@ var gen_tags: Dictionary = {}
 #       GetBeginGuideItem (0x525630); CloseBeginGuide.c]
 var begin_guide: Dictionary = {}
 var guide_cues: Array = []
-# Ending id from the fatal operation's `over` value (Sultan cards carry
-# their execution ending in vanish.over). The game-over screen maps it to
-# the over.json ending table entry.
-var over_reason := 0
+# Original Player keeps the terminal outcome independently of the transient
+# game-over presentation request. `over_reason` uses int.MinValue while no
+# terminal outcome has been set.
+# [SRC: dump.cs Player @0x79/@0x7C; GameController.c SetGameOver (0x556a50);
+#       GameOver.c Do (0x50ff10) calls SetGameOver(false, operation.value)]
+var success := false
+var over_reason := -2147483648
 # Set when a silently-settled event chain requests game over; the UI checks
 # and clears it after its current surface closes.
 var over_pending := false
@@ -785,6 +788,11 @@ func use_sudan_per_round_redraw() -> void:
 		return
 	sudan_redraw_times += 1
 	_sync_redraws_left()
+
+
+func set_game_over(is_success: bool, reason: int) -> void:
+	success = is_success
+	over_reason = reason
 
 
 ## Difficulty pick resource rebalance, shared by new-run setup and mid-run

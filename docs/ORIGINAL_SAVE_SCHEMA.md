@@ -19,7 +19,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 
 ## Player 存档 60 字段（dump.cs 偏移序）
 
-状态：**mapped 23**（同名同义）/ **semantic 8**（有对应但结构或语义漂移）/ **missing 29**（克隆无）。
+状态：**mapped 25**（同名同义）/ **semantic 8**（有对应但结构或语义漂移）/ **missing 27**（克隆无）。
 
 | 字段 | 类型 | 克隆 v5 | 状态 | 备注 |
 | --- | --- | --- | --- | --- |
@@ -46,8 +46,8 @@ godot --headless --script tools/export_save_diff.gd -- \
 | sudan_redraw_times | int | sudan_redraw_times | mapped | 本恢复周期内已用普通重抽次数 |
 | sudan_redraw_times_recovery_round | int | sudan_redraw_times_recovery_round | mapped | Init 配置的恢复周期 |
 | wizard_first_show | bool | begin_guide(部分) | semantic | 原作仅存布尔 |
-| success | bool | — | missing | 通关标志 |
-| over_reason | int | — | missing | int.MinValue=未结局 |
+| success | bool | success | mapped | SetGameOver 的终局成功标志 |
+| over_reason | int | over_reason | mapped | 结局原因；int.MinValue=未终局 |
 | ithink_card | Card? | — | missing | 俺寻思卡实例 |
 | cards | List\<Card\> | card_instances | semantic | 见下「结构差异」 |
 | rites | List\<Rite\> | rite_instances | semantic | 槽位下标数组内嵌卡 |
@@ -116,7 +116,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **35/35 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **37/37 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器等）。
 
 导入桥当场抓到并修复的结构偏差：
 

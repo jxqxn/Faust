@@ -46,6 +46,14 @@
 
 ## 当前进度
 
+**2026-08-18 终局结果字段（批次 L，378 测试 / 2374 断言全绿）：**
+`Player.success`@0x79 / `over_reason`@0x7C（未终局 = int.MinValue）落地为
+GameState 真字段，进入 v7 存读档和导入桥。`GameOver.Do` 的 `over` 操作经
+`SetGameOver(false, reason)` 同步写两字段；苏丹过期沿现有 vanish.over 链获得同一
+语义。证据：`GameOver.c` Do 0x50ff10 + `GameController.c` SetGameOver 0x556a50 +
+dump.cs Player@0x79/@0x7C；语料 auto_save 导入桥 **37/37** 全过。cached_event 的 UI
+队列语义独立留待逆向。
+
 **2026-08-18 苏丹重抽 profile（批次 K，378 测试 / 2369 断言全绿）：**
 `Player.sudan_card_init_life`@0x64、`sudan_redraw_times_per_round`@0x6C、
 `sudan_redraw_times`@0x70、`sudan_redraw_times_recovery_round`@0x74 已从
