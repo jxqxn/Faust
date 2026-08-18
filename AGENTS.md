@@ -46,6 +46,17 @@
 
 ## 当前进度
 
+**2026-08-18 唯一性登记（批次 I，376 测试 / 2323 断言全绿）：**
+`Player.only_cards`@0xF0 / `only_rites`@0xF8 的 HashSet 语义已落地并进入 v7
+存读档与原作导入桥。卡登记精确落在 `GenCard → PutCardOnTable` 后，只有
+`CardNode.is_only` 进入集合（独立的苏丹抽卡路径同样登记）；仪式登记精确落在 `InitRite` 开槽吸附成功并加入玩家仪式
+列表后，**不看** Rite 配置 `is_only`（该字段不存在）。type-3 loot 每轮抽取改查这两组
+登记，故已消耗的唯一卡仍不能再出，移除仪式也不回退。证据：`GameController.c`
+PutCardOnTable 0x5556c0 + `PlayerExtensions.c` InitRite 0x38e140 + `GenLoot.c`
+ExcludeAlreadyHave/IsCardExists/IsRiteExists + dump.cs Player@0xF0/@0xF8；样本中
+105 个 only_cards 均为配置 is_only 子集、4 个 only_rites 均为成功创建仪式。语料导入
+对拍扩至 **29/29** 全过。
+
 **2026-08-18 玩家级改名表（批次 H，375 测试 / 2306 断言全绿）：**
 `custom_rite_name`@Player+0x168 与 `player_card_name`@+0x170 已从实例字段中拆出：
 它们按**配置 id**持久化、导入、对拍；卡名表优先于 `Card.custom_name`，仪式名表优先于

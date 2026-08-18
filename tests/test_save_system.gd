@@ -47,6 +47,8 @@ func test_save_load_round_trip_preserves_state():
 	state.last_round_rite_data = {5000001: {"s1": {"id": 2000001, "count": 1}}}
 	state.custom_rite_names = {5000001: "自定义仪式"}
 	state.player_card_names = {2000001: "自定义角色"}
+	state.only_cards = {2000001: true, 2000005: true}
+	state.only_rites = {5000001: true, 5000003: true}
 	var first_instance = state.find_rite_instance_by_id(5000001)
 	var second_instance = state.create_rite_instance(5000003)
 	state.start_rite_instance(first_instance.uid)
@@ -105,6 +107,8 @@ func test_save_load_round_trip_preserves_state():
 		"rite-panel last placement cache survives the JSON boundary")
 	assert_eq(state2.custom_rite_names, state.custom_rite_names, "rite-name overrides survive JSON")
 	assert_eq(state2.player_card_names, state.player_card_names, "card-name overrides survive JSON")
+	assert_eq(state2.only_cards, state.only_cards, "unique-card registry survives JSON")
+	assert_eq(state2.only_rites, state.only_rites, "unique-rite registry survives JSON")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)
 	var loaded_second = state2.get_rite_instance(second_instance.uid)
 	assert_not_null(loaded_first, "first rite instance uid preserved")
@@ -145,6 +149,46 @@ func test_old_v5_save_recovers_player_actor_from_existing_instances() -> void:
 	SaveSystem.deserialize(data, restored, db)
 	assert_gt(restored.player_actor_uid, 0)
 	assert_eq(int(restored.player_actor_data(db).get("id", 0)), 2000001)
+
+
+func test_unique_registries_follow_generated_boundaries_not_current_ownership() -> void:
+	var state := GameState.new()
+	var unique_uid := state.add_card_to_hand(2000001, db)
+	assert_true(state.only_cards.has(2000001),
+		"PutCardOnTable records an is_only card after it is generated")
+	state.remove_card_from_hand(unique_uid)
+	state.card_instances.erase(unique_uid)
+	assert_true(state.only_cards.has(2000001),
+		"losing a unique card never rolls its generated-once registry back")
+	state.add_card_to_hand(2000029, db)
+	assert_false(state.only_cards.has(2000029), "non-is_only cards do not enter the registry")
+	var rite_state := GameState.new()
+	var rite_uid := rite_state.add_available_rite(5000002, db, RNG.new(56))
+	assert_gt(rite_uid, 0, "the no-adsorb fixture rite initializes successfully")
+	assert_true(rite_state.only_rites.has(5000002),
+		"successful InitRite records its id even without a RiteNode is_only flag")
+	rite_state.remove_rite_instance(rite_uid)
+	assert_true(rite_state.only_rites.has(5000002),
+		"removing an initialized rite never rolls its generated-once registry back")
+	var saved: Dictionary = SaveSystem.serialize(state)
+	assert_eq(saved.only_cards, [2000001])
+	var rite_saved: Dictionary = SaveSystem.serialize(rite_state)
+	assert_true(5000002 in rite_saved.only_rites)
+	# Type-3 loot must consult the registry rather than current card/rite
+	# ownership. 6000060 has exactly one unique card candidate (2000471).
+	var loot_context := {"db": db, "state": state, "rng": RNG.new(57)}
+	assert_true(DeferredEffects.can_generate_loot(6000060, loot_context),
+		"unregistered type-3 candidate remains generatable")
+	state.only_cards[2000471] = true
+	assert_false(DeferredEffects.can_generate_loot(6000060, loot_context),
+		"type-3 candidate is blocked by the persistent registry even when not held")
+	var sudan_state := GameState.new()
+	sudan_state.setup_new_run(db, 0, RNG.new(58))
+	RoundLoop.draw_weekly_sudan(sudan_state, db, RNG.new(59))
+	assert_eq(sudan_state.active_sudan_cards.size(), 1)
+	if not sudan_state.active_sudan_cards.is_empty():
+		assert_true(sudan_state.only_cards.has(int(sudan_state.active_sudan_cards[0].card_id)),
+			"the separate Sultan draw path registers its is_only CardNode id")
 
 
 func test_continue_load_rejects_unmarked_legacy_save():

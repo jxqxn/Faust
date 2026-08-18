@@ -355,6 +355,13 @@ static func _create_sudan_instance(state, db, card_id: int):
 	if state == null or not state.has_method("create_card_instance"):
 		return null
 	var instance = state.create_card_instance(card_id, db, "sudan")
+	# GenSudanCard's newly drawn Card is put onto the table rail, so the same
+	# PutCardOnTable is_only registration applies even though Sultan cards do
+	# not travel through the regular hand grant helper.
+	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) ->
+	# PutCardOnTable (0x5556c0)]
+	if instance != null and state.has_method("record_only_card"):
+		state.record_only_card(card_id, db)
 	if instance != null and state.sudan_pool_tags.has(card_id):
 		for tag_name in state.sudan_pool_tags[card_id]:
 			instance.tags[tag_name] = state.sudan_pool_tags[card_id][tag_name]

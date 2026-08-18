@@ -138,6 +138,8 @@ static func serialize(state) -> Dictionary:
 		"last_round_rite_data": state.last_round_rite_data.duplicate(true),
 		"custom_rite_names": state.custom_rite_names.duplicate(true),
 		"player_card_names": state.player_card_names.duplicate(true),
+		"only_cards": _sorted_set_keys(state.only_cards),
+		"only_rites": _sorted_set_keys(state.only_rites),
 		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -242,6 +244,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
 	state.custom_rite_names = _restore_nonempty_string_map(data.get("custom_rite_names", {}))
 	state.player_card_names = _restore_nonempty_string_map(data.get("player_card_names", {}))
+	state.only_cards = _restore_positive_id_set(data.get("only_cards", []))
+	state.only_rites = _restore_positive_id_set(data.get("only_rites", []))
 	state.last_round_rite_data.clear()
 	var saved_last_rite_data = data.get("last_round_rite_data", {})
 	if saved_last_rite_data is Dictionary:
@@ -356,6 +360,27 @@ static func _restore_nonempty_string_map(value: Variant) -> Dictionary:
 		if int(raw_key) > 0 and not text.is_empty():
 			restored[int(raw_key)] = text
 	return restored
+
+
+static func _restore_positive_id_set(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Array):
+		return restored
+	for raw_id in value:
+		var id := int(raw_id)
+		if id > 0:
+			restored[id] = true
+	return restored
+
+
+static func _sorted_set_keys(value: Dictionary) -> Array:
+	var ids: Array = []
+	for raw_id in value:
+		var id := int(raw_id)
+		if id > 0:
+			ids.append(id)
+	ids.sort()
+	return ids
 
 
 ## Save to disk. Returns true on success.

@@ -227,7 +227,11 @@ static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 		if state.has_method("queue_prompt"):
 			state.queue_prompt({"id": "loot.%d" % loot_id, "text": "获得掉落 %d" % loot_id})
 		return
-	var owned := _owned_ids(state)
+	# Type-3 loot reads Player.only_cards / Player.only_rites, not current
+	# ownership. A consumed unique card remains excluded on later draws.
+	# [SRC: GenLoot.c @ ExcludeAlreadyHave (0x511610), IsCardExists (0x511d20),
+	# IsRiteExists (0x511e20)]
+	var owned := _only_generated_ids(state)
 	# condition_ok: gate items by their condition field before weighting.
 	# [SRC: GenLoot.c: items filtered by Where condition before weighting]
 	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
@@ -271,17 +275,12 @@ static func _apply_loot_item(id: int, state, db, rng) -> void:
 		state.queue_prompt({"id": "loot_item.%d" % id, "text": "获得内容 %d" % id})
 
 
-static func _owned_ids(state) -> Array:
+static func _only_generated_ids(state) -> Array:
 	var ids: Array = []
-	for card_uid in state.hand:
-		var instance = state.get_card_instance(int(card_uid)) if state.has_method("get_card_instance") else null
-		ids.append(int(instance.card_id) if instance != null else int(card_uid))
-	for rid in state.available_rites:
-		ids.append(int(rid))
-	for eid in state.event_queue:
-		ids.append(int(eid))
-	for asc in state.active_sudan_cards:
-		ids.append(int(asc.card_id))
+	for raw_id in state.only_cards:
+		ids.append(int(raw_id))
+	for raw_id in state.only_rites:
+		ids.append(int(raw_id))
 	return ids
 
 
@@ -297,14 +296,10 @@ static func can_generate_loot(loot_id: int, ctx: Dictionary) -> bool:
 	if loot.is_empty():
 		return false
 	var owned := {}
-	for instance in state.card_instances.values():
-		if not bool(instance.is_lost):
-			owned[int(instance.card_id)] = true
-	for instance in state.available_rite_instances():
-		owned[int(instance.id)] = true
-	for event_id in state.event_status:
-		if bool(state.event_status[event_id]) or bool(state.event_done.get(event_id, false)):
-			owned[int(event_id)] = true
+	for raw_id in state.only_cards:
+		owned[int(raw_id)] = true
+	for raw_id in state.only_rites:
+		owned[int(raw_id)] = true
 	for item in loot.get("item", []):
 		if not (item is Dictionary):
 			continue

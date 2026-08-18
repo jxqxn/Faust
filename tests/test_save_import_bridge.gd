@@ -114,6 +114,8 @@ func test_synthetic_import_maps_core_state() -> void:
 		"rite-panel last placement imports as a separate state from rollback snapshots")
 	assert_eq(state.custom_rite_names, {5001001: "旧仪式名"})
 	assert_eq(state.player_card_names, {2000005: "旧卡名"})
+	assert_eq(state.only_cards, {2000001: true}, "unique-card registration imports as a set")
+	assert_eq(state.only_rites, {5001001: true}, "successful rite registrations import as a set")
 	assert_eq(state.rite_display_name(5001001, local_db), "旧仪式名", "rite names resolve from the player map")
 	assert_eq(str(state.card_data_for(30, local_db).get("name", "")), "旧卡名",
 		"player card-name map overrides the per-card/config name")
@@ -141,7 +143,8 @@ func test_report_flags_approximations_and_value_drops() -> void:
 		if bool(entry["has_value"]):
 			dropped_with_value.append(str(entry["field"]))
 	assert_has(dropped_with_value, "notes", "non-empty dropped fields are listed")
-	assert_has(dropped_with_value, "only_cards")
+	assert_false("only_cards" in dropped_with_value, "unique-card registration is converted, not dropped")
+	assert_false("only_rites" in dropped_with_value, "unique-rite registration is converted, not dropped")
 	assert_has(dropped_with_value, "name")
 
 

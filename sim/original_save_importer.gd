@@ -57,8 +57,6 @@ const DROPPED_FIELDS := {
 	"sudan_card_show_times": "苏丹卡展示计数",
 	"sudan_remove_count": "苏丹移除计数",
 	"random_cache": "RNG 续航缓存",
-	"only_cards": "唯一卡登记",
-	"only_rites": "唯一仪式登记",
 	"gen_cards": "卡生成计数",
 	"gen_tags": "标签生成计数",
 	"notes": "笔记系统",
@@ -215,6 +213,12 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		converted.append("custom_rite_name")
 	if not player_card_names.is_empty():
 		converted.append("player_card_name")
+	var only_cards := _positive_id_list(original.get("only_cards", []))
+	var only_rites := _positive_id_list(original.get("only_rites", []))
+	if not only_cards.is_empty():
+		converted.append("only_cards")
+	if not only_rites.is_empty():
+		converted.append("only_rites")
 
 	# ---- Rite-panel last placement ----
 	# This is not rollback state. OnConfirm stores manual slot guid ->
@@ -255,6 +259,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"last_round_rite_data": last_rite_data,
 		"custom_rite_names": custom_rite_names,
 		"player_card_names": player_card_names,
+		"only_cards": only_cards,
+		"only_rites": only_rites,
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
 		"pending_operations": [],
 		"delayed_operations": [],
@@ -319,6 +325,8 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("last_round_rite_data", _last_round_rite_data(original), state.last_round_rite_data))
 	rows.append(_row("custom_rite_name", _nonempty_string_map(original.get("custom_rite_name", {})), state.custom_rite_names))
 	rows.append(_row("player_card_name", _nonempty_string_map(original.get("player_card_name", {})), state.player_card_names))
+	rows.append(_row("only_cards", _sorted_int_list(original.get("only_cards", [])), _state_only_ids(state.only_cards)))
+	rows.append(_row("only_rites", _sorted_int_list(original.get("only_rites", [])), _state_only_ids(state.only_rites)))
 	return rows
 
 
@@ -713,10 +721,28 @@ static func _int_list(value) -> Array:
 	return listed
 
 
+static func _positive_id_list(value) -> Array:
+	var ids: Array = []
+	for raw_id in _int_list(value):
+		if int(raw_id) > 0 and int(raw_id) not in ids:
+			ids.append(int(raw_id))
+	ids.sort()
+	return ids
+
+
 static func _sorted_int_list(value) -> Array:
 	var listed: Array = _int_list(value)
 	listed.sort()
 	return listed
+
+
+static func _state_only_ids(value: Dictionary) -> Array:
+	var ids: Array = []
+	for raw_id in value:
+		if int(raw_id) > 0:
+			ids.append(int(raw_id))
+	ids.sort()
+	return ids
 
 
 static func _norm_bool_dict(value: Dictionary) -> Dictionary:

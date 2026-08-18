@@ -220,6 +220,13 @@ var last_round_rite_data: Dictionary = {}
 #       PlayerExtensions.c @ GetRiteCustomName (0x38dcb0)]
 var custom_rite_names: Dictionary = {}
 var player_card_names: Dictionary = {}
+# Player's persistent "generated once" registries. These are not ownership
+# lists: losing a card or removing a rite never removes its definition id.
+# [SRC: GameController.c @ PutCardOnTable (0x5556c0) adds CardNode.is_only
+# ids to player.only_cards; PlayerExtensions.c @ InitRite (0x38e140) adds
+# each successfully initialized rite id to player.only_rites]
+var only_cards: Dictionary = {}
+var only_rites: Dictionary = {}
 # Active on-screen beginner-guide directive from the last `begin_guide`
 # action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
 # it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
@@ -258,6 +265,14 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 	instance.zone = zone
 	card_instances[instance.uid] = instance
 	return instance
+
+
+func record_only_card(card_id: int, db) -> void:
+	if card_id <= 0 or db == null:
+		return
+	var definition: Dictionary = db.get_card(card_id)
+	if bool(definition.get("is_only", false)):
+		only_cards[card_id] = true
 
 
 func get_card_instance(uid: int):
@@ -622,6 +637,8 @@ func card_perspective_role(card_or_uid: int, db) -> String:
 func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	hand.clear()
 	card_instances.clear()
+	only_cards.clear()
+	only_rites.clear()
 	next_card_uid = 1
 	player_actor_uid = 0
 	rail_order.clear()
@@ -938,6 +955,11 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 	if uid not in rail_order:
 		rail_order.append(uid)
 	_sync_hand_order_from_rail()
+	# GenCard creates through AddCard, then PutCardOnTable records the
+	# definition only after it reaches the visible hand/table boundary. Moving
+	# an existing uid is idempotent against the HashSet; fresh grants record it.
+	# [SRC: GameController.c @ GenCard (0x54f650) -> PutCardOnTable (0x5556c0)]
+	record_only_card(instance.card_id, db)
 	return uid
 
 
@@ -1134,6 +1156,11 @@ func add_available_rite(id: int, db = null, rng = null) -> int:
 	if not _adsorb_open_slots(instance, rite, db, rng):
 		remove_rite_instance(instance.uid)
 		return 0
+	# InitRite adds the id only after open-slot adsorption succeeded and the
+	# runtime rite has joined player.rites. This records every rite id; unlike
+	# cards, RiteNode has no is_only config gate for this HashSet.
+	# [SRC: PlayerExtensions.c @ InitRite (0x38e140) lines 769-812]
+	only_rites[id] = true
 	return instance.uid
 
 
