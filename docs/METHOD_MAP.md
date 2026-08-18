@@ -38,7 +38,7 @@
 
 | 克隆落点 | 缺口 |
 | --- | --- |
-| `sim/game_state.gd` v5 存档（to_save_dict） | 原作 Player 序列化未解码对拍；`save_samples/` 真实存档尚未成为验收裁判（见「对拍台」） |
+| `sim/game_state.gd` v5 存档（to_save_dict） | 原作存档 schema 已全解码（60 字段，`docs/ORIGINAL_SAVE_SCHEMA.md` + `sim/original_save_schema.gd` 对拍工具）；**阶段二导入桥未建**：原作存档→GameState 转换 + 同刻值对拍 |
 | `GameState.pending_operations` / `delayed_operations` | 原作 Promise/Pop 队列模型的宿主等价物；事件日内 Promise 阻塞语义留档未对齐 |
 | `sim/condition.gd` AttrExprParser | 文法已对齐（四则/e() 敌方/sN.tag/counter.N）；解析器宿主为自制递归下降，非原作方法映射 |
 | `ui/game_audio.gd` GameAudio | 仅 main/tutorial BGM + 部分音效；拖放音、弹窗出现音、BGM 分层（level2/3）、结局 BGM、`sfx_*.json` 全量缺 |
@@ -53,6 +53,9 @@
 | 克隆物 | 处置 |
 | --- | --- |
 | `set_world_scene_blocker`、`world_spawn_id`、`world_position_ratio` 存档字段 | 横版世界探针遗留；清理需评估 v5 存档兼容（GAP 留档） |
+| `GameState.coin_count` 标量金币 | **结构偏差（双信号 GenCoin.c Do 0x510b40 + cards.json 2000029）**：原作金币 = 手牌金币卡 2000029 的 count，增减走生卡 + set_count + card_born + bagpos=1。修复 = 金币卡堆叠模型（涉及 have.金币 条件、卡牌操作命中、UI 读数）。见 `docs/ORIGINAL_SAVE_SCHEMA.md` 发现 1 |
+| `GameState.gold_dice` 标量骰子 | 原作 Player 无骰子字段，疑走 counter（id 待验证）；与金币同属"资源卡/计数器 vs 标量"偏差族 |
+| `GameState.hand`/`rail_order` 独立手牌数组 | 原作手牌 = cards 中 bag=0 按 bagpos 排序；随金币卡批次一并评估 |
 | `MethinksEngine` / `drop_card_on_methinks` 命名族 | 复刻期兼容接口；玩家可见概念统一为"思考"，方向定后重命名 |
 | ~~弹簧积分器、透视/阴影 shader、SubViewport 双通道、ui_motion.gd~~ | 已于 2026-08-17 去 Balatro 批次删除（git 历史可恢复） |
 
@@ -67,6 +70,16 @@
 | 音频全量 | `sfx_config.json`、`sfx_settle_card_new.json`、`sfx_npc_role_dub.json`、`over_music_config.json` | 小-中（配置在语料库未接） |
 | 未接配置域 | `quest.json`、`upgrade.json`、`variable.json`、`ui.json`、`textstyle.json`、`imagestyle.json`、`dt`、`credits.json`、`mobile_help.json` | 逐域判断用途后接入或说明 |
 | Live2D | 语料库 `live2d/` 已提取 | 大（既定策略：第一版静态图） |
+| 背包/手牌位系统（bag/bagpos/BagIndex） | 存档字段双信号（`docs/ORIGINAL_SAVE_SCHEMA.md`） | 中（与金币卡/手牌模型联动） |
+| 末日决战（end_open/is_armageddon/armageddon_rite_id） | 存档字段双信号；控制器未审 | 未知，需普查 |
+| RNG 续航（random_cache） | 存档字段双信号 | 小-中 |
+| 唯一性登记（only_cards/only_rites） | 存档字段双信号 | 小 |
+| 生成计数（gen_cards/gen_tags） | 存档字段双信号 | 小 |
+| 改名持久化（custom_rite_name/player_card_name） | 存档字段双信号（DSL 键已支持，持久化缺） | 小 |
+| UI 引导标志族（sudan_box_show/story/prestige/deadline/helpbtn、once_new_rites_is_show） | 存档字段双信号 | 小 |
+| 苏丹重抽恢复模型（times_per_round/times/recovery_round、sudan_card_init_life） | 存档字段双信号 | 小 |
+| 结局状态（success/over_reason）与 cached_event | 存档字段双信号 | 小 |
+| global.json 全局域（回退配额/图鉴解锁/升级/任务/统计/overRecord） | `save_samples/global.json` 29 字段 | 中（部分依赖图鉴/升级系统） |
 | 成就面板 | steam_achievement 空实现 | 可选 |
 
 ## 普查程序（如何扩展本表）
@@ -76,9 +89,9 @@
 3. 每个复刻批次收尾时更新所 touched 的行；每个大阶段做一次 dump.cs 增量普查。
 4. 表中新增 ✅ 必须附双信号；只有单信号时写 🟡 并注明缺口。
 
-## 对拍台（验收裁判，建设中）
+## 对拍台（验收裁判）
 
-- **资产**：语料库 `save_samples/`（`auto_save.json`、`save_slot_000.json`、`global.json`、`user_archive.json`）= 原作真实存档。
-- **阶段 1（未开始）**：解码原作存档 schema——Player 字段定义在 `dump.cs`，序列化规则在各 `Player_*_JsonHandler.c`。
-- **阶段 2**：写对照导出器：原作存档字段 vs 克隆同局状态字段，逐项 diff；此后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
+- **资产**：语料库 `save_samples/`（`auto_save.json`、`save_slot_000.json`、`global.json`、`user_archive.json`）= 原作真实存档，明文 JSON。
+- **阶段 1 ✅（2026-08-17）**：schema 全解码——Player 60 字段与 dump.cs 双信号吻合，零未知零类型不符；映射表与工具落地（`sim/original_save_schema.gd` + `tools/export_save_diff.gd` + `tests/test_save_diff_harness.gd`，mapped 11 / semantic 11 / missing 38）；快照文档 `docs/ORIGINAL_SAVE_SCHEMA.md`。结构发现：金币=卡 2000029 堆叠（双信号）、骰子疑 counter、手牌=bag/bagpos、仪式槽位内嵌嵌套、UI 队列不持久化、回退双轨、random_cache。
+- **阶段 2（下一步）**：导入桥——原作存档 → 克隆 GameState 内存态（嵌套↔扁平转换，missing 字段登记丢弃清单）→ 导出 v5 → 同刻值对拍。达成后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
 - **远期**：固定种子 trace 对拍（同一操作脚本下原作 vs 克隆的事件/结算日志序列）。

@@ -75,6 +75,20 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-17 复刻工作法固化 + 对拍台阶段一（327 测试全绿）：** 用户否决打地鼠式
+修错，确立三支柱方法论（数据零转译 / 原作产物当裁判 / 结构 1:1 映射，见
+「复刻工作法」节）；`docs/METHOD_MAP.md` 成为主 TODO，`tools/check_content_parity.ps1`
+守卫 content/ 与语料库字节一致（3808 文件零违规）。**原作存档全解码**：
+`save_samples/` 为明文 JSON，Player 60 字段与 dump.cs（391488 行，JsonSerializable）
+双信号吻合（零未知零类型不符）；映射表/分析工具/测试落地
+（`sim/original_save_schema.gd` + `tools/export_save_diff.gd` +
+`tests/test_save_diff_harness.gd`；mapped 11 / semantic 11 / missing 38），
+快照见 `docs/ORIGINAL_SAVE_SCHEMA.md`。**重大结构发现**：原作金币 = 手牌金币卡
+2000029 的 count（GenCoin.c Do 0x510b40：GenCard+set_count+bagpos=1+card_born，
+双信号），克隆 coin_count 标量为结构偏差（METHOD_MAP C，修复批次待排）；骰子
+疑走 counter（待验证）；手牌=cards bag=0 按 bagpos；仪式槽位为内嵌下标数组。
+下一步 = 对拍台阶段二导入桥（原作存档→GameState→v5 导出→同刻对拍）。
+
 **2026-08-17/18 逻辑层第八波（规则引擎 post_rite/选择器族/审计域扩展，320 测试全绿）：**
 **post_rite 执行链**：卡牌定义 post_rite 在所属仪式结算后执行（参战卡+其装备逐张以
 自身为上下文）——消耗品 clean.self 自毁、食客 parent-equip 离场、条件计数/结局/事件
