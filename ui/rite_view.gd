@@ -196,7 +196,7 @@ func _build_panel_content() -> void:
 	margin.add_child(col)
 
 	var title := Label.new()
-	title.text = "%s" % _rite.get("name", str(_rite_id))
+	title.text = _state.rite_display_name(_rite_id, _db) if _state != null else "%s" % _rite.get("name", str(_rite_id))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 27)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)

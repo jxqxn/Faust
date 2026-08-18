@@ -78,8 +78,8 @@ godot --headless --script tools/export_save_diff.gd -- \
 | last_round_rite_data | Dict\<int,Dict\> | last_round_rite_data | mapped | 按仪式配置 id + 手动槽 guid 保存 LastCardData{id,count}，用于面板恢复上次投放；不是回退快照 |
 | rite_auto_result | bool | rite_auto_result | mapped | |
 | disable_auto_gen_sudan_card | bool | auto_gen_sudan_card(取反) | mapped | |
-| custom_rite_name | Dict\<int,string\> | — | missing | 改名持久化 |
-| player_card_name | Dict\<int,string\> | — | missing | 改名持久化 |
+| custom_rite_name | Dict\<int,string\> | custom_rite_names | mapped | 玩家级仪式显示名覆盖（按配置 id） |
+| player_card_name | Dict\<int,string\> | player_card_names | mapped | 玩家级卡牌显示名覆盖（按配置 id，优先于 Card.custom_name） |
 | end_open | bool | — | missing | 终局开启 |
 | is_armageddon | bool | — | missing | 末日决战态 |
 | armageddon_rite_id | int | — | missing | 末日仪式 id |
@@ -116,7 +116,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **25/25 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读/仪式上次投放缓存等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **27/27 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/两张玩家级名称覆盖表等）。
 
 导入桥当场抓到并修复的结构偏差：
 

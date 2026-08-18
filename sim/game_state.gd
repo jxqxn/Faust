@@ -212,6 +212,14 @@ var round_snapshots := {"round_end": {}, "round_begin": {}}
 #       player.last_round_rite_data; @ OnLastState (0x58fdf0); dump.cs
 #       Player.last_round_rite_data @0x158, RiteNode.Slot.open_adsorb @0x20]
 var last_round_rite_data: Dictionary = {}
+# Player-level display-name overrides, keyed by definition id. They are
+# separate from Card.custom_name: GetName checks player_card_name first, and
+# rites resolve custom_rite_name before their configured title.
+# [SRC: CardExtensions.c @ GetName (0x37ff50) player+0x170 lookup precedes
+#       Card.custom_name; Player.c @ SetRiteCustomName (0x3a4520) player+0x168;
+#       PlayerExtensions.c @ GetRiteCustomName (0x38dcb0)]
+var custom_rite_names: Dictionary = {}
+var player_card_names: Dictionary = {}
 # Active on-screen beginner-guide directive from the last `begin_guide`
 # action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
 # it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
@@ -282,7 +290,10 @@ func card_data_for(uid: int, db) -> Dictionary:
 	card["count"] = instance.count
 	card["is_lost"] = instance.is_lost
 	card["rare"] = clampi(int(card.get("rare", 1)) + instance.rare_up, 1, 4)
-	if not instance.custom_name.is_empty():
+	var player_name := str(player_card_names.get(instance.card_id, ""))
+	if not player_name.is_empty():
+		card["name"] = player_name
+	elif not instance.custom_name.is_empty():
 		card["name"] = instance.custom_name
 	if not instance.custom_text.is_empty():
 		card["text"] = instance.custom_text
@@ -340,6 +351,29 @@ func set_card_custom_name(uid: int, value: String) -> bool:
 		return false
 	instance.custom_name = clean_value
 	return true
+
+
+func set_player_card_name(card_id: int, value: String) -> bool:
+	var clean_value := value.strip_edges()
+	if card_id <= 0 or clean_value.is_empty():
+		return false
+	player_card_names[card_id] = clean_value
+	return true
+
+
+func set_rite_custom_name(rite_id: int, value: String) -> bool:
+	var clean_value := value.strip_edges()
+	if rite_id <= 0 or clean_value.is_empty():
+		return false
+	custom_rite_names[rite_id] = clean_value
+	return true
+
+
+func rite_display_name(rite_id: int, db) -> String:
+	var custom := str(custom_rite_names.get(rite_id, ""))
+	if not custom.is_empty():
+		return custom
+	return str(db.get_rite(rite_id).get("name", rite_id)) if db != null else str(rite_id)
 
 
 func set_card_custom_text(uid: int, value: String) -> bool:

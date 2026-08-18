@@ -45,6 +45,8 @@ func test_save_load_round_trip_preserves_state():
 	state.auto_result_rites.append(5000002)
 	state.rite_auto_result = true
 	state.last_round_rite_data = {5000001: {"s1": {"id": 2000001, "count": 1}}}
+	state.custom_rite_names = {5000001: "自定义仪式"}
+	state.player_card_names = {2000001: "自定义角色"}
 	var first_instance = state.find_rite_instance_by_id(5000001)
 	var second_instance = state.create_rite_instance(5000003)
 	state.start_rite_instance(first_instance.uid)
@@ -101,6 +103,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_true(state2.rite_auto_result, "rite_auto_result flag preserved")
 	assert_eq(state2.last_round_rite_data, state.last_round_rite_data,
 		"rite-panel last placement cache survives the JSON boundary")
+	assert_eq(state2.custom_rite_names, state.custom_rite_names, "rite-name overrides survive JSON")
+	assert_eq(state2.player_card_names, state.player_card_names, "card-name overrides survive JSON")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)
 	var loaded_second = state2.get_rite_instance(second_instance.uid)
 	assert_not_null(loaded_first, "first rite instance uid preserved")

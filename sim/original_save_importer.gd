@@ -65,8 +65,6 @@ const DROPPED_FIELDS := {
 	"once_new_rites_is_show": "新仪式首见标志",
 	"cached_event": "事件缓存",
 	"BagIndex": "背包索引",
-	"custom_rite_name": "仪式改名（按 id 映射到 RiteInstance.custom_name）",
-	"player_card_name": "卡牌改名（按 id 映射到 CardInstance.custom_name）",
 	"end_open": "终局开启",
 	"is_armageddon": "末日决战态",
 	"armageddon_rite_id": "末日仪式 id",
@@ -176,7 +174,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 			"life": int(rite.get("life", 0)),
 			"slot_cards": slot_cards,
 			"is_cleaned": false,
-			"custom_name": _custom_rite_name(original, int(rite.get("id", 0))),
+			"custom_name": "",
 		})
 	converted.append("rites(槽位下标数组 -> 扁平 zone/rite_uid/slot_key)")
 
@@ -208,13 +206,14 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	rail_order.append_array(sudan_uids)
 	rail_order.append_array(ordered_hand)
 
-	# ---- Custom card names ----
-	var card_name_by_id: Dictionary = original.get("player_card_name", {})
-	if card_name_by_id is Dictionary and not card_name_by_id.is_empty():
-		for row in card_rows:
-			var cid_key := str(row["card_id"])
-			if card_name_by_id.has(cid_key):
-				row["custom_name"] = str(card_name_by_id[cid_key])
+	# ---- Player-level display-name overrides ----
+	# These maps are authoritative overlays by definition id, not per-instance
+	# Card/Rite fields. CardExtensions.GetName checks the card map first.
+	var custom_rite_names := _nonempty_string_map(original.get("custom_rite_name", {}))
+	var player_card_names := _nonempty_string_map(original.get("player_card_name", {}))
+	if not custom_rite_names.is_empty():
+		converted.append("custom_rite_name")
+	if not player_card_names.is_empty():
 		converted.append("player_card_name")
 
 	# ---- Rite-panel last placement ----
@@ -254,6 +253,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"auto_result_rites": _int_list(original.get("auto_result_rites", [])),
 		"rite_auto_result": bool(original.get("rite_auto_result", false)),
 		"last_round_rite_data": last_rite_data,
+		"custom_rite_names": custom_rite_names,
+		"player_card_names": player_card_names,
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
 		"pending_operations": [],
 		"delayed_operations": [],
@@ -316,6 +317,8 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
 	rows.append(_row("bag_positions", _original_bag_positions(original_cards), _clone_bag_positions(state)))
 	rows.append(_row("last_round_rite_data", _last_round_rite_data(original), state.last_round_rite_data))
+	rows.append(_row("custom_rite_name", _nonempty_string_map(original.get("custom_rite_name", {})), state.custom_rite_names))
+	rows.append(_row("player_card_name", _nonempty_string_map(original.get("player_card_name", {})), state.player_card_names))
 	return rows
 
 
@@ -440,11 +443,6 @@ static func _original_difficulty_value(db, difficulty_index: int, key: String, f
 	return int(config.get(key, fallback))
 
 
-static func _custom_rite_name(original: Dictionary, rite_id: int) -> String:
-	var names: Dictionary = original.get("custom_rite_name", {})
-	return str(names.get(str(rite_id), ""))
-
-
 static func _last_round_rite_data(original: Dictionary) -> Dictionary:
 	var raw = original.get("last_round_rite_data", {})
 	var normalized := {}
@@ -464,6 +462,17 @@ static func _last_round_rite_data(original: Dictionary) -> Dictionary:
 			if card_id > 0 and count > 0:
 				slots[str(raw_slot_key)] = {"id": card_id, "count": count}
 		normalized[int(raw_rite_id)] = slots
+	return normalized
+
+
+static func _nonempty_string_map(raw: Variant) -> Dictionary:
+	var normalized := {}
+	if not (raw is Dictionary):
+		return normalized
+	for raw_id in raw:
+		var value := str(raw[raw_id])
+		if int(raw_id) > 0 and not value.is_empty():
+			normalized[int(raw_id)] = value
 	return normalized
 
 

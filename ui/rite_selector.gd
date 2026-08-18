@@ -395,6 +395,7 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 	_rite_grids.append(grid)
 	for instance in rids:
 		var r: Dictionary = _db.rites.get(instance.id, {})
+		var rite_name: String = _state.rite_display_name(int(instance.id), _db) if _state != null else str(r.get("name", instance.id))
 		var btn := Button.new()
 		# Original rite pin art from the rites atlas, keyed by the rite's
 		# `icon` field (e.g. "rite_1" for 治理家业); name stays as tooltip.
@@ -416,11 +417,11 @@ func _add_location_section(loc_name: String, rids: Array) -> void:
 			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			btn.add_child(icon_rect)
 			btn.tooltip_text = "%s
-%s" % [str(r.get("name", instance.id)), str(r.get("text", ""))]
+%s" % [rite_name, str(r.get("text", ""))]
 			for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 				btn.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 		else:
-			btn.text = str(r.get("name", str(instance.id)))
+			btn.text = rite_name
 			btn.tooltip_text = str(r.get("text", ""))
 			btn.custom_minimum_size = Vector2(0, 44)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL

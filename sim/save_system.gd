@@ -136,6 +136,8 @@ static func serialize(state) -> Dictionary:
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
 		"last_round_rite_data": state.last_round_rite_data.duplicate(true),
+		"custom_rite_names": state.custom_rite_names.duplicate(true),
+		"player_card_names": state.player_card_names.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -238,6 +240,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rid in data.get("auto_result_rites", []):
 		state.auto_result_rites.append(int(rid))
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
+	state.custom_rite_names = _restore_nonempty_string_map(data.get("custom_rite_names", {}))
+	state.player_card_names = _restore_nonempty_string_map(data.get("player_card_names", {}))
 	state.last_round_rite_data.clear()
 	var saved_last_rite_data = data.get("last_round_rite_data", {})
 	if saved_last_rite_data is Dictionary:
@@ -340,6 +344,17 @@ static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
 		return restored
 	for raw_key in value:
 		restored[int(raw_key)] = value[raw_key]
+	return restored
+
+
+static func _restore_nonempty_string_map(value: Variant) -> Dictionary:
+	var restored := {}
+	if not (value is Dictionary):
+		return restored
+	for raw_key in value:
+		var text := str(value[raw_key])
+		if int(raw_key) > 0 and not text.is_empty():
+			restored[int(raw_key)] = text
 	return restored
 
 

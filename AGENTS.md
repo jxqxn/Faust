@@ -46,6 +46,14 @@
 
 ## 当前进度
 
+**2026-08-18 玩家级改名表（批次 H，375 测试 / 2306 断言全绿）：**
+`custom_rite_name`@Player+0x168 与 `player_card_name`@+0x170 已从实例字段中拆出：
+它们按**配置 id**持久化、导入、对拍；卡名表优先于 `Card.custom_name`，仪式名表优先于
+配置标题，仪式选择器与仪式面板都读取该覆盖。证据：`CardExtensions.GetName`
+0x37ff50（先查 player+0x170）+ `Player.SetRiteCustomName` 0x3a4520 /
+`PlayerExtensions.GetRiteCustomName` 0x38dcb0 + dump.cs Player 字段/方法。语料导入
+对拍扩至 **27/27** 全过。
+
 **2026-08-18 仪式“恢复上次投放”链（批次 G，375 测试 / 2300 断言全绿）：**
 `last_round_rite_data` 已确认**不是回退快照**：`RitePanelController.OnConfirm`
 （0x58f1c0）按 Rite 配置 id 记录每个手动槽 guid 的 `LastCardData{id,count}`；
