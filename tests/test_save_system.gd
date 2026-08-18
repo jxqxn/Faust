@@ -44,6 +44,7 @@ func test_save_load_round_trip_preserves_state():
 	state.started_rites.append(5000001)
 	state.auto_result_rites.append(5000002)
 	state.rite_auto_result = true
+	state.last_round_rite_data = {5000001: {"s1": {"id": 2000001, "count": 1}}}
 	var first_instance = state.find_rite_instance_by_id(5000001)
 	var second_instance = state.create_rite_instance(5000003)
 	state.start_rite_instance(first_instance.uid)
@@ -98,6 +99,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_true(5000003 in state2.available_rites, "available rites preserved")
 	assert_true(5000002 in state2.auto_result_rites, "auto-result rites preserved")
 	assert_true(state2.rite_auto_result, "rite_auto_result flag preserved")
+	assert_eq(state2.last_round_rite_data, state.last_round_rite_data,
+		"rite-panel last placement cache survives the JSON boundary")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)
 	var loaded_second = state2.get_rite_instance(second_instance.uid)
 	assert_not_null(loaded_first, "first rite instance uid preserved")

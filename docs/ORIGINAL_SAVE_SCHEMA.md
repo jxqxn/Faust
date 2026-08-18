@@ -75,7 +75,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 | once_new_rites_is_show | Dict\<int,bool\> | — | missing | 新仪式首见 |
 | cached_event | List\<int\> | — | missing | 事件缓存 |
 | BagIndex | int | — | missing | 背包索引 |
-| last_round_rite_data | Dict\<int,Dict\> | round_snapshots | semantic | 原作按仪式 LastCardData{id,count}；克隆整日快照 |
+| last_round_rite_data | Dict\<int,Dict\> | last_round_rite_data | mapped | 按仪式配置 id + 手动槽 guid 保存 LastCardData{id,count}，用于面板恢复上次投放；不是回退快照 |
 | rite_auto_result | bool | rite_auto_result | mapped | |
 | disable_auto_gen_sudan_card | bool | auto_gen_sudan_card(取反) | mapped | |
 | custom_rite_name | Dict\<int,string\> | — | missing | 改名持久化 |
@@ -109,14 +109,14 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 5. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
 6. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
 7. **原作 UI 队列不持久化**：只存 delay_ops + cached_event；克隆持久化全量 pending_operations（语义更重，导入桥需裁剪）。
-8. **回退三域已拆清**：① global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007）已迁入 `GlobalState`；② Datapool 轮次 Player 文件已于 **2026-08-18 批次 F** 落地：SaveRoundBegin/End 先刷新 continue，再写 `round_{N}.json` / `round_{N}_end.json`，LoadRound/End 从磁盘恢复并刷新 continue，档案恢复删除旧时间线的 `round_*.json`；③ player.last_round_rite_data 是按仪式 LastCardData 的独立字段，仍待确认用途。消耗顺序保持 `UseBackToPrev → Global.roundRollback=2 → SaveGlobal → LoadRound`，故玩家重启后仍可回退且配额不会随 Player 快照回滚。
+8. **回退与仪式恢复已拆清**：① global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007）已迁入 `GlobalState`；② Datapool 轮次 Player 文件已于 **2026-08-18 批次 F** 落地：SaveRoundBegin/End 先刷新 continue，再写 `round_{N}.json` / `round_{N}_end.json`，LoadRound/End 从磁盘恢复并刷新 continue，档案恢复删除旧时间线的 `round_*.json`；③ player.last_round_rite_data 是独立的仪式面板“恢复上次投放”缓存：`OnConfirm` 按 Rite.id 记录每个**手动槽** guid 的 `LastCardData{id,count}`，`OnLastState` 按卡牌可用性和当前槽条件逐槽恢复；它不是回退快照。消耗顺序保持 `UseBackToPrev → Global.roundRollback=2 → SaveGlobal → LoadRound`，故玩家重启后仍可回退且配额不会随 Player 快照回滚。
 9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 10. **苏丹期限 = 卡寿命模型**（2026-08-18 批次 D 解出）：激活苏丹卡无独立期限字段——`GenSudanCard` L3656-3662 出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)`（抢跑量），每日 life+1（老化无条件），`life >= card_vanishing` 且不在任一仪式槽即 DoVanish 处刑（vanish.over 驱动结局）；可见倒计时 = `card_vanishing − life`（UpdateSudanLife 0x55aeb0，庇护期间可为负）。样本 uid11 life=0=7−7 ✓；困难档 7−5=2 抢跑=5 天。重抽新卡 `set_life(弃卡 life)` 继承剩余；抽牌 = sudan_card_pool 先 Shuffle 再 RemoveLast（顺序无意义）。克隆：`_update_card_lives` 苏丹并入通用死亡，days_left 为镜像；导入桥 days_left 精确恢复。
 11. **手牌位 = bag/bagpos 双字段**（2026-08-18 批次 E 解出）：`Card.bag`@0x48 = 包页 id（`Player.BagIndex`@0x150 = 当前查看页，GenSudanCard 把新苏丹卡 set_bag 进当前页）；`bagpos`@0x4c = 页内 **1 基**位置，0 = 未摆放（背包列表）；`UpdateHandCardPos` 0x559a70 在 b__6 链（回合开始事件**之后**）收集 `IsCurrentHandCard`（bag==BagIndex 且三标签资格）卡排序后压缩为 1..N；GenCoin `set_bagpos(1)` 金币前置。样本仅 6 张卡有位置（主角/苏丹/妻子/法拉杰/已装备/乙太堆）——bagpos 是玩家手动摆放，非类型成员。克隆：CardInstance.bag/bag_pos 落地 + 日终压缩 + 导入桥透传（bag_positions 对拍行）；三标签名（IsHandCard 资格判据）无法从元数据反查，留档。
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **24/24 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **25/25 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集/per-id 计数/金币 7000105 派生读/仪式上次投放缓存等）。
 
 导入桥当场抓到并修复的结构偏差：
 

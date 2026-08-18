@@ -61,7 +61,7 @@ func _synthetic_original() -> Dictionary:
 		"timing_rounds": {"531000000": 6}, "auto_result_rites": [],
 		"notes": [[{"type": 1, "id": 5001001, "uid": 7, "count": 0}]],
 		"once_new_rites_is_show": {}, "cached_event": [], "BagIndex": 0,
-		"last_round_rite_data": {}, "rite_auto_result": false,
+		"last_round_rite_data": {"5001001": {"s2": {"id": 2000010, "count": 1}}}, "rite_auto_result": false,
 		"disable_auto_gen_sudan_card": false, "custom_rite_name": {},
 		"player_card_name": {}, "end_open": false, "is_armageddon": false,
 		"armageddon_rite_id": 0,
@@ -110,6 +110,8 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(equip.zone, "equipped")
 	assert_eq(int(equip.equipped_to_uid), 31)
 	assert_eq(int(state.ended_rites.get(6, 0)), 3, "ended rites import")
+	assert_eq(state.last_round_rite_data, {5001001: {"s2": {"id": 2000010, "count": 1}}},
+		"rite-panel last placement imports as a separate state from rollback snapshots")
 
 
 func test_synthetic_diff_is_clean() -> void:

@@ -65,7 +65,6 @@ const DROPPED_FIELDS := {
 	"once_new_rites_is_show": "新仪式首见标志",
 	"cached_event": "事件缓存",
 	"BagIndex": "背包索引",
-	"last_round_rite_data": "按仪式的上回合卡数据（回退快照持久化）",
 	"custom_rite_name": "仪式改名（按 id 映射到 RiteInstance.custom_name）",
 	"player_card_name": "卡牌改名（按 id 映射到 CardInstance.custom_name）",
 	"end_open": "终局开启",
@@ -218,6 +217,13 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 				row["custom_name"] = str(card_name_by_id[cid_key])
 		converted.append("player_card_name")
 
+	# ---- Rite-panel last placement ----
+	# This is not rollback state. OnConfirm stores manual slot guid ->
+	# LastCardData{id,count}, indexed by the rite definition id.
+	var last_rite_data := _last_round_rite_data(original)
+	if not last_rite_data.is_empty():
+		converted.append("last_round_rite_data(仪式手动槽位上次投放)")
+
 	# ---- Dropped-with-value scan ----
 	var dropped := _scan_dropped(original)
 
@@ -247,6 +253,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"started_rites": started_rites,
 		"auto_result_rites": _int_list(original.get("auto_result_rites", [])),
 		"rite_auto_result": bool(original.get("rite_auto_result", false)),
+		"last_round_rite_data": last_rite_data,
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
 		"pending_operations": [],
 		"delayed_operations": [],
@@ -308,6 +315,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("rites", _original_rites_summary(original), _clone_rites_summary(state)))
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
 	rows.append(_row("bag_positions", _original_bag_positions(original_cards), _clone_bag_positions(state)))
+	rows.append(_row("last_round_rite_data", _last_round_rite_data(original), state.last_round_rite_data))
 	return rows
 
 
@@ -435,6 +443,28 @@ static func _original_difficulty_value(db, difficulty_index: int, key: String, f
 static func _custom_rite_name(original: Dictionary, rite_id: int) -> String:
 	var names: Dictionary = original.get("custom_rite_name", {})
 	return str(names.get(str(rite_id), ""))
+
+
+static func _last_round_rite_data(original: Dictionary) -> Dictionary:
+	var raw = original.get("last_round_rite_data", {})
+	var normalized := {}
+	if not (raw is Dictionary):
+		return normalized
+	for raw_rite_id in raw:
+		var raw_slots = raw[raw_rite_id]
+		if not (raw_slots is Dictionary):
+			continue
+		var slots := {}
+		for raw_slot_key in raw_slots:
+			var raw_card = raw_slots[raw_slot_key]
+			if not (raw_card is Dictionary):
+				continue
+			var card_id := int(raw_card.get("id", 0))
+			var count := int(raw_card.get("count", 0))
+			if card_id > 0 and count > 0:
+				slots[str(raw_slot_key)] = {"id": card_id, "count": count}
+		normalized[int(raw_rite_id)] = slots
+	return normalized
 
 
 static func _scan_dropped(original: Dictionary) -> Array:

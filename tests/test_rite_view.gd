@@ -426,7 +426,69 @@ func _db_with_manual_rites() -> ConfigDB:
 		"settlement": [{"condition": {}, "result": {"coin": 6}, "action": {}}],
 		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
 	}
+	local_db.rites[992003] = {
+		"id": 992003, "name": "Manual restore", "open_conditions": [],
+		"cards_slot": {
+			"s1": {"condition": {}, "open_adsorb": 0},
+			"s2": {"condition": {}, "open_adsorb": 0},
+			"s3": {"condition": {}, "open_adsorb": 1},
+		}, "round_number": 2, "waiting_round": 0,
+		"waiting_round_end_action": [], "settlement_prior": [],
+		"settlement": [{"condition": {}, "result": {}, "action": {}}],
+		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
+	}
 	return local_db
+
+
+func test_confirm_records_manual_rite_slots_for_last_state_restore():
+	# OnConfirm stores manual slot guid -> LastCardData{id,count}; open_adsorb
+	# is field +0x20 and must not be confused with is_enemy.
+	# [SRC: RitePanelController.c OnConfirm 0x58f1c0 L1282-1288; dump.cs
+	#       RiteNode.Slot.open_adsorb @0x20]
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(100)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	state.add_coin(3, local_db)
+	var gold_uid := state.gold_card_uids()[0]
+	var actor_uid := state.player_actor_uid
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992003)
+	await wait_process_frames(2)
+	view._place_card_in_slot("s1", gold_uid, "hand", "")
+	view._place_card_in_slot("s3", actor_uid, "hand", "")
+	view._resolve()
+	assert_eq(state.get_last_round_rite_data(992003), {
+		"s1": {"id": 2000029, "count": 3},
+	}, "only manual slots are recorded under the rite config id")
+
+
+func test_restore_last_rite_state_is_partial_and_reforms_stack_count():
+	# OnLastState restores each slot independently. It must form the saved count
+	# from hand stacks, but leave an unavailable slot empty rather than failing
+	# the whole restore.
+	# [SRC: RitePanelController.c OnLastState (0x58fdf0)]
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(104)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	state.add_coin(5, local_db)
+	var gold_uid := state.gold_card_uids()[0]
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992003)
+	await wait_process_frames(2)
+	state.last_round_rite_data[992003] = {
+		"s1": {"id": 2000029, "count": 3},
+		"s2": {"id": 2000029, "count": 999},
+	}
+	view._restore_last_state()
+	var s1_uid := int(view._placed.get("s1", 0))
+	assert_gt(s1_uid, 0, "available first slot restores")
+	assert_eq(state.get_card_instance(s1_uid).count, 3, "restore splits a larger hand stack to the saved count")
+	assert_false(view._placed.has("s2"), "unavailable later slot does not undo the successful first restore")
+	assert_eq(state.gold_total(), 5, "restore only moves/splits objects; total gold is unchanged")
 
 
 func test_confirm_on_multi_day_rite_only_starts_it():

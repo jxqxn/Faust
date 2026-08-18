@@ -70,7 +70,7 @@ const ORIGINAL_FIELDS := {
 	"once_new_rites_is_show": {"type": "Dictionary<int,bool>", "clone": "", "status": "missing", "note": "新仪式首见标志"},
 	"cached_event": {"type": "List<int>", "clone": "", "status": "missing", "note": "事件缓存"},
 	"BagIndex": {"type": "int", "clone": "", "status": "missing", "note": "背包索引（bag/bagpos 系统）"},
-	"last_round_rite_data": {"type": "Dictionary<int,Dict>", "clone": "round_snapshots", "status": "semantic", "note": "原作按仪式记录上回合卡数据 LastCardData{id,count}；克隆整日全量快照"},
+	"last_round_rite_data": {"type": "Dictionary<int,Dict>", "clone": "last_round_rite_data", "status": "mapped", "note": "按仪式配置 id + 手动槽 guid 保存 LastCardData{id,count}，用于仪式面板恢复上次投放（非回退快照）"},
 	"rite_auto_result": {"type": "bool", "clone": "rite_auto_result", "status": "mapped", "note": ""},
 	"disable_auto_gen_sudan_card": {"type": "bool", "clone": "auto_gen_sudan_card(取反)", "status": "mapped", "note": ""},
 	"custom_rite_name": {"type": "Dictionary<int,string>", "clone": "", "status": "missing", "note": "table.change_card_name 仪式名持久化"},

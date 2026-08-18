@@ -53,6 +53,7 @@ var _pending_table_entries: Array = []
 var _resolution_pending := false
 var _rerolls_left := 0
 var _reroll_btn: Button
+var _last_state_btn: Button
 var _resolution_committed := false
 
 var _shade: ColorRect
@@ -268,6 +269,14 @@ func _build_panel_content() -> void:
 	_reroll_btn.pressed.connect(_use_reroll)
 	action_row.add_child(_reroll_btn)
 
+	_last_state_btn = Button.new()
+	_last_state_btn.name = "RestoreLastRiteStateButton"
+	_last_state_btn.text = "恢复上次投放"
+	_last_state_btn.tooltip_text = "恢复此仪式上一次确认时的手动投放"
+	_last_state_btn.custom_minimum_size = Vector2(122, 34)
+	_last_state_btn.pressed.connect(_restore_last_state)
+	action_row.add_child(_last_state_btn)
+
 	_result_label = RichTextLabel.new()
 	_result_label.name = "RiteResult"
 	_result_label.bbcode_enabled = true
@@ -307,6 +316,7 @@ func _build_panel_content() -> void:
 	bottom_row.add_child(_resolve_btn)
 
 	_update_stop_button()
+	_update_last_state_button()
 
 	_result_label.text = "[color=#a89880]从下方手牌选择卡牌后，点击左侧方块卡槽。[/color]"
 
@@ -468,6 +478,7 @@ func _after_placement_changed() -> void:
 	_update_gold_button()
 	_refresh_gold_label()
 	_refresh_slot_visuals()
+	_update_last_state_button()
 	_refresh_game_screen()
 
 
@@ -511,6 +522,10 @@ func _resolve() -> void:
 			# (round_number == 0) settle immediately after starting.
 			# [SRC: RitePanelController.c OnConfirm chain, lines 1203-1239;
 			#       GameController.c @ UpdateSingleRite (0x55ab10)]
+			# This is the original panel-confirm write, not a round rollback
+			# snapshot. It records only manual slots keyed by rite config id.
+			# [SRC: RitePanelController.c OnConfirm 0x58f1c0 L1282-1288]
+			_state.record_last_round_rite_data(_rite_uid, _db)
 			if not _state.start_rite_instance(_rite_uid):
 				return
 			if int(_rite.get("auto_result", 0)) == 1:
@@ -722,6 +737,7 @@ func _stop_started_rite() -> void:
 		_log_label.text = "仪式已停止，卡牌保留在槽位中。"
 		_update_resolve_button()
 		_update_stop_button()
+		_update_last_state_button()
 
 
 func _update_stop_button() -> void:
@@ -732,6 +748,70 @@ func _update_stop_button() -> void:
 		var instance = _state.get_rite_instance(_rite_uid)
 		started = instance != null and instance.start
 	_stop_btn.visible = started and int(_rite.get("round_number", 0)) > 0
+
+
+func _update_last_state_button() -> void:
+	if _last_state_btn == null:
+		return
+	var started := false
+	if _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
+		var instance = _state.get_rite_instance(_rite_uid)
+		started = instance != null and instance.start
+	var has_snapshot: bool = _state != null and _state.has_method("get_last_round_rite_data") \
+		and not _state.get_last_round_rite_data(_rite_id).is_empty()
+	_last_state_btn.disabled = not has_snapshot or started or _resolution_pending or _resolution_committed
+
+
+## Match RitePanelController.OnLastState: retain a current slot only when its
+## id and count already cover the saved request; otherwise return it, then
+## restore each saved manual slot if the necessary hand cards still exist and
+## the present slot condition accepts them.
+## [SRC: RitePanelController.c @ OnLastState (0x58fdf0); dump.cs
+##       Player.LastCardData{id,count} @0x10/@0x14]
+func _restore_last_state() -> void:
+	if _state == null or _rite_uid <= 0 or _resolution_pending or _resolution_committed:
+		return
+	var instance = _state.get_rite_instance(_rite_uid)
+	if instance != null and instance.start:
+		return
+	var saved: Dictionary = _state.get_last_round_rite_data(_rite_id)
+	if saved.is_empty():
+		return
+	var restored := 0
+	var slots: Dictionary = _rite.get("cards_slot", {})
+	var slot_keys: Array = saved.keys()
+	slot_keys.sort_custom(func(a, b): return str(a).substr(1).to_int() < str(b).substr(1).to_int())
+	for raw_slot_key in slot_keys:
+		var slot_key := str(raw_slot_key)
+		var snapshot = saved[raw_slot_key]
+		if not (snapshot is Dictionary) or not slots.has(slot_key):
+			continue
+		# OnConfirm never writes auto-adsorb slots. Treat a malformed/imported
+		# entry the same way rather than turning restore into a placement route.
+		if int(slots[slot_key].get("open_adsorb", 0)) != 0:
+			continue
+		var card_id := int(snapshot.get("id", 0))
+		var count := int(snapshot.get("count", 0))
+		if card_id <= 0 or count <= 0:
+			continue
+		if _placed.has(slot_key):
+			var current = _state.get_card_instance(int(_placed[slot_key]))
+			if current != null and current.card_id == card_id and int(current.count) >= count:
+				continue
+			_return_slot_to_hand(slot_key)
+		var card_uid: int = int(_state.take_hand_card_count(card_id, count))
+		if card_uid <= 0:
+			continue
+		var card: Dictionary = _state.card_data_for(card_uid, _db)
+		if not _slot_accepts_card(slots[slot_key], card):
+			continue
+		_place_card_in_slot(slot_key, card_uid, "hand", "")
+		restored += 1
+	if restored > 0:
+		_log_label.text = "已恢复 %d 个上次投放槽位。" % restored
+	else:
+		_log_label.text = "上次投放中的卡牌暂不可用。"
+	_after_placement_changed()
 
 
 func _update_resolve_button() -> void:

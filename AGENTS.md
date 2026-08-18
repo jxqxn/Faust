@@ -46,6 +46,16 @@
 
 ## 当前进度
 
+**2026-08-18 仪式“恢复上次投放”链（批次 G，375 测试 / 2300 断言全绿）：**
+`last_round_rite_data` 已确认**不是回退快照**：`RitePanelController.OnConfirm`
+（0x58f1c0）按 Rite 配置 id 记录每个手动槽 guid 的 `LastCardData{id,count}`；
+`OnLastState`（0x58fdf0）只在手牌数量足够且当前槽条件仍满足时逐槽恢复，当前槽同 id
+且 count 足够则保留，缺卡不阻断其他槽。克隆落地：GameState 独立缓存、Copy 式栈拆分/
+合并、仪式按钮、v7 存读档与原作导入桥；`open_adsorb`@+0x20 正确排除（不是 is_enemy）。
+证据：RitePanelController.c 0x58f1c0/0x58fdf0 + dump.cs Player@0x158、
+LastCardData@0x10/@0x14、RiteNode.Slot.open_adsorb@0x20。语料 auto_save 导入对拍
+扩至 **25/25** 全过。`BACK_TO_PREV_BEGIN(3)` 只有枚举定义，扫描仍无已验证写点，继续留档。
+
 Godot 工程具备横版主场景、近距 NPC 交互、场景出口与位置恢复、仪式浮层、事件队列、运行时卡牌/仪式实例、v5 存读档与第一批常驻仪式。卡牌 UID、运行时标签、数量和仪式槽位归属均由 `CardInstance` 维护；v4 及更早存档明确拒绝加载且不显示继续游戏。
 
 当前已验收克隆内容统一映射到一个稳定的玩家行动主体 `player_actor_uid`：
@@ -96,7 +106,7 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 dump.cs:418323-418343 + stringliteral `round_{0}`/`round_{0}_end`/`round_*.json`。
 新增 `tests/test_round_snapshot_persistence.gd`（4 测试 / 25 断言：双边界跨重启、
 损坏文件不扣配额、档案清理旧轮次）。原作 auto_save 导入桥复验 **24/24** 全过。
-留档：`last_round_rite_data` 独立语义、BACK_TO_PREV_BEGIN(3) 写点仍未定位。
+留档：BACK_TO_PREV_BEGIN(3) 写点仍未定位；`last_round_rite_data` 已由批次 G 确认为仪式面板恢复缓存。
 
 **2026-08-18 手牌位系统（bag/bagpos/BagIndex，批次 E，369 测试全绿）：**
 `Card.bag`@0x48 = 包页 id、`bagpos`@0x4c = 页内 1 基位置（0=未摆放）、
@@ -154,7 +164,7 @@ UNLIMIT_BACK_TO_PREV_TIMES 不消耗）。新局链：`Datapool.StartGame` L4497
 → 快照恢复；配额在恢复范围外，克隆"恢复后补回预算"hack 删除。档案恢复
 CorrectPlayerData L4130-4134：档案槽记录值覆写全局。v6→v7 局内存档迁移
 （payload 去掉 back_to_prev_left，旧值种入全局域）。轮次文件持久化已由批次 F
-补齐；BACK_TO_PREV_BEGIN(3) 写点与 last_round_rite_data 仍未定位。
+补齐；BACK_TO_PREV_BEGIN(3) 写点仍未定位；last_round_rite_data 已由批次 G 解出并落地。
 
 **2026-08-17 金币卡多对象模型（批次 A，337 测试全绿）：** 对拍台发现的首个结构
 偏差修复。原作金币 = 手牌金币卡 2000029 **多对象** count 之和：`GenCoin.c Do

@@ -205,6 +205,13 @@ var event_runtime = null
 #       DatapoolExtensions.c @ SaveRoundEnd (0x3f9120) / SaveRoundBegin
 #       (0x3f9050); report 7 A1]
 var round_snapshots := {"round_end": {}, "round_begin": {}}
+# The manual rite-panel "restore last placement" cache. The original keeps
+# this independently from round rollback: rite config id -> slot guid ->
+# LastCardData{id,count}. Auto-adsorb slots are intentionally excluded.
+# [SRC: RitePanelController.c @ OnConfirm (0x58f1c0) L1282-1288 stores
+#       player.last_round_rite_data; @ OnLastState (0x58fdf0); dump.cs
+#       Player.last_round_rite_data @0x158, RiteNode.Slot.open_adsorb @0x20]
+var last_round_rite_data: Dictionary = {}
 # Active on-screen beginner-guide directive from the last `begin_guide`
 # action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
 # it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
@@ -900,6 +907,65 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 	return uid
 
 
+## Return a hand CardInstance with exactly `amount` of `card_id`, creating a
+## Copy-style split or merging later matching hand objects as needed. Returns
+## 0 without mutating state when the hand lacks the requested total.
+## [SRC: RitePanelController.c @ OnLastState (0x58fdf0): GetHandCards,
+##       CardExtensions.Copy, then split/merge to LastCardData.count]
+func take_hand_card_count(card_id: int, amount: int) -> int:
+	if card_id <= 0 or amount <= 0:
+		return 0
+	var candidates: Array = []
+	var total := 0
+	for uid in hand:
+		var instance = get_card_instance(int(uid))
+		if instance != null and instance.card_id == card_id:
+			candidates.append(instance)
+			total += int(instance.count)
+	if total < amount or candidates.is_empty():
+		return 0
+	var selected = candidates[0]
+	if int(selected.count) > amount:
+		var split = _copy_card_for_stack(selected, amount)
+		selected.count -= amount
+		add_card_to_hand(split.uid)
+		return split.uid
+	if int(selected.count) == amount:
+		return selected.uid
+	var remaining := amount - int(selected.count)
+	for index in range(1, candidates.size()):
+		var donor = candidates[index]
+		var donor_count := int(donor.count)
+		if donor_count <= remaining:
+			remaining -= donor_count
+			remove_card_from_hand(donor.uid)
+			card_instances.erase(donor.uid)
+		else:
+			donor.count -= remaining
+			remaining = 0
+			break
+	selected.count = amount
+	return selected.uid
+
+
+func _copy_card_for_stack(source, amount: int):
+	var copied = CardInstanceData.new(next_card_uid, source.card_id, source.tags)
+	next_card_uid += 1
+	copied.count = amount
+	copied.life = source.life
+	copied.is_lost = source.is_lost
+	copied.rare_up = source.rare_up
+	copied.custom_name = source.custom_name
+	copied.custom_text = source.custom_text
+	copied.bag = source.bag
+	copied.bag_pos = source.bag_pos
+	copied.equip_slots = source.equip_slots.duplicate()
+	copied.removed_equip_slots = source.removed_equip_slots.duplicate()
+	copied.zone = "hand"
+	card_instances[copied.uid] = copied
+	return copied
+
+
 func insert_card_to_hand(card_or_uid: int, index: int, db = null) -> void:
 	var uid := _resolve_card_uid(card_or_uid, "hand")
 	if uid <= 0:
@@ -1169,6 +1235,34 @@ func available_rite_instances() -> Array[RiteInstance]:
 		out.append(rite_instances[rite_uid])
 	out.sort_custom(func(a: RiteInstance, b: RiteInstance) -> bool: return a.uid < b.uid)
 	return out
+
+
+## Record the manual slots exactly as RitePanelController.OnConfirm does.
+## The cache key is the rite definition id (not the runtime instance uid),
+## because the original indexes Player.last_round_rite_data by Rite.id.
+func record_last_round_rite_data(rite_uid: int, db) -> void:
+	var rite := get_rite_instance(rite_uid)
+	if rite == null or db == null:
+		return
+	var definition: Dictionary = db.get_rite(rite.id)
+	var slot_defs: Dictionary = definition.get("cards_slot", {})
+	var saved_slots := {}
+	for raw_slot_key in rite.slot_cards:
+		var slot_key := str(raw_slot_key)
+		var slot_def: Dictionary = slot_defs.get(slot_key, {})
+		# Slot.open_adsorb lives at +0x20 in the original RiteNode.Slot. The
+		# confirmation snapshot skips it; this is not the is_enemy flag.
+		if int(slot_def.get("open_adsorb", 0)) != 0:
+			continue
+		var card = get_card_instance(int(rite.slot_cards[raw_slot_key]))
+		if card != null:
+			saved_slots[slot_key] = {"id": card.card_id, "count": int(card.count)}
+	last_round_rite_data[rite.id] = saved_slots
+
+
+func get_last_round_rite_data(rite_id: int) -> Dictionary:
+	var saved = last_round_rite_data.get(rite_id, last_round_rite_data.get(str(rite_id), {}))
+	return saved.duplicate(true) if saved is Dictionary else {}
 
 
 func start_rite_instance(rite_uid: int) -> bool:

@@ -135,6 +135,7 @@ static func serialize(state) -> Dictionary:
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
 		"rite_auto_result": state.rite_auto_result,
+		"last_round_rite_data": state.last_round_rite_data.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -237,6 +238,23 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rid in data.get("auto_result_rites", []):
 		state.auto_result_rites.append(int(rid))
 	state.rite_auto_result = bool(data.get("rite_auto_result", false))
+	state.last_round_rite_data.clear()
+	var saved_last_rite_data = data.get("last_round_rite_data", {})
+	if saved_last_rite_data is Dictionary:
+		for raw_rite_id in saved_last_rite_data:
+			var raw_slots = saved_last_rite_data[raw_rite_id]
+			if not (raw_slots is Dictionary):
+				continue
+			var slots := {}
+			for raw_slot_key in raw_slots:
+				var raw_card = raw_slots[raw_slot_key]
+				if not (raw_card is Dictionary):
+					continue
+				var card_id := int(raw_card.get("id", 0))
+				var count := int(raw_card.get("count", 0))
+				if card_id > 0 and count > 0:
+					slots[str(raw_slot_key)] = {"id": card_id, "count": count}
+			state.last_round_rite_data[int(raw_rite_id)] = slots
 	state.ended_rites.clear()
 	var saved_ended_rites = data.get("ended_rites", {})
 	if saved_ended_rites is Dictionary:
