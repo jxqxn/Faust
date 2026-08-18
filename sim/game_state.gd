@@ -39,8 +39,19 @@ var rail_order: Array[int] = []
 var table_cards: Array:
 	get:
 		return table_card_entries()
-# Coin stack: the coin card (2000029 金币) count. Gold = coin-card stack (spec 10.2).
-var coin_count := 0
+# Gold is carried as stacked gold cards (id 2000029) in hand, matching the
+# original GenCoin chain: each coin op grants a fresh card object whose count
+# is the op value; the player total is the sum of object counts.
+# [SRC: GenCoin.c Do 0x510b40: GenCard/AddCard(0x1E849D=2000029) ->
+# Card.set_count(value) -> set_bagpos(1) -> OnCardBorn; multi-object stacks
+# confirmed in corpus save_samples (神的乙太 2001090 x20, each count=1)]
+const GOLD_CARD_ID := 2000029
+
+var coin_count: int:
+	get:
+		return gold_total()
+	set(value):
+		reconcile_gold(value)
 
 # Round / calendar.
 var round_number := 1
@@ -691,16 +702,92 @@ func queue_event_ids(ids: Array) -> void:
 		queue_event(int(eid))
 
 
-# ---- Gold (coin-card stack) ----
-func add_coin(n: int) -> void:
-	coin_count += n
+# ---- Gold (stacked gold card, id 2000029) ----
+
+func gold_total() -> int:
+	var total := 0
+	for uid in hand:
+		var instance = get_card_instance(int(uid))
+		if instance != null and instance.card_id == GOLD_CARD_ID:
+			total += instance.count
+	return total
+
+
+func gold_card_uids() -> Array[int]:
+	var uids: Array[int] = []
+	for uid in hand:
+		var instance = get_card_instance(int(uid))
+		if instance != null and instance.card_id == GOLD_CARD_ID:
+			uids.append(int(uid))
+	return uids
+
+
+func add_coin(n: int, db = null) -> void:
+	# GenCoin writes the op value onto a fresh gold card object whatever the
+	# sign (Card.set_count(value)); negative totals are representable.
+	if n == 0:
+		return
+	_grant_gold(n, db)
 
 
 func spend_coin(n: int) -> bool:
-	if coin_count < n:
+	if gold_total() < n:
 		return false
-	coin_count -= n
+	_remove_gold(n)
 	return true
+
+
+func reconcile_gold(target: int, db = null) -> void:
+	var desired := maxi(target, 0)
+	var current := gold_total()
+	if desired == current:
+		return
+	if desired < current:
+		_remove_gold(current - desired)
+	else:
+		_grant_gold(desired - current, db)
+
+
+func _grant_gold(amount: int, db = null) -> void:
+	if amount == 0:
+		return
+	var effective_db = db
+	if effective_db == null and event_runtime != null:
+		effective_db = event_runtime._db
+	if effective_db == null:
+		push_warning("GameState: gold granted without db; gold card carries no config tags")
+	var uid := add_card_to_hand(GOLD_CARD_ID, effective_db)
+	if uid <= 0:
+		return
+	var instance = get_card_instance(uid)
+	instance.count = amount
+	# GenCoin pins the gold stack to the front of the hand (set_bagpos(1)).
+	insert_card_to_hand(uid, 0)
+	trigger_events("card_born", {"card": GOLD_CARD_ID, "card_uid": uid})
+
+
+func _remove_gold(amount: int) -> void:
+	# Deduction order across multiple gold objects is not source-verified
+	# (cost payment execution still unaudited); largest-count first keeps the
+	# live object count minimal. Registered in METHOD_MAP as pending evidence.
+	var remaining := amount
+	var instances: Array = []
+	for uid in gold_card_uids():
+		var instance = get_card_instance(uid)
+		if instance != null:
+			instances.append(instance)
+	instances.sort_custom(func(a, b): return a.count > b.count)
+	for instance in instances:
+		if remaining <= 0:
+			break
+		if int(instance.count) <= 0:
+			continue
+		var take: int = mini(int(instance.count), remaining)
+		instance.count -= take
+		remaining -= take
+		if instance.count <= 0:
+			remove_card_from_hand(instance.uid)
+			card_instances.erase(instance.uid)
 
 
 # ---- Hand ----

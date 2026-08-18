@@ -75,6 +75,16 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-17 金币卡多对象模型（批次 A，337 测试全绿）：** 对拍台发现的首个结构
+偏差修复。原作金币 = 手牌金币卡 2000029 **多对象** count 之和：`GenCoin.c Do
+0x510b40` 每次 `AddCard` 新建对象（无堆叠合并）、`set_count(操作值)`（可为负）、
+`bagpos=1` 前置、OnCardBorn；花费判定 `CostCondition` 读卡对象 count；存档样本
+旁证（神的乙太 ×20 对象）。克隆落地：`coin_count` 改为求和**计算属性**（对外
+API/测试不变），`coin` 操作生成金币卡对象并触发 card_born，`have.金币` 等条件
+自然命中，可堆叠卡在手牌渲染层合并显示（×N 徽章）；**v5→v6 存档迁移**（标量
+→单对象，v5 仍可加载，≤v4 拒绝）。留档：多对象扣除顺序未验证（cost 支付执行
+链未审计，现为最大面额优先）；金骰疑走 counter 待验证。
+
 **2026-08-17 复刻工作法固化 + 对拍台阶段一（327 测试全绿）：** 用户否决打地鼠式
 修错，确立三支柱方法论（数据零转译 / 原作产物当裁判 / 结构 1:1 映射，见
 「复刻工作法」节）；`docs/METHOD_MAP.md` 成为主 TODO，`tools/check_content_parity.ps1`

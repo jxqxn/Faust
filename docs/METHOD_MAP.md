@@ -33,6 +33,8 @@
 | 文本占位符 `[sudan_life_time]` / `[sudan_redraw_total_left_times]` | `sim/game_state.gd` `substitute_text` | 显示前替换运行值 |
 | `MapController.c`（桌面底图 + 仪式图钉模型） | `ui/game_screen.gd` 桌面 | 表现层结构依据；点位精确对位见 🟡 |
 | `StartScene.unity` / `GameScene.unity` 场景树（GameObject/RectTransform/Sprite GUID） | `ui/main_menu.gd` 等第七波接线 | UI 原作化的证据法 |
+| `GameController.GenCard` 0x54f650 → `PlayerExtensions.AddCard` 0x38b620 + `GenCoin.c Do` 0x510b40（金币 = 手牌金币卡 2000029 **多对象** count 之和；每 op 新建对象、count=操作值可为负、bagpos=1 前置、OnCardBorn） | `sim/game_state.gd` coin_count 计算属性 + `_grant_gold`/`_remove_gold`、`sim/result.gd` coin 键、v5→v6 存档迁移 | 2026-08-17 修复；多对象扣除顺序未验证（cost 支付链未审计，现最大面额优先） |
+| `CostCondition.IsSatisfied` 0x3f6160（花费判定读卡对象 count，card+0x20） | `sim/condition.gd` 金币/coin 条件（经 coin_count 求和属性） | 读模型一致 |
 
 ## B. 近似 🟡（行为近似承载，缺背书或部分覆盖）
 
@@ -53,7 +55,7 @@
 | 克隆物 | 处置 |
 | --- | --- |
 | `set_world_scene_blocker`、`world_spawn_id`、`world_position_ratio` 存档字段 | 横版世界探针遗留；清理需评估 v5 存档兼容（GAP 留档） |
-| `GameState.coin_count` 标量金币 | **结构偏差（双信号 GenCoin.c Do 0x510b40 + cards.json 2000029）**：原作金币 = 手牌金币卡 2000029 的 count，增减走生卡 + set_count + card_born + bagpos=1。修复 = 金币卡堆叠模型（涉及 have.金币 条件、卡牌操作命中、UI 读数）。见 `docs/ORIGINAL_SAVE_SCHEMA.md` 发现 1 |
+| ~~`GameState.coin_count` 标量金币~~ | 已消灭（2026-08-17）：金币卡多对象模型落地，coin_count 变为求和计算属性，v6 存档不再持久化标量 |
 | `GameState.gold_dice` 标量骰子 | 原作 Player 无骰子字段，疑走 counter（id 待验证）；与金币同属"资源卡/计数器 vs 标量"偏差族 |
 | `GameState.hand`/`rail_order` 独立手牌数组 | 原作手牌 = cards 中 bag=0 按 bagpos 排序；随金币卡批次一并评估 |
 | `MethinksEngine` / `drop_card_on_methinks` 命名族 | 复刻期兼容接口；玩家可见概念统一为"思考"，方向定后重命名 |

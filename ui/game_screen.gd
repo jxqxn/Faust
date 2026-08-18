@@ -586,6 +586,21 @@ func refresh() -> void:
 	_hand_pan_ratio = 0.5
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
 	_state.sync_rail_order()
+	# Stackable currencies render as one merged stack with a total badge
+	# (the original keeps separate card objects and merges only for display;
+	# corpus save: 神的乙太 x20 objects all pinned at bagpos 1).
+	var stack_totals := {}
+	var stack_first_uid := {}
+	for card_uid in _state.visible_rail_card_uids():
+		var stack_probe_uid := int(card_uid)
+		var stack_probe_card: Dictionary = _state.card_data_for(stack_probe_uid, _db)
+		if stack_probe_card.is_empty() or not stack_probe_card.get("tag", {}).has("可堆叠"):
+			continue
+		var stack_id := int(stack_probe_card.get("id", 0))
+		var stack_instance = _state.get_card_instance(stack_probe_uid)
+		stack_totals[stack_id] = int(stack_totals.get(stack_id, 0)) + (int(stack_instance.count) if stack_instance != null else 1)
+		if not stack_first_uid.has(stack_id):
+			stack_first_uid[stack_id] = stack_probe_uid
 	var next_known_uids: Dictionary = {}
 	for card_uid in _state.visible_rail_card_uids():
 		var uid := int(card_uid)
@@ -613,7 +628,21 @@ func refresh() -> void:
 		var card: Dictionary = _state.card_data_for(uid, _db)
 		if card.is_empty():
 			continue
+		var stack_id := int(card.get("id", 0))
+		var is_stackable: bool = card.get("tag", {}).has("可堆叠")
+		if is_stackable and int(stack_first_uid.get(stack_id, uid)) != uid:
+			continue
 		var widget := CardWidget.make(card, "hand")
+		if is_stackable and int(stack_totals.get(stack_id, 1)) > 1:
+			var badge := Label.new()
+			badge.text = "×%d" % int(stack_totals[stack_id])
+			badge.add_theme_font_size_override("font_size", 26)
+			badge.add_theme_color_override("font_color", Color(1, 0.95, 0.7))
+			badge.add_theme_color_override("font_outline_color", Color(0.12, 0.08, 0.05))
+			badge.add_theme_constant_override("outline_size", 6)
+			badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			widget.add_child(badge)
 		widget.custom_minimum_size = CardWidget.CARD_SIZE
 		widget.clicked.connect(_show_card_detail)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)

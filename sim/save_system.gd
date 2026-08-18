@@ -9,7 +9,10 @@ extends RefCounted
 const CardInstanceData = preload("res://sim/card_instance.gd")
 
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
+# v6 moved gold from the coin_count scalar to stacked gold card objects
+# (GenCard 2000029). v5 saves migrate on load; anything older stays rejected.
+const MIN_LOADABLE_SAVE_VERSION := 5
 const SAVE_KIND_PLAYER := "player"
 const USER_ARCHIVE_ROOT := "user://user_archives"
 const USER_ARCHIVE_INDEX_NAME := "user_archives.json"
@@ -78,7 +81,6 @@ static func serialize(state) -> Dictionary:
 		"world_spawn_id": state.world_spawn_id,
 		"world_position_ratio": state.world_position_ratio,
 		"visited_world_locations": state.visited_world_locations.duplicate(),
-		"coin_count": state.coin_count,
 		"gold_dice": state.gold_dice,
 		"redraws_left": state.redraws_left,
 		"sudan_redraw_count": state.sudan_redraw_count,
@@ -129,7 +131,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 			state.visited_world_locations.append(location_id)
 	if state.world_location_id not in state.visited_world_locations:
 		state.visited_world_locations.append(state.world_location_id)
-	state.coin_count = int(data.get("coin_count", 0))
+	# Gold lives in gold card instances since v6 (see deserialize migration).
+	var legacy_coin: int = int(data.get("coin_count", 0)) if data.has("coin_count") else -1
 	state.gold_dice = int(data.get("gold_dice", 0))
 	state.redraws_left = int(data.get("redraws_left", 0))
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
@@ -253,6 +256,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		state.sync_rail_order()
 	if state.has_method("_rebuild_event_runtime"):
 		state._rebuild_event_runtime(db)
+	# v5 migration: the scalar coin_count becomes one stacked gold card object
+	# (id 2000029) at the front of the hand, preserving the recorded total.
+	if legacy_coin > 0 and state.gold_total() == 0:
+		state.reconcile_gold(legacy_coin, db)
 
 
 static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:
@@ -310,7 +317,7 @@ static func list_user_archives(db) -> Array:
 		if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
 			continue
 		var data: Variant = _read_save_data_at(user_archive_save_path(index))
-		if not is_valid_player_save_data(data) or int(data.get("version", 0)) != SAVE_VERSION:
+		if not is_valid_player_save_data(data) or int(data.get("version", 0)) < MIN_LOADABLE_SAVE_VERSION or int(data.get("version", 0)) > SAVE_VERSION:
 			continue
 		var summary: Dictionary = entry.duplicate(true)
 		summary["round_number"] = int(data.get("round_number", 1))
@@ -412,8 +419,8 @@ static func _load_from_path(db, path: String, require_player_save := false) -> V
 	# [SRC: original CorrectPlayerData reconciles configVersion; clone uses a
 	# simpler save-schema version check]
 	var v := int(parsed.get("version", 0))
-	if v != SAVE_VERSION:
-		push_warning("SaveSystem: save version %d != expected %d; refusing to load" % [v, SAVE_VERSION])
+	if v < MIN_LOADABLE_SAVE_VERSION or v > SAVE_VERSION:
+		push_warning("SaveSystem: save version %d outside loadable range [%d, %d]; refusing to load" % [v, MIN_LOADABLE_SAVE_VERSION, SAVE_VERSION])
 		return null
 	var state = preload("res://sim/game_state.gd").new()
 	deserialize(parsed, state, db)

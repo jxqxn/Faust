@@ -95,9 +95,11 @@ static func is_supported_key(key: String) -> bool:
 
 static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary, context: Dictionary = {}) -> void:
 	var k := key.strip_edges()
-	# Gold (GenCoin): coin / 金币 / g.coin.
+	# Gold (GenCoin): coin / 金币 / g.coin. Grants a gold card object whose
+	# count is the op value (front of hand, fires card_born).
+	# [SRC: GenCoin.c Do 0x510b40]
 	if k == "coin" or k == "金币" or k == "g.coin":
-		state.add_coin(int(val))
+		state.add_coin(int(val), db)
 		deferred.logs.append("coin +%d" % int(val))
 		return
 	# Counters.

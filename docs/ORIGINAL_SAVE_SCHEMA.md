@@ -102,7 +102,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 关键结构发现（驱动后续批次）
 
-1. **金币 = 手牌金币卡（id 2000029）的 count**，不是标量。双信号：`GenCoin.c Do 0x510b40`（`GameController.GenCard(0x1E849D)` / `PlayerExtensions.AddCard(player, 0x1E849D)` → `Card.set_count(value)` → `set_bagpos(1)` → `OnCardBorn`）× cards.json 2000029（金币/可堆叠/消耗品/已拥有）。克隆 `coin_count` 标量是结构偏差：金币增减不触发 card_born、不可被卡牌操作（clean/标签/条件 have.金币）命中、UI 读数模型不同。→ METHOD_MAP C，修复批次待排。
+1. **金币 = 手牌金币卡对象（id 2000029）的 count 之和（多对象模型）**。双信号：`GenCoin.c Do 0x510b40`（`GameController.GenCard(0x1E849D)` → `PlayerExtensions.AddCard`（**每次新建对象**，无堆叠合并分支）→ `Card.set_count(操作值)` → `set_bagpos(1)` → `OnCardBorn`）× cards.json 2000029（金币/可堆叠/消耗品/已拥有）+ 存档样本旁证（神的乙太 2001090 × 20 个对象各 count=1）。操作值**可为负**（set_count 直写）；花费判定 `CostCondition.IsSatisfied 0x3f6160` 读卡对象 count。克隆原 `coin_count` 标量为结构偏差——**2026-08-17 已修复**：`coin_count` 改为金币卡对象求和的计算属性，`coin` 操作按原作生成卡对象（前置手牌位、发 card_born），v5→v6 存档迁移（标量→单对象）。留档：多对象间的**扣除顺序**未验证（cost 支付执行链未审计，现为最大面额优先）。
 2. **骰子无 Player 字段**：金骰数量疑走 counter（样本 counter 7100006=3 值巧合待验证）。→ 待验证。
 3. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
 4. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
