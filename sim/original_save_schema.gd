@@ -68,7 +68,7 @@ const ORIGINAL_FIELDS := {
 	"auto_result_rites": {"type": "HashSet<int>", "clone": "auto_result_rites", "status": "mapped", "note": ""},
 	"notes": {"type": "List<List<Note>>", "clone": "", "status": "missing", "note": "笔记系统 Player.Note{type,id,uid,count}"},
 	"once_new_rites_is_show": {"type": "Dictionary<int,bool>", "clone": "", "status": "missing", "note": "新仪式首见标志"},
-	"cached_event": {"type": "List<int>", "clone": "", "status": "missing", "note": "事件缓存"},
+	"cached_event": {"type": "List<int>", "clone": "cached_event", "status": "semantic", "note": "可点击缓存提示的去重列表；提示 UI/缓存结算尚未接入"},
 	"BagIndex": {"type": "int", "clone": "", "status": "missing", "note": "背包索引（bag/bagpos 系统）"},
 	"last_round_rite_data": {"type": "Dictionary<int,Dict>", "clone": "last_round_rite_data", "status": "mapped", "note": "按仪式配置 id + 手动槽 guid 保存 LastCardData{id,count}，用于仪式面板恢复上次投放（非回退快照）"},
 	"rite_auto_result": {"type": "bool", "clone": "rite_auto_result", "status": "mapped", "note": ""},

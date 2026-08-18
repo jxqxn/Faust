@@ -146,6 +146,7 @@ static func serialize(state) -> Dictionary:
 		"player_card_names": state.player_card_names.duplicate(true),
 		"only_cards": _sorted_set_keys(state.only_cards),
 		"only_rites": _sorted_set_keys(state.only_rites),
+		"cached_event": state.cached_event.duplicate(),
 		"gen_cards": state.gen_cards.duplicate(true),
 		"gen_tags": state.gen_tags.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
@@ -268,6 +269,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.player_card_names = _restore_nonempty_string_map(data.get("player_card_names", {}))
 	state.only_cards = _restore_positive_id_set(data.get("only_cards", []))
 	state.only_rites = _restore_positive_id_set(data.get("only_rites", []))
+	state.cached_event.clear()
+	for raw_event_id in data.get("cached_event", []):
+		state.add_cached_event(int(raw_event_id))
 	state.gen_cards = _restore_int_count_dictionary(data.get("gen_cards", {}))
 	state.gen_tags = _restore_string_count_dictionary(data.get("gen_tags", {}))
 	state.last_round_rite_data.clear()

@@ -54,7 +54,6 @@ const DROPPED_FIELDS := {
 	"random_cache": "RNG 续航缓存",
 	"notes": "笔记系统",
 	"once_new_rites_is_show": "新仪式首见标志",
-	"cached_event": "事件缓存",
 	"BagIndex": "背包索引",
 	"end_open": "终局开启",
 	"is_armageddon": "末日决战态",
@@ -265,6 +264,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"player_card_names": player_card_names,
 		"only_cards": only_cards,
 		"only_rites": only_rites,
+		"cached_event": _unique_int_list(original.get("cached_event", [])),
 		"gen_cards": _norm_int_dict(original.get("gen_cards", {})),
 		"gen_tags": _norm_string_int_dict(original.get("gen_tags", {})),
 		"ended_rites": _int_keyed(original.get("end_rites", {})),
@@ -339,6 +339,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("player_card_name", _nonempty_string_map(original.get("player_card_name", {})), state.player_card_names))
 	rows.append(_row("only_cards", _sorted_int_list(original.get("only_cards", [])), _state_only_ids(state.only_cards)))
 	rows.append(_row("only_rites", _sorted_int_list(original.get("only_rites", [])), _state_only_ids(state.only_rites)))
+	rows.append(_row("cached_event", _unique_int_list(original.get("cached_event", [])), state.cached_event))
 	rows.append(_row("gen_cards", _norm_int_dict(original.get("gen_cards", {})), _norm_int_dict(state.gen_cards)))
 	rows.append(_row("gen_tags", _norm_string_int_dict(original.get("gen_tags", {})), _norm_string_int_dict(state.gen_tags)))
 	return rows
@@ -742,6 +743,14 @@ static func _positive_id_list(value) -> Array:
 			ids.append(int(raw_id))
 	ids.sort()
 	return ids
+
+
+static func _unique_int_list(value) -> Array:
+	var listed: Array = []
+	for raw_id in _int_list(value):
+		if int(raw_id) not in listed:
+			listed.append(int(raw_id))
+	return listed
 
 
 static func _sorted_int_list(value) -> Array:

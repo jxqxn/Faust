@@ -56,6 +56,7 @@ func test_save_load_round_trip_preserves_state():
 	state.player_card_names = {2000001: "自定义角色"}
 	state.only_cards = {2000001: true, 2000005: true}
 	state.only_rites = {5000001: true, 5000003: true}
+	state.cached_event = [5310008, 5310009]
 	state.gen_cards = {2000001: 3, 2000029: 2}
 	state.gen_tags = {"physique": 3, "money": 2, "custom_runtime_tag": 1}
 	var first_instance = state.find_rite_instance_by_id(5000001)
@@ -125,6 +126,7 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.player_card_names, state.player_card_names, "card-name overrides survive JSON")
 	assert_eq(state2.only_cards, state.only_cards, "unique-card registry survives JSON")
 	assert_eq(state2.only_rites, state.only_rites, "unique-rite registry survives JSON")
+	assert_eq(state2.cached_event, [5310008, 5310009], "cached event notices survive JSON")
 	assert_eq(state2.gen_cards, state.gen_cards, "card generation history survives JSON")
 	assert_eq(state2.gen_tags, state.gen_tags, "tag generation history survives JSON")
 	var loaded_first = state2.get_rite_instance(first_instance.uid)
@@ -151,6 +153,18 @@ func test_save_load_round_trip_preserves_state():
 		var asc = state2.active_sudan_cards[0]
 		assert_eq(asc.card_id, state.active_sudan_cards[0].card_id, "sudan card_id preserved")
 		assert_eq(asc.days_left, state.active_sudan_cards[0].days_left, "sudan days_left preserved")
+
+
+func test_cached_event_uses_the_original_unique_append_and_remove_rules() -> void:
+	# [SRC: PlayerExtensions.c AddCacheEvent (0x38b580) / RemoveCacheEvent (0x38ecb0)]
+	var state := GameState.new()
+	assert_true(state.add_cached_event(5310001), "the first notice is appended")
+	assert_true(state.add_cached_event(5310002), "later notices retain insertion order")
+	assert_false(state.add_cached_event(5310001), "duplicate event notices are ignored")
+	assert_eq(state.cached_event, [5310001, 5310002], "the list is unique and ordered")
+	state.remove_cached_event(5310001)
+	assert_eq(state.cached_event, [5310002], "removal deletes the completed notice")
+
 
 func test_load_missing_save_returns_null():
 	SaveSystem.delete_save()

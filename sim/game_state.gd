@@ -236,6 +236,12 @@ var player_card_names: Dictionary = {}
 # each successfully initialized rite id to player.only_rites]
 var only_cards: Dictionary = {}
 var only_rites: Dictionary = {}
+# A separate Player-persisted list of events whose cached settlement has been
+# triggered and is awaiting its clickable notice. It is not the transient
+# prompt/event operation queue.
+# [SRC: dump.cs Player.cached_event @0x148; PlayerExtensions.c
+#       AddCacheEvent (0x38b580) / RemoveCacheEvent (0x38ecb0)]
+var cached_event: Array[int] = []
 # Historical generation counters. They are event history rather than current
 # ownership: a card's id increments once when PlayerExtensions.AddCard creates
 # it, and every distinct effective tag increments once at that same boundary.
@@ -689,6 +695,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	card_instances.clear()
 	only_cards.clear()
 	only_rites.clear()
+	cached_event.clear()
 	gen_cards.clear()
 	gen_tags.clear()
 	next_card_uid = 1
@@ -793,6 +800,23 @@ func use_sudan_per_round_redraw() -> void:
 func set_game_over(is_success: bool, reason: int) -> void:
 	success = is_success
 	over_reason = reason
+
+
+func add_cached_event(event_id: int) -> bool:
+	# ObservableList.Contains blocks duplicates, then Add appends at the tail.
+	# [SRC: PlayerExtensions.c AddCacheEvent (0x38b580)]
+	if event_id in cached_event:
+		return false
+	cached_event.append(event_id)
+	return true
+
+
+func remove_cached_event(event_id: int) -> void:
+	# ObservableList.Remove deletes the matching notice after its cached
+	# settlement finishes or the event config can no longer be found.
+	# [SRC: PlayerExtensions.c RemoveCacheEvent (0x38ecb0); GameController.c
+	#       OnCachedEventClicked; GameController.__c__DisplayClass243_0.c (0x5728d0)]
+	cached_event.erase(event_id)
 
 
 ## Difficulty pick resource rebalance, shared by new-run setup and mid-run

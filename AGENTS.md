@@ -46,13 +46,20 @@
 
 ## 当前进度
 
+**2026-08-18 事件缓存结构承载（批次 M，379 测试 / 2381 断言全绿）：**
+`Player.cached_event`@0x148 已落地为有序、去重的可点击提示 id 列表，进入 v7 存读档与导入桥；
+它不是 `pending_operations` 或剧情重放队列。`AddCacheEvent`（0x38b580）在未存在时尾插，
+`RemoveCacheEvent`（0x38ecb0）在缓存结算点击完成（或找不到配置）后移除；EventTrigger 仅对带
+`EventNode.cached_settlement` 的事件写入。当前语料配置零个 cached_settlement 实例，故不虚构提示
+UI/结算链，明确保留为语义缺口。证据：dump.cs Player@0x148 / EventNode@0x10 +
+PlayerExtensions.c / EventTrigger.c / GameController.c；语料 auto_save 导入桥 **38/38** 全过。
+
 **2026-08-18 终局结果字段（批次 L，378 测试 / 2374 断言全绿）：**
 `Player.success`@0x79 / `over_reason`@0x7C（未终局 = int.MinValue）落地为
 GameState 真字段，进入 v7 存读档和导入桥。`GameOver.Do` 的 `over` 操作经
 `SetGameOver(false, reason)` 同步写两字段；苏丹过期沿现有 vanish.over 链获得同一
 语义。证据：`GameOver.c` Do 0x50ff10 + `GameController.c` SetGameOver 0x556a50 +
-dump.cs Player@0x79/@0x7C；语料 auto_save 导入桥 **37/37** 全过。cached_event 的 UI
-队列语义独立留待逆向。
+dump.cs Player@0x79/@0x7C；语料 auto_save 导入桥当时 **37/37** 全过。
 
 **2026-08-18 苏丹重抽 profile（批次 K，378 测试 / 2369 断言全绿）：**
 `Player.sudan_card_init_life`@0x64、`sudan_redraw_times_per_round`@0x6C、

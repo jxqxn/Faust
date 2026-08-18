@@ -62,7 +62,7 @@ func _synthetic_original() -> Dictionary:
 		"gen_cards": {"2000001": 3, "2000029": 2}, "gen_tags": {"physique": 3, "money": 2},
 		"timing_rounds": {"531000000": 6}, "auto_result_rites": [],
 		"notes": [[{"type": 1, "id": 5001001, "uid": 7, "count": 0}]],
-		"once_new_rites_is_show": {}, "cached_event": [], "BagIndex": 0,
+		"once_new_rites_is_show": {}, "cached_event": [5310000], "BagIndex": 0,
 		"last_round_rite_data": {"5001001": {"s2": {"id": 2000010, "count": 1}}}, "rite_auto_result": false,
 		"disable_auto_gen_sudan_card": false, "custom_rite_name": {"5001001": "旧仪式名"},
 		"player_card_name": {"2000005": "旧卡名"}, "end_open": false, "is_armageddon": false,
@@ -126,6 +126,7 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.only_rites, {5001001: true}, "successful rite registrations import as a set")
 	assert_eq(state.gen_cards, {2000001: 3, 2000029: 2}, "card generation history imports verbatim")
 	assert_eq(state.gen_tags, {"physique": 3, "money": 2}, "tag generation codes import verbatim")
+	assert_eq(state.cached_event, [5310000], "cached event notices import in source order")
 	assert_eq(state.rite_display_name(5001001, local_db), "旧仪式名", "rite names resolve from the player map")
 	assert_eq(str(state.card_data_for(30, local_db).get("name", "")), "旧卡名",
 		"player card-name map overrides the per-card/config name")
