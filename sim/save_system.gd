@@ -19,9 +19,13 @@ const SAVE_KIND_PLAYER := "player"
 const USER_ARCHIVE_ROOT := "user://user_archives"
 const USER_ARCHIVE_INDEX_NAME := "user_archives.json"
 const MAX_USER_ARCHIVE_COUNT := 50
+const DEFAULT_ROUND_SAVE_ROOT := "user://"
+const ROUND_BEGIN_NAME := "round_%d.json"
+const ROUND_END_NAME := "round_%d_end.json"
 
 static var save_path_override := ""
 static var user_archive_root_override := ""
+static var round_save_root_override := ""
 
 
 static func save_path() -> String:
@@ -34,6 +38,35 @@ static func use_save_path(path: String) -> void:
 
 static func use_default_save_path() -> void:
 	save_path_override = ""
+
+
+## Round snapshots sit beside auto_save in the original save root. Tests may
+## redirect them independently so no real continue data is touched.
+## [SRC: DatapoolExtensions.c @ SaveRoundBegin (RVA 0x3f9050) /
+##       SaveRoundEnd (RVA 0x3f9120); stringliteral.json 0x258BED0
+##       "round_{0}" and 0x258BF40 "round_{0}_end"]
+static func round_save_root() -> String:
+	return round_save_root_override if round_save_root_override != "" else DEFAULT_ROUND_SAVE_ROOT
+
+
+static func use_round_save_root(path: String) -> void:
+	round_save_root_override = path
+
+
+static func use_default_round_save_root() -> void:
+	round_save_root_override = ""
+
+
+static func round_begin_save_path(round: int) -> String:
+	return _round_save_path(ROUND_BEGIN_NAME % round)
+
+
+static func round_end_save_path(round: int) -> String:
+	return _round_save_path(ROUND_END_NAME % round)
+
+
+static func _round_save_path(filename: String) -> String:
+	return "%s/%s" % [round_save_root().trim_suffix("/"), filename]
 
 
 ## Manual archives deliberately use a separate index and payload directory.
@@ -297,6 +330,76 @@ static func save(state) -> bool:
 	return _write_save_data(save_path(), serialize(state))
 
 
+## DatapoolExtensions.SaveRoundBegin/End first refresh auto_save, then write
+## the same Player payload under the round-formatted name. The clone keeps its
+## v7 Player schema but mirrors that two-file transaction and naming boundary.
+static func save_round_begin(state) -> bool:
+	return _save_round(state, round_begin_save_path(int(state.round_number)))
+
+
+static func save_round_end(state) -> bool:
+	return _save_round(state, round_end_save_path(int(state.round_number)))
+
+
+static func _save_round(state, round_path: String) -> bool:
+	var data := serialize(state)
+	if not _write_save_data(save_path(), data):
+		return false
+	return _write_save_data(round_path, data)
+
+
+## LoadRound/LoadRoundEnd read the selected round file and, on success,
+## immediately refresh auto_save with the restored Player.
+## [SRC: DatapoolExtensions.c @ LoadRound (RVA 0x3f8fa0) /
+##       LoadRoundEnd (RVA 0x3f8e70); dump.cs:418331-418343]
+static func load_round(state, db, round: int) -> bool:
+	return _load_round_into(state, db, round_begin_save_path(round))
+
+
+static func load_round_end(state, db, round: int) -> bool:
+	return _load_round_into(state, db, round_end_save_path(round))
+
+
+static func _load_round_into(state, db, path: String) -> bool:
+	var data = _read_save_data_at(path)
+	if not _is_loadable_player_data(data):
+		return false
+	deserialize(data, state, db)
+	# Original LoadRound is void: once LoadPlayer succeeds it refreshes auto_save
+	# but does not turn a refresh-write failure into a failed restore.
+	save(state)
+	return true
+
+
+static func is_valid_round(round: int) -> bool:
+	return _is_loadable_player_data(_read_save_data_at(round_begin_save_path(round)))
+
+
+static func is_valid_round_end(round: int) -> bool:
+	return _is_loadable_player_data(_read_save_data_at(round_end_save_path(round)))
+
+
+static func _is_loadable_player_data(data: Variant) -> bool:
+	if not is_valid_player_save_data(data):
+		return false
+	var version := int(data.get("version", 0))
+	return version >= MIN_LOADABLE_SAVE_VERSION and version <= SAVE_VERSION
+
+
+## Loading a manual archive discards every round_*.json before installing the
+## archive Player, preventing rollback into another timeline.
+## [SRC: Datapool.c @ LoadUserArchive (RVA 0x417350) L4069-4083;
+##       stringliteral.json:11295 "round_*.json"]
+static func delete_round_saves() -> void:
+	var root := round_save_root()
+	var directory := DirAccess.open(root)
+	if directory == null:
+		return
+	for filename in directory.get_files():
+		if filename.begins_with("round_") and filename.ends_with(".json"):
+			DirAccess.remove_absolute(_round_save_path(filename))
+
+
 ## Create or replace a named manual archive. Indexes are stable 0-based slots,
 ## matching the original archive controller's fixed archive array.
 static func save_user_archive(state, index: int, archive_name: String) -> bool:
@@ -368,6 +471,7 @@ static func load_user_archive(db, index: int) -> Variant:
 		return null
 	var state = _load_from_path(db, user_archive_save_path(index), true)
 	if state != null:
+		delete_round_saves()
 		for entry in _read_user_archives():
 			if int(entry.get("index", -1)) == index and entry.has("back_to_prev_round"):
 				state.global_state.back_to_prev_round = int(entry["back_to_prev_round"])
@@ -425,7 +529,10 @@ static func _read_save_data_at(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null
 	var text := FileAccess.get_file_as_string(path)
-	var parsed = JSON.parse_string(text)
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		return null
+	var parsed = json.data
 	if not (parsed is Dictionary):
 		return null
 	return parsed

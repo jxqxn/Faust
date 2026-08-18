@@ -129,9 +129,12 @@ static func _update_card_lives(state, db, rng) -> Array:
 	return dead
 
 
-## Keep a full-state snapshot for one boundary, pruning to the latest two
-## rounds. [SRC: DatapoolExtensions.c @ SaveRoundEnd (0x3f9120) writes the
-## round-formatted key plus the main ""; memory-only in the clone]
+## Keep a full-state cache for one boundary, pruning to the latest two rounds.
+## Disk-backed runs also execute the original two-file transaction: refresh
+## auto_save, then write round_{N}.json / round_{N}_end.json. Detached test
+## states remain memory-only.
+## [SRC: DatapoolExtensions.c @ SaveRoundBegin (0x3f9050) / SaveRoundEnd
+##       (0x3f9120); stringliteral.json 0x258BED0 / 0x258BF40]
 static func _snapshot_round(state, kind: String) -> void:
 	if not state.has_method("get") or state.get("round_snapshots") == null:
 		return
@@ -140,6 +143,11 @@ static func _snapshot_round(state, kind: String) -> void:
 		var keys: Array = state.round_snapshots[kind].keys()
 		keys.sort()
 		state.round_snapshots[kind].erase(keys[0])
+	if state.global_state != null and state.global_state.is_disk_bound():
+		if kind == "round_end":
+			SaveSystem.save_round_end(state)
+		else:
+			SaveSystem.save_round_begin(state)
 
 
 ## Back to the previous round's end (retry the current round): gate on
@@ -162,14 +170,22 @@ static func back_to_prev_round_end(state, db) -> bool:
 	var budget: int = int(state.get("back_to_prev_left"))
 	if budget < 1:
 		return false
-	var snapshot: Dictionary = state.round_snapshots["round_end"].get(state.round_number - 1, {})
-	if snapshot.is_empty():
+	var target_round: int = state.round_number - 1
+	var snapshot: Dictionary = state.round_snapshots["round_end"].get(target_round, {})
+	var use_disk := snapshot.is_empty()
+	if use_disk and not SaveSystem.is_valid_round_end(target_round):
 		return false
 	if budget < state.UNLIMIT_BACK_TO_PREV_TIMES:
 		state.back_to_prev_left = budget - 1
 	state.global_state.round_rollback = GlobalState.ROLLBACK_TO_PREV_END
 	state.global_state.save()
-	SaveSystem.deserialize(snapshot, state, db)
+	if use_disk:
+		if not SaveSystem.load_round_end(state, db, target_round):
+			return false
+	else:
+		SaveSystem.deserialize(snapshot, state, db)
+		if state.global_state != null and state.global_state.is_disk_bound():
+			SaveSystem.save(state)
 	if state.event_runtime != null:
 		state.queue_event_ids(state.event_runtime.fire("back_to_prev_round_end", {}))
 	return true
@@ -184,9 +200,16 @@ static func back_to_round_begin(state, db) -> bool:
 	if state == null:
 		return false
 	var snapshot: Dictionary = state.round_snapshots["round_begin"].get(state.round_number, {})
-	if snapshot.is_empty():
+	var use_disk := snapshot.is_empty()
+	if use_disk and not SaveSystem.is_valid_round(state.round_number):
 		return false
-	SaveSystem.deserialize(snapshot, state, db)
+	if use_disk:
+		if not SaveSystem.load_round(state, db, state.round_number):
+			return false
+	else:
+		SaveSystem.deserialize(snapshot, state, db)
+		if state.global_state != null and state.global_state.is_disk_bound():
+			SaveSystem.save(state)
 	if state.event_runtime != null:
 		state.queue_event_ids(state.event_runtime.fire("back_to_round_begin", {}))
 	return true

@@ -86,6 +86,18 @@ COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104
 升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：~~7100007（需全局域）~~
 （2026-08-18 批次 B 已迁移）、7100008（随重抽族）。
 
+**2026-08-18 回退轮次文件持久化（批次 F，373 测试 / 2293 断言全绿）：**
+原作 `DatapoolExtensions.SaveRoundBegin/End` 双写链落地：先刷新 continue，再写
+`round_{N}.json` / `round_{N}_end.json`；`IsValidRound/End` 校验 Player 存档门，
+`LoadRound/End` 从磁盘恢复并刷新 continue。`GameState.round_snapshots` 保留为同进程
+缓存，缓存缺失时自动落到磁盘，因此重启后仍能回退；配额仍在 Global 域，恢复 Player
+不会返还消耗。`LoadUserArchive` 按原作删除 `round_*.json`，防止回到旧时间线。
+证据：DatapoolExtensions.c 0x3f8d50/0x3f8e70/0x3f8fa0/0x3f9050/0x3f9120 +
+dump.cs:418323-418343 + stringliteral `round_{0}`/`round_{0}_end`/`round_*.json`。
+新增 `tests/test_round_snapshot_persistence.gd`（4 测试 / 25 断言：双边界跨重启、
+损坏文件不扣配额、档案清理旧轮次）。原作 auto_save 导入桥复验 **24/24** 全过。
+留档：`last_round_rite_data` 独立语义、BACK_TO_PREV_BEGIN(3) 写点仍未定位。
+
 **2026-08-18 手牌位系统（bag/bagpos/BagIndex，批次 E，369 测试全绿）：**
 `Card.bag`@0x48 = 包页 id、`bagpos`@0x4c = 页内 1 基位置（0=未摆放）、
 `Player.BagIndex`@0x150 = 当前查看页（IsCurrentHandCard 0x3826a0 = bag==BagIndex
@@ -141,9 +153,8 @@ UNLIMIT_BACK_TO_PREV_TIMES 不消耗）。新局链：`Datapool.StartGame` L4497
 消耗链 `PrevRoundInternal` 0x555570：先消耗 → Global.roundRollback=2 → SaveGlobal
 → 快照恢复；配额在恢复范围外，克隆"恢复后补回预算"hack 删除。档案恢复
 CorrectPlayerData L4130-4134：档案槽记录值覆写全局。v6→v7 局内存档迁移
-（payload 去掉 back_to_prev_left，旧值种入全局域）。留档：快照仍为内存态
-（原作 Datapool 轮次文件，重启后不可跨日回退）；BACK_TO_PREV_BEGIN(3) 写点
-与 last_round_rite_data 未定位。
+（payload 去掉 back_to_prev_left，旧值种入全局域）。轮次文件持久化已由批次 F
+补齐；BACK_TO_PREV_BEGIN(3) 写点与 last_round_rite_data 仍未定位。
 
 **2026-08-17 金币卡多对象模型（批次 A，337 测试全绿）：** 对拍台发现的首个结构
 偏差修复。原作金币 = 手牌金币卡 2000029 **多对象** count 之和：`GenCoin.c Do

@@ -80,6 +80,8 @@ static func load_from(path: String) -> GlobalState:
 func save() -> bool:
 	if _path == "":
 		return false
+	var directory := _path.get_base_dir()
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 	save_time = Time.get_datetime_string_from_system()
 	var file := FileAccess.open(_path, FileAccess.WRITE)
 	if file == null:
@@ -88,6 +90,13 @@ func save() -> bool:
 	file.store_string(JSON.stringify(to_dict(), "\t"))
 	file.close()
 	return true
+
+
+## Whether this instance represents the process-wide, disk-backed Global.
+## Bare GameState instances deliberately carry a detached GlobalState so
+## simulation tests and import probes do not write player files.
+func is_disk_bound() -> bool:
+	return _path != ""
 
 
 func to_dict() -> Dictionary:

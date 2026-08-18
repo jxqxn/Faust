@@ -39,9 +39,10 @@
 | dump.cs:542529 常量表 + `PlayerExtensions` Add/SubCounter（**金骰 = COUNTER_GOLD_DICE 7100006**；额外重抽 = 7100008；回退 = 7100007 存 global，9999=无限） | `game_state.gold_dice` 计算属性（counter 存储 + 7100006 非负门 + v6 去标量） | 金骰已修；7100007 已修（见下行）；7100008 见 ⬜ |
 | `Global`（global.json 跨局域）+ `PlayerExtensions` SetCounter 0x38f2d0 7100007 分支（无条件非负 clamp 写 `Global.backToPrevRound`）+ `Datapool.c` StartGame L4497 新局重置 9999 + CorrectPlayerData L4130-4134 档案恢复 | `sim/global_state.gd` GlobalState（user://global.json；backToPrevRound/roundRollback 先行）+ `game_state.set_counter` 7100007 分支 + `setup_new_run` 重置 9999（`apply_resources=false` 供菜单新局延迟到叙事者选择）+ `SaveSystem.load_user_archive` 档案索引恢复 | 2026-08-18 修复；其余 global.json 字段见 ⬜ |
 | `GameController` OnPrevRound 0x554f80（min_round 门 + GetBackToPrevCount 配额门 + 9999 不消耗 + IsValidRoundEnd + 确认框）→ PrevRoundInternal 0x555570（UseBackToPrev 先消耗 → `Global.roundRollback = 2` → SaveGlobal → LoadRound(round-1)）；OnBeginRound 0x5537b0 置 rollback=1 | `sim/round_loop.gd` `back_to_prev_round_end`（门控 → 消耗 → 标记 → 全局保存 → 快照恢复；配额在全局域故快照恢复不回滚消耗）+ `advance_day` 置 ROLLBACK_TO_BEGIN | 消耗先于恢复，与原作顺序一致 |
+| `DatapoolExtensions` SaveRoundBegin 0x3f9050 / SaveRoundEnd 0x3f9120（先 SavePlayer(auto_save)，再写 `round_{N}.json` / `round_{N}_end.json`）+ LoadRound 0x3f8fa0 / LoadRoundEnd 0x3f8e70 / IsValidRoundEnd 0x3f8d50；LoadUserArchive 0x417350 删除 `round_*.json` | `SaveSystem.save/load_round[_end]` + `RoundLoop` 磁盘回退兜底 + 档案加载清理轮次文件；内存快照仅作同进程缓存 | 2026-08-18 批次 F；重启后仍可回退，文件名和双写顺序对齐 |
 | `PlayerExtensions.SetDifficulty` 0x38f530（金骰 = 当前 + 新难度 gold_dice_count **加法**；回退配额 = 当前 − 9999 + 新难度 back_to_prev_round_count；redraws 重置） | `game_state._apply_difficulty_resources()`（新局与中途切换共用；`apply_difficulty`） | 离开无限档=重置为新配额；有限切有限=clamp 归零；切回无限档=保留余量（防刷） |
 | `TimingRoundBase` 键 = 实例 +0x20 **int**（player+0x128 字典键；样本全部 = 事件 id×100，TimingRoundBase.c IsValid 0x465d30/OnStart 0x4660d0） | `event_runtime._timing_key` = event_id*100（2026-08-18 由导入桥发现偏差后修正；1381 个回合时机事件全单桶序号 0；旧字符串键 deserialize 迁移） | 多桶事件的序号分配未验证（当前无此配置） |
-| 原作存档 Player 60 字段（dump.cs:391488 × save_samples 双信号） | `sim/original_save_importer.gd` 导入桥（difficulty 1 基 -1；cards[i]↔s{i+1}；装备嵌套→扁平 equipped 链；min_round 显式持久化） | 同刻对拍 23/23；苏丹期限字段/牌堆顺序近似登记 |
+| 原作存档 Player 60 字段（dump.cs:391488 × save_samples 双信号） | `sim/original_save_importer.gd` 导入桥（difficulty 1 基 -1；cards[i]↔s{i+1}；装备嵌套→扁平 equipped 链；min_round 显式持久化） | 同刻对拍 24/24；仅 drawn_round 与洗牌后牌堆顺序作显式近似登记 |
 | `GameController.GenSudanCard` 0x54f6f0 L3656-3662（出生 `set_life(模板 card_vanishing − player.sudan_card_init_life)` 抢跑）+ `UpdateSingleCard` b__1 0x572420（每日 life+1，`life>=card_vanishing` 且无槽位庇护即 DoVanish 处刑）+ `UpdateSudanLife` 0x55aeb0（倒计时显示 = vanish − life，可负） | `round_loop.draw_weekly_sudan`（头起步）+ `_update_card_lives`（苏丹并入通用死亡，days_left 为 vanish−life 镜像）+ rebirth 按模板 | 2026-08-18 批次 D；困难档 7−5=2 抢跑=5 天；b__1 老化豁免标签字面量未反查（无配置命中） |
 | `RedrawSudanCard` 0x5558b0 L3823-3842（循环 player+0x68 次 GenSudanCard；新卡 `set_life(弃卡 life)` 继承剩余期限；弃卡 life 归 0 后 `Insert(Random.Range(0,count))` 回池）+ `GenSudanCard` 抽取 = sudan_card_pool **先 Shuffle（sudan_shuffle）再 RemoveLast** | `round_loop.use_redraw`（carried_life = 弃卡实例 life）+ `SudanCards.draw` pop_back 尾抽 | 2026-08-18 批次 D；牌序因每次 Shuffle 无意义，多重集对拍为正确粒度 |
 | 手牌位系统：Card `bag`@0x48（包页 id）/`bagpos`@0x4c（页内 1 基位置，0=未摆放）+ `Player.BagIndex`@0x150（当前查看页）+ `IsCurrentHandCard` 0x3826a0（bag==BagIndex 且三标签）+ `UpdateHandCardPos` 0x559a70 L1060-1097（b__6 链内、回合开始事件后：收集当前页手牌→排序→`set_bagpos(i+1)` 压缩 1..N）+ GenCoin `set_bagpos(1)` 金币前置 + GenSudanCard `set_bag(BagIndex)` | `CardInstance.bag/bag_pos`（v7 起持久化）+ `round_loop.update_hand_card_pos`（日终压缩，克隆单页 bag=0）+ `_grant_gold` 前置 + 抽卡 set_bag | 2026-08-18 批次 E；三标签名无法从元数据反查（字面量间接寻址），留档 |
@@ -50,12 +51,11 @@
 
 | 克隆落点 | 缺口 |
 | --- | --- |
-| `sim/game_state.gd` v7 存档（serialize） | 原作存档 schema 已全解码（60 字段，`docs/ORIGINAL_SAVE_SCHEMA.md` + `sim/original_save_schema.gd`）；**阶段二导入桥已落地**（`sim/original_save_importer.gd` + `tools/export_save_diff.gd --bridge`，语料 auto_save 23/23 同刻对拍全过）；续局行为对拍待实机样本 |
+| `sim/game_state.gd` v7 存档（serialize） | 原作存档 schema 已全解码（60 字段，`docs/ORIGINAL_SAVE_SCHEMA.md` + `sim/original_save_schema.gd`）；**阶段二导入桥已落地**（`sim/original_save_importer.gd` + `tools/export_save_diff.gd --bridge`，语料 auto_save 24/24 同刻对拍全过）；续局行为对拍待实机样本 |
 | `GameState.pending_operations` / `delayed_operations` | 原作 Promise/Pop 队列模型的宿主等价物；事件日内 Promise 阻塞语义留档未对齐 |
 | `sim/condition.gd` AttrExprParser | 文法已对齐（四则/e() 敌方/sN.tag/counter.N）；解析器宿主为自制递归下降，非原作方法映射 |
 | `ui/game_audio.gd` GameAudio | 仅 main/tutorial BGM + 部分音效；拖放音、弹窗出现音、BGM 分层（level2/3）、结局 BGM、`sfx_*.json` 全量缺 |
 | `ui/begin_guide_bar.gd` 引导条 | 文案/键族/存档对齐；`WizardController` 完整演示宿主与 magic_sudan 演出缺，5310004 后序列未实机校对 |
-| `GameState.round_snapshots` 回退链 | 方法背书已定位（A 表 OnPrevRound/PrevRoundInternal/SaveRoundEnd 行）；剩余缺口 = 快照仅存内存，原作为 Datapool 轮次文件（见 ⬜） |
 | `ui/game_screen.gd` 仪式图钉点位 | 结构依据 MapController；精确坐标需实机对照微调 |
 | 桌面地图计数小牌（count chit） | 仍为样式盒，待原作对位 |
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
@@ -97,7 +97,7 @@
 | 结局状态（success/over_reason）与 cached_event | 存档字段双信号 | 小 |
 | global.json 其余字段（gameStatistics/doneEvent/doneRite/showedPrompt/choosedOption/showedGalleryCards/图鉴/升级/任务/overRecord/meta counter） | `save_samples/global.json` 29 字段；承载容器 GlobalState 已落地（backToPrevRound/roundRollback 已接） | 中（部分依赖图鉴/升级系统） |
 | `[back_to_prev_count]` 文本占位符（Datapool.__c b__389_6 走 GetBackToPrevCount） | 原作配置中未发现该 token 的使用实例，token 拼写无法从语料确认 | 暂缓（不猜测命名） |
-| 回退快照持久化（Datapool 轮次文件 + IsValidRoundEnd + LoadController.LoadRound） | DatapoolExtensions.c SaveRoundEnd 0x3f9120 / LoadRoundEnd 0x3f8e70；克隆现为内存 round_snapshots 双快照 | 中（进程内重启后不可回退到上一天） |
+| ~~回退快照持久化（Datapool 轮次文件 + IsValidRoundEnd + LoadController.LoadRound）~~ | 已落地（2026-08-18 批次 F）：`round_{N}.json` / `round_{N}_end.json` 双边界持久化、有效性门、磁盘加载刷新 continue、档案恢复清理旧时间线；内存 round_snapshots 降为同进程缓存 | — |
 | RoundRollbackType.BACK_TO_PREV_BEGIN(3) 的写点 | dump.cs:6186 枚举存在，写点未定位（LoadRoundBegin 疑似） | 小（待双信号） |
 | 成就面板 | steam_achievement 空实现 | 可选 |
 
@@ -112,5 +112,5 @@
 
 - **资产**：语料库 `save_samples/`（`auto_save.json`、`save_slot_000.json`、`global.json`、`user_archive.json`）= 原作真实存档，明文 JSON。
 - **阶段 1 ✅（2026-08-17）**：schema 全解码——Player 60 字段与 dump.cs 双信号吻合，零未知零类型不符；映射表与工具落地（`sim/original_save_schema.gd` + `tools/export_save_diff.gd` + `tests/test_save_diff_harness.gd`，mapped 11 / semantic 11 / missing 38）；快照文档 `docs/ORIGINAL_SAVE_SCHEMA.md`。结构发现：金币=卡 2000029 堆叠（双信号）、骰子疑 counter、手牌=bag/bagpos、仪式槽位内嵌嵌套、UI 队列不持久化、回退双轨、random_cache。
-- **阶段 2（下一步）**：导入桥——原作存档 → 克隆 GameState 内存态（嵌套↔扁平转换，missing 字段登记丢弃清单）→ 导出 v5 → 同刻值对拍。达成后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
+- **阶段 2 ✅（2026-08-18）**：导入桥——原作存档 → 克隆 GameState → v7 payload → 同刻值对拍；语料 auto_save **24/24** 全过，差异按 converted / approximated / dropped 防静默登记。此后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
 - **远期**：固定种子 trace 对拍（同一操作脚本下原作 vs 克隆的事件/结算日志序列）。
