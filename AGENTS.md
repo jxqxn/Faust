@@ -75,6 +75,17 @@ counter/global_counter/card_born/game_end 时机发射 + game_end 结局过滤�
 剩余批次三（回退链/骰子重掷/auto_result UI/重抽三题/counter 默认 op/UI 时机钩子）
 与批次四（Low 打磨）见总修复清单。
 
+**2026-08-17 cost 支付链审计 + 金骰 counter 化（批次 A 续，342 测试全绿）：**
+counter 常量表全解（dump.cs:542525-542531）：金骰 = COUNTER_GOLD_DICE 7100006、
+回退 = COUNTER_BACK_TO_PREV 7100007（存 global，9999=无限）、额外重抽 =
+COUNTER_SUDAN_EXTRA_REDRAW 7100008；GetCounter 对金币 7000105/门客 7000104 为
+**派生读**（cards+rites 求和，仪式槽金币计入总额）。cost 支付：IsSatisfied
+判定时按 player.cards 枚举序选定付款卡清单记入 need_cost_cards（支付顺序=
+最旧优先；扣款执行体未反编译留档）。克隆落地：`gold_dice` 改为 counter 7100006
+计算属性（含非负门 + v6 去标量 + 旧值迁移）；`_remove_gold` 扣除顺序改 uid
+升序（枚举序）；`gold_total()` 扩展含仪式槽。待迁移：7100007（需全局域）、
+7100008（随重抽族）。
+
 **2026-08-17 金币卡多对象模型（批次 A，337 测试全绿）：** 对拍台发现的首个结构
 偏差修复。原作金币 = 手牌金币卡 2000029 **多对象** count 之和：`GenCoin.c Do
 0x510b40` 每次 `AddCard` 新建对象（无堆叠合并）、`set_count(操作值)`（可为负）、

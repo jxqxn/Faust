@@ -102,13 +102,15 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 关键结构发现（驱动后续批次）
 
-1. **金币 = 手牌金币卡对象（id 2000029）的 count 之和（多对象模型）**。双信号：`GenCoin.c Do 0x510b40`（`GameController.GenCard(0x1E849D)` → `PlayerExtensions.AddCard`（**每次新建对象**，无堆叠合并分支）→ `Card.set_count(操作值)` → `set_bagpos(1)` → `OnCardBorn`）× cards.json 2000029（金币/可堆叠/消耗品/已拥有）+ 存档样本旁证（神的乙太 2001090 × 20 个对象各 count=1）。操作值**可为负**（set_count 直写）；花费判定 `CostCondition.IsSatisfied 0x3f6160` 读卡对象 count。克隆原 `coin_count` 标量为结构偏差——**2026-08-17 已修复**：`coin_count` 改为金币卡对象求和的计算属性，`coin` 操作按原作生成卡对象（前置手牌位、发 card_born），v5→v6 存档迁移（标量→单对象）。留档：多对象间的**扣除顺序**未验证（cost 支付执行链未审计，现为最大面额优先）。
-2. **骰子无 Player 字段**：金骰数量疑走 counter（样本 counter 7100006=3 值巧合待验证）。→ 待验证。
-3. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
-4. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
-5. **原作 UI 队列不持久化**：只存 delay_ops + cached_event；克隆持久化全量 pending_operations（语义更重，导入桥需裁剪）。
-6. **回退双轨**：原作 global.backToPrevRound（配额）+ player.last_round_rite_data（按仪式卡数据）；克隆 back_to_prev_left（player 侧）+ round_snapshots（整日快照）。
-7. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
+1. **金币 = 手牌金币卡对象（id 2000029）的 count 之和（多对象模型）**。双信号：`GenCoin.c Do 0x510b40`（`GameController.GenCard(0x1E849D)` → `PlayerExtensions.AddCard`（**每次新建对象**，无堆叠合并分支）→ `Card.set_count(操作值)` → `set_bagpos(1)` → `OnCardBorn`）× cards.json 2000029（金币/可堆叠/消耗品/已拥有）+ 存档样本旁证（神的乙太 2001090 × 20 个对象各 count=1）。操作值**可为负**（set_count 直写）；花费判定 `CostCondition.IsSatisfied 0x3f6160` 读卡对象 count。克隆原 `coin_count` 标量为结构偏差——**2026-08-17 已修复**：`coin_count` 改为金币卡对象求和的计算属性，`coin` 操作按原作生成卡对象（前置手牌位、发 card_born），v5→v6 存档迁移（标量→单对象）；扣除顺序已按发现 3 的枚举序对齐。
+2. **金骰 = counter 7100006**（已修复）。三重信号：dump.cs:542529 `COUNTER_GOLD_DICE = 7100006` 常量 + PlayerExtensions Add/SubCounter 写点 + 存档样本（difficulty=1 → counter 7100006=3，与 init 难度表 gold_dice_count 精确吻合）。克隆 `gold_dice` 现为该 counter 的计算属性。**常量表顺带解出**：回退配额 = COUNTER_BACK_TO_PREV 7100007（存 global.json backToPrevRound，9999=UNLIMIT_BACK_TO_PREV_TIMES）、苏丹额外重抽 = COUNTER_SUDAN_EXTRA_REDRAW 7100008（均待克隆迁移）。
+3. **cost 支付链**（部分留档）：`CostCondition.IsSatisfied 0x3f6160` 判定时即按 player.cards 枚举序选定付款卡清单（累计 count 覆盖花费即停）记入 `ConditionContext.need_cost_cards`（dump.cs:383873）+ `cost_count`——支付顺序=卡列表顺序（最旧优先），克隆 `_remove_gold` 已按 uid 升序对齐；实际扣款执行体未包含在反编译子集（留档）。
+4. **金币/门客总额是派生读**：`GetCounter 0x38ce70` 对 7000105（金币）/7000104（门客数）特殊分支——从 player.cards + player.rites 按谓词求和，**仪式槽内的金币卡计入总额**；克隆 gold_total 已扩展 hand+slot。
+5. **手牌 = cards 中 bag=0 按 bagpos 排序**，无独立 hand 数组；克隆 `hand`/`rail_order` 为自制承载。
+6. **仪式槽位是下标数组**（null=空槽），卡与装备全内嵌；克隆用扁平 zone/rite_uid/slot_key + equipped_uids。导入桥必须做嵌套↔扁平转换。
+7. **原作 UI 队列不持久化**：只存 delay_ops + cached_event；克隆持久化全量 pending_operations（语义更重，导入桥需裁剪）。
+8. **回退双轨**：原作 global.backToPrevRound（配额，即 COUNTER_BACK_TO_PREV 7100007 的全局侧）+ player.last_round_rite_data（按仪式卡数据）；克隆 back_to_prev_left（player 侧标量）+ round_snapshots（整日快照）。
+9. **RNG 续航**：random_cache 字典——原作存 RNG 状态保证跨存档续局一致；克隆无。
 
 ## 下一步（阶段二：导入桥）
 

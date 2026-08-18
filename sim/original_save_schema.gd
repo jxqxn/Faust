@@ -86,7 +86,7 @@ const ORIGINAL_FIELDS := {
 const CLONE_ONLY_FIELDS := {
 	"day": "原作无 day——round 即日计数",
 	"coin_count": "已修复（2026-08-17）：原作金币 = 手牌金币卡 2000029 多对象 count 之和（GenCoin.c Do 0x510b40 每次 AddCard 新建对象 + set_count(操作值，可为负) + bagpos=1 + card_born，cards.json 2000029 双信号）；克隆 coin_count 现为该求和的计算属性，v6 存档不再持久化标量",
-	"gold_dice": "原作 Player 无骰子字段；疑走 counter（counter id 待验证）",
+	"gold_dice": "已修复（2026-08-17）：原作金骰 = counter COUNTER_GOLD_DICE 7100006（dump.cs:542529 常量 + PlayerExtensions Add/SubCounter + 存档样本 difficulty1→3 与 init gold_dice_count 吻合）；克隆 gold_dice 现为该 counter 的计算属性",
 	"hand": "原作手牌=cards 中 bag=0 按 bagpos 排序，无独立数组",
 	"rail_order": "克隆专属排序",
 	"world_location_id": "横版世界探针遗留（METHOD_MAP C）",

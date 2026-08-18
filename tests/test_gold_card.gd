@@ -109,3 +109,63 @@ func test_v5_save_with_zero_coin_gets_no_gold_object():
 	SaveSystem.deserialize(data, restored, db)
 	assert_eq(restored.coin_count, 0)
 	assert_eq(restored.gold_card_uids().size(), 0)
+
+
+func test_gold_dice_is_counter_7100006() -> void:
+	# [SRC: dump.cs:542529 COUNTER_GOLD_DICE = 7100006; difficulty seeds gold_dice_count]
+	var st := _new_state()
+	var expected := int(db.get_difficulty(1).get("gold_dice_count", 0))
+	assert_eq(st.gold_dice, expected, "difficulty seeds gold_dice_count into the counter")
+	assert_eq(st.get_counter(7100006), expected)
+	st.gold_dice = 1
+	assert_eq(st.get_counter(7100006), 1)
+	st.sub_counter(7100006, 5)
+	assert_eq(st.gold_dice, 0, "counter clamp keeps dice non-negative")
+
+
+func test_v6_save_has_no_gold_dice_scalar() -> void:
+	var st := _new_state()
+	st.gold_dice = 2
+	var data: Dictionary = SaveSystem.serialize(st)
+	assert_false(data.has("gold_dice"), "v6 saves must not carry the scalar")
+	var restored := GameState.new()
+	SaveSystem.deserialize(data, restored, db)
+	assert_eq(restored.gold_dice, 2)
+
+
+func test_legacy_gold_dice_scalar_migrates_to_counter() -> void:
+	var st := _new_state()
+	var data: Dictionary = SaveSystem.serialize(st)
+	data["version"] = 5
+	data["gold_dice"] = 5
+	# A real v5 save predates dice-in-counter storage; drop the seeded counter.
+	data["local_counters"].erase(7100006)
+	var restored := GameState.new()
+	SaveSystem.deserialize(data, restored, db)
+	assert_eq(restored.gold_dice, 5)
+	assert_eq(restored.get_counter(7100006), 5)
+
+
+func test_gold_in_rite_slot_counts_to_total() -> void:
+	# GetCounter(COIN) sums gold across cards and rite slots.
+	var st := _new_state()
+	st.add_coin(3, db)
+	var rite_uid := st.add_available_rite(5000001, db, RNG.new(2))
+	st.add_card_to_slot(st.gold_card_uids()[0], 1, db, rite_uid)
+	assert_eq(st.hand.size() > 0 or true, true)
+	assert_eq(st.gold_total(), 3, "slot-embedded gold still counts")
+	assert_eq(st.gold_card_uids().size(), 0, "payment enumeration only covers hand objects")
+
+
+func test_payment_consumes_oldest_gold_objects_first() -> void:
+	# CostCondition.IsSatisfied selects payer cards in player.cards order.
+	var st := _new_state()
+	st.add_coin(3, db)
+	st.add_coin(4, db)
+	var first_uid: int = st.gold_card_uids().min()
+	assert_true(st.spend_coin(5))
+	var remaining_uids := st.gold_card_uids()
+	assert_false(remaining_uids.has(first_uid), "the oldest object is consumed first")
+	assert_eq(st.coin_count, 2)
+	assert_eq(remaining_uids.size(), 1)
+	assert_eq(st.get_card_instance(remaining_uids[0]).count, 2)

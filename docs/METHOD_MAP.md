@@ -34,7 +34,9 @@
 | `MapController.c`（桌面底图 + 仪式图钉模型） | `ui/game_screen.gd` 桌面 | 表现层结构依据；点位精确对位见 🟡 |
 | `StartScene.unity` / `GameScene.unity` 场景树（GameObject/RectTransform/Sprite GUID） | `ui/main_menu.gd` 等第七波接线 | UI 原作化的证据法 |
 | `GameController.GenCard` 0x54f650 → `PlayerExtensions.AddCard` 0x38b620 + `GenCoin.c Do` 0x510b40（金币 = 手牌金币卡 2000029 **多对象** count 之和；每 op 新建对象、count=操作值可为负、bagpos=1 前置、OnCardBorn） | `sim/game_state.gd` coin_count 计算属性 + `_grant_gold`/`_remove_gold`、`sim/result.gd` coin 键、v5→v6 存档迁移 | 2026-08-17 修复；多对象扣除顺序未验证（cost 支付链未审计，现最大面额优先） |
-| `CostCondition.IsSatisfied` 0x3f6160（花费判定读卡对象 count，card+0x20） | `sim/condition.gd` 金币/coin 条件（经 coin_count 求和属性） | 读模型一致 |
+| `CostCondition.IsSatisfied` 0x3f6160（花费判定读卡对象 count，card+0x20；判定时按 player.cards 枚举序选定付款卡清单记入 `ConditionContext.need_cost_cards`） | `sim/condition.gd` 金币/coin 条件（经 coin_count 求和属性）、`game_state._remove_gold`（uid 升序=枚举序，末对象部分扣减等价于移除找零；付款执行体未反编译留档） | 读模型与支付顺序一致 |
+| `PlayerExtensions.GetCounter` 0x38ce70 特殊分支（7000105 金币/7000104 门客 = 从 cards+rites 派生求和；7100007 回退配额读 Global） | `game_state.gold_total()`（hand+slot 求和） | 金币总额含仪式槽 |
+| dump.cs:542529 常量表 + `PlayerExtensions` Add/SubCounter（**金骰 = COUNTER_GOLD_DICE 7100006**；额外重抽 = 7100008；回退 = 7100007 存 global，9999=无限） | `game_state.gold_dice` 计算属性（counter 存储 + 7100006 非负门 + v6 去标量） | 金骰已修；7100007/7100008 见 ⬜ |
 
 ## B. 近似 🟡（行为近似承载，缺背书或部分覆盖）
 
@@ -56,7 +58,7 @@
 | --- | --- |
 | `set_world_scene_blocker`、`world_spawn_id`、`world_position_ratio` 存档字段 | 横版世界探针遗留；清理需评估 v5 存档兼容（GAP 留档） |
 | ~~`GameState.coin_count` 标量金币~~ | 已消灭（2026-08-17）：金币卡多对象模型落地，coin_count 变为求和计算属性，v6 存档不再持久化标量 |
-| `GameState.gold_dice` 标量骰子 | 原作 Player 无骰子字段，疑走 counter（id 待验证）；与金币同属"资源卡/计数器 vs 标量"偏差族 |
+| ~~`GameState.gold_dice` 标量骰子~~ | 已消灭（2026-08-17）：金骰 = counter 7100006（dump.cs:542529 + Add/SubCounter + 存档样本三重信号），计算属性落地 |
 | `GameState.hand`/`rail_order` 独立手牌数组 | 原作手牌 = cards 中 bag=0 按 bagpos 排序；随金币卡批次一并评估 |
 | `MethinksEngine` / `drop_card_on_methinks` 命名族 | 复刻期兼容接口；玩家可见概念统一为"思考"，方向定后重命名 |
 | ~~弹簧积分器、透视/阴影 shader、SubViewport 双通道、ui_motion.gd~~ | 已于 2026-08-17 去 Balatro 批次删除（git 历史可恢复） |
@@ -79,7 +81,8 @@
 | 生成计数（gen_cards/gen_tags） | 存档字段双信号 | 小 |
 | 改名持久化（custom_rite_name/player_card_name） | 存档字段双信号（DSL 键已支持，持久化缺） | 小 |
 | UI 引导标志族（sudan_box_show/story/prestige/deadline/helpbtn、once_new_rites_is_show） | 存档字段双信号 | 小 |
-| 苏丹重抽恢复模型（times_per_round/times/recovery_round、sudan_card_init_life） | 存档字段双信号 | 小 |
+| 苏丹重抽恢复模型（times_per_round/times/recovery_round、sudan_card_init_life） | 存档字段双信号 + counter 常量 COUNTER_SUDAN_EXTRA_REDRAW 7100008（dump.cs:542531 + PlayerExtensions Add/Sub） | 小 |
+| 回退配额 counter 化（COUNTER_BACK_TO_PREV 7100007；**存 global.json backToPrevRound**，9999=UNLIMIT_BACK_TO_PREV_TIMES；克隆现为局内 back_to_prev_left 标量） | dump.cs:542530 + PlayerExtensions GetCounter 0x6c5667 分支读 Common.get_Global + global.json 样本 | 中（需全局域承载） |
 | 结局状态（success/over_reason）与 cached_event | 存档字段双信号 | 小 |
 | global.json 全局域（回退配额/图鉴解锁/升级/任务/统计/overRecord） | `save_samples/global.json` 29 字段 | 中（部分依赖图鉴/升级系统） |
 | 成就面板 | steam_achievement 空实现 | 可选 |

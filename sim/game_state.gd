@@ -70,7 +70,20 @@ var difficulty_index := 1
 var difficulty_config := {}   # {single_dice_face_weight, sudan_life_time, gold_dice_count, ...}
 
 # Resources.
-var gold_dice := 0            # remaining gold dice this run
+# Gold dice live in the counter dict (COUNTER_GOLD_DICE), granted from the
+# difficulty config and spent through Add/SubCounter; counter-change timing
+# events fire on writes like the original TIMING_COUNTER_CHANGED.
+# [SRC: dump.cs:542529 COUNTER_GOLD_DICE = 7100006; PlayerExtensions.c
+# grant 0x38be50-ish block @ lines 2268-2273 / spend @ 2368-2373; save sample
+# difficulty=1 -> counter 7100006=3 matches init gold_dice_count [0,3,2,1]]
+const COUNTER_GOLD_DICE := 7100006
+
+var gold_dice: int:
+	get:
+		return get_counter(COUNTER_GOLD_DICE)
+	set(value):
+		set_counter(COUNTER_GOLD_DICE, maxi(value, 0))
+
 var redraws_left := 0         # sudan card redraws left this round
 var back_to_prev_left := 0    # back-to-prev-round uses left
 # How many new sudan cards a redraw draws (original player+0x68).
@@ -190,7 +203,9 @@ var _event_rng = null
 
 
 func _init() -> void:
-	pass
+	# Keep the dice counter non-negative under direct Add/SubCounter calls
+	# (the original gates spends; the clone guards the store itself).
+	register_nonneg(COUNTER_GOLD_DICE)
 
 
 func create_card_instance(card_id: int, db, zone: String = "hand"):
@@ -705,15 +720,20 @@ func queue_event_ids(ids: Array) -> void:
 # ---- Gold (stacked gold card, id 2000029) ----
 
 func gold_total() -> int:
+	# GetCounter(COUNTER_CURRENT_COIN_COUNT_ID 7000105) is a derived read summing
+	# gold cards across the player's cards AND rite slots; the clone mirrors it
+	# by zone. [SRC: PlayerExtensions.c GetCounter 0x38ce70 @ 0x6ad029 branch]
 	var total := 0
-	for uid in hand:
-		var instance = get_card_instance(int(uid))
-		if instance != null and instance.card_id == GOLD_CARD_ID:
+	for uid in card_instances:
+		var instance = card_instances[uid]
+		if instance.card_id == GOLD_CARD_ID and instance.zone in ["hand", "slot"]:
 			total += instance.count
 	return total
 
 
 func gold_card_uids() -> Array[int]:
+	# Payment-side enumeration covers the player's card list (hand objects);
+	# slot-embedded gold spending is pending payer-body evidence.
 	var uids: Array[int] = []
 	for uid in hand:
 		var instance = get_card_instance(int(uid))
@@ -767,16 +787,20 @@ func _grant_gold(amount: int, db = null) -> void:
 
 
 func _remove_gold(amount: int) -> void:
-	# Deduction order across multiple gold objects is not source-verified
-	# (cost payment execution still unaudited); largest-count first keeps the
-	# live object count minimal. Registered in METHOD_MAP as pending evidence.
+	# CostCondition.IsSatisfied picks payer cards in player.cards enumeration
+	# order (insertion order = uid ascending here) until the cost is covered,
+	# recording them as need_cost_cards; the payer later consumes exactly that
+	# selection. Partial decrement on the last object is total-equivalent to
+	# the original remove-and-return-change model (payer body not decompiled).
+	# [SRC: CostCondition.c IsSatisfied 0x3f6160 loop @ FUN_1800032d0 add +
+	# SetNeedCosts; ConditionContext need_cost_cards dump.cs:383873]
 	var remaining := amount
 	var instances: Array = []
 	for uid in gold_card_uids():
 		var instance = get_card_instance(uid)
 		if instance != null:
 			instances.append(instance)
-	instances.sort_custom(func(a, b): return a.count > b.count)
+	instances.sort_custom(func(a, b): return a.uid < b.uid)
 	for instance in instances:
 		if remaining <= 0:
 			break

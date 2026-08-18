@@ -81,7 +81,6 @@ static func serialize(state) -> Dictionary:
 		"world_spawn_id": state.world_spawn_id,
 		"world_position_ratio": state.world_position_ratio,
 		"visited_world_locations": state.visited_world_locations.duplicate(),
-		"gold_dice": state.gold_dice,
 		"redraws_left": state.redraws_left,
 		"sudan_redraw_count": state.sudan_redraw_count,
 		"back_to_prev_left": state.back_to_prev_left,
@@ -131,8 +130,10 @@ static func deserialize(data: Dictionary, state, db) -> void:
 			state.visited_world_locations.append(location_id)
 	if state.world_location_id not in state.visited_world_locations:
 		state.visited_world_locations.append(state.world_location_id)
-	# Gold lives in gold card instances since v6 (see deserialize migration).
+	# Gold lives in gold card instances since v6 (see deserialize migration);
+	# gold dice live in the counter dict (COUNTER_GOLD_DICE) since v6.
 	var legacy_coin: int = int(data.get("coin_count", 0)) if data.has("coin_count") else -1
+	var legacy_gold_dice: int = int(data.get("gold_dice", 0)) if data.has("gold_dice") else -1
 	state.gold_dice = int(data.get("gold_dice", 0))
 	state.redraws_left = int(data.get("redraws_left", 0))
 	state.sudan_redraw_count = int(data.get("sudan_redraw_count", 1))
@@ -260,6 +261,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	# (id 2000029) at the front of the hand, preserving the recorded total.
 	if legacy_coin > 0 and state.gold_total() == 0:
 		state.reconcile_gold(legacy_coin, db)
+	# v5 migration: scalar gold_dice becomes the COUNTER_GOLD_DICE counter.
+	if legacy_gold_dice >= 0 and not state.local_counters.has(state.COUNTER_GOLD_DICE):
+		state.set_counter(state.COUNTER_GOLD_DICE, legacy_gold_dice)
 
 
 static func _restore_int_keyed_dictionary(value: Variant) -> Dictionary:

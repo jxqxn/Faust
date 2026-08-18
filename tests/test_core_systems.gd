@@ -45,13 +45,14 @@ func test_counter_clamp_nonneg_gated():
 	st.set_counter(7000001, -5)
 	assert_eq(st.get_counter(7000001), -5, "ungated counter may go negative")
 	# Registered counter clamps (instance-scoped, no global leakage).
-	st.register_nonneg(7100006)
-	st.set_counter(7100006, -3)
-	assert_eq(st.get_counter(7100006), 0, "gated counter clamps to 0 on set")
-	assert_true(st.is_nonneg_gated(7100006))
+	# 7100006 is the built-in gold-dice gate, so probe with 7100009.
+	st.register_nonneg(7100009)
+	st.set_counter(7100009, -3)
+	assert_eq(st.get_counter(7100009), 0, "gated counter clamps to 0 on set")
+	assert_true(st.is_nonneg_gated(7100009))
 	# A fresh instance is unaffected by the previous instance's registration.
 	var st2 := GameState.new()
-	assert_false(st2.is_nonneg_gated(7100006), "registry does not leak across instances")
+	assert_false(st2.is_nonneg_gated(7100009), "registry does not leak across instances")
 
 # ---- Tag (CardExtensions.c: RemoveTag decrements, no clamp; can_add gates ADD) ----
 func test_tag_add_sub_set():

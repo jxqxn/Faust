@@ -558,7 +558,9 @@ func _resolve() -> void:
 func _do_resolve() -> void:
 	if not _resolve_baseline.is_empty():
 		SaveSystem.deserialize(_resolve_baseline, _state, _db)
-		_state.gold_dice = max(0, int(_resolve_baseline.get("gold_dice", 0)) - _gold_used_this_resolve)
+		# The baseline deserialize restored the dice counter; subtract this
+		# resolve's usage from the restored value.
+		_state.gold_dice = maxi(0, _state.gold_dice - _gold_used_this_resolve)
 	else:
 		_prepare_table_from_placements()
 	var ctx := {
