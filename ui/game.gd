@@ -141,7 +141,7 @@ func _show_game() -> void:
 	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
 	gs.game_over_requested.connect(_show_game_over)
-	_legacy_layer().add_child(gs)
+	add_child(gs)
 	_current = gs
 	_game_screen = gs
 	gs.refresh()

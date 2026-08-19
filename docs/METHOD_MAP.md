@@ -59,7 +59,7 @@
 | `ui/game_screen.gd` 仪式图钉点位 | 结构依据 MapController；精确坐标需实机对照微调 |
 | 桌面地图计数小牌（count chit） | 仍为样式盒，待原作对位 |
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
-| `ui/*.gd` 旧屏坐标（game_screen / rite_view / situation_desk / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648），这些屏幕仍为 1280×800 手感坐标，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载；**每屏按 `docs/ui_layout/` 对应真值表逐个重摆后移出**（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
+| `ui/*.gd` 旧屏坐标（game_screen / rite_view / situation_desk / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**：GameScene 真值表的苏丹盒、声望、处决日条、菜单、手牌底图/轨道与怀表逐项落到 4K 坐标；`rite_view` / `situation_desk` / `card_widget` / `rite_selector` / 引导与各 overlay 仍为 1280×800，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载。其余屏幕每项按 `docs/ui_layout/` 真值表重摆后移出（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
 
 ## C. 自制 ❌（原作无对应，待消灭/降级）
 

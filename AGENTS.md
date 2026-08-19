@@ -46,6 +46,15 @@
 
 ## 当前进度
 
+**2026-08-19 GameScene 桌面 chrome + 手牌带 1:1（批次 Q，386 测试 / 2428 断言全绿）：**
+`game_screen` 直接进入 3840×2160 画布（不再走 LegacyLayer），按 GameScene 真值表重摆：
+处决日条、菜单、苏丹盒、声望条、手牌底图/轨道与下一天怀表；各数值、尺寸和锚点都回指
+`docs/ui_layout/GameScene.md`。新增原作 UI 资产（box/hand/prestige/menu/line），并把
+`sudan_box_show`、`prestige_unshow`、`deadline_unshow` 真正接到三项桌面可见性。
+截图 `docs/ui_layout/desktop_screenshot.png`，GUT 386/2428（无 ERROR/SCRIPT ERROR、仅既有
+两条测试警告）。未宣称完整 GameScene：故事/帮助、图鉴/笔记、卡牌与仪式浮层、俺寻思等
+仍在待迁移 UI 域；CardNew/SudanCard prefab 真值表已补出，作为下一步卡牌尺寸对拍依据。
+
 **2026-08-18 UI 布局对拍基建 + 主菜单 1:1（批次 P，385 测试 / 2421 断言全绿）：**
 用户指令转向"先修已有偏差，最明显是 UI 位置与缩放"。三支柱落到表现层：①新裁判工具
 `tools/export_ui_layout.gd` 解析语料 AssetRipper YAML（RectTransform 锚点/位置/尺寸/

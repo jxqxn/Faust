@@ -208,10 +208,42 @@ func test_game_screen_hud_uses_day_without_coin_or_round_labels():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	var hud_text := _collect_label_and_button_text(_find_node_by_name(screen, "Hud"))
-	assert_true(hud_text.find("第 1 天") >= 0, "HUD should show the visible day")
+	var strip := _find_node_by_name(screen, "RoundNumberBG")
+	assert_not_null(strip, "the original deadline strip (RoundNumber BG) is the desktop HUD")
+	var hud_text := _collect_label_and_button_text(strip)
+	assert_true(hud_text.find("处决日") >= 0, "deadline strip keeps the original title")
 	assert_eq(hud_text.find("回合"), -1, "HUD should not expose internal round wording")
 	assert_eq(hud_text.find("金币"), -1, "gold should be represented as cards instead of a HUD counter")
+
+
+func test_game_screen_hud_chrome_honors_player_visibility_preferences():
+	var rng := RNG.new(51)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	RoundLoop.draw_weekly_sudan(state, db, rng)
+	state.sudan_box_show = true
+	state.prestige_unshow = false
+	state.deadline_unshow = false
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var box := _find_node_by_name(screen, "SudanBox") as Control
+	var prestige := _find_node_by_name(screen, "Prestige") as Control
+	var deadline := _find_node_by_name(screen, "RoundNumberBG") as Control
+	assert_true(box.visible, "sudan_box_show uses visible polarity")
+	assert_true(prestige.visible, "a false prestige_unshow leaves the strip visible")
+	assert_true(deadline.visible, "a false deadline_unshow leaves the strip visible")
+
+	state.sudan_box_show = false
+	state.prestige_unshow = true
+	state.deadline_unshow = true
+	screen.refresh()
+	assert_false(box.visible, "sudan_box_show false hides the desktop box")
+	assert_false(prestige.visible, "prestige_unshow true hides the desktop strip")
+	assert_false(deadline.visible, "deadline_unshow true hides the deadline strip")
 
 
 func test_game_screen_home_site_and_menu_are_interactive():
@@ -1363,13 +1395,13 @@ func test_game_screen_menu_entry_stays_above_local_rite_overlay():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	var hud := _find_node_by_name(screen, "Hud") as Control
+	var hud := _find_node_by_name(screen, "RoundNumberBG") as Control
 	var menu := _find_node_by_name(screen, "MenuButton") as Control
 	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
 	var desk := _find_node_by_name(screen, "SituationDesk") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	var right_actions := _find_node_by_name(screen, "RightActions") as Control
-	assert_not_null(hud, "HUD should exist")
+	assert_not_null(hud, "the deadline strip is the desktop HUD")
 	assert_not_null(menu, "menu should exist")
 	assert_not_null(overlay, "rite overlay layer should exist")
 	assert_not_null(desk)
@@ -1377,9 +1409,9 @@ func test_game_screen_menu_entry_stays_above_local_rite_overlay():
 	assert_not_null(right_actions)
 	if hud == null or menu == null or overlay == null or desk == null or rail == null or right_actions == null:
 		return
-	assert_eq(menu.get_parent(), screen, "menu button should be separate from the HUD info panel")
-	assert_true(menu.get_index() < overlay.get_index(), "menu ordering must not be the source of its global priority")
-	assert_gt(menu.z_index, overlay.z_index, "the global menu entry must remain reachable over local modals")
+	assert_eq(menu.get_parent().get_parent(), screen, "menu button rides its chrome anchor, separate from the HUD strip")
+	var quit_anchor := _find_node_by_name(screen, "QuitAnchor") as Control
+	assert_gt(quit_anchor.z_index, overlay.z_index, "the global menu entry must remain reachable over local modals")
 	for child in desk.get_children():
 		if child is CanvasItem:
 			assert_lt(
@@ -1402,41 +1434,41 @@ func test_game_screen_matches_mockup_spatial_layout():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	var hud := _find_node_by_name(screen, "Hud") as Control
+	var deadline := _find_node_by_name(screen, "RoundNumberBG") as Control
 	var desk_map := _find_node_by_name(screen, "DeskMap") as Control
-	var rail_label := _find_node_by_name(screen, "RailLabel") as Control
+	var sudan_box := _find_node_by_name(screen, "SudanBox") as Control
 	var card_rail := _find_node_by_name(screen, "CardRail") as Control
 	var right_actions := _find_node_by_name(screen, "RightActions") as Control
 	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Control
 	var menu := _find_node_by_name(screen, "MenuButton") as Control
 
-	assert_not_null(hud, "mockup layout needs a named top Hud")
-	assert_not_null(menu, "mockup layout needs a separate menu button")
-	assert_not_null(desk_map, "mockup layout needs a named middle DeskMap")
-	assert_not_null(rail_label, "mockup layout needs a named bottom-left RailLabel")
-	assert_not_null(card_rail, "mockup layout needs a named bottom CardRail")
-	assert_not_null(right_actions, "mockup layout needs named bottom-right RightActions")
-	assert_not_null(advance, "mockup layout needs a named AdvanceDayButton")
-	if hud == null or menu == null or desk_map == null or rail_label == null or card_rail == null or right_actions == null or advance == null:
+	assert_not_null(deadline, "desktop layout needs the deadline strip")
+	assert_not_null(menu, "desktop layout needs a separate menu button")
+	assert_not_null(desk_map, "desktop layout needs a named middle DeskMap")
+	assert_not_null(sudan_box, "desktop layout needs the sudan box chrome")
+	assert_not_null(card_rail, "desktop layout needs a named bottom CardRail")
+	assert_not_null(right_actions, "desktop layout needs named bottom-right RightActions")
+	assert_not_null(advance, "desktop layout needs a named AdvanceDayButton")
+	if deadline == null or menu == null or desk_map == null or sudan_box == null or card_rail == null or right_actions == null or advance == null:
 		return
 
-	assert_almost_eq(hud.position.x, 20.0, 4.0, "Hud should follow the mockup left inset")
-	assert_almost_eq(hud.position.y, 16.0, 4.0, "Hud should follow the mockup top inset")
-	assert_true(hud.size.x < 360.0, "Hud should only frame the left status information")
-	assert_true(menu.position.x > 1060.0, "Menu button should be a separate top-right control")
-	assert_true(menu.get_parent() == screen, "Menu button should not live inside the Hud panel")
-	assert_true(desk_map.position.y > hud.position.y + hud.size.y, "DeskMap should sit below the Hud")
-	assert_true(desk_map.size.x > 1080.0, "DeskMap should use the broad middle area")
-	assert_true(desk_map.size.y > 330.0, "DeskMap should be the dominant middle area")
-	assert_true(
-		card_rail.position.y < desk_map.position.y + desk_map.size.y,
-		"the painted tabletop should continue behind the front-facing card rail"
-	)
-	assert_almost_eq(card_rail.position.x, 162.0, 8.0, "CardRail should leave room for the mockup rail label")
-	assert_true(card_rail.size.x < 840.0, "CardRail should leave room for the right action column")
-	assert_true(rail_label.position.x < card_rail.position.x, "RailLabel should be left of CardRail")
-	assert_true(right_actions.position.x > card_rail.position.x + card_rail.size.x, "RightActions should be right of CardRail")
-	assert_true(advance.size.x >= 110.0 and advance.size.y >= 110.0, "AdvanceDayButton should be the large round bottom action")
+	# Authored 3840x2160 chrome scales with the stage (k = view/design).
+	var view := Rect2(Vector2.ZERO, screen._effective_view_size())
+	var k := view.size.y / 2160.0
+	assert_almost_eq(deadline.position.y, 0.0, 2.0, "deadline strip pins to the top edge")
+	assert_almost_eq(deadline.get_global_rect().end.x, view.end.x - 80.0 * k, 2.0, "deadline strip keeps the original right inset")
+	assert_almost_eq(menu.get_global_rect().end.x, view.end.x - 30.0 * k, 2.0, "quit button keeps the original right inset")
+	assert_almost_eq(menu.get_global_rect().position.y, 30.0 * k, 2.0, "quit button keeps the original top inset")
+	assert_almost_eq(sudan_box.position.x, -47.0 * k, 2.0, "sudan box hangs off the left edge like the original")
+	assert_almost_eq(sudan_box.position.y, 20.0 * k, 2.0, "sudan box keeps the original top inset")
+	assert_almost_eq(desk_map.position.x, 0.0, 2.0, "the painted desk fills the whole canvas")
+	assert_almost_eq(desk_map.size.x, view.size.x, 2.0, "the painted desk fills the whole canvas width")
+	assert_almost_eq(card_rail.position.y, view.end.y - 470.0 * k, 2.0, "card rail band pins above the bottom edge")
+	assert_almost_eq(card_rail.size.x, view.size.x, 2.0, "hand band spans the full width (Hand BG)")
+	assert_almost_eq(right_actions.get_global_rect().end.x, view.end.x, 2.0, "watch cluster pins to the right edge")
+	assert_almost_eq(right_actions.get_global_rect().end.y, view.end.y, 2.0, "watch cluster pins to the bottom edge")
+	assert_almost_eq(advance.get_global_rect().size.x, 596.0 * k, 2.0, "watch keeps the original 596 width")
+	assert_almost_eq(advance.get_global_rect().size.y, 634.0 * k, 2.0, "watch keeps the original 634 height")
 
 
 func test_situation_desk_keeps_actions_separate_at_narrow_width():
@@ -1463,7 +1495,9 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	if desk == null or title == null or rail == null or advance == null or overlay == null:
 		return
 	assert_true(desk.visible, "narrow layouts should still open on the desk")
-	assert_lt(rail.get_global_rect().end.x, advance.get_global_rect().position.x, "hand rail and next-day action should remain separate")
+	var view_size := Rect2(Vector2.ZERO, screen._effective_view_size())
+	assert_almost_eq(advance.get_global_rect().end.x, view_size.end.x, 2.0, "watch pins to the bottom-right corner")
+	assert_almost_eq(advance.get_global_rect().end.y, view_size.end.y, 2.0, "watch pins to the bottom edge")
 	assert_gt(overlay.z_index, desk.z_index, "queue overlays should remain above the paper desk")
 
 
@@ -1515,7 +1549,7 @@ func _widest_content(node: Node) -> float:
 func _narrowest_direct_panel(screen: Control) -> float:
 	var direct_narrowest := INF
 	for child in screen.get_children():
-		if child is PanelContainer and child.name in ["Hud", "DeskMap"]:
+		if child is PanelContainer and child.name in ["RoundNumberBG", "DeskMap"]:
 			direct_narrowest = min(direct_narrowest, (child as PanelContainer).size.x)
 	if direct_narrowest < INF:
 		return direct_narrowest

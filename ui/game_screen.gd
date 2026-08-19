@@ -46,6 +46,14 @@ const MOCKUP_SIZE := Vector2(1280, 720)
 const HAND_NATURAL_STEP := 112.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
 const HAND_RAIL_BOTTOM_GUTTER := 20.0
+# Original MainUI canvas: 3840x2160 (GameScene.unity CanvasScaler Expand).
+# Desktop chrome anchors below are authored values from docs/ui_layout/GameScene.
+const DESIGN_SPACE := Vector2(3840, 2160)
+# Hand card content is authored in the 720p mockup space; it renders at 3x.
+const HAND_CONTENT_SCALE := 3.0
+# Full-rect overlays built by not-yet-migrated scripts (rite view/selector)
+# still lay out in the 1280x800 legacy space, scaled to fill design height.
+const LEGACY_OVERLAY_DESIGN := Vector2(1280, 800)
 # Rendering budget. Game owns the global menu above this entire screen.
 const SCENE_CONTENT_Z_MAX := 99
 const OVERLAY_LAYER_Z := 100
@@ -55,17 +63,20 @@ var _state
 var _db
 var _rng
 
-var _round_label: Label
-var _gold_label: Label
 var _log_label: Label
 var _background: ColorRect
 var _begin_guide_bar: BeginGuideBar
-var _hud: PanelContainer
 var _menu_button: Button
+var _deadline_strip: PanelContainer
+var _deadline_number: Label
+var _sudan_box: Control
+var _prestige_strip: Control
+var _prestige_slots: Array = []
+var _next_day_label: Label
 var _desk_map: PanelContainer
 var _desk_content: SituationDesk
 var _overlay_layer: Control
-var _rail_label: VBoxContainer
+var _hand_bg_sprite: TextureRect
 var _card_rail_view: Control
 var _rail_padding: MarginContainer
 var _card_items: Control
@@ -76,7 +87,7 @@ var _hand_drop_preview_index := -1
 var _pending_hand_drop_origins: Dictionary = {}
 var _pending_hand_drop_poses: Dictionary = {}
 var _known_rail_card_uids: Dictionary = {}
-var _right_actions: VBoxContainer
+var _right_actions: Control
 var _advance_button: Button
 var _redraw_button: Button
 var _back_to_prev_button: Button
@@ -138,65 +149,74 @@ func _build_ui() -> void:
 	# same top-left coordinate system so resizing it does not fight anchors.
 	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
-	_hud = _panel("Hud")
-	# The original floats the gold/round readouts over the desk painting with
-	# no chrome strip; the host panel stays only as a layout node.
-	# [SRC: GameScene.unity TopLeft cluster - no background Image]
-	_hud.add_theme_stylebox_override("panel", _hud_panel_style())
-	add_child(_hud)
-	var hud_row := HBoxContainer.new()
-	hud_row.add_theme_constant_override("separation", 24)
-	hud_row.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hud_row.offset_left = 18
-	hud_row.offset_right = -18
-	_hud.add_child(hud_row)
+	# [SRC: docs/ui_layout/GameScene.md — RoundNumber BG top-right anchors (1,1)
+	#       pivot (1,1) pos (-80,0) height 204, countdown_bg_new strip;
+	#       children Left Space/RoundNumberTitle "处决日" fs60/NumberSprite/
+	#       RoundNumber "N/7" fs60/Right Space (horizontal layout)]
+	_deadline_strip = PanelContainer.new()
+	_deadline_strip.name = "RoundNumberBG"
+	_deadline_strip.z_index = PERSISTENT_CONTROL_Z
+	_deadline_strip.add_theme_stylebox_override("panel", _nine_slice_style("res://assets/original/ui/countdown_bg_new.png"))
+	add_child(_deadline_strip)
+	var deadline_row := HBoxContainer.new()
+	deadline_row.add_theme_constant_override("separation", 36)
+	deadline_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	_deadline_strip.add_child(deadline_row)
+	var deadline_title := Label.new()
+	deadline_title.text = "处决日"
+	deadline_title.add_theme_font_size_override("font_size", 60)
+	deadline_title.add_theme_color_override("font_color", Color("#f4e6c0"))
+	deadline_row.add_child(deadline_title)
+	_deadline_number = Label.new()
+	_deadline_number.add_theme_font_size_override("font_size", 60)
+	_deadline_number.add_theme_color_override("font_color", Color("#f4e6c0"))
+	deadline_row.add_child(_deadline_number)
 
-	# Round display beside a compact crop of the original pocket-watch
-	# dial (56x56 icon; the HUD strip stays thin so the map sits below).
-	# [SRC: Texture2D/clock_bg.png 596x636]
-	if ResourceLoader.exists("res://assets/original/ui/clock_bg.png"):
-		var clock_box := HBoxContainer.new()
-		clock_box.name = "RoundClock"
-		clock_box.add_theme_constant_override("separation", 6)
-		var clock_icon := TextureRect.new()
-		var clock_atlas := AtlasTexture.new()
-		clock_atlas.atlas = preload("res://assets/original/ui/clock_bg.png")
-		clock_atlas.region = Rect2(96, 96, 404, 404)
-		clock_icon.texture = clock_atlas
-		clock_icon.custom_minimum_size = Vector2(36, 36)
-		clock_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		clock_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		clock_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		clock_box.add_child(clock_icon)
-		_round_label = _stat_label()
-		_round_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		clock_box.add_child(_round_label)
-		hud_row.add_child(clock_box)
-	else:
-		_round_label = _stat_label()
-		hud_row.add_child(_round_label)
-	# Original gold-coin badge art beside the gold count.
-	if ResourceLoader.exists("res://assets/original/ui/coin.png"):
-		var coin_icon := TextureRect.new()
-		coin_icon.texture = preload("res://assets/original/ui/coin.png")
-		coin_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		coin_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		coin_icon.custom_minimum_size = Vector2(54, 18)
-		coin_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		hud_row.add_child(coin_icon)
-	_gold_label = _stat_label()
-	hud_row.add_child(_gold_label)
-
+	# [SRC: GameScene Quit — checkbox_bg 80x82 top-right pivot (0.5,1) pos
+	#       (-70,-30), child Image menu 49x43 centered]
+	var quit_anchor := Control.new()
+	quit_anchor.name = "QuitAnchor"
+	quit_anchor.z_index = PERSISTENT_CONTROL_Z
+	quit_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(quit_anchor)
 	_menu_button = Button.new()
 	_menu_button.name = "MenuButton"
-	_menu_button.text = "菜单"
+	_menu_button.tooltip_text = "菜单"
 	_menu_button.flat = true
-	_menu_button.add_theme_font_size_override("font_size", 15)
-	_menu_button.add_theme_color_override("font_color", Color("#e8d59f"))
-	_menu_button.add_theme_color_override("font_hover_color", Color("#fff0ba"))
+	_menu_button.custom_minimum_size = Vector2(80, 82)
+	_menu_button.size = Vector2(80, 82)
+	var quit_style := _nine_slice_style("res://assets/original/ui/checkbox_bg.png")
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		_menu_button.add_theme_stylebox_override(state_name, quit_style)
+	if ResourceLoader.exists("res://assets/original/ui/menu.png"):
+		var menu_icon := TextureRect.new()
+		menu_icon.texture = load("res://assets/original/ui/menu.png") as Texture2D
+		menu_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		menu_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		menu_icon.set_anchors_preset(Control.PRESET_CENTER)
+		menu_icon.custom_minimum_size = Vector2(49, 43)
+		menu_icon.size = Vector2(49, 43)
+		menu_icon.position = Vector2(-24.5, -21.5)
+		menu_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_menu_button.add_child(menu_icon)
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
-	_menu_button.z_index = PERSISTENT_CONTROL_Z
-	add_child(_menu_button)
+	quit_anchor.add_child(_menu_button)
+
+	# [SRC: GameScene SudanBox — box_open 455x954 anchors (0,1) pivot (0,1)
+	#       pos (-47,20); child BoxTop 244x528 at center+(-85,43)]
+	_sudan_box = Control.new()
+	_sudan_box.name = "SudanBox"
+	_sudan_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_sudan_box.z_index = PERSISTENT_CONTROL_Z
+	add_child(_sudan_box)
+	var box_frame := _sprite_child("res://assets/original/ui/box_open.png", Vector2(455, 954))
+	_sudan_box.add_child(box_frame)
+	var box_top := _sprite_child("res://assets/original/ui/box_top.png", Vector2(244, 528))
+	box_top.set_anchors_preset(Control.PRESET_CENTER)
+	box_top.position = Vector2(455 * 0.5 - 85 - 122, 954 * 0.5 + 43 - 264)
+	_sudan_box.add_child(box_top)
+
+	_build_prestige_strip()
 
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
@@ -225,28 +245,6 @@ func _build_ui() -> void:
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay_layer.z_index = OVERLAY_LAYER_Z
 	add_child(_overlay_layer)
-
-	_rail_label = VBoxContainer.new()
-	_rail_label.name = "RailLabel"
-	_rail_label.z_index = PERSISTENT_CONTROL_Z
-	_rail_label.add_theme_constant_override("separation", 8)
-	add_child(_rail_label)
-	var rail_text := Label.new()
-	rail_text.name = "RailContextLabel"
-	rail_text.text = "当前处境"
-	rail_text.add_theme_font_size_override("font_size", 14)
-	rail_text.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.72))
-	_rail_label.add_child(rail_text)
-	var rank_caption := Label.new()
-	rank_caption.text = "卡牌等级"
-	rank_caption.add_theme_font_size_override("font_size", 11)
-	rank_caption.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.46))
-	_rail_label.add_child(rank_caption)
-	var rank_range := Label.new()
-	rank_range.text = "I — IV"
-	rank_range.add_theme_font_size_override("font_size", 13)
-	rank_range.add_theme_color_override("font_color", Color(0.92, 0.92, 0.93, 0.62))
-	_rail_label.add_child(rank_range)
 
 	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
@@ -281,49 +279,47 @@ func _build_ui() -> void:
 	_card_items.resized.connect(_layout_hand_cards)
 	_rail_padding.add_child(_card_items)
 
-	_right_actions = VBoxContainer.new()
+	_right_actions = Control.new()
 	_right_actions.name = "RightActions"
 	_right_actions.z_index = PERSISTENT_CONTROL_Z
-	_right_actions.add_theme_constant_override("separation", 12)
 	add_child(_right_actions)
 
 	_advance_button = Button.new()
 	_advance_button.name = "AdvanceDayButton"
 	_advance_button.tooltip_text = "下一天"
-	_advance_button.custom_minimum_size = Vector2(150, 160)
-	# Pocket-watch composite: the clock_bg watch IS the button face with the
-	# next_day_0 stamp riding in its center — no circular chrome of our own.
-	# [SRC: GameScene.unity "Next Round" -> clock_bg 596x634 + Image 305x306
-	#       sprite=next_day_0; Texture2D/clock_bg.png + next_day_0.png]
+	# [SRC: GameScene Next Round — clock_bg 596x634 anchors (1,0) pivot (1,0);
+	#       Image next_day_0 305x306 at center+(62,-41); Sort hand_sort 93x93
+	#       at (1,300); PrevRound return_last_round 158x137 at
+	#       center+(-206.1,-207.2); Text (TMP) "下一天" fs100 322x174 at
+	#       bottom-right (-240.5,275)]
+	_advance_button.set_anchors_preset(Control.PRESET_FULL_RECT)
 	if ResourceLoader.exists("res://assets/original/ui/clock_bg.png"):
 		var watch := TextureRect.new()
 		watch.name = "NextDayWatch"
 		watch.texture = preload("res://assets/original/ui/clock_bg.png")
 		watch.set_anchors_preset(Control.PRESET_FULL_RECT)
 		watch.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		watch.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		watch.stretch_mode = TextureRect.STRETCH_SCALE
 		watch.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_advance_button.add_child(watch)
 	if ResourceLoader.exists("res://assets/original/ui/next_day_0.png"):
 		var stamp := TextureRect.new()
 		stamp.name = "NextDayStamp"
 		stamp.texture = load("res://assets/original/ui/next_day_0.png") as Texture2D
-		stamp.set_anchors_preset(Control.PRESET_CENTER)
-		stamp.custom_minimum_size = Vector2(74, 74)
-		stamp.size = Vector2(74, 74)
-		stamp.position = Vector2(-37, -42)
+		stamp.size = Vector2(305, 306)
+		stamp.position = Vector2(596 * 0.5 + 62 - 305 * 0.5, 634 * 0.5 + 41 - 306 * 0.5)
 		stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		stamp.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		stamp.stretch_mode = TextureRect.STRETCH_SCALE
 		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_advance_button.add_child(stamp)
 	else:
 		_advance_button.text = "下一天"
-		_advance_button.add_theme_font_size_override("font_size", 23)
+		_advance_button.add_theme_font_size_override("font_size", 46)
 		_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
 		_advance_button.add_theme_color_override("font_hover_color", Color("#681f1b"))
 		_advance_button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.52))
-	var advance_style := _round_button_style()
-	_advance_button.add_theme_stylebox_override("normal", advance_style if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
+	var watch_style := _round_button_style()
+	_advance_button.add_theme_stylebox_override("normal", watch_style if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	_advance_button.add_theme_stylebox_override("pressed", _round_button_style(Color("#fff1bc")) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	# Disabled is a distinct theme state. Without this explicit style Godot falls
@@ -332,6 +328,17 @@ func _build_ui() -> void:
 	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)))
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
+
+	_next_day_label = Label.new()
+	_next_day_label.name = "NextDayLabel"
+	_next_day_label.text = "下一天"
+	_next_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_next_day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_next_day_label.add_theme_font_size_override("font_size", 100)
+	_next_day_label.add_theme_color_override("font_color", Color("#f2e3b0"))
+	_next_day_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_next_day_label.z_index = PERSISTENT_CONTROL_Z
+	add_child(_next_day_label)
 
 	_redraw_button = _icon_button("重抽")
 	_redraw_button.name = "RedrawSudanButton"
@@ -369,43 +376,180 @@ func _build_ui() -> void:
 
 
 func _apply_layout() -> void:
-	if _hud == null:
+	if _menu_button == null:
 		return
 	var view_size := _effective_view_size()
-	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
+	# Chrome anchors are authored 3840x2160 values from docs/ui_layout/GameScene;
+	# they scale with the actual canvas instead of the old mockup ratio.
+	var k := Vector2(view_size.x / DESIGN_SPACE.x, view_size.y / DESIGN_SPACE.y)
 
 	_set_rect(_background, Rect2(Vector2.ZERO, view_size))
-	_set_rect(_hud, Rect2(Vector2(22, 16) * s, Vector2(392, 48) * s))
-	_set_rect(_menu_button, Rect2(Vector2(view_size.x - 78 * s, 22 * s), Vector2(52, 40) * s))
-	# The painted board extends behind the persistent card band. Cards and HUD
-	# remain front-facing, while only the map surface uses tabletop perspective.
-	_set_rect(
-		_desk_map,
-		Rect2(
-			Vector2(18, 66) * s,
-			Vector2(view_size.x - 36 * s, view_size.y - (66 + 118) * s)
+	# [SRC: RoundNumber BG top-right pos (-80,0) height 204 — width wraps text]
+	if _deadline_strip != null:
+		_deadline_strip.size = Vector2(0, 204 * k.y)
+		_deadline_strip.reset_size()
+		_deadline_strip.position = Vector2(view_size.x - 80 * k.x - _deadline_strip.size.x, 0)
+	# [SRC: Quit checkbox_bg 80x82, pivot (0.5,1) pos (-70,-30) top-right]
+	if _menu_button != null and _menu_button.get_parent() is Control:
+		var quit_anchor: Control = _menu_button.get_parent()
+		quit_anchor.scale = k
+		quit_anchor.position = Vector2(view_size.x - 110 * k.x, 30 * k.y)
+		quit_anchor.size = Vector2(80, 82)
+	# [SRC: SudanBox box_open 455x954 anchors (0,1) pivot (0,1) pos (-47,20)]
+	if _sudan_box != null:
+		_sudan_box.scale = k
+		_sudan_box.position = Vector2(-47 * k.x, 20 * k.y)
+		_sudan_box.size = Vector2(455, 954)
+	if _prestige_strip != null:
+		_prestige_strip.scale = k
+		# [SRC: Prestige anchors (0.3,1) pivot (0,1) 1000x264]
+		_prestige_strip.position = Vector2(view_size.x * 0.3, 0)
+		_prestige_strip.size = Vector2(1000, 264)
+	# The painted board is the whole desktop behind every persistent control.
+	_set_rect(_desk_map, Rect2(Vector2.ZERO, view_size))
+	_set_rect(_desk_content, Rect2(Vector2.ZERO, view_size))
+	# [SRC: Next Round watch cluster anchors (1,0) pivot (1,0) 596x634;
+	#       下一天 text 322x174 centered at bottom-right + (-240.5,275)]
+	_right_actions.scale = k
+	_right_actions.position = Vector2(view_size.x - 596 * k.x, view_size.y - 634 * k.y)
+	_right_actions.size = Vector2(596, 634)
+	if _redraw_button != null:
+		# SudanDice runtime placement not yet located (registered); park the
+		# redraw dice left of the watch column.
+		_set_rect(_redraw_button, Rect2(Vector2(-176, 466), Vector2(150, 150)))
+	if _back_to_prev_button != null:
+		# [SRC: Next Round/PrevRound 158x137 at center+(-206.1,-207.2)]
+		_set_rect(_back_to_prev_button, Rect2(Vector2(12.9, 455.7), Vector2(158, 137)))
+	if _next_day_label != null:
+		_next_day_label.scale = k
+		_next_day_label.size = Vector2(322.26, 174.36)
+		_next_day_label.position = Vector2(
+			view_size.x - (240.5 + 322.26 * 0.5) * k.x,
+			view_size.y - (275 + 174.36 * 0.5) * k.y
 		)
-	)
-	_set_rect(_desk_content, Rect2(_desk_map.position, _desk_map.size))
-	_set_rect(_overlay_layer, Rect2(Vector2.ZERO, view_size))
-	_set_rect(_rail_label, Rect2(Vector2(28 * s, view_size.y - 168 * s), Vector2(116 * s, 140 * s)))
+	var legacy_k := view_size.y / LEGACY_OVERLAY_DESIGN.y
+	# Rite views/selector are still authored in the 1280x800 legacy space.
+	_overlay_layer.scale = Vector2(legacy_k, legacy_k)
+	_overlay_layer.position = Vector2((view_size.x - LEGACY_OVERLAY_DESIGN.x * legacy_k) * 0.5, 0)
+	_overlay_layer.size = LEGACY_OVERLAY_DESIGN
+	# [SRC: Hand BG hand_bg 4096x356 anchors (0,0)-(1,0) bottom stretched]
+	if _hand_bg_sprite != null:
+		_hand_bg_sprite.scale = k
+		_hand_bg_sprite.position = Vector2(0, view_size.y - 356 * k.y)
+		_hand_bg_sprite.size = Vector2(view_size.x / k.x, 356)
 	_set_rect(
 		_card_rail_view,
 		Rect2(
-			Vector2(180 * s, view_size.y - 222 * s),
-			Vector2(view_size.x - 360 * s, (202.0 + HAND_RAIL_BOTTOM_GUTTER) * s)
+			Vector2(0, view_size.y - 470 * k.y),
+			Vector2(view_size.x, (452.0 + HAND_RAIL_BOTTOM_GUTTER) * k.y)
 		)
 	)
 	_rail_padding.add_theme_constant_override(
-		"margin_bottom", roundi(HAND_RAIL_BOTTOM_GUTTER * s)
+		"margin_bottom", roundi(HAND_RAIL_BOTTOM_GUTTER * HAND_CONTENT_SCALE)
 	)
-	_set_rect(_right_actions, Rect2(Vector2(view_size.x - 160 * s, view_size.y - 194 * s), Vector2(132 * s, 170 * s)))
-
+	# Hand card content is authored in 720p mockup space; render it at 3x so
+	# cards match the original card size in the 4K canvas.
+	if _card_items != null:
+		_card_items.scale = Vector2(HAND_CONTENT_SCALE, HAND_CONTENT_SCALE)
+		_card_items.position = Vector2.ZERO
 	_card_items.custom_minimum_size = Vector2.ZERO
 	call_deferred("_layout_hand_cards")
-	_layout_situation_desk(s)
-	_layout_card_detail(s, view_size)
-	_layout_event_prompt(s, view_size)
+	_layout_situation_desk(HAND_CONTENT_SCALE)
+	_layout_card_detail(legacy_k, view_size)
+	_layout_event_prompt(legacy_k, view_size)
+
+
+## [SRC: GameScene Prestige — 1000x264 at top 30% width; bg line 1020x157
+##       top-left; slots 7100001..7100006 prestige_bg 231x252 staggered]
+func _build_prestige_strip() -> void:
+	_prestige_strip = Control.new()
+	_prestige_strip.name = "Prestige"
+	_prestige_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_prestige_strip.z_index = PERSISTENT_CONTROL_Z
+	add_child(_prestige_strip)
+	var line_tex := _sprite_child("res://assets/original/ui/line.png", Vector2(1020, 157))
+	line_tex.position = Vector2(0, 0)
+	_prestige_strip.add_child(line_tex)
+	var slot_offsets := [
+		Vector2(40, 0), Vector2(224, 10.1), Vector2(411.1, -14), Vector2(593.4, -19.4),
+		Vector2(726.2, -46.2), Vector2(872, 7),
+	]
+	for i in range(slot_offsets.size()):
+		var slot := Control.new()
+		slot.name = "PrestigeSlot710000%d" % (i + 1)
+		slot.position = slot_offsets[i]
+		slot.size = Vector2(231, 252)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var icon := _sprite_child("res://assets/original/ui/prestige_bg.png", Vector2(231, 252))
+		slot.add_child(icon)
+		var value := Label.new()
+		value.name = "Value"
+		value.text = "0"
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		value.add_theme_font_size_override("font_size", 56)
+		value.add_theme_color_override("font_color", Color("#f4e6c0"))
+		value.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+		value.offset_bottom = -18
+		value.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(value)
+		_prestige_slots.append(slot)
+		_prestige_strip.add_child(slot)
+
+
+## 处决日 counter: current day within the active Sultan card's window
+## (life+1 of card_vanishing; life grows while sheltered, matching the
+## visible-countdown model). Hidden by the original deadline_unshow flag.
+func _update_deadline_strip() -> void:
+	if _deadline_strip == null or _state == null:
+		return
+	var hidden := bool(_state.get("deadline_unshow"))
+	var asc = _state.active_sudan_cards[0] if not _state.active_sudan_cards.is_empty() else null
+	if hidden or asc == null:
+		_deadline_strip.visible = false
+		return
+	_deadline_strip.visible = true
+	var card: Dictionary = _db.get_card(asc.card_id) if _db != null else {}
+	var lifetime := int(card.get("card_vanishing", 7))
+	var day := clampi(lifetime - int(asc.days_left) + 1, 1, lifetime)
+	_deadline_number.text = " %d/%d" % [day, lifetime]
+
+
+func _update_prestige_strip() -> void:
+	if _state == null or _prestige_slots.is_empty():
+		return
+	for i in range(_prestige_slots.size()):
+		var slot: Control = _prestige_slots[i]
+		var value_label := slot.get_node_or_null("Value") as Label
+		if value_label != null:
+			value_label.text = str(int(_state.get_counter(7100001 + i)))
+
+
+func _nine_slice_style(texture_path: String) -> StyleBox:
+	if not ResourceLoader.exists(texture_path):
+		var flat := StyleBoxFlat.new()
+		flat.bg_color = Color("#3a2b1a")
+		return flat
+	var style := StyleBoxTexture.new()
+	style.texture = load(texture_path) as Texture2D
+	var tex: Texture2D = style.texture
+	var mx := tex.get_width() * 0.4
+	style.texture_margin_left = mx
+	style.texture_margin_right = mx
+	style.texture_margin_top = tex.get_height() * 0.4
+	style.texture_margin_bottom = tex.get_height() * 0.4
+	return style
+
+
+func _sprite_child(texture_path: String, sprite_size: Vector2) -> TextureRect:
+	var sprite := TextureRect.new()
+	if ResourceLoader.exists(texture_path):
+		sprite.texture = load(texture_path) as Texture2D
+		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite.stretch_mode = TextureRect.STRETCH_SCALE
+		sprite.custom_minimum_size = sprite_size
+		sprite.size = sprite_size
+		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return sprite
 
 
 func _effective_view_size() -> Vector2:
@@ -577,8 +721,16 @@ func refresh() -> void:
 		return
 	if _begin_guide_bar != null:
 		_begin_guide_bar.refresh(_state)
-	_round_label.text = "第 %d 天" % _state.day
-	_gold_label.text = "金骰 %d    重抽 %d" % [_state.gold_dice, _state.redraws_left]
+	# [SRC: GameController.c @ ShowSudanBox (0x557af0) / ShowPrestige
+	#       (0x557390), dump.cs Player.sudan_box_show@0x48 /
+	#       prestige_unshow@0x4A]  The stored flags are the source of truth for
+	# desktop chrome visibility; prestige uses the original inverse polarity.
+	if _sudan_box != null:
+		_sudan_box.visible = bool(_state.sudan_box_show)
+	if _prestige_strip != null:
+		_prestige_strip.visible = not bool(_state.prestige_unshow)
+	_update_deadline_strip()
+	_update_prestige_strip()
 	var previous_positions := _capture_hand_visual_positions()
 	for child in _card_items.get_children():
 		child.queue_free()
@@ -1134,7 +1286,8 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_event_overlay.name = "EventPromptOverlay"
 	_event_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_event_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_overlay(_event_overlay)
+	_event_overlay.z_index = OVERLAY_LAYER_Z
+	add_child(_event_overlay)
 
 	_event_panel = Panel.new()
 	_event_panel.name = "EventPromptPanel"
@@ -1483,7 +1636,8 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	_card_detail_overlay.name = "CardDetailOverlay"
 	_card_detail_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card_detail_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_overlay(_card_detail_overlay)
+	_card_detail_overlay.z_index = OVERLAY_LAYER_Z
+	add_child(_card_detail_overlay)
 	set_world_scene_blocker("card_detail", true)
 
 	_card_detail_panel = Panel.new()

@@ -32,10 +32,10 @@ godot --headless --script tools/export_save_diff.gd -- \
 | saveTime | DateTime | — | missing | 时间戳 |
 | card_uid_index | int | next_card_uid | mapped | |
 | rite_uid_index | int | next_rite_uid | mapped | |
-| sudan_box_show | bool | sudan_box_show | semantic | 苏丹卡盒可见标志；原作桌面 HUD 未接 |
+| sudan_box_show | bool | sudan_box_show | semantic | 苏丹卡盒可见标志；2026-08-19 起克隆桌面盒已接，剧情/帮助 HUD 仍缺 |
 | story_unshow | bool | story_unshow | semantic | 剧情 HUD 隐藏标志；原作桌面 HUD 未接 |
-| prestige_unshow | bool | prestige_unshow | semantic | 声望 HUD 隐藏标志；原作桌面 HUD 未接 |
-| deadline_unshow | bool | deadline_unshow | semantic | 死线 HUD 隐藏标志；原作桌面 HUD 未接 |
+| prestige_unshow | bool | prestige_unshow | semantic | 声望 HUD 隐藏标志；2026-08-19 起克隆条已接，原作图标/交互仍缺 |
+| deadline_unshow | bool | deadline_unshow | semantic | 死线 HUD 隐藏标志；2026-08-19 起克隆条已接，原作装饰/交互仍缺 |
 | helpbtn_unshow | bool | helpbtn_unshow | semantic | 帮助按钮隐藏标志；原作桌面 HUD 未接 |
 | location_icon_show | int | — | missing | change_location_icon 持久化 |
 | change_desk_bg | string | — | missing | change_desk_bg 持久化 |

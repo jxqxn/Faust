@@ -18,7 +18,35 @@ func _ready() -> void:
 			frames = int(args[i + 1])
 	var main: Node = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	var auto_start := args.has("--new-game")
+	if auto_start:
+		await get_tree().create_timer(1.5).timeout
+		if main.has_method("_on_new_game_pressed"):
+			main.call("_on_new_game_pressed")
+		# The opening events have already applied their world effects; their
+		# remaining queue entries are only blocking presentation.  Consume them
+		# exactly like the layout-test desk fixture so this captures the stable,
+		# player-reachable tabletop rather than an off-screen intro modal.
+		var state = main.get("state")
+		while state != null and state.has_method("pending_operation") and not state.pending_operation().is_empty():
+			state.consume_pending_operation()
+		var screen: Node = main.get("_game_screen")
+		if screen != null and screen.has_method("refresh"):
+			screen.call("refresh")
+		await get_tree().process_frame
+		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout
+	if auto_start:
+		var screen_node: Node = main.get("_game_screen")
+		if screen_node == null:
+			for child in main.get_children():
+				if child.get_script() != null and str(child.get_script().resource_path).find("game_screen") != -1:
+					screen_node = child
+		if screen_node != null:
+			for child in screen_node.get_children():
+				if child is Control and child.name in ["RoundNumberBG", "SudanBox", "Prestige", "QuitAnchor", "HandBG", "NextDayLabel"]:
+					var c: Control = child
+					print("chrome %s visible=%s rect=%s modulate=%s" % [child.name, c.visible, c.get_global_rect(), c.modulate])
 	var vp := get_viewport()
 	print("viewport=%s root_size=%s scale=%s/%s" % [vp.get_visible_rect(), vp.size, vp.content_scale_mode, vp.content_scale_aspect])
 	if main is Control:
