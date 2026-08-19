@@ -160,26 +160,25 @@ func _mcp_capture_situation_desk() -> void:
 
 func _mcp_capture_site_actions() -> void:
 	_mcp_capture_situation_desk()
-	# Use the normal site-button path so the capture includes the same focus
-	# state a player sees, rather than opening a detached selector directly.
-	var home_site: Button = null
-	if _game_screen != null:
-		home_site = _game_screen.get_node_or_null("SituationDesk/SiteHome") as Button
-	if home_site != null and not home_site.disabled:
-		home_site.pressed.emit()
-	else:
-		_on_open_rite_selector("自宅")
+	_mcp_capture_first_map_pin()
 
 
 func _mcp_capture_tabletop_market_actions() -> void:
 	_mcp_capture_situation_desk()
-	var market_site: Button = null
-	if _game_screen != null:
-		market_site = _game_screen.get_node_or_null("SituationDesk/SiteMarket") as Button
-	if market_site == null or market_site.disabled:
-		_mcp_capture_site_actions()
+	_mcp_capture_first_map_pin()
+
+
+func _mcp_capture_first_map_pin() -> void:
+	if _game_screen == null:
 		return
-	market_site.pressed.emit()
+	var desk := _game_screen.get_node_or_null("SituationDesk")
+	if desk == null:
+		return
+	for child in desk.get_children():
+		var pin := child as Button
+		if pin != null and str(pin.name).begins_with("RitePin_") and not pin.disabled:
+			pin.pressed.emit()
+			return
 
 
 func _mcp_capture_compact_prompt() -> void:
@@ -266,7 +265,10 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	else:
 		_legacy_layer().add_child(rv)
 	_rite_overlay = rv
-	_set_world_scene_blocker("rite", true)
+	# A direct MapController pin replaces the clone-era selector, but opening
+	# its rite remains the same modal input boundary: keep chrome visible while
+	# the persistent controls and rail are frozen beneath it.
+	_set_world_scene_blocker("rite", true, false, true, true)
 
 
 func _on_menu_pressed() -> void:

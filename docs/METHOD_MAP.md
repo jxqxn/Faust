@@ -31,7 +31,7 @@
 | `over.json` 159 结局表（处刑 vanish.over / 事件 over 值驱动） | `ui` 结局屏 | 名/副题/文本/后日谈标记 |
 | `init/*.json` 难度配置 | `sim/result.gd` `_difficulty_choices` | 难度选择发生在游戏内（SetDifficulty 语义） |
 | 文本占位符 `[sudan_life_time]` / `[sudan_redraw_total_left_times]` | `sim/game_state.gd` `substitute_text` | 显示前替换运行值 |
-| `MapController.c`（桌面底图 + 仪式图钉模型） | `ui/game_screen.gd` 桌面 | 表现层结构依据；点位精确对位见 🟡 |
+| `MapController.c` + `LocationController.c` + `GameScene.unity` Map / Location RectTransform | `ui/map_controller.gd` | 2026-08-19 批次 R：按原作 `locations/maps/pins/lastRite` 结构替换自制 SituationDesk；地点节点与底图坐标已回指真值表，`RitePosition` 子坐标仍 🟡。见 `docs/ui_layout/MapController.md` |
 | `StartScene.unity` / `GameScene.unity` 场景树（GameObject/RectTransform/Sprite GUID） | `ui/main_menu.gd` 等第七波接线 | UI 原作化的证据法 |
 | `GameController.GenCard` 0x54f650 → `PlayerExtensions.AddCard` 0x38b620 + `GenCoin.c Do` 0x510b40（金币 = 手牌金币卡 2000029 **多对象** count 之和；每 op 新建对象、count=操作值可为负、bagpos=1 前置、OnCardBorn） | `sim/game_state.gd` coin_count 计算属性 + `_grant_gold`/`_remove_gold`、`sim/result.gd` coin 键、v5→v6 存档迁移 | 2026-08-17 修复；多对象扣除顺序未验证（cost 支付链未审计，现最大面额优先） |
 | `CostCondition.IsSatisfied` 0x3f6160（花费判定读卡对象 count，card+0x20；判定时按 player.cards 枚举序选定付款卡清单记入 `ConditionContext.need_cost_cards`） | `sim/condition.gd` 金币/coin 条件（经 coin_count 求和属性）、`game_state._remove_gold`（uid 升序=枚举序，末对象部分扣减等价于移除找零；付款执行体未反编译留档） | 读模型与支付顺序一致 |
@@ -56,10 +56,9 @@
 | `sim/condition.gd` AttrExprParser | 文法已对齐（四则/e() 敌方/sN.tag/counter.N）；解析器宿主为自制递归下降，非原作方法映射 |
 | `ui/game_audio.gd` GameAudio | 仅 main/tutorial BGM + 部分音效；拖放音、弹窗出现音、BGM 分层（level2/3）、结局 BGM、`sfx_*.json` 全量缺 |
 | `ui/begin_guide_bar.gd` 引导条 | 文案/键族/存档对齐；`WizardController` 完整演示宿主与 magic_sudan 演出缺，5310004 后序列未实机校对 |
-| `ui/game_screen.gd` 仪式图钉点位 | 结构依据 MapController；精确坐标需实机对照微调 |
-| 桌面地图计数小牌（count chit） | 仍为样式盒，待原作对位 |
+| `ui/map_controller.gd` 仪式图钉精确子点位 | 地点中心与 `MapController.SetPos` 碰撞承载已接；`LocationController.RitePosition` 序列化子坐标尚未从语料恢复，不能把 location range 误当 x/y 坐标 |
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
-| `ui/*.gd` 旧屏坐标（game_screen / rite_view / situation_desk / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**：GameScene 真值表的苏丹盒、声望、处决日条、菜单、手牌底图/轨道与怀表逐项落到 4K 坐标；`rite_view` / `situation_desk` / `card_widget` / `rite_selector` / 引导与各 overlay 仍为 1280×800，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载。其余屏幕每项按 `docs/ui_layout/` 真值表重摆后移出（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
+| `ui/*.gd` 旧屏坐标（game_screen / rite_view / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**；**批次 R 已把桌面地图换为 `ui/map_controller.gd`**。`rite_view` / `card_widget` / `rite_selector` / 引导与各 overlay 仍为 1280×800，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载。其余屏幕每项按 `docs/ui_layout/` 真值表重摆后移出（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
 
 ## C. 自制 ❌（原作无对应，待消灭/降级）
 

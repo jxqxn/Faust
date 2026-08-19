@@ -46,7 +46,7 @@ func test_representative_main_screen_controls_exist():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	for node_name in ["MenuButton", "SiteHome", "AdvanceDayButton"]:
+	for node_name in ["MenuButton", "Location_SelfHome", "AdvanceDayButton"]:
 		var control := _find_node_by_name(screen, node_name)
 		assert_not_null(control, "%s should exist" % node_name)
 
@@ -246,38 +246,41 @@ func test_game_screen_hud_chrome_honors_player_visibility_preferences():
 	assert_false(deadline.visible, "deadline_unshow true hides the deadline strip")
 
 
-func test_game_screen_home_site_and_menu_are_interactive():
+func test_game_screen_map_pin_and_menu_are_interactive():
 	var rng := RNG.new(6)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
+	state.create_rite_instance(5000001)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
 	stage.add_child(screen)
 	await wait_process_frames(2)
+	screen.refresh()
 
-	var opened: Array = []
-	var locations: Array = []
+	var opened: Array[int] = []
 	var menu_count := [0]
-	screen.open_rite.connect(func(id: int): opened.append(id))
-	screen.open_rite_selector.connect(func(location: String): locations.append(location))
+	screen.open_rite_instance.connect(func(rite_uid: int): opened.append(rite_uid))
 	screen.menu_pressed.connect(func(): menu_count[0] += 1)
 
-	var home := _find_node_by_name(screen, "SiteHome") as Button
+	var pin: Button = null
+	for node in _find_node_by_name(screen, "SituationDesk").get_children():
+		if node is Button and str(node.name).begins_with("RitePin_"):
+			pin = node
+			break
 	var menu := _find_node_by_name(screen, "MenuButton") as Button
-	assert_not_null(home, "home site should be an interactive button")
+	assert_not_null(pin, "an available rite should be an interactive map pin")
 	assert_not_null(menu, "menu should be an interactive button")
-	if home != null:
-		home.pressed.emit()
+	if pin != null:
+		pin.pressed.emit()
 	if menu != null:
 		menu.pressed.emit()
-	assert_eq(opened, [], "site buttons should not hard-code a specific rite id")
-	assert_eq(locations, ["自宅"], "clicking home site should request the home location rites")
+	assert_eq(opened, [pin.rite_uid] if pin != null else [], "the pin must expose its exact runtime rite uid")
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
 
 
-func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
+func test_map_pin_opens_its_runtime_rite_without_location_selector_shortcut():
 	var stage := _stage()
 	var game = Game.new()
 	stage.add_child(game)
@@ -285,10 +288,11 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
+	game.state.create_rite_instance(5000001)
+	game._game_screen.refresh()
+	await wait_process_frames(1)
 
 	var screen := game._game_screen as Control
-	var home := _find_node_by_name(game, "SiteHome") as Button
-	var market := _find_node_by_name(game, "SiteMarket") as Button
 	var desk := _find_node_by_name(game, "SituationDesk") as Control
 	var card_rail := _find_node_by_name(game, "CardRail") as Control
 	var think_drop := _find_node_by_name(game, "ThinkDropZone") as Control
@@ -297,8 +301,6 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	var redraw := _find_node_by_name(game, "RedrawSudanButton") as Button
 	var menu := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(screen)
-	assert_not_null(home)
-	assert_not_null(market)
 	assert_not_null(desk)
 	assert_not_null(card_rail)
 	assert_not_null(think_drop)
@@ -306,94 +308,29 @@ func test_site_action_uses_one_local_selector_flow_and_locks_day_controls():
 	assert_not_null(advance)
 	assert_not_null(redraw)
 	assert_not_null(menu)
-	if screen == null or home == null or market == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
+	if screen == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
 		return
-	assert_false(home.disabled, "a site with available actions should be visibly enabled")
-	assert_string_contains(home.text, "·", "site labels should expose their action availability")
+	var pin: Button = null
+	for node in desk.get_children():
+		if node is Button and str(node.name).begins_with("RitePin_"):
+			pin = node
+			break
+	assert_not_null(pin, "an available rite must render as its own map pin")
+	if pin == null:
+		return
 	var rng_state_before: int = game.rng.get_state()
-	var source_anchor: Vector2 = screen.site_action_anchor("自宅")
-	home.pressed.emit()
+	pin.pressed.emit()
 	await wait_process_frames(2)
 
-	var selector := _find_node_by_name(game, "RiteSelector") as Control
-	var selector_panel := _find_node_by_name(game, "RiteSelectorPanel") as Control
-	var selector_backdrop := _find_node_by_name(game, "RiteSelectorBackdrop") as Control
-	var rail_cards := _rail_card_widgets(screen)
-	assert_not_null(selector, "every non-empty site should open the same action selector")
-	assert_not_null(selector_panel, "site actions should use a local context menu instead of replacing the game screen")
-	assert_not_null(selector_backdrop, "the menu needs a full-screen input-capturing pause shade")
-	assert_null(_find_node_by_name(game, "RiteSelectorConnector"), "nearby context should not need a tether line")
-	assert_null(_find_node_by_name(game, "CloseRiteSelectorButton"), "the visible map makes a return button redundant")
-	assert_eq(game._game_screen, screen, "opening a site action list must preserve the current GameScreen")
-	assert_eq(game.rng.get_state(), rng_state_before, "availability previews must not consume simulation RNG")
-	assert_null(_find_node_by_name(game, "RiteOverlayPanel"), "a single action must not skip the selector contract")
-	if selector != null:
-		assert_eq(selector._overlay_anchor, source_anchor, "the selector should open from the clicked site")
-	assert_true(home.visible, "the selected site should remain visible beneath its local panel")
-	assert_almost_eq(
-		market.self_modulate.a,
-		1.0,
-		0.001,
-		"pausing a site menu must not fade or remove the other physical nodes"
-	)
-	assert_true(think_drop.visible, "a compact site menu must not make the thought drop target disappear")
-	if selector_panel != null:
-		var panel_rect := selector_panel.get_global_rect()
-		assert_lte(selector_panel.size.x, 288.0, "one local action should use a compact menu")
-		assert_true(
-			desk.get_global_rect().encloses(panel_rect),
-			"the menu should stay inside the map work area"
-		)
-		assert_false(
-			panel_rect.intersects(card_rail.get_global_rect()),
-			"the menu must never overlap the persistent card rail"
-		)
-		assert_false(
-			Rect2(selector_panel.position, selector_panel.size).has_point(source_anchor),
-			"the menu should open beside, not over, the selected site"
-		)
-	assert_true(right_actions.visible, "a local context menu must not make persistent actions disappear")
-	assert_true(advance.disabled, "visible day controls must reject programmatic activation while the menu is open")
-	assert_true(redraw.disabled, "visible redraw controls must reject programmatic activation while the menu is open")
-	assert_almost_eq(right_actions.self_modulate.a, 1.0, 0.001, "the shared pause shade, not a special alpha, should dim right-side controls")
-	var disabled_advance_style := advance.get_theme_stylebox("disabled") as StyleBoxFlat
-	assert_not_null(disabled_advance_style, "the disabled primary action must retain an authored shape")
-	if disabled_advance_style != null:
-		assert_eq(disabled_advance_style.corner_radius_top_left, 72, "the disabled primary action must retain its round silhouette")
-	var disabled_redraw_style := redraw.get_theme_stylebox("disabled") as StyleBox
-	assert_not_null(disabled_redraw_style, "the disabled secondary action must retain an authored shape")
-	if selector != null:
-		assert_gt(selector.z_index, card_rail.z_index, "the contextual pause shade must cover the card rail")
-		assert_gt(selector.z_index, right_actions.z_index, "the contextual pause shade must cover right-side controls")
-		assert_gt(selector.z_index, menu.z_index, "the contextual pause shade must cover the menu entry")
-	if selector_backdrop != null:
-		assert_eq(selector_backdrop.mouse_filter, Control.MOUSE_FILTER_STOP, "the shade must intercept all background pointer input")
-	assert_true(menu.disabled, "the menu must pause with the rest of the background")
-	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_IGNORE, "the paused rail must reject direct drag/drop input")
-	if not rail_cards.is_empty():
-		var first_card := rail_cards[0] as CardWidget
-		assert_true(first_card.is_presentation_paused(), "visible rail cards must stop their idle and hover processing")
-		assert_false(first_card.is_processing(), "a paused background card must not keep animating beneath the menu")
-	if selector != null:
-		var escape := InputEventKey.new()
-		escape.keycode = KEY_ESCAPE
-		escape.pressed = true
-		selector.call("_unhandled_key_input", escape)
-		await wait_seconds(0.18)
-		await wait_process_frames(1)
-	assert_null(_find_node_by_name(game, "RiteSelector"), "closing the action panel should remove the selector")
-	assert_true(right_actions.visible, "closing the local panel should restore desk progression controls")
-	assert_false(advance.disabled)
-	assert_false(redraw.disabled)
-	assert_almost_eq(right_actions.self_modulate.a, 1.0, 0.001)
-	assert_false(menu.disabled, "closing the local panel should restore the persistent menu entry")
-	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_STOP, "closing the local panel should restore rail input")
-	if not rail_cards.is_empty():
-		var restored_card := rail_cards[0] as CardWidget
-		assert_false(restored_card.is_presentation_paused(), "closing the local panel should resume rail presentation")
-	assert_almost_eq(market.self_modulate.a, 1.0, 0.001)
-	await wait_process_frames(1)
-	assert_true(home.has_focus(), "returning from the local panel should restore the source site focus")
+	assert_eq(game.rng.get_state(), rng_state_before, "opening a pin must not consume simulation RNG")
+	assert_not_null(_find_node_by_name(game, "RiteOverlayPanel"), "a pin opens its rite directly")
+	assert_null(_find_node_by_name(game, "RiteSelector"), "MapController has no location selector shortcut")
+	assert_true(think_drop.visible, "the thought target remains visible under the rite overlay")
+	assert_true(right_actions.visible)
+	assert_true(advance.disabled, "rite overlay blocks progression controls")
+	assert_true(redraw.disabled, "rite overlay blocks redraw controls")
+	assert_true(menu.disabled, "rite overlay blocks the global menu entry")
+	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_IGNORE, "rite overlay blocks direct rail input")
 
 
 func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
@@ -415,11 +352,10 @@ func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
 	if target == null or desk == null:
 		return
 	assert_false(target is Button, "drag-only affordances must not be exposed as clickable buttons")
-	assert_string_contains(
-		_collect_label_and_button_text(target),
-		"拖入卡牌",
-		"the drop zone should state the required gesture without relying on a tooltip"
-	)
+	var target_style := target.get_theme_stylebox("panel") as StyleBoxTexture
+	assert_not_null(target_style, "the original IThink affordance is a textured panel")
+	if target_style != null:
+		assert_not_null(target_style.texture, "the thought target must use its original texture")
 	assert_lt(target.position.x, desk.size.x * 0.2, "the thought drop zone stays in the desk lower-left position")
 	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk drop zone should accept valid card drops")
 
@@ -1483,18 +1419,19 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	await wait_process_frames(2)
 
 	var desk := _find_node_by_name(screen, "SituationDesk") as Control
-	var title := _find_node_by_name(screen, "SituationDeskTitle") as Control
+	var self_home := _find_node_by_name(screen, "Location_SelfHome") as Control
 	var rail := _find_node_by_name(screen, "CardRail") as Control
 	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Control
 	var overlay := _find_node_by_name(screen, "OverlayLayer") as Control
 	assert_not_null(desk)
-	assert_not_null(title)
+	assert_not_null(self_home)
 	assert_not_null(rail)
 	assert_not_null(advance)
 	assert_not_null(overlay)
-	if desk == null or title == null or rail == null or advance == null or overlay == null:
+	if desk == null or self_home == null or rail == null or advance == null or overlay == null:
 		return
 	assert_true(desk.visible, "narrow layouts should still open on the desk")
+	assert_null(_find_node_by_name(screen, "SituationDeskTitle"), "the clone-era desk title must stay removed")
 	var view_size := Rect2(Vector2.ZERO, screen._effective_view_size())
 	assert_almost_eq(advance.get_global_rect().end.x, view_size.end.x, 2.0, "watch pins to the bottom-right corner")
 	assert_almost_eq(advance.get_global_rect().end.y, view_size.end.y, 2.0, "watch pins to the bottom edge")

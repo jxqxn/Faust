@@ -28,8 +28,20 @@ func _ready() -> void:
 		# exactly like the layout-test desk fixture so this captures the stable,
 		# player-reachable tabletop rather than an off-screen intro modal.
 		var state = main.get("state")
-		while state != null and state.has_method("pending_operation") and not state.pending_operation().is_empty():
+		# Some intro queues can schedule their follow-up while being consumed.
+		# A capture must reach a stable player-reachable frame rather than loop
+		# forever if a malformed/config-only chain keeps re-arming itself.
+		var drained := 0
+		while (
+			state != null
+			and state.has_method("pending_operation")
+			and not state.pending_operation().is_empty()
+			and drained < 128
+		):
 			state.consume_pending_operation()
+			drained += 1
+		if drained == 128:
+			push_warning("Screenshot capture reached the intro-queue safety cap")
 		var screen: Node = main.get("_game_screen")
 		if screen != null and screen.has_method("refresh"):
 			screen.call("refresh")

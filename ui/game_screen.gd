@@ -15,7 +15,7 @@ signal open_rite_selector(location_name: String)
 signal menu_pressed()
 signal game_over_requested()
 
-const SituationDeskScript = preload("res://ui/situation_desk.gd")
+const MapControllerScript = preload("res://ui/map_controller.gd")
 
 class HandRailDrop:
 	extends Control
@@ -74,7 +74,7 @@ var _prestige_strip: Control
 var _prestige_slots: Array = []
 var _next_day_label: Label
 var _desk_map: PanelContainer
-var _desk_content: SituationDesk
+var _desk_content: Control
 var _overlay_layer: Control
 var _hand_bg_sprite: TextureRect
 var _card_rail_view: Control
@@ -221,11 +221,10 @@ func _build_ui() -> void:
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
 	add_child(_desk_map)
-	_desk_content = SituationDeskScript.new()
+	_desk_content = MapControllerScript.new()
 	_desk_content.name = "SituationDesk"
 	_desk_content.setup(_state, _db, _rng)
 	_desk_content.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_desk_content.open_rite_selector.connect(_on_desk_rite_selector_requested)
 	_desk_content.open_rite_instance.connect(_emit_open_rite_instance)
 	add_child(_desk_content)
 
@@ -612,10 +611,6 @@ func _scene_frame_style() -> StyleBoxFlat:
 	return style
 
 
-func _on_desk_rite_selector_requested(location_name: String) -> void:
-	open_rite_selector.emit(location_name)
-
-
 func site_action_anchor(location_name: String) -> Vector2:
 	if _desk_content == null or not _desk_content.has_method("site_action_anchor"):
 		return Vector2(-1.0, -1.0)
@@ -719,6 +714,11 @@ func _emit_open_rite_instance(rite_uid: int) -> void:
 func refresh() -> void:
 	if _state == null or _card_items == null:
 		return
+	# The clone rebuilds presentation from runtime state on refresh. This is the
+	# host equivalent of MapController.AddPin/RemovePin reacting to rite nodes;
+	# never derive pins from config-only availability.
+	if _desk_content != null:
+		_desk_content.refresh_context()
 	if _begin_guide_bar != null:
 		_begin_guide_bar.refresh(_state)
 	# [SRC: GameController.c @ ShowSudanBox (0x557af0) / ShowPrestige

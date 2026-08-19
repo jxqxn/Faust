@@ -1,10 +1,10 @@
 extends GutTest
 
 const RNG = preload("res://core/rng.gd")
-const SituationDesk = preload("res://ui/situation_desk.gd")
+const MapController = preload("res://ui/map_controller.gd")
 
-const MAP_PATH := "res://assets/original/situation_desk/tabletop_campaign_map.png"
-const NODE_PATH := "res://assets/original/situation_desk/map_node_token.png"
+const TABLE_PATH := "res://assets/original/situation_desk/table.png"
+const MAP_PATH := "res://assets/original/situation_desk/table-map.png"
 
 var db: ConfigDB
 
@@ -14,79 +14,63 @@ func before_all():
 	db.load_all()
 
 
-func test_tabletop_assets_load_and_cutout_assets_have_alpha():
-	for path in [MAP_PATH, NODE_PATH]:
-		assert_true(ResourceLoader.exists(path), "%s should be imported from the project asset directory" % path)
+func test_source_table_and_map_assets_load():
+	for path in [TABLE_PATH, MAP_PATH]:
+		assert_true(ResourceLoader.exists(path), "%s should be an original map asset" % path)
 		var texture := load(path) as Texture2D
-		assert_not_null(texture, "%s should load as a texture" % path)
+		assert_not_null(texture, "%s should load" % path)
 		if texture != null:
-			assert_gt(texture.get_width(), 0, "%s should have a valid width" % path)
-			assert_gt(texture.get_height(), 0, "%s should have a valid height" % path)
+			assert_gt(texture.get_width(), 0)
+			assert_gt(texture.get_height(), 0)
 
-	var texture := load(NODE_PATH) as Texture2D
-	if texture == null:
+
+func test_authored_location_nodes_use_gamescene_coordinates_not_clone_ratios():
+	var desk := _desk(null, null, Vector2(3840, 2160))
+	await wait_process_frames(2)
+	var home := desk.get_node("Location_SelfHome") as Control
+	var palace := desk.get_node("Location_Palace") as Control
+	var uptown := desk.get_node("Location_Uptown") as Control
+	assert_not_null(home)
+	assert_not_null(palace)
+	assert_not_null(uptown)
+	if home == null or palace == null or uptown == null:
 		return
-	var image := texture.get_image()
-	assert_lt(
-		image.get_pixel(0, 0).a,
-		0.05,
-		"%s should retain a transparent cutout corner" % NODE_PATH
-	)
-	assert_gt(
-		image.get_pixel(image.get_width() / 2, image.get_height() / 2).a,
-		0.50,
-		"%s should retain an opaque physical component" % NODE_PATH
-	)
+	# GameScene Map@7621: 4200x2600 at (0,-178); child authored positions.
+	assert_almost_eq(home.get_rect().get_center().x, 542.4, 1.0)
+	assert_almost_eq(home.get_rect().get_center().y, 1345.0, 1.0)
+	assert_almost_eq(palace.get_rect().get_center().x, 1484.1, 1.0)
+	assert_almost_eq(palace.get_rect().get_center().y, 805.0, 1.5)
+	assert_almost_eq(uptown.get_rect().get_center().x, 1860.6, 1.0)
+	assert_almost_eq(uptown.get_rect().get_center().y, 588.9, 1.5)
+	assert_null(desk.get_node_or_null("SiteHome"), "the invented location action buttons must be gone")
+	assert_null(desk.get_node_or_null("SituationDeskTitle"), "the invented desk title must be gone")
+	assert_false((desk.get_node("Location_Harem") as Control).visible, "Harem starts inactive in GameScene")
 
 
-func test_map_projection_uses_narrower_top_and_shared_vertical_compression():
-	var desk := _desk()
-	await wait_process_frames(2)
-	var top_width: float = desk._project_ratio(Vector2(1, 0)).x - desk._project_ratio(Vector2(0, 0)).x
-	var bottom_width: float = desk._project_ratio(Vector2(1, 1)).x - desk._project_ratio(Vector2(0, 1)).x
-	var projected_height: float = desk._project_ratio(Vector2(0.5, 1)).y - desk._project_ratio(Vector2(0.5, 0)).y
-	assert_almost_eq(top_width / bottom_width, 0.90, 0.001)
-	assert_almost_eq(projected_height / desk.size.y, 0.94, 0.001)
-
-
-func test_all_tabletop_controls_remain_inside_a_720_square_layout():
-	var desk := _desk(null, null, Vector2(720, 720))
-	await wait_process_frames(2)
-	var desk_rect := Rect2(Vector2.ZERO, desk.size)
-	for node_name in [
-		"SiteHome",
-		"SiteMarket",
-		"SitePalace",
-		"SiteTemple",
-		"SiteWild",
-		"ThinkDropZone",
-		"SituationDeskTitle",
-	]:
-		var control := desk.get_node(node_name) as Control
-		assert_true(
-			desk_rect.encloses(Rect2(control.position, control.size)),
-			"%s should remain inside the narrow tabletop" % node_name
-		)
-
-
-func test_site_press_opens_selector_immediately_without_mutating_simulation_state():
+func test_rite_pin_opens_its_instance_without_a_location_selector_shortcut():
 	var rng := RNG.new(8801)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
+	state.create_rite_instance(5000001)
 	var desk := _desk(state, rng)
 	await wait_process_frames(2)
+	var pin: Button = null
+	for node in desk.get_children():
+		if node is Button and str(node.name).begins_with("RitePin_"):
+			pin = node
+			break
+	assert_not_null(pin, "available rites enter the map as individual pins")
+	if pin == null:
+		return
 	var before := SaveSystem.serialize(state)
 	var rng_state_before: int = rng.get_state()
-	var requested: Array[String] = []
-	desk.open_rite_selector.connect(func(location: String): requested.append(location))
-
-	(desk.get_node("SiteHome") as Button).pressed.emit()
-	(desk.get_node("SiteMarket") as Button).pressed.emit()
-	(desk.get_node("SiteWild") as Button).pressed.emit()
-
-	assert_eq(requested, ["自宅", "商业区", "野外"], "every site press opens its location immediately")
-	assert_eq(SaveSystem.serialize(state), before, "site presses must not enter the save or rule state")
-	assert_eq(rng.get_state(), rng_state_before, "site presses must not consume simulation RNG")
+	var opened: Array[int] = []
+	desk.open_rite_instance.connect(func(rite_uid: int): opened.append(rite_uid))
+	pin.pressed.emit()
+	assert_eq(opened, [pin.rite_uid])
+	assert_eq(desk.last_rite, pin.rite_uid)
+	assert_eq(SaveSystem.serialize(state), before)
+	assert_eq(rng.get_state(), rng_state_before)
 
 
 func _desk(
@@ -101,7 +85,7 @@ func _desk(
 	var stage := Control.new()
 	stage.size = desk_size
 	add_child_autofree(stage)
-	var desk := SituationDesk.new()
+	var desk := MapController.new()
 	desk.setup(state, db, rng)
 	desk.size = stage.size
 	stage.add_child(desk)
