@@ -73,6 +73,50 @@ func test_rite_pin_opens_its_instance_without_a_location_selector_shortcut():
 	assert_eq(rng.get_state(), rng_state_before)
 
 
+func test_rite_positions_follow_authored_children_range_selection_and_stack_order():
+	var rng := RNG.new(8802)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	# setup_new_run seeds the original opening rites.  Remove them so this test
+	# isolates the exact GetPosition tie/range behaviour below.
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	# Original content locations: 5000001 = 自宅:1; 5000003 = 自宅:[2,12].
+	# The final fixed pin shares child 1 and must receive RitePosition's +100 X.
+	var fixed_first = state.create_rite_instance(5000001)
+	var ranged_first = state.create_rite_instance(5000003)
+	var ranged_second = state.create_rite_instance(5000003)
+	var ranged_third = state.create_rite_instance(5000003)
+	var fixed_second = state.create_rite_instance(5000001)
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	assert_not_null(desk)
+	if desk == null:
+		return
+	# GameScene SelfHome root @8644 plus integer-named RitePosition children.
+	var root := Vector2(-1506, -141)
+	_assert_pin_center(desk, fixed_first.uid, root + Vector2(24, 3))
+	_assert_pin_center(desk, ranged_first.uid, root + Vector2(-295, 11))
+	_assert_pin_center(desk, ranged_second.uid, root + Vector2(44, 120))
+	_assert_pin_center(desk, ranged_third.uid, root + Vector2(338, -3))
+	_assert_pin_center(desk, fixed_second.uid, root + Vector2(24 + 100, 3))
+
+
+func _assert_pin_center(desk: MapController, rite_uid: int, source_position: Vector2) -> void:
+	var pin := desk.pins.get(rite_uid, null) as Control
+	assert_not_null(pin, "rite %d should have an original map pin" % rite_uid)
+	if pin == null:
+		return
+	var expected := Vector2(
+		desk.size.x * 0.5 + (source_position.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
+		desk.size.y * 0.5 - (source_position.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
+	)
+	var actual := pin.position + pin.size * 0.5
+	assert_almost_eq(actual.x, expected.x, 1.0, "rite %d X uses the authored RitePosition child" % rite_uid)
+	assert_almost_eq(actual.y, expected.y, 1.0, "rite %d Y uses the authored RitePosition child" % rite_uid)
+
+
 func _desk(
 	state = null,
 	rng = null,
