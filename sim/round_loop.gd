@@ -550,6 +550,14 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 	var post_rng = rng if rng != null else state.get("_event_rng")
 	_run_post_rites(table_entries, instance, state, db, post_rng)
 	state.remove_rite_instance(instance.uid)
+	# A completed final_pin becomes a persistent endpoint only after the live
+	# Rite is removed.  It is not a new runtime Rite and cannot open a panel.
+	# [SRC: RiteResultPanelController.__c__DisplayClass56_0 <Settlement>b__8:
+	#       RemoveRite(player, rite.uid) -> if RiteNode.final_pin@0x34 then
+	#       PlayerExtensions.AddRitePin(player, rite.id) -> GameController.AddRitePin]
+	var rite_definition: Dictionary = db.get_rite(instance.id) if db != null else {}
+	if bool(rite_definition.get("final_pin", false)) and state.has_method("add_rite_pin"):
+		state.add_rite_pin(instance.id)
 
 
 ## Card-carried post-rite settlements run when the settled rite's result panel

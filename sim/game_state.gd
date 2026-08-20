@@ -138,6 +138,12 @@ var auto_gen_sudan_card := true
 var rite_instances: Dictionary = {} # uid(int) -> RiteInstance
 var next_rite_uid := 1
 var active_rite_uid := 0
+# Completed-map endpoints are not live Rite instances.  Player.pins is an
+# ordered, duplicate-free List<int> of rite *definition* ids; the result UI
+# appends a final_pin rite only after RemoveRite has removed its runtime uid.
+# [SRC: dump.cs Player.pins @0x98; PlayerExtensions.c AddRitePin/RemoveRitePin;
+#       RiteResultPanelController.__c__DisplayClass56_0 <Settlement>b__8]
+var rite_pins: Array[int] = []
 # Rites started/opened by auto-begin processing. Auto-begin is not the same as
 # auto-resolve; the original DoStartAutoBeginRite calls Rite.set_start.
 var started_rites: Array[int] = []
@@ -776,6 +782,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
 	rite_instances.clear()
+	rite_pins.clear()
 	next_rite_uid = 1
 	active_rite_uid = 0
 	available_rites.clear()
@@ -1446,6 +1453,26 @@ func find_rite_instance_by_id(rite_id: int) -> RiteInstance:
 		if instance.id == rite_id:
 			return instance
 	return null
+
+
+## PlayerExtensions.AddRitePin is an ordered List<int> append with a Contains
+## guard.  These ids are map endpoints, not an alternate live-rite list.
+## [SRC: PlayerExtensions.c AddRitePin (0x38c360)]
+func add_rite_pin(rite_id: int) -> bool:
+	if rite_id <= 0 or rite_id in rite_pins:
+		return false
+	rite_pins.append(rite_id)
+	return true
+
+
+## PlayerExtensions.RemoveRitePin delegates to List<int>.Remove.
+## [SRC: PlayerExtensions.c RemoveRitePin (0x38efe0)]
+func remove_rite_pin(rite_id: int) -> bool:
+	var index := rite_pins.find(rite_id)
+	if index < 0:
+		return false
+	rite_pins.remove_at(index)
+	return true
 
 
 func available_rite_instances() -> Array[RiteInstance]:

@@ -117,13 +117,14 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v7 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge_payload_v7.json）。语料 auto_save.json 实测 **45/45 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器/notes 日志等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v8 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge payload）。语料 auto_save.json 实测 **46/46 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器/notes 日志/**Player.pins 终局图钉**等）。
 
 导入桥当场抓到并修复的结构偏差：
 
 - **timing_rounds 键格式**：原作键 = TimingRoundBase 实例 +0x20 的 **int**（样本全部 = 事件 id×100，如 5300067→530006700；TimingRoundBase.c IsValid 0x465d30/OnStart 0x4660d0 直接以该 int 寻址 player+0x128）。克隆旧自制格式 `"round_begin_ba:5310000"` 已改为 `event_id*100`（全部 1381 个带回合时机的事件均单桶，序号恒 0；多桶序号分配留待原作侧验证），旧字符串键在 deserialize 迁移。
 - **difficulty 基数**：1 基确认（样本 difficulty=1 与 counter 7100006=3、per_round=3、global backToPrevRound=9999 四信号同指简单档）；导入时 -1。
 - **min_round**：原作显式持久化 player+0x30 且 OnPrevRound 直读；克隆补 `GameState.min_round`（v7 序列化）作回退门。
+- **pins**：`Player.pins`@0x98 是有序去重的 `List<int>`（仪式定义 ID，不是运行 Rite UID）。结算尾链先 `RemoveRite`，随后仅在 `RiteNode.final_pin=true` 时 `AddRitePin`；克隆以 `GameState.rite_pins` 进入 v8 存读档与同刻对拍。
 - **仪式槽位映射**：原作 `Rite.cards[i]`（0 基数组，长度=配置 s 槽数）↔ 克隆 `s{i+1}`。
 
 报告三类防静默登记：**converted**（含玩家级覆盖与唯一性登记等标量/结构转换）、**approximated**（active_sudan 的 drawn_round 无法在难度中途切换后反推；每抽前 Shuffle 使牌堆顺序无语义，按多重集对拍）、**dropped**（仅列本存档携带非默认值的克隆缺口字段，如 notes）。

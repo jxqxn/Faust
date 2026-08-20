@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Phase-2 import bridge (methodology pillar 2: original artifacts as judge).
 ## Converts an original Player save (the corpus save_samples JSON, decoded by
-## sim/original_save_schema.gd) into a clone v7 payload, loads it through the
+## sim/original_save_schema.gd) into a clone v8 payload, loads it through the
 ## normal SaveSystem.deserialize path, and diffs the same-instant values back
 ## against the original. What the clone cannot represent is reported as
 ## dropped/approximated — never silently swallowed.
@@ -40,7 +40,6 @@ const DROPPED_FIELDS := {
 	"change_desk_bg": "change_desk_bg 持久化",
 	"after_round_auto_sort": "日终自动整理开关",
 	"ithink_card": "思考卡实例",
-	"pins": "桌面图钉",
 	"sudan_pool": "池变体字符串",
 	"sudan_pool_pos": "苏丹池 UI 坐标",
 	"sudan_pool_init_count": "苏丹池初始计数",
@@ -59,7 +58,7 @@ const DROPPED_FIELDS := {
 }
 
 
-## Build a v7-shaped clone payload from an original Player save dict.
+## Build a v8-shaped clone payload from an original Player save dict.
 static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	var approximated: Array = []
 	var converted: Array = []
@@ -211,6 +210,9 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		converted.append("only_cards")
 	if not only_rites.is_empty():
 		converted.append("only_rites")
+	var rite_pins := _unique_int_list(original.get("pins", []))
+	if not rite_pins.is_empty():
+		converted.append("pins")
 
 	# ---- Rite-panel last placement ----
 	# This is not rollback state. OnConfirm stores manual slot guid ->
@@ -255,6 +257,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"rite_instances": rite_rows,
 		"next_rite_uid": int(original.get("rite_uid_index", 1)),
 		"active_rite_uid": 0,
+		"rite_pins": rite_pins,
 		"available_rites": available_rites,
 		"started_rites": started_rites,
 		"auto_result_rites": _int_list(original.get("auto_result_rites", [])),
@@ -339,6 +342,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("sudan_deck_multiset", _sorted_int_list(original.get("sudan_pool_cards", [])), _sorted_int_list(state.sudan_deck)))
 	rows.append(_row("player_actor_uid", _original_protagonist_uid(original_cards), int(state.player_actor_uid)))
 	rows.append(_row("rites", _original_rites_summary(original), _clone_rites_summary(state)))
+	rows.append(_row("pins", _unique_int_list(original.get("pins", [])), state.rite_pins))
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
 	rows.append(_row("bag_positions", _original_bag_positions(original_cards), _clone_bag_positions(state)))
 	rows.append(_row("last_round_rite_data", _last_round_rite_data(original), state.last_round_rite_data))

@@ -266,11 +266,11 @@ func test_game_screen_map_pin_and_menu_are_interactive():
 
 	var pin: Button = null
 	for node in _find_node_by_name(screen, "SituationDesk").get_children():
-		if node is Button and str(node.name).begins_with("RitePin_"):
+		if node is Button and str(node.name).begins_with("RiteNew_"):
 			pin = node
 			break
 	var menu := _find_node_by_name(screen, "MenuButton") as Button
-	assert_not_null(pin, "an available rite should be an interactive map pin")
+	assert_not_null(pin, "an available rite should be an interactive RiteNew map card")
 	assert_not_null(menu, "menu should be an interactive button")
 	if pin != null:
 		pin.pressed.emit()
@@ -280,7 +280,7 @@ func test_game_screen_map_pin_and_menu_are_interactive():
 	assert_eq(menu_count[0], 1, "clicking menu should emit a menu action")
 
 
-func test_map_pin_opens_its_runtime_rite_without_location_selector_shortcut():
+func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	var stage := _stage()
 	var game = Game.new()
 	stage.add_child(game)
@@ -310,16 +310,16 @@ func test_map_pin_opens_its_runtime_rite_without_location_selector_shortcut():
 	assert_not_null(menu)
 	if screen == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
 		return
-	var pin: Button = null
+	var rite_card: Button = null
 	for node in desk.get_children():
-		if node is Button and str(node.name).begins_with("RitePin_"):
-			pin = node
+		if node is Button and str(node.name).begins_with("RiteNew_"):
+			rite_card = node
 			break
-	assert_not_null(pin, "an available rite must render as its own map pin")
-	if pin == null:
+	assert_not_null(rite_card, "an available rite must render as its own RiteNew map card")
+	if rite_card == null:
 		return
 	var rng_state_before: int = game.rng.get_state()
-	pin.pressed.emit()
+	rite_card.pressed.emit()
 	await wait_process_frames(2)
 
 	assert_eq(game.rng.get_state(), rng_state_before, "opening a pin must not consume simulation RNG")

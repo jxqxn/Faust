@@ -46,7 +46,7 @@ const ORIGINAL_FIELDS := {
 	"ithink_card": {"type": "Card?", "clone": "", "status": "missing", "note": "俺寻思卡实例；克隆思考状态未持久化为卡"},
 	"cards": {"type": "List<Card>", "clone": "card_instances", "status": "semantic", "note": "原作平铺所有卡+bag/bagpos 手牌位，仪式槽位与装备内嵌嵌套；克隆扁平 zone/rite_uid/slot_key"},
 	"rites": {"type": "List<Rite>", "clone": "rite_instances", "status": "semantic", "note": "原作 Rite.cards 为槽位下标数组（null=空槽）内嵌卡与装备"},
-	"pins": {"type": "List<int>", "clone": "", "status": "missing", "note": "桌面图钉"},
+	"pins": {"type": "List<int>", "clone": "rite_pins", "status": "mapped", "note": "按仪式配置 id 的有序去重桌面图钉；仅 final_pin 仪式结算后进入"},
 	"sudan_pool_cards": {"type": "List<int>", "clone": "sudan_deck(部分)", "status": "semantic", "note": "苏丹池剩牌 id 列表"},
 	"sudan_pool": {"type": "string", "clone": "", "status": "missing", "note": "池变体字符串"},
 	"sudan_card_pool": {"type": "List<Card>", "clone": "sudan_deck(部分)", "status": "semantic", "note": "手边待选苏丹卡（带 uid/tag）"},

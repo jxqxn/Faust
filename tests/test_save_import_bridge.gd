@@ -54,7 +54,7 @@ func _synthetic_original() -> Dictionary:
 				"custom_name": "",
 			},
 		],
-		"pins": [], "sudan_pool_cards": [2010001, 2010002],
+		"pins": [5010009, 5010009, 5010012], "sudan_pool_cards": [2010001, 2010002],
 		"sudan_pool": "", "sudan_card_pool": [], "sudan_pool_pos": [0, 0],
 		"sudan_pool_init_count": 2, "sudan_card_show_times": {}, "sudan_remove_count": 0,
 		"counter": {"7100006": 2, "7000060": 5}, "global_counter_cacher": {},
@@ -134,6 +134,7 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.gen_cards, {2000001: 3, 2000029: 2}, "card generation history imports verbatim")
 	assert_eq(state.gen_tags, {"physique": 3, "money": 2}, "tag generation codes import verbatim")
 	assert_eq(state.cached_event, [5310000], "cached event notices import in source order")
+	assert_eq(state.rite_pins, [5010009, 5010012], "Player.pins imports as an ordered de-duplicated config-id list")
 	assert_eq(state.once_new_rites_is_show, {5001001: false, 5001002: true},
 		"new-rite first-seen flags import with integer ids")
 	assert_eq(state.rite_display_name(5001001, local_db), "旧仪式名", "rite names resolve from the player map")
@@ -167,6 +168,7 @@ func test_report_flags_approximations_and_value_drops() -> void:
 	assert_false("only_rites" in dropped_with_value, "unique-rite registration is converted, not dropped")
 	assert_false("gen_cards" in dropped_with_value, "card generation history is mapped, not dropped")
 	assert_false("gen_tags" in dropped_with_value, "tag generation history is mapped, not dropped")
+	assert_false("pins" in dropped_with_value, "completed rite pins are carried, not dropped")
 	assert_has(dropped_with_value, "name")
 
 

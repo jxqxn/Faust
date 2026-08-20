@@ -19,8 +19,11 @@ table.
 - `RitePosition.AddRite` first normalises existing children, then parents the
   new rite at local `(riteCountAfterAdd * 100 - 100, 0, 0)`.  A location string
   is therefore a selector (`area:N` or `area:[N,M]`), never an x/y coordinate.
-- `MapController.AddPin` is a UID-keyed dictionary insertion.  `OnDrop`
-  forwards the card to `lastRite`; it does not open a location action menu.
+- `MapController.AddPin` is a **rite-definition-ID** keyed dictionary
+  insertion. `Player.pins` is an ordered, de-duplicated `List<int>` of those
+  IDs. `GameController.AddRite` instead makes a runtime-UID `RiteController`.
+  `OnDrop` forwards the card to `lastRite`; it does not open a location action
+  menu.
 
 Sources: `engine_spec/decompiled/MapController.c` (`Awake`, `AddPin`, `OnDrop`,
 `SetPos`, `SetRitesPosition`), `GameController.c` (`GetLocation`,
@@ -89,16 +92,26 @@ Sources: `Resources/prefab/RitePin.prefab` root/Icon RectTransforms
 
 Implemented: original table/map textures, source location nodes and coordinates,
 all static `RitePosition` children, range selection, same-child 100-pixel stack
-offsets, exact `RitePin` child geometry, UID-keyed clickable rite pins, and
-removal of the clone-only location labels, count chits, area ratios,
-collision-ring layout, and location-selector shortcut.
-`tests/test_situation_desk_tabletop.gd` checks fixed/ranged selection, the
-stacked offset, and the 123×133 pin rectangle from original content locations.
+offsets, and the two independent map object carriers:
 
-Still 🟡: the clone currently makes the `RitePin` directly open the ritual;
-the original separately instantiates a `RiteNew` / `RiteController` card via
-`GameController.AddRite`, then uses `RitePin` as a map endpoint.  Consequently
-`MapController.SetRitesPosition` / `SetPos` (which operates on RiteNew's
-123×133 `bound`) and `from_pins` line generation remain explicitly unported.
-They must be migrated as a three-layer `RiteController + RitePin + line` batch,
-not approximated by moving the small pin.
+- a runtime-UID, clickable `RiteNew` card for every live `Rite`, using its
+  independently authored `bound` rectangle `(0,-18)`, `123×133`, pivot `(0.5,0)`;
+- a non-interactive `RitePin` endpoint for each ordered, de-duplicated
+  `Player.pins` definition ID, using its `(0,-17.6)`, `123×133`, pivot `(0.5,0)`
+  Icon rectangle.
+
+On settlement, the clone now removes the live runtime rite first and only then
+adds its definition ID when `RiteNode.final_pin=true`, matching the result-panel
+chain. `tests/test_situation_desk_tabletop.gd` checks the fixed/ranged card
+selection, stack offset, card/pin split, and final-pin transition.
+
+The currently exported `rites.png` atlas has some `rite_ex_*` metadata frames
+outside its available bitmap bounds.  The clone still creates the source-backed
+card/pin carrier and geometry, but intentionally leaves that unavailable source
+texture blank; it does not substitute a hand-made image.  Direct Unity-GUID
+asset extraction is the remaining asset-provenance task for those frames.
+
+Still 🟡: `MapController.SetRitesPosition` / `SetPos` cross-position collision
+and map-bound reversion for `RiteNew.bound`, plus `from_pins` line generation.
+The line data is present in 8 original rite files and will remain a separate,
+source-backed layer rather than being folded into pin or card placement.

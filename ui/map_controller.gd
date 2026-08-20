@@ -1,11 +1,10 @@
 ## Desktop map presentation mapped to the original MapController.
 ##
 ## The source owns a `locations` array, a name-keyed `maps` dictionary, and a
-## UID-keyed `pins` dictionary.  Location artwork is the authored GameScene
-## layout; rites are individually clickable pins.  This deliberately does not
-## expose the clone-era "location -> action list" shortcut: MapController only
-## forwards a dropped card to `lastRite` (MapController.c OnDrop), while rites
-## enter the map as individual pins (AddPin).
+## config-id-keyed `pins` dictionary and UID-keyed `rite_cards` dictionary.
+## A completed final_pin rite creates the former; a live Rite creates the
+## latter. This deliberately does not expose the clone-era "location -> action
+## list" shortcut: only the RiteNew/RiteController card can open a rite.
 class_name MapController
 extends Control
 
@@ -122,14 +121,18 @@ const LOCATION_SCENE_SPECS := [
 ]
 
 # RitePin.prefab Icon RectTransform: anchored (0,-17.6), 123x133, pivot
-# (0.5,0).  Its root remains at the selected RitePosition; it is not centred
-# on that root.  The clone keeps the existing direct-open interaction while
-# the separate RiteNew/RiteController card layer is still pending.
+# (0.5,0).  RiteNew's RiteController bound is independently authored at
+# (0,-18), also 123x133, pivot (0.5,0).  Both roots remain at their selected
+# RitePosition; neither is centred on that root.
 # [SRC: Resources/prefab/RitePin.prefab Icon RectTransform@224632457200066912;
-#       il2cpp_dump/dump.cs RitePinRender@324544.]
+#       Resources/prefab/RiteNew.prefab bound RectTransform@224738892719839630;
+#       il2cpp_dump/dump.cs RitePinRender@324544 / RiteController@320629.]
 const RITE_PIN_ICON_SIZE := Vector2(123.0, 133.0)
 const RITE_PIN_ICON_ANCHORED_POSITION := Vector2(0.0, -17.6)
 const RITE_PIN_ICON_PIVOT := Vector2(0.5, 0.0)
+const RITE_CARD_BOUND_SIZE := Vector2(123.0, 133.0)
+const RITE_CARD_BOUND_ANCHORED_POSITION := Vector2(0.0, -18.0)
+const RITE_CARD_BOUND_PIVOT := Vector2(0.5, 0.0)
 
 var _state
 var _db
@@ -137,7 +140,8 @@ var _rng
 var _scene_blockers: Dictionary = {}
 var locations: Array[LocationController] = []
 var maps: Dictionary = {}
-var pins: Dictionary = {}
+var pins: Dictionary = {} # rite definition id -> non-interactive RitePin view
+var rite_cards: Dictionary = {} # runtime rite uid -> clickable RiteNew view
 var last_rite: int = 0
 var ViewRange := Rect2()
 var DeskBGSpecial: TextureRect
@@ -214,6 +218,7 @@ func _build_ithink_target() -> void:
 
 
 func refresh_context() -> void:
+	refresh_rite_cards()
 	refresh_rite_pins()
 	queue_redraw()
 
@@ -227,8 +232,8 @@ func set_scene_blocker(source: String, blocking: bool, _hide_chrome: bool = true
 		_scene_blockers.erase(source)
 	if _think_drop_zone != null:
 		_think_drop_zone.mouse_filter = Control.MOUSE_FILTER_IGNORE if is_scene_blocked() else Control.MOUSE_FILTER_STOP
-	for pin in pins.values():
-		var button := pin as Button
+	for card in rite_cards.values():
+		var button := card as Button
 		if button != null:
 			button.disabled = is_scene_blocked()
 
@@ -282,6 +287,7 @@ func _layout() -> void:
 	if _think_drop_zone != null:
 		_think_drop_zone.size = Vector2(146, 58) * minf(size.x / 3840.0, size.y / 2160.0)
 		_think_drop_zone.position = Vector2(size.x * 0.075, size.y * 0.735) - _think_drop_zone.size * 0.5
+	_layout_rite_cards()
 	_layout_rite_pins()
 
 
@@ -303,38 +309,92 @@ func refresh_rite_pins() -> void:
 		_pin_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/rites.png")
 	if _pin_atlas == null:
 		return
-	var instances: Array = _state.available_rite_instances() if _state.has_method("available_rite_instances") else []
-	for instance in instances:
-		var rite: Dictionary = _db.rites.get(instance.id, {})
-		# MapController.AddPin receives an already-created RiteController.  It
-		# does not rebuild an availability list from config/open conditions;
-		# those conditions belong to the rite-generation path.
+	var rite_ids: Array[int] = _state.rite_pins
+	for rite_id in rite_ids:
+		var rite: Dictionary = _db.rites.get(rite_id, {})
 		var texture := _pin_atlas.frame(str(rite.get("icon", "")) + ".png")
-		if texture == null:
-			continue
-		var pin := RitePinButton.new()
-		pin.name = "RitePin_%d" % instance.uid
-		pin.rite_uid = instance.uid
-		pin.rite_id = instance.id
-		pin.tooltip_text = str(rite.get("name", instance.id))
-		pin.disabled = is_scene_blocked()
-		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
-			pin.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
-		var art := TextureRect.new()
-		art.texture = texture
-		art.set_anchors_preset(Control.PRESET_FULL_RECT)
-		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pin.add_child(art)
-		pin.pressed.connect(_on_rite_pin_pressed.bind(instance.uid))
-		pin.z_index = 6
+		var pin := RitePinView.new()
+		pin.name = "RitePin_%d" % rite_id
+		pin.rite_id = rite_id
+		pin.tooltip_text = str(rite.get("name", rite_id))
+		pin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if texture != null:
+			var art := TextureRect.new()
+			art.texture = texture
+			art.set_anchors_preset(Control.PRESET_FULL_RECT)
+			art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			pin.add_child(art)
+		pin.z_index = 5
 		add_child(pin)
-		pins[instance.uid] = pin
+		pins[rite_id] = pin
 	_layout_rite_pins()
 
 
-func _on_rite_pin_pressed(rite_uid: int) -> void:
+## GameController.AddRite instantiates RiteNew and RiteController.Init parents
+## it into a selected RitePosition.  Unlike Player.pins, this is a runtime-UID
+## layer and its button is the map interaction surface.
+## [SRC: GameController.c AddRite (0x54b320); RiteController.c Init (0x58ae00);
+##       Resources/prefab/RiteNew.prefab bound RectTransform.]
+func refresh_rite_cards() -> void:
+	for card in rite_cards.values():
+		if is_instance_valid(card):
+			card.queue_free()
+	rite_cards.clear()
+	if _state == null or _db == null:
+		return
+	if _pin_atlas == null:
+		_pin_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/rites.png")
+	if _pin_atlas == null:
+		return
+	var instances: Array = _state.available_rite_instances() if _state.has_method("available_rite_instances") else []
+	for instance in instances:
+		var rite: Dictionary = _db.rites.get(instance.id, {})
+		var texture := _pin_atlas.frame(str(rite.get("icon", "")) + ".png")
+		var card := RiteCardButton.new()
+		card.name = "RiteNew_%d" % instance.uid
+		card.rite_uid = instance.uid
+		card.rite_id = instance.id
+		card.tooltip_text = str(rite.get("name", instance.id))
+		card.disabled = is_scene_blocked()
+		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+			card.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+		if texture != null:
+			var icon := TextureRect.new()
+			icon.name = "Icon"
+			icon.texture = texture
+			icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.add_child(icon)
+		var title := Label.new()
+		title.name = "Title"
+		title.text = str(rite.get("name", instance.id))
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		title.add_theme_font_size_override("font_size", 18)
+		title.add_theme_color_override("font_color", Color("#f5e7c0"))
+		title.add_theme_color_override("font_shadow_color", Color("#21120a"))
+		title.add_theme_constant_override("shadow_offset_x", 1)
+		title.add_theme_constant_override("shadow_offset_y", 1)
+		title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		title.offset_left = 4.0
+		title.offset_top = 6.0
+		title.offset_right = -4.0
+		title.offset_bottom = -6.0
+		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		card.add_child(title)
+		card.pressed.connect(_on_rite_card_pressed.bind(instance.uid))
+		card.z_index = 7
+		add_child(card)
+		rite_cards[instance.uid] = card
+	_layout_rite_cards()
+
+
+func _on_rite_card_pressed(rite_uid: int) -> void:
 	if is_scene_blocked():
 		return
 	last_rite = rite_uid
@@ -342,33 +402,52 @@ func _on_rite_pin_pressed(rite_uid: int) -> void:
 
 
 func _layout_rite_pins() -> void:
-	var source_positions := _allocate_rite_positions()
+	var source_positions := _allocate_rite_pin_positions()
 	var rite_uids: Array[int] = []
-	for raw_uid in pins.keys():
-		rite_uids.append(int(raw_uid))
+	for raw_rite_id in pins.keys():
+		rite_uids.append(int(raw_rite_id))
 	rite_uids.sort()
-	for uid in rite_uids:
-		var pin := pins[uid] as Control
+	for rite_id in rite_uids:
+		var pin := pins[rite_id] as Control
 		if pin == null:
 			continue
-		var source_position: Vector2 = source_positions.get(uid, Vector2.ZERO)
+		var source_position: Vector2 = source_positions.get(rite_id, Vector2.ZERO)
 		_layout_rite_pin(pin, source_position)
 
 
+func _layout_rite_cards() -> void:
+	var source_positions := _allocate_rite_card_positions()
+	var rite_uids: Array[int] = []
+	for raw_uid in rite_cards.keys():
+		rite_uids.append(int(raw_uid))
+	rite_uids.sort()
+	for rite_uid in rite_uids:
+		var card := rite_cards[rite_uid] as Control
+		if card == null:
+			continue
+		_layout_rite_card(card, source_positions.get(rite_uid, Vector2.ZERO))
+
+
 func _layout_rite_pin(pin: Control, source_position: Vector2) -> void:
+	_layout_map_rect(pin, source_position, RITE_PIN_ICON_SIZE, RITE_PIN_ICON_ANCHORED_POSITION, RITE_PIN_ICON_PIVOT)
+
+
+func _layout_rite_card(card: Control, source_position: Vector2) -> void:
+	_layout_map_rect(card, source_position, RITE_CARD_BOUND_SIZE, RITE_CARD_BOUND_ANCHORED_POSITION, RITE_CARD_BOUND_PIVOT)
+
+
+func _layout_map_rect(view: Control, source_position: Vector2, rect_size: Vector2, anchored_position: Vector2, pivot: Vector2) -> void:
 	var source_scale := Vector2(size.x / MAP_SIZE.x, size.y / MAP_SIZE.y)
-	pin.size = RITE_PIN_ICON_SIZE * source_scale
+	view.size = rect_size * source_scale
 	var root := _map_local_to_canvas(source_position + MAP_LOCAL_OFFSET)
-	# Convert the prefab's bottom-pivot Icon rectangle from Unity's y-up map
-	# coordinates into Godot's y-down canvas top-left coordinates.
 	var source_top_left := Vector2(
-		-RITE_PIN_ICON_SIZE.x * RITE_PIN_ICON_PIVOT.x,
-		RITE_PIN_ICON_ANCHORED_POSITION.y + RITE_PIN_ICON_SIZE.y * (1.0 - RITE_PIN_ICON_PIVOT.y)
+		-rect_size.x * pivot.x + anchored_position.x,
+		anchored_position.y + rect_size.y * (1.0 - pivot.y)
 	)
-	pin.position = (root + Vector2(source_top_left.x * source_scale.x, -source_top_left.y * source_scale.y)).round()
+	view.position = (root + Vector2(source_top_left.x * source_scale.x, -source_top_left.y * source_scale.y)).round()
 
 
-func _allocate_rite_positions() -> Dictionary:
+func _allocate_rite_card_positions() -> Dictionary:
 	# GameController.GetLocationRange parses `area:N` / `area:[N,M]` before
 	# GetLocation delegates to LocationController.GetPosition.  This runs in
 	# runtime Rite UID creation order, matching the clone's ordered rite carrier.
@@ -379,7 +458,7 @@ func _allocate_rite_positions() -> Dictionary:
 	if _state == null or _db == null:
 		return result
 	var rite_uids: Array[int] = []
-	for raw_uid in pins.keys():
+	for raw_uid in rite_cards.keys():
 		rite_uids.append(int(raw_uid))
 	rite_uids.sort()
 	for rite_uid in rite_uids:
@@ -394,6 +473,30 @@ func _allocate_rite_positions() -> Dictionary:
 		var position := controller.get_position(int(location_range["min"]), int(location_range["max"]))
 		if position != null:
 			result[rite_uid] = controller.source_position + position.add_rite(rite_uid)
+	return result
+
+
+## GameController.AddRitePin calls GetLocation and parents the pin directly;
+## it does not call RitePosition.AddRite, so pins never consume stack slots.
+## Their selection nevertheless observes the live RiteController occupancy.
+## [SRC: GameController.c AddRitePin (0x54b080); RitePosition.c AddRite.]
+func _allocate_rite_pin_positions() -> Dictionary:
+	var result: Dictionary = {}
+	if _state == null or _db == null:
+		return result
+	_allocate_rite_card_positions()
+	var rite_ids: Array[int] = []
+	for raw_rite_id in pins.keys():
+		rite_ids.append(int(raw_rite_id))
+	for rite_id in rite_ids:
+		var rite: Dictionary = _db.rites.get(rite_id, {})
+		var location_range := _location_range(str(rite.get("location", "")))
+		var controller := maps.get(str(location_range["name"])) as LocationController
+		if controller == null:
+			continue
+		var position := controller.get_position(int(location_range["min"]), int(location_range["max"]))
+		if position != null:
+			result[rite_id] = controller.source_position + position.source_position
 	return result
 
 
@@ -426,7 +529,12 @@ func _draw() -> void:
 	draw_texture_rect(MAP_TEXTURE, Rect2((size - map_size) * 0.5, map_size), false)
 
 
-class RitePinButton:
+class RitePinView:
+	extends Control
+	var rite_id := 0
+
+
+class RiteCardButton:
 	extends Button
 	var rite_uid := 0
 	var rite_id := 0

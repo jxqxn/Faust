@@ -47,33 +47,33 @@ func test_authored_location_nodes_use_gamescene_coordinates_not_clone_ratios():
 	assert_false((desk.get_node("Location_Harem") as Control).visible, "Harem starts inactive in GameScene")
 
 
-func test_rite_pin_opens_its_instance_without_a_location_selector_shortcut():
+func test_rite_new_card_opens_its_instance_without_a_location_selector_shortcut():
 	var rng := RNG.new(8801)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
 	state.create_rite_instance(5000001)
 	var desk := _desk(state, rng)
 	await wait_process_frames(2)
-	var pin: Button = null
+	var card: Button = null
 	for node in desk.get_children():
-		if node is Button and str(node.name).begins_with("RitePin_"):
-			pin = node
+		if node is Button and str(node.name).begins_with("RiteNew_"):
+			card = node
 			break
-	assert_not_null(pin, "available rites enter the map as individual pins")
-	if pin == null:
+	assert_not_null(card, "live rites enter the map as individual RiteNew cards")
+	if card == null:
 		return
 	var before := SaveSystem.serialize(state)
 	var rng_state_before: int = rng.get_state()
 	var opened: Array[int] = []
 	desk.open_rite_instance.connect(func(rite_uid: int): opened.append(rite_uid))
-	pin.pressed.emit()
-	assert_eq(opened, [pin.rite_uid])
-	assert_eq(desk.last_rite, pin.rite_uid)
+	card.pressed.emit()
+	assert_eq(opened, [card.rite_uid])
+	assert_eq(desk.last_rite, card.rite_uid)
 	assert_eq(SaveSystem.serialize(state), before)
 	assert_eq(rng.get_state(), rng_state_before)
 
 
-func test_rite_positions_follow_authored_children_range_selection_and_stack_order():
+func test_rite_new_positions_follow_authored_children_range_selection_and_stack_order():
 	var rng := RNG.new(8802)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -83,7 +83,7 @@ func test_rite_positions_follow_authored_children_range_selection_and_stack_orde
 	state.available_rites.clear()
 	state.started_rites.clear()
 	# Original content locations: 5000001 = 自宅:1; 5000003 = 自宅:[2,12].
-	# The final fixed pin shares child 1 and must receive RitePosition's +100 X.
+	# The final fixed RiteNew shares child 1 and receives +100 X.
 	var fixed_first = state.create_rite_instance(5000001)
 	var ranged_first = state.create_rite_instance(5000003)
 	var ranged_second = state.create_rite_instance(5000003)
@@ -96,31 +96,64 @@ func test_rite_positions_follow_authored_children_range_selection_and_stack_orde
 		return
 	# GameScene SelfHome root @8644 plus integer-named RitePosition children.
 	var root := Vector2(-1506, -141)
-	_assert_pin_center(desk, fixed_first.uid, root + Vector2(24, 3))
-	var first_pin := desk.pins.get(fixed_first.uid, null) as Control
-	if first_pin != null:
-		assert_almost_eq(first_pin.size.x, 123.0 * 3840.0 / 4200.0, 1.0, "RitePin Icon keeps its original 123 source-pixel width")
-		assert_almost_eq(first_pin.size.y, 133.0 * 2160.0 / 2600.0, 1.0, "RitePin Icon keeps its original 133 source-pixel height")
-	_assert_pin_center(desk, ranged_first.uid, root + Vector2(-295, 11))
-	_assert_pin_center(desk, ranged_second.uid, root + Vector2(44, 120))
-	_assert_pin_center(desk, ranged_third.uid, root + Vector2(338, -3))
-	_assert_pin_center(desk, fixed_second.uid, root + Vector2(24 + 100, 3))
+	_assert_card_center(desk, fixed_first.uid, root + Vector2(24, 3))
+	var first_card := desk.rite_cards.get(fixed_first.uid, null) as Control
+	if first_card != null:
+		assert_almost_eq(first_card.size.x, 123.0 * 3840.0 / 4200.0, 1.0, "RiteNew bound keeps its original 123 source-pixel width")
+		assert_almost_eq(first_card.size.y, 133.0 * 2160.0 / 2600.0, 1.0, "RiteNew bound keeps its original 133 source-pixel height")
+	_assert_card_center(desk, ranged_first.uid, root + Vector2(-295, 11))
+	_assert_card_center(desk, ranged_second.uid, root + Vector2(44, 120))
+	_assert_card_center(desk, ranged_third.uid, root + Vector2(338, -3))
+	_assert_card_center(desk, fixed_second.uid, root + Vector2(24 + 100, 3))
 
 
-func _assert_pin_center(desk: MapController, rite_uid: int, source_position: Vector2) -> void:
-	var pin := desk.pins.get(rite_uid, null) as Control
-	assert_not_null(pin, "rite %d should have an original map pin" % rite_uid)
-	if pin == null:
+func test_final_pin_is_a_persistent_noninteractive_endpoint_separate_from_rite_new():
+	var rng := RNG.new(8803)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	var live := state.create_rite_instance(5000001)
+	assert_true(state.add_rite_pin(5010009), "Player.pins appends a final rite id")
+	assert_false(state.add_rite_pin(5010009), "Player.pins rejects duplicate ids")
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	var card := desk.rite_cards.get(live.uid, null) as Button
+	var pin := desk.pins.get(5010009, null) as Control
+	assert_not_null(card, "live rite owns a RiteNew/RiteController card")
+	assert_not_null(pin, "completed final_pin owns a separate RitePin endpoint")
+	assert_false(pin is Button, "RitePin.prefab is not the map opening button")
+	assert_eq(state.rite_pins, [5010009], "pins retain source list order")
+
+
+func test_settled_final_pin_enters_player_pins_only_after_live_rite_removal():
+	var rng := RNG.new(8804)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	var final_rite := state.create_rite_instance(5010009)
+	RoundLoop.finalize_rite_settlement(final_rite, {"clean_rite": false}, state, db, [], rng)
+	assert_null(state.get_rite_instance(final_rite.uid), "settlement removes the live RiteController carrier first")
+	assert_eq(state.rite_pins, [5010009], "only final_pin=true creates the persistent config-id endpoint")
+
+
+func _assert_card_center(desk: MapController, rite_uid: int, source_position: Vector2) -> void:
+	var card := desk.rite_cards.get(rite_uid, null) as Control
+	assert_not_null(card, "rite %d should have an original RiteNew card" % rite_uid)
+	if card == null:
 		return
-	var icon_center := source_position + Vector2(
-		desk.RITE_PIN_ICON_ANCHORED_POSITION.x + desk.RITE_PIN_ICON_SIZE.x * (0.5 - desk.RITE_PIN_ICON_PIVOT.x),
-		desk.RITE_PIN_ICON_ANCHORED_POSITION.y + desk.RITE_PIN_ICON_SIZE.y * (0.5 - desk.RITE_PIN_ICON_PIVOT.y)
+	var bound_center := source_position + Vector2(
+		desk.RITE_CARD_BOUND_ANCHORED_POSITION.x + desk.RITE_CARD_BOUND_SIZE.x * (0.5 - desk.RITE_CARD_BOUND_PIVOT.x),
+		desk.RITE_CARD_BOUND_ANCHORED_POSITION.y + desk.RITE_CARD_BOUND_SIZE.y * (0.5 - desk.RITE_CARD_BOUND_PIVOT.y)
 	)
 	var expected := Vector2(
-		desk.size.x * 0.5 + (icon_center.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
-		desk.size.y * 0.5 - (icon_center.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
+		desk.size.x * 0.5 + (bound_center.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
+		desk.size.y * 0.5 - (bound_center.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
 	)
-	var actual := pin.position + pin.size * 0.5
+	var actual := card.position + card.size * 0.5
 	assert_almost_eq(actual.x, expected.x, 1.0, "rite %d X uses the authored RitePosition child" % rite_uid)
 	assert_almost_eq(actual.y, expected.y, 1.0, "rite %d Y uses the authored RitePosition child" % rite_uid)
 

@@ -9,11 +9,12 @@ extends RefCounted
 const CardInstanceData = preload("res://sim/card_instance.gd")
 
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 # v6 moved gold from the coin_count scalar to stacked gold card objects
 # (GenCard 2000029). v7 moved the back-to-prev quota off the run payload onto
 # the global domain (user://global.json, COUNTER_BACK_TO_PREV 7100007).
-# v5/v6 saves migrate on load; anything older stays rejected.
+# v8 adds Player.pins, the ordered completed-rite endpoint list.  v5-v7 saves
+# migrate with an empty list; anything older stays rejected.
 const MIN_LOADABLE_SAVE_VERSION := 5
 const SAVE_KIND_PLAYER := "player"
 const USER_ARCHIVE_ROOT := "user://user_archives"
@@ -137,6 +138,7 @@ static func serialize(state) -> Dictionary:
 		"rite_instances": rite_instances_data,
 		"next_rite_uid": state.next_rite_uid,
 		"active_rite_uid": state.active_rite_uid,
+		"rite_pins": state.rite_pins.duplicate(),
 		"available_rites": state.available_rites.duplicate(),
 		"started_rites": state.started_rites.duplicate(),
 		"auto_result_rites": state.auto_result_rites.duplicate(),
@@ -262,6 +264,9 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for rite_uid in state.rite_instances:
 		state.next_rite_uid = maxi(state.next_rite_uid, int(rite_uid) + 1)
 	state.active_rite_uid = int(data.get("active_rite_uid", 0))
+	state.rite_pins.clear()
+	for raw_rite_id in data.get("rite_pins", []):
+		state.add_rite_pin(int(raw_rite_id))
 	state.available_rites.clear()
 	for rid in data.get("available_rites", db.get_default_rites()):
 		state.available_rites.append(int(rid))
