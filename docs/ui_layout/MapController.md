@@ -73,16 +73,32 @@ presentation scene data, not as a gameplay content conversion.
 | 上城区 | 12 | (-675,-754), (-995,-706), (-764,-863), (-445,-864), (-580,-635), (-907,-588), (19,56), (409,-136), (398,-2), (-36,-78), (386,143), (482,-267) |
 | 商业区 | 10 | (-232,-383), (95,-238), (4,8), (74,131), (-92,-108), (194,-113), (-269,-11), (284,1), (261,397), (337,-503) |
 
+## RitePin geometry
+
+`RitePin.prefab` is a separate object from `RiteNew.prefab`.  Its root remains
+at the selected `RitePosition`; its `Icon` child is not root-centred: anchored
+at `(0,-17.6)`, size `123×133`, pivot `(0.5,0)`.  The clone maps that exact
+rectangle (including its visual centre offset) before applying the scene's map
+coordinate conversion.  This is why a rite icon's centre is not identical to
+the selected child Transform coordinate.
+
+Sources: `Resources/prefab/RitePin.prefab` root/Icon RectTransforms
+`&224256069497284392` / `&224632457200066912`, plus `dump.cs` `RitePinRender`.
+
 ## Current boundary
 
 Implemented: original table/map textures, source location nodes and coordinates,
 all static `RitePosition` children, range selection, same-child 100-pixel stack
-offsets, UID-keyed clickable rite pins, and removal of the clone-only location
-labels, count chits, area ratios, collision-ring layout, and location-selector
-shortcut.  `tests/test_situation_desk_tabletop.gd` checks fixed/ranged selection
-and the stacked offset from original content locations.
+offsets, exact `RitePin` child geometry, UID-keyed clickable rite pins, and
+removal of the clone-only location labels, count chits, area ratios,
+collision-ring layout, and location-selector shortcut.
+`tests/test_situation_desk_tabletop.gd` checks fixed/ranged selection, the
+stacked offset, and the 123×133 pin rectangle from original content locations.
 
-Still 🟡: `MapController.SetRitesPosition` runs a later global collision/bounds
-pass over instantiated RiteControllers.  The source child choice and local
-RitePosition stacking are exact; its separate final `SetPos` displacement rule
-has not yet been mirrored or claimed.
+Still 🟡: the clone currently makes the `RitePin` directly open the ritual;
+the original separately instantiates a `RiteNew` / `RiteController` card via
+`GameController.AddRite`, then uses `RitePin` as a map endpoint.  Consequently
+`MapController.SetRitesPosition` / `SetPos` (which operates on RiteNew's
+123×133 `bound`) and `from_pins` line generation remain explicitly unported.
+They must be migrated as a three-layer `RiteController + RitePin + line` batch,
+not approximated by moving the small pin.

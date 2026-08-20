@@ -121,7 +121,15 @@ const LOCATION_SCENE_SPECS := [
 	{"node": "Downtown", "location": "商业区", "position": Vector2(-121, -133), "size": Vector2(800, 500), "active": true, "asset": "Downtown_1.png", "rite_positions": [Vector2(-232, -383), Vector2(95, -238), Vector2(4, 8), Vector2(74, 131), Vector2(-92, -108), Vector2(194, -113), Vector2(-269, -11), Vector2(284, 1), Vector2(261, 397), Vector2(337, -503)]},
 ]
 
-const PIN_SIZE := Vector2(64.0, 70.0)
+# RitePin.prefab Icon RectTransform: anchored (0,-17.6), 123x133, pivot
+# (0.5,0).  Its root remains at the selected RitePosition; it is not centred
+# on that root.  The clone keeps the existing direct-open interaction while
+# the separate RiteNew/RiteController card layer is still pending.
+# [SRC: Resources/prefab/RitePin.prefab Icon RectTransform@224632457200066912;
+#       il2cpp_dump/dump.cs RitePinRender@324544.]
+const RITE_PIN_ICON_SIZE := Vector2(123.0, 133.0)
+const RITE_PIN_ICON_ANCHORED_POSITION := Vector2(0.0, -17.6)
+const RITE_PIN_ICON_PIVOT := Vector2(0.5, 0.0)
 
 var _state
 var _db
@@ -344,8 +352,20 @@ func _layout_rite_pins() -> void:
 		if pin == null:
 			continue
 		var source_position: Vector2 = source_positions.get(uid, Vector2.ZERO)
-		pin.size = PIN_SIZE * minf(size.x / 3840.0, size.y / 2160.0)
-		pin.position = (_map_local_to_canvas(source_position + MAP_LOCAL_OFFSET) - pin.size * 0.5).round()
+		_layout_rite_pin(pin, source_position)
+
+
+func _layout_rite_pin(pin: Control, source_position: Vector2) -> void:
+	var source_scale := Vector2(size.x / MAP_SIZE.x, size.y / MAP_SIZE.y)
+	pin.size = RITE_PIN_ICON_SIZE * source_scale
+	var root := _map_local_to_canvas(source_position + MAP_LOCAL_OFFSET)
+	# Convert the prefab's bottom-pivot Icon rectangle from Unity's y-up map
+	# coordinates into Godot's y-down canvas top-left coordinates.
+	var source_top_left := Vector2(
+		-RITE_PIN_ICON_SIZE.x * RITE_PIN_ICON_PIVOT.x,
+		RITE_PIN_ICON_ANCHORED_POSITION.y + RITE_PIN_ICON_SIZE.y * (1.0 - RITE_PIN_ICON_PIVOT.y)
+	)
+	pin.position = (root + Vector2(source_top_left.x * source_scale.x, -source_top_left.y * source_scale.y)).round()
 
 
 func _allocate_rite_positions() -> Dictionary:

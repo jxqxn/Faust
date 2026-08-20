@@ -97,6 +97,10 @@ func test_rite_positions_follow_authored_children_range_selection_and_stack_orde
 	# GameScene SelfHome root @8644 plus integer-named RitePosition children.
 	var root := Vector2(-1506, -141)
 	_assert_pin_center(desk, fixed_first.uid, root + Vector2(24, 3))
+	var first_pin := desk.pins.get(fixed_first.uid, null) as Control
+	if first_pin != null:
+		assert_almost_eq(first_pin.size.x, 123.0 * 3840.0 / 4200.0, 1.0, "RitePin Icon keeps its original 123 source-pixel width")
+		assert_almost_eq(first_pin.size.y, 133.0 * 2160.0 / 2600.0, 1.0, "RitePin Icon keeps its original 133 source-pixel height")
 	_assert_pin_center(desk, ranged_first.uid, root + Vector2(-295, 11))
 	_assert_pin_center(desk, ranged_second.uid, root + Vector2(44, 120))
 	_assert_pin_center(desk, ranged_third.uid, root + Vector2(338, -3))
@@ -108,9 +112,13 @@ func _assert_pin_center(desk: MapController, rite_uid: int, source_position: Vec
 	assert_not_null(pin, "rite %d should have an original map pin" % rite_uid)
 	if pin == null:
 		return
+	var icon_center := source_position + Vector2(
+		desk.RITE_PIN_ICON_ANCHORED_POSITION.x + desk.RITE_PIN_ICON_SIZE.x * (0.5 - desk.RITE_PIN_ICON_PIVOT.x),
+		desk.RITE_PIN_ICON_ANCHORED_POSITION.y + desk.RITE_PIN_ICON_SIZE.y * (0.5 - desk.RITE_PIN_ICON_PIVOT.y)
+	)
 	var expected := Vector2(
-		desk.size.x * 0.5 + (source_position.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
-		desk.size.y * 0.5 - (source_position.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
+		desk.size.x * 0.5 + (icon_center.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
+		desk.size.y * 0.5 - (icon_center.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
 	)
 	var actual := pin.position + pin.size * 0.5
 	assert_almost_eq(actual.x, expected.x, 1.0, "rite %d X uses the authored RitePosition child" % rite_uid)
