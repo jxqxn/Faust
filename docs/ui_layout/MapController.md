@@ -111,7 +111,16 @@ card/pin carrier and geometry, but intentionally leaves that unavailable source
 texture blank; it does not substitute a hand-made image.  Direct Unity-GUID
 asset extraction is the remaining asset-provenance task for those frames.
 
-Still 🟡: `MapController.SetRitesPosition` / `SetPos` cross-position collision
-and map-bound reversion for `RiteNew.bound`, plus `from_pins` line generation.
-The line data is present in 8 original rite files and will remain a separate,
-source-backed layer rather than being folded into pin or card placement.
+`SetRitesPosition` / `SetPos` is now mapped for `RiteNew` only: NORMAL or
+range-location (`[`) cards sort by their bound centre's distance to the current
+screen centre; the later card moves along its smaller overlap axis.  Fixed
+special cards move only away from that primary group.  A candidate whose **bound
+centre** leaves `bg` reverts to its whole previous position—there is no edge
+clamp.  This is separate from `RitePosition`'s same-child 100-pixel stacking.
+`RiteController.Init` selects that `RitePosition` once; redraw does not select
+again. On removal, `RiteController.OnDestroy` invokes `RemoveRite`, whose
+`UpdateExistsChild` compacts surviving siblings back to local `index×100`.
+
+Still 🟡: `from_pins` line generation. The line data is present in 8 original
+rite files and will remain a separate, source-backed layer rather than being
+folded into pin or card placement.

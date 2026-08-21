@@ -60,6 +60,9 @@ class RitePosition:
 		rite_uids.append(rite_uid)
 		return source_position + Vector2(float(rite_uids.size() - 1) * 100.0, 0.0)
 
+	func remove_rite(rite_uid: int) -> void:
+		rite_uids.erase(rite_uid)
+
 
 ## Direct structural counterpart of the original LocationController.  `view`
 ## is Godot's visual host; placement remains in the original source space.
@@ -133,6 +136,20 @@ const RITE_PIN_ICON_PIVOT := Vector2(0.5, 0.0)
 const RITE_CARD_BOUND_SIZE := Vector2(123.0, 133.0)
 const RITE_CARD_BOUND_ANCHORED_POSITION := Vector2(0.0, -18.0)
 const RITE_CARD_BOUND_PIVOT := Vector2(0.5, 0.0)
+# `RiteController.bounds` is CalculateRelativeRectTransformBounds(Map,
+# RiteNew.bound), so the collision rectangle is this child bound rather than
+# the RitePosition root.  The root-to-bound centre offset follows directly
+# from its anchor/pivot geometry.
+const RITE_CARD_BOUND_CENTER_OFFSET := Vector2(0.0, 48.5)
+const RITE_CARD_BOUND_EXTENTS := Vector2(61.5, 66.5)
+# MapController.SetRitesPosition converts the screen centre into Map-local
+# space before sorting.  Map is at (0,-178), so this is (0,178) in that space.
+const RITE_CARD_SORT_CENTER := Vector2(0.0, 178.0)
+# MapController.SetPos checks the moved RiteNew *bound centre* against `bg`;
+# it restores the old point when that centre leaves the background.  Scene
+# YAML: Map=4200x2600 scale 1.25 at (0,-178); bg=4095x2147 scale 1.5 at (0,0).
+# Expressing bg relative to Map yields centre (0,142.4), extents (2457,1288.2).
+const RITE_CARD_BG_BOUNDS := Rect2(Vector2(-2457.0, -1145.8), Vector2(4914.0, 2576.4))
 
 var _state
 var _db
@@ -142,6 +159,11 @@ var locations: Array[LocationController] = []
 var maps: Dictionary = {}
 var pins: Dictionary = {} # rite definition id -> non-interactive RitePin view
 var rite_cards: Dictionary = {} # runtime rite uid -> clickable RiteNew view
+# Runtime counterpart of RiteController.position and its Transform position.
+# Init selects a RitePosition once; later SetRitesPosition moves that already
+# instantiated RiteNew transform, never calls GetPosition a second time.
+var _rite_position_assignments: Dictionary = {} # uid -> {controller, position}
+var _rite_card_source_positions: Dictionary = {} # uid -> current Map-local root
 var last_rite: int = 0
 var ViewRange := Rect2()
 var DeskBGSpecial: TextureRect
@@ -449,21 +471,53 @@ func _layout_map_rect(view: Control, source_position: Vector2, rect_size: Vector
 
 func _allocate_rite_card_positions() -> Dictionary:
 	# GameController.GetLocationRange parses `area:N` / `area:[N,M]` before
-	# GetLocation delegates to LocationController.GetPosition.  This runs in
-	# runtime Rite UID creation order, matching the clone's ordered rite carrier.
+	# GetLocation delegates to LocationController.GetPosition. RiteController.Init
+	# performs that selection once; its later SetPos transforms must not re-run
+	# GetPosition just because the clone redraws its view.
 	# [SRC: decompiled/GameController.c GetLocation/GetLocationRange/AddRitePin;
+	#       decompiled/RiteController.c Init/OnDestroy;
 	#       decompiled/LocationController.c GetPosition;
-	#       decompiled/RitePosition.c AddRite.]
-	var result: Dictionary = {}
+	#       decompiled/RitePosition.c AddRite/RemoveRite.]
 	if _state == null or _db == null:
-		return result
+		return {}
 	var rite_uids: Array[int] = []
 	for raw_uid in rite_cards.keys():
 		rite_uids.append(int(raw_uid))
 	rite_uids.sort()
+	var live_uids := {}
+	for rite_uid in rite_uids:
+		live_uids[rite_uid] = true
+	for raw_uid in _rite_position_assignments.keys().duplicate():
+		var stale_uid := int(raw_uid)
+		if live_uids.has(stale_uid):
+			continue
+		var assignment: Dictionary = _rite_position_assignments[stale_uid]
+		var stale_position := assignment.get("position", null) as RitePosition
+		if stale_position != null:
+			stale_position.remove_rite(stale_uid)
+		_rite_position_assignments.erase(stale_uid)
+		_rite_card_source_positions.erase(stale_uid)
+		# RiteController.OnDestroy -> RitePosition.RemoveRite calls
+		# UpdateExistsChild, which immediately compacts every remaining sibling's
+		# local X back to index * 100. Keep that lifecycle correction separate
+		# from the later, global SetPos collision pass.
+		# [SRC: decompiled/RiteController.c OnDestroy (0x58b200);
+		#       decompiled/RitePosition.c RemoveRite/UpdateExistsChild.]
+		for raw_other_uid in _rite_position_assignments.keys():
+			var other_uid := int(raw_other_uid)
+			var other_assignment: Dictionary = _rite_position_assignments[other_uid]
+			var other_position := other_assignment.get("position", null) as RitePosition
+			if other_position != stale_position:
+				continue
+			var other_controller := other_assignment.get("controller", null) as LocationController
+			if other_controller != null:
+				_rite_card_source_positions[other_uid] = other_controller.source_position + other_position.add_rite(other_uid)
+	var added_any := false
 	for rite_uid in rite_uids:
 		var instance = _state.get_rite_instance(rite_uid) if _state.has_method("get_rite_instance") else null
 		if instance == null:
+			continue
+		if _rite_position_assignments.has(rite_uid):
 			continue
 		var rite: Dictionary = _db.rites.get(instance.id, {})
 		var location_range := _location_range(str(rite.get("location", "")))
@@ -472,8 +526,94 @@ func _allocate_rite_card_positions() -> Dictionary:
 			continue
 		var position := controller.get_position(int(location_range["min"]), int(location_range["max"]))
 		if position != null:
-			result[rite_uid] = controller.source_position + position.add_rite(rite_uid)
+			_rite_position_assignments[rite_uid] = {"controller": controller, "position": position}
+			_rite_card_source_positions[rite_uid] = controller.source_position + position.add_rite(rite_uid)
+			added_any = true
+	if added_any:
+		_rite_card_source_positions = _resolve_rite_card_positions(_rite_card_source_positions)
+	return _rite_card_source_positions.duplicate()
+
+
+## MapController.SetRitesPosition separates normal/ranged rites from fixed
+## special rites, sorts the former by distance to the current screen centre,
+## then invokes SetPos on each ordered pair.  The `[` discriminator is not a
+## clone convention: it is the original literal from stringliteral.json.
+## [SRC: decompiled/MapController.c SetRitesPosition (0x56a200), SetPos
+##       (0x569cd0); il2cpp_dump/stringliteral.json @0x2579348 = "[";
+##       il2cpp_dump/dump.cs MapController@321039, RiteController@323632.]
+func _resolve_rite_card_positions(source_positions: Dictionary) -> Dictionary:
+	var result := source_positions.duplicate()
+	if _state == null or _db == null:
+		return result
+	var primary: Array[int] = []
+	var fixed_special: Array[int] = []
+	for raw_uid in result.keys():
+		var rite_uid := int(raw_uid)
+		var instance = _state.get_rite_instance(rite_uid) if _state.has_method("get_rite_instance") else null
+		if instance == null:
+			continue
+		var rite: Dictionary = _db.rites.get(instance.id, {})
+		if _is_primary_rite_position(rite):
+			primary.append(rite_uid)
+		else:
+			fixed_special.append(rite_uid)
+	primary.sort_custom(func(a: int, b: int) -> bool:
+		var a_center: Vector2 = result[a] + RITE_CARD_BOUND_CENTER_OFFSET
+		var b_center: Vector2 = result[b] + RITE_CARD_BOUND_CENTER_OFFSET
+		return a_center.distance_squared_to(RITE_CARD_SORT_CENTER) < b_center.distance_squared_to(RITE_CARD_SORT_CENTER)
+	)
+	fixed_special.sort()
+	for first_index in primary.size():
+		for second_index in range(first_index + 1, primary.size()):
+			_apply_rite_card_pair_position(result, primary[first_index], primary[second_index])
+	for special_uid in fixed_special:
+		for primary_uid in primary:
+			_apply_rite_card_pair_position(result, primary_uid, special_uid)
 	return result
+
+
+func _is_primary_rite_position(rite: Dictionary) -> bool:
+	var type_value = rite.get("type", "NORMAL")
+	var is_normal := type_value is int and int(type_value) == 0
+	if type_value is String:
+		is_normal = str(type_value).is_empty() or str(type_value).to_upper() == "NORMAL"
+	return is_normal or str(rite.get("location", "")).contains("[")
+
+
+func _apply_rite_card_pair_position(source_positions: Dictionary, fixed_uid: int, moved_uid: int) -> void:
+	if not source_positions.has(fixed_uid) or not source_positions.has(moved_uid):
+		return
+	source_positions[moved_uid] = resolve_rite_card_pair_position(
+		source_positions[fixed_uid], source_positions[moved_uid]
+	)
+
+
+## Pure MapController.SetPos counterpart.  A touching edge has zero overlap
+## and remains a SetPos hit, matching the source's strict `<` early returns.
+## It tests only the candidate bound centre against bg and restores the full
+## previous root position on failure; it never clamps an edge.
+static func resolve_rite_card_pair_position(fixed_root: Vector2, moved_root: Vector2) -> Vector2:
+	var fixed_center := fixed_root + RITE_CARD_BOUND_CENTER_OFFSET
+	var moved_center := moved_root + RITE_CARD_BOUND_CENTER_OFFSET
+	var delta := moved_center - fixed_center
+	if absf(delta.x) > RITE_CARD_BOUND_EXTENTS.x * 2.0:
+		return moved_root
+	if absf(delta.y) > RITE_CARD_BOUND_EXTENTS.y * 2.0:
+		return moved_root
+	var overlap_x := RITE_CARD_BOUND_EXTENTS.x * 2.0 - absf(delta.x)
+	var overlap_y := RITE_CARD_BOUND_EXTENTS.y * 2.0 - absf(delta.y)
+	var candidate := moved_root
+	if overlap_x <= overlap_y:
+		candidate.x += -overlap_x if moved_center.x < fixed_center.x else overlap_x
+	else:
+		candidate.y += -overlap_y if moved_center.y < fixed_center.y else overlap_y
+	var candidate_center := candidate + RITE_CARD_BOUND_CENTER_OFFSET
+	var right_bottom := RITE_CARD_BG_BOUNDS.position + RITE_CARD_BG_BOUNDS.size
+	if candidate_center.x < RITE_CARD_BG_BOUNDS.position.x or candidate_center.x > right_bottom.x:
+		return moved_root
+	if candidate_center.y < RITE_CARD_BG_BOUNDS.position.y or candidate_center.y > right_bottom.y:
+		return moved_root
+	return candidate
 
 
 ## GameController.AddRitePin calls GetLocation and parents the pin directly;

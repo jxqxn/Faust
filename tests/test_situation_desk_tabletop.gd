@@ -83,7 +83,8 @@ func test_rite_new_positions_follow_authored_children_range_selection_and_stack_
 	state.available_rites.clear()
 	state.started_rites.clear()
 	# Original content locations: 5000001 = 自宅:1; 5000003 = 自宅:[2,12].
-	# The final fixed RiteNew shares child 1 and receives +100 X.
+	# The final fixed RiteNew shares child 1 and receives +100 X before the
+	# subsequent MapController.SetRitesPosition collision pass.
 	var fixed_first = state.create_rite_instance(5000001)
 	var ranged_first = state.create_rite_instance(5000003)
 	var ranged_second = state.create_rite_instance(5000003)
@@ -96,15 +97,50 @@ func test_rite_new_positions_follow_authored_children_range_selection_and_stack_
 		return
 	# GameScene SelfHome root @8644 plus integer-named RitePosition children.
 	var root := Vector2(-1506, -141)
-	_assert_card_center(desk, fixed_first.uid, root + Vector2(24, 3))
+	# Normal/ranged live rites are sorted closest-first to the Map-local screen
+	# centre, then each later rectangle is pushed along its smallest overlap
+	# axis.  These values are the source SetPos result, not a clone spacing rule.
+	_assert_card_center(desk, fixed_first.uid, root + Vector2(1, 3))
 	var first_card := desk.rite_cards.get(fixed_first.uid, null) as Control
 	if first_card != null:
 		assert_almost_eq(first_card.size.x, 123.0 * 3840.0 / 4200.0, 1.0, "RiteNew bound keeps its original 123 source-pixel width")
 		assert_almost_eq(first_card.size.y, 133.0 * 2160.0 / 2600.0, 1.0, "RiteNew bound keeps its original 133 source-pixel height")
 	_assert_card_center(desk, ranged_first.uid, root + Vector2(-295, 11))
-	_assert_card_center(desk, ranged_second.uid, root + Vector2(44, 120))
+	_assert_card_center(desk, ranged_second.uid, root + Vector2(44, 136))
 	_assert_card_center(desk, ranged_third.uid, root + Vector2(338, -3))
 	_assert_card_center(desk, fixed_second.uid, root + Vector2(24 + 100, 3))
+
+
+func test_rite_new_set_pos_uses_smallest_overlap_axis_and_reverts_outside_bg():
+	# RiteNew.bound is 123x133.  A card 100 source pixels to the right overlaps
+	# by 23 horizontally, so SetPos moves it right by 23 (the smaller axis).
+	var pushed := MapController.resolve_rite_card_pair_position(Vector2.ZERO, Vector2(100, 0))
+	assert_eq(pushed, Vector2(123, 0))
+	var diagonal := MapController.resolve_rite_card_pair_position(Vector2(-1382, -138), Vector2(-1462, -21))
+	assert_eq(diagonal, Vector2(-1462, -5), "16 vertical overlap is smaller than 43 horizontal overlap")
+	# Source only tests the candidate bound centre against bg and restores the
+	# old root if it would leave; it does not clamp to the right edge.
+	var near_edge := Vector2(2430, 0)
+	var reverted := MapController.resolve_rite_card_pair_position(Vector2(2380, 0), near_edge)
+	assert_eq(reverted, near_edge)
+
+
+func test_rite_position_compacts_surviving_card_after_runtime_removal():
+	var rng := RNG.new(8805)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	var first = state.create_rite_instance(5000001)
+	var second = state.create_rite_instance(5000001)
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	state.remove_rite_instance(first.uid)
+	desk.refresh_context()
+	await wait_process_frames(2)
+	# RemoveRite -> UpdateExistsChild reindexes the remaining sibling to local X=0.
+	_assert_card_center(desk, second.uid, Vector2(-1506, -141) + Vector2(24, 3))
 
 
 func test_final_pin_is_a_persistent_noninteractive_endpoint_separate_from_rite_new():
