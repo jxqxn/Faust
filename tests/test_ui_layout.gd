@@ -323,7 +323,10 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	await wait_process_frames(2)
 
 	assert_eq(game.rng.get_state(), rng_state_before, "opening a pin must not consume simulation RNG")
-	assert_not_null(_find_node_by_name(game, "RiteOverlayPanel"), "a pin opens its rite directly")
+	var rite_panel := _find_node_by_name(game, "RiteOverlayPanel") as Control
+	assert_not_null(rite_panel, "a pin opens its rite directly")
+	if rite_panel != null:
+		assert_eq(rite_panel.get_parent().get_parent().get_parent().name, "SourceOverlayLayer", "RitePanelShow must bypass the legacy overlay scale")
 	assert_null(_find_node_by_name(game, "RiteSelector"), "MapController has no location selector shortcut")
 	assert_true(think_drop.visible, "the thought target remains visible under the rite overlay")
 	assert_true(right_actions.visible)
@@ -1438,24 +1441,44 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	assert_gt(overlay.z_index, desk.z_index, "queue overlays should remain above the paper desk")
 
 
-func test_rite_view_uses_wide_viewport_width():
+func test_rite_view_replays_source_canvas_geometry():
 	var rng := RNG.new(2)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
-	var stage := _stage()
+	var stage := _stage(Vector2(3840, 2160))
 	var view = RiteView.new()
 	view.setup(state, db, rng, 5000001)
 	stage.add_child(view)
 	await wait_process_frames(2)
 
 	var shade := _find_node_by_name(view, "RiteModalShade") as Control
+	var source_canvas := _find_node_by_name(view, "RitePanelShow") as Control
+	var template_bg := _find_node_by_name(view, "RiteTemplateBackground") as Control
 	var slot_layer := _find_node_by_name(view, "RiteSlotOverlay") as Control
+	var slot_1 := _find_node_by_name(view, "OverlaySlot_S1") as Control
+	var title_panel := _find_node_by_name(view, "RiteOverlayPanel") as Control
 	assert_not_null(shade, "rite overlay should include a full-screen modal shade")
+	assert_not_null(source_canvas, "rite overlay should retain the source RitePanelShow canvas")
+	assert_not_null(template_bg, "rite template background should be a source-backed layer")
 	assert_not_null(slot_layer, "rite overlay should include a full-screen slot layer")
+	assert_not_null(slot_1, "source template slot s1 should be instantiated")
+	assert_not_null(title_panel, "source RitePanelTitle surface should be instantiated")
 	if shade != null:
-		assert_true(shade.size.x >= MIN_CONTENT_WIDTH, "rite modal shade should cover the wide viewport")
+		assert_almost_eq(shade.size.x, 3840.0, 0.1, "rite interaction blocker covers the source viewport")
+		assert_almost_eq(shade.size.y, 2160.0, 0.1, "rite interaction blocker covers the source viewport")
+	if source_canvas != null:
+		assert_eq(source_canvas.size, Vector2(3840, 2160), "RitePanelShow retains its original design canvas")
 	if slot_layer != null:
-		assert_true(slot_layer.size.x >= MIN_CONTENT_WIDTH, "rite slot layer should cover the wide viewport")
+		assert_eq(slot_layer.size, Vector2(3840, 2160), "SlotsContainer coordinates are not remapped to a legacy mockup")
+	if template_bg != null:
+		assert_eq(template_bg.position, Vector2(-128, -414), "template bg_pos is replayed from the original JSON")
+		assert_eq(template_bg.size, Vector2(4096, 2148), "Position/bg retains the original source size")
+	if slot_1 != null:
+		assert_eq(slot_1.position, Vector2(1472, 733), "template s1 uses the original SlotsContainer lower-left coordinate system")
+		assert_eq(slot_1.size, Vector2(272, 496), "CardSlot root keeps the original 272x496 geometry")
+	if title_panel != null:
+		assert_eq(title_panel.position, Vector2(2199, 535), "template title_pos is replayed under Position")
+		assert_eq(title_panel.size, Vector2(1148, 1124), "RitePanelTitle keeps its original source size")
 
 
 ## The real new-run entry fires the opening round_begin_ba chain (intro

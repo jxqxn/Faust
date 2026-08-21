@@ -17,14 +17,16 @@ func test_rite_view_keeps_protagonist_as_actor_while_other_cards_are_participant
 	view.setup(state, db, RNG.new(701), 5000001)
 	add_child(view)
 	await wait_process_frames(2)
-	var actor := view.find_child("RiteActorLabel", true, false) as Label
-	var hint := view.find_child("RitePerspectiveHint", true, false) as Label
-	assert_not_null(actor)
-	assert_not_null(hint)
-	if actor != null:
-		assert_eq(actor.text, "行动者：阿尔图")
-	if hint != null:
-		assert_string_contains(hint.text, "被卷入")
+	# Actor identity is runtime context, not clone-only prose in the original
+	# RitePanelShow prefab. Keep it in the resolver payload and do not restore
+	# the removed RiteActorLabel/RitePerspectiveHint presentation nodes.
+	var actor := state.player_actor_data(db)
+	var context := state.with_player_actor_context({"rite_id": 5000001}, db)
+	assert_eq(actor.get("name", ""), "阿尔图")
+	assert_eq(int(context.get("player_actor_uid", 0)), state.player_actor_uid)
+	assert_eq(int(context.get("player_actor_id", 0)), 2000001)
+	assert_null(view.find_child("RiteActorLabel", true, false))
+	assert_null(view.find_child("RitePerspectiveHint", true, false))
 	view.queue_free()
 
 

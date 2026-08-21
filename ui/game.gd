@@ -260,7 +260,9 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
 	rv.game_over_requested.connect(_show_game_over)
-	if _game_screen != null and _game_screen.has_method("add_overlay"):
+	if _game_screen != null and _game_screen.has_method("add_source_overlay"):
+		_game_screen.add_source_overlay(rv)
+	elif _game_screen != null and _game_screen.has_method("add_overlay"):
 		_game_screen.add_overlay(rv)
 	else:
 		_legacy_layer().add_child(rv)

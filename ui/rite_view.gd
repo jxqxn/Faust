@@ -34,7 +34,16 @@ signal closed()
 signal resolved()
 signal game_over_requested()
 
-const MOCKUP_SIZE := Vector2(1280, 720)
+# Original MainUI CanvasScaler reference resolution.  RitePanelShow is a
+# direct GameScene overlay, not a legacy 1280x800 mockup.
+# [SRC: GameScene.unity MainUI CanvasScaler; RitePanelShow.prefab root]
+const SOURCE_CANVAS_SIZE := Vector2(3840, 2160)
+const SOURCE_POSITION_CENTER := Vector2(1920, 870) # Position: (0, +210) in Unity y-up.
+const SOURCE_SLOTS_CONTAINER_SIZE := Vector2(3692, 2132)
+const SOURCE_SLOT_SIZE := Vector2(272, 496) # CardSlot.prefab root.
+const SOURCE_TITLE_SIZE := Vector2(1148, 1124) # RitePanelTitle.
+const SOURCE_TEMPLATE_BG_RECT := Rect2(Vector2(-128, -204), Vector2(4096, 2148))
+const SOURCE_DEFAULT_TITLE_POS := Vector2(1564, -54)
 
 var _state
 var _db
@@ -57,6 +66,8 @@ var _last_state_btn: Button
 var _resolution_committed := false
 
 var _shade: ColorRect
+var _source_canvas: Control
+var _template_backdrop: TextureRect
 var _slot_layer: Control
 var _rite_panel: Panel
 var _gold_dice_label: Label
@@ -112,19 +123,36 @@ func _ready() -> void:
 func _build_ui() -> void:
 	_shade = ColorRect.new()
 	_shade.name = "RiteModalShade"
-	_shade.color = Color(0, 0, 0, 0.48)
+	# The original RitePanelShow blocks interaction through its full template;
+	# it does not add the clone's black modal veil.
+	_shade.color = Color(0, 0, 0, 0)
 	_shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_shade)
 
+	_source_canvas = Control.new()
+	_source_canvas.name = "RitePanelShow"
+	_source_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_source_canvas)
+
+	_template_backdrop = TextureRect.new()
+	_template_backdrop.name = "RiteTemplateBackground"
+	_template_backdrop.texture = _rite_bg_texture()
+	_template_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_template_backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+	_template_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_source_canvas.add_child(_template_backdrop)
+
 	_slot_layer = Control.new()
 	_slot_layer.name = "RiteSlotOverlay"
-	_slot_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(_slot_layer)
+	# This layer receives literal source-canvas coordinates; full-rect anchors
+	# would fight its 3840x2160 source size on every resize.
+	_slot_layer.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_source_canvas.add_child(_slot_layer)
 	_build_slot_placeholders()
 
 	_rite_panel = _panel("RiteOverlayPanel")
 	_rite_panel.clip_contents = true
-	add_child(_rite_panel)
+	_source_canvas.add_child(_rite_panel)
 	_build_panel_content()
 
 	_log_label = Label.new()
@@ -132,7 +160,7 @@ func _build_ui() -> void:
 	_log_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_log_label.add_theme_font_size_override("font_size", 14)
 	_log_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	add_child(_log_label)
+	_source_canvas.add_child(_log_label)
 
 	_refresh_slot_visuals()
 	_refresh_gold_label()
@@ -198,45 +226,20 @@ func _build_panel_content() -> void:
 	var title := Label.new()
 	title.text = _state.rite_display_name(_rite_id, _db) if _state != null else "%s" % _rite.get("name", str(_rite_id))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 27)
+	title.add_theme_font_size_override("font_size", 60)
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	col.add_child(title)
 
-	var actor := Label.new()
-	actor.name = "RiteActorLabel"
-	var actor_data: Dictionary = (
-		_state.player_actor_data(_db)
-		if _state != null and _state.has_method("player_actor_data")
-		else {}
-	)
-	actor.text = "行动者：%s" % str(actor_data.get("name", "主角"))
-	actor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	actor.add_theme_font_size_override("font_size", 13)
-	actor.add_theme_color_override("font_color", FaustTheme.GOLD)
-	col.add_child(actor)
-
 	var desc := Label.new()
+	desc.name = "RiteMainContent"
 	desc.text = "%s" % _rite.get("text", "")
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 12)
+	desc.add_theme_font_size_override("font_size", 36)
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
 	col.add_child(desc)
 
-	var tips := Label.new()
-	tips.name = "RitePerspectiveHint"
-	tips.text = "人物表示谁被卷入这次行动；物品表示你准备调用什么。"
-	tips.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	tips.add_theme_font_size_override("font_size", 11)
-	tips.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
-	col.add_child(tips)
-
 	var sep := HSeparator.new()
 	col.add_child(sep)
-
-	_slots_container = VBoxContainer.new()
-	_slots_container.add_theme_constant_override("separation", 3)
-	col.add_child(_slots_container)
-	_build_slot_summary()
 
 	var action_row := HBoxContainer.new()
 	action_row.add_theme_constant_override("separation", 8)
@@ -318,7 +321,7 @@ func _build_panel_content() -> void:
 	_update_stop_button()
 	_update_last_state_button()
 
-	_result_label.text = "[color=#a89880]从下方手牌选择卡牌后，点击左侧方块卡槽。[/color]"
+	_result_label.text = ""
 
 
 func _build_slot_summary() -> void:
@@ -340,37 +343,29 @@ func _apply_layout() -> void:
 		var parent_control := get_parent() as Control
 		if parent_control != null:
 			view_size = parent_control.size
-	var s: float = min(view_size.x / MOCKUP_SIZE.x, view_size.y / MOCKUP_SIZE.y)
-
 	_set_rect(_shade, Rect2(Vector2.ZERO, view_size))
-	_set_rect(_slot_layer, Rect2(Vector2.ZERO, view_size))
-	var hand_top := view_size.y - 222 * s
-	# The panel takes the original template's aspect (its bg art), sized to
-	# the free area right of the hand rail like the original rite surface.
-	# [SRC: rite_template bg art aspect ratios (~1.73..2.14)]
-	var canvas := _template_canvas_size(_rite_template_data())
-	var panel_area_width: float = view_size.x - 760 * s
-	var panel_area_height: float = hand_top - 80 * s
-	var panel_size := Vector2(panel_area_width, panel_area_height)
-	if canvas.x > 0 and canvas.y > 0:
-		var aspect: float = canvas.x / canvas.y
-		if panel_size.x / panel_size.y > aspect:
-			panel_size.x = panel_size.y * aspect
-		else:
-			panel_size.y = panel_size.x / aspect
-	var panel_pos := Vector2(view_size.x - panel_size.x - 36 * s, view_size.y * 0.5 - panel_size.y * 0.5)
-	_set_rect(_rite_panel, Rect2(panel_pos, panel_size))
-	_set_rect(_log_label, Rect2(Vector2(386, 488) * s, Vector2(500, 26) * s))
+	_source_canvas.position = Vector2.ZERO
+	_source_canvas.size = SOURCE_CANVAS_SIZE
+	_source_canvas.scale = Vector2(view_size.x / SOURCE_CANVAS_SIZE.x, view_size.y / SOURCE_CANVAS_SIZE.y)
+	_set_rect(_slot_layer, Rect2(Vector2.ZERO, SOURCE_CANVAS_SIZE))
+	var template := _rite_template_data()
+	var bg_offset := _template_pos(template.get("bg_pos", {}))
+	_set_rect(_template_backdrop, Rect2(
+		SOURCE_TEMPLATE_BG_RECT.position + Vector2(bg_offset.x, -bg_offset.y),
+		SOURCE_TEMPLATE_BG_RECT.size
+	))
+	var title_pos := _template_pos(template.get("title_pos", {}), SOURCE_DEFAULT_TITLE_POS)
+	var title_pivot := SOURCE_POSITION_CENTER + Vector2(title_pos.x, -title_pos.y)
+	_set_rect(_rite_panel, Rect2(
+		title_pivot - Vector2(SOURCE_TITLE_SIZE.x, SOURCE_TITLE_SIZE.y * 0.5),
+		SOURCE_TITLE_SIZE
+	))
+	_set_rect(_log_label, Rect2(Vector2(1510, 1700), Vector2(820, 60)))
 
-	var slot_size := CardWidget.CARD_SIZE * s
-	var safe_slot_bottom := hand_top - 12 * s
-	var slot_rects := _slot_rects_for_keys(_slot_keys(), s, slot_size)
+	var slot_rects := _slot_rects_for_keys(_slot_keys())
 	for slot_key in _slot_buttons:
 		if slot_rects.has(slot_key):
-			var slot_rect: Rect2 = slot_rects[slot_key]
-			if slot_rect.position.y + slot_rect.size.y > safe_slot_bottom:
-				slot_rect.position.y = safe_slot_bottom - slot_rect.size.y
-			_set_rect(_slot_buttons[slot_key], slot_rect)
+			_set_rect(_slot_buttons[slot_key], slot_rects[slot_key])
 
 
 func _slot_rect_from_center(center: Vector2, slot_size: Vector2) -> Rect2:
@@ -1017,15 +1012,17 @@ func set_log(text: String) -> void:
 func _panel(node_name: String) -> Panel:
 	var panel := Panel.new()
 	panel.name = node_name
-	# Texture-first: the rite's template background IS the panel surface —
-	# no paper chrome may frame it. The authored style only survives when
-	# no art resolved.
-	# [SRC: rite_template_mappings.json -> rite_template bg fields;
-	#       assets/original/ui/rite_bg/]
-	var bg_texture := _rite_bg_texture()
-	if bg_texture != null:
+	# RitePanelTitle/CommonContent is a separate 1148x1124 source asset. The
+	# rite_template background belongs to Position/bg and is rendered behind
+	# the slots above, never re-used as an invented sidebar skin.
+	# [SRC: RitePanelShow.prefab RitePanelTitle/CommonContent]
+	var panel_texture: Texture2D = null
+	var panel_path := "res://assets/original/ui/common_operation_bg.png"
+	if ResourceLoader.exists(panel_path):
+		panel_texture = load(panel_path) as Texture2D
+	if panel_texture != null:
 		var style := StyleBoxTexture.new()
-		style.texture = bg_texture
+		style.texture = panel_texture
 		style.texture_margin_left = 40
 		style.texture_margin_right = 40
 		style.texture_margin_top = 36
@@ -1146,61 +1143,41 @@ func _slot_keys() -> Array[String]:
 	return keys
 
 
-func _slot_rects_for_keys(keys: Array[String], s: float, slot_size: Vector2) -> Dictionary:
+func _slot_rects_for_keys(keys: Array[String]) -> Dictionary:
 	var rects := {}
-	if keys.is_empty():
-		return rects
-	# Template-driven placement: slot centers come from the original
-	# rite_template coordinates (localPosition relative to the panel center,
-	# y-up) mapped onto the rendered panel rect; rotation and per-slot scale
-	# ride on the buttons. [SRC: RitePanelShowController.c L675-680
-	# set_localPosition/set_localScale from the template slots]
+	# RitePanelShowController instantiates CardSlot under SlotsContainer and
+	# writes each original template slot's localPosition/localScale/rotation.
+	# No clone grid or hand-rail collision adjustment is permitted here.
+	# [SRC: RitePanelShowController.c 0x596450, set_localPosition 0x598000,
+	#       set_localScale 0x598020, set_localRotation 0x5980e0;
+	#       CardSlot.prefab root = 272x496]
 	var template := _rite_template_data()
-	var panel_rect := _rite_panel.get_rect()
-	var canvas := _template_canvas_size(template)
-	if canvas.x > 0 and canvas.y > 0:
-		var fit := _template_fit(canvas, panel_rect)
-		for slot_key in keys:
-			var slot_def: Dictionary = template.get("slots", {}).get(slot_key, {})
-			var pos: Dictionary = slot_def.get("pos", {}) if slot_def.get("pos", {}) is Dictionary else {}
-			if pos.is_empty():
-				continue
-			# Unity center-origin y-up -> Godot panel-local y-down.
-			var cx: float = panel_rect.position.x + (canvas.x * 0.5 + float(pos.get("x", 0))) * fit
-			var cy: float = panel_rect.position.y + (canvas.y * 0.5 - float(pos.get("y", 0))) * fit
-			var sc: Dictionary = slot_def.get("scale", {}) if slot_def.get("scale", {}) is Dictionary else {}
-			var scale_xy := Vector2(float(sc.get("x", 1)), float(sc.get("y", 1)))
-			var btn := _slot_buttons.get(slot_key) as Control
-			if btn != null:
-				btn.rotation_degrees = -float(slot_def.get("rotation_z", 0))
-				btn.scale = scale_xy
-			rects[slot_key] = _slot_rect_from_center(Vector2(cx, cy), slot_size * scale_xy)
-		if not rects.is_empty():
-			return rects
-	# Fallback: authored grid for templates without resolvable art/coords.
-	if keys.size() <= 4:
-		var centers := [
-			Vector2(332, 179),
-			Vector2(472, 351),
-			Vector2(594, 303),
-			Vector2(714, 351),
-		]
-		for i in keys.size():
-			rects[keys[i]] = _slot_rect_from_center(centers[i] * s, slot_size)
-		return rects
-	var cols := mini(4, keys.size())
-	var rows := ceili(float(keys.size()) / float(cols))
-	var start := Vector2(300, 146) * s
-	var gap := Vector2(126, 170) * s
-	for i in keys.size():
-		var col := i % cols
-		var row := floori(float(i) / float(cols))
-		var center := start + Vector2(float(col) * gap.x, float(row) * gap.y)
-		if rows > 1 and row == rows - 1 and keys.size() % cols != 0:
-			var last_count := keys.size() % cols
-			center.x += float(cols - last_count) * gap.x * 0.5
-		rects[keys[i]] = _slot_rect_from_center(center, slot_size)
+	var template_slots: Dictionary = template.get("slots", {}) if template.get("slots", {}) is Dictionary else {}
+	for slot_key in keys:
+		var slot_def: Dictionary = template_slots.get(slot_key, {}) if template_slots.get(slot_key, {}) is Dictionary else {}
+		if slot_def.is_empty():
+			continue
+		var pos := _template_pos(slot_def.get("pos", {}))
+		var scale_xy := _template_pos(slot_def.get("scale", {}), Vector2.ONE)
+		var btn := _slot_buttons.get(slot_key) as Control
+		if btn != null:
+			btn.rotation_degrees = -float(slot_def.get("rotation_z", 0))
+			btn.scale = Vector2.ONE
+		# Template `pos` is measured from SlotsContainer's lower-left. The
+		# original controller converts it to a centered localPosition by
+		# subtracting half the RectTransform width/height before assigning it.
+		var center := SOURCE_POSITION_CENTER + Vector2(
+			pos.x - SOURCE_SLOTS_CONTAINER_SIZE.x * 0.5,
+			SOURCE_SLOTS_CONTAINER_SIZE.y * 0.5 - pos.y
+		)
+		rects[slot_key] = _slot_rect_from_center(center, SOURCE_SLOT_SIZE * scale_xy)
 	return rects
+
+
+func _template_pos(value: Variant, fallback := Vector2.ZERO) -> Vector2:
+	if value is Dictionary:
+		return Vector2(float(value.get("x", fallback.x)), float(value.get("y", fallback.y)))
+	return fallback
 
 
 ## The resolved rite_template entry driving this panel's layout.

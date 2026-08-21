@@ -76,6 +76,7 @@ var _next_day_label: Label
 var _desk_map: PanelContainer
 var _desk_content: Control
 var _overlay_layer: Control
+var _source_overlay_layer: Control
 var _hand_bg_sprite: TextureRect
 var _card_rail_view: Control
 var _rail_padding: MarginContainer
@@ -244,6 +245,15 @@ func _build_ui() -> void:
 	_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_overlay_layer.z_index = OVERLAY_LAYER_Z
 	add_child(_overlay_layer)
+
+	# New overlays migrate here one at a time after their original RectTransform
+	# hierarchy has been re-emitted in the 3840x2160 GameScene design space.
+	# Keep OverlayLayer intact for the remaining 1280x800 compatibility views.
+	_source_overlay_layer = Control.new()
+	_source_overlay_layer.name = "SourceOverlayLayer"
+	_source_overlay_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_source_overlay_layer.z_index = OVERLAY_LAYER_Z + 1
+	add_child(_source_overlay_layer)
 
 	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
@@ -431,6 +441,10 @@ func _apply_layout() -> void:
 	_overlay_layer.scale = Vector2(legacy_k, legacy_k)
 	_overlay_layer.position = Vector2((view_size.x - LEGACY_OVERLAY_DESIGN.x * legacy_k) * 0.5, 0)
 	_overlay_layer.size = LEGACY_OVERLAY_DESIGN
+	if _source_overlay_layer != null:
+		_source_overlay_layer.position = Vector2.ZERO
+		_source_overlay_layer.scale = Vector2.ONE
+		_source_overlay_layer.size = view_size
 	# [SRC: Hand BG hand_bg 4096x356 anchors (0,0)-(1,0) bottom stretched]
 	if _hand_bg_sprite != null:
 		_hand_bg_sprite.scale = k
@@ -1117,11 +1131,12 @@ func _rail_insert_index_at(rail_position: Vector2, dragged_card_uid: int = 0) ->
 
 
 func _notify_card_returned_to_hand(card_uid: int, source_slot: String) -> void:
-	if _overlay_layer == null:
-		return
-	for child in _overlay_layer.get_children():
-		if child.has_method("return_card_to_hand"):
-			child.return_card_to_hand(card_uid, source_slot)
+	for layer in [_overlay_layer, _source_overlay_layer]:
+		if layer == null:
+			continue
+		for child in layer.get_children():
+			if child.has_method("return_card_to_hand"):
+				child.return_card_to_hand(card_uid, source_slot)
 
 
 func set_log(text: String) -> void:
@@ -1136,6 +1151,15 @@ func add_overlay(node: Control) -> void:
 	_overlay_layer.add_child(node)
 	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_overlay_layer.move_child(node, _overlay_layer.get_child_count() - 1)
+
+
+func add_source_overlay(node: Control) -> void:
+	if _source_overlay_layer == null:
+		add_child(node)
+		return
+	_source_overlay_layer.add_child(node)
+	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_source_overlay_layer.move_child(node, _source_overlay_layer.get_child_count() - 1)
 
 
 func set_world_scene_blocker(
