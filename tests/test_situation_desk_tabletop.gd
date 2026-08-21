@@ -176,6 +176,60 @@ func test_settled_final_pin_enters_player_pins_only_after_live_rite_removal():
 	assert_eq(state.rite_pins, [5010009], "only final_pin=true creates the persistent config-id endpoint")
 
 
+func test_from_pins_draws_only_from_completed_pin_to_live_rite_new():
+	var rng := RNG.new(8806)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	# 5010014 has FromPin(5010013).  The target is live here, so the source
+	# needs to be a completed RitePin but the target must remain RiteNew.
+	var target = state.create_rite_instance(5010014)
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	assert_eq(desk.lines.size(), 0, "a live target never makes an uncompleted source into a line")
+	assert_true(state.add_rite_pin(5010013))
+	desk.refresh_context()
+	await wait_process_frames(2)
+	var line := desk.lines.get(Vector2i(5010014, 5010013), null) as MapController.RitePinLineView
+	assert_not_null(line, "RefreshRitePinLines connects completed source pin to live RiteController")
+	if line == null:
+		return
+	assert_eq(line.target_rite_id, target.id)
+	assert_eq(line.source_rite_id, 5010013)
+	assert_eq(line.sampled_points.size(), 51, "source resolution=50 produces 51 inclusive samples")
+	assert_true(line.dashed, "the original FromPin dashed flag maps to LineRenderer LineList")
+	assert_eq(line.line_color, Color8(207, 187, 161, 255))
+	assert_eq(line.line_width, 20.0)
+	assert_eq(line.arrow_points.size(), 3, "source arrow_length creates a two-wing arrow")
+
+
+func test_from_pins_connects_completed_endpoint_pairs_and_uses_source_curve_data():
+	var rng := RNG.new(8807)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.rite_instances.clear()
+	state.available_rites.clear()
+	state.started_rites.clear()
+	# 5010009 -> FromPin(5010025), with both sides now persistent endpoints.
+	assert_true(state.add_rite_pin(5010025))
+	assert_true(state.add_rite_pin(5010009))
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	var line := desk.lines.get(Vector2i(5010009, 5010025), null) as MapController.RitePinLineView
+	assert_not_null(line, "first source pass connects completed RitePin targets")
+	if line == null:
+		return
+	var positions := desk._allocate_rite_pin_positions()
+	var start := desk._map_local_to_canvas(positions[5010025] + desk.MAP_LOCAL_OFFSET)
+	var ending := desk._map_local_to_canvas(positions[5010009] + desk.MAP_LOCAL_OFFSET)
+	var controls: Array[Vector2] = [start + Vector2(100, -100)]
+	var expected := MapController.sample_rite_pin_line(start, ending, controls, 50, 0.08, 1.0)
+	assert_eq(line.sampled_points, expected, "controls are original root-canvas offsets from the source pin")
+	assert_false(desk.lines.has(Vector2i(5010009, 5010013)), "unrelated completed pins do not synthesize graph edges")
+
+
 func _assert_card_center(desk: MapController, rite_uid: int, source_position: Vector2) -> void:
 	var card := desk.rite_cards.get(rite_uid, null) as Control
 	assert_not_null(card, "rite %d should have an original RiteNew card" % rite_uid)

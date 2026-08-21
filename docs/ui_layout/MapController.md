@@ -24,6 +24,12 @@ table.
   IDs. `GameController.AddRite` instead makes a runtime-UID `RiteController`.
   `OnDrop` forwards the card to `lastRite`; it does not open a location action
   menu.
+- `RefreshRitePinLines` first visits completed `Player.pins` as targets, then
+  live Player rites as targets.  For either target it creates a line only when
+  a `from_pins[].rite_id` is itself in `Player.pins`; `CreateLine` looks that
+  source up in the map pin dictionary.  The line dictionary key is
+  `(target rite definition ID, source pin definition ID)`, so it suppresses
+  duplicate live instances of the same target definition.
 
 Sources: `engine_spec/decompiled/MapController.c` (`Awake`, `AddPin`, `OnDrop`,
 `SetPos`, `SetRitesPosition`), `GameController.c` (`GetLocation`,
@@ -121,6 +127,27 @@ clamp.  This is separate from `RitePosition`'s same-child 100-pixel stacking.
 again. On removal, `RiteController.OnDestroy` invokes `RemoveRite`, whose
 `UpdateExistsChild` compacts surviving siblings back to local `index×100`.
 
-Still 🟡: `from_pins` line generation. The line data is present in 8 original
-rite files and will remain a separate, source-backed layer rather than being
-folded into pin or card placement.
+## From-pin lines
+
+All eight original rite files with `from_pins` are now rendered as a separate
+`RitePinLineView` layer.  They do not affect location selection, pin placement,
+or RiteNew collision placement.
+
+- The source must be a completed `Player.pins` endpoint.  A live RiteNew can
+  receive a line but can never originate one.
+- `CreateLine` converts source/target transforms to root-canvas coordinates,
+  then adds each configured control point to the **source** point.  The clone
+  applies the same original 3840×2160 canvas scaling (and converts Unity-up Y
+  to Godot-down Y).
+- `LineController.GenerateLine` samples the original linear/quadratic/cubic
+  Bézier form from `start_reserve` through `1-end_reserve`, inclusive.  The
+  present eight entries each have one control, resolution 50, width 20,
+  `start_reserve=.08`, arrow 100/40, RGBA `(207,187,161,255)`, and `dashed`.
+  Dashed maps to the source `UILineRenderer.LineList` pairwise segments; the
+  arrow is generated from the last two samples.
+
+Sources: `MapController.c` `RefreshRitePinLines` (RVA `0x5690d0`),
+`CleanUnexistsPinLines` (`0x568080`), `CreateLine` (`0x568360`);
+`LineController.c` `GenerateLine` (`0x42edd0`);
+`BezierCurveGenerator.c` `CalculateBezierPoint` / `GenerateArrow`; and
+`dump.cs` `MapController` / `RiteNode.FromPin` / `LineCreator.LineData`.

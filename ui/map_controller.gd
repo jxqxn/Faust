@@ -64,6 +64,33 @@ class RitePosition:
 		rite_uids.erase(rite_uid)
 
 
+## Godot rendering host for LineCreator/LineController.  It intentionally owns
+## only the already-parsed original FromPin data; it is not a new map graph.
+## [SRC: decompiled/MapController.c RefreshRitePinLines/CreateLine
+##       (0x5690d0/0x568360); decompiled/LineController.c GenerateLine
+##       (0x42edd0); il2cpp_dump/dump.cs RiteNode.FromPin@393030.]
+class RitePinLineView:
+	extends Control
+
+	var target_rite_id := 0
+	var source_rite_id := 0
+	var sampled_points := PackedVector2Array()
+	var arrow_points := PackedVector2Array()
+	var line_color := Color.WHITE
+	var line_width := 1.0
+	var dashed := false
+
+	func _draw() -> void:
+		if dashed:
+			for point_index in range(0, sampled_points.size() - 1, 2):
+				draw_line(sampled_points[point_index], sampled_points[point_index + 1], line_color, line_width, true)
+		elif sampled_points.size() >= 2:
+			draw_polyline(sampled_points, line_color, line_width, true)
+		if arrow_points.size() == 3:
+			draw_line(arrow_points[0], arrow_points[1], line_color, line_width, true)
+			draw_line(arrow_points[2], arrow_points[1], line_color, line_width, true)
+
+
 ## Direct structural counterpart of the original LocationController.  `view`
 ## is Godot's visual host; placement remains in the original source space.
 ## [SRC: decompiled/LocationController.c InitInternal/GetPosition;
@@ -159,6 +186,9 @@ var locations: Array[LocationController] = []
 var maps: Dictionary = {}
 var pins: Dictionary = {} # rite definition id -> non-interactive RitePin view
 var rite_cards: Dictionary = {} # runtime rite uid -> clickable RiteNew view
+# Original MapController.lines is keyed by (target rite definition id,
+# source completed-pin definition id), not a runtime Rite UID.
+var lines: Dictionary = {}
 # Runtime counterpart of RiteController.position and its Transform position.
 # Init selects a RitePosition once; later SetRitesPosition moves that already
 # instantiated RiteNew transform, never calls GetPosition a second time.
@@ -242,6 +272,7 @@ func _build_ithink_target() -> void:
 func refresh_context() -> void:
 	refresh_rite_cards()
 	refresh_rite_pins()
+	refresh_rite_pin_lines()
 	queue_redraw()
 
 
@@ -311,6 +342,7 @@ func _layout() -> void:
 		_think_drop_zone.position = Vector2(size.x * 0.075, size.y * 0.735) - _think_drop_zone.size * 0.5
 	_layout_rite_cards()
 	_layout_rite_pins()
+	refresh_rite_pin_lines()
 
 
 func _map_local_to_canvas(source_position: Vector2) -> Vector2:
@@ -352,6 +384,157 @@ func refresh_rite_pins() -> void:
 		add_child(pin)
 		pins[rite_id] = pin
 	_layout_rite_pins()
+
+
+## Original RefreshRitePinLines makes a line only if the FromPin source is in
+## Player.pins.  Its target is first a completed RitePin, then each live Rite
+## controller.  `lines` rejects duplicate (target config id, source config id)
+## pairs, even if multiple runtime rites share the target definition.
+## [SRC: decompiled/MapController.c RefreshRitePinLines (0x5690d0),
+##       CleanUnexistsPinLines (0x568080), CreateLine (0x568360);
+##       il2cpp_dump/dump.cs MapController@321039, RiteNode.FromPin@393030.]
+func refresh_rite_pin_lines() -> void:
+	for line in lines.values():
+		if is_instance_valid(line):
+			line.queue_free()
+	lines.clear()
+	if _state == null or _db == null or size.x <= 0.0 or size.y <= 0.0:
+		return
+	var pin_positions := _allocate_rite_pin_positions()
+	# The original's first pass targets completed endpoint transforms.
+	for raw_target_id in pins.keys():
+		var target_id := int(raw_target_id)
+		if not pin_positions.has(target_id):
+			continue
+		_add_rite_pin_lines_for_target(target_id, pin_positions[target_id], pin_positions)
+	# The second pass targets active RiteController transforms.  This pass is
+	# deliberately separate: a live RiteNew does not become a source endpoint.
+	var live_positions := _allocate_rite_card_positions()
+	var rite_uids: Array[int] = []
+	for raw_uid in rite_cards.keys():
+		rite_uids.append(int(raw_uid))
+	rite_uids.sort()
+	for rite_uid in rite_uids:
+		var instance = _state.get_rite_instance(rite_uid) if _state.has_method("get_rite_instance") else null
+		if instance == null or not live_positions.has(rite_uid):
+			continue
+		_add_rite_pin_lines_for_target(int(instance.id), live_positions[rite_uid], pin_positions)
+
+
+func _add_rite_pin_lines_for_target(target_rite_id: int, target_root: Vector2, pin_positions: Dictionary) -> void:
+	var rite: Dictionary = _db.rites.get(target_rite_id, {})
+	var from_pins = rite.get("from_pins", [])
+	if not (from_pins is Array):
+		return
+	for raw_from_data in from_pins:
+		if not (raw_from_data is Dictionary):
+			continue
+		var from_data: Dictionary = raw_from_data
+		var source_rite_id := int(from_data.get("rite_id", 0))
+		# CreateLine looks up this exact source id in MapController.pins.  The
+		# clone's `pin_positions` is the same completed-pin domain.
+		if not pin_positions.has(source_rite_id):
+			continue
+		var line_key := Vector2i(target_rite_id, source_rite_id)
+		if lines.has(line_key):
+			continue
+		var line := _create_rite_pin_line(target_rite_id, source_rite_id, pin_positions[source_rite_id], target_root, from_data)
+		if line == null:
+			continue
+		lines[line_key] = line
+
+
+func _create_rite_pin_line(target_rite_id: int, source_rite_id: int, source_root: Vector2, target_root: Vector2, from_data: Dictionary) -> RitePinLineView:
+	# CreateLine converts both endpoint Transforms into rootCanvas local space.
+	# Its captured lambda then adds each configured control Vector2 to the start
+	# point.  Config Y is Unity-up, whereas the Godot canvas is down.
+	var start := _map_local_to_canvas(source_root + MAP_LOCAL_OFFSET)
+	var ending := _map_local_to_canvas(target_root + MAP_LOCAL_OFFSET)
+	var controls: Array[Vector2] = []
+	var raw_controls = from_data.get("controls", [])
+	if raw_controls is Array:
+		for raw_control in raw_controls:
+			if raw_control is Array and raw_control.size() >= 2:
+				controls.append(start + Vector2(
+					float(raw_control[0]) * size.x / 3840.0,
+					-float(raw_control[1]) * size.y / 2160.0
+				))
+	var resolution := int(from_data.get("resolution", 0))
+	if resolution <= 0:
+		resolution = 30
+	var start_reserve := clampf(float(from_data.get("start_reserve", 0.0)), 0.0, 1.0)
+	var end_reserve := 1.0 - float(from_data.get("end_reserve", 0.0))
+	if is_zero_approx(end_reserve):
+		end_reserve = 1.0
+	end_reserve = clampf(end_reserve, 0.0, 1.0)
+	var line := RitePinLineView.new()
+	line.name = "RitePinLine_%d_from_%d" % [target_rite_id, source_rite_id]
+	line.target_rite_id = target_rite_id
+	line.source_rite_id = source_rite_id
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.position = Vector2.ZERO
+	line.size = size
+	line.z_index = 4
+	line.sampled_points = sample_rite_pin_line(start, ending, controls, resolution, start_reserve, end_reserve)
+	line.arrow_points = _rite_pin_line_arrow(line.sampled_points, float(from_data.get("arrow_length", 0.0)), float(from_data.get("arrow_angle", 0.0)))
+	line.line_color = _rite_pin_line_color(from_data.get("color", []))
+	line.line_width = float(from_data.get("width", 0.0))
+	if line.line_width <= 0.0:
+		line.line_width = 5.0
+	line.line_width *= minf(size.x / 3840.0, size.y / 2160.0)
+	line.dashed = bool(from_data.get("dashed", false))
+	add_child(line)
+	return line
+
+
+## LineController samples t from startReserve through 1-endReserve inclusive
+## at resolution+1 points.  The original supports linear, quadratic, and cubic
+## curves (0/1/2 controls); every current original FromPin uses one control.
+## [SRC: decompiled/LineController.c GenerateLine (0x42edd0);
+##       decompiled/BezierCurveGenerator.c CalculateBezierPoint (0x428630).]
+static func sample_rite_pin_line(start: Vector2, ending: Vector2, controls: Array[Vector2], resolution: int, start_reserve: float, end_reserve: float) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	var safe_resolution := maxi(resolution, 0)
+	for point_index in safe_resolution + 1:
+		var t := float(point_index) * (end_reserve - start_reserve) / float(safe_resolution) + start_reserve if safe_resolution > 0 else start_reserve
+		if controls.is_empty():
+			points.append(start.lerp(ending, t))
+		elif controls.size() == 1:
+			var inv_t := 1.0 - t
+			points.append(start * inv_t * inv_t + controls[0] * 2.0 * t * inv_t + ending * t * t)
+		elif controls.size() == 2:
+			var inv_t := 1.0 - t
+			points.append(start * inv_t * inv_t * inv_t + controls[0] * 3.0 * inv_t * inv_t * t + controls[1] * 3.0 * inv_t * t * t + ending * t * t * t)
+		else:
+			# BezierCurveGenerator logs an error and returns Vector3.zero for an
+			# unsupported control count.  Preserve that boundary rather than
+			# silently inventing a higher-order curve.
+			points.append(Vector2.ZERO)
+	return points
+
+
+## LineController builds the arrow from the final two sampled points: base is
+## arrowLength behind the endpoint and wing separation is length*sin(angle).
+## [SRC: decompiled/BezierCurveGenerator.c GenerateArrow (0x428950).]
+func _rite_pin_line_arrow(points: PackedVector2Array, source_length: float, angle_degrees: float) -> PackedVector2Array:
+	if points.size() < 2 or source_length <= 0.0:
+		return PackedVector2Array()
+	var scale := minf(size.x / 3840.0, size.y / 2160.0)
+	var ending := points[points.size() - 1]
+	var direction := (ending - points[points.size() - 2]).normalized()
+	if direction.is_zero_approx():
+		return PackedVector2Array()
+	var length := source_length * scale
+	var base := ending - direction * length
+	var wing_length := length * sin(deg_to_rad(angle_degrees))
+	var perpendicular := Vector2(-direction.y, direction.x)
+	return PackedVector2Array([base + perpendicular * wing_length, ending, base - perpendicular * wing_length])
+
+
+static func _rite_pin_line_color(raw_color) -> Color:
+	if raw_color is Array and raw_color.size() >= 4:
+		return Color8(int(raw_color[0]), int(raw_color[1]), int(raw_color[2]), int(raw_color[3]))
+	return Color.WHITE
 
 
 ## GameController.AddRite instantiates RiteNew and RiteController.Init parents

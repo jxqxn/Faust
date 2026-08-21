@@ -56,8 +56,8 @@
 | `sim/condition.gd` AttrExprParser | 文法已对齐（四则/e() 敌方/sN.tag/counter.N）；解析器宿主为自制递归下降，非原作方法映射 |
 | `ui/game_audio.gd` GameAudio | 仅 main/tutorial BGM + 部分音效；拖放音、弹窗出现音、BGM 分层（level2/3）、结局 BGM、`sfx_*.json` 全量缺 |
 | `ui/begin_guide_bar.gd` 引导条 | 文案/键族/存档对齐；`WizardController` 完整演示宿主与 magic_sudan 演出缺，5310004 后序列未实机校对 |
-| `MapController.SetRitesPosition/SetPos` + `RefreshRitePinLines` | 批次 U 已拆出 live `RiteNew/RiteController` 卡层与 `Player.pins` endpoint；批次 V 已补 RiteNew 123×133 bound 的跨点碰撞与 bg 外整位回退（只测 bound 中心、不钳边）；仍缺 8 个原作 `RiteNode.from_pins` 连线。不得把 SetPos 误套到 RitePin |
-| `ui/map_controller.gd` `MapController.SetRitesPosition` / `SetPos` 最终全局碰撞与边界位移 | `LocationController.RitePosition` 子点、范围选位与同点叠放已精确；批次 V：NORMAL/`[` 组按屏幕中心排序后两两推开，固定特殊仪式只避开该组；候选出 bg 则恢复旧位。仍缺 `RefreshRitePinLines`，不能将此缺口误称为子点坐标缺失 |
+| `MapController.SetRitesPosition/SetPos` + `RefreshRitePinLines` | 批次 U 已拆出 live `RiteNew/RiteController` 卡层与 `Player.pins` endpoint；批次 V 已补 RiteNew 123×133 bound 的跨点碰撞与 bg 外整位回退（只测 bound 中心、不钳边）；批次 W 已接 8 个原作 `RiteNode.from_pins`：仅已完成 pin 可作起点、终点可为 pin 或 live RiteNew、键为 `(target rite-id, source pin-id)`、原始二次 Bézier/保留区/虚线/箭头参数直读配置。不得把 SetPos 或 from_pins 起点误套到 RitePin 之外的运行时卡 |
+| `ui/map_controller.gd` `MapController.SetRitesPosition` / `SetPos` / `RefreshRitePinLines` | `LocationController.RitePosition` 子点、范围选位与同点叠放已精确；批次 V：NORMAL/`[` 组按屏幕中心排序后两两推开，固定特殊仪式只避开该组；候选出 bg 则恢复旧位。批次 W：重建线层等价 `CleanUnexistsPinLines`，且不因 live source 或无关 pin 合成边；已覆盖的 8 条配置同为 50 段、20 像素、起始保留 .08、100/40 箭头、RGBA(207,187,161,255)、虚线。|
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
 | `ui/*.gd` 旧屏坐标（game_screen / rite_view / card_widget / rite_selector / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**；**批次 R 已把桌面地图换为 `ui/map_controller.gd`**。`rite_view` / `card_widget` / `rite_selector` / 引导与各 overlay 仍为 1280×800，经 `ui/game.gd` LegacyLayer（×2.7 居中）过渡承载。其余屏幕每项按 `docs/ui_layout/` 真值表重摆后移出（GameScene 3159 节点清单已生成；其余面板用 `tools/export_ui_layout.gd --input Resources/prefab/<名>.prefab` 按需导出） |
 
