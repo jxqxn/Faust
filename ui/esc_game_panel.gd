@@ -11,6 +11,7 @@ extends Control
 signal return_requested
 signal end_game_requested
 signal main_menu_requested
+signal settings_requested
 
 const DESIGN_SPACE := Vector2(3840, 2160)
 const SOURCE_CANVAS := Vector2(1920, 1080)
@@ -73,7 +74,7 @@ func _build_source_tree() -> void:
 
 	# NewGame is m_IsActive: 0 in the original prefab, therefore absent here.
 	# The active children retain their original prefab order and overlap spacing.
-	_add_source_button(group, "Settings", "Settings", 0, false, Callable())
+	_add_source_button(group, "Settings", "Settings", 0, true, settings_requested.emit)
 	_add_source_button(group, "EndGame", "End Game", 1, true, end_game_requested.emit)
 	_add_source_button(group, "SaveAndExit", "Main Menu", 2, true, main_menu_requested.emit)
 	_add_source_button(group, "Return", "Return", 3, true, return_requested.emit)
@@ -95,7 +96,7 @@ func _add_source_button(
 	button.disabled = not interactable
 	button.focus_mode = Control.FOCUS_NONE
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND if interactable else Control.CURSOR_ARROW
-	button.tooltip_text = "SettingsController 尚未迁移；此原作入口暂不能执行。" if not interactable else ""
+	button.tooltip_text = ""
 	group.add_child(button)
 	if interactable:
 		button.pressed.connect(callback)

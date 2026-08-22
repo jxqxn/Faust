@@ -7,6 +7,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const ESCGamePanel = preload("res://ui/esc_game_panel.gd")
+const SettingsPanel = preload("res://ui/settings_panel.gd")
 const GLOBAL_MODAL_Z := 1000
 
 # Transitional compat layer: screens not yet re-emitted in the original
@@ -24,6 +25,7 @@ var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
+var _settings_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
 var _user_archive_name_input: LineEdit
@@ -248,9 +250,29 @@ func _show_game_menu() -> void:
 	_menu_overlay.return_requested.connect(_close_game_menu)
 	_menu_overlay.end_game_requested.connect(_on_end_game_from_esc)
 	_menu_overlay.main_menu_requested.connect(_on_main_menu_from_esc)
+	_menu_overlay.settings_requested.connect(_show_settings)
 	# ESCPanel is a direct GameScene Prompt child, never a 1280x800 legacy
 	# surface. [SRC: GameScene.unity MainUI/Prompt/ESCPanel]
 	add_child(_menu_overlay)
+
+
+func _show_settings() -> void:
+	if _settings_overlay != null:
+		return
+	# ESCGameController.OnSettings calls SettingsController.ShowSettings(false).
+	# Keep the ESC panel beneath the source SettingsPanel; closing settings
+	# therefore returns directly to the same paused ESC surface.
+	_settings_overlay = SettingsPanel.new()
+	_settings_overlay.setup(_audio)
+	_settings_overlay.closed.connect(_close_settings)
+	add_child(_settings_overlay)
+
+
+func _close_settings() -> void:
+	if _settings_overlay == null:
+		return
+	_settings_overlay.queue_free()
+	_settings_overlay = null
 
 
 ## Texture-first: the original common-operation menu surface.
@@ -437,6 +459,7 @@ func _confirm_delete_user_archive(index: int) -> void:
 
 
 func _close_game_menu() -> void:
+	_close_settings()
 	_set_gameplay_presentation_frozen(false)
 	_set_world_scene_blocker("game_menu", false, false)
 	if _menu_overlay == null:

@@ -7,6 +7,7 @@ class_name GameAudio
 extends Node
 
 const AUDIO_DIR := "res://assets/original/audio/"
+const AppSettings = preload("res://ui/game_application_settings.gd")
 
 const BGM_TRACKS := {
 	"main": "main_game_level1.ogg",
@@ -34,6 +35,7 @@ const SUDAN_DRAW_CUES := {
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_active = self
+	AppSettings.load_preferences()
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.name = "BgmPlayer"
 	_bgm_player.bus = "Master"
@@ -43,6 +45,24 @@ func _ready() -> void:
 		player.name = "SfxPlayer%d" % i
 		add_child(player)
 		_sfx_players.append(player)
+	set_music_settings(AppSettings.music_value, AppSettings.music_state == AppSettings.STATE_ON)
+	set_sound_settings(AppSettings.sound_value, AppSettings.sound_state == AppSettings.STATE_ON)
+
+
+## Source settings use linear values in the inclusive 0..100 range, then
+## apply enabled/disabled state separately. [SRC: MusicSliderController.c @
+## SldOnClick/BtnOnClick (0x56c2c0/0x56bce0); SoundSliderController.c @
+## SldOnClick/BtnOnClick (0x5ad100/0x5acb20)]
+func set_music_settings(value: float, enabled: bool) -> void:
+	if _bgm_player == null:
+		return
+	_bgm_player.volume_db = linear_to_db(maxf(value, 0.0001) / 100.0) if enabled else -80.0
+
+
+func set_sound_settings(value: float, enabled: bool) -> void:
+	var db := linear_to_db(maxf(value, 0.0001) / 100.0) if enabled else -80.0
+	for player in _sfx_players:
+		player.volume_db = db
 
 
 func play_bgm(track: String) -> void:

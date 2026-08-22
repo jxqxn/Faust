@@ -787,7 +787,32 @@ func test_game_menu_replays_source_esc_geometry_and_end_game_call_chain():
 	assert_eq(settings.size, Vector2(405, 174), "source ESC buttons retain their authored dimensions")
 	assert_eq(settings.position, Vector2(308, 0), "Settings starts the active source layout sequence")
 	assert_eq(end_game.position, Vector2(308, 94), "source layout keeps the -80px vertical overlap")
-	assert_true(settings.disabled, "the missing SettingsController host is explicit, not an invented action")
+	assert_false(settings.disabled, "ESCGameController.OnSettings must reach its source SettingsController host")
+	settings.pressed.emit()
+	await wait_process_frames(1)
+	var settings_panel := _find_node_by_name(game, "SettingsController") as Control
+	assert_not_null(settings_panel, "source SettingsController opens above the ESC panel")
+	if settings_panel != null:
+		var source_settings := _find_node_by_name(settings_panel, "SettingsPanel") as Control
+		var panel_bg := _find_node_by_name(settings_panel, "PanelBG") as Control
+		var music := _find_node_by_name(settings_panel, "MusicVolume") as Control
+		var sound := _find_node_by_name(settings_panel, "SoundVolume") as Control
+		assert_not_null(source_settings)
+		assert_not_null(panel_bg)
+		assert_not_null(music)
+		assert_not_null(sound)
+		if source_settings != null:
+			assert_eq(source_settings.size, Vector2(1920, 1080), "SettingsPanel retains the source canvas")
+			assert_eq(source_settings.scale, Vector2(2, 2), "SettingsPanel retains the source root scale")
+		if panel_bg != null:
+			assert_eq(panel_bg.size, Vector2(1788, 1200), "PanelBG replays its source prefab dimensions")
+		if music != null:
+			assert_eq(music.position, Vector2(0, 0), "MusicVolume remains first in SliderGroup")
+		if sound != null:
+			assert_eq(sound.position, Vector2(0, 80.5), "SoundVolume keeps the source 30.5px row separation")
+		settings_panel.closed.emit()
+		await wait_process_frames(1)
+		assert_null(_find_node_by_name(game, "SettingsController"), "SettingsController.OnClose returns to ESCPanel")
 
 	end_game.pressed.emit()
 	await wait_process_frames(1)
