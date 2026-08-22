@@ -512,7 +512,9 @@ func _apply_layout() -> void:
 
 
 ## [SRC: GameScene Prestige — 1000x264 at top 30% width; bg line 1020x157
-##       top-left; slots 7100001..7100006 prestige_bg 231x252 staggered]
+##       top-left; slots 7100001..7100006 prestige_bg 231x252 with the
+##       authored anchor/pivot mix ((0,1)/(0,0) + pivot (0.52,0.94)); the
+##       Godot rects below fold that pivot into the top-left origin.]
 func _build_prestige_strip() -> void:
 	_prestige_strip = Control.new()
 	_prestige_strip.name = "Prestige"
@@ -522,18 +524,30 @@ func _build_prestige_strip() -> void:
 	var line_tex := _sprite_child("res://assets/original/ui/line.png", Vector2(1020, 157))
 	line_tex.position = Vector2(0, 0)
 	_prestige_strip.add_child(line_tex)
-	var slot_offsets := [
-		Vector2(40, 0), Vector2(224, 10.1), Vector2(411.1, -14), Vector2(593.4, -19.4),
-		Vector2(726.2, -46.2), Vector2(872, 7),
+	var slot_rects := [
+		Rect2(-80.12, -8.62, 231, 252),
+		Rect2(103.88, -5.02, 231, 252),
+		Rect2(290.98, 22.88, 231, 252),
+		Rect2(473.28, -4.52, 231, 252),
+		Rect2(606.08, -9.32, 231, 252),
+		Rect2(751.88, 43.88, 231, 252),
 	]
-	for i in range(slot_offsets.size()):
+	for i in range(slot_rects.size()):
 		var slot := Control.new()
 		slot.name = "PrestigeSlot710000%d" % (i + 1)
-		slot.position = slot_offsets[i]
-		slot.size = Vector2(231, 252)
+		slot.position = slot_rects[i].position
+		slot.size = slot_rects[i].size
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var icon := _sprite_child("res://assets/original/ui/prestige_bg.png", Vector2(231, 252))
 		slot.add_child(icon)
+		# [SRC: Prestige/710000N/Icon — 710000N art 231x242 at (0,-3.77)]
+		var medal := _sprite_child(
+			"res://assets/original/ui/710000%d.png" % (i + 1),
+			Vector2(231, 242)
+		)
+		medal.set_anchors_preset(Control.PRESET_CENTER)
+		medal.position = Vector2(0, -3.77) - medal.size * 0.5
+		slot.add_child(medal)
 		var value := Label.new()
 		value.name = "Value"
 		value.text = "0"

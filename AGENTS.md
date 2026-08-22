@@ -46,6 +46,16 @@
 
 ## 当前进度
 
+**2026-08-22 声望条槽位几何对拍修正（批次 AI，61/61 UI 组全绿）：**
+`_build_prestige_strip` 六槽按 `docs/ui_layout/GameScene.md` 的
+MainUI/Prestige/710000N 行修正：原实现把 authored `pos` 当左上角直接摆放，
+全部错位（7100001 该在 strip 左外 −80.12、x+40 的是错值）；现按行的
+anchor/pivot 混合（7100001 锚 (0,1)+(−6.5)，其余 (0,0)+各 y；pivot 恒
+(0.52,0.94)）折叠出左上角矩形（−80.12/−8.62 … 751.88/43.88），并补上
+710000N 勋章贴图（231×242 @ (0,−3.77)）与计数标签（原作计数显示为
+Image/Count 精灵，宿主保持标签视图 🟡）。测试
+`test_prestige_slots_replay_source_pivot_geometry`。
+
 **2026-08-22 改名提示 PromptChangeName 1:1（批次 AH，60/60 UI 组全绿）：**
 改名操作从旧遗传暗盒迁到 `ui/change_name_view.gd`（ChangeNameView，挂
 `GameScreen._source_overlay_layer`）：`PromptChangeName` 源几何——PromptBG

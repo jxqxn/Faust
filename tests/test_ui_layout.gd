@@ -1763,6 +1763,33 @@ func test_change_name_replays_source_geometry():
 		assert_almost_eq(border.size.y, 324.0, 0.1, "Border keeps the decorate 236x324")
 
 
+func test_prestige_slots_replay_source_pivot_geometry():
+	# [SRC: docs/ui_layout/GameScene.md MainUI/Prestige rows — slots use the
+	# authored anchor/pivot mix ((0,1)/(0,0) + pivot (0.52,0.94)); the rects
+	# below fold that pivot into a top-left origin.]
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(17))
+	var stage := _stage(Vector2(3840, 2160))
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(18))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var expected := [
+		Vector2(-80.12, -8.62), Vector2(103.88, -5.02), Vector2(290.98, 22.88),
+		Vector2(473.28, -4.52), Vector2(606.08, -9.32), Vector2(751.88, 43.88),
+	]
+	for i in range(6):
+		var slot := _find_node_by_name(screen, "PrestigeSlot710000%d" % (i + 1)) as Control
+		assert_not_null(slot, "prestige slot %d should exist" % (i + 1))
+		if slot != null:
+			assert_almost_eq(slot.position.x, expected[i].x, 0.1, "slot %d keeps the authored pivot-folded x" % (i + 1))
+			assert_almost_eq(slot.position.y, expected[i].y, 0.1, "slot %d keeps the authored pivot-folded y" % (i + 1))
+			assert_almost_eq(slot.size.x, 231.0, 0.1, "slot %d keeps prestige_bg 231 width" % (i + 1))
+			assert_almost_eq(slot.size.y, 252.0, 0.1, "slot %d keeps prestige_bg 252 height" % (i + 1))
+			assert_not_null(_find_node_by_name(slot, "Value"), "slot %d keeps its count label" % (i + 1))
+
+
 func test_rite_view_replays_source_canvas_geometry():
 	var rng := RNG.new(2)
 	var state := GameState.new()
