@@ -1,4 +1,4 @@
-﻿## Main in-game desk screen.
+## Main in-game desk screen.
 ## The tabletop SituationDesk is the single play surface; the shared rail,
 ## queue surfaces, and day controls remain persistent.
 extends Control
@@ -15,6 +15,7 @@ signal menu_pressed()
 signal game_over_requested()
 
 const MapControllerScript = preload("res://ui/map_controller.gd")
+const CardInfoViewScript = preload("res://ui/card_info_view.gd")
 
 class HandRailDrop:
 	extends Control
@@ -92,11 +93,9 @@ var _right_actions: Control
 var _advance_button: Button
 var _redraw_button: Button
 var _back_to_prev_button: Button
-var _card_detail_overlay: Control
-var _card_detail_panel: Panel
+var _card_info_view = null
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
-var _detail_card_type := ""
 var _event_overlay: Control
 var _event_panel: Panel
 var _rename_input: LineEdit
@@ -468,7 +467,6 @@ func _apply_layout() -> void:
 	_card_items.custom_minimum_size = Vector2.ZERO
 	call_deferred("_layout_hand_cards")
 	_layout_situation_desk(k.y)
-	_layout_card_detail(legacy_k, view_size)
 	_layout_event_prompt(legacy_k, view_size)
 
 
@@ -1644,7 +1642,7 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	) or (
 		card_uid <= 0 and _card_detail_card_uid <= 0 and _card_detail_card_id == card_id
 	)
-	if _card_detail_overlay != null and same_card:
+	if _card_info_view != null and is_instance_valid(_card_info_view) and same_card:
 		close_card_detail()
 		return
 	close_card_detail()
@@ -1656,140 +1654,28 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	#       -> OnCardInfoOpenEnd on close; report 6 A5]
 	if _state != null and _state.has_method("trigger_events"):
 		_state.trigger_events("open_card_info", {"card": card_id, "card_uid": card_uid})
-	_card_detail_overlay = Control.new()
-	_card_detail_overlay.name = "CardDetailOverlay"
-	_card_detail_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_card_detail_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_card_detail_overlay.z_index = OVERLAY_LAYER_Z
-	add_child(_card_detail_overlay)
+	# CardInfoNew source panel (2510x1077 on the 3840x2160 canvas) as built by
+	# ui/card_info_view.gd; geometry from docs/ui_layout/CardInfoNew.md.
+	# [SRC: CardInfoNew.prefab + CardInfoNewController.c Show 0x537000]
+	if _card_info_view == null or not is_instance_valid(_card_info_view):
+		_card_info_view = CardInfoViewScript.new()
+		_card_info_view.name = "CardDetailOverlay"
+		_card_info_view.z_index = OVERLAY_LAYER_Z + 1
+		_card_info_view.setup(_state, _db)
+		if _source_overlay_layer != null:
+			_source_overlay_layer.add_child(_card_info_view)
+		else:
+			add_child(_card_info_view)
+		if not _card_info_view.closed.is_connected(close_card_detail):
+			_card_info_view.closed.connect(close_card_detail)
 	set_world_scene_blocker("card_detail", true)
-
-	_card_detail_panel = Panel.new()
-	_card_detail_panel.name = "CardDetailPanel"
-	_card_detail_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_card_detail_panel.clip_contents = true
-	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
-	_card_detail_overlay.add_child(_card_detail_panel)
-	# Texture-first: the per-type cardinfo art drives the 9-slice surface
-	# (see _detail_panel_style / _detail_backdrop_texture).
-	# [SRC: Texture2D/cardinfo_bg_char.png / cardinfo_bg_item.png / cardinfo_bg.png]
-	_detail_card_type = str(card.get("type", ""))
-	_card_detail_panel.add_theme_stylebox_override("panel", _detail_panel_style())
-
-	var root := VBoxContainer.new()
-	root.name = "CardDetailContent"
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 18
-	root.offset_top = 18
-	root.offset_right = -18
-	root.offset_bottom = -18
-	root.add_theme_constant_override("separation", 8)
-	_card_detail_panel.add_child(root)
-
-	var top_row := HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 12)
-	root.add_child(top_row)
-
-	var badge := Label.new()
-	badge.name = "CardDetailBadge"
-	badge.text = _rarity_badge(card)
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	badge.custom_minimum_size = Vector2(64, 64)
-	badge.add_theme_font_size_override("font_size", 28)
-	badge.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	badge.add_theme_stylebox_override("normal", _badge_style())
-	top_row.add_child(badge)
-
-	var title_box := VBoxContainer.new()
-	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_theme_constant_override("separation", 6)
-	top_row.add_child(title_box)
-
-	var name_label := Label.new()
-	name_label.name = "CardDetailName"
-	name_label.text = str(card.get("name", "?"))
-	name_label.add_theme_font_size_override("font_size", 26)
-	name_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	title_box.add_child(name_label)
-
-	var subtitle := Label.new()
-	subtitle.name = "CardDetailSubtitle"
-	var perspective_role: String = (
-		_state.card_perspective_role(card_uid if card_uid > 0 else int(card.get("id", 0)), _db)
-		if _state != null and _state.has_method("card_perspective_role")
-		else ""
-	)
-	subtitle.text = "%s  ·  %s  %s" % [
-		perspective_role,
-		CardWidget._type_label(str(card.get("type", ""))),
-		str(card.get("title", "")),
-	]
-	subtitle.add_theme_font_size_override("font_size", 16)
-	subtitle.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
-	title_box.add_child(subtitle)
-
-	var text := Label.new()
-	text.name = "CardDetailDescription"
-	text.text = str(card.get("text", card.get("tips", "")))
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.clip_text = true
-	text.custom_minimum_size = Vector2(460, 46)
-	text.add_theme_font_size_override("font_size", 17)
-	text.add_theme_color_override("font_color", FaustTheme.TEXT)
-	title_box.add_child(text)
-
-	var close := Button.new()
-	close.name = "CloseCardDetailButton"
-	close.text = ""
-	close.tooltip_text = "关闭"
-	close.custom_minimum_size = Vector2(42, 42)
-	close.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	# The original close_1 stamp IS the button face.
-	# [SRC: Texture2D/close_1.png 80x80; GameScene Close -> close_1]
-	var close_style := _close_button_style()
-	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
-		close.add_theme_stylebox_override(state_name, close_style)
-	close.pressed.connect(close_card_detail)
-	top_row.add_child(close)
-
-	var body := HBoxContainer.new()
-	body.add_theme_constant_override("separation", 16)
-	root.add_child(body)
-
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	info.add_theme_constant_override("separation", 8)
-	body.add_child(info)
-	_add_detail_section(info, "属性", _attribute_lines(card))
-	_add_detail_section(info, "标签", _tag_lines(card))
-	_add_detail_section(info, "装备", _equipment_lines(card))
-
-	# Card art fills the portrait side; the original cardinfo popup shows the
-	# full card painting, with the type icon standing in when the card ships
-	# without art. [SRC: Texture2D/cards/<id>.png; card_type_char/item/sudan]
-	var portrait := TextureRect.new()
-	portrait.name = "CardDetailPortrait"
-	portrait.custom_minimum_size = Vector2(140, 150)
-	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var art_path := "res://assets/original/cards/%d.png" % int(card.get("id", 0))
-	if ResourceLoader.exists(art_path):
-		portrait.texture = load(art_path) as Texture2D
-	elif ResourceLoader.exists("res://assets/original/ui/card_type_%s.png" % str(card.get("type", "item"))):
-		portrait.texture = load(
-			"res://assets/original/ui/card_type_%s.png" % str(card.get("type", "item"))
-		) as Texture2D
-	if portrait.texture == null:
-		portrait.texture = load("res://assets/original/ui/card_type_item.png") as Texture2D
-	body.add_child(portrait)
-
+	_card_info_view.show_card(card, card_uid)
+	_apply_layout()
 	_apply_layout()
 
 
 func close_card_detail() -> void:
-	if _card_detail_overlay == null:
+	if _card_info_view == null or not is_instance_valid(_card_info_view):
 		set_world_scene_blocker("card_detail", false)
 		_card_detail_card_id = 0
 		_card_detail_card_uid = 0
@@ -1800,16 +1686,15 @@ func close_card_detail() -> void:
 		_state.trigger_events("open_card_info_end", {
 			"card": _card_detail_card_id, "card_uid": _card_detail_card_uid,
 		})
-	var old_overlay := _card_detail_overlay
-	_card_detail_overlay = null
-	_card_detail_panel = null
+	var old_view = _card_info_view
+	_card_info_view = null
 	_card_detail_card_id = 0
 	_card_detail_card_uid = 0
 	_sync_card_selection_visuals()
-	if old_overlay.get_parent() != null:
-		old_overlay.get_parent().remove_child(old_overlay)
+	if old_view.get_parent() != null:
+		old_view.get_parent().remove_child(old_view)
 	set_world_scene_blocker("card_detail", false)
-	old_overlay.queue_free()
+	old_view.queue_free()
 
 
 func _sync_card_selection_visuals(selected_uid: int = 0, selected_id: int = 0) -> void:
@@ -1823,173 +1708,3 @@ func _sync_card_selection_visuals(selected_uid: int = 0, selected_id: int = 0) -
 		if selected_uid <= 0 and selected_id > 0:
 			matches = widget.card_id == selected_id
 		widget.set_selected(matches)
-
-
-func _layout_card_detail(s: float, view_size: Vector2) -> void:
-	if _card_detail_panel == null:
-		return
-	var panel_w: float = min(view_size.x - 360 * s, 690 * s)
-	var panel_h: float = 340 * s
-	var panel_x: float = (view_size.x - panel_w) * 0.5
-	var panel_y: float = 108 * s
-	_set_rect(_card_detail_panel, Rect2(Vector2(panel_x, panel_y), Vector2(panel_w, panel_h)))
-
-
-func _add_detail_section(parent: VBoxContainer, title_text: String, lines: Array[String]) -> void:
-	var title := Label.new()
-	title.text = title_text
-	title.add_theme_font_size_override("font_size", 17)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD)
-	parent.add_child(title)
-
-	var text := Label.new()
-	text.text = "\n".join(lines) if not lines.is_empty() else "无"
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.add_theme_font_size_override("font_size", 16)
-	text.add_theme_color_override("font_color", FaustTheme.TEXT)
-	parent.add_child(text)
-
-
-func _attribute_lines(card: Dictionary) -> Array[String]:
-	var tag: Dictionary = card.get("tag", {})
-	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
-	var lines: Array[String] = []
-	var row: Array[String] = []
-	for attr in attrs:
-		var value := int(tag.get(attr, 0))
-		if value == 0:
-			continue
-		row.append("%s  %d" % [attr, value])
-		if row.size() == 3:
-			lines.append("    ".join(row))
-			row.clear()
-	if not row.is_empty():
-		lines.append("    ".join(row))
-	return lines
-
-
-func _tag_lines(card: Dictionary) -> Array[String]:
-	var tag: Dictionary = card.get("tag", {})
-	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
-	var visible_tags: Array[String] = []
-	for key in tag.keys():
-		if key in attrs:
-			continue
-		if int(tag[key]) != 0:
-			visible_tags.append(str(key))
-	if visible_tags.is_empty():
-		return []
-	return [" ".join(visible_tags.slice(0, 10))]
-
-
-func _equipment_lines(card: Dictionary) -> Array[String]:
-	var lines: Array[String] = []
-	for equipment in card.get("equipped_cards", []):
-		if not (equipment is Dictionary):
-			continue
-		var slot := str(equipment.get("equipped_slot", ""))
-		var name := str(equipment.get("name", equipment.get("id", "?")))
-		lines.append("%s：%s" % [slot if not slot.is_empty() else "附着", name])
-	return lines
-
-
-func _rarity_badge(card: Dictionary) -> String:
-	var rare := clampi(int(card.get("rare", 0)), 0, 5)
-	if rare <= 0:
-		return "铜"
-	if rare == 1:
-		return "铜"
-	if rare == 2:
-		return "银"
-	if rare == 3:
-		return "金"
-	return "星"
-
-
-func _detail_panel_style() -> StyleBox:
-	# Texture-first: original cardinfo art is the surface (set per card type
-	# by the caller); authored dark box only without art.
-	var art := _detail_backdrop_texture()
-	if art != null:
-		var style := StyleBoxTexture.new()
-		style.texture = art
-		style.texture_margin_left = 90
-		style.texture_margin_right = 90
-		style.texture_margin_top = 70
-		style.texture_margin_bottom = 70
-		style.content_margin_left = 96
-		style.content_margin_right = 96
-		style.content_margin_top = 76
-		style.content_margin_bottom = 76
-		return style
-	var flat := FaustTheme.card_style(FaustTheme.GOLD)
-	flat.bg_color = Color(0.05, 0.045, 0.035, 0.94)
-	flat.set_content_margin_all(18)
-	flat.border_width_left = 2
-	flat.border_width_right = 2
-	flat.border_width_top = 2
-	flat.border_width_bottom = 2
-	return flat
-
-
-func _detail_backdrop_texture() -> Texture2D:
-	# Current card's type backdrop for the 9-slice detail surface.
-	# [SRC: Texture2D/cardinfo_bg_char.png / cardinfo_bg_item.png / cardinfo_bg.png]
-	var name := "cardinfo_bg"
-	match str(_detail_card_type):
-		"char": name = "cardinfo_bg_char"
-		"item": name = "cardinfo_bg_item"
-	var path := "res://assets/original/ui/%s.png" % name
-	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
-	return null
-
-
-func _badge_style() -> StyleBox:
-	# The original card-info tag plate IS the badge surface.
-	# [SRC: Texture2D/card_info_tag.png 52x56]
-	var art_path := "res://assets/original/ui/card_info_tag.png"
-	if ResourceLoader.exists(art_path):
-		var tex := load(art_path) as Texture2D
-		if tex != null:
-			var style := StyleBoxTexture.new()
-			style.texture = tex
-			style.texture_margin_left = 14
-			style.texture_margin_right = 14
-			style.texture_margin_top = 14
-			style.texture_margin_bottom = 14
-			style.content_margin_left = 16
-			style.content_margin_right = 16
-			style.content_margin_top = 16
-			style.content_margin_bottom = 16
-			return style
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("#e9edf1")
-	style.border_color = FaustTheme.GOLD
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(34)
-	style.set_content_margin_all(8)
-	return style
-
-
-## The shared original close stamp (close_1) as a button surface.
-## [SRC: Texture2D/close_1.png 80x80; GameScene Close -> close_1]
-func _close_button_style() -> StyleBox:
-	var art_path := "res://assets/original/ui/close_1.png"
-	if ResourceLoader.exists(art_path):
-		var tex := load(art_path) as Texture2D
-		if tex != null:
-			var style := StyleBoxTexture.new()
-			style.texture = tex
-			style.texture_margin_left = 26
-			style.texture_margin_right = 26
-			style.texture_margin_top = 26
-			style.texture_margin_bottom = 26
-			return style
-	var flat := StyleBoxFlat.new()
-	flat.bg_color = Color("#17110d")
-	flat.border_color = FaustTheme.GOLD
-	flat.set_border_width_all(2)
-	flat.set_corner_radius_all(24)
-	flat.set_content_margin_all(4)
-	return flat

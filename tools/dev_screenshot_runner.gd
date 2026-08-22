@@ -45,6 +45,11 @@ func _ready() -> void:
 		var screen: Node = main.get("_game_screen")
 		if screen != null and screen.has_method("refresh"):
 			screen.call("refresh")
+		if args.has("--card-detail"):
+			var state_c = main.get("state")
+			var db_c = main.get("db")
+			if screen != null and state_c != null and not state_c.hand.is_empty() and screen.has_method("show_card_detail"):
+				screen.call("show_card_detail", int(state_c.hand[0]))
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

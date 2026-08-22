@@ -5,6 +5,7 @@ const MainMenu = preload("res://ui/main_menu.gd")
 const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
+const CardInfoView = preload("res://ui/card_info_view.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -1673,6 +1674,81 @@ func test_rite_view_replays_source_canvas_geometry():
 	if title_panel != null:
 		assert_eq(title_panel.position, Vector2(2199, 535), "template title_pos is replayed under Position")
 		assert_eq(title_panel.size, Vector2(1148, 1124), "RitePanelTitle keeps its original source size")
+
+
+func test_card_info_replays_source_geometry():
+	# [SRC: docs/ui_layout/CardInfoNew.md — every authored RectTransform value
+	# below comes straight from the prefab truth table.]
+	var rng := RNG.new(3)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage(Vector2(3840, 2160))
+	var view = CardInfoView.new()
+	view.setup(state, db)
+	stage.add_child(view)
+	await wait_process_frames(2)
+	var hand_uid := int(state.hand[0])
+	view.show_card(state.card_data_for(hand_uid, db), hand_uid)
+	await wait_process_frames(1)
+
+	var canvas := _find_node_by_name(view, "CardInfoCanvas") as Control
+	var panel := _find_node_by_name(view, "CardDetailPanel") as Control
+	var panel_bg := _find_node_by_name(view, "PanelBackground") as Control
+	var name_label := _find_node_by_name(view, "CardDetailName") as Control
+	var content := _find_node_by_name(view, "CardDetailContent") as Control
+	var rare_bg := _find_node_by_name(view, "RareBG") as Control
+	var tag_area := _find_node_by_name(view, "TagInfo") as Control
+	var icon_mask := _find_node_by_name(view, "MainIconMask") as Control
+	var equip_area := _find_node_by_name(view, "Equips") as Control
+	var equip_state := _find_node_by_name(view, "EquipState") as Control
+	var close := _find_node_by_name(view, "CloseCardDetailButton") as Control
+	var decorate := _find_node_by_name(view, "BottomDecorate") as Control
+	assert_not_null(canvas, "CardInfoNew should retain a fixed source canvas")
+	assert_not_null(panel, "card info should render as the source panel, not a standalone screen")
+	assert_not_null(name_label, "the original Name node should exist")
+	assert_not_null(content, "the original Content node should exist")
+	assert_not_null(rare_bg, "the original RareBG node should exist")
+	assert_not_null(tag_area, "the original TagInfo column should exist")
+	assert_not_null(icon_mask, "the original MainIconMask should exist")
+	assert_not_null(equip_area, "the original Equips area should exist")
+	assert_not_null(close, "the original Close button should exist")
+	assert_not_null(decorate, "the original BottomDecorate ornament should exist")
+	if canvas != null:
+		assert_eq(canvas.size, Vector2(3840, 2160), "CardInfoNew retains its original design canvas")
+	if panel != null:
+		assert_eq(panel.position, Vector2((3840.0 - 2510.0) * 0.5, (2160.0 - 1077.0) * 0.5), "CardInfoNew panel is centred on the MainUI canvas")
+		assert_eq(panel.size, Vector2(2510, 1077), "CardInfoNew panel keeps its original 2510x1077 size")
+	if panel_bg != null:
+		assert_eq(panel_bg.position, Vector2.ZERO, "panel background fills the source panel")
+		assert_eq(panel_bg.size, Vector2(2510, 1077), "bg_7 stretches over the whole panel")
+	if name_label != null:
+		assert_almost_eq(name_label.position.x, 1911.0, 0.1, "Name keeps its authored left offset")
+		assert_almost_eq(name_label.position.y, 89.0, 0.1, "Name keeps its authored top offset")
+		assert_almost_eq(name_label.size.x, 435.55, 0.1, "Name keeps its authored width")
+		assert_almost_eq(name_label.size.y, 71.58, 0.1, "Name keeps its authored height")
+	if content != null:
+		assert_almost_eq(content.position.x, 270.0, 0.1, "Content resolves to its authored (0,1)-(1,1) rect")
+		assert_almost_eq(content.position.y, 80.0, 0.1, "Content sits 80px below the panel top")
+		assert_almost_eq(content.size.x, 1550.0, 0.1, "Content width is 2510-960")
+		assert_almost_eq(content.size.y, 185.0, 0.1, "Content keeps its authored height")
+	if rare_bg != null:
+		assert_almost_eq(rare_bg.size.x, 147.0, 0.1, "RareBG keeps the rare_stone 147x249 geometry")
+		assert_almost_eq(rare_bg.size.y, 249.0, 0.1, "RareBG keeps the rare_stone 147x249 geometry")
+	if tag_area != null:
+		assert_almost_eq(tag_area.size.x, 1336.7, 0.1, "TagInfo keeps its authored 1336.7x647.76 width")
+		assert_almost_eq(tag_area.size.y, 647.76, 0.1, "TagInfo keeps its authored 1336.7x647.76 height")
+	if icon_mask != null:
+		assert_almost_eq(icon_mask.size.x, 1000.0, 0.1, "MainIconMask keeps its authored 1000x1100")
+		assert_almost_eq(icon_mask.size.y, 1100.0, 0.1, "MainIconMask keeps its authored 1000x1100")
+	if equip_area != null:
+		assert_almost_eq(equip_area.size.x, 402.65, 0.1, "Equips keeps its authored 402.65x500.57 width")
+		assert_almost_eq(equip_area.size.y, 500.57, 0.1, "Equips keeps its authored 402.65x500.57 height")
+	if close != null:
+		assert_almost_eq(close.size.x, 80.0, 0.1, "Close keeps the checkbox_bg 80x82")
+		assert_almost_eq(close.size.y, 82.0, 0.1, "Close keeps the checkbox_bg 80x82")
+	if decorate != null:
+		assert_almost_eq(decorate.size.x, 250.0, 0.1, "BottomDecorate keeps the decorate 250x323")
+		assert_almost_eq(decorate.size.y, 323.0, 0.1, "BottomDecorate keeps the decorate 250x323")
 
 
 ## The real new-run entry fires the opening round_begin_ba chain (intro

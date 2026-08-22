@@ -46,6 +46,28 @@
 
 ## 当前进度
 
+**2026-08-22 卡牌详情 CardInfoNew 1:1（批次 AF，386 测试 / 2516 断言全绿）：**
+卡牌详情从旧自制 690×340 暗盒迁到 `ui/card_info_view.gd`（CardInfoView，挂
+`GameScreen._source_overlay_layer`）：源 `CardInfoNew` 2510×1077 居中面板 + `bg_7`
+整幅板面；Name（(1911,-89)/435.55×71.58）与 TypeIcon（36×58@1.5 + fs30 标题）、
+Content（(270,80)/1550×185 fs34，custom_text‖config.text+占位符）、RareBG
+（rare_stone 147×249 + CARD_RARE_1..4 石/铜/银/金 fs60）、TagInfo 左列
+（1336.7×647.76 属性/标签两栏）、MainIconMask（1000×1100 + 471×1028 立绘）、
+Equips（402.65×500.57 已装配列表）+ EquipState、Close（checkbox_bg 80×82 +
+close_2）、BottomDecorate（decorate 250×323）、HelpButton → Help 浮层
+（card_info 四条 CARD_INFO_HELP_* 气泡，zhTW→简体）。几何来自新导出真值表
+`docs/ui_layout/{CardInfoNew,CardAttribute,CardEquipSlot,PromptNew}.{md,json}`
+（tools/export_ui_layout.gd 直读语料 prefab），`_unity_rect` 把 anchors/pos/
+sizeDelta/pivot 精确换算为 Godot Rect2（y 翻转；Content 行验证 Rect2(270,80,1550,185)）。
+新增 UI 资产 bg_7/card_info/decorate/close_2/rare_{stone,copper,silver,gold}/
+equip_slot/help_button。测试 `test_card_info_replays_source_geometry`（UI 组 58 全绿、
+零 orphan/泄漏）。**修正**：旧 `_rarity_badge`（稀有 0/1→铜）按 ui.json
+CARD_RARE_1..4 改为 1=石/2=铜/3=银/4=金；`Card.custom_text@0x58` 优先于
+config.text 由原 Show 0x537000 确认。留档 🟡：TagNode 属性/标签分组旗标未精确
+验证（沿用现有数据视图）、RareIcon 列表未定位、Equips 内容（已装配 vs 可装）待
+验证、事件提示浮层仍为旧 PromptNew 未迁（建议下一批）。截图
+`docs/ui_layout/cardinfo_screenshot.png`（dev_screenshot_runner 新增 `--card-detail`）。
+
 **2026-08-19 GameScene 桌面 chrome + 手牌带 1:1（批次 Q，386 测试 / 2428 断言全绿）：**
 `game_screen` 直接进入 3840×2160 画布（不再走 LegacyLayer），按 GameScene 真值表重摆：
 处决日条、菜单、苏丹盒、声望条、手牌底图/轨道与下一天怀表；各数值、尺寸和锚点都回指
