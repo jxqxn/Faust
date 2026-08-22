@@ -53,6 +53,16 @@ func _ready() -> void:
 		if args.has("--main-help"):
 			if screen != null and screen.has_method("_toggle_main_help"):
 				screen.call("_toggle_main_help")
+		if args.has("--change-name"):
+			var state_c = main.get("state")
+			if screen != null and state_c != null and not state_c.hand.is_empty() and state_c.has_method("queue_operation"):
+				state_c.queue_operation("rename_card", "rename.shot", {
+					"card_uid": int(state_c.hand[0]),
+					"title": "为卡牌命名",
+					"text": "输入一个名字。",
+					"initial_text": "",
+				})
+				screen.call("refresh")
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

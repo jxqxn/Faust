@@ -17,6 +17,7 @@ signal game_over_requested()
 const MapControllerScript = preload("res://ui/map_controller.gd")
 const CardInfoViewScript = preload("res://ui/card_info_view.gd")
 const MainHelpViewScript = preload("res://ui/main_help.gd")
+const ChangeNameViewScript = preload("res://ui/change_name_view.gd")
 
 class HandRailDrop:
 	extends Control
@@ -95,6 +96,7 @@ var _advance_button: Button
 var _redraw_button: Button
 var _back_to_prev_button: Button
 var _main_help_view = null
+var _change_name_view = null
 var _main_help_button: Button
 var _card_info_view = null
 var _card_detail_card_id := 0
@@ -1325,6 +1327,8 @@ func _next_event_display() -> Dictionary:
 			"title": str(payload.get("title", "为卡牌命名")),
 			"text": str(payload.get("text", "")),
 			"initial_text": str(payload.get("initial_text", "")),
+			"card_uid": int(payload.get("card_uid", 0)),
+			"card_id": int(payload.get("card_id", 0)),
 		}
 	if kind == "sleep":
 		return {"kind": "sleep", "seconds": float(payload.get("seconds", 0.0))}
@@ -1343,6 +1347,9 @@ func _next_event_display() -> Dictionary:
 
 
 func _show_event_overlay(display: Dictionary) -> void:
+	if str(display.get("kind", "")) == "rename_card":
+		_show_change_name(display)
+		return
 	_clear_event_overlay()
 	set_world_scene_blocker("event_prompt", true)
 	_event_overlay = Control.new()
@@ -1498,6 +1505,14 @@ func _choice_icon_texture(resource_ref: String) -> Texture2D:
 
 
 func _clear_event_overlay() -> void:
+	# Rename prompts live on their own source surface.
+	if _change_name_view != null and is_instance_valid(_change_name_view):
+		var old_view = _change_name_view
+		_change_name_view = null
+		_rename_input = null
+		if old_view.get_parent() != null:
+			old_view.get_parent().remove_child(old_view)
+		old_view.queue_free()
 	if _event_overlay == null:
 		set_world_scene_blocker("event_prompt", false)
 		return
@@ -1664,6 +1679,67 @@ func _event_panel_style() -> StyleBox:
 	fallback.shadow_color = Color(0.01, 0.012, 0.03, 0.62)
 	fallback.shadow_size = 10
 	return fallback
+
+
+## Desktop help: MainHelpTrigger -> MainUI/MainHelp (source overlay).
+## Rename prompts use the original PromptChangeName surface.
+func _show_change_name(display: Dictionary) -> void:
+	_clear_event_overlay()
+	if _change_name_view == null or not is_instance_valid(_change_name_view):
+		_change_name_view = ChangeNameViewScript.new()
+		_change_name_view.name = "ChangeNameOverlay"
+		_change_name_view.z_index = OVERLAY_LAYER_Z + 1
+		if _source_overlay_layer != null:
+			_source_overlay_layer.add_child(_change_name_view)
+		else:
+			add_child(_change_name_view)
+		if not _change_name_view.submitted.is_connected(_consume_rename_input):
+			_change_name_view.submitted.connect(_consume_rename_input)
+		if not _change_name_view.cancelled.is_connected(_cancel_rename):
+			_change_name_view.cancelled.connect(_cancel_rename)
+	set_world_scene_blocker("event_prompt", true)
+	# The original PromptChangeNameController.Show fills Icon with the card art.
+	var card_uid := int(display.get("card_uid", 0))
+	var card_id := int(display.get("card_id", 0))
+	var art_id := card_id
+	if card_uid > 0 and _state != null:
+		var runtime_card: Dictionary = _state.card_data_for(card_uid, _db) if _state.has_method("card_data_for") else {}
+		if not runtime_card.is_empty():
+			art_id = int(runtime_card.get("id", card_id))
+	var art_path := "res://assets/original/cards/%d.png" % art_id
+	if ResourceLoader.exists(art_path):
+		_change_name_view.show_card_art(load(art_path) as Texture2D)
+	elif ResourceLoader.exists("res://assets/original/ui/card_type_item.png"):
+		_change_name_view.show_card_art(load("res://assets/original/ui/card_type_item.png") as Texture2D)
+	_change_name_view.initial_text(str(display.get("initial_text", "")))
+	# Keep the legacy rename field name for the existing consume path.
+	var rename_input := _find_node_by_name(_change_name_view, "CardRenameInput")
+	_rename_input = rename_input as LineEdit if rename_input is LineEdit else null
+
+
+func _consume_rename_input(text_value: String) -> void:
+	if _rename_input == null:
+		return
+	if _rename_input.text != text_value:
+		_rename_input.text = text_value
+	_consume_event_display()
+
+
+func _cancel_rename() -> void:
+	if _state != null and _state.has_method("consume_pending_operation"):
+		_state.consume_pending_operation()
+	_clear_event_overlay()
+	refresh()
+
+
+func _find_node_by_name(node: Node, target: String) -> Node:
+	if node.name == target:
+		return node
+	for child in node.get_children():
+		var found := _find_node_by_name(child, target)
+		if found != null:
+			return found
+	return null
 
 
 ## Desktop help: MainHelpTrigger -> MainUI/MainHelp (source overlay).

@@ -46,6 +46,21 @@
 
 ## 当前进度
 
+**2026-08-22 改名提示 PromptChangeName 1:1（批次 AH，60/60 UI 组全绿）：**
+改名操作从旧遗传暗盒迁到 `ui/change_name_view.gd`（ChangeNameView，挂
+`GameScreen._source_overlay_layer`）：`PromptChangeName` 源几何——PromptBG
+2534.4 宽条（prompt_bg）居中、"修改名称"（i18n `PROMPT_CHANGE_NAME_TITLE`）、
+InputField 826×90（input_bg + "请输入名称"占位）挂于条带下方（authored 锚点）、
+校验错误行 324×48、卡立绘 Icon 471×1028 右探、Border decorate 236×324、
+Confirm rite_op_confirm 325×158、Cancel rite_op_cancel 168×158+"取消" fs24。
+**修正偏差**：原 IsValidName 0x584de0 是 **1–20 字符**（0x15），旧克隆
+max_length=32 一并修到 20；取消=静默丢弃 op（DoClose 语义）。🟡 登记：
+PromptBG 高度 = ContentSizeFitter PreferredSize 无法静态解出，宿主用 220
+常量（子几何全部 authored 锚点数学，可单点替换）。测试
+`test_change_name_replays_source_geometry`（bar/输入/确认/取消/立绘/装饰几何
++ 20 字符上限）。截图 `docs/ui_layout/changename_screenshot.png`
+（dev_screenshot_runner 新增 `--change-name`）。
+
 **2026-08-22 桌面帮助按钮 + 主帮助浮层 1:1（批次 AG，59/59 UI 组全绿）：**
 `GameScreen` 新增 `MainHelpTrigger`（help_button 88×91，top-right (−70,−143.5)，
 z=50 位于局部模态之下，随 `Player.helpbtn_unshow`（batch N 旗标）显隐）→

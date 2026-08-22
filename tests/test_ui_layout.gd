@@ -7,6 +7,7 @@ const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const CardInfoView = preload("res://ui/card_info_view.gd")
 const MainHelpView = preload("res://ui/main_help.gd")
+const ChangeNameView = preload("res://ui/change_name_view.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -1708,6 +1709,58 @@ func test_main_help_replays_source_geometry_and_trigger():
 		overlay.closed.emit()
 		await wait_process_frames(1)
 		assert_null(_find_node_by_name(screen, "MainHelpOverlay"), "the help overlay closes on mask click")
+
+
+func test_change_name_replays_source_geometry():
+	# [SRC: docs/ui_layout/PromptChangeName.md — authored RectTransforms]
+	var rng := RNG.new(11)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage(Vector2(3840, 2160))
+	var view = ChangeNameView.new()
+	stage.add_child(view)
+	await wait_process_frames(2)
+	view.initial_text("旧名字")
+	await wait_process_frames(1)
+
+	var canvas := _find_node_by_name(view, "ChangeNameCanvas") as Control
+	var bar := _find_node_by_name(view, "PromptBG") as Control
+	var input := _find_node_by_name(view, "CardRenameInput") as Control
+	var confirm := _find_node_by_name(view, "CardRenameConfirmButton") as Control
+	var cancel := _find_node_by_name(view, "Cancel") as Control
+	var icon := _find_node_by_name(view, "Icon") as Control
+	var border := _find_node_by_name(view, "Border") as Control
+	assert_not_null(canvas, "ChangeName should retain a fixed 3840x2160 source canvas")
+	assert_not_null(bar, "the original PromptBG band should exist")
+	assert_not_null(input, "the original InputField should exist")
+	assert_not_null(confirm, "the original Confirm stamp should exist")
+	assert_not_null(cancel, "the original Cancel stamp should exist")
+	assert_not_null(icon, "the original Icon (card art) should exist")
+	assert_not_null(border, "the original Border decoration should exist")
+	if canvas != null:
+		assert_eq(canvas.size, Vector2(3840, 2160), "ChangeName retains the source design canvas")
+	if bar != null:
+		assert_almost_eq(bar.position.x, (3840.0 - 2534.4) * 0.5, 0.1, "PromptBG is centred with its source 2534.4 width")
+		assert_almost_eq(bar.position.y, (2160.0 - 220.0) * 0.5, 0.1, "PromptBG is centred vertically")
+		assert_almost_eq(bar.size.x, 2534.4, 0.1, "PromptBG keeps the source 2534.4 width")
+	var input_host := _find_node_by_name(view, "InputFieldHost") as Control
+	if input_host != null:
+		assert_almost_eq(input_host.size.x, 826.0, 0.1, "InputField keeps the authored 826x90")
+		assert_almost_eq(input_host.size.y, 90.0, 0.1, "InputField keeps the authored 826x90")
+	if input != null:
+		assert_eq(input.max_length, 20, "IsValidName caps names at 20 chars (0x15)")
+	if confirm != null:
+		assert_almost_eq(confirm.size.x, 325.0, 0.1, "Confirm keeps the rite_op_confirm 325x158")
+		assert_almost_eq(confirm.size.y, 158.0, 0.1, "Confirm keeps the rite_op_confirm 325x158")
+	if cancel != null:
+		assert_almost_eq(cancel.size.x, 168.0, 0.1, "Cancel keeps the rite_op_cancel 168x158")
+		assert_almost_eq(cancel.size.y, 158.0, 0.1, "Cancel keeps the rite_op_cancel 168x158")
+	if icon != null:
+		assert_almost_eq(icon.size.x, 471.0, 0.1, "Icon keeps the source card art 471x1028")
+		assert_almost_eq(icon.size.y, 1028.0, 0.1, "Icon keeps the source card art 471x1028")
+	if border != null:
+		assert_almost_eq(border.size.x, 236.0, 0.1, "Border keeps the decorate 236x324")
+		assert_almost_eq(border.size.y, 324.0, 0.1, "Border keeps the decorate 236x324")
 
 
 func test_rite_view_replays_source_canvas_geometry():
