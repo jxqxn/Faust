@@ -1,18 +1,22 @@
-## On-screen beginner-guide bar. The active `begin_guide` directive from the
-## rules layer renders as a short instruction line with the bound-key hint;
-## clicking it dismisses the directive (the original's OnClose path). Cue
-## entries (focus/hand_pop/rite_pop/slide) stay invisible until their hosts
-## exist. [SRC: BeginGuideController.c @ ShowBeginGuide (0x526220),
-## OnCloseBtnClick (0x525fa0); BeginGuideItemController.c:132 -> OnCloseBeginGuide]
+## Original BeginGuide presentation. The active `begin_guide` directive is
+## state, while this node is the desktop `MainUI/Prompt/BeginGuide` surface.
 ##
-## Visual layer mirrors the original BeginGuide prefab: a text_bg_2 strip,
-## a mouse-hint icon from the begin_guide atlas, and a close_1 button.
-## [SRC: GameScene.unity BeginGuide/Default -> text_bg_2, Close -> close_1,
-##       Image -> mouse_right_click; Datapool.GetBeginGuideSprite atlas]
+## [SRC: GameScene.unity MainUI/Prompt/BeginGuide/Default; BeginGuideController
+## ShowBeginGuide (0x526220) -> BeginGuideItemController.Show/SetPos
+## (0x527450/0x526dd0), dump.cs BeginGuideController@316733]
 class_name BeginGuideBar
 extends Control
 
 signal dismiss_requested()
+
+const DESIGN_SPACE := Vector2(3840, 2160)
+# BeginGuide/Default: center anchors, anchoredPosition (747.3,-785), 1200x460.
+const DEFAULT_POSITION := Vector2(2067.3, 65.0)
+const DEFAULT_SIZE := Vector2(1200, 460)
+const CLOSE_RECT := Rect2(1149.1, 410.0, 80, 80)
+const IMAGE_RECT := Rect2(-356, 30, 400, 400)
+const TEXT_RECT := Rect2(35, 35, 1130, 390)
+const RING_RECT := Rect2(-263, -219.5, 314, 225)
 
 const TYPE_TEXT := {
 	"CHANGE_SUDAN_CARD": "换一张苏丹卡：把手牌拖进仪式，解决当前的苏丹。",
@@ -32,15 +36,16 @@ const TYPE_TEXT := {
 	"FILL_COIN": "金币不足：需要先补充金币。",
 }
 
-## Guide types whose original hint art is the right-click mouse icon.
 const RIGHT_CLICK_TYPES := ["RIGHT_CLICK_SLOT", "RIGHT_CLICK_CARD"]
-
 const TEXT_BG_PATH := "res://assets/original/ui/text_bg_2.png"
 const CLOSE_TEXTURE_PATH := "res://assets/original/ui/close_1.png"
+const RING_TEXTURE_PATH := "res://assets/original/ui/single_ring.png"
 
+var _default: Control
 var _label: Label
 var _icon: TextureRect
 var _close: Button
+var _ring: TextureRect
 var _state = null
 
 static var _guide_atlas: OriginalAtlas = null
@@ -52,87 +57,93 @@ func setup(state) -> void:
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	name = "BeginGuide"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var bar := PanelContainer.new()
-	bar.name = "BeginGuideBar"
-	bar.mouse_filter = Control.MOUSE_FILTER_STOP
-	bar.add_theme_stylebox_override("panel", _bar_style())
-	add_child(bar)
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	bar.add_child(row)
-
-	_icon = TextureRect.new()
-	_icon.name = "BeginGuideIcon"
-	_icon.custom_minimum_size = Vector2(30, 30)
-	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_icon.visible = false
-	row.add_child(_icon)
-
-	_label = Label.new()
-	_label.name = "BeginGuideText"
-	_label.add_theme_font_size_override("font_size", 15)
-	_label.add_theme_color_override("font_color", Color("#f5e5b4"))
-	_label.custom_minimum_size = Vector2(420, 0)
-	row.add_child(_label)
-
-	_close = Button.new()
-	_close.name = "BeginGuideClose"
-	_close.custom_minimum_size = Vector2(30, 30)
-	_close.tooltip_text = "关闭指引"
-	# The original close_1 stamp IS the button face.
-	# [SRC: Texture2D/close_1.png 80x80 -> BeginGuide/Default/Close]
-	if ResourceLoader.exists(CLOSE_TEXTURE_PATH):
-		var tex := load(CLOSE_TEXTURE_PATH) as Texture2D
-		if tex != null:
-			var style := StyleBoxTexture.new()
-			style.texture = tex
-			style.texture_margin_left = 26
-			style.texture_margin_right = 26
-			style.texture_margin_top = 26
-			style.texture_margin_bottom = 26
-			for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
-				_close.add_theme_stylebox_override(state_name, style)
-	else:
-		_close.text = "知道了"
-	_close.pressed.connect(_on_dismiss)
-	row.add_child(_close)
-
+	position = Vector2.ZERO
+	size = DESIGN_SPACE
+	_build_source_default()
 	_refresh()
 
 
-func _bar_style() -> StyleBox:
-	# Texture-first: the original strip IS the bar surface (9-slice).
-	# [SRC: Texture2D/text_bg_2.png 1112x404 -> BeginGuide/Default]
-	if ResourceLoader.exists(TEXT_BG_PATH):
-		var tex := load(TEXT_BG_PATH) as Texture2D
-		if tex != null:
-			var style := StyleBoxTexture.new()
-			style.texture = tex
-			style.texture_margin_left = 140
-			style.texture_margin_right = 140
-			style.texture_margin_top = 120
-			style.texture_margin_bottom = 120
-			style.content_margin_left = 150
-			style.content_margin_right = 150
-			style.content_margin_top = 128
-			style.content_margin_bottom = 128
-			return style
-	var fallback := StyleBoxFlat.new()
-	fallback.bg_color = Color(0.09, 0.05, 0.03, 0.92)
-	fallback.border_color = Color("#d4ad5a")
-	fallback.set_border_width_all(1)
-	fallback.set_corner_radius_all(6)
-	fallback.set_content_margin_all(10)
-	return fallback
+func apply_source_layout(view_size: Vector2) -> void:
+	position = Vector2.ZERO
+	size = DESIGN_SPACE
+	scale = Vector2(view_size.x / DESIGN_SPACE.x, view_size.y / DESIGN_SPACE.y)
+
+
+func _build_source_default() -> void:
+	_default = Control.new()
+	_default.name = "Default"
+	_default.position = DEFAULT_POSITION
+	_default.size = DEFAULT_SIZE
+	_default.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_default)
+
+	var background := TextureRect.new()
+	background.name = "Background"
+	background.texture = load(TEXT_BG_PATH) as Texture2D
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	background.stretch_mode = TextureRect.STRETCH_SCALE
+	background.position = Vector2.ZERO
+	background.size = DEFAULT_SIZE
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_default.add_child(background)
+
+	_icon = TextureRect.new()
+	_icon.name = "Image"
+	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_icon.position = IMAGE_RECT.position
+	_icon.size = IMAGE_RECT.size
+	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_default.add_child(_icon)
+
+	_label = Label.new()
+	_label.name = "Text"
+	_label.position = TEXT_RECT.position
+	_label.size = TEXT_RECT.size
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_label.add_theme_font_size_override("font_size", 75)
+	_label.add_theme_color_override("font_color", Color("#f5e5b4"))
+	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_default.add_child(_label)
+
+	_ring = TextureRect.new()
+	_ring.name = "Ring"
+	_ring.texture = load(RING_TEXTURE_PATH) as Texture2D
+	_ring.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_ring.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_ring.position = RING_RECT.position
+	_ring.size = RING_RECT.size
+	_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_default.add_child(_ring)
+
+	_close = Button.new()
+	_close.name = "Close"
+	_close.position = CLOSE_RECT.position
+	_close.size = CLOSE_RECT.size
+	_close.tooltip_text = "关闭指引"
+	for state_name in ["normal", "hover", "pressed", "focus"]:
+		_close.add_theme_stylebox_override(state_name, _close_style())
+	_close.pressed.connect(_on_dismiss)
+	_default.add_child(_close)
+
+
+func _close_style() -> StyleBox:
+	var style := StyleBoxTexture.new()
+	style.texture = load(CLOSE_TEXTURE_PATH) as Texture2D
+	style.texture_margin_left = 26
+	style.texture_margin_right = 26
+	style.texture_margin_top = 26
+	style.texture_margin_bottom = 26
+	return style
 
 
 static func _hint_icon(guide_type: String) -> Texture2D:
 	# [SRC: Datapool.c GetBeginGuideSprite; assets/original/ui/begin_guide.png
-	#       + begin_guide.json frames mouse_* / arrow_*]
+	# + begin_guide.json frames mouse_* / arrow_*]
 	if guide_type == "":
 		return null
 	if _guide_atlas == null:
@@ -140,9 +151,7 @@ static func _hint_icon(guide_type: String) -> Texture2D:
 	if _guide_atlas == null:
 		return null
 	var frame_id := "mouse_right_click.png" if guide_type in RIGHT_CLICK_TYPES else ""
-	if frame_id == "":
-		return null
-	return _guide_atlas.frame(frame_id)
+	return _guide_atlas.frame(frame_id) if frame_id != "" else null
 
 
 func refresh(state) -> void:
@@ -158,16 +167,17 @@ func _refresh() -> void:
 	if directive.is_empty():
 		return
 	var guide_type := str(directive.get("type", ""))
-	_label.text = TYPE_TEXT.get(guide_type, "跟随指引继续操作。")
+	_label.text = str(directive.get("text", TYPE_TEXT.get(guide_type, "跟随指引继续操作。")))
 	if str(directive.get("bind", "")) != "":
 		_label.text += "（手柄：%s）" % str(directive.get("bind"))
-	if _icon != null:
-		_icon.texture = _hint_icon(guide_type)
-		_icon.visible = _icon.texture != null
+	_icon.texture = _hint_icon(guide_type)
+	_icon.visible = _icon.texture != null
+	_ring.visible = bool(directive.get("is_show_ring", false))
 
 
 func _on_dismiss() -> void:
-	# The original closes via OnCloseBtnClick -> CloseBeginGuide op.
+	# [SRC: BeginGuideController.OnCloseBtnClick (0x525fa0) ->
+	# BeginGuideItemController.CloseInternal -> OnCloseBeginGuide]
 	if _state != null:
 		_state.begin_guide = {}
 		_state.guide_cues.clear()

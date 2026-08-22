@@ -6,7 +6,6 @@ extends Control
 const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
-const RiteSelector = preload("res://ui/rite_selector.gd")
 const GLOBAL_MODAL_Z := 1000
 
 # Transitional compat layer: screens not yet re-emitted in the original
@@ -23,7 +22,6 @@ var rng: GameRNG
 var _current: Control
 var _game_screen: Control
 var _rite_overlay: Control
-var _rite_selector_overlay: Control
 var _menu_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
@@ -138,7 +136,6 @@ func _show_game() -> void:
 	gs.advance_pressed.connect(_on_advance)
 	gs.redraw_pressed.connect(_on_redraw)
 	gs.back_to_prev_pressed.connect(_on_back_to_prev)
-	gs.open_rite_selector.connect(_on_open_rite_selector)
 	gs.menu_pressed.connect(_on_menu_pressed)
 	gs.game_over_requested.connect(_show_game_over)
 	add_child(gs)
@@ -196,44 +193,6 @@ func _mcp_capture_compact_prompt() -> void:
 	_game_screen.refresh()
 
 
-func _on_open_rite_selector(location_filter: String = "") -> void:
-	var availability_rng = rng.duplicate_stream() if rng != null else null
-	var open_uids := RiteSelector.filter_open_rite_instance_uids(
-		db, state, availability_rng, location_filter
-	)
-	if open_uids.is_empty():
-		if _game_screen != null and _game_screen.has_method("set_log"):
-			_game_screen.set_log("该地点当前没有可处理行动。")
-		return
-	_close_rite_selector_overlay(false)
-	var sel := RiteSelector.new()
-	sel.setup(db, state, rng, location_filter)
-	sel.set_overlay_mode(true)
-	if _game_screen != null and _game_screen.has_method("site_action_anchor"):
-		sel.set_overlay_anchor(_game_screen.site_action_anchor(location_filter))
-	if _game_screen != null and _game_screen.has_method("site_action_menu_bounds"):
-		sel.set_overlay_safe_rect(_game_screen.site_action_menu_bounds())
-	sel.rite_chosen_instance.connect(_on_rite_selector_choice)
-	sel.closed.connect(_close_rite_selector_overlay)
-	if _game_screen != null and _game_screen.has_method("add_overlay"):
-		_game_screen.add_overlay(sel)
-		# Unlike a full rite view, this compact menu pauses the entire desk. Its
-		# backdrop must therefore sit above the persistent rail, actions, and menu
-		# instead of leaving those controls visually floating in front of it.
-		sel.z_index = GameScreen.PERSISTENT_CONTROL_Z + 1
-	else:
-		_legacy_layer().add_child(sel)
-	_rite_selector_overlay = sel
-	# A site menu preserves the desk as a dimmed snapshot. Its own overlay stays
-	# live, while every underlying persistent control is locked and paused.
-	_set_world_scene_blocker("rite_selector", true, false, true, true)
-
-
-func _on_rite_selector_choice(rite_uid: int) -> void:
-	_close_rite_selector_overlay()
-	_on_open_rite_instance(rite_uid)
-
-
 func _on_open_rite(rite_id: int) -> void:
 	var instance = state.find_rite_instance_by_id(rite_id) if state != null and state.has_method("find_rite_instance_by_id") else null
 	if instance == null:
@@ -247,7 +206,6 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 		return
 	if _game_screen == null:
 		_show_game()
-	_close_rite_selector_overlay()
 	_close_rite_overlay()
 	_current_rite_uid = instance.uid
 	_current_rite_id = instance.id
@@ -636,7 +594,6 @@ func _on_back_to_prev() -> void:
 func _clear_current() -> void:
 	_close_game_menu()
 	_close_user_archive_overlay()
-	_close_rite_selector_overlay()
 	_close_rite_overlay()
 	if _current:
 		_current.queue_free()
@@ -649,19 +606,6 @@ func _close_rite_overlay() -> void:
 		return
 	_rite_overlay.queue_free()
 	_rite_overlay = null
-
-
-func _close_rite_selector_overlay(clear_focus: bool = true) -> void:
-	_set_world_scene_blocker("rite_selector", false)
-	if _rite_selector_overlay != null:
-		_rite_selector_overlay.queue_free()
-		_rite_selector_overlay = null
-	if (
-		clear_focus
-		and _game_screen != null
-		and _game_screen.has_method("clear_site_focus")
-	):
-		_game_screen.clear_site_focus()
 
 
 func _set_world_scene_blocker(

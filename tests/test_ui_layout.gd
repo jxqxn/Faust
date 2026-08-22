@@ -51,6 +51,47 @@ func test_representative_main_screen_controls_exist():
 		assert_not_null(control, "%s should exist" % node_name)
 
 
+func test_begin_guide_replays_source_default_geometry():
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(711))
+	state.begin_guide = {"type": "RIGHT_CLICK_CARD", "is_show_ring": true}
+	var stage := _stage()
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(712))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var guide := _find_node_by_name(screen, "BeginGuide") as Control
+	assert_not_null(guide)
+	if guide == null:
+		return
+	var default_item := guide.get_node_or_null("Default") as Control
+	var image := guide.get_node_or_null("Default/Image") as TextureRect
+	var text := guide.get_node_or_null("Default/Text") as Label
+	var close := guide.get_node_or_null("Default/Close") as Button
+	var ring := guide.get_node_or_null("Default/Ring") as TextureRect
+	assert_not_null(default_item)
+	assert_not_null(image)
+	assert_not_null(text)
+	assert_not_null(close)
+	assert_not_null(ring)
+	if default_item == null or image == null or text == null or close == null or ring == null:
+		return
+	assert_eq(guide.size, Vector2(3840, 2160), "BeginGuide parent keeps the source canvas")
+	assert_eq(default_item.position, Vector2(2067.3, 65), "Default replays its resolved source position")
+	assert_eq(default_item.size, Vector2(1200, 460), "Default replays its source dimensions")
+	assert_eq(image.position, Vector2(-356, 30), "the 400px mouse hint intentionally extends beyond Default")
+	assert_eq(image.size, Vector2(400, 400))
+	assert_eq(text.position, Vector2(35, 35), "Text uses the source stretch offsets")
+	assert_eq(text.size, Vector2(1130, 390))
+	assert_eq(text.get_theme_font_size("font_size"), 75)
+	assert_eq(close.position, Vector2(1149.1, 410), "Close uses the source bottom-right anchor")
+	assert_eq(close.size, Vector2(80, 80))
+	assert_true(ring.visible, "is_show_ring displays the original ring child")
+	assert_eq(ring.position, Vector2(-263, -219.5))
+	assert_eq(ring.size, Vector2(314, 225))
+
+
 func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
 	var rng := RNG.new(73)
 	var state := GameState.new()

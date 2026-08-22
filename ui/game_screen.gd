@@ -11,7 +11,6 @@ signal open_rite_instance(rite_uid: int)
 signal advance_pressed()
 signal redraw_pressed()
 signal back_to_prev_pressed()
-signal open_rite_selector(location_name: String)
 signal menu_pressed()
 signal game_over_requested()
 
@@ -389,6 +388,10 @@ func _apply_layout() -> void:
 	var k := Vector2(view_size.x / DESIGN_SPACE.x, view_size.y / DESIGN_SPACE.y)
 
 	_set_rect(_background, Rect2(Vector2.ZERO, view_size))
+	# [SRC: GameScene MainUI/Prompt/BeginGuide/Default: its parent is the
+	# full 3840x2160 canvas; Default itself owns the 1200x460 source rect.]
+	if _begin_guide_bar != null:
+		_begin_guide_bar.apply_source_layout(view_size)
 	# [SRC: RoundNumber BG top-right pos (-80,0) height 204 — width wraps text]
 	if _deadline_strip != null:
 		_deadline_strip.size = Vector2(0, 204 * k.y)
@@ -620,34 +623,6 @@ func _scene_frame_style() -> StyleBoxFlat:
 	style.bg_color = Color.TRANSPARENT
 	style.border_color = Color.TRANSPARENT
 	return style
-
-
-func site_action_anchor(location_name: String) -> Vector2:
-	if _desk_content == null or not _desk_content.has_method("site_action_anchor"):
-		return Vector2(-1.0, -1.0)
-	var desk_anchor: Vector2 = _desk_content.site_action_anchor(location_name)
-	if desk_anchor.x < 0.0 or desk_anchor.y < 0.0:
-		return desk_anchor
-	return _desk_content.position + desk_anchor
-
-
-func site_action_menu_bounds() -> Rect2:
-	if _desk_map == null:
-		return Rect2()
-	# The map visually continues behind the hand, but contextual actions belong
-	# to the readable upper work area and must never cover the persistent cards.
-	var lower_edge: float = _desk_map.position.y + _desk_map.size.y
-	if _card_rail_view != null:
-		lower_edge = minf(lower_edge, _card_rail_view.position.y - 8.0)
-	return Rect2(
-		_desk_map.position,
-		Vector2(_desk_map.size.x, maxf(0.0, lower_edge - _desk_map.position.y))
-	)
-
-
-func clear_site_focus() -> void:
-	if _desk_content != null and _desk_content.has_method("clear_site_focus"):
-		_desk_content.clear_site_focus()
 
 
 func _icon_button(label: String) -> Button:
