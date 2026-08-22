@@ -16,6 +16,7 @@ signal game_over_requested()
 
 const MapControllerScript = preload("res://ui/map_controller.gd")
 const CardInfoViewScript = preload("res://ui/card_info_view.gd")
+const MainHelpViewScript = preload("res://ui/main_help.gd")
 
 class HandRailDrop:
 	extends Control
@@ -93,6 +94,8 @@ var _right_actions: Control
 var _advance_button: Button
 var _redraw_button: Button
 var _back_to_prev_button: Button
+var _main_help_view = null
+var _main_help_button: Button
 var _card_info_view = null
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
@@ -201,6 +204,35 @@ func _build_ui() -> void:
 		_menu_button.add_child(menu_icon)
 	_menu_button.pressed.connect(func(): menu_pressed.emit())
 	quit_anchor.add_child(_menu_button)
+
+	# [SRC: GameScene MainHelpTrigger — help_button 88x91 top-right pivot
+	# (0.5,1) pos (-70,-143.5); opens MainUI/MainHelp (main_help.gd).
+	# Player.helpbtn_unshow 0=show, nonzero=hide (batch N close_* polarity).]
+	var help_anchor := Control.new()
+	help_anchor.name = "HelpAnchor"
+	help_anchor.z_index = 50
+	help_anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(help_anchor)
+	_main_help_button = Button.new()
+	_main_help_button.name = "MainHelpTrigger"
+	_main_help_button.tooltip_text = "帮助"
+	_main_help_button.flat = true
+	_main_help_button.custom_minimum_size = Vector2(88, 91)
+	_main_help_button.size = Vector2(88, 91)
+	var help_style := StyleBoxEmpty.new()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		_main_help_button.add_theme_stylebox_override(state_name, help_style)
+	if ResourceLoader.exists("res://assets/original/ui/help_button.png"):
+		var help_icon := TextureRect.new()
+		help_icon.texture = load("res://assets/original/ui/help_button.png") as Texture2D
+		help_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		help_icon.stretch_mode = TextureRect.STRETCH_SCALE
+		help_icon.custom_minimum_size = Vector2(88, 91)
+		help_icon.size = Vector2(88, 91)
+		help_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_main_help_button.add_child(help_icon)
+	_main_help_button.pressed.connect(_toggle_main_help)
+	help_anchor.add_child(_main_help_button)
 
 	# [SRC: GameScene SudanBox — box_open 455x954 anchors (0,1) pivot (0,1)
 	#       pos (-47,20); child BoxTop 244x528 at center+(-85,43)]
@@ -402,6 +434,13 @@ func _apply_layout() -> void:
 		quit_anchor.scale = k
 		quit_anchor.position = Vector2(view_size.x - 110 * k.x, 30 * k.y)
 		quit_anchor.size = Vector2(80, 82)
+	# [SRC: MainHelpTrigger pivot (0.5,1) pos (-70,-143.5) 88x91; x spans
+	# 3726..3814 in the 3840 design space]
+	if _main_help_button != null and _main_help_button.get_parent() is Control:
+		var help_anchor: Control = _main_help_button.get_parent()
+		help_anchor.scale = k
+		help_anchor.position = Vector2(3726 * k.x, 143.5 * k.y)
+		help_anchor.size = Vector2(88, 91)
 	# [SRC: SudanBox box_open 455x954 anchors (0,1) pivot (0,1) pos (-47,20)]
 	if _sudan_box != null:
 		_sudan_box.scale = k
@@ -713,6 +752,8 @@ func refresh() -> void:
 		_sudan_box.visible = bool(_state.sudan_box_show)
 	if _prestige_strip != null:
 		_prestige_strip.visible = not bool(_state.prestige_unshow)
+	if _main_help_button != null:
+		_main_help_button.visible = not bool(_state.helpbtn_unshow)
 	_update_deadline_strip()
 	_update_prestige_strip()
 	var previous_positions := _capture_hand_visual_positions()
@@ -1623,6 +1664,32 @@ func _event_panel_style() -> StyleBox:
 	fallback.shadow_color = Color(0.01, 0.012, 0.03, 0.62)
 	fallback.shadow_size = 10
 	return fallback
+
+
+## Desktop help: MainHelpTrigger -> MainUI/MainHelp (source overlay).
+func _toggle_main_help() -> void:
+	if _main_help_view != null and is_instance_valid(_main_help_view):
+		close_main_help()
+		return
+	_main_help_view = MainHelpViewScript.new()
+	_main_help_view.name = "MainHelpOverlay"
+	_main_help_view.z_index = OVERLAY_LAYER_Z + 2
+	if _source_overlay_layer != null:
+		_source_overlay_layer.add_child(_main_help_view)
+	else:
+		add_child(_main_help_view)
+	if not _main_help_view.closed.is_connected(close_main_help):
+		_main_help_view.closed.connect(close_main_help)
+
+
+func close_main_help() -> void:
+	if _main_help_view == null or not is_instance_valid(_main_help_view):
+		return
+	var old_view = _main_help_view
+	_main_help_view = null
+	if old_view.get_parent() != null:
+		old_view.get_parent().remove_child(old_view)
+	old_view.queue_free()
 
 
 func show_card_detail(card_or_uid: int) -> void:

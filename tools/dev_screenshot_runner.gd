@@ -50,6 +50,9 @@ func _ready() -> void:
 			var db_c = main.get("db")
 			if screen != null and state_c != null and not state_c.hand.is_empty() and screen.has_method("show_card_detail"):
 				screen.call("show_card_detail", int(state_c.hand[0]))
+		if args.has("--main-help"):
+			if screen != null and screen.has_method("_toggle_main_help"):
+				screen.call("_toggle_main_help")
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

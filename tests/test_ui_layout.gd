@@ -6,6 +6,7 @@ const Game = preload("res://ui/game.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const CardInfoView = preload("res://ui/card_info_view.gd")
+const MainHelpView = preload("res://ui/main_help.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -1634,6 +1635,79 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	assert_almost_eq(advance.get_global_rect().end.x, view_size.end.x, 2.0, "watch pins to the bottom-right corner")
 	assert_almost_eq(advance.get_global_rect().end.y, view_size.end.y, 2.0, "watch pins to the bottom edge")
 	assert_gt(overlay.z_index, desk.z_index, "queue overlays should remain above the paper desk")
+
+
+func test_main_help_replays_source_geometry_and_trigger():
+	# [SRC: docs/ui_layout/GameScene.md MainUI/MainHelp + MainHelpTrigger rows]
+	var rng := RNG.new(5)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage(Vector2(3840, 2160))
+	var view = MainHelpView.new()
+	stage.add_child(view)
+	await wait_process_frames(2)
+
+	var canvas := _find_node_by_name(view, "MainHelpCanvas") as Control
+	var mask := _find_node_by_name(view, "Mask") as Control
+	var prompt_art := _find_node_by_name(view, "Prompt") as Control
+	var sudan := _find_node_by_name(view, "SudanBoxPrompt") as Control
+	var story := _find_node_by_name(view, "StoryPrompt") as Control
+	var deadline := _find_node_by_name(view, "DeadLinePrompt") as Control
+	var hand := _find_node_by_name(view, "HandCardPrompt") as Control
+	var menu := _find_node_by_name(view, "MenuPrompt") as Control
+	var next_day := _find_node_by_name(view, "NextDayPrompt") as Control
+	assert_not_null(canvas, "MainHelp should retain a fixed 3840x2160 source canvas")
+	assert_not_null(mask, "the original MainHelp Mask should exist")
+	assert_not_null(prompt_art, "the original MainHelp Prompt art should exist")
+	assert_not_null(sudan, "the original SudanBoxPrompt bubble should exist")
+	assert_not_null(story, "the original StoryPrompt bubble should exist")
+	assert_not_null(deadline, "the original DeadLinePrompt bubble should exist")
+	assert_not_null(hand, "the original HandCardPrompt bubble should exist")
+	assert_not_null(menu, "the original MenuPrompt bubble should exist")
+	assert_not_null(next_day, "the original NextDayPrompt bubble should exist")
+	if canvas != null:
+		assert_eq(canvas.size, Vector2(3840, 2160), "MainHelp retains the source design canvas")
+	if sudan != null:
+		assert_eq(sudan.position, Vector2(87, 642), "SudanBoxPrompt replays its authored (0,1) rect")
+		assert_eq(sudan.size, Vector2(602, 200), "all help bubbles keep the authored 602x200")
+	if story != null:
+		assert_eq(story.position, Vector2(626, 1140), "StoryPrompt replays its authored (0,0) rect")
+	if deadline != null:
+		assert_eq(deadline.position, Vector2(1179, 442), "DeadLinePrompt replays its authored centred rect")
+	if hand != null:
+		assert_eq(hand.position, Vector2(1574, 1440), "HandCardPrompt replays its authored (0.5,0) rect")
+	if menu != null:
+		assert_eq(menu.position, Vector2(2644, 170), "MenuPrompt replays its authored top rect")
+
+	# MainHelpTrigger on the desktop honours helpbtn_unshow and opens the view.
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(6))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	var trigger := _find_node_by_name(screen, "MainHelpTrigger") as Control
+	assert_not_null(trigger, "the desktop MainHelpTrigger should exist")
+	if trigger != null:
+		var global_rect := trigger.get_global_rect()
+		assert_almost_eq(global_rect.position.x, 3726.0, 0.1, "MainHelpTrigger keeps its authored left offset in design space")
+		assert_almost_eq(global_rect.position.y, 143.5, 0.1, "MainHelpTrigger keeps its authored top offset in design space")
+		assert_almost_eq(global_rect.size.x, 88.0, 0.1, "MainHelpTrigger keeps the help_button 88x91")
+		assert_almost_eq(global_rect.size.y, 91.0, 0.1, "MainHelpTrigger keeps the help_button 88x91")
+		assert_true(trigger.visible, "help button shows while helpbtn_unshow is false")
+	state.helpbtn_unshow = 1
+	screen.refresh()
+	await wait_process_frames(1)
+	assert_false(trigger.visible, "helpbtn_unshow hides the desktop help trigger")
+	state.helpbtn_unshow = 0
+	screen.refresh()
+	await wait_process_frames(1)
+	(trigger as Button).pressed.emit()
+	await wait_process_frames(1)
+	var overlay := _find_node_by_name(screen, "MainHelpOverlay") as Control
+	assert_not_null(overlay, "pressing MainHelpTrigger opens the source MainHelp overlay")
+	if overlay != null:
+		overlay.closed.emit()
+		await wait_process_frames(1)
+		assert_null(_find_node_by_name(screen, "MainHelpOverlay"), "the help overlay closes on mask click")
 
 
 func test_rite_view_replays_source_canvas_geometry():

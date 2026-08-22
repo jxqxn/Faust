@@ -557,9 +557,21 @@ func _help_bubble(pos: Vector2, size: Vector2, text: String) -> Label:
 	bubble.size = size
 	bubble.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bubble.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	bubble.text = text
+	bubble.text = _to_bbcode(text)
 	bubble.mouse_filter = Control.MOUSE_FILTER_STOP
 	return bubble
+
+
+## Unity TMP emphasis tags (<b><color=white><size=86>…) -> Godot 4 BBCode.
+static func _to_bbcode(text_value: String) -> String:
+	var out := text_value
+	out = out.replace("<color=white>", "[color=white]")
+	out = out.replace("</color>", "[/color]")
+	out = out.replace("<size=86>", "[font_size=86]")
+	out = out.replace("</size>", "[/font_size]")
+	out = out.replace("<b>", "[b]")
+	out = out.replace("</b>", "[/b]")
+	return out
 
 
 func _help_text(kind: String) -> String:

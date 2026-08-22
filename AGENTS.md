@@ -46,6 +46,19 @@
 
 ## 当前进度
 
+**2026-08-22 桌面帮助按钮 + 主帮助浮层 1:1（批次 AG，59/59 UI 组全绿）：**
+`GameScreen` 新增 `MainHelpTrigger`（help_button 88×91，top-right (−70,−143.5)，
+z=50 位于局部模态之下，随 `Player.helpbtn_unshow`（batch N 旗标）显隐）→
+`ui/main_help.gd`（`MainUI/MainHelp` 源浮层：Mask + 指针图 `main.asset` +
+11 条 602×200 fs50 气泡，锚点/位置直读 `docs/ui_layout/GameScene.md` 真值表；
+文案 = i18n `MAIN_HELP_*`，zhTW→简体；Unity `<b><color=white><size=86>` 标记
+转 Godot 4 BBCode（`[b]`/`[color]`/`[font_size=86]`），卡牌详情 Help 浮层同步
+应用转换）。测试 `test_main_help_replays_source_geometry_and_trigger`
+（按钮几何 + helpbtn_unshow 显隐 + 打开/关闭；帮助文案关键字 86px 的原产
+行内基线差异登记为已知渲染差异；手柄 InputDisplay 未做）。截图
+`docs/ui_layout/mainhelp_screenshot.png`（dev_screenshot_runner 新增
+`--main-help`）。几何均为 3840×2160 设计空间直读。
+
 **2026-08-22 卡牌详情 CardInfoNew 1:1（批次 AF，386 测试 / 2516 断言全绿）：**
 卡牌详情从旧自制 690×340 暗盒迁到 `ui/card_info_view.gd`（CardInfoView，挂
 `GameScreen._source_overlay_layer`）：源 `CardInfoNew` 2510×1077 居中面板 + `bg_7`
