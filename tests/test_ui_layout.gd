@@ -724,14 +724,17 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(overlay, "menu button should open an in-game menu overlay")
 	assert_not_null(rail)
 	assert_not_null(desk_think)
-	assert_not_null(_find_node_by_name(game, "ResumeGameButton"), "menu overlay should include a resume action")
-	assert_not_null(_find_node_by_name(game, "SaveGameButton"), "menu overlay should include a save action")
-	assert_not_null(_find_node_by_name(game, "SaveUserArchiveButton"), "menu overlay should include a named archive action")
-	assert_not_null(_find_node_by_name(game, "ReturnTitleButton"), "menu overlay should include a return-title action")
+	assert_not_null(_find_node_by_name(game, "ESCPanel"), "menu must replay the source ESCPanel root")
+	assert_null(_find_node_by_name(game, "NewGame"), "NewGame is inactive in ESCPanel.prefab")
+	assert_not_null(_find_node_by_name(game, "Settings"), "source Settings entry must remain visible")
+	assert_not_null(_find_node_by_name(game, "EndGame"), "source EndGame entry must remain visible")
+	assert_not_null(_find_node_by_name(game, "SaveAndExit"), "source Main Menu entry must remain visible")
+	assert_not_null(_find_node_by_name(game, "Return"), "source Return entry must remain visible")
 	if overlay != null and rail != null:
 		assert_gt(overlay.z_index, rail.z_index, "the menu must cover persistent hand cards")
 		assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "the global menu layer must block clicks behind it")
-		var shade := overlay.get_child(0) as Control
+		var source_root := _find_node_by_name(overlay, "ESCPanel") as Control
+		var shade := _find_node_by_name(source_root, "Mask") as Control
 		assert_not_null(shade)
 		if shade != null:
 			assert_eq(shade.mouse_filter, Control.MOUSE_FILTER_STOP, "the menu shade must absorb background input")
@@ -744,7 +747,7 @@ func test_game_menu_button_opens_real_overlay():
 	)
 	var desk := _find_node_by_name(game, "SituationDesk")
 	assert_true(desk.is_scene_blocked(), "the game menu should block desk input")
-	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
+	var resume := _find_node_by_name(game, "Return") as Button
 	if resume != null:
 		resume.pressed.emit()
 		await wait_process_frames(1)
@@ -754,6 +757,43 @@ func test_game_menu_button_opens_real_overlay():
 			Node.PROCESS_MODE_INHERIT,
 			"resuming should reactivate the lower gameplay layer"
 		)
+
+
+func test_game_menu_replays_source_esc_geometry_and_end_game_call_chain():
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	game._on_new_game_pressed()
+	await wait_process_frames(2)
+	_drain_intro_events(game)
+	game._show_game_menu()
+	await wait_process_frames(1)
+
+	var esc := _find_node_by_name(game, "ESCPanel") as Control
+	var group := _find_node_by_name(game, "ButtonGroup") as Control
+	var settings := _find_node_by_name(game, "Settings") as Button
+	var end_game := _find_node_by_name(game, "EndGame") as Button
+	assert_not_null(esc)
+	assert_not_null(group)
+	assert_not_null(settings)
+	assert_not_null(end_game)
+	if esc == null or group == null or settings == null or end_game == null:
+		return
+	assert_eq(esc.size, Vector2(1920, 1080), "ESCPanel keeps its source canvas before its 2x transform")
+	assert_eq(esc.scale, Vector2(2, 2), "ESCPanel replays its source root scale")
+	assert_eq(group.position, Vector2(449.5, 312), "ButtonGroup remains centered in the source canvas")
+	assert_eq(group.size, Vector2(1021, 456), "inactive NewGame is excluded by the source content fitter")
+	assert_eq(settings.size, Vector2(405, 174), "source ESC buttons retain their authored dimensions")
+	assert_eq(settings.position, Vector2(308, 0), "Settings starts the active source layout sequence")
+	assert_eq(end_game.position, Vector2(308, 94), "source layout keeps the -80px vertical overlap")
+	assert_true(settings.disabled, "the missing SettingsController host is explicit, not an invented action")
+
+	end_game.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(game.state.success, "ESCGameController.OnEndGame writes Player.success")
+	assert_eq(game.state.over_reason, 16, "ESCGameController.OnEndGame writes over_reason 0x10")
+	assert_not_null(_find_node_by_name(game, "Over"), "EndGame continues into the source-shaped game-over controller")
 
 
 func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
@@ -793,11 +833,11 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 	assert_not_null(menu_overlay)
 	assert_not_null(rail)
 	if menu_overlay != null and rail != null:
-		assert_eq(menu_overlay.get_parent().get_parent(), game, "the global menu keeps the Game-owned legacy layer as its permanent parent")
+		assert_eq(menu_overlay.get_parent(), game, "the source ESC panel attaches directly to Game, not LegacyLayer")
 		assert_gt(menu_overlay.z_index, rail.z_index, "global menu outranks persistent hand cards")
 		assert_eq(menu_overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "global menu blocks clicks behind its shade")
 	assert_true(desk.is_scene_blocked(), "the global menu blocks all lower desk input")
-	var resume := _find_node_by_name(game, "ResumeGameButton") as Button
+	var resume := _find_node_by_name(game, "Return") as Button
 	assert_not_null(resume)
 	if resume == null:
 		return

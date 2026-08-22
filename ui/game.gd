@@ -6,6 +6,7 @@ extends Control
 const MainMenu = preload("res://ui/main_menu.gd")
 const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
+const ESCGamePanel = preload("res://ui/esc_game_panel.gd")
 const GLOBAL_MODAL_Z := 1000
 
 # Transitional compat layer: screens not yet re-emitted in the original
@@ -243,70 +244,13 @@ func _show_game_menu() -> void:
 		return
 	_set_world_scene_blocker("game_menu", true, false)
 	_set_gameplay_presentation_frozen(true)
-	_menu_overlay = Control.new()
-	_menu_overlay.name = "GameMenuOverlay"
-	_menu_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_menu_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_menu_overlay.z_index = GLOBAL_MODAL_Z
-	_legacy_layer().add_child(_menu_overlay)
-
-	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.48)
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	_menu_overlay.add_child(shade)
-
-	var panel := PanelContainer.new()
-	panel.name = "GameMenuPanel"
-	panel.custom_minimum_size = Vector2(260, 330)
-	panel.add_theme_stylebox_override("panel", _menu_panel_style())
-	panel.anchor_left = 0.5
-	panel.anchor_top = 0.5
-	panel.anchor_right = 0.5
-	panel.anchor_bottom = 0.5
-	panel.offset_left = -130
-	panel.offset_top = -165
-	panel.offset_right = 130
-	panel.offset_bottom = 165
-	_menu_overlay.add_child(panel)
-
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 12)
-	panel.add_child(box)
-
-	var title := Label.new()
-	title.text = "菜单"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	box.add_child(title)
-
-	var resume := _menu_button("继续")
-	resume.name = "ResumeGameButton"
-	resume.pressed.connect(_close_game_menu)
-	box.add_child(resume)
-
-	var save := _menu_button("保存")
-	save.name = "SaveGameButton"
-	save.pressed.connect(_on_save_from_menu)
-	box.add_child(save)
-
-	var save_archive := _menu_button("保存为存档")
-	save_archive.name = "SaveUserArchiveButton"
-	save_archive.pressed.connect(_show_user_archive_overlay)
-	box.add_child(save_archive)
-
-	var title_screen := _menu_button("返回标题")
-	title_screen.name = "ReturnTitleButton"
-	title_screen.pressed.connect(_show_menu)
-	box.add_child(title_screen)
-
-
-func _menu_button(label: String) -> Button:
-	var button := Button.new()
-	button.text = label
-	button.custom_minimum_size = Vector2(220, 42)
-	return button
+	_menu_overlay = ESCGamePanel.new()
+	_menu_overlay.return_requested.connect(_close_game_menu)
+	_menu_overlay.end_game_requested.connect(_on_end_game_from_esc)
+	_menu_overlay.main_menu_requested.connect(_on_main_menu_from_esc)
+	# ESCPanel is a direct GameScene Prompt child, never a 1280x800 legacy
+	# surface. [SRC: GameScene.unity MainUI/Prompt/ESCPanel]
+	add_child(_menu_overlay)
 
 
 ## Texture-first: the original common-operation menu surface.
@@ -331,11 +275,21 @@ func _menu_panel_style() -> StyleBox:
 	return FaustTheme.card_style(FaustTheme.GOLD)
 
 
-func _on_save_from_menu() -> void:
-	var ok := SaveSystem.save(state)
-	_close_game_menu()
-	if _current and _current.has_method("set_log"):
-		_current.set_log("已保存。" if ok else "保存失败。")
+func _on_end_game_from_esc() -> void:
+	if state == null:
+		return
+	# [SRC: ESCGameController.c @ OnEndGame (RVA 0x5429f0):
+	# Player.success=true; Player.over_reason=0x10; GameController.DoGameOver]
+	state.success = true
+	state.over_reason = 16
+	_show_game_over()
+
+
+func _on_main_menu_from_esc() -> void:
+	# [SRC: ESCGameController.c @ OnMainMenu (RVA 0x542ae0): SavePlayer ->
+	# scene transition. Save first even when the title transition later changes.]
+	SaveSystem.save(state)
+	_show_menu()
 
 
 func _show_user_archive_overlay() -> void:
