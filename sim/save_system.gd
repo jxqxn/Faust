@@ -584,6 +584,30 @@ static func save_user_archive(state, index: int, archive_name: String) -> bool:
 	return _write_user_archives(archives)
 
 
+## UserArchiveController.OnModifyName delegates to Datapool.UpdateUserArchive:
+## it changes archive metadata only and never serializes/replaces the live
+## Player payload.  Keep that boundary explicit rather than routing a rename
+## through save_user_archive.
+## [SRC: UserArchiveController.__c__DisplayClass20_0.c @
+##       <OnModifyName>b__0 (RVA 0x5c7e30) -> Datapool.UpdateUserArchive;
+##       dump.cs:423740-423746]
+static func update_user_archive(index: int, archive_name: String) -> bool:
+	if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
+		return false
+	var name := archive_name.strip_edges()
+	if name.is_empty() or name.length() > 20:
+		return false
+	var archives := _read_user_archives()
+	for archive_index in archives.size():
+		var entry = archives[archive_index]
+		if entry is Dictionary and int(entry.get("index", -1)) == index:
+			var renamed: Dictionary = entry.duplicate(true)
+			renamed["name"] = name
+			archives[archive_index] = renamed
+			return _write_user_archives(archives)
+	return false
+
+
 static func list_user_archives(db) -> Array:
 	var valid_archives: Array = []
 	for entry in _read_user_archives():

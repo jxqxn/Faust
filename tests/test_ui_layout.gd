@@ -882,9 +882,48 @@ func test_game_menu_opens_manual_archive_picker():
 	game._show_user_archive_overlay()
 	await wait_process_frames(1)
 
-	assert_not_null(_find_node_by_name(game, "UserArchiveOverlay"), "manual save opens a separate archive picker")
-	assert_not_null(_find_node_by_name(game, "UserArchiveNameInput"), "archive picker accepts a player-specified name")
-	assert_not_null(_find_node_by_name(game, "SaveNewUserArchiveButton"), "archive picker can create a new slot")
+	var archive_panel := _find_node_by_name(game, "UserArchiveController") as Control
+	var left := _find_node_by_name(game, "Left") as Control
+	var scroll := _find_node_by_name(game, "Scroll View") as Control
+	var first_slot := _find_node_by_name(game, "UserArchiveItem_00") as Button
+	assert_not_null(archive_panel, "manual save opens the source UserArchiveController")
+	assert_not_null(left, "archive controller replays its source left information column")
+	assert_not_null(scroll, "archive controller replays its source scroll viewport")
+	assert_not_null(first_slot, "archive controller renders its fixed source slot datasource, including empty slots")
+	if archive_panel != null:
+		assert_eq(archive_panel.size, Vector2(3840, 2160), "archive root retains the original full-canvas design space")
+	if left != null:
+		assert_eq(left.position, Vector2(200, 300), "Left replays its source inset after Unity-to-Godot coordinates")
+		assert_almost_eq(left.size.x, 875.2, 0.01, "Left replays the source 28%-wide column with 200px inset")
+		assert_almost_eq(left.size.y, 1560.0, 0.01, "Left preserves the source vertical insets")
+	if scroll != null:
+		assert_eq(scroll.position, Vector2(1228.8, 200), "Scroll View replays its source right-column origin")
+		assert_almost_eq(scroll.size.x, 2511.2, 0.01, "Scroll View preserves its source width independent of item width")
+		assert_almost_eq(scroll.size.y, 1760.0, 0.01, "Scroll View replays its source vertical insets")
+	if first_slot != null:
+		assert_eq(first_slot.custom_minimum_size, Vector2(2760, 240), "UserArchiveItem preserves the authored 2760x240 row")
+	var empty_slot: Button
+	for index in SaveSystem.MAX_USER_ARCHIVE_COUNT:
+		var candidate := _find_node_by_name(game, "UserArchiveItem_%02d" % index) as Button
+		if candidate != null and _find_node_by_name(candidate, "EmptyContent") != null:
+			empty_slot = candidate
+			break
+	assert_not_null(empty_slot, "at least one source archive slot should be empty in this isolated test run")
+	if empty_slot != null:
+		empty_slot.pressed.emit()
+		await wait_process_frames(1)
+		assert_not_null(_find_node_by_name(game, "UserArchiveNameInput"), "selecting an empty source slot opens the separate name-input controller")
+		var input := _find_node_by_name(game, "InputField (TMP)") as LineEdit
+		var confirm := _find_node_by_name(game, "Confirm") as Button
+		assert_not_null(input, "name controller owns the source-sized input field")
+		assert_not_null(confirm, "name controller owns a separate confirm control")
+		if input != null and confirm != null:
+			assert_eq(input.max_length, 20, "source name input permits only 1–20 characters")
+			assert_true(confirm.disabled, "empty archive names cannot be confirmed")
+			input.text = "原作槽位"
+			input.text_changed.emit(input.text)
+			await wait_process_frames(1)
+			assert_false(confirm.disabled, "a non-empty <=20-character name enables confirmation")
 	var desk := _find_node_by_name(game, "SituationDesk")
 	assert_true(desk.is_scene_blocked(), "the archive picker should block desk input")
 	game._close_user_archive_overlay()

@@ -359,6 +359,17 @@ func test_user_archives_are_named_selectable_and_deleted_with_payload():
 	assert_eq(archives.size(), 2, "two valid archive entries are listed")
 	assert_eq(str(archives[0].get("name", "")), "Estate before search", "archive keeps its player name")
 	assert_eq(int(archives[1].get("day", 0)), 7, "archive summary reads the saved day")
+	var archive_payload_before := FileAccess.get_file_as_string(SaveSystem.user_archive_save_path(1))
+	assert_true(SaveSystem.update_user_archive(1, "Renamed shop"), "renaming an archive updates its index entry")
+	assert_eq(
+		FileAccess.get_file_as_string(SaveSystem.user_archive_save_path(1)),
+		archive_payload_before,
+		"source UpdateUserArchive must not replace the saved Player payload"
+	)
+	archives = SaveSystem.list_user_archives(db)
+	assert_eq(str(archives[1].get("name", "")), "Renamed shop", "renamed metadata is visible to the archive datasource")
+	assert_false(SaveSystem.update_user_archive(1, ""), "source name input rejects empty archive names")
+	assert_false(SaveSystem.update_user_archive(1, "123456789012345678901"), "source name input rejects names longer than 20 characters")
 
 	var loaded = SaveSystem.load_user_archive(db, 1)
 	assert_not_null(loaded, "selected archive should load")

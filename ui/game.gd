@@ -8,7 +8,7 @@ const GameScreen = preload("res://ui/game_screen.gd")
 const RiteView = preload("res://ui/rite_view.gd")
 const ESCGamePanel = preload("res://ui/esc_game_panel.gd")
 const SettingsPanel = preload("res://ui/settings_panel.gd")
-const GLOBAL_MODAL_Z := 1000
+const UserArchivePanel = preload("res://ui/user_archive_panel.gd")
 
 # Transitional compat layer: screens not yet re-emitted in the original
 # 3840x2160 canvas space still lay out in the old 1280x800 mockup space.
@@ -28,7 +28,6 @@ var _menu_overlay: Control
 var _settings_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
-var _user_archive_name_input: LineEdit
 var _current_rite_id := 0
 var _current_rite_uid := 0
 var _audio: GameAudio
@@ -275,28 +274,6 @@ func _close_settings() -> void:
 	_settings_overlay = null
 
 
-## Texture-first: the original common-operation menu surface.
-## [SRC: GameScene.unity CommonContent -> common_operation_bg;
-##       Texture2D/common_operation_bg.png 1148x1124]
-func _menu_panel_style() -> StyleBox:
-	var art_path := "res://assets/original/ui/common_operation_bg.png"
-	if ResourceLoader.exists(art_path):
-		var tex := load(art_path) as Texture2D
-		if tex != null:
-			var style := StyleBoxTexture.new()
-			style.texture = tex
-			style.texture_margin_left = 200
-			style.texture_margin_right = 200
-			style.texture_margin_top = 200
-			style.texture_margin_bottom = 200
-			style.content_margin_left = 210
-			style.content_margin_right = 210
-			style.content_margin_top = 210
-			style.content_margin_bottom = 210
-			return style
-	return FaustTheme.card_style(FaustTheme.GOLD)
-
-
 func _on_end_game_from_esc() -> void:
 	if state == null:
 		return
@@ -319,143 +296,42 @@ func _show_user_archive_overlay() -> void:
 	_close_user_archive_overlay()
 	_set_world_scene_blocker("user_archive", true, false)
 	_set_gameplay_presentation_frozen(true)
-	_user_archive_overlay = Control.new()
-	_user_archive_overlay.name = "UserArchiveOverlay"
-	_user_archive_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_user_archive_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
-	_user_archive_overlay.z_index = GLOBAL_MODAL_Z
-	_legacy_layer().add_child(_user_archive_overlay)
-
-	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.56)
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	shade.mouse_filter = Control.MOUSE_FILTER_STOP
-	_user_archive_overlay.add_child(shade)
-
-	var panel := PanelContainer.new()
-	panel.name = "UserArchivePanel"
-	panel.custom_minimum_size = Vector2(720, 560)
-	panel.anchor_left = 0.5
-	panel.anchor_top = 0.5
-	panel.anchor_right = 0.5
-	panel.anchor_bottom = 0.5
-	panel.offset_left = -360
-	panel.offset_top = -280
-	panel.offset_right = 360
-	panel.offset_bottom = 280
-	panel.add_theme_stylebox_override("panel", _menu_panel_style())
-	_user_archive_overlay.add_child(panel)
-
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 10)
-	panel.add_child(box)
-	var title := Label.new()
-	title.text = "保存为存档"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	box.add_child(title)
-
-	var create_row := HBoxContainer.new()
-	create_row.add_theme_constant_override("separation", 8)
-	box.add_child(create_row)
-	_user_archive_name_input = LineEdit.new()
-	_user_archive_name_input.name = "UserArchiveNameInput"
-	_user_archive_name_input.placeholder_text = "存档名称"
-	_user_archive_name_input.text = "第 %d 天" % state.day
-	_user_archive_name_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	create_row.add_child(_user_archive_name_input)
-	var create := Button.new()
-	create.name = "SaveNewUserArchiveButton"
-	create.text = "新建存档"
-	create.custom_minimum_size = Vector2(110, 42)
-	var new_index := SaveSystem.next_user_archive_index()
-	create.disabled = new_index < 0
-	create.tooltip_text = "存档槽已满" if new_index < 0 else ""
-	create.pressed.connect(_save_user_archive.bind(new_index, ""))
-	create_row.add_child(create)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(scroll)
-	var list := VBoxContainer.new()
-	list.name = "UserArchiveSaveList"
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 6)
-	scroll.add_child(list)
-	for archive in SaveSystem.list_user_archives(db):
-		list.add_child(_make_user_archive_save_row(archive))
-
-	var back := Button.new()
-	back.name = "CloseUserArchiveButton"
-	back.text = "返回"
-	back.custom_minimum_size = Vector2(0, 42)
-	back.pressed.connect(_close_user_archive_overlay)
-	box.add_child(back)
+	# UserArchive is a direct full-canvas GameScene prompt, not a LegacyLayer
+	# surface. The controller keeps all 50 source slots visible.
+	# [SRC: GameScene.unity UserArchive instance; UserArchiveController.Show
+	#       (RVA 0x5c9030) binds Datapool.user_archives to its datasource.]
+	var panel := UserArchivePanel.new()
+	panel.name = "UserArchiveOverlay"
+	panel.setup(SaveSystem.list_user_archives(db), true)
+	panel.closed.connect(_close_user_archive_overlay)
+	panel.save_requested.connect(_save_user_archive)
+	panel.rename_requested.connect(_rename_user_archive)
+	panel.delete_requested.connect(_delete_user_archive)
+	_user_archive_overlay = panel
+	add_child(_user_archive_overlay)
 
 
-func _make_user_archive_save_row(archive: Dictionary) -> Control:
-	var row := HBoxContainer.new()
-	row.name = "UserArchiveSaveRow_%d" % int(archive.get("index", -1))
-	row.add_theme_constant_override("separation", 8)
-	var summary := Label.new()
-	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	summary.text = "%s  |  Day %d / Round %d" % [
-		str(archive.get("name", "Unnamed archive")),
-		int(archive.get("day", archive.get("live_days", 1))),
-		int(archive.get("round_number", 1)),
-	]
-	row.add_child(summary)
-	var overwrite := Button.new()
-	overwrite.name = "OverwriteUserArchiveButton_%d" % int(archive.get("index", -1))
-	overwrite.text = "覆盖"
-	overwrite.custom_minimum_size = Vector2(72, 42)
-	overwrite.pressed.connect(_confirm_overwrite_user_archive.bind(int(archive.get("index", -1)), str(archive.get("name", ""))))
-	row.add_child(overwrite)
-	var delete := Button.new()
-	delete.name = "DeleteUserArchiveButton_%d" % int(archive.get("index", -1))
-	delete.text = "删除"
-	delete.tooltip_text = "删除存档"
-	delete.custom_minimum_size = Vector2(72, 42)
-	delete.pressed.connect(_confirm_delete_user_archive.bind(int(archive.get("index", -1))))
-	row.add_child(delete)
-	return row
-
-
-func _confirm_overwrite_user_archive(index: int, existing_name: String) -> void:
-	var confirm := ConfirmationDialog.new()
-	confirm.dialog_text = "确定覆盖这个存档吗？"
-	_user_archive_overlay.add_child(confirm)
-	confirm.confirmed.connect(_save_user_archive.bind(index, existing_name))
-	confirm.canceled.connect(confirm.queue_free)
-	confirm.confirmed.connect(confirm.queue_free)
-	confirm.popup_centered()
-
-
-func _save_user_archive(index: int, fallback_name: String) -> void:
-	if index < 0 or state == null:
+func _save_user_archive(index: int, archive_name: String) -> void:
+	if state == null:
 		return
-	var name := _user_archive_name_input.text if _user_archive_name_input != null else ""
-	if name.strip_edges().is_empty():
-		name = fallback_name
-	var ok := SaveSystem.save_user_archive(state, index, name)
+	var ok := SaveSystem.save_user_archive(state, index, archive_name)
 	_close_user_archive_overlay()
 	if _current and _current.has_method("set_log"):
 		_current.set_log("已保存为存档" if ok else "存档保存失败")
 
 
-func _confirm_delete_user_archive(index: int) -> void:
-	var confirm := ConfirmationDialog.new()
-	confirm.dialog_text = "确定删除这个存档吗？此操作无法撤销。"
-	_user_archive_overlay.add_child(confirm)
-	confirm.confirmed.connect(func():
-		SaveSystem.delete_user_archive(index)
-		_close_user_archive_overlay()
-		_show_user_archive_overlay()
-	)
-	confirm.canceled.connect(confirm.queue_free)
-	confirm.confirmed.connect(confirm.queue_free)
-	confirm.popup_centered()
+func _rename_user_archive(index: int, archive_name: String) -> void:
+	var ok := SaveSystem.update_user_archive(index, archive_name)
+	_close_user_archive_overlay()
+	if _current and _current.has_method("set_log"):
+		_current.set_log("存档名称已修改" if ok else "存档改名失败")
+
+
+func _delete_user_archive(index: int) -> void:
+	var ok := SaveSystem.delete_user_archive(index)
+	_close_user_archive_overlay()
+	if _current and _current.has_method("set_log"):
+		_current.set_log("存档已删除" if ok else "存档删除失败")
 
 
 func _close_game_menu() -> void:
@@ -475,7 +351,6 @@ func _close_user_archive_overlay() -> void:
 		return
 	_user_archive_overlay.queue_free()
 	_user_archive_overlay = null
-	_user_archive_name_input = null
 
 
 func _after_rite_resolution() -> void:
