@@ -92,6 +92,30 @@ func test_begin_guide_replays_source_default_geometry():
 	assert_eq(ring.size, Vector2(314, 225))
 
 
+func test_game_over_replays_source_stages_and_geometry():
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(713))
+	state.over_reason = 12
+	var stage := _stage()
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup(state, db)
+	stage.add_child(over)
+	await wait_process_frames(2)
+
+	assert_eq(over.name, "Over")
+	assert_eq(over.size, Vector2(3840, 2160), "Over retains the source design canvas")
+	var title_bg := over.get_node_or_null("Step1/Title BG") as Control
+	assert_not_null(title_bg)
+	if title_bg == null:
+		return
+	assert_eq(title_bg.position, Vector2(1442, 420))
+	assert_eq(title_bg.size, Vector2(956, 1320))
+	over.do_next()
+	assert_not_null(over.get_node_or_null("Step2/CG"), "DoNext advances from source Step1 to CG")
+	over.do_next()
+	assert_not_null(over.get_node_or_null("Step3/MainMenuButton"), "no-story over node falls through to source result step")
+
+
 func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
 	var rng := RNG.new(73)
 	var state := GameState.new()

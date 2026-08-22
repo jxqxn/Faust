@@ -550,7 +550,8 @@ func _show_game_over() -> void:
 	var go := preload("res://ui/game_over.gd").new()
 	go.setup(state, db)
 	go.restart.connect(_show_menu)
-	_legacy_layer().add_child(go)
+	# [SRC: GameScene MainUI/Over is a direct 3840x2160 canvas.]
+	add_child(go)
 	_current = go
 
 
