@@ -43,14 +43,15 @@ class HandRailDrop:
 
 
 const MOCKUP_SIZE := Vector2(1280, 720)
-const HAND_NATURAL_STEP := 112.0
+## HandCardsController authoring on GameScene/MainUI/Hand.
+const HAND_SPACE := 10.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
-const HAND_RAIL_BOTTOM_GUTTER := 20.0
+const HAND_MASK_HEIGHT := 470.0
+const HAND_CONTENT_OFFSET := Vector2(516.7349, 36.0)
+const HAND_CONTENT_SIZE := Vector2(2723.264, 430.0)
 # Original MainUI canvas: 3840x2160 (GameScene.unity CanvasScaler Expand).
 # Desktop chrome anchors below are authored values from docs/ui_layout/GameScene.
 const DESIGN_SPACE := Vector2(3840, 2160)
-# Hand card content is authored in the 720p mockup space; it renders at 3x.
-const HAND_CONTENT_SCALE := 3.0
 # Full-rect overlays built by not-yet-migrated scripts (rite view/selector)
 # still lay out in the 1280x800 legacy space, scaled to fill design height.
 const LEGACY_OVERLAY_DESIGN := Vector2(1280, 800)
@@ -259,24 +260,19 @@ func _build_ui() -> void:
 	_card_rail_view.name = "CardRail"
 	_card_rail_view.z_index = PERSISTENT_CONTROL_Z
 	(_card_rail_view as HandRailDrop).owner_screen = self
-	_card_rail_view.clip_contents = true
+	# Original Hand Mask is inactive in GameScene. The HandCardsController
+	# compresses cards itself, so it must not clip CardArea's raised visual.
+	_card_rail_view.clip_contents = false
 	_card_rail_view.mouse_filter = Control.MOUSE_FILTER_STOP
 	_card_rail_view.mouse_exited.connect(_clear_hand_drop_preview)
 	add_child(_card_rail_view)
 	_rail_padding = MarginContainer.new()
 	_rail_padding.name = "CardRailPadding"
-	# Leave room for CardWidget's bottom-pivot hover lift and shadow inside the
-	# clipped hand viewport. Without this inset the effect exists in code but
-	# its top edge is visibly cut off by the rail.
-	_rail_padding.add_theme_constant_override("margin_top", 24)
-	# Extend the clipping viewport to the screen edge, then reserve the same
-	# amount as inner space.  This keeps the hand at its existing height while
-	# allowing tilted bottom corners and the 12 px card shadow to render fully.
-	_rail_padding.add_theme_constant_override("margin_bottom", int(HAND_RAIL_BOTTOM_GUTTER))
 	_card_rail_view.add_child(_rail_padding)
-	# Anchor only after parenting.  Doing this while the node is orphaned makes
-	# Godot calculate offsets from the viewport, shifting the centred hand right.
-	_rail_padding.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# GameScene/MainUI/Hand has stretch-x anchors but resolves to this concrete
+	# rect on the 3840x2160 canvas. Keep it as a source-space child, not a
+	# full-width clone container.
+	_rail_padding.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_card_items = Control.new()
 	_card_items.name = "CardRailItems"
 	_card_items.mouse_filter = Control.MOUSE_FILTER_PASS
@@ -453,21 +449,22 @@ func _apply_layout() -> void:
 	_set_rect(
 		_card_rail_view,
 		Rect2(
-			Vector2(0, view_size.y - 470 * k.y),
-			Vector2(view_size.x, (452.0 + HAND_RAIL_BOTTOM_GUTTER) * k.y)
+			Vector2(0, view_size.y - HAND_MASK_HEIGHT * k.y),
+			Vector2(view_size.x, HAND_MASK_HEIGHT * k.y)
 		)
 	)
-	_rail_padding.add_theme_constant_override(
-		"margin_bottom", roundi(HAND_RAIL_BOTTOM_GUTTER * HAND_CONTENT_SCALE)
+	_set_rect(
+		_rail_padding,
+		Rect2(HAND_CONTENT_OFFSET * k, HAND_CONTENT_SIZE * k)
 	)
-	# Hand card content is authored in 720p mockup space; render it at 3x so
-	# cards match the original card size in the 4K canvas.
+	# CardNew/SudanCard use their prefab RectTransforms directly. There is no
+	# legacy mockup scale between the card root and GameScene/MainUI/Hand.
 	if _card_items != null:
-		_card_items.scale = Vector2(HAND_CONTENT_SCALE, HAND_CONTENT_SCALE)
+		_card_items.scale = Vector2.ONE
 		_card_items.position = Vector2.ZERO
 	_card_items.custom_minimum_size = Vector2.ZERO
 	call_deferred("_layout_hand_cards")
-	_layout_situation_desk(HAND_CONTENT_SCALE)
+	_layout_situation_desk(k.y)
 	_layout_card_detail(legacy_k, view_size)
 	_layout_event_prompt(legacy_k, view_size)
 
@@ -809,7 +806,7 @@ func refresh() -> void:
 			badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			widget.add_child(badge)
-		widget.custom_minimum_size = CardWidget.CARD_SIZE
+		widget.custom_minimum_size = widget.card_size()
 		widget.clicked.connect(_show_card_detail)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
@@ -850,22 +847,22 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 	if count == 0:
 		_hand_content_overflows = false
 		return
-	var slot_count := count + (1 if _hand_drop_preview_index >= 0 else 0)
-	var metrics := _hand_layout_metrics(slot_count)
+	var metrics := _hand_layout_metrics(cards, 1 if _hand_drop_preview_index >= 0 else 0)
 	if metrics.is_empty():
 		return
 	var available_width: float = metrics["available_width"]
-	var step: float = metrics["step"]
-	var start_x: float = metrics["start_x"]
+	var slot_positions: Array = metrics["slot_positions"]
 	_hand_content_overflows = bool(metrics["overflows"])
-	var base_y := maxf(0.0, (_card_items.size.y - CardWidget.CARD_SIZE.y) * 0.5)
 	for index in count:
 		var card := cards[index]
 		var slot_index := index
 		if _hand_drop_preview_index >= 0 and slot_index >= _hand_drop_preview_index:
 			slot_index += 1
 		card.set_hand_pose(
-			Vector2(start_x + step * slot_index, base_y),
+			Vector2(
+				float(slot_positions[slot_index]),
+				maxf(0.0, (_card_items.size.y - card.card_size().y) * 0.5)
+			),
 			0.0,
 			slot_index
 		)
@@ -897,20 +894,44 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 	_card_items.modulate = Color.WHITE
 
 
-func _hand_layout_metrics(slot_count: int) -> Dictionary:
+func _hand_layout_metrics(cards: Array[CardWidget], preview_slots: int = 0) -> Dictionary:
 	var available_width := _card_items.size.x
-	if available_width <= 0.0 or slot_count <= 0:
+	if available_width <= 0.0 or cards.is_empty() and preview_slots <= 0:
 		return {}
-	var step := HAND_NATURAL_STEP
+	var widths: Array[float] = []
+	for card in cards:
+		widths.append(card.card_size().x)
+	for _index in preview_slots:
+		# A hand insertion preview has no instance yet; its source default is
+		# CardNew, which is also what HandCardsController receives on creation.
+		widths.append(CardWidget.CARD_SIZE.x)
+	var slot_count := widths.size()
+	var natural_width := 0.0
+	for width in widths:
+		natural_width += width
 	if slot_count > 1:
-		var fit_step := (available_width - CardWidget.CARD_SIZE.x) / float(slot_count - 1)
-		step = minf(step, maxf(HAND_MIN_VISIBLE_WIDTH, fit_step))
-	var hand_width := CardWidget.CARD_SIZE.x + step * float(slot_count - 1)
-	var overflow := maxf(0.0, hand_width - available_width)
+		natural_width += HAND_SPACE * float(slot_count - 1)
+	var overflow := maxf(0.0, natural_width - available_width)
+	var slot_positions: Array = []
+	if overflow <= 0.0:
+		var next_x := (available_width - natural_width) * 0.5
+		for width in widths:
+			slot_positions.append(next_x)
+			next_x += width + HAND_SPACE
+	else:
+		# HandCardsController keeps every child at its prefab size and brings
+		# adjacent origins together until at least minVisibleWidth remains.
+		var stride := HAND_MIN_VISIBLE_WIDTH
+		if slot_count > 1:
+			stride = maxf(
+				HAND_MIN_VISIBLE_WIDTH,
+				(available_width - float(widths[slot_count - 1])) / float(slot_count - 1)
+			)
+		for index in slot_count:
+			slot_positions.append(stride * float(index))
 	return {
 		"available_width": available_width,
-		"step": step,
-		"start_x": (available_width - hand_width) * 0.5 if overflow <= 0.0 else -overflow * _hand_pan_ratio,
+		"slot_positions": slot_positions,
 		"overflows": overflow > 0.0,
 	}
 
@@ -965,18 +986,22 @@ func _clear_hand_drop_preview() -> void:
 
 
 func _hand_preview_index_at(rail_position: Vector2, dragged_card_uid: int) -> int:
-	var visible_count := 0
+	var cards: Array[CardWidget] = []
 	for child in _card_items.get_children():
 		if child is CardWidget and child.visible and not child.is_queued_for_deletion():
 			if int((child as CardWidget).card_uid) != dragged_card_uid:
-				visible_count += 1
-	var metrics := _hand_layout_metrics(visible_count + 1)
+				cards.append(child as CardWidget)
+	var metrics := _hand_layout_metrics(cards, 1)
 	if metrics.is_empty():
-		return visible_count
+		return cards.size()
 	var global_pos := _card_rail_view.get_global_transform() * rail_position
 	var local_x := (_card_items.get_global_transform().affine_inverse() * global_pos).x
-	var first_center: float = float(metrics["start_x"]) + CardWidget.CARD_SIZE.x * 0.5
-	return clampi(roundi((local_x - first_center) / float(metrics["step"])), 0, visible_count)
+	var slot_positions: Array = metrics["slot_positions"]
+	for index in cards.size():
+		var center := float(slot_positions[index]) + cards[index].card_size().x * 0.5
+		if local_x < center:
+			return index
+	return cards.size()
 
 
 func _set_hand_pan_ratio(ratio: float) -> void:
@@ -1008,7 +1033,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	card["type"] = "sudan"
 	card["name"] = "%s%s" % [dec.rank, dec.action]
 	var widget := CardWidget.make(card, "active_sudan")
-	widget.custom_minimum_size = CardWidget.CARD_SIZE
+	widget.custom_minimum_size = widget.card_size()
 	widget.clip_contents = false
 	widget.clicked.connect(_show_card_detail)
 	var days := Label.new()
@@ -1016,7 +1041,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	days.text = str(int(asc.days_left))
 	days.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	days.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	days.position = Vector2(CardWidget.CARD_SIZE.x - 38, -20)
+	days.position = Vector2(widget.card_size().x - 38, -20)
 	days.size = Vector2(28, 24)
 	days.add_theme_font_size_override("font_size", 18)
 	days.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)

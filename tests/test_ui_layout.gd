@@ -793,6 +793,21 @@ func test_card_widget_exports_drag_payload_with_card_id():
 	assert_eq(data.get("drag_visual_scale"), widget._drag_selected_scale)
 	assert_eq(data.get("drag_visual_tilt"), widget._drag_selected_tilt)
 
+
+func test_card_widget_uses_source_prefab_rect_by_card_kind():
+	var stage := _stage()
+	var ordinary := CardWidget.make({"id": 2000001, "type": "char", "tag": {}})
+	var sudan := CardWidget.make({"id": 7100001, "type": "sudan", "tag": {}})
+	stage.add_child(ordinary)
+	stage.add_child(sudan)
+	await wait_process_frames(1)
+
+	assert_eq(ordinary.card_size(), Vector2(194, 422), "CardNew prefab root is 194x422")
+	assert_eq(ordinary.size, Vector2(194, 422), "normal card Control uses CardNew's direct RectTransform")
+	assert_eq(sudan.card_size(), Vector2(185, 330), "SudanCard prefab root is 185x330")
+	assert_eq(sudan.size, Vector2(185, 330), "Sudan card must not inherit CardNew's size")
+
+
 func test_card_widget_face_only_shows_name_and_art():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 3, "tag": {"智慧": 9, "主角": 1}}
 	var stage := _stage()
@@ -949,7 +964,7 @@ func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled remaining card should restore interaction")
 
 
-func test_game_screen_card_rail_reserves_hover_lift_space():
+func test_game_screen_card_rail_replays_source_hand_and_mask_rects():
 	var rng := RNG.new(10)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -961,23 +976,23 @@ func test_game_screen_card_rail_reserves_hover_lift_space():
 
 	var rail_padding := _find_node_by_name(screen, "CardRailPadding") as MarginContainer
 	var card_rail := _find_node_by_name(screen, "CardRail") as Control
-	assert_not_null(rail_padding, "clipped card rail should reserve inset space for hover lift and shadow")
-	if rail_padding != null:
-		assert_true(rail_padding.get_theme_constant("margin_top") >= 20, "rail top inset should keep the raised card inside the viewport")
-		assert_true(
-			rail_padding.get_theme_constant("margin_bottom") >= 16,
-			"rail bottom inset should preserve the hand position while exposing card shadows"
-		)
+	assert_not_null(rail_padding, "source Hand child should exist inside the Hand Mask band")
 	assert_not_null(card_rail, "card rail viewport should exist")
 	if card_rail != null:
 		assert_false(card_rail is ScrollContainer, "hand navigation must not expose a scrollbar")
+		assert_false(card_rail.clip_contents, "inactive source Hand Mask must not clip raised CardArea visuals")
 		assert_almost_eq(
 			card_rail.position.y + card_rail.size.y, screen._effective_view_size().y, 1.0,
-			"the central hand clip should extend to the viewport bottom like its side siblings"
+			"source Hand Mask reaches the viewport bottom"
 		)
 	if rail_padding != null and card_rail != null:
-		assert_almost_eq(rail_padding.size.x, card_rail.size.x, 1.0, "hand content must use the rail width, not the whole viewport")
-		assert_almost_eq(screen._card_items.size.x, card_rail.size.x, 1.0, "centering should be calculated inside the hand rail")
+		var view := screen._effective_view_size()
+		var k := Vector2(view.x / 3840.0, view.y / 2160.0)
+		assert_almost_eq(rail_padding.position.x, 516.7349 * k.x, 1.0, "Hand's resolved left inset must replay GameScene")
+		assert_almost_eq(rail_padding.position.y, 36.0 * k.y, 1.0, "Hand sits 36 pixels below the source mask top")
+		assert_almost_eq(rail_padding.size.x, 2723.264 * k.x, 1.0, "Hand uses the source 2723.264 width, not full viewport width")
+		assert_almost_eq(rail_padding.size.y, 430.0 * k.y, 1.0, "Hand keeps its source 430 height")
+		assert_almost_eq(screen._card_items.size.x, rail_padding.size.x, 1.0, "card layout uses the source Hand rectangle")
 
 
 func test_game_screen_idle_hand_is_centered_spaced_and_straight():
@@ -999,7 +1014,7 @@ func test_game_screen_idle_hand_is_centered_spaced_and_straight():
 	var hand_left := first.position.x
 	var hand_right := last.position.x + last.size.x
 	assert_almost_eq((hand_left + hand_right) * 0.5, screen._card_items.size.x * 0.5, 2.0, "untouched hand should be centred")
-	assert_true(cards[1].position.x - first.position.x > CardWidget.CARD_SIZE.x, "ordinary hands should leave every card border visible")
+	assert_almost_eq(cards[1].position.x - first.position.x, CardWidget.CARD_SIZE.x + 10.0, 0.1, "source HandCardsController uses 10 pixels of space between full cards")
 	assert_almost_eq(first.position.y, last.position.y, 0.1, "this game's hand should stay on a straight baseline")
 	assert_almost_eq(first.rotation, 0.0, 0.001, "idle drift must not turn the stable hand layout into a fan")
 	assert_almost_eq(last.rotation, 0.0, 0.001, "idle drift must remain a visual-only offset")
@@ -1052,7 +1067,17 @@ func test_game_screen_hand_drop_preview_opens_insertion_gap():
 	var new_span := (cards[-1] as CardWidget).position.x - (cards[0] as CardWidget).position.x
 
 	assert_true(screen._hand_drop_preview_index >= 0, "hovering a dragged card over the hand should reserve an insertion slot")
-	assert_true(new_span > old_span + CardWidget.CARD_SIZE.x * 0.5, "existing cards should visibly make room instead of being covered")
+	# HandCardsController's source minimum is 20 visible pixels. A crowded hand
+	# is already at that limit, so an insertion does not invent a clone-only
+	# full-card gap; its stable origins may shift by at most one compressed
+	# minVisibleWidth notch as the last-card boundary is recomputed.
+	if screen._hand_content_overflows:
+		assert_true(
+			new_span - old_span <= 20.1,
+			"a saturated source hand opens at most one minVisibleWidth notch during preview"
+		)
+	else:
+		assert_true(new_span > old_span, "a non-saturated hand opens the source-width insertion slot")
 	screen._clear_hand_drop_preview()
 	assert_eq(screen._hand_drop_preview_index, -1)
 

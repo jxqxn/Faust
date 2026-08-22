@@ -15,7 +15,11 @@ extends Control
 signal clicked(card_id: int, card: Dictionary)
 signal drag_visibility_changed(card_uid: int, hidden: bool)
 
-const CARD_SIZE := Vector2(104, 160)
+## Authored RectTransforms, not clone-side presentation measurements.
+## [SRC: Resources/prefab/CardNew.prefab CardNew 194x422;
+##       Resources/prefab/SudanCard.prefab SudanCard 185x330]
+const CARD_SIZE := Vector2(194, 422)
+const SUDAN_CARD_SIZE := Vector2(185, 330)
 const SELECTED_LIFT := CARD_SIZE.y * 0.2
 const HOVER_Z_INDEX := 20
 const DEAL_DURATION := 0.30
@@ -23,6 +27,7 @@ const DEAL_STAGGER := 0.055
 const REFLOW_DURATION := 0.22
 
 var _card: Dictionary = {}
+var _card_size := CARD_SIZE
 var card_id: int = 0
 var card_uid: int = 0
 var drag_source := "hand"
@@ -51,14 +56,25 @@ var _presentation_paused := false
 
 func set_card(card: Dictionary) -> void:
 	_card = card
+	_card_size = size_for_card(card)
 	card_id = int(card.get("id", card_id))
 	card_uid = int(card.get("instance_uid", card_uid))
+	custom_minimum_size = _card_size
+	size = _card_size
 	_rebuild()
 
 
+static func size_for_card(card: Dictionary) -> Vector2:
+	return SUDAN_CARD_SIZE if str(card.get("type", "")) == "sudan" else CARD_SIZE
+
+
+func card_size() -> Vector2:
+	return _card_size
+
+
 func _ready() -> void:
-	custom_minimum_size = CARD_SIZE
-	size = CARD_SIZE
+	custom_minimum_size = _card_size
+	size = _card_size
 	mouse_filter = Control.MOUSE_FILTER_IGNORE if _drag_preview else Control.MOUSE_FILTER_STOP
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_base_z_index = z_index
@@ -76,8 +92,8 @@ func _ready() -> void:
 ## transform owns hit testing; offset_transform carries the hover lift only.
 func set_hand_pose(target_position: Vector2, target_rotation: float, order: int) -> void:
 	position = target_position
-	size = CARD_SIZE
-	pivot_offset = CARD_SIZE * 0.5
+	size = _card_size
+	pivot_offset = _card_size * 0.5
 	rotation = target_rotation
 	_base_z_index = order
 	if not _drag_preview:
@@ -244,7 +260,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	)
 	var preview_root := Control.new()
 	preview_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview_root.custom_minimum_size = CARD_SIZE
+	preview_root.custom_minimum_size = _card_size
 	# Preserve the pointer-to-card offset from the moment dragging begins.
 	preview.position = -at_position
 	preview_root.add_child(preview)
@@ -383,7 +399,7 @@ func _apply_rest_pose() -> void:
 	if _drag_preview or _dealing or _hidden_for_drag:
 		return
 	_kill_pose_tween()
-	var lift := SELECTED_LIFT if (_hovered or _selected) else 0.0
+	var lift := _card_size.y * 0.2 if (_hovered or _selected) else 0.0
 	offset_transform_position = Vector2(0.0, -lift)
 	offset_transform_rotation = 0.0
 	offset_transform_scale = Vector2.ONE
@@ -614,7 +630,8 @@ static func _rarity_color(rare: int, card_type: String = "") -> Color:
 ## Build a standalone card widget from a card dictionary.
 static func make(card: Dictionary, source: String = "hand", slot_key: String = "", rite_uid: int = 0) -> CardWidget:
 	var w := CardWidget.new()
-	w.custom_minimum_size = CARD_SIZE
+	w._card_size = size_for_card(card)
+	w.custom_minimum_size = w._card_size
 	w.card_id = int(card.get("id", 0))
 	w.card_uid = int(card.get("instance_uid", 0))
 	w.drag_source = source
