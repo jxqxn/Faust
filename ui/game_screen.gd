@@ -19,6 +19,7 @@ const CardInfoViewScript = preload("res://ui/card_info_view.gd")
 const MainHelpViewScript = preload("res://ui/main_help.gd")
 const ChangeNameViewScript = preload("res://ui/change_name_view.gd")
 const CachedEventsViewScript = preload("res://ui/cached_events_view.gd")
+const EventPromptViewScript = preload("res://ui/event_prompt_view.gd")
 
 class HandRailDrop:
 	extends Control
@@ -105,7 +106,7 @@ var _cached_event_mask: Button
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
-var _event_panel: Panel
+var _event_panel = null  # PromptNew OptionBG (plain Control after batch AL)
 var _rename_input: LineEdit
 var _sleep_waiting := false
 var _presentation_frozen := false
@@ -1426,140 +1427,21 @@ func _show_event_overlay(display: Dictionary) -> void:
 		return
 	_clear_event_overlay()
 	set_world_scene_blocker("event_prompt", true)
-	_event_overlay = Control.new()
+	# [SRC: PromptNew.prefab / PromptController.Show 0x58a020 —
+	# the event prompt is the 2705-wide OptionBG parchment with body text,
+	# full-width option rows, right-side portrait and confirm row. The clone
+	# keeps its op-queue semantics and swaps only the presentation surface.]
+	_event_overlay = EventPromptViewScript.new()
 	_event_overlay.name = "EventPromptOverlay"
-	_event_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_event_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_event_overlay.z_index = OVERLAY_LAYER_Z
 	add_child(_event_overlay)
-
-	_event_panel = Panel.new()
-	_event_panel.name = "EventPromptPanel"
-	_event_panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	_event_panel.clip_contents = true
-	_event_panel.add_theme_stylebox_override("panel", _event_panel_style())
-	_event_overlay.add_child(_event_panel)
-	var root := VBoxContainer.new()
-	root.name = "EventPromptContent"
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.offset_left = 18
-	root.offset_top = 16
-	root.offset_right = -18
-	root.offset_bottom = -16
-	root.add_theme_constant_override("separation", 10)
-	_event_panel.add_child(root)
-
-	var title := Label.new()
-	title.name = "EventPromptTitle"
-	title.text = str(display.get("title", "事件"))
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 21)
-	title.add_theme_color_override("font_color", Color("#fff1c3"))
-	root.add_child(title)
-
-	# Original portrait art beside the event text (event configs carry an
-	# `icon` resource like "cards/2000012"; art lands in assets/original/cards
-	# keyed by the resource basename). [SRC: event icon fields; heads.png
-	# atlas is the live2D fallback in the original]
-	var portrait: Texture2D = display.get("icon", null)
-	if portrait != null:
-		var portrait_rect := TextureRect.new()
-		portrait_rect.name = "EventPortrait"
-		portrait_rect.texture = portrait
-		portrait_rect.custom_minimum_size = Vector2(96, 120)
-		portrait_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		portrait_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		portrait_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		root.add_child(portrait_rect)
-
-	var body := RichTextLabel.new()
-	body.name = "EventPromptBody"
-	body.text = str(display.get("text", ""))
-	body.bbcode_enabled = true
-	body.fit_content = true
-	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_font_size_override("font_size", 16)
-	body.add_theme_color_override("default_color", Color("#f0eee9"))
-	body.scroll_active = true
-	root.add_child(body)
-
-	if str(display.get("kind", "")) == "rename_card":
-		_rename_input = LineEdit.new()
-		_rename_input.name = "CardRenameInput"
-		_rename_input.text = str(display.get("initial_text", ""))
-		_rename_input.placeholder_text = "输入名字"
-		_rename_input.max_length = 32
-		_rename_input.custom_minimum_size = Vector2(320, 42)
-		_rename_input.text_submitted.connect(func(_value: String): _consume_event_display())
-		root.add_child(_rename_input)
-		_rename_input.call_deferred("grab_focus")
-		_rename_input.call_deferred("select_all")
-
-	var buttons := HFlowContainer.new()
-	buttons.name = "EventPromptActions"
-	buttons.add_theme_constant_override("separation", 10)
-	root.add_child(buttons)
-
-	var choices: Dictionary = display.get("choices", {})
-	if str(display.get("kind", "")) == "rename_card":
-		var confirm_rename := _event_button("确认")
-		confirm_rename.name = "CardRenameConfirmButton"
-		confirm_rename.pressed.connect(_consume_event_display)
-		buttons.add_child(confirm_rename)
-	elif choices.is_empty():
-		var cont := _event_button("继续")
-		cont.name = "EventPromptContinueButton"
-		cont.pressed.connect(_consume_event_display)
-		buttons.add_child(cont)
-	else:
-		var desc_label: RichTextLabel = null
-		var has_desc := false
-		for key in choices.keys():
-			var entry = choices[key]
-			if entry is Dictionary and str(entry.get("desc", "")) != "":
-				has_desc = true
-				break
-		if has_desc:
-			# DifficultyPanel-style live description: hovering a choice
-			# updates the desc area like UpdateShow swaps portrait+desc.
-			# [SRC: DifficultyPanelController.c UpdateShow/OnItemSelect]
-			desc_label = RichTextLabel.new()
-			desc_label.name = "EventPromptChoiceDesc"
-			desc_label.bbcode_enabled = true
-			desc_label.fit_content = true
-			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			desc_label.custom_minimum_size = Vector2(0, 74)
-			desc_label.add_theme_font_size_override("font_size", 13)
-			desc_label.add_theme_color_override("default_color", Color("#e8dcb8"))
-			desc_label.scroll_active = true
-			root.add_child(desc_label)
-		for key in choices.keys():
-			var choice_entry = choices[key]
-			var choice_text := str(choice_entry.get("text", key)) if choice_entry is Dictionary and choice_entry.has("value") else str(choice_entry)
-			var choice_value = choice_entry.get("value") if choice_entry is Dictionary and choice_entry.has("value") else choice_entry
-			var choice := _event_button(choice_text)
-			choice.name = "EventPromptChoiceButton"
-			var choice_icon: Texture2D = (
-				_choice_icon_texture(choice_entry.get("icon", ""))
-				if choice_entry is Dictionary
-				else null
-			)
-			if choice_icon != null:
-				var icon_rect := TextureRect.new()
-				icon_rect.texture = choice_icon
-				icon_rect.custom_minimum_size = Vector2(56, 56)
-				icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-				icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-				icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				choice.add_child(icon_rect)
-			if desc_label != null and choice_entry is Dictionary:
-				var entry_desc := str(choice_entry.get("desc", ""))
-				choice.mouse_entered.connect(func():
-					desc_label.text = entry_desc
-				)
-			choice.pressed.connect(_consume_event_display.bind(str(key), choice_value))
-			buttons.add_child(choice)
+	_event_panel = _event_overlay.get_node_or_null("PromptNewCanvas/EventPromptPanel")
+	_event_overlay.choice_clicked.connect(
+		func(key: String, value: Variant): _consume_event_display(key, value)
+	)
+	_event_overlay.confirm_clicked.connect(func(): _consume_event_display())
+	_event_overlay.show_prompt(display, Callable())
 	_apply_layout()
 
 
@@ -1697,6 +1579,10 @@ func _event_body_text(event: Dictionary, event_id: int) -> String:
 
 func _layout_event_prompt(s: float, view_size: Vector2) -> void:
 	if _event_panel == null:
+		return
+	if _event_overlay != null and _event_overlay.has_method("apply_source_layout"):
+		# PromptNew 1:1 overlay owns its 3840x2160 source canvas.
+		_event_overlay.apply_source_layout(view_size)
 		return
 	var scene_rect := (
 		Rect2(_desk_map.position, _desk_map.size)

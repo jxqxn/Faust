@@ -52,6 +52,17 @@
 
 ## 当前进度
 
+**2026-08-23 事件提示浮层 PromptNew 1:1（批次 AL，UI 组 66/66 全绿）：**
+事件主浮层从旧 1280 暗盒迁到 `ui/event_prompt_view.gd`（EventPromptView，游戏 `_event_overlay`）：
+3840×2160 源画布 + OptionBG 2705×960（prompt_bg + prompt_bg_mask_2 Full + Title + EventPromptBody
+fs40 + OptionNewItem 选项行 2200×100/步进 150/fs40（option_item_bg + option_item_highlight 新纹理）
++ Border decorate + Confirm rite_op_confirm 325×158@(1,0)(−483,73)）；队列语义原样（choice/continue →
+`_consume_event_display`）。**量测来源**：用户提供的原作全窗截图（苏丹雅兴 3-选项等）——OptionBG 高度
+960 与正文/选项行/立绘矩形均为截图归一化推导（🟡，等整窗原图单点替换；OptionBG 高度真源 =
+`PromptController.Show 0x58a020` 的 ForceRebuildLayoutImmediate 运行时计算）。测试 3 条新几何/交互 +
+既有 choice/continue 流全部保持；截图走查留档（dev_screenshot_runner `--event-prompt` 旗标已加，
+实机 bootstrap 下浮层显隐待复验）。
+
 **2026-08-22 事件通知托盘 CachedEvents 1:1（批次 AK，托盘谜底解开 + 全链落地）：**
 用户桌面截图的目标 —— 原作常驻右侧事件通知条。谜底：**条目摆放不是代码**，是容器的
 自定义 HorizontalLayoutGroup 运行时流式布局（`GameScene.unity` Mono 11735：pad L0/R100/T0/B0、

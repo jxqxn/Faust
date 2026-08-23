@@ -72,6 +72,17 @@ func _ready() -> void:
 				state_t.add_cached_event(5300001)
 				state_t.add_cached_event(5300002)
 				screen.call("refresh")
+		if args.has("--event-prompt"):
+			# Dev-only: queue a three-choice prompt so the PromptNew 1:1
+			# surface (OptionBG + OptionNewItem rows) is captured.
+			var state_p = main.get("state")
+			if screen != null and state_p != null and state_p.has_method("queue_choice_prompt"):
+				state_p.queue_choice_prompt(
+					{"你是岩石品级": "rock", "你是青铜品级": "bronze", "你是白银品级": "silver", "你是黄金品级": "gold"},
+					"贵族拦住了你",
+					"一个贵族拦住你，希望你能告诉他，他自己的品位和他死对头的品位。\n他只是一个青铜品级的公子哥，而他……"
+				)
+				screen.call("refresh")
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

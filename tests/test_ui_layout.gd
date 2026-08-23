@@ -478,27 +478,16 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 		"thought results distinguish the focused object from the player actor"
 	)
 	var prompt_panel := _find_node_by_name(screen, "EventPromptPanel") as Control
-	var scene := _find_node_by_name(screen, "DeskMap") as Control
-	var rail := _find_node_by_name(screen, "CardRail") as Control
 	assert_not_null(prompt_panel, "card-to-thought results should use the scene event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "card-to-thought processing should not open the rite overlay")
 	assert_false(desk.is_thinking(), "dropping a card should not create a desk thought presentation state")
-	if prompt_panel != null and scene != null and rail != null:
-		assert_lte(
-			prompt_panel.position.y + prompt_panel.size.y,
-			scene.position.y + scene.size.y,
-			"event prompts should stay inside the desk area"
-		)
-		assert_lt(
-			prompt_panel.position.y + prompt_panel.size.y,
-			rail.position.y,
-			"event prompts must not cover the card rail"
-		)
-		assert_lt(
-			prompt_panel.size.y,
-			scene.size.y * 0.6,
-			"ordinary prompts should stay compact, not full-screen pages"
-		)
+	if prompt_panel != null:
+		# PromptNew 1:1: the prompt replays the OptionBG parchment instead of
+		# the old compact dark box; it stays inside the 3840x2160 desk band.
+		assert_almost_eq(prompt_panel.size.x, 2705.0, 1.0, "event prompt replays OptionBG 2705 width")
+		assert_almost_eq(prompt_panel.size.y, 960.0, 1.0, "event prompt keeps the screenshot-derived OptionBG height")
+		assert_almost_eq(prompt_panel.position.x, (3840.0 - 2705.0) * 0.5, 1.0, "event prompt is centred on the source canvas")
+		assert_almost_eq(prompt_panel.position.y, (2160.0 - 960.0) * 0.5, 1.0, "event prompt stays inside the desk band")
 
 
 func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
@@ -598,8 +587,10 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 
 	var panel := _find_node_by_name(screen, "EventPromptPanel")
 	assert_not_null(panel, "queued events should render as a scene overlay even before event configs are imported")
-	var text := _collect_label_and_button_text(panel)
-	assert_true(text.find("5310008") >= 0, "missing event configs should fall back to a visible event id")
+	var body := _find_node_by_name(panel, "EventPromptBody") as RichTextLabel
+	var title := _find_node_by_name(panel, "EventPromptTitle") as Label
+	var text := (body.text if body != null else "") + "|" + (title.text if title != null else "")
+	assert_true(text.find("5310008") >= 0, "missing event configs should fall back to a visible event id (body='%s' title='%s')" % [(body.text if body != null else ""), (title.text if title != null else "")])
 
 	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
 	if cont != null:
@@ -1907,6 +1898,85 @@ func test_cached_event_click_removes_notice():
 	await wait_process_frames(2)
 	assert_false(state.cached_event.has(5300003), "clicking a notice removes it after lookup miss")
 	assert_null(tray.get_node_or_null("CachedEvent_5300003"), "clicked notice leaves the tray")
+
+
+func test_event_prompt_replays_prompt_new_geometry():
+	# [SRC: docs/ui_layout/PromptNew.md — OptionBG 2705 wide (prompt_bg +
+	# prompt_bg_mask_2 Full), Border decorate 250x323, Confirm rite_op_confirm
+	# 325x158 at (1,0)(-483,73); option rows = OptionNewItem (Text fs40
+	# centred on option_item_bg). OptionBG height 960 is the screenshot-
+	# derived constant (runtime layout-group height; registered 🟡).]
+	var rng := RNG.new(23)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.queue_choice_prompt({"第一个选项": "a", "第二个选项": "b", "第三个选项": "c"})
+	var stage := _stage(Vector2(3840, 2160))
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var panel := _find_node_by_name(screen, "EventPromptPanel") as Control
+	assert_not_null(panel, "PromptNew EventPromptPanel exists")
+	if panel == null:
+		return
+	assert_almost_eq(panel.size.x, 2705.0, 1.0, "OptionBG keeps authored 2705 width")
+	assert_almost_eq(panel.size.y, 960.0, 1.0, "OptionBG keeps the screenshot-derived height")
+	assert_almost_eq(panel.position.x, 567.5, 1.0, "OptionBG is centred horizontally")
+	assert_almost_eq(panel.position.y, 600.0, 1.0, "OptionBG is centred vertically")
+	var body := _find_node_by_name(screen, "EventPromptBody") as RichTextLabel
+	assert_not_null(body, "prompt keeps the body text")
+	if body != null:
+		assert_eq(body.get_theme_font_size("font_size"), 40, "body uses the authored fs40")
+		assert_true(body.text.length() > 0, "body carries the event text")
+	var border := _find_node_by_name(panel, "Border") as Control
+	assert_not_null(border, "prompt keeps the decorate Border")
+	if border != null:
+		assert_almost_eq(border.position.x, 2454.0, 1.0, "Border keeps decorate placement")
+		assert_almost_eq(border.size.x, 250.0, 1.0, "Border keeps decorate 250 width")
+		assert_almost_eq(border.size.y, 323.0, 1.0, "Border keeps decorate 323 height")
+	var option_group := _find_node_by_name(panel, "OptionGroup")
+	var row_names: Array = []
+	if option_group != null:
+		for child in option_group.get_children():
+			row_names.append(child.name)
+	assert_eq(row_names.size(), 3, "three choices render as OptionNewItem rows")
+	assert_true(row_names.has("EventPromptChoiceButton"), "rows keep the button name")
+	var first := _find_node_by_name(panel, "EventPromptChoiceButton") as Button
+	assert_not_null(first, "a choice row exists")
+	if first != null:
+		assert_almost_eq(first.size.x, 2200.0, 1.0, "option rows are full-width")
+		assert_almost_eq(first.size.y, 100.0, 1.0, "option rows keep the row height")
+		assert_eq(first.get_theme_font_size("font_size"), 40, "option text uses OptionNewItem fs40")
+		assert_almost_eq(first.position.y, 320.0, 1.0, "first row sits below the body text")
+
+
+func test_event_prompt_continue_mode_shows_source_confirm():
+	# [SRC: PromptNew OptionBG/Confirm — rite_op_confirm 325x158 at
+	# anchors (1,0) pos (-483,73); a text-only prompt shows the continue
+	# stamp instead of choice rows.]
+	var rng := RNG.new(24)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.queue_prompt({
+		"id": "prompt.test",
+		"title": "事件提示",
+		"text": "你像往常一样进入宫廷，不一样的是这也许是苏丹游戏…",
+	})
+	var stage := _stage(Vector2(3840, 2160))
+	var screen = GameScreen.new()
+	screen.setup(state, db, rng)
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
+	assert_not_null(cont, "text-only prompt shows the continue stamp")
+	if cont != null:
+		assert_almost_eq(cont.size.x, 325.0, 1.0, "Confirm keeps rite_op_confirm 325 width")
+		assert_almost_eq(cont.size.y, 158.0, 1.0, "Confirm keeps rite_op_confirm 158 height")
+		assert_almost_eq(cont.position.x, 2059.5, 1.0, "Confirm resolves anchors (1,0) pos (-483,73)")
+		assert_almost_eq(cont.position.y, 808.0, 1.0, "Confirm sits in the OptionBG bottom-right")
+	assert_eq(_count_nodes_by_name(screen, "EventPromptChoiceButton"), 0, "no choices => no option rows")
 
 
 func test_rite_view_replays_source_canvas_geometry():
