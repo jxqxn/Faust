@@ -72,6 +72,17 @@ Image 透明 a=1/255 点击吸收器，UnityEvent OnClick→`NoticeCachedEvent 0
 🟡/⬜：cached_settlement 结算分支（⬜ 未接）、Shaker perlin 视觉近似（🟡）、红点点后隐藏无证据（🟡）、
 StoryNotifyController 文字通知为另一表面（⬜）。
 
+**2026-08-22 卡牌详情徽记澄清 + PromptNew 候选普查（AK 后续，纯证据批次）：**
+澄清 AJ 留档项：`CardAttribute.prefab`（60×40 纯文本行 + 全幅 Outline，**无徽记图**）——"属性徽记
+图标"系误解（`Resources/image/tags.png` 时轴图集属其他列表，tag_N 帧所在待定位）；`TagInfo/StateBar`
+= "状态" 标题 + `CardStateTag.prefab`（43×43 可点图标按钮 + LayoutElement 43² + Outline）+ Left 分隔线，
+状态语义（哪些状态/点击行为）无控制器背书，记 ⬜。**PromptNew 全真值表已出**
+（`docs/ui_layout/PromptNew.md`：2705 宽 OptionBG/prompt_bg_mask_2 Full/IconGroup 3×400 列 472×1028
+图/Content Group 文本行 (882.01,−24)/1764.01×48.01 fs40/Confirm rite_op_confirm/Border decorate +
+`PromptController.Show 0x58a020`/`PromptControllerBase.ShowInternal 0x589890` + `OptionNewItem.prefab`）；
+主障碍 = **OptionBG 高度 = 运行时布局组计算（ForceRebuildLayoutImmediate）静态不可解**——下一个大批次
+（事件提示浮层）需要用户提供原作实机截图/量测样本后再落地。METHOD_MAP 行 36/37 已更新。
+
 **2026-08-22 卡牌详情内容行对拍修正（批次 AJ，62/62 UI 组全绿）：**
 用户提供原作运行时截图（卡牌详情/桌面各一张）。与截图对拍修正 CardInfoNew
 内容行：①属性行顺序 = 体魄/魅力/智慧/**战斗**/社交/支持（原 cfg 2000001 顺序
