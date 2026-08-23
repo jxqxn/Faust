@@ -17,6 +17,13 @@ signal test_start_requested(index: int)
 signal continue_pressed()
 signal user_archive_load_requested(index: int)
 signal user_archive_delete_requested(index: int)
+signal story_pressed()
+signal shop_pressed()
+signal collect_pressed()
+signal settings_pressed()
+signal notice_pressed()
+signal mod_pressed()
+signal credits_pressed()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
 const MAIN_GROUP_SIZE := Vector2(2200, 1800)
@@ -30,6 +37,7 @@ const BUTTON_FONT_SIZE := 60
 var _db = null
 var _column: VBoxContainer
 var _show_archives := false
+var _design: Control = null
 
 
 func setup(db = null) -> void:
@@ -38,11 +46,21 @@ func setup(db = null) -> void:
 
 func _ready() -> void:
 	theme = FaustTheme.get_theme()
+	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
 
 
 func _build_ui() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# The whole menu is authored in the 3840x2160 design space; a scaled
+	# design canvas keeps the original geometry while the root adapts to the
+	# actual window (same convention as the in-game screen chrome).
+	_design = Control.new()
+	_design.name = "DesignCanvas"
+	_design.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_design)
+	resized.connect(_layout_design)
+	call_deferred("_layout_design")
 	# [SRC: StartPanel full-rect Image bg_new_0 — stretched to fill the canvas]
 	var bg := TextureRect.new()
 	bg.name = "Background"
@@ -50,9 +68,24 @@ func _build_ui() -> void:
 		bg.texture = load(TITLE_BG_PATH) as Texture2D
 		bg.stretch_mode = TextureRect.STRETCH_SCALE
 	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	bg.position = Vector2.ZERO
+	bg.size = DESIGN_SPACE
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_design.add_child(bg)
 	_build_title_view()
+
+
+func _layout_design() -> void:
+	if _design == null:
+		return
+	var view_size := size
+	if view_size.x <= 0.0 or view_size.y <= 0.0:
+		var parent_control := get_parent() as Control
+		if parent_control != null:
+			view_size = parent_control.size
+		if view_size.x <= 0.0 or view_size.y <= 0.0:
+			view_size = get_viewport().get_visible_rect().size
+	_design.scale = Vector2(view_size.x / DESIGN_SPACE.x, view_size.y / DESIGN_SPACE.y)
 
 
 ## Title page: the game's front door. Difficulty is NOT chosen here.
@@ -63,7 +96,7 @@ func _build_title_view() -> void:
 	group.name = "MainGroup"
 	group.size = MAIN_GROUP_SIZE
 	group.position = (DESIGN_SPACE - MAIN_GROUP_SIZE) * 0.5
-	add_child(group)
+	_design.add_child(group)
 	# [SRC: MainGroup VerticalLayoutGroup spacing=30 UpperCenter]
 	var vbox := VBoxContainer.new()
 	vbox.name = "Stack"
@@ -103,6 +136,11 @@ func _build_title_view() -> void:
 		archive_btn.pressed.connect(_toggle_archive_section)
 		vbox.add_child(archive_btn)
 
+	# [SRC: MainGroup/ButtonsGroup 1900x200 HorizontalLayoutGroup spacing 240
+	#       MiddleCenter; Story/Shop/Collect 405x174 with Image 668x140
+	#       button_bg_new + Text fs60 + RedDot 114x114 @(56.5,-21).]
+	_build_buttons_group(vbox)
+
 	var quit := _title_button("退出游戏", "QuitGameButton")
 	quit.pressed.connect(func(): get_tree().quit())
 	vbox.add_child(quit)
@@ -135,8 +173,165 @@ func _build_title_view() -> void:
 	line.add_child(sep)
 	vbox.add_child(line)
 
+	# [SRC: MainGroup/Contacts 1820x60 HorizontalLayoutGroup spacing 20 +
+	#       Version 400x50 at the bottom.]
+	_build_contacts_row(vbox)
+	_build_version(vbox)
+
 	if not archives.is_empty() and _show_archives:
 		vbox.add_child(_make_archive_section(archives))
+
+
+func _build_buttons_group(vbox: VBoxContainer) -> void:
+	var group := HBoxContainer.new()
+	group.name = "ButtonsGroup"
+	group.custom_minimum_size = Vector2(1900, 200)
+	group.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	group.add_theme_constant_override("separation", 240)
+	vbox.add_child(group)
+	var entries := [
+		["千零一夜", "StoryButton", story_pressed],
+		["命运商店", "ShopButton", shop_pressed],
+		["游戏画廊", "CollectButton", collect_pressed],
+	]
+	for entry in entries:
+		var btn_signal: Signal = entry[2]
+		var button := _title_button(String(entry[0]), String(entry[1]))
+		button.custom_minimum_size = Vector2(405, 174)
+		button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		button.pressed.connect(func(): btn_signal.emit())
+		# [SRC: Story/Shop/Collect/RedDot — new.asset 114x114, anchors (1,1),
+		# pos (56.5,-21): centre at (405+56.5, 21) on the button box.]
+		var red := TextureRect.new()
+		red.name = "RedDot"
+		red.texture = load("res://assets/original/ui/new.png") as Texture2D
+		red.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		red.stretch_mode = TextureRect.STRETCH_SCALE
+		red.size = Vector2(114, 114)
+		red.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		red.position = Vector2(405 + 56.5 - 57.0, 21 - 57.0)
+		red.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		button.add_child(red)
+		group.add_child(button)
+
+
+func _build_contacts_row(vbox: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.name = "Contacts"
+	row.custom_minimum_size = Vector2(1820, 60)
+	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	row.add_theme_constant_override("separation", 20)
+	# [SRC: SettingAndNotice 516x100, spacing 70, pad right 44 —
+	#       Mod/Setting/Notice 120x100 icons with rite_title_short 108x48
+	#       outline at (0,-72.6); Notice carries a new.asset red dot.]
+	var san := HBoxContainer.new()
+	san.name = "SettingAndNotice"
+	san.custom_minimum_size = Vector2(516, 100)
+	san.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	san.add_theme_constant_override("separation", 70)
+	var san_entries := [
+		["mod_pressed", "Mod", "workshop.png", mod_pressed],
+		["settings_pressed", "Setting", "settings_icon.png", settings_pressed],
+		["notice_pressed", "Notice", "notice_icon_0.png", notice_pressed],
+	]
+	for entry in san_entries:
+		var icon_signal: Signal = entry[3]
+		var icon := _icon_button(entry[2], Vector2(120, 100), String(entry[1]))
+		icon.pressed.connect(func(): icon_signal.emit())
+		if String(entry[1]) == "Notice":
+			var dot := TextureRect.new()
+			dot.texture = load("res://assets/original/ui/new.png") as Texture2D
+			dot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			dot.stretch_mode = TextureRect.STRETCH_SCALE
+			dot.size = Vector2(57, 57)
+			dot.set_anchors_preset(Control.PRESET_TOP_LEFT)
+			dot.position = Vector2(120 - 20.4 - 28.5, 10.7 - 28.5)
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			icon.add_child(dot)
+		san.add_child(icon)
+	row.add_child(san)
+	row.add_child(_divider())
+	# [SRC: Contacts social buttons — Bilibili 64x56, Red 72x72, Tencent
+	#       64x64, X 64x56, Discord 72x56, YouTube 72x56.]
+	var socials := [
+		["contact_bilibili.png", Vector2(64, 56)],
+		["contact_red.png", Vector2(72, 72)],
+		["content_tencent_channel.png", Vector2(64, 64)],
+		["contact_X.png", Vector2(64, 56)],
+		["contact_discord.png", Vector2(72, 56)],
+		["contact_youtube.png", Vector2(72, 56)],
+	]
+	for social in socials:
+		row.add_child(_icon_button(social[0], social[1], "Contact"))
+	row.add_child(_divider())
+	# [SRC: Credits — button_icon 516x108 + rite_title 450x56 at (0,-22).]
+	var credits := Button.new()
+	credits.name = "Credits"
+	credits.custom_minimum_size = Vector2(516, 108)
+	credits.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var credits_stamp := _icon_rect("button_icon.png", Vector2(516, 108))
+	credits.add_child(credits_stamp)
+	var title_art := _atlas_frame("res://assets/original/ui/rite_outlines.png", "rite_title.png")
+	if title_art != null:
+		var outline := TextureRect.new()
+		outline.name = "Outline"
+		outline.texture = title_art
+		outline.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		outline.stretch_mode = TextureRect.STRETCH_SCALE
+		outline.size = Vector2(450, 56)
+		outline.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		outline.position = Vector2((516 - 450) * 0.5, 108 + 22 - 28)
+		outline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		credits.add_child(outline)
+	credits.pressed.connect(func(): credits_pressed.emit())
+	row.add_child(credits)
+	vbox.add_child(row)
+
+
+func _build_version(vbox: VBoxContainer) -> void:
+	var version := Label.new()
+	version.name = "Version"
+	version.text = "VERSION 1.0.2lab3"
+	version.custom_minimum_size = Vector2(400, 50)
+	version.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	version.add_theme_font_size_override("font_size", 22)
+	version.add_theme_color_override("font_color", Color("#b9a87a"))
+	vbox.add_child(version)
+
+
+func _divider() -> Control:
+	var line := Control.new()
+	line.custom_minimum_size = Vector2(100, 120)
+	var bar := _icon_rect("scroll_bar.png", Vector2(6, 120))
+	line.add_child(bar)
+	return line
+
+
+func _icon_button(texture_name: String, size: Vector2, node_name: String) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.custom_minimum_size = size
+	button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var empty := StyleBoxEmpty.new()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		button.add_theme_stylebox_override(state_name, empty)
+	var icon := _icon_rect(texture_name, size)
+	button.add_child(icon)
+	return button
+
+
+func _icon_rect(texture_name: String, size: Vector2) -> TextureRect:
+	var rect := TextureRect.new()
+	var path := "res://assets/original/ui/" + texture_name
+	if ResourceLoader.exists(path):
+		rect.texture = load(path) as Texture2D
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.size = size
+	rect.custom_minimum_size = size
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 func _toggle_archive_section() -> void:
@@ -209,7 +404,7 @@ func _atlas_frame(atlas_path: String, frame_name: String) -> Texture2D:
 
 
 func _clear_dynamic() -> void:
-	for child in get_children():
+	for child in _design.get_children():
 		if child.name != "Background":
 			child.queue_free()
 	_column = null

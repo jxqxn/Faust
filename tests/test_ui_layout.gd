@@ -1979,6 +1979,30 @@ func test_event_prompt_continue_mode_shows_source_confirm():
 	assert_eq(_count_nodes_by_name(screen, "EventPromptChoiceButton"), 0, "no choices => no option rows")
 
 
+func test_main_menu_replays_source_group_rows():
+	# [SRC: StartScene.md MainGroup — ButtonsGroup 1900x200 spacing 240 with
+	# Story/Shop/Collect, Contacts 1820x60 row (SettingAndNotice + socials +
+	# Credits) and the Version line at the bottom.]
+	var menu = MainMenu.new()
+	menu.setup(db)
+	var stage := _stage(Vector2(3840, 2160))
+	stage.add_child(menu)
+	await wait_process_frames(2)
+
+	assert_eq(_count_nodes_by_name(menu, "StoryButton"), 1, "千零一夜 row exists")
+	assert_eq(_count_nodes_by_name(menu, "ShopButton"), 1, "命运商店 row exists")
+	assert_eq(_count_nodes_by_name(menu, "CollectButton"), 1, "游戏画廊 row exists")
+	assert_eq(_count_nodes_by_name(menu, "RedDot"), 3, "three rows carry the new.asset red dot")
+	assert_not_null(_find_node_by_name(menu, "Mod"), "bottom bar keeps the Mod icon")
+	assert_not_null(_find_node_by_name(menu, "Setting"), "bottom bar keeps the Setting icon")
+	assert_not_null(_find_node_by_name(menu, "Notice"), "bottom bar keeps the Notice icon")
+	assert_not_null(_find_node_by_name(menu, "Credits"), "bottom bar keeps the Credits stamp")
+	var version := _find_node_by_name(menu, "Version") as Label
+	assert_not_null(version, "Version line exists")
+	if version != null:
+		assert_true(version.text.begins_with("VERSION"), "Version shows the build line")
+
+
 func test_rite_view_replays_source_canvas_geometry():
 	var rng := RNG.new(2)
 	var state := GameState.new()

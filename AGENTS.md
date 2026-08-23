@@ -52,6 +52,20 @@
 
 ## 当前进度
 
+**2026-08-23 主菜单 1:1 补全（批次 AM，UI 组 67/67 全绿）：**
+用户报图1（灰底+按钮贴图错位）与原版图2不符。根因修复：①按钮装饰 TextureRect 误用 PRESET_CENTER
+锚点后赋 position（以按钮中心为原点→贴图右下偏、文字悬空）→改 TOP_LEFT；②菜单根无锚点/尺寸=0
+→ 菜单整体走 3840×2160 设计画布 `_design` + 根 `_layout_design` 缩放（与游戏内 chrome 同法），
+背景 `bg_new_0`（语料直拷 2048×1076）恢复。**补全 StartScene 余下行**（真值表已出）：ButtonsGroup
+1900×200/spacing 240 —— 千零一夜/命运商店/游戏画廊（405×174 hit + 668×140 stamp + fs60 + RedDot
+114×114@(1,1)(56.5,−21)）；Contacts 1820×60 —— SettingAndNotice（Mod/Setting/Notice 120×100 +
+rite_title_short + Notice 红点）+ 分隔线 + Bilibili/Red/腾讯频道/X/Discord/YouTube + Credits（button_icon
+516×108 + rite_title）；Version "VERSION 1.0.2lab3"。新增语料直拷纹理 12 张（workshop/settings_icon/
+notice_icon_0/contact_*/content_tencent_channel/button_icon/rite_title_short）。测试
+`test_main_menu_replays_source_group_rows`（行/红点/图标/Credits/Version）。截图
+`docs/ui_layout/menu_screenshot.png`（已与图2对齐）。🟡：六路按钮（千零一夜/商店/画廊/Mod/设置/公告）
+主机（面板/商店等）未接，先发信号；InputDisplay 手柄提示行未做（沿用同类 🟡）。
+
 **2026-08-23 事件提示浮层 PromptNew 1:1（批次 AL，UI 组 66/66 全绿）：**
 事件主浮层从旧 1280 暗盒迁到 `ui/event_prompt_view.gd`（EventPromptView，游戏 `_event_overlay`）：
 3840×2160 源画布 + OptionBG 2705×960（prompt_bg + prompt_bg_mask_2 Full + Title + EventPromptBody
