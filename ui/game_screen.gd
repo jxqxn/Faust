@@ -18,6 +18,7 @@ const MapControllerScript = preload("res://ui/map_controller.gd")
 const CardInfoViewScript = preload("res://ui/card_info_view.gd")
 const MainHelpViewScript = preload("res://ui/main_help.gd")
 const ChangeNameViewScript = preload("res://ui/change_name_view.gd")
+const CachedEventsViewScript = preload("res://ui/cached_events_view.gd")
 
 class HandRailDrop:
 	extends Control
@@ -99,6 +100,8 @@ var _main_help_view = null
 var _change_name_view = null
 var _main_help_button: Button
 var _card_info_view = null
+var _cached_events_view = null
+var _cached_event_mask: Button
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
@@ -251,6 +254,8 @@ func _build_ui() -> void:
 	_sudan_box.add_child(box_top)
 
 	_build_prestige_strip()
+
+	_build_cached_events()
 
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
@@ -412,6 +417,45 @@ func _build_ui() -> void:
 	_right_actions.add_child(_back_to_prev_button)
 
 
+## [SRC: GameScene MainUI/CachedEvents (rect 7782, custom layout group
+## 11735) + "Next Round Mask For Cached Event" (GameObject 47 / rect 7639)
+## + GameController.c OnCachedListChanged (0x553b70).]
+func _build_cached_events() -> void:
+	_cached_events_view = CachedEventsViewScript.new()
+	_cached_events_view.name = "CachedEvents"
+	_cached_events_view.z_index = PERSISTENT_CONTROL_Z
+	_cached_events_view.cached_event_clicked.connect(_on_cached_event_clicked)
+	add_child(_cached_events_view)
+	# [SRC: rect 7639 — anchors (1,0)-(1,0), pos (64.87,-187.82), pivot (1,0),
+	# 596x634; Image colour alpha 1/255 alpha-hit-test = invisible click
+	# catcher over the next-day zone; scene UnityEvent OnClick ->
+	# GameController.NoticeCachedEvent (shake the tray).]
+	_cached_event_mask = Button.new()
+	_cached_event_mask.name = "CachedEventMask"
+	_cached_event_mask.flat = true
+	_cached_event_mask.tooltip_text = "事件通知"
+	var mask_style := StyleBoxEmpty.new()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		_cached_event_mask.add_theme_stylebox_override(state_name, mask_style)
+	_cached_event_mask.z_index = PERSISTENT_CONTROL_Z + 1
+	_cached_event_mask.visible = false
+	_cached_event_mask.pressed.connect(func(): _cached_events_view.notice())
+	add_child(_cached_event_mask)
+
+
+## [SRC: GameController.c OnCachedEventClicked (0x5538e0) — TryGetValue on
+## Datapool.can_cached_event_settlements; a failed lookup removes the notice
+## (PlayerExtensions.RemoveCacheEvent 0x38ecb0).  Corpus config declares zero
+## cached_settlement instances, so the settlement branch (OperationMask
+## @0x1C0 + OperationsExtensions.Start + completion callback 0x5728d0)
+## stays registered ⬜ until a config instance exists.]
+func _on_cached_event_clicked(event_id: int) -> void:
+	var settlement: Array = _db.get_event(event_id).get("cached_settlement", [])
+	if settlement.is_empty():
+		_state.remove_cached_event(event_id)
+	refresh()
+
+
 func _apply_layout() -> void:
 	if _menu_button == null:
 		return
@@ -453,6 +497,16 @@ func _apply_layout() -> void:
 		# [SRC: Prestige anchors (0.3,1) pivot (0,1) 1000x264]
 		_prestige_strip.position = Vector2(view_size.x * 0.3, 0)
 		_prestige_strip.size = Vector2(1000, 264)
+	# [SRC: MainUI/CachedEvents tray (0,1352,3840,128) + mask
+	# (3308.87,1713.82,596,634), both design-space rects]
+	if _cached_events_view != null:
+		_cached_events_view.scale = k
+		_cached_events_view.position = Vector2(0, 1352.0 * k.y)
+		_cached_events_view.size = Vector2(3840, 128)
+	if _cached_event_mask != null:
+		_cached_event_mask.scale = k
+		_cached_event_mask.position = Vector2(3308.87 * k.x, 1713.82 * k.y)
+		_cached_event_mask.size = Vector2(596, 634)
 	# The painted board is the whole desktop behind every persistent control.
 	_set_rect(_desk_map, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_desk_content, Rect2(Vector2.ZERO, view_size))
@@ -770,6 +824,12 @@ func refresh() -> void:
 		_prestige_strip.visible = not bool(_state.prestige_unshow)
 	if _main_help_button != null:
 		_main_help_button.visible = not bool(_state.helpbtn_unshow)
+	# [SRC: GameController.c OnCachedListChanged (0x553b70) — the tray items
+	# mirror player.cached_event; the next-round mask SetActive(0 < Count).]
+	if _cached_events_view != null:
+		_cached_events_view.refresh(_state.cached_event)
+	if _cached_event_mask != null:
+		_cached_event_mask.visible = not _state.cached_event.is_empty()
 	_update_deadline_strip()
 	_update_prestige_strip()
 	var previous_positions := _capture_hand_visual_positions()

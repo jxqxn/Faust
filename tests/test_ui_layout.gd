@@ -1818,6 +1818,97 @@ func test_prestige_slots_replay_source_pivot_geometry():
 			assert_not_null(_find_node_by_name(slot, "Value"), "slot %d keeps its count label" % (i + 1))
 
 
+func test_cached_events_tray_replays_source_geometry():
+	# [SRC: docs/ui_layout/GameScene.md MainUI/CachedEvents row — container
+	# anchors (1,0)-(1,0) pos (0,680) pivot (1,0) 3840x128, layout(align=5
+	# spacing=50 pad=[0,100,0,0] cc=0/0 fe=0/0 rev=1); item rects below are
+	# the layout contract's right-to-left flow (index 0 rightmost: right edge
+	# = 3840-100, spacing 162.5 between item left edges, vertical centre of
+	# the 128px band).]
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(19))
+	state.add_cached_event(5300001)
+	state.add_cached_event(5300002)
+	var stage := _stage(Vector2(3840, 2160))
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(20))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var tray := _find_node_by_name(screen, "CachedEvents") as Control
+	var mask := _find_node_by_name(screen, "CachedEventMask") as Control
+	assert_not_null(tray, "the CachedEvents tray should exist")
+	assert_not_null(mask, "the next-round mask for cached events should exist")
+	if tray == null or mask == null:
+		return
+	assert_eq(tray.size, Vector2(3840, 128), "tray keeps the 3840x128 source band")
+	assert_eq(tray.position, Vector2(0, 1352), "tray bands at design y 1352..1480")
+	assert_true(mask.visible, "cached events pending => next-round mask active")
+	assert_eq(mask.position, Vector2(3308.87, 1713.82), "mask keeps the authored pivot-folded rect")
+	assert_almost_eq(mask.size.x, 596.0, 0.1, "mask keeps 596x634 over the next-day zone")
+	assert_almost_eq(mask.size.y, 634.0, 0.1, "mask keeps 596x634 over the next-day zone")
+
+	var item_1 := tray.get_node_or_null("CachedEvent_5300001") as Control
+	var item_2 := tray.get_node_or_null("CachedEvent_5300002") as Control
+	assert_not_null(item_1, "first cached event becomes a tray item")
+	assert_not_null(item_2, "second cached event becomes a tray item")
+	if item_1 == null or item_2 == null:
+		return
+	assert_eq(item_1.get_global_rect().position, Vector2(3627.5, 1357.5), "index 0 sits rightmost (3840-100-112.5), centred in the band")
+	assert_eq(item_2.get_global_rect().position, Vector2(3465.0, 1357.5), "index 1 steps left by 112.5+50")
+	assert_eq(item_1.position, Vector2(3627.5, 5.5), "item local y centres 117px inside the 128px tray")
+	assert_eq(item_1.size, Vector2(112.5, 117), "item keeps the 112.5x117 checkbox_bg frame")
+	var icon := item_1.get_node_or_null("Icon") as TextureRect
+	var new_dot := item_1.get_node_or_null("NewDot") as TextureRect
+	assert_not_null(icon, "item keeps the dialog icon")
+	assert_not_null(new_dot, "item keeps the NEW badge")
+	if icon != null:
+		assert_eq(icon.size, Vector2(96, 96), "dialog icon renders at 192*0.5 visually")
+		assert_eq(icon.position, Vector2(8.25, 10.5), "icon is centred on the 112.5x117 item")
+	if new_dot != null:
+		assert_almost_eq(new_dot.size.x, 85.5, 0.1, "NEW badge keeps 85.5x85.5")
+		assert_almost_eq(new_dot.size.y, 85.5, 0.1, "NEW badge keeps 85.5x85.5")
+		assert_almost_eq(new_dot.position.x, 61.85, 0.1, "NEW badge anchors (1,1) pos (-7.9,-12.7)")
+		assert_almost_eq(new_dot.position.y, -30.05, 0.1, "NEW badge pokes out of the top-right corner")
+
+	state.remove_cached_event(5300001)
+	screen.refresh()
+	await wait_process_frames(2)
+	assert_null(tray.get_node_or_null("CachedEvent_5300001"), "removed id leaves the tray")
+	assert_not_null(tray.get_node_or_null("CachedEvent_5300002"), "remaining item survives")
+	assert_true(mask.visible, "any cached event keeps the mask active")
+	state.cached_event.clear()
+	screen.refresh()
+	await wait_process_frames(2)
+	assert_null(tray.get_node_or_null("CachedEvent_5300002"), "empty list empties the tray")
+	assert_false(mask.visible, "no cached events => next-round mask hidden")
+
+
+func test_cached_event_click_removes_notice():
+	# [SRC: GameController.c OnCachedEventClicked (0x5538e0) — config lookup
+	# misses (corpus has zero can_cached_event_settlements entries), so the
+	# original removes the notice; the clone mirrors that branch.]
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(21))
+	state.add_cached_event(5300003)
+	var stage := _stage(Vector2(3840, 2160))
+	var screen = GameScreen.new()
+	screen.setup(state, db, RNG.new(22))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+
+	var tray := _find_node_by_name(screen, "CachedEvents") as Control
+	assert_not_null(tray, "tray exists")
+	var item := tray.get_node_or_null("CachedEvent_5300003") as Control
+	assert_not_null(item, "notice item exists")
+	if item == null:
+		return
+	item.emit_signal("item_clicked")
+	await wait_process_frames(2)
+	assert_false(state.cached_event.has(5300003), "clicking a notice removes it after lookup miss")
+	assert_null(tray.get_node_or_null("CachedEvent_5300003"), "clicked notice leaves the tray")
+
+
 func test_rite_view_replays_source_canvas_geometry():
 	var rng := RNG.new(2)
 	var state := GameState.new()

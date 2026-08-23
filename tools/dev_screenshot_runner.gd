@@ -63,6 +63,15 @@ func _ready() -> void:
 					"initial_text": "",
 				})
 				screen.call("refresh")
+		if args.has("--event-tray"):
+			# Dev-only: seed two cached notices so the 1:1 tray is captured.
+			# Runtime play never writes these ids (corpus has zero
+			# cached_settlement configs), so this stays a screenshot-only path.
+			var state_t = main.get("state")
+			if screen != null and state_t != null:
+				state_t.add_cached_event(5300001)
+				state_t.add_cached_event(5300002)
+				screen.call("refresh")
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout
@@ -74,9 +83,13 @@ func _ready() -> void:
 					screen_node = child
 		if screen_node != null:
 			for child in screen_node.get_children():
-				if child is Control and child.name in ["RoundNumberBG", "SudanBox", "Prestige", "QuitAnchor", "HandBG", "NextDayLabel"]:
+				if child is Control and child.name in ["RoundNumberBG", "SudanBox", "Prestige", "QuitAnchor", "HandBG", "NextDayLabel", "CachedEvents", "CachedEventMask"]:
 					var c: Control = child
 					print("chrome %s visible=%s rect=%s modulate=%s" % [child.name, c.visible, c.get_global_rect(), c.modulate])
+					if child.name == "CachedEvents":
+						for sub in child.get_children():
+							var c2: Control = sub
+							print("  tray %s visible=%s rect=%s" % [sub.name, c2.visible, c2.get_global_rect()])
 	var vp := get_viewport()
 	print("viewport=%s root_size=%s scale=%s/%s" % [vp.get_visible_rect(), vp.size, vp.content_scale_mode, vp.content_scale_aspect])
 	if main is Control:

@@ -18,6 +18,12 @@
 - 如果内容无法避免较长，先给“30 秒版”，再提供可跳过的详细部分；用户说“一点点来”时必须停止扩展，只讨论当前一项。
 - 不把 ADHD 当作能力不足，也不擅自提供医疗判断；目标是减少切换、检索、记忆和阅读负担，让用户把注意力用于创意判断。
 
+## 网络与流量约束（2026-08-23 用户决定，对后续会话强制生效）
+
+1. **联网动作先报备后执行。** 任何会走用户网络的主动动作——git push/pull/fetch/clone、下载文件、`Invoke-WebRequest`/`curl`/`WebClient` 抓取、`web_fetch` 等——执行前必须先向用户报告**目标域名/主机、预估流量体量、预计耗时**，用户明确同意后才执行。例外：模型 API 请求（对话本身的往返）是工具运行的必要开销，无需逐个询问。
+2. **不做未经用户环境验证的网络链路断言。** 不得把"某域名必走代理 / 必走 VPN / 必直连"等因果结论写成事实——网络路由由用户 VPN 客户端配置决定，解释网络或流量问题时先询问用户的配置，以用户配置为准。
+3. 背景（供溯源定位使用，新会话不要主动重提这个事故）：2026-08-23 用户就 VPN 流量消耗问询；会话记录显示 2026-08-17 会话曾将约 421MB 素材 `git push` 至 `github.com/jxqxn/Faust`，是当时流量大头；其实际网络路径未经用户环境核实。
+
 ## 语料库
 
 完整逆向产物在 `C:\Users\User\Documents\GitHub\Faust-local-source\_unpack\`（只读，不拷贝、不修改）。
@@ -45,6 +51,26 @@
 - 修改研究总报告、快照或核心设计研究后，运行 `tools/check_design_research.ps1`。
 
 ## 当前进度
+
+**2026-08-22 事件通知托盘 CachedEvents 1:1（批次 AK，托盘谜底解开 + 全链落地）：**
+用户桌面截图的目标 —— 原作常驻右侧事件通知条。谜底：**条目摆放不是代码**，是容器的
+自定义 HorizontalLayoutGroup 运行时流式布局（`GameScene.unity` Mono 11735：pad L0/R100/T0/B0、
+align 5=MiddleRight、spacing 50、rev 1）——`CachedEventController.Init 0x527900` 因此无定位代码；
+条目 rect = 右→左（index 0 最右，right edge=3840−100，步进 112.5+50）。载入链
+`OnCachedListChanged 0x553b70`（cachedEvents@+0x320 差量重建：`player.cached_event`@0x148 →
+`CachedEventPrefab`@0xA0 → 实例化于 `cachedEventContainer`@0x108 → `cachedEvents[id]=controller`）。
+点击链 `OnCachedEventClicked 0x5538e0`：`Datapool.can_cached_event_settlements` 未命中 → 直接
+`RemoveCacheEvent`（语料零个 cached_settlement，此分支即原作行为）；命中 → OperationMask@0x1C0 +
+`OperationsExtensions.Start` + b__0 0x5728d0 收尾（⬜ 未接，等配置实例）。尾段
+`SetActive(0<Count)` 的 0x220 = **"Next Round Mask For Cached Event"**（GO 47/rect 7639：596×634、
+Image 透明 a=1/255 点击吸收器，UnityEvent OnClick→`NoticeCachedEvent 0x5534d0` 摇动托盘）。
+条目 = checkbox_bg 112.5×117 + dialog 图标 192²@scale 0.5（视觉 96²）+ new 红点 85.5²@(1,1)(−7.9,−12.7)
++ **禁用** Shaker（freq 40/time 10/maxSpeed 2/perlin，`CachedEventController.Shake 0x527940` 重启，
+`Shaker.c` 已阅）。落地：`ui/cached_events_view.gd`（托盘+条目+notice 抖动）+ GameScreen 集成
+（`refresh()` 按 `cached_event` 重建、点击移除、mask 显隐）+ 2 测试 + 截图
+`docs/ui_layout/cachedevents_screenshot.png` + 新纹理 dialog.png/new.png（语料 Texture2D 直拷）。
+🟡/⬜：cached_settlement 结算分支（⬜ 未接）、Shaker perlin 视觉近似（🟡）、红点点后隐藏无证据（🟡）、
+StoryNotifyController 文字通知为另一表面（⬜）。
 
 **2026-08-22 卡牌详情内容行对拍修正（批次 AJ，62/62 UI 组全绿）：**
 用户提供原作运行时截图（卡牌详情/桌面各一张）。与截图对拍修正 CardInfoNew
