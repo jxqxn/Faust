@@ -309,10 +309,12 @@ func _build_tag_area(card: Dictionary) -> void:
 
 
 ## 属性 chips (60x40 icon-free plates, @CARD_INFO_TAG_TEXT 26..30).
+## Runtime sample (原作截图, CardInfoNew): 属性 shows 体魄/魅力/智慧/战斗/
+## 社交/支持 in that order with icon+name+value (cfg 2000001, rare=3 银).
 func _fill_attribute_chips(card: Dictionary) -> void:
 	if _state_bar_chips == null:
 		return
-	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
+	var attrs := ["体魄", "魅力", "智慧", "战斗", "社交", "支持"]
 	var tag: Dictionary = card.get("tag", {})
 	var x := 0.0
 	for attr in attrs:
@@ -325,11 +327,12 @@ func _fill_attribute_chips(card: Dictionary) -> void:
 		x += chip.size.x + 12.0
 
 
-## 标签 chips (all non-attribute tags with a non-zero value).
+## 标签 chips (non-attribute tags in config order, name-only per the runtime
+## sample; the original shows 男性 贵族 主角 已拥有 with NO values).
 func _fill_tag_chips(card: Dictionary) -> void:
 	if _tag_chips == null:
 		return
-	var attrs := ["体魄", "魅力", "智慧", "社交", "战斗", "支持"]
+	var attrs := ["体魄", "魅力", "智慧", "战斗", "社交", "支持"]
 	var tag: Dictionary = card.get("tag", {})
 	var x := 0.0
 	var y := 0.0
@@ -339,7 +342,7 @@ func _fill_tag_chips(card: Dictionary) -> void:
 		var value := int(tag[key])
 		if value == 0:
 			continue
-		var chip := _tag_chip("%s %d" % [str(key), value], 28)
+		var chip := _tag_chip(str(key), 28)
 		chip.position = Vector2(x, y)
 		_tag_chips.add_child(chip)
 		x += chip.size.x + 12.0

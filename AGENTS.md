@@ -46,6 +46,16 @@
 
 ## 当前进度
 
+**2026-08-22 卡牌详情内容行对拍修正（批次 AJ，62/62 UI 组全绿）：**
+用户提供原作运行时截图（卡牌详情/桌面各一张）。与截图对拍修正 CardInfoNew
+内容行：①属性行顺序 = 体魄/魅力/智慧/**战斗**/社交/支持（原 cfg 2000001 顺序
+与截图一致，旧实现 社交/战斗 颠倒）；②标签行 = **纯名称无数值**（截图
+男性 贵族 主角 已拥有；旧实现"名 值"）。同时确认稀有映射正确（2000001
+rare=3 → 银 ✓）。🟡 登记：属性徽记图标（tag_N 精灵只以
+Resource/image/*.asset 存在，纹理未独立导出）暂缺；桌面截图确认事件通知条
+（CachedEvents 托盘）为下一批次目标（原作常驻右侧，克隆缺失）。
+测试 `test_card_info_attributes_replay_source_order_and_tag_names`。
+
 **2026-08-22 声望条槽位几何对拍修正（批次 AI，61/61 UI 组全绿）：**
 `_build_prestige_strip` 六槽按 `docs/ui_layout/GameScene.md` 的
 MainUI/Prestige/710000N 行修正：原实现把 authored `pos` 当左上角直接摆放，

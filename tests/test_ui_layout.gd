@@ -1763,6 +1763,34 @@ func test_change_name_replays_source_geometry():
 		assert_almost_eq(border.size.y, 324.0, 0.1, "Border keeps the decorate 236x324")
 
 
+func test_card_info_attributes_replay_source_order_and_tag_names():
+	# [SRC: 原作运行时截图 (CardInfoNew) — 属性行 体魄/魅力/智慧/战斗/社交/支持
+	# 顺序带值；标签行 男性 贵族 主角 已拥有 纯名称无数值；cfg 2000001 rare=3 银]
+	var rng := RNG.new(202)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var stage := _stage(Vector2(3840, 2160))
+	var view = CardInfoView.new()
+	view.setup(state, db)
+	stage.add_child(view)
+	await wait_process_frames(2)
+	var hand_uid := int(state.hand[0])
+	view.show_card(state.card_data_for(hand_uid, db), hand_uid)
+	await wait_process_frames(1)
+
+	var states_text := _collect_label_and_button_text(_find_node_by_name(view, "States"))
+	var tags_text := _collect_label_and_button_text(_find_node_by_name(view, "TagContents"))
+	assert_true(states_text.find("体魄") >= 0, "attributes begin at 体魄")
+	var combat_at := states_text.find("战斗")
+	var social_at := states_text.find("社交")
+	assert_true(combat_at >= 0 and social_at >= 0 and combat_at < social_at, "the source order puts 战斗 before 社交 (cfg 2000001 order)")
+	assert_true(states_text.find("3") >= 0, "attributes keep their values (体魄 3)")
+	assert_true(tags_text.find("已拥有") >= 0, "non-attribute tags render in the 标签 column")
+	var value_pattern := RegEx.new()
+	value_pattern.compile("[0-9]+\\s*$")
+	assert_null(value_pattern.search(tags_text), "标签 chips are name-only, no values")
+
+
 func test_prestige_slots_replay_source_pivot_geometry():
 	# [SRC: docs/ui_layout/GameScene.md MainUI/Prestige rows — slots use the
 	# authored anchor/pivot mix ((0,1)/(0,0) + pivot (0.52,0.94)); the rects
