@@ -179,7 +179,9 @@ func _framed_button_decoration(button: Button, image_size: Vector2, image_path: 
 		stamp.stretch_mode = TextureRect.STRETCH_SCALE
 		stamp.custom_minimum_size = image_size
 		stamp.size = image_size
-		stamp.set_anchors_preset(Control.PRESET_CENTER)
+		# Top-left anchor so the authored inset applies from the button origin
+		# (a CENTER preset would make `position` an offset from the centre).
+		stamp.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		stamp.position = (BUTTON_SIZE - image_size) * 0.5
 		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		stamp.show_behind_parent = true
@@ -192,7 +194,7 @@ func _framed_button_decoration(button: Button, image_size: Vector2, image_path: 
 		flourish.stretch_mode = TextureRect.STRETCH_SCALE
 		flourish.custom_minimum_size = Vector2(404, 56)
 		flourish.size = Vector2(404, 56)
-		flourish.set_anchors_preset(Control.PRESET_CENTER)
+		flourish.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		flourish.position = (BUTTON_SIZE - Vector2(404, 56)) * 0.5 + Vector2(0, -4)
 		flourish.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		flourish.show_behind_parent = true
