@@ -11,6 +11,7 @@ extends GutTest
 ##       save_samples/global.json backToPrevRound=9999]
 
 const RNG = preload("res://core/rng.gd")
+const CORPUS_GLOBAL := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/save_samples/global.json"
 
 
 func before_each() -> void:
@@ -160,6 +161,32 @@ func test_global_state_disk_round_trip() -> void:
 	assert_eq(reloaded.round_rollback, GlobalState.ROLLBACK_TO_PREV_END)
 	assert_ne(reloaded, gs, "reset_default_cache forces a fresh disk read")
 	DirAccess.remove_absolute("user://test_global_domain.json")
+
+
+func test_original_global_gallery_fields_load_without_translation() -> void:
+	if not FileAccess.file_exists(CORPUS_GLOBAL):
+		pending("corpus global sample not available; skipping")
+		return
+	var original := JSON.parse_string(FileAccess.get_file_as_string(CORPUS_GLOBAL)) as Dictionary
+	var global := GlobalState.load_from(CORPUS_GLOBAL)
+	assert_eq(global.back_to_prev_round, int(original["backToPrevRound"]))
+	assert_eq(global.round_rollback, int(original["roundRollback"]))
+	assert_eq(global.over_records, original["overRecord"], "overRecord stays as source-shaped data")
+	assert_eq(GlobalState._serialize_int_set(global.over_ids), original["overID"])
+	assert_eq(GlobalState._serialize_int_set(global.showed_gallery_cards), original["showedGalleryCards"])
+
+
+func test_gallery_global_hash_sets_deduplicate_and_keep_source_keys() -> void:
+	var global := GlobalState.new()
+	global.over_records = [{"id": 7, "char_cards": [], "after_storys": []}]
+	global.over_ids = GlobalState._restore_int_set([7, 7, 9])
+	global.mark_gallery_card_shown(101)
+	global.mark_gallery_card_shown(101)
+	var saved := global.to_dict()
+	assert_eq(saved["overRecord"], global.over_records)
+	assert_eq(saved["overID"], [7, 9], "Global.overID is a HashSet<int>")
+	assert_eq(saved["showedGalleryCards"], [101], "gallery unlock ids are a HashSet<int>")
+	assert_true(global.has_shown_gallery_card(101))
 
 
 func test_detached_global_state_does_not_touch_disk() -> void:

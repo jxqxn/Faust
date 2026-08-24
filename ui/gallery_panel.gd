@@ -1,6 +1,8 @@
 ## Source-shaped title GalleryPanelController surface.
 ## [SRC: GalleryPanelController.OnEnable/OnClose; GalleryCardPanel.GetCards
-##       (RVA 0x548540) / ShowCards (RVA 0x549720); GalleryPanelNew.prefab.]
+##       (RVA 0x548540) / ShowCards (RVA 0x549720); GalleryPanelNew.prefab;
+##       GalleryCardController.OnPointerClick (RVA 0x543890) ->
+##       CardInfoNewController.Show (RVA 0x537000).]
 class_name GalleryPanel
 extends Control
 
@@ -19,7 +21,9 @@ const CARD_PADDING := Vector2(21, 25)
 const GALLERY_CARDS_PATH := "res://content/gallery_cards.json"
 const VARIABLE_PATH := "res://content/variable.json"
 const UI_PATH := "res://content/ui.json"
-const BACKGROUND_PATH := "res://assets/original/ui/gallery_bg.png"
+## [SRC: GalleryPanelNew/Background Sprite bg_2.asset -> texture GUID
+## 9a7a67e0a2b80064d887233bee114f63 (Texture2D/bg_2.png).]
+const BACKGROUND_PATH := "res://assets/original/ui/bg_2.png"
 
 var _db: ConfigDB
 var _design: Control
@@ -34,6 +38,7 @@ var _ui: Dictionary = {}
 var _types: Array[String] = []
 var _card_groups: Array[Array] = []
 var _current_type := ""
+var _card_detail: CardInfoView
 
 
 func setup(config_db: ConfigDB) -> void:
@@ -250,6 +255,9 @@ func _rebuild_card_groups() -> void:
 			button.size = CARD_ITEM_SIZE
 			button.flat = true
 			button.tooltip_text = str(item.get("name", item.get("id", "")))
+			# [SRC: GalleryCardController.OnPointerClick 0x543890 destroys the
+			# prior info view, instantiates CardInfoNew, then calls Show(card).]
+			button.pressed.connect(_show_card_detail.bind(item["card"]))
 			group.add_child(button)
 	call_deferred("_refresh_visible_groups")
 
@@ -307,6 +315,25 @@ func _dematerialize_group(group: Control) -> void:
 			var card := (child as Control).get_node_or_null("Card")
 			if card != null:
 				card.queue_free()
+
+
+func _show_card_detail(card: Dictionary) -> void:
+	if is_instance_valid(_card_detail):
+		_card_detail.queue_free()
+	_card_detail = CardInfoView.new()
+	_card_detail.setup(null, _db)
+	_card_detail.closed.connect(_close_card_detail)
+	add_child(_card_detail)
+	# GalleryCardController passes the config Card directly to the same
+	# CardInfoNewController.Show surface.  There is deliberately no synthetic
+	# runtime UID or equipment state in archive view.
+	_card_detail.show_card(card, 0)
+
+
+func _close_card_detail() -> void:
+	if is_instance_valid(_card_detail):
+		_card_detail.queue_free()
+	_card_detail = null
 
 
 func _ui_text(key: String, fallback: String) -> String:

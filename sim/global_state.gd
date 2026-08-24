@@ -2,13 +2,12 @@
 ## persisted as global.json next to the run saves. Only evidence-backed fields
 ## are carried today: the back-to-prev quota (COUNTER_BACK_TO_PREV 7100007
 ## routes here through GameState.get_counter/set_counter) and the rollback-kind
-## marker written at round boundaries. The remaining global.json fields
-## (gameStatistics, doneEvent/doneRite, showedPrompt/choosedOption, galleries,
-## meta counters) stay unmigrated until their systems land.
-## [SRC: dump.cs:385595 <backToPrevRound>k__BackingField @0x7C;
-##       dump.cs:385641 roundRollback @0x80; RoundRollbackType enum
-##       dump.cs:6186 None/BACK_TO_BEGIN/BACK_TO_PREV_END/BACK_TO_PREV_BEGIN;
-##       save_samples/global.json backToPrevRound=9999, roundRollback=0]
+## marker written at round boundaries. `overRecord` is retained as opaque
+## original `Global.OverData` JSON until the original result-record lifecycle
+## is fully traced; `overID` and `showedGalleryCards` retain HashSet semantics.
+## [SRC: dump.cs:385599-385609 Global fields; Global.c @ .ctor (0x38a510)
+##       constructs List<OverData> + three HashSet<int>; GalleryCGIconController
+##       @ IsLock (0x5430a0) queries showedGalleryCards; save_samples/global.json]
 class_name GlobalState
 extends RefCounted
 
@@ -26,6 +25,13 @@ var back_to_prev_round := 0
 ## Which boundary the run currently sits behind (RoundRollbackType).
 var round_rollback := ROLLBACK_NONE
 var save_time := ""
+## Original `List<Global.OverData>`; dictionaries remain source-shaped JSON
+## records, because their player/card payload must not be translated here.
+var over_records: Array[Dictionary] = []
+## Original `HashSet<int>` at Global+0x90 (dump offset 0x90).
+var over_ids: Dictionary = {}
+## Original `HashSet<int>` at Global+0xB0 (dump offset 0xB0).
+var showed_gallery_cards: Dictionary = {}
 
 # Disk binding: instances loaded through load_default()/load_from() remember
 # their path so save() persists; bare instances (tests) stay detached.
@@ -101,13 +107,54 @@ func is_disk_bound() -> bool:
 
 func to_dict() -> Dictionary:
 	return {
-		"back_to_prev_round": back_to_prev_round,
-		"round_rollback": round_rollback,
-		"save_time": save_time,
+		# Use original Global/global.json key spelling. _apply_dict keeps reading
+		# the clone's former snake_case file so existing local saves migrate.
+		"saveTime": save_time,
+		"backToPrevRound": back_to_prev_round,
+		"roundRollback": round_rollback,
+		"overRecord": over_records.duplicate(true),
+		"overID": _serialize_int_set(over_ids),
+		"showedGalleryCards": _serialize_int_set(showed_gallery_cards),
 	}
 
 
 func _apply_dict(data: Dictionary) -> void:
-	back_to_prev_round = int(data.get("back_to_prev_round", 0))
-	round_rollback = int(data.get("round_rollback", ROLLBACK_NONE))
-	save_time = str(data.get("save_time", ""))
+	back_to_prev_round = int(data.get("backToPrevRound", data.get("back_to_prev_round", 0)))
+	round_rollback = int(data.get("roundRollback", data.get("round_rollback", ROLLBACK_NONE)))
+	save_time = str(data.get("saveTime", data.get("save_time", "")))
+	over_records.clear()
+	var raw_records: Variant = data.get("overRecord", data.get("over_records", []))
+	if raw_records is Array:
+		for raw_record in raw_records:
+			if raw_record is Dictionary:
+				over_records.append((raw_record as Dictionary).duplicate(true))
+	over_ids = _restore_int_set(data.get("overID", data.get("over_ids", [])))
+	showed_gallery_cards = _restore_int_set(
+		data.get("showedGalleryCards", data.get("showed_gallery_cards", []))
+	)
+
+
+## HashSet<int> serialization has no meaningful order; a sorted array makes
+## clone saves stable while preserving original membership semantics.
+static func _serialize_int_set(values: Dictionary) -> Array[int]:
+	var out: Array[int] = []
+	for raw_id in values.keys():
+		out.append(int(raw_id))
+	out.sort()
+	return out
+
+
+static func _restore_int_set(value: Variant) -> Dictionary:
+	var restored := {}
+	if value is Array:
+		for raw_id in value:
+			restored[int(raw_id)] = true
+	return restored
+
+
+func has_shown_gallery_card(id: int) -> bool:
+	return showed_gallery_cards.has(id)
+
+
+func mark_gallery_card_shown(id: int) -> void:
+	showed_gallery_cards[id] = true

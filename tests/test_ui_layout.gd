@@ -81,6 +81,18 @@ func test_title_gallery_replays_source_data_route_and_card_grouping():
 	if item != null:
 		assert_eq(item.size, Vector2(322, 650.5), "GalleryCardItem keeps its original rectangle")
 		assert_not_null(item.get_node_or_null("Card"), "only visible source rows materialize CardNew surfaces")
+		item.pressed.emit()
+		await wait_process_frames(2)
+		var detail := gallery.get_node_or_null("CardDetailOverlay") as CardInfoView
+		assert_not_null(detail, "GalleryCardController opens the shared CardInfoNew surface")
+		if detail != null:
+			assert_eq(detail.card_id(), 2000001, "the archive item passes its source Card config to Show")
+			var close_detail := detail.get_node_or_null("CardInfoCanvas/CardDetailPanel/CloseCardDetailButton") as Button
+			assert_not_null(close_detail, "the source CardInfoNew close control remains reachable")
+			if close_detail != null:
+				close_detail.pressed.emit()
+				await wait_process_frames(2)
+				assert_null(gallery.get_node_or_null("CardDetailOverlay"), "closing CardInfoNew restores the gallery")
 
 
 func test_representative_main_screen_controls_exist():
