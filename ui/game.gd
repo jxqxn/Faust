@@ -67,6 +67,12 @@ func _show_menu() -> void:
 	menu.continue_pressed.connect(_on_continue)
 	menu.user_archive_load_requested.connect(_on_user_archive_load)
 	menu.user_archive_delete_requested.connect(_on_user_archive_delete)
+	# The title-screen Setting icon targets the scene-owned SettingsController
+	# directly, rather than going through StartController.  Keep the title menu
+	# mounted below it so SettingsController.OnClose returns to this exact panel.
+	# [SRC: StartScene.unity Settings button m_OnClick -> SettingsController.OnShow
+	#       (lines 124454-124470); dump.cs:325897-325909]
+	menu.settings_pressed.connect(_show_settings)
 	menu.test_start_requested.connect(_on_test_start_requested)
 	add_child(menu)
 	_current = menu

@@ -2003,6 +2003,32 @@ func test_main_menu_replays_source_group_rows():
 		assert_true(version.text.begins_with("VERSION"), "Version shows the build line")
 
 
+func test_main_menu_settings_replays_direct_source_controller_route():
+	# [SRC: StartScene.unity Settings button m_OnClick -> SettingsController.OnShow
+	#       (lines 124454-124470); SettingsController.c @ ShowSettings
+	#       (RVA 0x5ab420), dump.cs:325897-325909.]
+	var stage := _stage()
+	var game = Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	var title_menu: Control = game._current
+
+	var setting := _find_node_by_name(game, "Setting") as Button
+	assert_not_null(setting, "the source title Setting icon remains interactive")
+	if setting == null:
+		return
+	setting.pressed.emit()
+	await wait_process_frames(1)
+	var settings_panel := _find_node_by_name(game, "SettingsController") as Control
+	assert_not_null(settings_panel, "title Settings directly opens SettingsController")
+	assert_true(is_instance_valid(title_menu) and title_menu.get_parent() == game, "title menu remains mounted below settings")
+	if settings_panel != null:
+		settings_panel.closed.emit()
+		await wait_process_frames(1)
+		assert_null(_find_node_by_name(game, "SettingsController"), "OnClose returns to the title menu")
+		assert_true(is_instance_valid(title_menu) and title_menu.get_parent() == game, "closing settings preserves the title surface")
+
+
 func test_rite_view_replays_source_canvas_geometry():
 	var rng := RNG.new(2)
 	var state := GameState.new()
