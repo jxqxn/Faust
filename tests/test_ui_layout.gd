@@ -93,6 +93,16 @@ func test_title_gallery_replays_source_data_route_and_card_grouping():
 				close_detail.pressed.emit()
 				await wait_process_frames(2)
 				assert_null(gallery.get_node_or_null("CardDetailOverlay"), "closing CardInfoNew restores the gallery")
+	var search := _find_node_by_name(gallery, "GalleryCardSearchInput") as LineEdit
+	var search_button := _find_node_by_name(gallery, "GalleryCardSearchButton") as Button
+	assert_not_null(search, "GalleryCardPanel keeps the source Search input")
+	assert_not_null(search_button, "SearchCard remains an explicit source button route")
+	if search != null and search_button != null:
+		assert_eq(search.size, Vector2(826, 90), "Search input keeps its source 826x90 rectangle")
+		search.text = "阿尔图"
+		search_button.pressed.emit()
+		await wait_process_frames(2)
+		assert_eq(gallery.filtered_card_ids(), [2000001], "SearchCard uses source display-name Contains filtering")
 
 
 func test_representative_main_screen_controls_exist():

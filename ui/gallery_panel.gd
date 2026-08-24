@@ -13,6 +13,9 @@ const GROUP_RECT := Rect2(1340, 0, 2500, 2160)
 const CARD_PANEL_RECT := Rect2(0, 150, 2500, 1910)
 const TYPE_GROUP_RECT := Rect2(0, 67.5, 1482, 135)
 const CARD_SCROLL_RECT := Rect2(-50, 100, 2500, 1710)
+## [SRC: GalleryCard/Scroll View/Search: resolved from anchors (1,1),
+## pos (-773.4,75), size 826x100 in the 2500x1710 Scroll View.]
+const SEARCH_RECT := Rect2(1313.6, -125, 826, 100)
 const CARD_GROUP_SIZE := Vector2(2048, 690)
 const CARD_ITEM_SIZE := Vector2(322, 650.5)
 const CARDS_PER_GROUP := 6
@@ -24,6 +27,7 @@ const UI_PATH := "res://content/ui.json"
 ## [SRC: GalleryPanelNew/Background Sprite bg_2.asset -> texture GUID
 ## 9a7a67e0a2b80064d887233bee114f63 (Texture2D/bg_2.png).]
 const BACKGROUND_PATH := "res://assets/original/ui/bg_2.png"
+const SEARCH_ICON_PATH := "res://assets/original/ui/search.png"
 
 var _db: ConfigDB
 var _design: Control
@@ -32,12 +36,14 @@ var _cards: Control
 var _cg: Control
 var _scroll: ScrollContainer
 var _scroll_content: Control
+var _search_input: LineEdit
 var _gallery_cards: Dictionary = {}
 var _variables: Dictionary = {}
 var _ui: Dictionary = {}
 var _types: Array[String] = []
 var _card_groups: Array[Array] = []
 var _current_type := ""
+var _search_query := ""
 var _card_detail: CardInfoView
 
 
@@ -198,8 +204,60 @@ func _build_card_panel() -> void:
 	_scroll_content = Control.new()
 	_scroll_content.name = "ViewportContent"
 	_scroll.add_child(_scroll_content)
+	_build_search()
 	_scroll.get_v_scroll_bar().value_changed.connect(func(_value): _refresh_visible_groups())
 	_rebuild_card_groups()
+
+
+func _build_search() -> void:
+	# [SRC: GalleryPanelNew/GalleryCard/Scroll View/Search/InputField (TMP)
+	# 826x90 + Btn 110x116; GalleryCardPanel.SearchCard 0x549240.]
+	var search := Control.new()
+	search.name = "Search"
+	search.position = CARD_SCROLL_RECT.position + SEARCH_RECT.position
+	search.size = SEARCH_RECT.size
+	_cards.add_child(search)
+	_search_input = LineEdit.new()
+	_search_input.name = "GalleryCardSearchInput"
+	_search_input.position = Vector2(0, 5)
+	_search_input.size = Vector2(826, 90)
+	_search_input.placeholder_text = _ui_text("GALLERY_CARD_SEARCH_PLACEHOLDER", "搜索")
+	_search_input.add_theme_font_size_override("font_size", 40)
+	_search_input.add_theme_stylebox_override("normal", _source_texture_style("input_bg.png"))
+	_search_input.add_theme_stylebox_override("focus", _source_texture_style("input_bg.png"))
+	_search_input.text_submitted.connect(func(_submitted: String): _search_cards())
+	search.add_child(_search_input)
+	var button := Button.new()
+	button.name = "GalleryCardSearchButton"
+	button.position = Vector2(826, -8)
+	button.size = Vector2(110, 116)
+	button.flat = true
+	button.tooltip_text = _ui_text("GALLERY_CARD_SEARCH_PLACEHOLDER", "搜索")
+	button.pressed.connect(_search_cards)
+	search.add_child(button)
+	var icon := TextureRect.new()
+	icon.name = "Icon"
+	icon.texture = load(SEARCH_ICON_PATH) as Texture2D if ResourceLoader.exists(SEARCH_ICON_PATH) else null
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_SCALE
+	icon.size = button.size
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(icon)
+
+
+func _source_texture_style(file_name: String) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	var path := "res://assets/original/ui/%s" % file_name
+	if ResourceLoader.exists(path):
+		style.texture = load(path) as Texture2D
+	return style
+
+
+func _search_cards() -> void:
+	_search_query = _search_input.text if _search_input != null else ""
+	_rebuild_card_groups()
+	if _scroll != null:
+		_scroll.scroll_vertical = 0
 
 
 func _build_close() -> void:
@@ -274,6 +332,11 @@ func _filtered_cards() -> Array:
 			continue
 		var card := _db.get_card(int(definition.get("id", 0))) if _db != null else {}
 		if card.is_empty():
+			continue
+		# [SRC: GalleryCardPanel.<>c__DisplayClass22_0.<SearchCard>b__0
+		# 0x55c7f0: CardExtensions.GetName(card).Contains(input), no trim or
+		# case-folding.  Archive view has no synthetic Player name overrides.]
+		if not _search_query.is_empty() and not str(card.get("name", "")).contains(_search_query):
 			continue
 		out.append({"id": int(definition.get("id", 0)), "sort": int(definition.get("sort", 0)), "card": card, "name": str(card.get("name", ""))})
 	out.sort_custom(func(a: Dictionary, b: Dictionary): return int(a["sort"]) < int(b["sort"]))
