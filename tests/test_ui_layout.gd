@@ -8,6 +8,7 @@ const RiteView = preload("res://ui/rite_view.gd")
 const CardInfoView = preload("res://ui/card_info_view.gd")
 const MainHelpView = preload("res://ui/main_help.gd")
 const ChangeNameView = preload("res://ui/change_name_view.gd")
+const GalleryPanel = preload("res://ui/gallery_panel.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -38,6 +39,48 @@ func test_main_menu_uses_wide_viewport_width():
 	await wait_process_frames(2)
 
 	assert_true(_widest_content(menu) >= MIN_CONTENT_WIDTH, "main menu content should use the wide viewport")
+
+
+func test_title_gallery_replays_source_data_route_and_card_grouping():
+	var stage := _stage()
+	var game := Game.new()
+	stage.add_child(game)
+	await wait_process_frames(2)
+	var collect := _find_node_by_name(game, "CollectButton") as Button
+	assert_not_null(collect, "the title Collect button is the GalleryPanelController entry")
+	if collect == null:
+		return
+	collect.pressed.emit()
+	await wait_process_frames(3)
+	var gallery := game._gallery_overlay as GalleryPanel
+	assert_not_null(gallery, "Collect opens the source-shaped GalleryNew controller")
+	if gallery == null:
+		return
+	var design := gallery.get_node_or_null("GalleryNew") as Control
+	var title := gallery.get_node_or_null("GalleryNew/Title") as Control
+	assert_not_null(design)
+	assert_not_null(title)
+	if design == null or title == null:
+		return
+	assert_eq(design.size, Vector2(3840, 2160), "GalleryNew keeps the original canvas")
+	assert_eq(title.position, Vector2(249, 206), "Title resolves its source anchor/pivot rectangle")
+	var tab := _find_node_by_name(gallery, "GalleryTab") as Button
+	assert_not_null(tab)
+	if tab == null:
+		return
+	tab.pressed.emit()
+	await wait_process_frames(3)
+	assert_eq(gallery.filtered_card_ids()[0], 2000001, "GetCards retains original is_show/type/sort filtering")
+	var group := _find_node_by_name(gallery, "GalleryCardGroup_0") as Control
+	var item := _find_node_by_name(gallery, "GalleryCardItem_2000001") as Button
+	assert_not_null(group)
+	assert_not_null(item)
+	if group != null:
+		assert_eq(group.position, Vector2(226, 0), "ShowCards centres each authored group in Content")
+		assert_eq(group.size, Vector2(2048, 690), "ShowCards groups six cards into source-sized rows")
+	if item != null:
+		assert_eq(item.size, Vector2(322, 650.5), "GalleryCardItem keeps its original rectangle")
+		assert_not_null(item.get_node_or_null("Card"), "only visible source rows materialize CardNew surfaces")
 
 
 func test_representative_main_screen_controls_exist():

@@ -9,6 +9,7 @@ const RiteView = preload("res://ui/rite_view.gd")
 const ESCGamePanel = preload("res://ui/esc_game_panel.gd")
 const SettingsPanel = preload("res://ui/settings_panel.gd")
 const UserArchivePanel = preload("res://ui/user_archive_panel.gd")
+const GalleryPanel = preload("res://ui/gallery_panel.gd")
 
 # Transitional compat layer: screens not yet re-emitted in the original
 # 3840x2160 canvas space still lay out in the old 1280x800 mockup space.
@@ -26,6 +27,7 @@ var _game_screen: Control
 var _rite_overlay: Control
 var _menu_overlay: Control
 var _settings_overlay: Control
+var _gallery_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
 var _current_rite_id := 0
@@ -73,6 +75,9 @@ func _show_menu() -> void:
 	# [SRC: StartScene.unity Settings button m_OnClick -> SettingsController.OnShow
 	#       (lines 124454-124470); dump.cs:325897-325909]
 	menu.settings_pressed.connect(_show_settings)
+	# [SRC: StartScene Collect button -> GalleryPanelController; GalleryPanel-
+	#       Controller.OnEnable creates the source gallery's initial selection.]
+	menu.collect_pressed.connect(_show_gallery)
 	menu.test_start_requested.connect(_on_test_start_requested)
 	add_child(menu)
 	_current = menu
@@ -280,6 +285,22 @@ func _close_settings() -> void:
 	_settings_overlay = null
 
 
+func _show_gallery() -> void:
+	if _gallery_overlay != null:
+		return
+	_gallery_overlay = GalleryPanel.new()
+	_gallery_overlay.setup(db)
+	_gallery_overlay.closed.connect(_close_gallery)
+	add_child(_gallery_overlay)
+
+
+func _close_gallery() -> void:
+	if _gallery_overlay == null:
+		return
+	_gallery_overlay.queue_free()
+	_gallery_overlay = null
+
+
 func _on_end_game_from_esc() -> void:
 	if state == null:
 		return
@@ -452,6 +473,7 @@ func _on_back_to_prev() -> void:
 
 func _clear_current() -> void:
 	_close_game_menu()
+	_close_gallery()
 	_close_user_archive_overlay()
 	_close_rite_overlay()
 	if _current:

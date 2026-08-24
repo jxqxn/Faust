@@ -83,10 +83,10 @@
 | --- | --- | --- |
 | after_story 后日谈播放 | `data/config/after_story/` + `AfterStoryNode` + `OverNewAfterStoryItemController.c` | 中（配置已定位，未审流程） |
 | ~~笔记系统（普查+结构承载）~~ | 已落地（2026-08-18 批次 O）：`Player.notes` List<List<Note>>@0x138 按回合分页（页=round−1），Note={type,id,uid,count}；type 1=仪式创建/2=消亡/3=结算/4=吸附卡(count 存卡 id)/10001=成为随从/10002=获得奖励卡。克隆 `GameState.notes`+`add_note` 进 v7 存读档与导入桥（对拍行过）；运行时写点 1/2/3 已接（StartRite.c L133 / GameController.c L5867 / RiteResultPanelController 链），4/10001 调用方不在反编译子集、10002 的手牌标签门未解——三写点留档 | 中（笔记 UI 未做） |
-| 图鉴/画廊 | `gallery_cards.json` / `gallery_cg.json` + Gallery*Controller 族 | 中 |
+| 图鉴/画廊 | `gallery_cards.json` / `gallery_cg.json` + Gallery*Controller 族 | 🟡 标题入口 → `GalleryPanelController`、`GalleryCardPanel.GetCards/ShowCards` 的 `is_show/type/definition/sort` 筛选、六张 `GalleryCardGroup` 与可视行 CardNew 实例化已对拍；原作 `variable.json`/`ui.json` 直读分类顺序和名称。结局记录（`Global.overRecord`）、卡牌剧情详情/SearchCard、CG 解锁（`Global.showedGalleryCards`）仍缺对应 Global 域，不能自制替代。 |
 | 向导演示宿主 | `wizard/` 配置 + WizardController（未审） | 中 |
 | 音频全量 | `sfx_config.json`、`sfx_settle_card_new.json`、`sfx_npc_role_dub.json`、`over_music_config.json` | 小-中（配置在语料库未接） |
-| 未接配置域 | `quest.json`、`upgrade.json`、`variable.json`、`ui.json`、`textstyle.json`、`imagestyle.json`、`dt`、`credits.json`、`mobile_help.json` | 逐域判断用途后接入或说明 |
+| 未接配置域 | `quest.json`、`upgrade.json`、`textstyle.json`、`imagestyle.json`、`dt`、`credits.json`、`mobile_help.json` | 逐域判断用途后接入或说明（`variable.json` / `ui.json` 已由图鉴直接读取，非转换层） |
 | Live2D | 语料库 `live2d/` 已提取 | 大（既定策略：第一版静态图） |
 | ~~背包/手牌位系统（bag/bagpos/BagIndex）~~ | 已落地（2026-08-18 批次 E）：CardInstance.bag/bag_pos 持久化 + 日终压缩 + 导入桥透传与对拍（24 项）；三标签资格判据与多页包 UI 未做（三标签名留档） | — |
 | 末日决战（end_open/is_armageddon/armageddon_rite_id） | 存档字段双信号；控制器未审 | 未知，需普查 |
