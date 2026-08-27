@@ -4,6 +4,8 @@
 class_name GalleryPanel
 extends Control
 
+const GalleryCardInfoView = preload("res://ui/gallery_card_info.gd")
+
 signal closed()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
@@ -28,6 +30,7 @@ const BACKGROUND_PATH := "res://assets/original/ui/bg_2.png"
 const SEARCH_ICON_PATH := "res://assets/original/ui/search.png"
 
 var _db: ConfigDB
+var _global_state: GlobalState
 var _design: Control
 var _over: Control
 var _cards: Control
@@ -42,10 +45,13 @@ var _types: Array[String] = []
 var _card_groups: Array[Array] = []
 var _current_type := ""
 var _search_query := ""
+var _card_info: Control
+var _current_card_index := -1
 
 
-func setup(config_db: ConfigDB) -> void:
+func setup(config_db: ConfigDB, global_state: GlobalState = null) -> void:
 	_db = config_db
+	_global_state = global_state
 
 
 func _ready() -> void:
@@ -310,6 +316,7 @@ func _rebuild_card_groups() -> void:
 			button.size = CARD_ITEM_SIZE
 			button.flat = true
 			button.tooltip_text = str(item.get("name", item.get("id", "")))
+			button.pressed.connect(func(): _show_card_info(item))
 			group.add_child(button)
 	call_deferred("_refresh_visible_groups")
 
@@ -332,7 +339,7 @@ func _filtered_cards() -> Array:
 		# case-folding.  Archive view has no synthetic Player name overrides.]
 		if not _search_query.is_empty() and not str(card.get("name", "")).contains(_search_query):
 			continue
-		out.append({"id": int(definition.get("id", 0)), "sort": int(definition.get("sort", 0)), "card": card, "name": str(card.get("name", ""))})
+		out.append({"id": int(definition.get("id", 0)), "sort": int(definition.get("sort", 0)), "card": card, "definition": definition, "name": str(card.get("name", ""))})
 	out.sort_custom(func(a: Dictionary, b: Dictionary): return int(a["sort"]) < int(b["sort"]))
 	return out
 
@@ -384,3 +391,47 @@ func filtered_card_ids() -> Array[int]:
 	for item in _filtered_cards():
 		out.append(int(item["id"]))
 	return out
+
+
+func _show_card_info(item: Dictionary) -> void:
+	# [SRC: GalleryCardItemController.OnPointerClick 0x547970 ->
+	# GalleryCardPanel.ShowCardInfo 0x549520 -> GalleryCardInfo.Show 0x5465f0.]
+	var cards := _filtered_cards()
+	_current_card_index = -1
+	for index in cards.size():
+		if int(cards[index].get("id", 0)) == int(item.get("id", 0)):
+			_current_card_index = index
+			break
+	if _current_card_index < 0:
+		return
+	_open_card_info(cards[_current_card_index], cards.size())
+
+
+func _open_card_info(item: Dictionary, count: int) -> void:
+	if _card_info != null and is_instance_valid(_card_info):
+		remove_child(_card_info)
+		_card_info.queue_free()
+	_card_info = GalleryCardInfoView.new()
+	_card_info.name = "GalleryCardInfoOverlay"
+	_card_info.setup(_db, _global_state, item.get("definition", {}) as Dictionary, item.get("card", {}) as Dictionary, _current_card_index > 0, _current_card_index < count - 1)
+	_card_info.closed.connect(_close_card_info)
+	_card_info.navigation_requested.connect(_navigate_card_info)
+	add_child(_card_info)
+
+
+func _navigate_card_info(delta: int) -> void:
+	var cards := _filtered_cards()
+	var next_index := _current_card_index + delta
+	if next_index < 0 or next_index >= cards.size():
+		return
+	_current_card_index = next_index
+	_open_card_info(cards[_current_card_index], cards.size())
+
+
+func _close_card_info() -> void:
+	if _card_info == null:
+		return
+	remove_child(_card_info)
+	_card_info.queue_free()
+	_card_info = null
+	_current_card_index = -1

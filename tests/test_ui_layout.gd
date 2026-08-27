@@ -86,6 +86,34 @@ func test_title_gallery_replays_source_data_route_and_card_grouping():
 		item.pressed.emit()
 		await wait_process_frames(2)
 		assert_null(gallery.get_node_or_null("CardDetailOverlay"), "the archive grid must not misroute into the ordinary CardInfoNew controller")
+		var detail := gallery.get_node_or_null("GalleryCardInfoOverlay") as Control
+		assert_not_null(detail, "GalleryCardItem opens the dedicated GalleryCardInfo controller")
+		if detail != null:
+			var detail_design := detail.get_node_or_null("GalleryCardInfo") as Control
+			var plots := detail.get_node_or_null("GalleryCardInfo/Plots") as Control
+			var card_info := detail.get_node_or_null("GalleryCardInfo/CardInfo") as Control
+			assert_not_null(detail_design)
+			assert_not_null(plots)
+			assert_not_null(card_info)
+			if detail_design != null:
+				assert_eq(detail_design.size, Vector2(3840, 2160), "GalleryCardInfo keeps the source canvas")
+			if plots != null:
+				assert_eq(Rect2(plots.position, plots.size), Rect2(0, 228, 1300, 1930), "Plots resolves the authored anchor/pivot rectangle")
+			if card_info != null:
+				assert_almost_eq(card_info.position.x, 1210.0, 0.01, "CardInfo keeps its source right edge")
+				assert_almost_eq(card_info.size.y, 1946.73, 0.01, "CardInfo keeps its authored height")
+			var content := _find_node_by_name(detail, "Content") as Label
+			assert_not_null(content)
+			if content != null:
+				assert_eq(content.text, str(db.get_card(2000001).get("text", "")), "GalleryCardInfo reads CardNode.text directly")
+			var plot_item := _find_node_by_name(detail, "PlotItem_87a7895a-fd16-4f53-8ff9-32653ad18806") as Button
+			assert_not_null(plot_item, "Show creates PlotItemController rows from gallery_cards.json")
+			var close_detail := _find_node_by_name(detail, "Close") as Button
+			assert_not_null(close_detail)
+			if close_detail != null:
+				close_detail.pressed.emit()
+				await wait_process_frames(2)
+				assert_null(gallery.get_node_or_null("GalleryCardInfoOverlay"), "GalleryCardInfo.OnClose destroys only the detail surface")
 	var search := _find_node_by_name(gallery, "GalleryCardSearchInput") as LineEdit
 	var search_button := _find_node_by_name(gallery, "GalleryCardSearchButton") as Button
 	assert_not_null(search, "GalleryCardPanel keeps the source Search input")
@@ -96,6 +124,63 @@ func test_title_gallery_replays_source_data_route_and_card_grouping():
 		search_button.pressed.emit()
 		await wait_process_frames(2)
 		assert_eq(gallery.filtered_card_ids(), [2000001], "SearchCard uses source display-name Contains filtering")
+
+
+func test_gallery_card_info_replays_plot_unlock_and_content_switch():
+	var source_global := GlobalState.new()
+	var stage := _stage()
+	var gallery := GalleryPanel.new()
+	gallery.setup(db, source_global)
+	stage.add_child(gallery)
+	await wait_process_frames(2)
+	var tab := _find_node_by_name(gallery, "GalleryTab") as Button
+	assert_not_null(tab)
+	if tab == null:
+		return
+	tab.pressed.emit()
+	await wait_process_frames(2)
+	var item := _find_node_by_name(gallery, "GalleryCardItem_2000001") as Button
+	assert_not_null(item)
+	if item == null:
+		return
+	item.pressed.emit()
+	await wait_process_frames(2)
+	var detail := gallery.get_node_or_null("GalleryCardInfoOverlay") as Control
+	assert_not_null(detail)
+	if detail == null:
+		return
+	var mask := detail.get_node_or_null("GalleryCardInfo/Plots/PlotsGroup/PlotMask") as Control
+	assert_not_null(mask)
+	if mask == null:
+		return
+	assert_true(mask.visible, "Show masks plots while Global.showedGalleryCards lacks the GalleryData id")
+	var confirm := mask.get_node_or_null("Confirm") as Button
+	assert_not_null(confirm)
+	if confirm == null:
+		return
+	confirm.pressed.emit()
+	assert_true(source_global.has_shown_gallery_card(2000001), "AddShowedGalleryCard writes the exact GalleryData id")
+	assert_false(mask.visible, "AddShowedGalleryCard reveals PlotItems after the write")
+	var plot_item := _find_node_by_name(detail, "PlotItem_87a7895a-fd16-4f53-8ff9-32653ad18806") as Button
+	assert_not_null(plot_item)
+	if plot_item == null:
+		return
+	plot_item.pressed.emit()
+	await wait_process_frames(1)
+	var basic := detail.get_node_or_null("GalleryCardInfo/CardInfo/Left") as Control
+	var plot_content := detail.get_node_or_null("GalleryCardInfo/CardInfo/plotContent") as Control
+	assert_not_null(basic)
+	assert_not_null(plot_content)
+	if basic != null and plot_content != null:
+		assert_false(basic.visible, "OnItemClicked swaps CardInfo to PlotInfo")
+		assert_true(plot_content.visible, "OnItemClicked exposes the selected plot content")
+	var plot_list := detail.get_node_or_null("GalleryCardInfo/CardInfo/plotContent/Scroll View/PlotContainer") as VBoxContainer
+	assert_not_null(plot_list)
+	if plot_list != null and plot_list.get_child_count() > 0:
+		var plot_text := plot_list.get_child(0).get_node_or_null("Content") as Label
+		assert_not_null(plot_text)
+		if plot_text != null:
+			assert_true(plot_text.text.begins_with("当你不举的传言"), "PlotContentItem reads gallery_cards.json plot_text without a clone intermediary")
 
 
 func test_representative_main_screen_controls_exist():

@@ -289,7 +289,9 @@ func _show_gallery() -> void:
 	if _gallery_overlay != null:
 		return
 	_gallery_overlay = GalleryPanel.new()
-	_gallery_overlay.setup(db)
+	# The title gallery reads/writes the original process-wide Global domain.
+	# [SRC: GalleryCardInfo.AddShowedGalleryCard 0x543c80.]
+	_gallery_overlay.setup(db, GlobalState.load_default())
 	_gallery_overlay.closed.connect(_close_gallery)
 	add_child(_gallery_overlay)
 
