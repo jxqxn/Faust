@@ -9,6 +9,7 @@ const CardInfoView = preload("res://ui/card_info_view.gd")
 const MainHelpView = preload("res://ui/main_help.gd")
 const ChangeNameView = preload("res://ui/change_name_view.gd")
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
+const GalleryCardInfoView = preload("res://ui/gallery_card_info.gd")
 
 const WIDE_VIEWPORT := Vector2(1152, 648)
 const MIN_CONTENT_WIDTH := 900.0
@@ -225,6 +226,60 @@ func test_gallery_card_resources_resolve_directly_from_original_config():
 				ResourceLoader.exists("res://assets/original/%s.png" % source_name),
 				"GalleryData resource resolves without translation: %s" % source_name
 			)
+
+
+func test_gallery_card_info_replays_source_tag_controllers_and_sorting():
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
+	assert_true(parsed is Dictionary)
+	if not (parsed is Dictionary):
+		return
+	var definition := (parsed as Dictionary).get("2000001", {}) as Dictionary
+	var card := db.get_card(2000001)
+	var stage := _stage()
+	var detail := GalleryCardInfoView.new()
+	detail.setup(db, GlobalState.new(), definition, card, false, false)
+	stage.add_child(detail)
+	await wait_process_frames(2)
+
+	var tag_contents := detail.get_node_or_null("GalleryCardInfo/CardInfo/Left/TagContents") as Control
+	assert_not_null(tag_contents)
+	if tag_contents != null:
+		assert_eq(tag_contents.get_child_count(), 6, "RefreshAllTags sends six non-attribute TagNodes to CardTagNew")
+		var expected_names := ["体魄", "魅力", "智慧", "战斗", "社交", "支持"]
+		var expected_values := [3, 2, 1, 2, 1, 1]
+		for index in expected_names.size():
+			var item := tag_contents.get_child(index) as Control
+			assert_eq(str(item.get_meta("source_tag_name")), expected_names[index], "CardTagNew rows sort by TagNode.tag_rank descending")
+			assert_eq(int(item.get_meta("source_tag_value")), expected_values[index], "CardTagNew.Show receives CardExtensions.GetTag value")
+			assert_eq(item.size, Vector2(365, 120), "Gallery TagInfo GridLayoutGroup owns the 365x120 source cell")
+			assert_eq(item.position, Vector2(-70 + (index % 3) * 365, (index / 3) * 120), "Gallery TagInfo replays the source 3-column grid")
+		var first_icon := tag_contents.get_child(0).get_node_or_null("CardTag") as TextureRect
+		var first_title := tag_contents.get_child(0).get_node_or_null("CardTag/Title") as Label
+		assert_not_null(first_icon)
+		assert_not_null(first_title)
+		if first_icon != null:
+			assert_eq(first_icon.size, Vector2(72, 72), "CardTag.prefab keeps its authored icon rectangle")
+			assert_eq(first_icon.scale, Vector2(1.2, 1.2), "CardTag.prefab keeps its authored icon scale")
+			assert_not_null(first_icon.texture, "TagNode.resource resolves directly through the original tags atlas")
+		if first_title != null:
+			assert_eq(first_title.text, "体魄　3", "CardTagNew formats the source name and value rather than a clone summary line")
+			assert_eq(first_title.get_theme_font_size("font_size"), 30, "CardTag title keeps source fs30")
+
+	var attributes := detail.get_node_or_null("GalleryCardInfo/CardInfo/Left/AttributeContents/RealAttributeContents") as Control
+	assert_not_null(attributes)
+	if attributes != null:
+		assert_eq(attributes.scale, Vector2(1.5, 1.5), "Real Attribute Contents keeps the authored 1.5 scale")
+		assert_eq(attributes.get_child_count(), 4, "RefreshAllTags sends type=attribute TagNodes to CardAttribute")
+		var expected_attributes := ["男性", "贵族", "主角", "已拥有"]
+		for index in expected_attributes.size():
+			var item := attributes.get_child(index) as Control
+			var text := item.get_node_or_null("Text") as Label
+			assert_not_null(text)
+			if text != null:
+				assert_eq(text.text, expected_attributes[index], "CardAttribute.Show displays TagNode.name only")
+				assert_eq(text.get_theme_font_size("font_size"), 30, "CardAttribute keeps source fs30")
+			assert_eq(item.size, Vector2(60, 40), "CardAttribute.prefab keeps its authored 60x40 rectangle")
+			assert_eq(item.position, Vector2(index * 80, 0), "Attribute flow keeps the authored 20px horizontal spacing")
 
 
 func test_representative_main_screen_controls_exist():

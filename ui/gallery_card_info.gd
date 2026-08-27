@@ -14,6 +14,13 @@ const PLOTS_RECT := Rect2(0, 228, 1300, 1930)
 const CARD_INFO_RECT := Rect2(1210, 191.005, 2630, 1946.73)
 const PLOTS_GROUP_RECT := Rect2(217, 512, 900, 1170)
 const SOURCE_UI := "res://assets/original/ui/"
+const TAG_GRID_CELL := Vector2(365, 120)
+const TAG_GRID_COLUMNS := 3
+const TAG_GRID_LEFT_PADDING := -70.0
+const ATTRIBUTE_ITEM_SIZE := Vector2(60, 40)
+const ATTRIBUTE_SPACING := Vector2(20, 10)
+
+static var _tags_atlas: OriginalAtlas = null
 
 var _db: ConfigDB
 var _global_state: GlobalState
@@ -256,25 +263,157 @@ func _build_card_info() -> void:
 
 
 func _build_tags(parent: Control) -> void:
-	var tags := _card.get("tag", {}) as Dictionary
-	var attrs := ["体魄", "魅力", "智慧", "战斗", "社交", "支持"]
-	var attr_line := _label("", 32)
-	attr_line.name = "AttributeContents"
-	var attr_text: Array[String] = []
-	for key in attrs:
-		if int(tags.get(key, 0)) != 0:
-			attr_text.append("%s %d" % [key, int(tags[key])])
-	attr_line.text = "　".join(attr_text)
-	_place(parent, Rect2(0, 650, 930, 70), attr_line)
-	var tag_line := _label("", 30)
-	tag_line.name = "TagContents"
-	var tag_text: Array[String] = []
-	for key in tags.keys():
-		if key not in attrs and int(tags[key]) != 0:
-			tag_text.append(str(key))
-	tag_line.text = "　".join(tag_text)
-	tag_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_place(parent, Rect2(0, 750, 930, 220), tag_line)
+	# [SRC: GalleryCardInfo.RefreshAllTags 0x5459c0] builds TagNode lists
+	# directly from CardExtensions.GetTags, applies TagNode visibility/value
+	# gates, splits type=="attribute", sorts both by tag_rank descending, then
+	# instantiates CardTagNew (non-attribute) and CardAttribute (attribute).
+	var split := _source_tag_nodes()
+	var tag_nodes: Array = split["tags"]
+	var attribute_nodes: Array = split["attributes"]
+
+	# GalleryCardInfo/Left/TagInfo is the controller's TagContainer: a source
+	# GridLayoutGroup with padding-left -70, cell 365x120 and 3 columns.
+	var tag_contents := Control.new()
+	tag_contents.name = "TagContents"
+	_place(parent, Rect2(0, 650, 1095, ceili(float(tag_nodes.size()) / TAG_GRID_COLUMNS) * TAG_GRID_CELL.y), tag_contents)
+	for index in tag_nodes.size():
+		var row: Dictionary = tag_nodes[index]
+		var item := _card_tag_new(row)
+		item.position = Vector2(
+			TAG_GRID_LEFT_PADDING + float(index % TAG_GRID_COLUMNS) * TAG_GRID_CELL.x,
+			float(index / TAG_GRID_COLUMNS) * TAG_GRID_CELL.y
+		)
+		tag_contents.add_child(item)
+
+	# Source Attribute Contents wraps a Real Attribute Contents flow group at
+	# scale 1.5. CardAttribute.Show 0x527c10 assigns TagNode.name only.
+	var attribute_contents := Control.new()
+	attribute_contents.name = "AttributeContents"
+	_place(parent, Rect2(0, 910, 930, 100), attribute_contents)
+	var real_contents := Control.new()
+	real_contents.name = "RealAttributeContents"
+	real_contents.scale = Vector2(1.5, 1.5)
+	real_contents.size = Vector2(620, 60)
+	attribute_contents.add_child(real_contents)
+	var cursor := Vector2.ZERO
+	for raw_row in attribute_nodes:
+		var row: Dictionary = raw_row
+		var item := _card_attribute(row)
+		item.position = cursor
+		real_contents.add_child(item)
+		cursor.x += ATTRIBUTE_ITEM_SIZE.x + ATTRIBUTE_SPACING.x
+
+
+func _source_tag_nodes() -> Dictionary:
+	var out := {"tags": [], "attributes": []}
+	if _db == null:
+		return out
+	var card_tags = _card.get("tag", {})
+	if not (card_tags is Dictionary):
+		return out
+	var source_index := 0
+	for raw_name in (card_tags as Dictionary).keys():
+		var tag_name := str(raw_name)
+		var code := str(_db.tag_name_to_code.get(tag_name, ""))
+		if code.is_empty() or not _db.tags_by_code.has(code):
+			source_index += 1
+			continue
+		var tag_node: Dictionary = (_db.tags_by_code[code] as Dictionary).duplicate(true)
+		var value := int((card_tags as Dictionary).get(raw_name, 0))
+		# Exact RefreshAllTags gates: visible && (can_add || value != 0) &&
+		# (can_nagative_and_zero || value > 0).
+		if int(tag_node.get("can_visible", 0)) == 0:
+			source_index += 1
+			continue
+		if int(tag_node.get("can_add", 0)) == 0 and value == 0:
+			source_index += 1
+			continue
+		if int(tag_node.get("can_nagative_and_zero", 0)) == 0 and value <= 0:
+			source_index += 1
+			continue
+		tag_node["_source_name"] = tag_name
+		tag_node["_source_value"] = value
+		tag_node["_source_index"] = source_index
+		var bucket: Array = out["attributes"] if str(tag_node.get("type", "")) == "attribute" else out["tags"]
+		bucket.append(tag_node)
+		source_index += 1
+	for bucket_key in ["tags", "attributes"]:
+		var bucket: Array = out[bucket_key]
+		bucket.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			var a_rank := int(a.get("tag_rank", 0))
+			var b_rank := int(b.get("tag_rank", 0))
+			if a_rank == b_rank:
+				return int(a.get("_source_index", 0)) < int(b.get("_source_index", 0))
+			return a_rank > b_rank
+		)
+	return out
+
+
+func _card_tag_new(tag_node: Dictionary) -> Control:
+	# [SRC: CardTag.prefab + CardTagNewController.Show 0x53f040]
+	var item := Control.new()
+	var tag_name := str(tag_node.get("_source_name", tag_node.get("name", "")))
+	var value := int(tag_node.get("_source_value", 0))
+	item.name = "CardTag_%s" % tag_name
+	item.size = TAG_GRID_CELL
+	item.set_meta("source_tag_name", tag_name)
+	item.set_meta("source_tag_value", value)
+
+	var icon := TextureRect.new()
+	icon.name = "CardTag"
+	icon.texture = _tag_texture(str(tag_node.get("resource", "")))
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_SCALE
+	icon.position = Vector2(0, 14)
+	icon.size = Vector2(72, 72)
+	icon.pivot_offset = Vector2(0, 36)
+	icon.scale = Vector2(1.2, 1.2)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	item.add_child(icon)
+
+	var title := _label("%s　%d" % [tag_name, value], 30)
+	title.name = "Title"
+	title.position = Vector2(82, -4)
+	title.size = Vector2(220, 80)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	icon.add_child(title)
+
+	var count_bg := _texture_rect("checkbox_bg.png")
+	count_bg.name = "CountBg"
+	count_bg.position = Vector2(1, 36)
+	count_bg.size = Vector2(70, 72)
+	count_bg.pivot_offset = count_bg.size * 0.5
+	count_bg.scale = Vector2(0.5, 0.5)
+	icon.add_child(count_bg)
+	return item
+
+
+func _card_attribute(tag_node: Dictionary) -> Control:
+	# [SRC: CardAttribute.prefab 60x40/fs30; CardAttributeController.Show
+	# 0x527c10 writes TagNode.name and never writes the numeric value.]
+	var tag_name := str(tag_node.get("name", tag_node.get("_source_name", "")))
+	# A fixed RectTransform shell prevents Godot's Label minimum size from
+	# expanding the authored 60x40 prefab (Unity TMP is allowed to overflow it).
+	var item := Control.new()
+	item.name = "CardAttribute_%s" % tag_name
+	item.size = ATTRIBUTE_ITEM_SIZE
+	item.set_meta("source_tag_name", tag_name)
+	var text := _label(tag_name, 30)
+	text.name = "Text"
+	text.position = Vector2.ZERO
+	text.size = ATTRIBUTE_ITEM_SIZE
+	text.add_theme_constant_override("outline_size", 2)
+	text.add_theme_color_override("font_outline_color", Color(0.08, 0.05, 0.03, 0.9))
+	item.add_child(text)
+	return item
+
+
+func _tag_texture(resource_id: String) -> Texture2D:
+	if resource_id.is_empty():
+		return null
+	if _tags_atlas == null:
+		_tags_atlas = OriginalAtlas.load_atlas(SOURCE_UI + "tags.png")
+	return _tags_atlas.frame(resource_id + ".png") if _tags_atlas != null else null
 
 
 func _build_navigation(has_prev: bool, has_next: bool) -> void:

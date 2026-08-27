@@ -4,6 +4,7 @@ extends Control
 ## the normal project startup path (window stretch settings included) applies,
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
+##   [--gallery-card-info]
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -18,6 +19,21 @@ func _ready() -> void:
 			frames = int(args[i + 1])
 	var main: Node = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	if args.has("--gallery-card-info"):
+		await get_tree().create_timer(0.5).timeout
+		# Follow the real title route: Game._show_gallery -> GalleryPanel, then
+		# select the source Gallery tab and open the first source-sorted card.
+		if main.has_method("_show_gallery"):
+			main.call("_show_gallery")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var gallery: Node = main.get("_gallery_overlay")
+			if gallery != null:
+				gallery.call("_show_mode", "Gallery")
+				await get_tree().process_frame
+				var cards: Array = gallery.call("_filtered_cards")
+				if not cards.is_empty():
+					gallery.call("_show_card_info", cards[0])
 	var auto_start := args.has("--new-game")
 	if auto_start:
 		await get_tree().create_timer(1.5).timeout
