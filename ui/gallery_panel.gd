@@ -5,6 +5,7 @@ class_name GalleryPanel
 extends Control
 
 const GalleryCardInfoView = preload("res://ui/gallery_card_info.gd")
+const OverRecordViewScript = preload("res://ui/over_record_view.gd")
 
 signal closed()
 
@@ -37,8 +38,9 @@ const SEARCH_ICON_PATH := "res://assets/original/ui/search.png"
 
 var _db: ConfigDB
 var _global_state: GlobalState
+var _over_record_store: OverRecordStore
 var _design: Control
-var _over: Control
+var _over: OverRecordView
 var _cards: Control
 var _cg: Control
 var _scroll: ScrollContainer
@@ -59,6 +61,7 @@ var _big_cg_container: Control
 var _big_cg: TextureRect
 var _cg_title: Label
 var _cg_lock_prompt: Label
+var _over_memory_button: Button
 
 ## Authored GalleryPanelNew.prefab RectTransforms, converted from Unity's
 ## centre anchors / upward Y into top-left positions inside CG's 2281.8x1574.5
@@ -75,9 +78,10 @@ const CG_ITEM_LAYOUT := {
 }
 
 
-func setup(config_db: ConfigDB, global_state: GlobalState = null) -> void:
+func setup(config_db: ConfigDB, global_state: GlobalState = null, over_record_store: OverRecordStore = null) -> void:
 	_db = config_db
 	_global_state = global_state
+	_over_record_store = over_record_store
 
 
 func _ready() -> void:
@@ -177,9 +181,9 @@ func _build_mode_buttons() -> void:
 	over_types.custom_minimum_size = Vector2(950, 216)
 	over_types.add_theme_constant_override("separation", 0)
 	buttons.add_child(over_types)
-	var memory_button := _mode_button("OverMemoryTab", "历史画廊", Vector2(950, 100), 40)
-	memory_button.pressed.connect(func(): _show_mode("Over"))
-	over_types.add_child(memory_button)
+	_over_memory_button = _mode_button("OverMemoryTab", _over_memory_text(0, OverRecordStore.MAX_VISIBLE_RECORDS), Vector2(950, 100), 40)
+	_over_memory_button.pressed.connect(func(): _show_mode("Over"))
+	over_types.add_child(_over_memory_button)
 	var cg_button := _mode_button("CGTab", _ui_text("GALLERY_OVER_BTN_CG", "图鉴"), Vector2(950, 100), 40)
 	cg_button.pressed.connect(func(): _show_mode("CG"))
 	over_types.add_child(cg_button)
@@ -204,9 +208,14 @@ func _build_body() -> void:
 	body.size = GROUP_RECT.size
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_design.add_child(body)
-	_over = Control.new()
+	if _over_record_store == null:
+		_over_record_store = OverRecordStore.new()
+	_over = OverRecordViewScript.new()
 	_over.name = "Over"
-	_over.size = Vector2(2500, 1960)
+	_over.position = CG_PANEL_RECT.position
+	_over.size = CG_PANEL_RECT.size
+	_over.setup(_over_record_store, _global_state)
+	_over.count_changed.connect(_on_over_record_count_changed)
 	body.add_child(_over)
 	_cards = Control.new()
 	_cards.name = "GalleryCard"
@@ -574,6 +583,18 @@ func _dematerialize_group(group: Control) -> void:
 func _ui_text(key: String, fallback: String) -> String:
 	var row := _ui.get(key, {}) as Dictionary
 	return str(row.get("zhCN", fallback))
+
+
+func _over_memory_text(current: int, maximum: int) -> String:
+	# TMP-only link/sprite markup is a controller glyph, not visible label text.
+	var source := _ui_text("GALLERY_OVER_BTN_MEMORY", "历史画廊 ({0}/{1})")
+	source = source.replace("<link=over><sprite=36></link>", "").strip_edges()
+	return source.format([current, maximum])
+
+
+func _on_over_record_count_changed(current: int, maximum: int) -> void:
+	if _over_memory_button != null:
+		_over_memory_button.text = _over_memory_text(current, maximum)
 
 
 func filtered_card_ids() -> Array[int]:

@@ -4,7 +4,9 @@ extends Control
 ## the normal project startup path (window stretch settings included) applies,
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
-##   [--gallery-card-info] [--gallery-cg]
+##   [--gallery-card-info] [--gallery-cg] [--gallery-over]
+
+const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -48,6 +50,24 @@ func _ready() -> void:
 				shot_global.over_ids[100] = true
 				gallery.set("_global_state", shot_global)
 				gallery.call("_show_mode", "CG")
+	if args.has("--gallery-over"):
+		await get_tree().create_timer(0.5).timeout
+		_cleanup_gallery_over_shot()
+		var shot_store := OverRecordStore.new(GALLERY_OVER_SHOT_ROOT)
+		shot_store.load_over_record_excerpt()
+		shot_store.add_over_record({"id": 1, "char_cards": [], "player_data": null, "after_storys": [], "time": "08/27/2026"})
+		shot_store.add_over_record({"id": 273, "char_cards": [], "player_data": null, "after_storys": [], "time": "08/27/2026"})
+		if main.has_method("_show_gallery"):
+			main.call("_show_gallery")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var gallery: Node = main.get("_gallery_overlay")
+			if gallery != null:
+				var over_view: Node = gallery.get("_over")
+				if over_view != null:
+					over_view.call("setup", shot_store, GlobalState.new())
+					over_view.call("refresh")
+				gallery.call("_show_mode", "Over")
 	var auto_start := args.has("--new-game")
 	if auto_start:
 		await get_tree().create_timer(1.5).timeout
@@ -131,6 +151,10 @@ func _ready() -> void:
 						for sub in child.get_children():
 							var c2: Control = sub
 							print("  tray %s visible=%s rect=%s" % [sub.name, c2.visible, c2.get_global_rect()])
+	# Remove the screenshot-only archive before image readback so even a
+	# renderer/readback failure cannot leave synthetic user data behind.
+	if args.has("--gallery-over"):
+		_cleanup_gallery_over_shot()
 	var vp := get_viewport()
 	print("viewport=%s root_size=%s scale=%s/%s" % [vp.get_visible_rect(), vp.size, vp.content_scale_mode, vp.content_scale_aspect])
 	if main is Control:
@@ -142,3 +166,16 @@ func _ready() -> void:
 	image.save_png(out)
 	print("screenshot saved: %s (%dx%d)" % [out, image.get_width(), image.get_height()])
 	get_tree().quit(0)
+
+
+func _cleanup_gallery_over_shot() -> void:
+	for index in 2:
+		var record := "%s/OVERRECORDDATA/over_record_No.%d.json" % [GALLERY_OVER_SHOT_ROOT, index]
+		if FileAccess.file_exists(record):
+			DirAccess.remove_absolute(record)
+	var excerpt := GALLERY_OVER_SHOT_ROOT + "/over_record_excerpt.json"
+	if FileAccess.file_exists(excerpt):
+		DirAccess.remove_absolute(excerpt)
+	DirAccess.remove_absolute(GALLERY_OVER_SHOT_ROOT + "/OVERRECORDDATA/EXCESSDATA")
+	DirAccess.remove_absolute(GALLERY_OVER_SHOT_ROOT + "/OVERRECORDDATA")
+	DirAccess.remove_absolute(GALLERY_OVER_SHOT_ROOT)

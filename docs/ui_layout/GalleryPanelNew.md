@@ -7,6 +7,132 @@ Corpus truth table (RectTransform, authored values). Regenerate with `tools/expo
 | path | anchors | pos | size | pivot | scale | rotZ | extras |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | GalleryPanelNew | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/bg_2.asset |
+| GalleryPanelNew/Title | (0.00, 1.00)–(0.00, 1.00) | (315.00, -270.00) | (132.00, 128.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/title.asset |
+| GalleryPanelNew/Title/title | (0.00, 0.50)–(0.00, 0.50) | (160.00, 0.00) | (1000.00, 80.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | text="历史画廊" fs=60 |
+| GalleryPanelNew/Title/Text (TMP) | (0.00, 1.00)–(0.00, 1.00) | (-71.87, -200.00) | (940.00, 351.36) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | text="在这里可以看到已经触发过的游戏内容。" fs=36 |
+| GalleryPanelNew/ButtonGroup | (0.00, 1.00)–(0.00, 1.00) | (649.50, -836.10) | (950.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=0 v=2) |
+| GalleryPanelNew/ButtonGroup/Over | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 150.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/Over/HighLight | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (800.00, 0.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/Over/Image | (0.00, 0.00)–(1.00, 0.00) | (0.00, 0.00) | (0.00, 30.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/slash.asset |
+| GalleryPanelNew/ButtonGroup/Over/Text | (0.00, 0.00)–(0.00, 1.00) | (50.00, 0.00) | (0.00, -89.99) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | text="结局" fs=50 fitter(h=2 v=0) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 216.00) | (0.50, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Image | (0.00, 0.00)–(1.00, 0.00) | (0.00, 5.00) | (0.00, 30.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/slash.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (-10.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | layout(align=2 spacing=6.0 pad=[0, 0, 10, 0] cc=1/0 fe=1/0 rev=0) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1) | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 100.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/bg | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/bg/Image | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 6.00) | (0.50, 0.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/rite_log_sperator.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/CheckMark | (0.00, 0.00)–(1.00, 1.00) | (-3.00, 0.00) | (-6.00, -12.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/Text | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Label | (0.00, 0.00)–(1.00, 1.00) | (20.00, 0.00) | (-160.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | text=""\n"" fs=60 |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Image | (0.00, 0.50)–(0.00, 0.50) | (40.00, 0.00) | (18.00, 18.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_nomal.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Image/Image | (0.50, 0.50)–(0.50, 0.50) | (3.30, 2.60) | (43.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_light.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay | (0.50, 0.50)–(0.50, 0.50) | (273.00, 21.00) | (100.00, 100.00) | (0.50, 0.50) | (1.50, 1.50) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/First | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/ShowOverHelp/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay | (1.00, 0.50)–(1.00, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (1.00, 0.50) | (1.50, 1.50) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2) | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 100.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/bg | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/bg/Image | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 6.00) | (0.50, 0.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/rite_log_sperator.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/CheckMark | (0.00, 0.00)–(1.00, 1.00) | (-3.00, 0.00) | (-6.00, -12.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/Text | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Label | (0.00, 0.00)–(1.00, 1.00) | (20.00, 0.00) | (-160.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Image | (0.00, 0.50)–(0.00, 0.50) | (40.00, 0.00) | (18.00, 18.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_nomal.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Image/Image | (0.50, 0.50)–(0.50, 0.50) | (3.30, 2.60) | (43.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_light.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay | (1.00, 0.50)–(1.00, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (1.00, 0.50) | (1.50, 1.50) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Scrollbar Vertical | (1.00, 0.00)–(1.00, 1.00) | (0.00, -30.00) | (6.00, -60.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_bar.asset |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Scrollbar Vertical/Sliding Area | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (12.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/OverTypeGroup/Scrollbar Vertical/Sliding Area/Handle | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 20.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_thumb.asset |
+| GalleryPanelNew/ButtonGroup/Gallery | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 150.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/HighLight | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (800.00, 0.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/Image | (0.00, 0.00)–(1.00, 0.00) | (0.00, 0.00) | (0.00, 30.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/slash.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/Text | (0.00, 0.00)–(0.00, 1.00) | (50.00, 0.00) | (0.00, -89.99) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | text="卡牌" fs=50 fitter(h=2 v=0) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup | (0.00, 0.00)–(1.00, 0.00) | (0.00, 15.00) | (0.00, 865.00) | (0.50, 1.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (-10.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Image | (0.50, 0.00)–(0.50, 0.00) | (5.00, 5.00) | (950.00, 30.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/slash.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (-10.00, 216.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | layout(align=2 spacing=6.0 pad=[0, 0, 10, 0] cc=0/0 fe=0/0 rev=0) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1) | (0.00, 1.00)–(0.00, 1.00) | (65.00, -10.00) | (865.00, 100.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/bg | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/bg/Image | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 6.00) | (0.50, 0.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/rite_log_sperator.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/CheckMark | (0.00, 0.00)–(1.00, 1.00) | (-3.00, 0.00) | (-6.00, -12.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/Text | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Label | (0.00, 0.00)–(1.00, 1.00) | (20.00, 0.00) | (-160.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | text="type" fs=60 |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Image | (0.00, 0.50)–(0.00, 0.50) | (40.00, 0.00) | (18.00, 18.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_nomal.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/Text/Image/Image | (0.50, 0.50)–(0.50, 0.50) | (3.30, 2.60) | (43.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_light.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay | (1.00, 0.50)–(1.00, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (1.00, 0.50) | (1.50, 1.50) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (54.00, 56.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First | (0.00, 1.00)–(0.00, 1.00) | (0.00, -28.00) | (54.00, 56.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (1)/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2) | (0.00, 1.00)–(0.00, 1.00) | (65.00, -116.00) | (865.00, 100.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/bg | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/bg/Image | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 6.00) | (0.50, 0.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/rite_log_sperator.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/CheckMark | (0.00, 0.00)–(1.00, 1.00) | (-3.00, 0.00) | (-6.00, -12.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/hightlight.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/Text | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Label | (0.00, 0.00)–(1.00, 1.00) | (20.00, 0.00) | (-160.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | text="type" fs=60 |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Image | (0.00, 0.50)–(0.00, 0.50) | (40.00, 0.00) | (18.00, 18.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_nomal.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/Text/Image/Image | (0.50, 0.50)–(0.50, 0.50) | (3.30, 2.60) | (43.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/dot_light.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay | (1.00, 0.50)–(1.00, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (1.00, 0.50) | (1.50, 1.50) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (54.00, 56.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First | (0.00, 1.00)–(0.00, 1.00) | (0.00, -28.00) | (54.00, 56.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Viewport/Content/GalleryToggleNew (2)/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Scrollbar Vertical | (1.00, 0.00)–(1.00, 1.00) | (0.00, -30.00) | (6.00, -60.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_bar.asset |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Scrollbar Vertical/Sliding Area | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (12.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/ButtonGroup/Gallery/TypeGroup/Scrollbar Vertical/Sliding Area/Handle | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 20.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_thumb.asset |
+| GalleryPanelNew/Group | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (2500.00, 0.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/Over Record | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (2500.00, -200.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Group/Over Record/Scroll View | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/Group/Over Record/Scroll View/Viewport | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/Group/Over Record/Scroll View/Viewport/Content | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (-317.50, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | layout(align=1 spacing=15.0 pad=[0, 0, 115, 0] cc=1/0 fe=1/1 rev=0) |
+| GalleryPanelNew/Group/Over Record/Scroll View/Scrollbar Vertical | (1.00, 0.00)–(1.00, 1.00) | (-100.00, -100.00) | (6.00, -200.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_bar.asset |
+| GalleryPanelNew/Group/Over Record/Scroll View/Scrollbar Vertical/Sliding Area | (0.00, 0.00)–(1.00, 1.00) | (0.50, 0.00) | (21.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Group/Over Record/Scroll View/Scrollbar Vertical/Sliding Area/Handle | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 20.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_thumb.asset |
+| GalleryPanelNew/Group/Over Record/Operations | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/Over Record/Operations/Show | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/Over Record/Operations/Delete | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/Over Record/OverRecordNavigationDelegate | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
 | GalleryPanelNew/Group/GalleryCard | (1.00, 0.00)–(1.00, 1.00) | (0.00, -25.00) | (2500.00, -250.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/bg_6.asset |
 | GalleryPanelNew/Group/GalleryCard/TypeGroup | (0.00, 1.00)–(1.00, 1.00) | (0.00, -135.00) | (-1018.00, 135.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
 | GalleryPanelNew/Group/GalleryCard/TypeGroup/Viewport | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
@@ -141,3 +267,172 @@ Corpus truth table (RectTransform, authored values). Regenerate with `tools/expo
 | GalleryPanelNew/Group/GalleryCard/Scroll View/Scrollbar Vertical | (1.00, 0.00)–(1.00, 1.00) | (-65.00, -100.00) | (6.00, -200.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_bar.asset |
 | GalleryPanelNew/Group/GalleryCard/Scroll View/Scrollbar Vertical/Sliding Area | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (12.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
 | GalleryPanelNew/Group/GalleryCard/Scroll View/Scrollbar Vertical/Sliding Area/Handle | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 20.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_thumb.asset |
+| GalleryPanelNew/Group/CG | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (2500.00, -200.00) | (1.00, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Group/CG/GameObject | (0.50, 0.50)–(0.50, 0.50) | (-55.10, 60.75) | (2281.80, 1574.50) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/CG/GameObject/Items | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem | (0.50, 0.50)–(0.50, 0.50) | (-955.60, -14.60) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (1) | (0.50, 0.50)–(0.50, 0.50) | (-674.60, 462.60) | (315.50, 441.20) | (0.50, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (1)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (1)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (1)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (1)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (2) | (0.50, 0.50)–(0.50, 0.50) | (-674.60, -288.10) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (2)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (2)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (2)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (2)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (3) | (0.50, 0.50)–(0.50, 0.50) | (-390.60, 495.40) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (3)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (3)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (3)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (3)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (4) | (0.50, 0.50)–(0.50, 0.50) | (-390.60, -14.60) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (4)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (4)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (4)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (4)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (5) | (0.50, 0.50)–(0.50, 0.50) | (-390.60, -529.50) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (5)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (5)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (5)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (5)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (6) | (0.50, 0.50)–(0.50, 0.50) | (-2.40, 495.40) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (6)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (6)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (6)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (6)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (7) | (0.50, 0.50)–(0.50, 0.50) | (-2.40, -14.60) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (7)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (7)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (7)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (7)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (8) | (0.50, 0.50)–(0.50, 0.50) | (-2.40, -529.50) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (8)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (8)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (8)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (8)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (9) | (0.50, 0.50)–(0.50, 0.50) | (391.70, 495.40) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (9)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (9)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (9)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (9)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (10) | (0.50, 0.50)–(0.50, 0.50) | (391.70, -14.60) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (10)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (10)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (10)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (10)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (11) | (0.50, 0.50)–(0.50, 0.50) | (391.70, -529.50) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (11)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (11)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (11)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (11)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (12) | (0.50, 0.50)–(0.50, 0.50) | (677.20, 462.60) | (315.50, 441.20) | (0.50, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (12)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (12)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (12)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (12)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (13) | (0.50, 0.50)–(0.50, 0.50) | (677.20, -288.10) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (13)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (13)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (13)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (13)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (14) | (0.50, 0.50)–(0.50, 0.50) | (956.20, -14.60) | (315.50, 441.20) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/cg_mask_1.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (14)/mask | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (565.00, 805.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_mask.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (14)/mask/deselect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_deselect.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (14)/mask/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15.asset |
+| GalleryPanelNew/Group/CG/GameObject/Items/CGItem (14)/mask/locked | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (337.00, 439.00) | (0.50, 0.50) | (1.20, 1.20) | -0.0 | sprite=Resources/image/over_cg_icon/cg_15_lock.asset |
+| GalleryPanelNew/Group/CG/GameObject/frame | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_frame_0.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate | (0.50, 0.50)–(0.50, 0.50) | (55.10, -60.75) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image | (0.50, 0.50)–(0.50, 0.50) | (-249.70, 290.80) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (1) | (0.50, 0.50)–(0.50, 0.50) | (136.30, 290.80) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (2) | (0.50, 0.50)–(0.50, 0.50) | (-249.70, -184.40) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (3) | (0.50, 0.50)–(0.50, 0.50) | (136.30, -184.40) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (4) | (0.50, 0.50)–(0.50, 0.50) | (-1012.50, 841.90) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (5) | (0.50, 0.50)–(0.50, 0.50) | (895.00, 841.90) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (6) | (0.50, 0.50)–(0.50, 0.50) | (-1012.50, -781.30) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Group/CG/GameObject/Decorate/Image (7) | (0.50, 0.50)–(0.50, 0.50) | (895.00, -781.30) | (120.00, 148.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/cg_decorate.asset |
+| GalleryPanelNew/Over | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/white.asset |
+| GalleryPanelNew/Over/Step3 | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/bg_new.asset |
+| GalleryPanelNew/Over/Step3/Logo | (0.50, 0.50)–(0.50, 0.50) | (0.00, 800.00) | (1460.00, 916.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/logo/logo_zhCN.asset |
+| GalleryPanelNew/Over/Step3/Seperator | (0.50, 0.50)–(0.50, 0.50) | (0.00, 300.00) | (703.00, 6.00) | (0.50, 0.50) | (3.00, 1.00) | 0.0 | sprite=Sprite/seperator_0.asset |
+| GalleryPanelNew/Over/Step3/Content | (0.50, 0.50)–(0.50, 0.50) | (0.00, 103.00) | (2000.00, 50.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step3/PointPlus | (0.00, 0.50)–(1.00, 0.50) | (0.00, -120.00) | (3840.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step3/PointPlus/Icon | (0.49, 0.50)–(0.49, 0.50) | (40.00, 0.00) | (103.00, 110.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/point_0.asset |
+| GalleryPanelNew/Over/Step3/PointPlus/Text (TMP) | (0.51, 0.50)–(0.51, 0.50) | (80.00, 0.00) | (199.00, 50.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step3/Seperator (1) | (0.50, 0.50)–(0.50, 0.50) | (0.00, -343.00) | (703.00, 6.00) | (0.50, 0.50) | (3.00, 1.00) | 0.0 | sprite=Sprite/seperator_0.asset |
+| GalleryPanelNew/Over/Step3/Back | (0.50, 0.50)–(0.50, 0.50) | (0.00, -510.00) | (810.00, 348.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step3/Back/Outline | (0.50, 0.00)–(0.50, 0.00) | (0.00, 80.84) | (380.00, 56.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/rite_title.asset |
+| GalleryPanelNew/Over/Step3/Back/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (668.00, 140.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/button_bg_new.asset |
+| GalleryPanelNew/Over/Step3/Back/Text (TMP) | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (400.00, 50.00) | (0.50, 0.50) | (2.00, 2.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step3/Back/Text Hghlight | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (400.00, 50.00) | (0.50, 0.50) | (2.00, 2.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step2 | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2/CG | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step2/Mask | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/after_story_tile_mask.asset |
+| GalleryPanelNew/Over/Step2/Mask/UIParticle | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (0.00, 0.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2/Over Title | (0.00, 0.00)–(0.00, 0.00) | (100.00, 100.00) | (100.00, 100.00) | (0.00, 0.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2/Over Title/BG | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (4000.00, 100.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | layout(align=3 spacing=10.0 pad=[8, 0, 0, 0] cc=1/0 fe=0/0 rev=0) |
+| GalleryPanelNew/Over/Step2/Over Title/BG/BG | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (800.00, 80.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/after_story_title_board.asset |
+| GalleryPanelNew/Over/Step2/Over Title/BG/Border | (0.00, 1.00)–(0.00, 1.00) | (14.50, -40.00) | (13.00, 80.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/after_story_title_bg.asset |
+| GalleryPanelNew/Over/Step2/Over Title/BG/Title | (0.00, 0.00)–(1.00, 1.00) | (20.00, 0.00) | (-40.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | layout(align=3 spacing=30.0 pad=[0, 0, 0, 0] cc=0/0 fe=0/0 rev=0) |
+| GalleryPanelNew/Over/Step2/Over Title/BG/Title/Title | (0.00, 1.00)–(0.00, 1.00) | (31.00, -40.00) | (200.01, 80.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=0) |
+| GalleryPanelNew/Over/Step2/Over Title/BG/Title/Content | (0.00, 1.00)–(0.00, 1.00) | (256.01, -40.00) | (30.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | layout(align=0 spacing=10.0 pad=[0, 0, 0, 0] cc=0/0 fe=0/0 rev=0) |
+| GalleryPanelNew/Over/Step2-Story | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/BG | (1.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (1707.00, 0.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/after_story_content_bg.asset |
+| GalleryPanelNew/Over/Step2-Story/Story View | (1.00, 0.00)–(1.00, 1.00) | (-150.00, 0.00) | (1050.00, -400.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 | sprite=guid:0000000000000000f000000000000000 fitter(h=0 v=0) |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (-17.00, 0.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport/Content | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 520.00) | (0.00, 1.00) | (1.00, 1.00) | -0.0 | fitter(h=0 v=2) |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport/Content/Front Spacer | (0.00, 1.00)–(0.00, 1.00) | (546.50, -150.00) | (893.00, 300.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport/Content/Title | (0.00, 1.00)–(0.00, 1.00) | (546.50, -390.00) | (893.00, 180.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport/Content/Spacer | (0.00, 1.00)–(0.00, 1.00) | (546.50, -500.00) | (893.00, 40.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Story View/Viewport/Content/Story | (0.00, 1.00)–(0.00, 1.00) | (546.50, -520.00) | (893.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Story View/Scrollbar Vertical | (1.00, 0.00)–(1.00, 1.00) | (0.00, -200.00) | (6.00, -400.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_bar.asset |
+| GalleryPanelNew/Over/Step2-Story/Story View/Scrollbar Vertical/Sliding Area | (0.00, 0.00)–(1.00, 1.00) | (0.50, 0.00) | (21.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Story View/Scrollbar Vertical/Sliding Area/Handle | (0.00, 0.63)–(1.00, 1.00) | (0.00, -10.00) | (0.00, -10.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/scroll_thumb.asset |
+| GalleryPanelNew/Over/Step2-Story/Story View Blocker | (1.00, 0.00)–(1.00, 1.00) | (-50.00, 0.00) | (1000.00, -400.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/After Story | (1.00, 0.00)–(1.00, 1.00) | (-50.00, -50.00) | (1000.00, -300.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/After Story/Viewport | (0.00, 0.00)–(1.00, 1.00) | (0.00, 50.00) | (0.00, -100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=guid:0000000000000000f000000000000000 |
+| GalleryPanelNew/Over/Step2-Story/After Story/Viewport/Content | (0.00, 0.00)–(0.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=0) |
+| GalleryPanelNew/Over/Step2-Story/After Story/Op Contents | (0.00, 0.00)–(1.00, 0.00) | (0.00, -100.00) | (0.00, 200.00) | (0.50, 0.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/After Story/Op Contents/Prev | (0.50, 0.50)–(0.50, 0.50) | (-200.00, 9.00) | (168.00, 156.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/page_left_0.asset |
+| GalleryPanelNew/Over/Step2-Story/After Story/Op Contents/Confirm | (1.00, 0.50)–(1.00, 0.50) | (20.00, -10.00) | (44.00, 51.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/jump.asset |
+| GalleryPanelNew/Over/Step2-Story/After Story/Op Contents/Confirm/Text (TMP) | (0.50, 0.50)–(0.50, 0.50) | (-41.80, 0.00) | (100.00, 52.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/After Story/Op Contents/Next | (0.50, 0.50)–(0.50, 0.50) | (200.00, 9.00) | (168.00, 156.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Sprite/page_right.asset |
+| GalleryPanelNew/Over/Step2-Story/Jump | (1.00, 0.00)–(1.00, 0.00) | (-660.00, 170.00) | (44.00, 51.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/jump.asset |
+| GalleryPanelNew/Over/Step2-Story/Jump/Text (TMP) | (0.50, 0.50)–(0.50, 0.50) | (-41.80, 0.00) | (100.00, 52.00) | (1.00, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Zoom | (1.00, 1.00)–(1.00, 1.00) | (-200.00, -60.00) | (93.00, 93.00) | (1.00, 1.00) | (1.00, 1.00) | -0.0 | sprite=Sprite/expand.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay | (0.50, 0.50)–(0.50, 0.50) | (40.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.50, 1.50) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Text | (0.00, 0.50)–(0.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | 0.0 | fitter(h=2 v=2) |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/First | (0.00, 0.00)–(0.00, 0.00) | (0.00, 0.00) | (0.00, 0.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/A.png.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/First/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/First/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/Spacer | (0.00, 1.00)–(0.00, 1.00) | (94.50, -41.00) | (5.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/Plus | (0.00, 1.00)–(0.00, 1.00) | (107.00, -41.00) | (69.00, 76.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/+.png_0.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/Second | (0.00, 1.00)–(0.00, 1.00) | (186.00, -41.00) | (82.00, 82.00) | (0.00, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/B.png.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/Second/Hold | (1.00, 0.00)–(1.00, 0.00) | (5.00, 10.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Resources/image/hold_empty.png.asset |
+| GalleryPanelNew/Over/Step2-Story/Zoom/InputDisplay/Sprites/Second/Hold/Fill | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (50.00, 46.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 | sprite=Resources/image/hold_full.png.asset |
+| GalleryPanelNew/Over/Step1 | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Up Mask | (0.00, 0.50)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 1.00) | (1.00, 1.00) | 0.0 | sprite=Sprite/white.asset |
+| GalleryPanelNew/Over/Step1/Down Mask | (0.00, 0.00)–(1.00, 0.50) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.00) | (1.00, 1.00) | 0.0 | sprite=Sprite/white.asset |
+| GalleryPanelNew/Over/Step1/UIEffect | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/UIEffect/UIParticle | (0.50, 0.50)–(0.50, 0.50) | (0.00, -60.00) | (100.00, 100.00) | (0.50, 0.50) | (0.00, 0.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Up Decorate | (0.50, 0.50)–(0.50, 0.50) | (0.00, 800.00) | (1232.00, 284.00) | (0.50, 0.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Down Decorate | (0.50, 0.50)–(0.50, 0.50) | (0.00, -800.00) | (1232.00, 284.00) | (0.50, 1.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Title BG | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (956.00, 1320.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Title BG/Title | (0.00, 0.50)–(1.00, 0.50) | (0.00, 140.00) | (-600.00, 160.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Title BG/Sub Title | (0.00, 0.50)–(1.00, 0.50) | (0.00, -10.00) | (-300.00, 200.00) | (0.50, 1.00) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Decorate | (0.50, 0.00)–(0.50, 1.00) | (0.00, 0.00) | (1888.24, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Over/Step1/Decorate/UIParticle | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (100.00, 100.00) | (0.50, 0.50) | (0.00, 0.00) | 0.0 |  |
+| GalleryPanelNew/Over/Blocker | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/Close | (1.00, 1.00)–(1.00, 1.00) | (-81.00, -85.40) | (75.00, 78.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/checkbox_bg.asset |
+| GalleryPanelNew/Close/Image | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (43.00, 37.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | sprite=Sprite/close_2.asset |
+| GalleryPanelNew/OverInfoContainer | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/CardInfoContainer | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/BigCGContainer | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/BigCGContainer/Image | (0.00, 0.00)–(1.00, 1.00) | (0.00, 0.00) | (-1680.00, 0.00) | (0.50, 0.50) | (1.00, 1.00) | 0.0 |  |
+| GalleryPanelNew/BigCGContainer/Image/Title | (0.00, 1.00)–(1.00, 1.00) | (0.00, 0.00) | (0.00, 147.50) | (0.00, 1.00) | (1.00, 1.00) | -0.0 |  |
+| GalleryPanelNew/BigCGContainer/Image/Title/Text (TMP) | (0.50, 0.50)–(0.50, 0.50) | (0.00, 0.00) | (663.60, 147.50) | (0.50, 0.50) | (1.00, 1.00) | 0.0 | text="逃往中国" fs=60 |
