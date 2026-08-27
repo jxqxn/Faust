@@ -187,6 +187,8 @@ func test_gallery_global_hash_sets_deduplicate_and_keep_source_keys() -> void:
 	assert_eq(saved["overID"], [7, 9], "Global.overID is a HashSet<int>")
 	assert_eq(saved["showedGalleryCards"], [101], "gallery unlock ids are a HashSet<int>")
 	assert_true(global.has_shown_gallery_card(101))
+	assert_true(global.has_over_id(7), "GalleryCGIconController reads Global.overID membership")
+	assert_false(global.has_over_id(101), "showedGalleryCards must not unlock GalleryCG icons")
 
 
 func test_detached_global_state_does_not_touch_disk() -> void:

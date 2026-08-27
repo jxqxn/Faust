@@ -228,6 +228,74 @@ func test_gallery_card_resources_resolve_directly_from_original_config():
 			)
 
 
+func test_gallery_cg_replays_source_unlock_layout_and_big_resource():
+	var source_global := GlobalState.new()
+	var stage := _stage()
+	var gallery := GalleryPanel.new()
+	gallery.setup(db, source_global)
+	stage.add_child(gallery)
+	await wait_process_frames(2)
+	var buttons := gallery.get_node_or_null("GalleryNew/ButtonGroup") as VBoxContainer
+	var cg_tab := _find_node_by_name(gallery, "CGTab") as Button
+	assert_not_null(buttons)
+	assert_not_null(cg_tab)
+	if buttons != null:
+		assert_eq(buttons.position, Vector2(174.5, 558.1), "ButtonGroup height includes the source OverTypeGroup")
+		assert_eq(buttons.size, Vector2(950, 556), "ButtonGroup replays 150+20+216+20+150")
+	var item_two := _find_node_by_name(gallery, "CGItem_2") as Button
+	assert_not_null(item_two)
+	if item_two == null or cg_tab == null:
+		return
+	cg_tab.pressed.emit()
+	await wait_process_frames(1)
+	assert_true(item_two.visible, "GALLERY_OVER_BTN_CG opens the nested CG surface")
+	assert_eq(item_two.position, Vector2(308.55, 854.75), "CG index 2 keeps its authored RectTransform")
+	assert_almost_eq(item_two.size.x, 315.5, 0.01, "CGItem keeps its authored hit width")
+	assert_almost_eq(item_two.size.y, 441.2, 0.01, "CGItem keeps its authored hit height")
+	assert_true(bool(item_two.get_meta("is_lock")), "empty Global.overID leaves CG locked")
+	var lock := item_two.get_node_or_null("Lock") as TextureRect
+	assert_not_null(lock)
+	if lock != null:
+		assert_true(lock.visible)
+		assert_eq(lock.size, Vector2(337, 439), "CGItem mask image keeps the source rectangle")
+		assert_eq(lock.scale, Vector2(1.2, 1.2), "CGItem mask image keeps authored scale")
+	item_two.pressed.emit()
+	assert_false((gallery.get_node("GalleryNew/BigCGContainer") as Control).visible, "locked click must not show BigCG")
+	assert_true((gallery.get_node("GalleryNew/CGLockPrompt") as Label).visible, "locked click replays Common.ShowPrompt")
+
+	# Any one matching over_id unlocks; node 1 deliberately has many ids.
+	source_global.over_ids[100] = true
+	assert_false(gallery._is_cg_locked(gallery._gallery_cg["2"]), "one matching overID unlocks the CG")
+	assert_true(gallery._is_cg_locked(gallery._gallery_cg["1"]), "unrelated overID cannot unlock another CG")
+	item_two.pressed.emit()
+	var big_container := gallery.get_node("GalleryNew/BigCGContainer") as Control
+	var big := gallery.get_node("GalleryNew/BigCGContainer/BigCG") as TextureRect
+	var title := gallery.get_node("GalleryNew/BigCGContainer/BigCG/CGTitle") as Label
+	assert_true(big_container.visible, "unlocked click activates BigCGContainer")
+	assert_true(big.texture.resource_path.ends_with("over_100_cg.png"), "ShowBigCG loads big_resource without translation")
+	assert_eq(big.position, Vector2(840, 0), "BigCG is the source centred 2160 square")
+	assert_eq(big.size, Vector2(2160, 2160))
+	assert_eq(title.text, "逃往中国", "ShowBigCG copies GalleryCGNode.title")
+
+
+func test_gallery_cg_resources_resolve_directly_from_original_config():
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cg.json"))
+	assert_true(parsed is Dictionary)
+	if not (parsed is Dictionary):
+		return
+	var count := 0
+	for raw_definition in (parsed as Dictionary).values():
+		var definition := raw_definition as Dictionary
+		for key in ["icon", "icon_deselect", "icon_lock", "big_resource"]:
+			var source_name := str(definition.get(key, ""))
+			count += 1
+			assert_true(
+				ResourceLoader.exists("res://assets/original/%s.png" % source_name),
+				"GalleryCGNode.%s resolves without translation: %s" % [key, source_name]
+			)
+	assert_eq(count, 60, "all 15 source CG nodes expose four direct resources")
+
+
 func test_gallery_card_info_replays_source_tag_controllers_and_sorting():
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
 	assert_true(parsed is Dictionary)

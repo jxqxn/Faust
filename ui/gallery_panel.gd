@@ -11,6 +11,11 @@ signal closed()
 const DESIGN_SPACE := Vector2(3840, 2160)
 const GROUP_RECT := Rect2(1340, 0, 2500, 2160)
 const CARD_PANEL_RECT := Rect2(0, 150, 2500, 1910)
+const CG_PANEL_RECT := Rect2(0, 100, 2500, 1960)
+const CG_INNER_RECT := Rect2(54, 132, 2281.8, 1574.5)
+const CG_ITEM_SIZE := Vector2(315.5, 441.2)
+const CG_LAYER_SIZE := Vector2(337, 439)
+const CG_LAYER_SCALE := Vector2(1.2, 1.2)
 const TYPE_GROUP_RECT := Rect2(0, 67.5, 1482, 135)
 const CARD_SCROLL_RECT := Rect2(-50, 100, 2500, 1710)
 ## [SRC: GalleryCard/Scroll View/Search: resolved from anchors (1,1),
@@ -22,6 +27,7 @@ const CARDS_PER_GROUP := 6
 const CARD_GAP := 13.2
 const CARD_PADDING := Vector2(21, 25)
 const GALLERY_CARDS_PATH := "res://content/gallery_cards.json"
+const GALLERY_CG_PATH := "res://content/gallery_cg.json"
 const VARIABLE_PATH := "res://content/variable.json"
 const UI_PATH := "res://content/ui.json"
 ## [SRC: GalleryPanelNew/Background Sprite bg_2.asset -> texture GUID
@@ -39,6 +45,7 @@ var _scroll: ScrollContainer
 var _scroll_content: Control
 var _search_input: LineEdit
 var _gallery_cards: Dictionary = {}
+var _gallery_cg: Dictionary = {}
 var _variables: Dictionary = {}
 var _ui: Dictionary = {}
 var _types: Array[String] = []
@@ -47,6 +54,25 @@ var _current_type := ""
 var _search_query := ""
 var _card_info: Control
 var _current_card_index := -1
+var _cg_items: Dictionary = {}
+var _big_cg_container: Control
+var _big_cg: TextureRect
+var _cg_title: Label
+var _cg_lock_prompt: Label
+
+## Authored GalleryPanelNew.prefab RectTransforms, converted from Unity's
+## centre anchors / upward Y into top-left positions inside CG's 2281.8x1574.5
+## inner surface. This is layout evidence, not content data.
+const CG_ITEM_LAYOUT := {
+	1: Vector2(592.55, 71.25), 2: Vector2(308.55, 854.75),
+	3: Vector2(980.75, 1096.15), 4: Vector2(1374.85, 581.25),
+	5: Vector2(592.55, 581.25), 6: Vector2(1374.85, 71.25),
+	7: Vector2(980.75, 581.25), 8: Vector2(1659.65, 324.65),
+	9: Vector2(1659.65, 854.75), 10: Vector2(980.75, 71.25),
+	11: Vector2(1939.15, 581.25), 12: Vector2(308.55, 324.65),
+	13: Vector2(1374.85, 1096.15), 14: Vector2(592.55, 1096.15),
+	15: Vector2(27.55, 581.25),
+}
 
 
 func setup(config_db: ConfigDB, global_state: GlobalState = null) -> void:
@@ -63,6 +89,7 @@ func _ready() -> void:
 
 func _load_source_data() -> void:
 	_gallery_cards = _read_object(GALLERY_CARDS_PATH)
+	_gallery_cg = _read_object(GALLERY_CG_PATH)
 	_variables = _read_object(VARIABLE_PATH)
 	_ui = _read_object(UI_PATH)
 	for value in _variables.get("gallery_card_type", []):
@@ -134,21 +161,40 @@ func _build_title() -> void:
 
 
 func _build_mode_buttons() -> void:
-	# [SRC: GalleryNew/ButtonGroup 950x320, Over/Gallery 950x150 fs50.]
+	# [SRC: GalleryPanelNew/ButtonGroup VerticalLayoutGroup: Over 150,
+	# OverTypeGroup 216 (Memory/CG 100 rows), Gallery 150; spacing 20.]
 	var buttons := VBoxContainer.new()
 	buttons.name = "ButtonGroup"
-	buttons.position = Vector2(174.5, 676.1)
-	buttons.size = Vector2(950, 320)
+	buttons.position = Vector2(174.5, 558.1)
+	buttons.size = Vector2(950, 556)
 	buttons.add_theme_constant_override("separation", 20)
 	_design.add_child(buttons)
-	for entry in [["结局", "Over"], ["卡牌", "Gallery"]]:
-		var button := Button.new()
-		button.name = "%sTab" % entry[1]
-		button.text = entry[0]
-		button.custom_minimum_size = Vector2(950, 150)
-		button.add_theme_font_size_override("font_size", 50)
-		button.pressed.connect(func(): _show_mode(str(entry[1])))
-		buttons.add_child(button)
+	var over_button := _mode_button("OverTab", "结局", Vector2(950, 150), 50)
+	over_button.pressed.connect(func(): _show_mode("Over"))
+	buttons.add_child(over_button)
+	var over_types := VBoxContainer.new()
+	over_types.name = "OverTypeGroup"
+	over_types.custom_minimum_size = Vector2(950, 216)
+	over_types.add_theme_constant_override("separation", 0)
+	buttons.add_child(over_types)
+	var memory_button := _mode_button("OverMemoryTab", "历史画廊", Vector2(950, 100), 40)
+	memory_button.pressed.connect(func(): _show_mode("Over"))
+	over_types.add_child(memory_button)
+	var cg_button := _mode_button("CGTab", _ui_text("GALLERY_OVER_BTN_CG", "图鉴"), Vector2(950, 100), 40)
+	cg_button.pressed.connect(func(): _show_mode("CG"))
+	over_types.add_child(cg_button)
+	var gallery_button := _mode_button("GalleryTab", "卡牌", Vector2(950, 150), 50)
+	gallery_button.pressed.connect(func(): _show_mode("Gallery"))
+	buttons.add_child(gallery_button)
+
+
+func _mode_button(node_name: String, text_value: String, minimum: Vector2, font_size: int) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.text = text_value
+	button.custom_minimum_size = minimum
+	button.add_theme_font_size_override("font_size", font_size)
+	return button
 
 
 func _build_body() -> void:
@@ -169,9 +215,135 @@ func _build_body() -> void:
 	body.add_child(_cards)
 	_cg = Control.new()
 	_cg.name = "CG"
-	_cg.size = Vector2(2500, 1960)
+	_cg.position = CG_PANEL_RECT.position
+	_cg.size = CG_PANEL_RECT.size
 	body.add_child(_cg)
 	_build_card_panel()
+	_build_cg_panel()
+	_build_big_cg()
+
+
+func _build_cg_panel() -> void:
+	# [SRC: GalleryCGPanelController.OnEnable 0x543600 calls ShowIcon on
+	# all 15 authored GalleryCGIconController children.]
+	var inner := Control.new()
+	inner.name = "CGInner"
+	inner.position = CG_INNER_RECT.position
+	inner.size = CG_INNER_RECT.size
+	inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_cg.add_child(inner)
+	for raw_key in _gallery_cg.keys():
+		var index := int(raw_key)
+		var definition := _gallery_cg[raw_key] as Dictionary
+		if definition == null or not CG_ITEM_LAYOUT.has(index):
+			continue
+		var button := Button.new()
+		button.name = "CGItem_%d" % index
+		button.position = CG_ITEM_LAYOUT[index]
+		button.size = CG_ITEM_SIZE
+		button.flat = true
+		button.tooltip_text = str(definition.get("title", ""))
+		button.set_meta("source_index", index)
+		button.set_meta("is_lock", _is_cg_locked(definition))
+		button.pressed.connect(func(): _on_cg_clicked(index))
+		inner.add_child(button)
+		_add_cg_layer(button, "Icon", str(definition.get("icon", "")), true)
+		_add_cg_layer(button, "DeSelect", str(definition.get("icon_deselect", "")), false)
+		_add_cg_layer(button, "Lock", str(definition.get("icon_lock", "")), bool(button.get_meta("is_lock")))
+		_cg_items[index] = button
+
+
+func _add_cg_layer(parent: Control, node_name: String, source_name: String, shown: bool) -> void:
+	var layer := TextureRect.new()
+	layer.name = node_name
+	layer.position = (CG_ITEM_SIZE - CG_LAYER_SIZE) * 0.5
+	layer.size = CG_LAYER_SIZE
+	layer.pivot_offset = CG_LAYER_SIZE * 0.5
+	layer.scale = CG_LAYER_SCALE
+	layer.texture = _load_original_texture(source_name)
+	layer.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	layer.stretch_mode = TextureRect.STRETCH_SCALE
+	layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.visible = shown
+	parent.add_child(layer)
+
+
+func _build_big_cg() -> void:
+	# [SRC: GalleryCGPanelController.ShowBigCG 0x5436b0; prefab's
+	# BigCGContainer fills 3840x2160 and BigCG is a centred 2160 square.]
+	_big_cg_container = Control.new()
+	_big_cg_container.name = "BigCGContainer"
+	_big_cg_container.size = DESIGN_SPACE
+	_big_cg_container.visible = false
+	_design.add_child(_big_cg_container)
+	var shade := ColorRect.new()
+	shade.name = "Mask"
+	shade.color = Color(0, 0, 0, 0.92)
+	shade.size = DESIGN_SPACE
+	_big_cg_container.add_child(shade)
+	_big_cg = TextureRect.new()
+	_big_cg.name = "BigCG"
+	_big_cg.position = Vector2(840, 0)
+	_big_cg.size = Vector2(2160, 2160)
+	_big_cg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_big_cg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_big_cg.mouse_filter = Control.MOUSE_FILTER_STOP
+	_big_cg.gui_input.connect(_on_big_cg_input)
+	_big_cg_container.add_child(_big_cg)
+	_cg_title = Label.new()
+	_cg_title.name = "CGTitle"
+	_cg_title.position = Vector2(748.2, 0)
+	_cg_title.size = Vector2(663.6, 147.5)
+	_cg_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cg_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_cg_title.add_theme_font_size_override("font_size", 60)
+	_big_cg.add_child(_cg_title)
+	_cg_lock_prompt = Label.new()
+	_cg_lock_prompt.name = "CGLockPrompt"
+	_cg_lock_prompt.position = Vector2(1420, 1840)
+	_cg_lock_prompt.size = Vector2(1000, 120)
+	_cg_lock_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_cg_lock_prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_cg_lock_prompt.add_theme_font_size_override("font_size", 36)
+	_cg_lock_prompt.text = _ui_text("GALLERY_OVER_CG_LOCK_TIPS", "尚未解锁")
+	_cg_lock_prompt.visible = false
+	_design.add_child(_cg_lock_prompt)
+
+
+func _is_cg_locked(definition: Dictionary) -> bool:
+	# [SRC: GalleryCGIconController.IsLock 0x5430a0 / ShowIcon 0x5433a0:
+	# ANY GalleryCGNode.over_id present in Global.overID unlocks the CG.]
+	if _global_state == null:
+		return true
+	for raw_id in definition.get("over_id", []):
+		if _global_state.has_over_id(int(raw_id)):
+			return false
+	return true
+
+
+func _on_cg_clicked(index: int) -> void:
+	var definition := _gallery_cg.get(str(index), {}) as Dictionary
+	if definition == null or definition.is_empty():
+		return
+	if _is_cg_locked(definition):
+		_cg_lock_prompt.visible = true
+		return
+	_cg_lock_prompt.visible = false
+	_big_cg.texture = _load_original_texture(str(definition.get("big_resource", "")))
+	_cg_title.text = str(definition.get("title", ""))
+	_big_cg_container.visible = _big_cg.texture != null
+
+
+func _on_big_cg_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed:
+		_big_cg_container.visible = false
+
+
+func _load_original_texture(source_name: String) -> Texture2D:
+	if source_name.is_empty():
+		return null
+	var path := "res://assets/original/%s.png" % source_name
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
 
 
 func _build_card_panel() -> void:
@@ -282,6 +454,24 @@ func _show_mode(mode: String) -> void:
 	_cg.visible = mode == "CG"
 	if mode == "Gallery":
 		call_deferred("_refresh_visible_groups")
+	elif mode == "CG":
+		_refresh_cg_items()
+
+
+func _refresh_cg_items() -> void:
+	# [SRC: GalleryCGPanelController.OnEnable 0x543600 replays ShowIcon for
+	# every child whenever the CG panel becomes active.]
+	for raw_index in _cg_items.keys():
+		var index := int(raw_index)
+		var button := _cg_items[index] as Button
+		var definition := _gallery_cg.get(str(index), {}) as Dictionary
+		if button == null or definition == null:
+			continue
+		var locked := _is_cg_locked(definition)
+		button.set_meta("is_lock", locked)
+		var lock := button.get_node_or_null("Lock") as TextureRect
+		if lock != null:
+			lock.visible = locked
 
 
 func _change_type(card_type: String) -> void:

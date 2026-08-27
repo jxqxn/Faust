@@ -4,7 +4,7 @@ extends Control
 ## the normal project startup path (window stretch settings included) applies,
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
-##   [--gallery-card-info]
+##   [--gallery-card-info] [--gallery-cg]
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -34,6 +34,20 @@ func _ready() -> void:
 				var cards: Array = gallery.call("_filtered_cards")
 				if not cards.is_empty():
 					gallery.call("_show_card_info", cards[0])
+	if args.has("--gallery-cg"):
+		await get_tree().create_timer(0.5).timeout
+		if main.has_method("_show_gallery"):
+			main.call("_show_gallery")
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var gallery: Node = main.get("_gallery_overlay")
+			if gallery != null:
+				# Screenshot-only detached unlock. Runtime still reads the real
+				# Global.overID through GalleryCGIconController semantics.
+				var shot_global := GlobalState.new()
+				shot_global.over_ids[100] = true
+				gallery.set("_global_state", shot_global)
+				gallery.call("_show_mode", "CG")
 	var auto_start := args.has("--new-game")
 	if auto_start:
 		await get_tree().create_timer(1.5).timeout

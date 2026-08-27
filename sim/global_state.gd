@@ -7,7 +7,7 @@
 ## is fully traced; `overID` and `showedGalleryCards` retain HashSet semantics.
 ## [SRC: dump.cs:385599-385609 Global fields; Global.c @ .ctor (0x38a510)
 ##       constructs List<OverData> + three HashSet<int>; GalleryCGIconController
-##       @ IsLock (0x5430a0) queries showedGalleryCards; save_samples/global.json]
+##       @ IsLock (0x5430a0) queries overID; save_samples/global.json]
 class_name GlobalState
 extends RefCounted
 
@@ -154,6 +154,12 @@ static func _restore_int_set(value: Variant) -> Dictionary:
 
 func has_shown_gallery_card(id: int) -> bool:
 	return showed_gallery_cards.has(id)
+
+
+## [SRC: GalleryCGIconController.IsLock 0x5430a0 / ShowIcon 0x5433a0:
+## GalleryCGNode.over_id is tested against Global.overID (offset 0x90).]
+func has_over_id(id: int) -> bool:
+	return over_ids.has(id)
 
 
 func mark_gallery_card_shown(id: int) -> void:
