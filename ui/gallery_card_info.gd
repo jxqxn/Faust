@@ -27,6 +27,8 @@ var _basic_content: Control
 var _plot_content: Control
 var _plot_content_list: VBoxContainer
 var _main_icon: TextureRect
+var _rare_image: TextureRect
+var _head_markers: Array[Control] = []
 
 
 func setup(config_db: ConfigDB, global_state: GlobalState, definition: Dictionary, card: Dictionary, has_prev: bool, has_next: bool) -> void:
@@ -116,9 +118,21 @@ func _build_plots(plots: Control) -> void:
 			continue
 		var button := Button.new()
 		button.name = "PlotItem_%s" % str(plot.get("guid", ""))
-		button.text = str(plot.get("title", ""))
-		button.custom_minimum_size = Vector2(880, 92)
-		button.add_theme_font_size_override("font_size", 42)
+		button.custom_minimum_size = Vector2(850, 100)
+		# PlotItem.prefab owns its 850px width; the source VerticalLayoutGroup
+		# does not control child width (cc=0), so keep it from stretching.
+		button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		button.flat = true
+		var highlight := _texture_rect("hightlight.png")
+		highlight.name = "HighLight"
+		_place(button, Rect2(50, 0, 800, 100), highlight)
+		var dot := _texture_rect("dot_light.png")
+		dot.name = "Image"
+		_place(button, Rect2(0, 23.495, 50, 53.01), dot)
+		var title := _label(str(plot.get("title", "")), 50)
+		title.name = "Title"
+		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_place(button, Rect2(50, 0, 800, 100), title)
 		button.pressed.connect(func(): _show_plot(plot))
 		list.add_child(button)
 
@@ -128,8 +142,10 @@ func _build_plots(plots: Control) -> void:
 	_plot_mask.mouse_filter = Control.MOUSE_FILTER_STOP
 	var mask_panel := Panel.new()
 	mask_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	mask_panel.add_theme_stylebox_override("panel", _solid_style(Color(0.035, 0.025, 0.02, 0.94)))
+	mask_panel.add_theme_stylebox_override("panel", _texture_style("cardinfo_plot_mask.png"))
 	_plot_mask.add_child(mask_panel)
+	var tips := _texture_rect("rite_tips.png")
+	_place(_plot_mask, Rect2(374, 313, 152, 144), tips)
 	var prompt := _label("解锁该角色的剧情记录", 40)
 	prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	prompt.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -150,9 +166,10 @@ func _build_plots(plots: Control) -> void:
 
 
 func _build_resource_toggles(plots: Control) -> void:
-	var resources := _definition.get("resources", []) as Array
+	var resources := _image_resources()
 	if resources.is_empty():
 		return
+	_head_markers.clear()
 	var heads := HBoxContainer.new()
 	heads.name = "HeadGroup"
 	heads.position = Vector2(346, 0)
@@ -165,16 +182,26 @@ func _build_resource_toggles(plots: Control) -> void:
 		toggle.name = "GalleryCardHead_%d" % index
 		toggle.custom_minimum_size = Vector2(110, 110)
 		toggle.tooltip_text = str(resource.get("pic_res", ""))
-		toggle.text = str(index + 1)
-		toggle.add_theme_font_size_override("font_size", 30)
+		toggle.flat = true
+		var head := _card_art(_resource_asset_path(str(resource.get("pic_res", ""))))
+		head.name = "Head"
+		head.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		_place(toggle, Rect2(0, 0, 110, 110), head)
+		var marker := _texture_rect("is_on.png")
+		marker.name = "Image"
+		marker.position = Vector2(36.3, 78.69)
+		marker.size = Vector2(50, 50)
+		marker.visible = index == 0
+		toggle.add_child(marker)
+		_head_markers.append(marker)
 		toggle.pressed.connect(func(): _change_icon(index))
 		heads.add_child(toggle)
 
 
 func _build_card_info() -> void:
-	var rare := _texture_rect("cardinfo_gold.png")
-	rare.name = "Rare"
-	_place(_card_info, Rect2(2173.26, 441.865, 370, 1063), rare)
+	_rare_image = _texture_rect(_rare_texture_name(_initial_rare()))
+	_rare_image.name = "Rare"
+	_place(_card_info, Rect2(2173.26, 441.865, 370, 1063), _rare_image)
 	_main_icon = _card_art(_card_resource_path(0))
 	_main_icon.name = "MainIcon"
 	_main_icon.position = Vector2(1755, 334.365)
@@ -210,9 +237,12 @@ func _build_card_info() -> void:
 	plot_scroll.add_child(_plot_content_list)
 	var back := Button.new()
 	back.name = "PlotBack"
-	back.text = "返回"
 	back.position = Vector2(372.5, 1260)
 	back.size = Vector2(168, 160)
+	back.flat = true
+	var back_icon := _texture_rect("close_0.png")
+	back_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	back.add_child(back_icon)
 	back.pressed.connect(_show_basic_content)
 	_plot_content.add_child(back)
 
@@ -252,18 +282,22 @@ func _build_navigation(has_prev: bool, has_next: bool) -> void:
 	prev.name = "Prev"
 	prev.position = Vector2(0, 1002)
 	prev.size = Vector2(168, 156)
-	prev.text = "‹"
+	prev.flat = true
+	var prev_icon := _texture_rect("page_left.png")
+	prev_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	prev.add_child(prev_icon)
 	prev.disabled = not has_prev
-	prev.add_theme_font_size_override("font_size", 72)
 	prev.pressed.connect(func(): navigation_requested.emit(-1))
 	_design.add_child(prev)
 	var next := Button.new()
 	next.name = "Next"
 	next.position = Vector2(3672, 1002)
 	next.size = Vector2(168, 156)
-	next.text = "›"
+	next.flat = true
+	var next_icon := _texture_rect("page_right_0.png")
+	next_icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	next.add_child(next_icon)
 	next.disabled = not has_next
-	next.add_theme_font_size_override("font_size", 72)
 	next.pressed.connect(func(): navigation_requested.emit(1))
 	_design.add_child(next)
 
@@ -309,23 +343,63 @@ func _show_basic_content() -> void:
 
 
 func _change_icon(index: int) -> void:
-	var resources := _definition.get("resources", []) as Array
+	# [SRC: Show 0x5465f0 prepends ResourceNode(GetPic(card), card.rare),
+	# then AddRange(GalleryData.resources); ChangeIcon 0x544210 switches both
+	# sprite and resource rare frame at the same index.]
+	var resources := _image_resources()
 	if index < 0 or index >= resources.size() or _main_icon == null:
 		return
 	var resource := resources[index] as Dictionary
 	var path := _resource_asset_path(str(resource.get("pic_res", "")))
 	if ResourceLoader.exists(path):
 		_main_icon.texture = load(path) as Texture2D
+	if _rare_image != null:
+		var rare_path := SOURCE_UI + _rare_texture_name(int(resource.get("rare", _initial_rare())))
+		if ResourceLoader.exists(rare_path):
+			_rare_image.texture = load(rare_path) as Texture2D
+	for marker_index in _head_markers.size():
+		_head_markers[marker_index].visible = marker_index == index
 
 
 func _card_resource_path(index: int) -> String:
-	var resources := _definition.get("resources", []) as Array
+	var resources := _image_resources()
 	if index >= 0 and index < resources.size():
 		var resource := resources[index] as Dictionary
 		var path := _resource_asset_path(str(resource.get("pic_res", "")))
 		if ResourceLoader.exists(path):
 			return path
 	return "res://assets/original/cards/%d.png" % int(_card.get("id", 0))
+
+
+func _image_resources() -> Array:
+	var resources: Array = []
+	var card_resource = _card.get("resource", "cards/%d" % int(_card.get("id", 0)))
+	var current_pic := ""
+	if card_resource is Array and not (card_resource as Array).is_empty():
+		current_pic = str((card_resource as Array)[0])
+	else:
+		current_pic = str(card_resource)
+	resources.append({"pic_res": current_pic, "rare": _initial_rare()})
+	for raw_resource in _definition.get("resources", []):
+		if raw_resource is Dictionary:
+			resources.append(raw_resource)
+	return resources
+
+
+func _initial_rare() -> int:
+	return clampi(int(_card.get("rare", 1)), 1, 4)
+
+
+func _rare_texture_name(rare: int) -> String:
+	match clampi(rare, 1, 4):
+		1:
+			return "cardinfo_stone.png"
+		2:
+			return "cardinfo_copper.png"
+		3:
+			return "cardinfo_silver.png"
+		_:
+			return "cardinfo_gold.png"
 
 
 func _resource_asset_path(resource: String) -> String:

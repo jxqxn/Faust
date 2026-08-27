@@ -161,10 +161,32 @@ func test_gallery_card_info_replays_plot_unlock_and_content_switch():
 	confirm.pressed.emit()
 	assert_true(source_global.has_shown_gallery_card(2000001), "AddShowedGalleryCard writes the exact GalleryData id")
 	assert_false(mask.visible, "AddShowedGalleryCard reveals PlotItems after the write")
+	var heads := detail.get_node_or_null("GalleryCardInfo/Plots/HeadGroup") as HBoxContainer
+	assert_not_null(heads)
+	if heads != null:
+		assert_eq(heads.get_child_count(), 4, "Show prepends Card.GetPic before the three GalleryData resources")
+		var first_head := heads.get_child(0) as Button
+		var last_head := heads.get_child(3) as Button
+		assert_eq(first_head.tooltip_text, "cards/2000001", "resource zero is the CardNode current picture")
+		assert_eq(last_head.tooltip_text, "cards/2000001_3", "GalleryData resources retain source order")
+		last_head.pressed.emit()
+		var main_icon := detail.get_node_or_null("GalleryCardInfo/CardInfo/MainIcon") as TextureRect
+		var rare := detail.get_node_or_null("GalleryCardInfo/CardInfo/Rare") as TextureRect
+		assert_not_null(main_icon)
+		assert_not_null(rare)
+		if main_icon != null:
+			assert_true(main_icon.texture.resource_path.ends_with("2000001_3.png"), "ChangeIcon loads the selected original resource")
+		if rare != null:
+			assert_true(rare.texture.resource_path.ends_with("cardinfo_silver.png"), "ChangeIcon applies the selected ResourceNode.rare")
 	var plot_item := _find_node_by_name(detail, "PlotItem_87a7895a-fd16-4f53-8ff9-32653ad18806") as Button
 	assert_not_null(plot_item)
 	if plot_item == null:
 		return
+	assert_eq(plot_item.size, Vector2(850, 100), "PlotItem keeps its authored 850x100 prefab geometry")
+	var plot_title := plot_item.get_node_or_null("Title") as Label
+	assert_not_null(plot_title)
+	if plot_title != null:
+		assert_eq(plot_title.get_theme_font_size("font_size"), 50, "PlotItem title keeps source fs50")
 	plot_item.pressed.emit()
 	await wait_process_frames(1)
 	var basic := detail.get_node_or_null("GalleryCardInfo/CardInfo/Left") as Control
@@ -181,6 +203,28 @@ func test_gallery_card_info_replays_plot_unlock_and_content_switch():
 		assert_not_null(plot_text)
 		if plot_text != null:
 			assert_true(plot_text.text.begins_with("当你不举的传言"), "PlotContentItem reads gallery_cards.json plot_text without a clone intermediary")
+
+
+func test_gallery_card_resources_resolve_directly_from_original_config():
+	# Configuration is the judge: every GalleryCardNode.ResourceNode.pic_res
+	# must resolve directly, with no clone-side resource-name translation table.
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
+	assert_true(parsed is Dictionary)
+	if not (parsed is Dictionary):
+		return
+	for raw_definition in (parsed as Dictionary).values():
+		var definition := raw_definition as Dictionary
+		if definition == null:
+			continue
+		for raw_resource in definition.get("resources", []):
+			var resource := raw_resource as Dictionary
+			if resource == null:
+				continue
+			var source_name := str(resource.get("pic_res", ""))
+			assert_true(
+				ResourceLoader.exists("res://assets/original/%s.png" % source_name),
+				"GalleryData resource resolves without translation: %s" % source_name
+			)
 
 
 func test_representative_main_screen_controls_exist():
