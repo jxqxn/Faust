@@ -77,7 +77,11 @@ func _ready() -> void:
 		shot_over.setup_record(GameState.new(), main.get("db"), {
 			"id": 102 if args.has("--story-typewriter") else 273,
 			"player_data": null,
-			"char_cards": [],
+			# Historical replay consumes the record's exact char_cards order.
+			"char_cards": [
+				{"id": 2000001, "tag": {"pic": 1}},
+				{"id": 2000006, "tag": {}},
+			],
 			"after_storys": [{
 				"card_id": 2000001,
 				"pic": "cards/2000001",

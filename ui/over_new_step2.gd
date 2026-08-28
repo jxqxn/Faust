@@ -8,6 +8,7 @@ class_name OverNewStep2ControllerView
 extends Control
 
 const DESIGN_SPACE := Vector2(3840, 2160)
+const OriginalAtlasScript = preload("res://ui/atlas.gd")
 
 var full_cg: TextureRect
 var cg_mask: TextureRect
@@ -15,9 +16,10 @@ var name_label: Label
 var npc_head_container: HBoxContainer
 var mask_group: Control
 var _mask_group_tween: Tween
+var _heads_atlas
 
 
-func setup(over_node: Dictionary, _over_data: Dictionary = {}) -> void:
+func setup(over_node: Dictionary, over_data: Dictionary = {}, state = null, db = null) -> void:
 	name = "Step2"
 	position = Vector2.ZERO
 	size = DESIGN_SPACE
@@ -51,6 +53,7 @@ func setup(over_node: Dictionary, _over_data: Dictionary = {}) -> void:
 	mask_group.add_child(cg_mask)
 
 	_build_over_title(str(over_node.get("name", "")))
+	_build_npc_heads(_source_head_cards(over_data, state, db), db)
 
 
 func set_animation_mask_alpha(value: float) -> void:
@@ -129,6 +132,105 @@ func _build_over_title(title_text: String) -> void:
 	npc_head_container.custom_minimum_size = Vector2(30, 100)
 	npc_head_container.add_theme_constant_override("separation", 10)
 	title_row.add_child(npc_head_container)
+
+
+func _source_head_cards(over_data: Dictionary, state, db) -> Array:
+	# [SRC: OverNewStep2Controller.<Init>d__5::MoveNext 0x587ee0]
+	# A historical record without player_data copies char_cards verbatim. Live
+	# playback (or a record with Player) filters player.cards through
+	# <Init>b__5_0: type==char && HasTag(adherent) && !HasTag(lost).
+	if not over_data.is_empty() and over_data.get("player_data") == null:
+		var record_cards = over_data.get("char_cards", [])
+		return record_cards.duplicate(true) if record_cards is Array else []
+	var result: Array = []
+	if state == null or db == null:
+		return result
+	var uids: Array = state.card_instances.keys()
+	uids.sort()
+	for uid in uids:
+		var instance = state.card_instances[uid]
+		if instance == null or instance.is_lost:
+			continue
+		var definition: Dictionary = db.get_card(int(instance.card_id))
+		if str(definition.get("type", "")) != "char":
+			continue
+		if _effective_tag_value(instance, definition, db, "adherent") <= 0:
+			continue
+		if _effective_tag_value(instance, definition, db, "lost") > 0:
+			continue
+		result.append({
+			"id": int(instance.card_id),
+			"tag": instance.tags.duplicate(true),
+		})
+	return result
+
+
+func _effective_tag_value(instance, definition: Dictionary, db, code: String) -> int:
+	var value := int(instance.tags.get(code, 0))
+	var source_tags = definition.get("tag", {})
+	if source_tags is Dictionary:
+		for raw_tag in source_tags:
+			if str(db.tag_code_for(raw_tag)) == code:
+				value += int(source_tags[raw_tag])
+	return value
+
+
+func _build_npc_heads(cards: Array, db) -> void:
+	if npc_head_container == null or cards.is_empty():
+		return
+	_heads_atlas = OriginalAtlasScript.load_atlas("res://assets/original/ui/heads.png")
+	if _heads_atlas == null:
+		return
+	for raw_card in cards:
+		if not (raw_card is Dictionary):
+			continue
+		var card := raw_card as Dictionary
+		var card_id := int(card.get("id", card.get("card_id", 0)))
+		if card_id <= 0:
+			continue
+		var pic := _card_pic_value(card, db)
+		var item := Control.new()
+		item.name = "OverNpcHead"
+		item.custom_minimum_size = Vector2(100, 100)
+		item.size = Vector2(100, 100)
+		npc_head_container.add_child(item)
+		var head := TextureRect.new()
+		head.name = "Image"
+		head.position = Vector2(4, -16)
+		head.size = Vector2(92, 92)
+		head.texture = _head_texture(card_id, pic)
+		head.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		head.stretch_mode = TextureRect.STRETCH_SCALE
+		head.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		item.add_child(head)
+
+
+func _card_pic_value(card: Dictionary, db) -> int:
+	var tags = card.get("tag", card.get("tags", {}))
+	if not (tags is Dictionary):
+		return 0
+	if tags.has("pic"):
+		return int(tags.get("pic", 0))
+	if db != null:
+		for raw_tag in tags:
+			if str(db.tag_code_for(raw_tag)) == "pic":
+				return int(tags[raw_tag])
+	return 0
+
+
+func _head_texture(card_id: int, pic: int) -> Texture2D:
+	# [SRC: Datapool.GetHeadSprite 0x411ea0] variant, zero-padded variant,
+	# base id, then the dictionary's default sprite.
+	var candidates: Array[String] = []
+	if pic > 0:
+		candidates.append("%d_%d.png" % [card_id, pic])
+		candidates.append("%d_0%d.png" % [card_id, pic])
+	candidates.append("%d.png" % card_id)
+	candidates.append("2000000.png")
+	for frame_name in candidates:
+		if _heads_atlas.has_frame(frame_name):
+			return _heads_atlas.frame(frame_name)
+	return null
 
 
 func _ending_texture(over_node: Dictionary, key: String, suffix := "") -> Texture2D:

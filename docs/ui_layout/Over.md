@@ -29,6 +29,12 @@ integer truncation and `StopStory`'s first-activation reveal boundary; zoom uses
 the source 0.1-second width interpolation and 0.2 layout-switch threshold.
 Runtime evidence: `story_typewriter_screenshot.png` captures an original
 `over.json` story while the 20-character/second reveal is still in progress.
+The same capture includes two `OverNpcHead` items from historical
+`OverData.char_cards`: each item is the authored 100x100 layout element with a
+92x92 head at `(4,-16)`. `OverNewNpcHeadController.Show` (0x57a610) resolves
+the runtime `pic` tag through `Datapool.GetHeadSprite` (0x411ea0): `id_pic`,
+`id_0pic`, base `id`, then the atlas default. Live playback instead applies
+`<Init>b__5_0` (0x588d80): `type==char && adherent && !lost`.
 
 ## Nodes
 

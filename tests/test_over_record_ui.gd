@@ -333,7 +333,10 @@ func test_show_story_animation_keeps_source_cg_and_starts_playback_at_one_second
 	over.setup_record(GameState.new(), db, {
 		"id": 102,
 		"player_data": null,
-		"char_cards": [],
+		"char_cards": [
+			{"id": 2000001, "tag": {"pic": 1}},
+			{"id": 2000006, "tag": {}},
+		],
 		"after_storys": [],
 	})
 	var stage := Control.new()
@@ -350,6 +353,13 @@ func test_show_story_animation_keeps_source_cg_and_starts_playback_at_one_second
 	assert_null(over.get_node_or_null("Step2/Content"), "the clone-only bottom story label is absent")
 	assert_not_null(over.get_node_or_null("Step2/Over Title/BG/Title/Content"), "source NpcHeadContainer hierarchy is preserved")
 	assert_same(cg.cg_mask.texture, load("res://assets/original/ui/over_cg/over_264_cg_mask.png"), "CGMask loads OverNode.bg + _mask")
+	var heads := over.get_node("Step2/Over Title/BG/Title/Content") as HBoxContainer
+	assert_eq(heads.get_child_count(), 2, "record playback copies OverData.char_cards without live filtering")
+	var first_head := heads.get_child(0).get_node("Image") as TextureRect
+	assert_eq(first_head.position, Vector2(4, -16), "OverNpcHead 92x92 image replays the authored +20 Unity y offset")
+	assert_eq(first_head.size, Vector2(92, 92))
+	var atlas := OriginalAtlas.load_atlas("res://assets/original/ui/heads.png")
+	assert_eq(first_head.texture.get_image().get_data(), atlas.frame("2000001_1.png").get_image().get_data(), "pic tag selects the source head variant")
 
 	over.do_next()
 	var controller := over.get_node("Step2-Story") as OverNewStep2StoryControllerView
@@ -362,6 +372,28 @@ func test_show_story_animation_keeps_source_cg_and_starts_playback_at_one_second
 	assert_between(mask.modulate.a, 0.14, 0.18, "UpdateMaskCanvasGroup has advanced about 0.8/5 seconds")
 	assert_almost_eq(controller.modulate.a, 1.0, 0.01, "Step2-Story reaches its source time=1 endpoint")
 	assert_true(controller.play_story, "show_story time=1 event invokes StartStory")
+
+
+func test_step2_live_heads_filter_source_adherent_characters_and_lost_state() -> void:
+	var state := GameState.new()
+	var follower = state.create_card_instance(2000006, db)
+	follower.tags["adherent"] = 1
+	var ordinary = state.create_card_instance(2000008, db)
+	ordinary.tags.erase("adherent")
+	var lost_follower = state.create_card_instance(2000372, db)
+	lost_follower.tags["adherent"] = 1
+	lost_follower.is_lost = true
+	var item = state.create_card_instance(2000029, db)
+	item.tags["adherent"] = 1
+
+	var step2 = preload("res://ui/over_new_step2.gd").new()
+	step2.setup({"name": "live", "bg": "over_cg/over_264_cg"}, {}, state, db)
+	add_child_autofree(step2)
+	await wait_process_frames(2)
+	assert_eq(step2.npc_head_container.get_child_count(), 1, "live Init keeps only type=char + adherent + !lost")
+	var head := step2.npc_head_container.get_child(0).get_node("Image") as TextureRect
+	var atlas := OriginalAtlas.load_atlas("res://assets/original/ui/heads.png")
+	assert_eq(head.texture.get_image().get_data(), atlas.frame("2000006.png").get_image().get_data())
 
 
 func _find_node_by_name(node: Node, target: String) -> Node:

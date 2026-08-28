@@ -186,10 +186,13 @@ func _build_step2_cg() -> void:
 	var placeholder := _surface
 	remove_child(placeholder)
 	_cg_surface = Step2ViewScript.new()
-	_cg_surface.setup(_entry, _over_data)
+	_cg_surface.setup(_entry, _over_data, _state, _db)
 	_surface = _cg_surface
 	add_child(_cg_surface)
-	placeholder.queue_free()
+	# This is only the empty host allocated by `_show_stage`, not a source UI
+	# object.  It has already left the tree, so deferred deletion can survive
+	# until GUT's orphan scan when several source stages advance in one frame.
+	placeholder.free()
 
 
 func _build_step3() -> void:
