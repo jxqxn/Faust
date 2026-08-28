@@ -6,6 +6,7 @@ extends Control
 
 const GalleryCardInfoView = preload("res://ui/gallery_card_info.gd")
 const OverRecordViewScript = preload("res://ui/over_record_view.gd")
+const OverNewViewScript = preload("res://ui/game_over.gd")
 
 signal closed()
 
@@ -62,6 +63,8 @@ var _big_cg: TextureRect
 var _cg_title: Label
 var _cg_lock_prompt: Label
 var _over_memory_button: Button
+var _over_info_container: Control
+var _over_info: Control
 
 ## Authored GalleryPanelNew.prefab RectTransforms, converted from Unity's
 ## centre anchors / upward Y into top-left positions inside CG's 2281.8x1574.5
@@ -216,6 +219,7 @@ func _build_body() -> void:
 	_over.size = CG_PANEL_RECT.size
 	_over.setup(_over_record_store, _global_state)
 	_over.count_changed.connect(_on_over_record_count_changed)
+	_over.memory_requested.connect(_show_over_info)
 	body.add_child(_over)
 	_cards = Control.new()
 	_cards.name = "GalleryCard"
@@ -230,6 +234,51 @@ func _build_body() -> void:
 	_build_card_panel()
 	_build_cg_panel()
 	_build_big_cg()
+	_build_over_info_container()
+
+
+func _build_over_info_container() -> void:
+	# [SRC: GalleryPanelNew/OverInfoContainer full stretch; OverRecordController
+	# ShowOverInfo 0x57e1e0 instantiates OverNewPanel under this exact host.]
+	_over_info_container = Control.new()
+	_over_info_container.name = "OverInfoContainer"
+	_over_info_container.size = DESIGN_SPACE
+	_over_info_container.visible = false
+	_over_info_container.z_index = 100
+	_design.add_child(_over_info_container)
+
+
+func _show_over_info(over_data: Dictionary) -> void:
+	if _over_record_store == null or _over_info_container == null:
+		return
+	_close_over_info()
+	var player_data = over_data.get("player_data")
+	var loaded: Dictionary
+	if player_data is Dictionary:
+		loaded = _over_record_store.load_player_over_data(player_data as Dictionary, _db)
+	else:
+		loaded = _over_record_store.load_default_player_over_data(_db)
+	var state = loaded.get("state")
+	if state == null:
+		return
+	state.over_reason = int(over_data.get("id", 1))
+	_over_info = OverNewViewScript.new()
+	_over_info.name = "OverNewPanel"
+	_over_info.set_meta("is_record", true)
+	_over_info.set_meta("load_report", loaded.get("report", {}))
+	_over_info.setup_record(state, _db, over_data, true)
+	_over_info.closed.connect(_close_over_info)
+	_over_info_container.add_child(_over_info)
+	_over_info_container.visible = true
+
+
+func _close_over_info() -> void:
+	if _over_info != null and is_instance_valid(_over_info):
+		_over_info_container.remove_child(_over_info)
+		_over_info.queue_free()
+	_over_info = null
+	if _over_info_container != null:
+		_over_info_container.visible = false
 
 
 func _build_cg_panel() -> void:

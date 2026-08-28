@@ -4,15 +4,22 @@ Corpus truth table (RectTransform, authored values). Regenerate with `tools/expo
 
 Runtime call chain: `OverNewController.Init` loads `OverNode`, starts at
 `SHOW_OVER`, and `DoNext` moves through CG, optional story / after-story, then
-`SHOW_RESULT`. `over.json` currently contains no `story` key, so the clone's
-verified normal branch is `Step1 -> Step2(CG) -> Step3(result)`. `open_after_story`
-does not itself create a story stage; it only gates the later transition after a
-story stage. Evidence: `OverNewController.c` (`0x579f50`, `0x579bc0`),
+`SHOW_RESULT`. `hasStory` is **not** a `story` key: `Init 0x579f50` sets it from
+`OverNode.text_extra != null && text_extra.Length != 0`. Therefore entries with
+`text_extra` use `Step1 -> Step2(CG) -> Step2-Story`, and `open_after_story`
+then gates `After Story`. Record playback (`isRecord=true`) calls `Hide` after
+its final story stage and returns to GalleryPanelNew; only a live ending reaches
+`SHOW_RESULT`. Evidence: `OverNewController.c` (`0x579f50`, `0x579bc0`,
+`0x579e40`),
 `dump.cs` `OverNewController.Stage`, and direct `content/over.json` inspection.
 
-The clone now uses the source `3840×2160` canvas and these stage names. Dynamic
-title sprite selection and the `after_story` reader remain explicitly unported;
-no replacement art is invented for the missing title atlas.
+The clone now uses the source `3840×2160` canvas and these stage names. The
+historical-memory route maps `OverNodeController.OnMemoryClick ->
+OverRecordController.ShowOverInfo -> Datapool.LoadPlayerOverData ->
+OverNewController.SetRecord/Init/Hide`; its Player boundary reuses the original
+save differential importer. Dynamic title sprite selection and the full
+`AfterStoryItem` pager remain explicitly unported; no replacement art is
+invented for the missing title atlas.
 
 ## Nodes
 

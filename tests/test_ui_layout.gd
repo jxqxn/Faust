@@ -429,6 +429,27 @@ func test_game_over_replays_source_stages_and_geometry():
 	assert_not_null(over.get_node_or_null("Step3/MainMenuButton"), "no-story over node falls through to source result step")
 
 
+func test_game_over_text_extra_controls_story_and_after_story_stages():
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(714))
+	state.over_reason = 273
+	var stage := _stage()
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup(state, db)
+	stage.add_child(over)
+	await wait_process_frames(2)
+	over.do_next()
+	over.do_next()
+	var story := over.get_node_or_null("Step2-Story/StoryText") as RichTextLabel
+	assert_not_null(story, "OverNewController.Init derives hasStory from text_extra.Length")
+	if story != null:
+		assert_true(story.text.contains("吾为神王"))
+	over.do_next()
+	assert_not_null(over.get_node_or_null("After Story/AfterStoryRecords"), "open_after_story gates the stage after Story")
+	over.do_next()
+	assert_not_null(over.get_node_or_null("Step3/MainMenuButton"), "live endings alone continue to result")
+
+
 func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
 	var rng := RNG.new(73)
 	var state := GameState.new()

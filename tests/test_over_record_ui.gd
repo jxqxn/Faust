@@ -2,6 +2,7 @@ extends GutTest
 
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
 const TEST_ROOT := "user://test_over_record_ui"
+const CORPUS_AUTO_SAVE := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/save_samples/auto_save.json"
 
 var db: ConfigDB
 
@@ -88,6 +89,65 @@ func test_gallery_over_record_replays_source_index_row_and_delete_chain() -> voi
 func test_over_node_assets_are_bounded_corpus_copies() -> void:
 	for file_name in ["repeat.png", "delete.png", "fail.png", "great_victory.png", "slash.png", "hightlight.png"]:
 		assert_true(ResourceLoader.exists("res://assets/original/ui/%s" % file_name), "%s resolves directly" % file_name)
+
+
+func test_memory_click_loads_original_player_artifact_and_record_flow_closes_to_gallery() -> void:
+	assert_true(FileAccess.file_exists(CORPUS_AUTO_SAVE), "the original product save is the differential judge")
+	if not FileAccess.file_exists(CORPUS_AUTO_SAVE):
+		return
+	var original = JSON.parse_string(FileAccess.get_file_as_string(CORPUS_AUTO_SAVE))
+	assert_true(original is Dictionary)
+	if not (original is Dictionary):
+		return
+	var store := OverRecordStore.new(TEST_ROOT)
+	store.load_over_record_excerpt()
+	store.add_over_record({
+		"id": 273,
+		"char_cards": [],
+		"player_data": original,
+		"after_storys": [],
+		"time": "2026-08-28T12:00:00",
+	})
+	var stage := Control.new()
+	stage.size = Vector2(1152, 648)
+	add_child_autofree(stage)
+	var gallery := GalleryPanel.new()
+	gallery.setup(db, GlobalState.new(), store)
+	stage.add_child(gallery)
+	await wait_process_frames(3)
+
+	var record := _find_node_by_name(gallery, "Record") as Button
+	assert_not_null(record)
+	if record == null:
+		return
+	record.pressed.emit()
+	await wait_process_frames(3)
+	var host := _find_node_by_name(gallery, "OverInfoContainer") as Control
+	var over := host.get_node_or_null("Over") as Control if host != null else null
+	assert_not_null(host)
+	assert_not_null(over)
+	if host == null or over == null:
+		return
+	assert_true(host.visible)
+	assert_true(bool(over.get_meta("is_record", false)), "SetRecord marks the replay controller before Init")
+	assert_eq(over.scale, Vector2.ONE, "OverNewPanel inherits GalleryPanelNew's single source-canvas scale")
+	var report := over.get_meta("load_report", {}) as Dictionary
+	var failed: Array = []
+	for row in report.get("diff", []):
+		if row is Dictionary and not bool(row.get("pass", false)):
+			failed.append(row)
+	assert_eq(failed, [], "LoadPlayerOverData passes the original save field differential")
+
+	over.do_next()
+	assert_not_null(over.get_node_or_null("Step2/CG"))
+	over.do_next()
+	assert_not_null(over.get_node_or_null("Step2-Story/StoryText"), "text_extra, not a clone story key, gates the story stage")
+	over.do_next()
+	assert_not_null(over.get_node_or_null("After Story/AfterStoryRecords"))
+	over.do_next()
+	await wait_process_frames(2)
+	assert_false(host.visible, "record Hide returns to GalleryPanelNew instead of showing Step3")
+	assert_eq(host.get_child_count(), 0)
 
 
 func _find_node_by_name(node: Node, target: String) -> Node:

@@ -12,6 +12,8 @@ const EXCESS_ROOT := "EXCESSDATA"
 const EXCERPT_FILE := "over_record_excerpt.json"
 const RECORD_FILE_FORMAT := "over_record_No.%d"
 const MAX_VISIBLE_RECORDS := 200
+const OriginalSaveImporterScript = preload("res://sim/original_save_importer.gd")
+const GameStateScript = preload("res://sim/game_state.gd")
 
 var root_path := "user://"
 var excerpt := _empty_excerpt()
@@ -95,6 +97,26 @@ func load_over_record(file_name: String) -> Dictionary:
 		return {}
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return parsed as Dictionary if parsed is Dictionary else {}
+
+
+func load_player_over_data(player_data: Dictionary, db) -> Dictionary:
+	# [SRC: Datapool.LoadPlayerOverData 0x415e40] installs the archived Player,
+	# then initializes top-level and rite-nested Card objects. The established
+	# original-save importer is this clone's one Player boundary and supplies a
+	# same-instant differential report; no second record-only schema is created.
+	return OriginalSaveImporterScript.import_save(player_data, db)
+
+
+func load_default_player_over_data(db) -> Dictionary:
+	# [SRC: Datapool.LoadDefaultPlayerOverData 0x414c70] constructs a fresh
+	# Player and only assigns the default protagonist name. GameState does not
+	# carry Player.name, so the faithful representable state is a fresh object.
+	return {"state": GameStateScript.new(), "payload": {}, "report": {
+		"converted": [],
+		"dropped": [{"field": "name", "reason": "GameState has no Player.name field"}],
+		"approximated": [],
+		"diff": [],
+	}}
 
 
 func add_over_record(over_data: Dictionary, save_excerpt := true) -> String:

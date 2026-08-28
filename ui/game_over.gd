@@ -2,16 +2,16 @@
 ##
 ## The original is a stage controller, not a one-page restart popup:
 ## SHOW_OVER -> SHOW_CG -> (SHOW_STORY -> SHOW_AFTER_STORY)? -> SHOW_RESULT.
-## This clone presently has no `after_story` playback host, but its direct
-## `over.json` entries have no story field; the source's normal path therefore
-## reaches SHOW_RESULT immediately after the configured CG.
 ## [SRC: OverNewController.c @ Init/DoNext (0x579f50/0x579bc0),
+##       SetRecord/Hide (0x57a480/0x579e40),
 ##       OverNewStep1Controller.c @ Init (0x57a700),
 ##       OverNewStep3Controller.c @ OnMain (0x57cad0),
 ##       dump.cs OverNewController.Stage/fields; content/over.json]
+class_name OverNewControllerView
 extends Control
 
 signal restart()
+signal closed()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
 
@@ -23,11 +23,26 @@ var _endings: Dictionary = {}
 var _stage := Stage.SHOW_OVER
 var _entry: Dictionary = {}
 var _surface: Control
+var _is_record := false
+var _over_data: Dictionary = {}
+var _embedded_source_canvas := false
 
 
 func setup(state, db) -> void:
 	_state = state
 	_db = db
+	_load_endings()
+
+
+func setup_record(state, db, over_data: Dictionary, embedded_source_canvas := false) -> void:
+	# [SRC: OverNewController.SetRecord 0x57a480] stores the exact OverData and
+	# sets isRecord before Init(overData.id). GalleryPanel supplies the Player
+	# loaded by Datapool.LoadPlayerOverData/LoadDefaultPlayerOverData.
+	_state = state
+	_db = db
+	_over_data = over_data.duplicate(true)
+	_is_record = true
+	_embedded_source_canvas = embedded_source_canvas
 	_load_endings()
 
 
@@ -39,7 +54,8 @@ func _ready() -> void:
 	size = DESIGN_SPACE
 	_entry = _ending_entry()
 	_show_stage(Stage.SHOW_OVER)
-	apply_source_layout(get_viewport_rect().size)
+	if not _embedded_source_canvas:
+		apply_source_layout(get_viewport_rect().size)
 
 
 func apply_source_layout(view_size: Vector2) -> void:
@@ -58,9 +74,8 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func do_next() -> void:
-	# Exact branch order from OverNewController.DoNext. `hasStory` is false for
-	# the direct over.json entries currently loaded by this clone, so CG falls
-	# through to result. Keep the enum slots rather than inventing a flat popup.
+	# Exact branch order from OverNewController.DoNext. Record playback closes
+	# after its last story stage; only a live ending reaches SHOW_RESULT.
 	match _stage:
 		Stage.SHOW_OVER:
 			_show_stage(Stage.SHOW_CG)
@@ -68,15 +83,23 @@ func do_next() -> void:
 			if _has_story():
 				_show_stage(Stage.SHOW_STORY)
 			else:
-				_show_stage(Stage.SHOW_RESULT)
+				_finish_sequence()
 		Stage.SHOW_STORY:
 			if _has_after_story():
 				_show_stage(Stage.SHOW_AFTER_STORY)
 			else:
-				_show_stage(Stage.SHOW_RESULT)
+				_finish_sequence()
 		Stage.SHOW_AFTER_STORY:
-			# No after-story reader yet; retain the real controller transition.
-			_show_stage(Stage.SHOW_RESULT)
+			_finish_sequence()
+
+
+func _finish_sequence() -> void:
+	# [SRC: OverNewController.DoNext 0x579bc0 -> Hide 0x579e40] record mode
+	# destroys only the replay instance and returns to GalleryPanelNew.
+	if _is_record:
+		closed.emit()
+	else:
+		_show_stage(Stage.SHOW_RESULT)
 
 
 func _show_stage(next_stage: Stage) -> void:
@@ -94,10 +117,12 @@ func _show_stage(next_stage: Stage) -> void:
 			_build_step1()
 		Stage.SHOW_CG:
 			_build_step2_cg()
+		Stage.SHOW_STORY:
+			_build_story_step()
+		Stage.SHOW_AFTER_STORY:
+			_build_after_story_step()
 		Stage.SHOW_RESULT:
 			_build_step3()
-		_:
-			_build_missing_story_step()
 
 
 func _build_step1() -> void:
@@ -201,15 +226,62 @@ func _build_step3() -> void:
 	_surface.add_child(main)
 
 
-func _build_missing_story_step() -> void:
-	var notice := Label.new()
-	notice.name = "MissingStoryHost"
-	notice.text = "后日谈播放尚未迁移"
-	notice.position = Vector2(920, 1000)
-	notice.size = Vector2(2000, 160)
-	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	notice.add_theme_font_size_override("font_size", 56)
-	_surface.add_child(notice)
+func _build_story_step() -> void:
+	# [SRC: OverNewStep2StoryController.Init 0x57b740 and its async body]
+	# consumes OverNode.text followed by matching text_extra rows. It does not
+	# read a synthetic `story` property.
+	var mask := ColorRect.new()
+	mask.name = "StoryViewBlocker"
+	mask.color = Color(0, 0, 0, 0.94)
+	mask.size = DESIGN_SPACE
+	_surface.add_child(mask)
+	var title := Label.new()
+	title.name = "StoryTitle"
+	title.text = str(_entry.get("name", ""))
+	title.position = Vector2(720, 350)
+	title.size = Vector2(2400, 120)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 60)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_surface.add_child(title)
+	var story := RichTextLabel.new()
+	story.name = "StoryText"
+	story.text = _story_text()
+	story.position = Vector2(760, 560)
+	story.size = Vector2(2320, 1100)
+	story.fit_content = false
+	story.add_theme_font_size_override("normal_font_size", 42)
+	_surface.add_child(story)
+
+
+func _build_after_story_step() -> void:
+	# The record artifact owns `after_storys`; render that source payload rather
+	# than inventing a clone-side ending table. Full AfterStoryItem controls stay
+	# separately tracked in METHOD_MAP.
+	var mask := ColorRect.new()
+	mask.name = "AfterStoryView"
+	mask.color = Color(0, 0, 0, 0.94)
+	mask.size = DESIGN_SPACE
+	_surface.add_child(mask)
+	var title := Label.new()
+	title.name = "AfterStoryTitle"
+	title.text = str(_entry.get("name", ""))
+	title.position = Vector2(720, 350)
+	title.size = Vector2(2400, 120)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 60)
+	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
+	_surface.add_child(title)
+	var rows := Label.new()
+	rows.name = "AfterStoryRecords"
+	rows.text = _after_story_text()
+	rows.position = Vector2(760, 560)
+	rows.size = Vector2(2320, 1100)
+	rows.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rows.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	rows.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	rows.add_theme_font_size_override("font_size", 42)
+	_surface.add_child(rows)
 
 
 func _load_endings() -> void:
@@ -232,11 +304,55 @@ func _ending_texture(key: String) -> Texture2D:
 
 
 func _has_story() -> bool:
-	return _entry.has("story") and not str(_entry.get("story", "")).is_empty()
+	# [SRC: OverNewController.Init 0x579f50] hasStory is precisely
+	# OverNode.text_extra != null && text_extra.Length != 0.
+	var rows = _entry.get("text_extra", [])
+	return rows is Array and not rows.is_empty()
 
 
 func _has_after_story() -> bool:
 	return int(_entry.get("open_after_story", 0)) != 0
+
+
+func _story_text() -> String:
+	var lines: Array[String] = [str(_entry.get("text", ""))]
+	var player_data = _over_data.get("player_data") if _is_record else {}
+	for raw in _entry.get("text_extra", []):
+		if not (raw is Dictionary):
+			continue
+		var row := raw as Dictionary
+		# In record playback, the original bypasses live condition evaluation
+		# when OverData.player_data is null; otherwise it evaluates against the
+		# Player installed by LoadPlayerOverData.
+		var include := _is_record and player_data == null
+		if not include:
+			include = ConditionEval.evaluate(row.get("condition", {}) as Dictionary, {"db": _db, "state": _state})
+		if not include:
+			continue
+		var row_title := str(row.get("result_title", ""))
+		var row_text := str(row.get("result_text", ""))
+		if not row_title.is_empty():
+			lines.append(row_title)
+		if not row_text.is_empty():
+			lines.append(row_text)
+	return "\n\n".join(lines.filter(func(line: String): return not line.is_empty()))
+
+
+func _after_story_text() -> String:
+	var rows = _over_data.get("after_storys", []) if _is_record else []
+	if not (rows is Array) or rows.is_empty():
+		return ""
+	var lines: Array[String] = []
+	for raw in rows:
+		if raw is Dictionary:
+			var row := raw as Dictionary
+			for key in ["title", "name", "text", "content"]:
+				var value := str(row.get(key, ""))
+				if not value.is_empty():
+					lines.append(value)
+		elif raw != null:
+			lines.append(str(raw))
+	return "\n\n".join(lines)
 
 
 func _stage_name(value: Stage) -> String:
