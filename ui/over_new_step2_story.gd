@@ -63,7 +63,6 @@ func _ready() -> void:
 	_build_surface()
 	_init_after_story_items()
 	show_story()
-	start_story()
 
 
 func _process(delta: float) -> void:

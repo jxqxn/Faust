@@ -3,7 +3,9 @@
 Corpus truth table (RectTransform, authored values). Regenerate with `tools/export_ui_layout.gd`.
 
 Runtime chain: `OverNewController.Init/DoNext` (0x579f50/0x579bc0) owns
-the stage transition; `OverNewStep2StoryController.Init` (0x57b740,
+the stage transition; `OverNewStep2Controller.Init` (0x57a790, state-machine
+body 0x587ee0) binds `Name <- OverNode.name`, `FullCG <- OverNode.bg` and
+`CGMask <- OverNode.bg + "_mask"`; `OverNewStep2StoryController.Init` (0x57b740,
 state-machine body 0x5863e0) builds the story and after-story pages;
 `OverNewAfterStoryItemController.Setup/Show` (0x578e70/0x5790a0/0x579620)
 renders each selected settlement. `hasStory` comes from
@@ -15,8 +17,14 @@ created. Historical records with `player_data == null` replay the exact
 The previous generated table contained only Step1 because it was captured
 before the complete AssetRipper scan finished. This table was regenerated from
 the same read-only `Over.prefab` and now includes Step2, Step2-Story, Step3 and
-Blocker. The clone maps the controller and item classes 1:1. Story playback now
-uses `PlaySpeed=20`, `CurrentVisibleCharacter += deltaTime * PlaySpeed`, TMP
+Blocker. The clone maps the controller and item classes 1:1. The Step2 title
+strip therefore contains only the ending name and the source-shaped NPC-head
+container; ending prose is owned exclusively by Step2-Story. During
+`show_story.anim`, the CG remains active, the ending-specific mask Image fades
+from 0 to 1 over 0.25--0.9166667, the time=0.25
+`UpdateMaskCanvasGroup` event starts the controller's independent five-second
+linear group fade, and the time=1 `StartStory` event begins playback. Story
+playback now uses `PlaySpeed=20`, `CurrentVisibleCharacter += deltaTime * PlaySpeed`, TMP
 integer truncation and `StopStory`'s first-activation reveal boundary; zoom uses
 the source 0.1-second width interpolation and 0.2 layout-switch threshold.
 Runtime evidence: `story_typewriter_screenshot.png` captures an original

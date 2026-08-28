@@ -91,7 +91,7 @@ func _ready() -> void:
 		shot_over.do_next()
 		shot_over.do_next()
 		if args.has("--story-typewriter"):
-			await get_tree().create_timer(0.1).timeout
+			await get_tree().create_timer(1.1).timeout
 		else:
 			shot_over.do_next()
 		if args.has("--after-story-zoom"):

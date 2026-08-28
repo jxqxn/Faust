@@ -14,6 +14,7 @@ signal restart()
 signal closed()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
+const Step2ViewScript = preload("res://ui/over_new_step2.gd")
 const Step2StoryViewScript = preload("res://ui/over_new_step2_story.gd")
 
 enum Stage { SHOW_OVER, SHOW_CG, SHOW_STORY, SHOW_AFTER_STORY, SHOW_RESULT }
@@ -24,6 +25,7 @@ var _endings: Dictionary = {}
 var _stage := Stage.SHOW_OVER
 var _entry: Dictionary = {}
 var _surface: Control
+var _cg_surface: Control
 var _is_record := false
 var _over_data: Dictionary = {}
 var _embedded_source_canvas := false
@@ -111,13 +113,15 @@ func _show_stage(next_stage: Stage) -> void:
 		return
 	if next_stage == Stage.SHOW_STORY:
 		_stage = next_stage
-		if _surface != null:
-			_surface.queue_free()
 		_build_story_step()
 		return
 	_stage = next_stage
 	if _surface != null:
 		_surface.queue_free()
+	if next_stage == Stage.SHOW_RESULT and _cg_surface != null and is_instance_valid(_cg_surface):
+		if _cg_surface != _surface:
+			_cg_surface.queue_free()
+		_cg_surface = null
 	_surface = Control.new()
 	_surface.name = _stage_name(next_stage)
 	_surface.position = Vector2.ZERO
@@ -177,25 +181,15 @@ func _build_step1() -> void:
 
 
 func _build_step2_cg() -> void:
-	var cg := TextureRect.new()
-	cg.name = "CG"
-	cg.position = Vector2.ZERO
-	cg.size = DESIGN_SPACE
-	cg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	cg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	cg.texture = _ending_texture("bg")
-	_surface.add_child(cg)
-	var text := Label.new()
-	text.name = "Content"
-	text.text = str(_entry.get("text", ""))
-	text.position = Vector2(920, 1720)
-	text.size = Vector2(2000, 220)
-	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.add_theme_font_size_override("font_size", 42)
-	text.add_theme_color_override("font_color", Color.WHITE)
-	_surface.add_child(text)
+	# Keep the original controller boundary: OverNewController owns the stage;
+	# OverNewStep2Controller owns FullCG/CGMask/Name/NpcHeadContainer.
+	var placeholder := _surface
+	remove_child(placeholder)
+	_cg_surface = Step2ViewScript.new()
+	_cg_surface.setup(_entry, _over_data)
+	_surface = _cg_surface
+	add_child(_cg_surface)
+	placeholder.queue_free()
 
 
 func _build_step3() -> void:
@@ -236,13 +230,45 @@ func _build_step3() -> void:
 
 func _build_story_step() -> void:
 	# Keep the original class boundary instead of embedding a clone-only story
-	# panel in OverNewController.
-	_surface.queue_free()
+	# panel in OverNewController. show_story.anim keeps Step2 active at alpha 1
+	# and overlays Step2/Mask + Step2-Story; it never destroys the CG surface.
 	_story_controller = Step2StoryViewScript.new()
 	_story_controller.setup(_entry, _state, _db, _over_data, _story_text())
 	_story_controller.jump_requested.connect(do_next)
+	_story_controller.modulate.a = 0.0
 	_surface = _story_controller
 	add_child(_surface)
+	_play_show_story_animation()
+
+
+func _play_show_story_animation() -> void:
+	# [SRC: Resources/anims/over/show_story.anim] Step2 remains active/opaque;
+	# Mask fades 0->1 from 0.25 to 0.9166667, Step2-Story fades 0->1 from
+	# 0.25 to 1.0, and the time=1 event invokes StartStory.
+	if _cg_surface != null:
+		_cg_surface.mask_group.visible = true
+		_cg_surface.mask_group.modulate.a = 1.0
+		_cg_surface.set_animation_mask_alpha(0.0)
+		var mask_tween := create_tween()
+		mask_tween.tween_method(_set_story_mask_fade, 0.0, 1.0, 2.0 / 3.0).set_delay(0.25)
+		var mask_group_event := create_tween()
+		mask_group_event.tween_callback(_cg_surface.update_mask_canvas_group).set_delay(0.25)
+	var story_tween := create_tween()
+	story_tween.tween_method(_set_story_panel_fade, 0.0, 1.0, 0.75).set_delay(0.25)
+	story_tween.tween_callback(func():
+		if _stage == Stage.SHOW_STORY and _story_controller != null and is_instance_valid(_story_controller):
+			_story_controller.start_story()
+	)
+
+
+func _set_story_mask_fade(value: float) -> void:
+	if _cg_surface != null and is_instance_valid(_cg_surface):
+		_cg_surface.set_animation_mask_alpha(value)
+
+
+func _set_story_panel_fade(value: float) -> void:
+	if _story_controller != null and is_instance_valid(_story_controller):
+		_story_controller.modulate.a = smoothstep(0.0, 1.0, value)
 
 
 func _load_endings() -> void:

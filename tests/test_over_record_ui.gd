@@ -328,6 +328,42 @@ func test_story_typewriter_replays_source_speed_stop_and_jump_boundary() -> void
 	assert_signal_emit_count(controller, "jump_requested", 1, "a second OnJump invokes the parent DoNext callback")
 
 
+func test_show_story_animation_keeps_source_cg_and_starts_playback_at_one_second() -> void:
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup_record(GameState.new(), db, {
+		"id": 102,
+		"player_data": null,
+		"char_cards": [],
+		"after_storys": [],
+	})
+	var stage := Control.new()
+	stage.size = Vector2(3840, 2160)
+	add_child_autofree(stage)
+	stage.add_child(over)
+	await wait_process_frames(2)
+	over.do_next()
+	var cg = over.get_node("Step2")
+	var mask := over.get_node("Step2/Mask") as Control
+	assert_not_null(cg)
+	assert_false(mask.visible, "Step2/Mask is inactive during the CG stage")
+	assert_eq(cg.name_label.text, "神的仆人", "Step2 Name binds OverNode.name, never the story body")
+	assert_null(over.get_node_or_null("Step2/Content"), "the clone-only bottom story label is absent")
+	assert_not_null(over.get_node_or_null("Step2/Over Title/BG/Title/Content"), "source NpcHeadContainer hierarchy is preserved")
+	assert_same(cg.cg_mask.texture, load("res://assets/original/ui/over_cg/over_264_cg_mask.png"), "CGMask loads OverNode.bg + _mask")
+
+	over.do_next()
+	var controller := over.get_node("Step2-Story") as OverNewStep2StoryControllerView
+	assert_same(over.get_node("Step2"), cg, "show_story.anim keeps the existing Step2 CG active")
+	assert_true(cg.visible)
+	assert_true(mask.visible)
+	assert_false(controller.play_story, "StartStory is an animation event at time=1, not an immediate stage side effect")
+	await get_tree().create_timer(1.05).timeout
+	assert_almost_eq(cg.cg_mask.self_modulate.a, 1.0, 0.01, "Image mask reaches its source time=0.9166667 endpoint")
+	assert_between(mask.modulate.a, 0.14, 0.18, "UpdateMaskCanvasGroup has advanced about 0.8/5 seconds")
+	assert_almost_eq(controller.modulate.a, 1.0, 0.01, "Step2-Story reaches its source time=1 endpoint")
+	assert_true(controller.play_story, "show_story time=1 event invokes StartStory")
+
+
 func _find_node_by_name(node: Node, target: String) -> Node:
 	if node.name == target:
 		return node
