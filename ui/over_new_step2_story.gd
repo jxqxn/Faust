@@ -138,6 +138,12 @@ func _init_after_story_items() -> void:
 	if not _over_data.is_empty() and player_data == null:
 		_collect_recorded_items(candidates)
 	else:
+		# [SRC: OverNewStep2StoryController.<Init>d__27 MoveNext 0x5863e0]
+		# A live ending clears Datapool.over_ids before enumerating settlements.
+		# Record playback with a loaded Player follows the live evaluator without
+		# that clear; null-player records use the artifact-only branch above.
+		if _over_data.is_empty() and _db != null and _db.has_method("clear_over_ids"):
+			_db.clear_over_ids()
 		_collect_runtime_items(candidates)
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary):
 		var sort_a := int(a["settlement"].get("sort", 10))
@@ -199,6 +205,7 @@ func _collect_runtime_items(out: Array[Dictionary]) -> void:
 		for raw in node.get("prior", []):
 			if raw is Dictionary and _settlement_matches(raw, ctx):
 				out.append({"settlement": raw, "pic": pic, "card_id": card_id})
+				_set_over_id(str(raw.get("key", "")))
 				prior_added = true
 				break
 		if prior_added:
@@ -206,6 +213,7 @@ func _collect_runtime_items(out: Array[Dictionary]) -> void:
 		for raw in node.get("extra", []):
 			if raw is Dictionary and _settlement_matches(raw, ctx):
 				out.append({"settlement": raw, "pic": pic, "card_id": card_id})
+				_set_over_id(str(raw.get("key", "")))
 
 
 func _settlement_matches(settlement: Dictionary, ctx: Dictionary) -> bool:
@@ -259,6 +267,15 @@ func _runtime_card_uid(card_id: int) -> int:
 		if int(instance.card_id) == card_id:
 			return int(instance.uid)
 	return 0
+
+
+func _set_over_id(key: String) -> void:
+	# [SRC: OverNewStep2StoryController.InitAfterStoryItem(Card...)
+	# 0x57af60 -> Datapool.SetOverId after result/action dispatch. The shipped
+	# 66 after_story files contain 7,750 settlements and zero result/action
+	# fields, so the observable original-data write in this build is the key.
+	if _db != null and _db.has_method("set_over_id"):
+		_db.set_over_id(key)
 
 
 func show_story() -> void:

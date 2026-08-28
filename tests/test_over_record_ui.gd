@@ -202,6 +202,37 @@ func test_live_after_story_conditions_bind_the_matching_runtime_card() -> void:
 	controller.free()
 
 
+func test_live_after_story_writes_transient_source_keys_but_record_replay_is_read_only() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(82))
+	state.local_counters[7000490] = 1
+	db.clear_over_ids()
+	var controller := OverNewStep2StoryControllerView.new()
+	controller.setup({}, state, db, {}, "")
+	var live_items: Array[Dictionary] = []
+	controller._collect_runtime_items(live_items)
+	assert_true(db.has_over_id("2000001_extra_1"), "live Show(Card) calls Datapool.SetOverId with the matched settlement key")
+	assert_true(ConditionEval.evaluate({"over_id": "2000001_extra_1"}, {"db": db}), "HasOverId reads the transient Datapool string set")
+	assert_false(ConditionEval.evaluate({"!over_id": ["2000001_extra_1"]}, {"db": db}), "the source condition modifier negates membership")
+
+	db.clear_over_ids()
+	controller.setup({}, state, db, {
+		"player_data": null,
+		"after_storys": [{
+			"card_id": 2000001,
+			"pic": "cards/2000001",
+			"prior": "",
+			"extra": ["2000001_extra_1"],
+		}],
+	}, "")
+	var recorded_items: Array[Dictionary] = []
+	controller._collect_recorded_items(recorded_items)
+	assert_eq(recorded_items.size(), 1, "the stored original key still resolves its source settlement")
+	assert_false(db.has_over_id("2000001_extra_1"), "Show(AfterStoryData) replays text without SetOverId side effects")
+	db.clear_over_ids()
+	controller.free()
+
+
 func _find_node_by_name(node: Node, target: String) -> Node:
 	if node.name == target:
 		return node

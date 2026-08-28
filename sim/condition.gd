@@ -35,6 +35,18 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return eval_any(val, ctx)
 	if k == "all":
 		return eval_all(val, ctx)
+	# Transient ending-settlement keys. Datapool.over_ids is a runtime
+	# HashSet<string>, unrelated to persisted Global.overID HashSet<int>.
+	# [SRC: HasOverId.c @ IsSatisfiedInternal (RVA 0x3fdc90);
+	#       Datapool.c @ HasOverId (RVA 0x413300)]
+	if k == "over_id" or k == "!over_id" or k == "~over_id":
+		var db = ctx.get("db")
+		var matched := false
+		for raw_id in val if val is Array else [val]:
+			if db != null and db.has_method("has_over_id") and db.has_over_id(str(raw_id)):
+				matched = true
+				break
+		return not matched if k != "over_id" else matched
 	# FuncCompare: (f|r\d*):<expr><op>  -> dice/attribute check.
 	# val is [X, Y] for r1 (X=needed, Y=success line) or a number for f.
 	if k.match("r*:*") or k.match("f:*") or k.begins_with("r1:") or k.begins_with("f:"):
@@ -170,7 +182,7 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 ## such as an unimplemented control key out of the supported bucket.
 static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	var k := key.strip_edges()
-	if k in ["any", "all", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "!is_rite", "~is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
+	if k in ["any", "all", "over_id", "!over_id", "~over_id", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "!is_rite", "~is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
 		return true
 	if k.begins_with("tag_tips.") or k.begins_with("!tag_tips.") or k.begins_with("~tag_tips."):
 		return true

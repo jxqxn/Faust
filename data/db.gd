@@ -22,6 +22,9 @@ var rites := {}            # id(int) -> rite dict
 var loots := {}            # id(int) -> loot dict
 var events := {}           # id(int) -> event dict
 var after_stories := {}    # id(int/card id) -> AfterStoryNode dict
+# Runtime-only Datapool.over_ids HashSet<string>. This is distinct from
+# Global.overID HashSet<int>, which unlocks gallery CG across runs.
+var over_ids := {}
 var tags_by_code := {}     # code -> tag dict
 var tags_by_id := {}       # id(int) -> tag dict
 var tag_name_to_code := {} # name -> code
@@ -137,6 +140,23 @@ func get_after_story(id: int) -> Dictionary:
 	# [SRC: dump.cs Datapool.after_story @0x70 / AfterStoryNode fields
 	# @ dump.cs:389342] The source dictionary is keyed by the character card id.
 	return after_stories.get(id, {})
+
+
+## [SRC: Datapool.c @ ClearOverIds/SetOverId/HasOverId
+##       (RVA 0x40f8b0/0x41b2f0/0x413300), dump.cs Datapool.over_ids@0x2A0]
+## Ending settlements use their string keys as a transient condition chain;
+## they never write Global.overID, whose element type and lifecycle differ.
+func clear_over_ids() -> void:
+	over_ids.clear()
+
+
+func set_over_id(id: String) -> void:
+	if not id.is_empty():
+		over_ids[id] = true
+
+
+func has_over_id(id: String) -> bool:
+	return over_ids.has(id)
 
 
 func get_difficulty(index: int) -> Dictionary:
