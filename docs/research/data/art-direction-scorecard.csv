@@ -1,0 +1,10 @@
+experiment_id,candidate_id,reviewer_role,criterion,weight,raw_score_1_10,weighted_score,measured_evidence,asset_hours,revision_count,notes,status
+TBD,A,TBD,production_throughput,0.20,,,,,,,not_run
+TBD,A,TBD,readability,0.15,,,,,,,not_run
+TBD,A,TBD,identity,0.15,,,,,,,not_run
+TBD,A,TBD,world_coherence,0.15,,,,,,,not_run
+TBD,A,TBD,scalability,0.10,,,,,,,not_run
+TBD,A,TBD,gameplay_integration,0.10,,,,,,,not_run
+TBD,A,TBD,motion_robustness,0.05,,,,,,,not_run
+TBD,A,TBD,ui_integration,0.05,,,,,,,not_run
+TBD,A,TBD,marketing_thumbnail,0.05,,,,,,,not_run

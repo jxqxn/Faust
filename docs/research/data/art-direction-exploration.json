@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "status": "discussion_intake_not_canon",
+  "recorded_at": "2026-08-28",
+  "provenance": {
+    "kind": "user_chat_discussion_pack",
+    "package": "indie_art_direction_codex_pack",
+    "original_location": "C:/Users/User/Downloads/indie_art_direction_codex_pack/indie_art_direction_codex_pack",
+    "verification": "not_independently_verified_by_faust_project"
+  },
+  "authority_boundary": {
+    "highest_product_direction": "docs/design/autobattler-campus-direction.md",
+    "current_visual_baseline": "docs/design/thought-world-visual-references.md",
+    "does_not_override_either": true,
+    "unconfirmed_assumptions": [
+      "half_submerged_city",
+      "victorian_or_classical_primary_aesthetic",
+      "water_as_the_primary_world_metaphor"
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "FAUST-ART-HYP-001",
+      "statement": "水正在把这个文明印刷出来的秩序重新溶解。",
+      "status": "unvalidated_hypothesis",
+      "project_fit": "unresolved"
+    },
+    {
+      "id": "FAUST-ART-HYP-002",
+      "statement": "以硬边印刷秩序表现水上，以洇染错版和有机边界表现水下，并让魔法跨越两套语法，可能统一场景、角色、UI、卡牌与 VFX。",
+      "status": "unvalidated_hypothesis",
+      "project_fit": "requires_in_engine_comparison"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "A",
+      "name": "Tidal Etching / 潮汐蚀刻",
+      "materials": ["hand-coloured etching", "engraving", "chromolithography", "occult cards", "water damage", "misregistration"],
+      "proposed_strengths": ["world_ui_card_unity", "identity", "limited_animation_compatibility"],
+      "risks": ["line_noise", "detail_cost"],
+      "kill_tests": ["thumbnail_readability", "ordinary_npc_hours", "crowd_test"]
+    },
+    {
+      "id": "B",
+      "name": "Enamel Registry / 珐琅登记制",
+      "materials": ["enamel", "brass", "stained glass", "waterproof plaques", "registry signage"],
+      "proposed_strengths": ["material_clarity", "institutional_worldbuilding", "modularity"],
+      "risks": ["decorative_without_systemic_depth", "weak_organic_integration"],
+      "kill_tests": ["character_cohesion", "underwater_test", "ui_integration"]
+    },
+    {
+      "id": "C",
+      "name": "Drowned Naturalist / 沉没博物志",
+      "materials": ["natural_history_plates", "marine_taxonomy", "specimen_labels", "occult_annotations"],
+      "proposed_strengths": ["species_diversity", "monster_design", "lore_card_systems"],
+      "risks": ["museum_feel", "weak_everyday_city_emotion"],
+      "kill_tests": ["street_scene", "ordinary_citizen_test", "movement_test"]
+    }
+  ],
+  "mandatory_same_content_tests": [
+    "city_or_campus_cross_section",
+    "six_named_character_group",
+    "character_location_spell_cards",
+    "real_game_ui",
+    "five_second_effect",
+    "thirty_second_motion_scene",
+    "seventy_percent_quality_ordinary_asset"
+  ],
+  "stress_tests": [
+    "thumbnail_960_480_240",
+    "grayscale",
+    "crowd_15_to_20",
+    "reuse",
+    "motion",
+    "store_grid_blind_description",
+    "one_page_rule_replication"
+  ],
+  "provisional_score_weights": {
+    "production_throughput": 0.20,
+    "readability": 0.15,
+    "identity": 0.15,
+    "world_coherence": 0.15,
+    "scalability": 0.10,
+    "gameplay_integration": 0.10,
+    "motion_robustness": 0.05,
+    "ui_integration": 0.05,
+    "marketing_thumbnail": 0.05
+  },
+  "evidence_fields_required_per_score": [
+    "reviewer_role",
+    "raw_score",
+    "measured_evidence",
+    "asset_hours",
+    "revision_count",
+    "notes"
+  ],
+  "source_leads": [
+    {"id": "sultan_ign", "title": "IGN JP《苏丹的游戏》访谈（TapTap 转录）", "url": "https://www.taptap.cn/moment/809350638671497907", "verification_status": "unverified_lead"},
+    {"id": "sultan_chule", "title": "《苏丹的游戏》9 人团队访谈", "url": "https://www.weibo.com/ttarticle/p/show?id=2309635096848497967217", "verification_status": "unverified_lead"},
+    {"id": "sultan_constraints", "title": "《苏丹的游戏》制作人谈限制", "url": "https://club.gamersky.com/activity/1521791", "verification_status": "unverified_lead"},
+    {"id": "darkest_mash", "title": "A Talk with Darkest Dungeon's Chris Bourassa", "url": "https://mashthosebuttons.com/2013/11/a-talk-with-darkest-dungeons-chris-bourassa/", "verification_status": "unverified_lead"},
+    {"id": "darkest_gamespot", "title": "The Gothic Sensibilities of Darkest Dungeon", "url": "https://www.gamespot.com/articles/the-gothic-sensibilities-of-darkest-dungeon/1100-6424880/", "verification_status": "unverified_lead"},
+    {"id": "hollow_official", "title": "Introducing Hollow Knight", "url": "https://www.teamcherry.com.au/blog/introducing-hollow-knight", "verification_status": "unverified_lead"},
+    {"id": "pentiment_gameshub", "title": "Pentiment Art Director Hannah Kennedy Interview", "url": "https://www.gameshub.com/news/features/pentiment-interview-xbox-obsidian-entertainment-hannah-kennedy-art-director-34642/", "verification_status": "unverified_lead"},
+    {"id": "pentiment_wired", "title": "The Director of Pentiment Wants You to Know How His Characters Ate", "url": "https://www.wired.com/story/pentiment-josh-sawyer-interview/", "verification_status": "unverified_lead"},
+    {"id": "disco_pcgamer", "title": "Why does isometric perspective suit Disco Elysium?", "url": "https://www.pcgamer.com/games/rpg/why-does-isometric-perspective-suit-disco-elysium-you-can-design-the-entire-game-as-if-it-was-a-painting/", "verification_status": "unverified_lead"},
+    {"id": "magic_awakened", "title": "《哈利波特：魔法觉醒》美术团队专访", "url": "https://www.sohu.com/a/507859377_204824", "verification_status": "unverified_lead"},
+    {"id": "cuphead_constraints", "title": "The unique development constraints of Cuphead's painstakingly hand-drawn art", "url": "https://www.gamedeveloper.com/design/the-unique-development-constraints-of-i-cuphead-i-s-painstakingly-hand-drawn-art", "verification_status": "unverified_lead"},
+    {"id": "met_cards", "title": "The Cloisters Playing Cards", "url": "https://www.metmuseum.org/art/collection/search/475548", "verification_status": "unverified_lead"},
+    {"id": "british_etteilla", "title": "Etteilla tarot pack, British Museum", "url": "https://www.britishmuseum.org/collection/object/P_1904-0511-49-1-78", "verification_status": "unverified_lead"},
+    {"id": "haeckel_smithsonian", "title": "Art Forms in Nature: Marine Species From Ernst Haeckel", "url": "https://ocean.si.edu/ocean-life/invertebrates/art-forms-nature-marine-species-ernst-haeckel", "verification_status": "unverified_lead"}
+  ],
+  "missing_project_evidence": [
+    "completed_same_content_art_candidates",
+    "in_engine_visual_comparisons",
+    "asset_hour_baselines",
+    "thumbnail_grayscale_crowd_motion_results",
+    "confirmed_art_team_capacity",
+    "confirmed_water_city_worldbuilding"
+  ]
+}

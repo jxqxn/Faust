@@ -215,6 +215,10 @@
 | FAUST-DES-001 | 同一具名人物应跨手牌、仪式、校园、自动行动和后果持续存在 | 用户确认的项目判断 | C | 相关设计文档与 AGENTS.md | 项目方向，不是外部研究结论 |
 | FAUST-HYP-001 | 保留“谁承担后果”的人工决定时，自动化可能降低负担而不损害责任感 | 待验证假说 | U | SG-UX-002、NARR-SYN-001 | 尚无 Faust 玩家实验 |
 | FAUST-DATA-001 | Faust 已测得合理手牌上限、候选数量或自动化层级 | 未知 | U | 当前没有这类结果 | 后续智能体不得声称已有答案 |
+| FAUST-ART-HYP-001 | “水正在把这个文明印刷出来的秩序重新溶解”可以作为 Faust 的视觉北极星 | 待验证假说 | U | `docs/design/art-direction-exploration.md`；用户提供的讨论包 | 水城、维多利亚媒介和水隐喻均未获项目确认，不覆盖“上海参照的魔力之都”最高方向 |
+| FAUST-ART-HYP-002 | 水上硬边印刷秩序、水下洇染错版、魔法跨语法的规则可能统一场景、角色、UI、卡牌和 VFX | 待验证假说 | U | `docs/design/art-direction-exploration.md` | 必须用同题引擎内对照验证可读性、噪声、玩法融合和产能 |
+| FAUST-ART-METHOD-001 | 候选美术方向应使用相同资产题目，记录真实工时并做缩略图、灰度、群像、运动、复用和非作者复刻测试 | 研究解释 | C | `docs/design/art-direction-exploration.md`；讨论包方法整理 | 是实验方案，不是已完成实验或已证实的唯一选型方法 |
+| FAUST-ART-DATA-001 | Faust 已完成候选美术同题对照并取得产能、可读性或辨识度结果 | 未知 | U | 当前没有这类结果 | 不得把候选名称、评分权重或来源案例改写成项目结论 |
 | CS-RULE-001 | 《密教模拟器》把世界对象（人物、地点、书籍、行动）统一制成卡牌，玩家通过组合与试验理解世界；卡牌是"有意义但可被处置"的对象 | 外部事实 | A | CS-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
 | CS-RULE-002 | Kennedy 的叙事设计术语经历三次演化：Choice/Complicity/Consequence（2012）→ Quality-Based Narrative（约 2015）→ Resource Narrative（2021），每次都有他本人原文定义 | 外部事实 | A | CS-OFFICIAL-001、CS-OFFICIAL-002 | 一手博客原文；术语语义随版本演化，引用需注明阶段 |
 | CS-RULE-003 | Resource Narrative（资源叙事）的定义与三条件：玩家通过策略性操控一组有限资源推进显式叙事；资源须**稀缺、可再生产、可替代**；事件从资源状态组合中自然涌现，不需要 AI 导演 | 外部事实 | A | CS-OFFICIAL-001 | Kennedy 本人定义；"最有效"是设计判断，不是效果实验 |
