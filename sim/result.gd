@@ -13,6 +13,7 @@ class_name ResultExec
 extends RefCounted
 
 const RuntimeOperationFilter = preload("res://sim/operation_filter.gd")
+const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
@@ -104,7 +105,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# Counters.
 	if k.begins_with("counter") or k.begins_with("global_counter"):
-		_apply_counter(k, val, state)
+		_apply_counter(k, val, state, db)
 		return
 	# Card grant.
 	if k == "card":
@@ -651,7 +652,7 @@ static func _queue_context(context: Dictionary) -> Dictionary:
 	return persisted
 
 
-static func _apply_counter(k: String, val: Variant, state) -> void:
+static func _apply_counter(k: String, val: Variant, state, db) -> void:
 	var parsed := CounterSystem.parse_key(k)
 	if parsed.is_empty():
 		return
@@ -671,6 +672,13 @@ static func _apply_counter(k: String, val: Variant, state) -> void:
 			state.sub_global_counter(parsed.id, delta)
 		else:
 			state.sub_counter(parsed.id, delta)
+	if parsed.global and state.global_state != null:
+		# ModifyGlobalCounter.Do refreshes every QuestNode after the mutation,
+		# then persists Global. Keep this operation boundary out of the UI.
+		# [SRC: ModifyGlobalCounter.c @ Do (RVA 0x5176a0)]
+		GlobalExtensionsScript.refresh_quest(state.global_state, state, db, true, false)
+		if state.global_state.is_disk_bound():
+			state.global_state.save()
 
 
 static func _clean_slot_from_key(k: String) -> int:

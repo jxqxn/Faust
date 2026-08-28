@@ -384,6 +384,13 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.event_init_profile_id = int(data.get("event_init_profile_id", 1))
 	state.local_counters = _restore_int_keyed_dictionary(data.get("local_counters", {}))
 	state.global_counters = _restore_int_keyed_dictionary(data.get("global_counters", {}))
+	# Old clone saves carried only Player.global_counter_cacher. Seed an empty
+	# Global.counter once; an existing global.json remains authoritative.
+	if state.global_state != null:
+		if state.global_state.counters.is_empty() and not state.global_counters.is_empty():
+			state.global_state.counters = state.global_counters.duplicate(true)
+		elif not state.global_state.counters.is_empty():
+			state.global_counters = state.global_state.counters.duplicate(true)
 	if state.has_method("sync_rail_order"):
 		state.sync_rail_order()
 	if state.has_method("_rebuild_event_runtime"):

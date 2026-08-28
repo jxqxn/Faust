@@ -5,7 +5,7 @@ extends Control
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
 ##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--story-typewriter]
-##   [--after-story] [--after-story-zoom]
+##   [--after-story] [--after-story-zoom] [--story-notify]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -168,6 +168,13 @@ func _ready() -> void:
 					"一个贵族拦住你，希望你能告诉他，他自己的品位和他死对头的品位。\n他只是一个青铜品级的公子哥，而他……"
 				)
 				screen.call("refresh")
+		if args.has("--story-notify"):
+			# Screenshot-only replay of StoryNotifyController.Show with an exact
+			# QuestNode from the zero-translation source configuration.
+			var state_q = main.get("state")
+			var db_q = main.get("db")
+			if screen != null and state_q != null and db_q != null:
+				state_q.global_state.notify_quest_completed(db_q.get_quest(3300001))
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

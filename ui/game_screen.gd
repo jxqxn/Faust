@@ -13,6 +13,7 @@ signal redraw_pressed()
 signal back_to_prev_pressed()
 signal menu_pressed()
 signal game_over_requested()
+signal story_requested(quest_id: int)
 
 const MapControllerScript = preload("res://ui/map_controller.gd")
 const CardInfoViewScript = preload("res://ui/card_info_view.gd")
@@ -20,6 +21,7 @@ const MainHelpViewScript = preload("res://ui/main_help.gd")
 const ChangeNameViewScript = preload("res://ui/change_name_view.gd")
 const CachedEventsViewScript = preload("res://ui/cached_events_view.gd")
 const EventPromptViewScript = preload("res://ui/event_prompt_view.gd")
+const StoryNotifyControllerScript = preload("res://ui/story_notify_controller.gd")
 
 class HandRailDrop:
 	extends Control
@@ -103,6 +105,7 @@ var _main_help_button: Button
 var _card_info_view = null
 var _cached_events_view = null
 var _cached_event_mask: Button
+var _story_notify = null
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
@@ -257,6 +260,7 @@ func _build_ui() -> void:
 	_build_prestige_strip()
 
 	_build_cached_events()
+	_build_story_notify()
 
 	_desk_map = _panel("DeskMap")
 	_desk_map.add_theme_stylebox_override("panel", _scene_frame_style())
@@ -444,6 +448,15 @@ func _build_cached_events() -> void:
 	add_child(_cached_event_mask)
 
 
+func _build_story_notify() -> void:
+	_story_notify = StoryNotifyControllerScript.new()
+	_story_notify.name = "StoryNotify"
+	_story_notify.z_index = PERSISTENT_CONTROL_Z + 3
+	_story_notify.setup(_state.global_state)
+	_story_notify.story_requested.connect(func(quest_id: int): story_requested.emit(quest_id))
+	add_child(_story_notify)
+
+
 ## [SRC: GameController.c OnCachedEventClicked (0x5538e0) — TryGetValue on
 ## Datapool.can_cached_event_settlements; a failed lookup removes the notice
 ## (PlayerExtensions.RemoveCacheEvent 0x38ecb0).  Corpus config declares zero
@@ -508,6 +521,8 @@ func _apply_layout() -> void:
 		_cached_event_mask.scale = k
 		_cached_event_mask.position = Vector2(3308.87 * k.x, 1713.82 * k.y)
 		_cached_event_mask.size = Vector2(596, 634)
+	if _story_notify != null:
+		_story_notify.apply_source_layout(view_size)
 	# The painted board is the whole desktop behind every persistent control.
 	_set_rect(_desk_map, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_desk_content, Rect2(Vector2.ZERO, view_size))

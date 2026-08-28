@@ -10,6 +10,7 @@ const ESCGamePanel = preload("res://ui/esc_game_panel.gd")
 const SettingsPanel = preload("res://ui/settings_panel.gd")
 const UserArchivePanel = preload("res://ui/user_archive_panel.gd")
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
+const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 # Transitional compat layer: screens not yet re-emitted in the original
 # 3840x2160 canvas space still lay out in the old 1280x800 mockup space.
@@ -140,6 +141,11 @@ func _start_new_run(index: int, use_test_cards: bool) -> void:
 func _show_game() -> void:
 	_clear_current()
 	if state != null and db != null:
+		# StartController restores QuestNode completion state without replaying
+		# historical notifications before opening the active game surface.
+		# [SRC: StartController.c RefreshQuest(false, true);
+		#       GlobalExtensions.RefreshQuest 0x4fcee0]
+		GlobalExtensionsScript.refresh_quest(state.global_state, state, db, false, true)
 		RoundLoop.start_auto_begin_rites(state, db)
 	_audio.play_bgm("main")
 	var gs := GameScreen.new()

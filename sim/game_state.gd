@@ -923,6 +923,12 @@ func get_counter(id: int) -> int:
 
 
 func get_global_counter(id: int) -> int:
+	# Global.counter is the persistent truth; Player.global_counter_cacher is
+	# retained only as the source-shaped run cache/old-save compatibility view.
+	# [SRC: dump.cs Global.counter@0x68; Player.global_counter_cacher@0xE0;
+	#       GlobalExtensions.GetCounter / ModifyGlobalCounter.Do 0x5176a0]
+	if global_state != null and global_state.counters.has(id):
+		return global_state.get_counter_value(id)
 	return int(global_counters.get(id, 0))
 
 
@@ -961,26 +967,33 @@ func _notify_counter_changed(id: int, new_value: int) -> void:
 
 
 func add_global_counter(id: int, delta: int) -> void:
-	var before := int(global_counters.get(id, 0))
-	global_counters[id] = before + delta
-	if before != int(global_counters[id]):
-		_notify_global_counter_changed(id, int(global_counters[id]))
+	var before := get_global_counter(id)
+	var current := before + delta
+	global_counters[id] = current
+	if global_state != null:
+		global_state.set_counter_value(id, current)
+	if before != current:
+		_notify_global_counter_changed(id, current)
 
 
 func sub_global_counter(id: int, delta: int) -> void:
-	var before := int(global_counters.get(id, 0))
-	global_counters[id] = CounterSystem.clamp_nonneg(id, before - delta, _nonneg_ids)
-	if before != int(global_counters[id]):
-		_notify_global_counter_changed(id, int(global_counters[id]))
+	var before := get_global_counter(id)
+	var current := CounterSystem.clamp_nonneg(id, before - delta, _nonneg_ids)
+	global_counters[id] = current
+	if global_state != null:
+		global_state.set_counter_value(id, current)
+	if before != current:
+		_notify_global_counter_changed(id, current)
 
 
 func set_global_counter(id: int, val: int) -> void:
 	var clamped := CounterSystem.clamp_nonneg(id, val, _nonneg_ids)
-	if int(global_counters.get(id, 0)) != clamped:
-		global_counters[id] = clamped
+	var before := get_global_counter(id)
+	global_counters[id] = clamped
+	if global_state != null:
+		global_state.set_counter_value(id, clamped)
+	if before != clamped:
 		_notify_global_counter_changed(id, clamped)
-	else:
-		global_counters[id] = clamped
 
 
 ## [SRC: GameController.c @ OnGlobalCounterChanged (0x4f9a30, callers 9052/9116)]

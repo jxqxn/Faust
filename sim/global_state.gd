@@ -1,8 +1,9 @@
 ## Cross-run global domain, the counterpart of the original's Global object
-## persisted as global.json next to the run saves. Only evidence-backed fields
-## are carried today: the back-to-prev quota (COUNTER_BACK_TO_PREV 7100007
-## routes here through GameState.get_counter/set_counter) and the rollback-kind
-## marker written at round boundaries. `overRecord` is retained as opaque
+## persisted as global.json next to the run saves. Evidence-backed fields now
+## include the quest/counter progress chain, the back-to-prev quota
+## (COUNTER_BACK_TO_PREV 7100007 routes here through GameState.get_counter/
+## set_counter), and the rollback-kind marker written at round boundaries.
+## `overRecord` is retained as opaque
 ## original `Global.OverData` JSON until the original result-record lifecycle
 ## is fully traced; `overID` and `showedGalleryCards` retain HashSet semantics.
 ## [SRC: dump.cs:385599-385609 Global fields; Global.c @ .ctor (0x38a510)
@@ -10,6 +11,10 @@
 ##       @ IsLock (0x5430a0) queries overID; save_samples/global.json]
 class_name GlobalState
 extends RefCounted
+
+signal has_quest_reward_changed(value: bool)
+signal quest_completed(quest: Dictionary)
+signal counter_changed(counter_id: int, value: int, old_value: int)
 
 # RoundRollbackType (dump.cs:6186).
 const ROLLBACK_NONE := 0
@@ -25,6 +30,20 @@ var back_to_prev_round := 0
 ## Which boundary the run currently sits behind (RoundRollbackType).
 var round_rollback := ROLLBACK_NONE
 var save_time := ""
+## Cross-run progress fields owned by original Global, not Player.
+## [SRC: dump.cs:385568-385576 Global totalRound/totalPoint/usedPoint/
+## questState/quest/counter; GlobalExtensions.RefreshQuest 0x4fcee0]
+var total_round := 0
+var total_point := 0
+var used_point := 0
+var quest_state := ""
+var quests: Dictionary = {}
+var counters: Dictionary = {}
+var has_enter_quest := false
+var has_quest_reward := false
+## Fields whose runtime hosts are not migrated yet remain byte-structure
+## shaped and survive a load/save cycle instead of being silently dropped.
+var _source_passthrough: Dictionary = {}
 ## Original `List<Global.OverData>`; dictionaries remain source-shaped JSON
 ## records, because their player/card payload must not be translated here.
 var over_records: Array[Dictionary] = []
@@ -106,22 +125,39 @@ func is_disk_bound() -> bool:
 
 
 func to_dict() -> Dictionary:
-	return {
+	var out := _source_passthrough.duplicate(true)
+	out.merge({
 		# Use original Global/global.json key spelling. _apply_dict keeps reading
 		# the clone's former snake_case file so existing local saves migrate.
 		"saveTime": save_time,
+		"totalRound": total_round,
+		"totalPoint": total_point,
+		"usedPoint": used_point,
+		"questState": quest_state,
+		"quest": _serialize_int_dictionary(quests),
+		"counter": _serialize_int_dictionary(counters),
+		"hasEnterQuest": has_enter_quest,
 		"backToPrevRound": back_to_prev_round,
 		"roundRollback": round_rollback,
 		"overRecord": over_records.duplicate(true),
 		"overID": _serialize_int_set(over_ids),
 		"showedGalleryCards": _serialize_int_set(showed_gallery_cards),
-	}
+	}, true)
+	return out
 
 
 func _apply_dict(data: Dictionary) -> void:
+	_source_passthrough = data.duplicate(true)
 	back_to_prev_round = int(data.get("backToPrevRound", data.get("back_to_prev_round", 0)))
 	round_rollback = int(data.get("roundRollback", data.get("round_rollback", ROLLBACK_NONE)))
 	save_time = str(data.get("saveTime", data.get("save_time", "")))
+	total_round = int(data.get("totalRound", data.get("total_round", 0)))
+	total_point = int(data.get("totalPoint", data.get("total_point", 0)))
+	used_point = int(data.get("usedPoint", data.get("used_point", 0)))
+	quest_state = str(data.get("questState", data.get("quest_state", "")))
+	quests = _restore_int_dictionary(data.get("quest", data.get("quests", {})))
+	counters = _restore_int_dictionary(data.get("counter", data.get("counters", {})))
+	has_enter_quest = bool(data.get("hasEnterQuest", data.get("has_enter_quest", false)))
 	over_records.clear()
 	var raw_records: Variant = data.get("overRecord", data.get("over_records", []))
 	if raw_records is Array:
@@ -150,6 +186,49 @@ static func _restore_int_set(value: Variant) -> Dictionary:
 		for raw_id in value:
 			restored[int(raw_id)] = true
 	return restored
+
+
+static func _serialize_int_dictionary(values: Dictionary) -> Dictionary:
+	var out := {}
+	var keys: Array[int] = []
+	for raw_id in values.keys():
+		keys.append(int(raw_id))
+	keys.sort()
+	for id in keys:
+		out[str(id)] = int(values[id])
+	return out
+
+
+static func _restore_int_dictionary(value: Variant) -> Dictionary:
+	var restored := {}
+	if value is Dictionary:
+		for raw_id in value:
+			restored[int(raw_id)] = int(value[raw_id])
+	return restored
+
+
+func set_has_quest_reward(value: bool) -> void:
+	if has_quest_reward == value:
+		return
+	has_quest_reward = value
+	has_quest_reward_changed.emit(value)
+
+
+func notify_quest_completed(quest: Dictionary) -> void:
+	quest_completed.emit(quest)
+
+
+func get_counter_value(id: int) -> int:
+	return int(counters.get(id, 0))
+
+
+func set_counter_value(id: int, value: int) -> void:
+	var old_value := get_counter_value(id)
+	if old_value == value:
+		counters[id] = value
+		return
+	counters[id] = value
+	counter_changed.emit(id, value, old_value)
 
 
 func has_shown_gallery_card(id: int) -> bool:

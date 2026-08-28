@@ -22,6 +22,7 @@ var rites := {}            # id(int) -> rite dict
 var loots := {}            # id(int) -> loot dict
 var events := {}           # id(int) -> event dict
 var after_stories := {}    # id(int/card id) -> AfterStoryNode dict
+var quests := {}           # id(int) -> QuestNode dict
 # Runtime-only Datapool.over_ids HashSet<string>. This is distinct from
 # Global.overID HashSet<int>, which unlocks gallery CG across runs.
 var over_ids := {}
@@ -40,6 +41,7 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_dir(content_dir + "/event", events)
 	_load_dir(content_dir + "/after_story", after_stories)
 	_load_dir(content_dir + "/loot", loots)
+	_load_map(content_dir + "/quest.json", quests)
 	_load_init(content_dir + "/init/1.json")
 
 
@@ -81,6 +83,18 @@ func _load_cards(path: String) -> void:
 		var id := int(cd.get("id", key.to_int()))
 		cards[id] = cd
 		cards_by_str[str(id)] = cd
+
+
+func _load_map(path: String, dest: Dictionary) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (parsed is Dictionary):
+		return
+	for key in parsed:
+		var node: Dictionary = parsed[key]
+		var id := int(node.get("id", str(key).to_int()))
+		dest[id] = node
 
 
 func _load_dir(dir_path: String, dest: Dictionary) -> void:
@@ -140,6 +154,10 @@ func get_after_story(id: int) -> Dictionary:
 	# [SRC: dump.cs Datapool.after_story @0x70 / AfterStoryNode fields
 	# @ dump.cs:389342] The source dictionary is keyed by the character card id.
 	return after_stories.get(id, {})
+
+
+func get_quest(id: int) -> Dictionary:
+	return quests.get(id, {})
 
 
 ## [SRC: Datapool.c @ ClearOverIds/SetOverId/HasOverId
