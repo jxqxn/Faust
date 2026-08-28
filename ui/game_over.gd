@@ -240,6 +240,7 @@ func _build_story_step() -> void:
 	_surface.queue_free()
 	_story_controller = Step2StoryViewScript.new()
 	_story_controller.setup(_entry, _state, _db, _over_data, _story_text())
+	_story_controller.jump_requested.connect(do_next)
 	_surface = _story_controller
 	add_child(_surface)
 

@@ -5,11 +5,16 @@
 class_name OverNewStep2StoryControllerView
 extends Control
 
+signal jump_requested()
+
 const AfterStoryItemViewScript = preload("res://ui/over_new_after_story_item.gd")
 const DESIGN_SPACE := Vector2(3840, 2160)
 const STORY_VIEW_RECT := Rect2(2640, 200, 1050, 1760)
 const AFTER_STORY_RECT := Rect2(2790, 200, 1000, 1860)
+const STORY_JUMP_RECT := Rect2(3136, 1990, 44, 51)
+const ZOOM_RECT := Rect2(3547, 60, 93, 93)
 const ITEM_WIDTH := 1000.0
+const PLAY_SPEED := 20.0
 const ZOOM_TIME := 0.1
 const ZOOM_SWITCH := 0.2
 const BG_WIDTH_RANGE := Vector2(1707, 4800)
@@ -22,8 +27,10 @@ var _state
 var _db
 var _over_data: Dictionary = {}
 var _story_view: Control
+var _story_scroll: ScrollContainer
 var _story_text: RichTextLabel
 var _story_blocker: Control
+var _story_jump: Button
 var _after_story: Control
 var _after_viewport: Control
 var _after_content: Control
@@ -38,6 +45,8 @@ var after_story_view_width := ITEM_WIDTH
 var _zoom_range := 0.0
 var _zoomed := false
 var _zoom_tween: Tween
+var play_story := false
+var current_visible_character := 0.0
 
 
 func setup(entry: Dictionary, state, db, over_data: Dictionary, story_text: String) -> void:
@@ -54,6 +63,24 @@ func _ready() -> void:
 	_build_surface()
 	_init_after_story_items()
 	show_story()
+	start_story()
+
+
+func _process(delta: float) -> void:
+	# [SRC: OverNewStep2StoryController.Update 0x57bf40] accumulates the
+	# serialized PlaySpeed (20) in floating point, truncates it for TMP's
+	# maxVisibleCharacters, grows the preferred text height and follows bottom.
+	if not play_story or _story_text == null:
+		return
+	var total := _story_text.get_total_character_count()
+	if current_visible_character < total:
+		current_visible_character += delta * PLAY_SPEED
+		var visible_count := mini(int(current_visible_character), total)
+		_story_text.visible_characters = visible_count
+		_update_story_preferred_height(visible_count)
+		_follow_story_bottom.call_deferred()
+	else:
+		stop_story()
 
 
 func _build_surface() -> void:
@@ -71,15 +98,15 @@ func _build_surface() -> void:
 	_story_view.position = STORY_VIEW_RECT.position
 	_story_view.size = STORY_VIEW_RECT.size
 	add_child(_story_view)
-	var scroll := ScrollContainer.new()
-	scroll.name = "Viewport"
-	scroll.size = STORY_VIEW_RECT.size
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_story_view.add_child(scroll)
+	_story_scroll = ScrollContainer.new()
+	_story_scroll.name = "Viewport"
+	_story_scroll.size = STORY_VIEW_RECT.size
+	_story_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_story_view.add_child(_story_scroll)
 	var content_root := VBoxContainer.new()
 	content_root.name = "Content"
 	content_root.custom_minimum_size = Vector2(1033, 520)
-	scroll.add_child(content_root)
+	_story_scroll.add_child(content_root)
 	var front := Control.new()
 	front.name = "Front Spacer"
 	front.custom_minimum_size = Vector2(893, 300)
@@ -107,7 +134,12 @@ func _build_surface() -> void:
 	_story_blocker.name = "Story View Blocker"
 	_story_blocker.position = Vector2(2790, 200)
 	_story_blocker.size = Vector2(1000, 1760)
+	_story_blocker.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_story_blocker)
+	_story_jump = _pager_button("Jump", STORY_JUMP_RECT, "jump.png")
+	_story_jump.visible = false
+	_story_jump.pressed.connect(on_jump)
+	add_child(_story_jump)
 	_build_after_story_surface()
 
 
@@ -119,7 +151,7 @@ func _build_after_story_surface() -> void:
 	add_child(_after_story)
 	_after_viewport = Control.new()
 	_after_viewport.name = "Viewport"
-	_after_viewport.position = Vector2(0, 50)
+	_after_viewport.position = Vector2.ZERO
 	_after_viewport.size = Vector2(1000, 1760)
 	_after_viewport.clip_contents = true
 	_after_story.add_child(_after_viewport)
@@ -129,18 +161,19 @@ func _build_after_story_surface() -> void:
 	_after_viewport.add_child(_after_content)
 	_ops = Control.new()
 	_ops.name = "Op Contents"
-	_ops.position = Vector2(0, 1660)
+	_ops.position = Vector2(0, 1760)
 	_ops.size = Vector2(1000, 200)
 	_after_story.add_child(_ops)
-	_prev = _pager_button("Prev", Rect2(216, 31, 168, 156), "page_left_0.png")
+	_prev = _pager_button("Prev", Rect2(216, 13, 168, 156), "page_left_0.png")
 	_prev.pressed.connect(on_prev)
 	_ops.add_child(_prev)
-	_next = _pager_button("Next", Rect2(616, 31, 168, 156), "page_right.png")
+	_next = _pager_button("Next", Rect2(616, 13, 168, 156), "page_right.png")
 	_next.pressed.connect(on_next)
 	_ops.add_child(_next)
-	_confirm = _pager_button("Confirm", Rect2(936, 139, 44, 51), "jump.png")
+	_confirm = _pager_button("Confirm", Rect2(976, 110, 44, 51), "jump.png")
+	_confirm.pressed.connect(on_jump)
 	_ops.add_child(_confirm)
-	var zoom := _pager_button("Zoom", Rect2(3647, 2007, 93, 93), "expand.png")
+	var zoom := _pager_button("Zoom", ZOOM_RECT, "expand.png")
 	zoom.pressed.connect(toggle_zoom)
 	add_child(zoom)
 
@@ -295,6 +328,8 @@ func show_story() -> void:
 	_story_view.visible = true
 	_story_blocker.visible = true
 	_after_story.visible = false
+	if _story_jump != null:
+		_story_jump.visible = not play_story
 
 
 func show_after_story() -> void:
@@ -303,6 +338,67 @@ func show_after_story() -> void:
 	_after_story.visible = true
 	if not _items.is_empty():
 		_items[after_story_item_index].bind()
+
+
+func start_story() -> void:
+	# [SRC: OverNewController.StartStory 0x57a4a0] the animation callback turns
+	# PlayStory on. Init already set TMP maxVisibleCharacters=0.
+	current_visible_character = 0.0
+	play_story = true
+	_story_text.fit_content = false
+	_story_text.custom_minimum_size.y = 0
+	_story_text.visible_characters = 0
+	_story_blocker.visible = true
+	_story_jump.visible = false
+
+
+func stop_story() -> bool:
+	# [SRC: OverNewStep2StoryController.StopStory 0x57bd70] returns false when
+	# already stopped; otherwise reveals all characters, returns the story scroll
+	# to its top, removes the blocker and activates AfterStoryConfirm (Jump).
+	if not play_story:
+		return false
+	play_story = false
+	current_visible_character = float(_story_text.get_total_character_count())
+	_story_text.visible_characters = -1
+	_story_text.custom_minimum_size.y = 0
+	_story_text.fit_content = true
+	_story_blocker.visible = false
+	_story_jump.visible = true
+	_story_scroll.scroll_vertical = 0
+	return true
+
+
+func on_jump() -> void:
+	# [SRC: OverNewStep2StoryController.OnJump 0x57b810] first activation only
+	# completes the typewriter; a later activation invokes OverNewController.DoNext.
+	if not stop_story():
+		jump_requested.emit()
+
+
+func _gui_input(event: InputEvent) -> void:
+	# [SRC: OnPointerClick/OnSubmit 0x57bac0] background activation calls only
+	# StopStory. Progression remains on the explicit Jump/Confirm control.
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		stop_story()
+		accept_event()
+
+
+func _follow_story_bottom() -> void:
+	if play_story and _story_scroll != null:
+		_story_scroll.scroll_vertical = int(_story_scroll.get_v_scroll_bar().max_value)
+
+
+func _update_story_preferred_height(visible_count: int) -> void:
+	# TMP.GetRenderedValues(true) in Update measures only the currently visible
+	# glyphs. RichTextLabel otherwise reports the full hidden document height,
+	# which would scroll into blank unrevealed pages, so measure the same prefix.
+	var prefix := _story_text.text.substr(0, visible_count)
+	var font := _story_text.get_theme_font("normal_font")
+	var font_size := _story_text.get_theme_font_size("normal_font_size")
+	_story_text.custom_minimum_size.y = font.get_multiline_string_size(
+		prefix, HORIZONTAL_ALIGNMENT_LEFT, 893.0, font_size
+	).y
 
 
 func has_after_story_items() -> bool:
@@ -365,7 +461,7 @@ func _apply_zoom_range(value: float) -> void:
 	_ops.size.x = after_width
 	_prev.position.x = after_width * 0.5 - 284.0
 	_next.position.x = after_width * 0.5 + 116.0
-	_confirm.position.x = after_width - 64.0
+	_confirm.position.x = after_width - 24.0
 	after_story_view_width = after_width
 	_after_content.position.x = -after_story_item_index * after_width
 	var expanded := _zoom_range >= ZOOM_SWITCH

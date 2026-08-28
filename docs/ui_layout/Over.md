@@ -15,8 +15,12 @@ created. Historical records with `player_data == null` replay the exact
 The previous generated table contained only Step1 because it was captured
 before the complete AssetRipper scan finished. This table was regenerated from
 the same read-only `Over.prefab` and now includes Step2, Step2-Story, Step3 and
-Blocker. The clone maps the controller and item classes 1:1; story typewriter
-timing and zoom tween interpolation remain visual gaps.
+Blocker. The clone maps the controller and item classes 1:1. Story playback now
+uses `PlaySpeed=20`, `CurrentVisibleCharacter += deltaTime * PlaySpeed`, TMP
+integer truncation and `StopStory`'s first-activation reveal boundary; zoom uses
+the source 0.1-second width interpolation and 0.2 layout-switch threshold.
+Runtime evidence: `story_typewriter_screenshot.png` captures an original
+`over.json` story while the 20-character/second reveal is still in progress.
 
 ## Nodes
 

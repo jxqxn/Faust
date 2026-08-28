@@ -284,6 +284,50 @@ func test_after_story_zoom_replays_source_width_ranges_without_moving_root_canva
 	assert_eq(Rect2(first_item.get_node("Icon").position, first_item.get_node("Icon").size), Rect2(0, 0, 1000, 1028), "collapsed layout restores the prefab VerticalLayoutGroup geometry")
 
 
+func test_story_typewriter_replays_source_speed_stop_and_jump_boundary() -> void:
+	var controller := OverNewStep2StoryControllerView.new()
+	controller.setup({"name": "测试"}, GameState.new(), db, {}, "甲乙丙丁戊")
+	var stage := Control.new()
+	stage.size = Vector2(3840, 2160)
+	add_child_autofree(stage)
+	stage.add_child(controller)
+	controller.set_process(false)
+	controller.start_story()
+	watch_signals(controller)
+
+	var story := controller.get_node("Story View/Viewport/Content/Story") as RichTextLabel
+	var blocker := controller.get_node("Story View Blocker") as Control
+	var jump := controller.get_node("Jump") as Button
+	var zoom := controller.get_node("Zoom") as Button
+	var after_viewport := controller.get_node("After Story/Viewport") as Control
+	var ops := controller.get_node("After Story/Op Contents") as Control
+	var prev := controller.get_node("After Story/Op Contents/Prev") as Button
+	var confirm := controller.get_node("After Story/Op Contents/Confirm") as Button
+	assert_eq(Rect2(jump.position, jump.size), Rect2(3136, 1990, 44, 51), "Jump resolves its source bottom-right anchors and pivot")
+	assert_eq(Rect2(zoom.position, zoom.size), Rect2(3547, 60, 93, 93), "Zoom resolves its source top-right anchors and pivot")
+	assert_eq(Rect2(after_viewport.position, after_viewport.size), Rect2(0, 0, 1000, 1760), "After Story viewport replays the stretched source rect")
+	assert_eq(Rect2(ops.position, ops.size), Rect2(0, 1760, 1000, 200), "Op Contents replays its bottom anchored source rect")
+	assert_eq(Rect2(prev.position, prev.size), Rect2(216, 13, 168, 156), "Prev replays the y-flipped Unity rect")
+	assert_eq(Rect2(confirm.position, confirm.size), Rect2(976, 110, 44, 51), "Confirm replays the right anchored Unity rect")
+	assert_true(controller.play_story)
+	assert_true(blocker.visible)
+	assert_false(jump.visible, "AfterStoryConfirm starts inactive in Over.prefab")
+
+	controller._process(0.24)
+	assert_eq(story.visible_characters, 4, "Update truncates CurrentVisibleCharacter after adding deltaTime * PlaySpeed(20)")
+	assert_gt(story.custom_minimum_size.y, 0.0, "GetRenderedValues grows preferred height from the visible prefix")
+	assert_false(story.fit_content, "typing height must not reserve the hidden full document")
+	controller.on_jump()
+	assert_false(controller.play_story)
+	assert_eq(story.visible_characters, -1, "the first OnJump reveals all TMP characters")
+	assert_true(story.fit_content, "StopStory restores the full preferred text height")
+	assert_false(blocker.visible)
+	assert_true(jump.visible)
+	assert_signal_emit_count(controller, "jump_requested", 0, "the first OnJump must not advance OverNewController")
+	controller.on_jump()
+	assert_signal_emit_count(controller, "jump_requested", 1, "a second OnJump invokes the parent DoNext callback")
+
+
 func _find_node_by_name(node: Node, target: String) -> Node:
 	if node.name == target:
 		return node
