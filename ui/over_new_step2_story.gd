@@ -47,6 +47,8 @@ var _zoomed := false
 var _zoom_tween: Tween
 var play_story := false
 var current_visible_character := 0.0
+var _after_story_control_enabled := false
+var _left_stick_direction := 0
 
 
 func setup(entry: Dictionary, state, db, over_data: Dictionary, story_text: String) -> void:
@@ -324,6 +326,8 @@ func _set_over_id(key: String) -> void:
 
 
 func show_story() -> void:
+	_after_story_control_enabled = false
+	_left_stick_direction = 0
 	_story_view.visible = true
 	_story_blocker.visible = true
 	_after_story.visible = false
@@ -332,11 +336,17 @@ func show_story() -> void:
 
 
 func show_after_story() -> void:
+	# [SRC: OverNewController.OnAfterStoryShowed 0x57a210 ->
+	# EnableAfterStoryControl(true) 0x57aaf0] binds the two dedicated page
+	# actions and selects AfterStoryConfirm.
+	_after_story_control_enabled = true
 	_story_view.visible = false
 	_story_blocker.visible = false
 	_after_story.visible = true
 	if not _items.is_empty():
 		_items[after_story_item_index].bind()
+	if _confirm != null:
+		_confirm.grab_focus()
 
 
 func start_story() -> void:
@@ -381,6 +391,33 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		stop_story()
 		accept_event()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	# [SRC: InputActions.asset UI/AfterStoryPrev + UI/AfterStoryNext]
+	# These dedicated actions are gamepad-only: d-pad and left-stick left/right.
+	# Keyboard arrows belong to the generic UI navigation map, not this direct
+	# page callback, so do not broaden the original bindings here.
+	if not _after_story_control_enabled:
+		return
+	var direction := 0
+	if event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_DPAD_LEFT:
+			direction = -1
+		elif event.button_index == JOY_BUTTON_DPAD_RIGHT:
+			direction = 1
+	elif event is InputEventJoypadMotion and event.axis == JOY_AXIS_LEFT_X:
+		var next_direction := -1 if event.axis_value <= -0.5 else (1 if event.axis_value >= 0.5 else 0)
+		if next_direction != 0 and next_direction != _left_stick_direction:
+			direction = next_direction
+		_left_stick_direction = next_direction
+	if direction < 0:
+		on_prev()
+	elif direction > 0:
+		on_next()
+	else:
+		return
+	get_viewport().set_input_as_handled()
 
 
 func _follow_story_bottom() -> void:

@@ -36,6 +36,13 @@ the runtime `pic` tag through `Datapool.GetHeadSprite` (0x411ea0): `id_pic`,
 `id_0pic`, base `id`, then the atlas default. Live playback instead applies
 `<Init>b__5_0` (0x588d80): `type==char && adherent && !lost`.
 
+Input follows the exported `InputActions.asset`, not clone-defined shortcuts.
+`UI/Submit` is Space, Enter, or gamepad buttonSouth and follows the currently
+selected source target across Over, story Confirm, AfterStoryConfirm, and
+MainMenuButton. `EnableAfterStoryControl` (0x57aaf0) alone activates the direct
+`UI/AfterStoryPrev/Next` callbacks: gamepad d-pad or left-stick left/right.
+Keyboard arrows remain ordinary UI navigation and do not call the page methods.
+
 ## Nodes
 
 | path | anchors | pos | size | pivot | scale | rotZ | extras |

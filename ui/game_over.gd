@@ -77,6 +77,41 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	# [SRC: InputActions.asset UI/Submit] Space, Enter and gamepad buttonSouth
+	# feed EventSystem submit. The selected target changes with the source stage:
+	# Over itself -> DoNext, story panel -> StopStory, AfterStoryConfirm ->
+	# OnJump, and MainMenuButton -> OnMain.
+	if not _is_source_submit(event):
+		return
+	match _stage:
+		Stage.SHOW_OVER, Stage.SHOW_CG:
+			do_next()
+		Stage.SHOW_STORY:
+			if _story_controller != null and is_instance_valid(_story_controller):
+				# During playback the panel itself receives submit and stops the
+				# typewriter. StopStory then selects its ConfirmButton, whose next
+				# submit invokes OnJump.
+				if _story_controller.play_story:
+					_story_controller.stop_story()
+				else:
+					_story_controller.on_jump()
+		Stage.SHOW_AFTER_STORY:
+			if _story_controller != null and is_instance_valid(_story_controller):
+				_story_controller.on_jump()
+		Stage.SHOW_RESULT:
+			restart.emit()
+	get_viewport().set_input_as_handled()
+
+
+func _is_source_submit(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		return event.pressed and not event.echo and event.keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]
+	if event is InputEventJoypadButton:
+		return event.pressed and event.button_index == JOY_BUTTON_A
+	return false
+
+
 func do_next() -> void:
 	# Exact branch order from OverNewController.DoNext. Record playback closes
 	# after its last story stage; only a live ending reaches SHOW_RESULT.

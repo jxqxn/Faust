@@ -396,6 +396,90 @@ func test_step2_live_heads_filter_source_adherent_characters_and_lost_state() ->
 	assert_eq(head.texture.get_image().get_data(), atlas.frame("2000006.png").get_image().get_data())
 
 
+func test_over_submit_replays_source_stage_selection_chain() -> void:
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup_record(GameState.new(), db, {
+		"id": 102,
+		"player_data": null,
+		"char_cards": [],
+		"after_storys": [],
+	})
+	watch_signals(over)
+	add_child_autofree(over)
+	await wait_process_frames(2)
+
+	var enter := InputEventKey.new()
+	enter.pressed = true
+	enter.keycode = KEY_ENTER
+	over._unhandled_input(enter)
+	assert_not_null(over.get_node_or_null("Step2/CG"), "UI/Submit Enter advances the selected Over controller")
+
+	var south := InputEventJoypadButton.new()
+	south.pressed = true
+	south.button_index = JOY_BUTTON_A
+	over._unhandled_input(south)
+	var story := over.get_node_or_null("Step2-Story") as OverNewStep2StoryControllerView
+	assert_not_null(story, "gamepad buttonSouth follows the same source Submit action")
+	if story == null:
+		return
+	story.start_story()
+	var space := InputEventKey.new()
+	space.pressed = true
+	space.keycode = KEY_SPACE
+	over._unhandled_input(space)
+	assert_false(story.play_story, "the first story Submit targets StopStory")
+	assert_signal_emit_count(over, "closed", 0, "revealing the story does not advance the record")
+	over._unhandled_input(enter)
+	assert_signal_emit_count(over, "closed", 1, "StopStory selects ConfirmButton; its next Submit invokes OnJump")
+
+
+func test_after_story_gamepad_actions_replay_source_direct_bindings() -> void:
+	var controller := OverNewStep2StoryControllerView.new()
+	controller.setup({}, GameState.new(), db, {
+		"player_data": null,
+		"after_storys": [{
+			"card_id": 2000001,
+			"pic": "cards/2000001",
+			"prior": "",
+			"extra": ["2000001_extra_1", "2000001_extra_12"],
+		}],
+	}, "")
+	add_child_autofree(controller)
+	await wait_process_frames(2)
+	controller.show_after_story()
+
+	var right_key := InputEventKey.new()
+	right_key.pressed = true
+	right_key.keycode = KEY_RIGHT
+	controller._unhandled_input(right_key)
+	assert_eq(controller.after_story_item_index, 0, "keyboard arrows are generic navigation, not the direct AfterStory action")
+
+	var dpad_right := InputEventJoypadButton.new()
+	dpad_right.pressed = true
+	dpad_right.button_index = JOY_BUTTON_DPAD_RIGHT
+	controller._unhandled_input(dpad_right)
+	assert_eq(controller.after_story_item_index, 1, "UI/AfterStoryNext binds gamepad d-pad right")
+	var dpad_left := InputEventJoypadButton.new()
+	dpad_left.pressed = true
+	dpad_left.button_index = JOY_BUTTON_DPAD_LEFT
+	controller._unhandled_input(dpad_left)
+	assert_eq(controller.after_story_item_index, 0, "UI/AfterStoryPrev binds gamepad d-pad left")
+
+	var stick := InputEventJoypadMotion.new()
+	stick.axis = JOY_AXIS_LEFT_X
+	stick.axis_value = 0.8
+	controller._unhandled_input(stick)
+	assert_eq(controller.after_story_item_index, 1, "left-stick right crosses the source action threshold once")
+	stick.axis_value = 0.9
+	controller._unhandled_input(stick)
+	assert_eq(controller.after_story_item_index, 1, "a held stick does not repeatedly perform the button action")
+	stick.axis_value = 0.0
+	controller._unhandled_input(stick)
+	stick.axis_value = -0.8
+	controller._unhandled_input(stick)
+	assert_eq(controller.after_story_item_index, 0, "neutral re-arms the left-stick action")
+
+
 func _find_node_by_name(node: Node, target: String) -> Node:
 	if node.name == target:
 		return node
