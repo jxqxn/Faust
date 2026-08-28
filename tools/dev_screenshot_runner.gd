@@ -4,7 +4,7 @@ extends Control
 ## the normal project startup path (window stretch settings included) applies,
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
-##   [--gallery-card-info] [--gallery-cg] [--gallery-over]
+##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--after-story]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -68,6 +68,28 @@ func _ready() -> void:
 					over_view.call("setup", shot_store, GlobalState.new())
 					over_view.call("refresh")
 				gallery.call("_show_mode", "Over")
+	if args.has("--after-story"):
+		await get_tree().create_timer(0.5).timeout
+		if main is CanvasItem:
+			(main as CanvasItem).visible = false
+		var shot_over = preload("res://ui/game_over.gd").new()
+		shot_over.setup_record(GameState.new(), main.get("db"), {
+			"id": 273,
+			"player_data": null,
+			"char_cards": [],
+			"after_storys": [{
+				"card_id": 2000001,
+				"pic": "cards/2000001",
+				"prior": "",
+				"extra": ["2000001_extra_12", "2000001_extra_1"],
+			}],
+		})
+		add_child(shot_over)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		shot_over.do_next()
+		shot_over.do_next()
+		shot_over.do_next()
 	var auto_start := args.has("--new-game")
 	if auto_start:
 		await get_tree().create_timer(1.5).timeout

@@ -432,6 +432,7 @@ func test_game_over_replays_source_stages_and_geometry():
 func test_game_over_text_extra_controls_story_and_after_story_stages():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(714))
+	state.local_counters[7000490] = 1
 	state.over_reason = 273
 	var stage := _stage()
 	var over = preload("res://ui/game_over.gd").new()
@@ -440,12 +441,16 @@ func test_game_over_text_extra_controls_story_and_after_story_stages():
 	await wait_process_frames(2)
 	over.do_next()
 	over.do_next()
-	var story := over.get_node_or_null("Step2-Story/StoryText") as RichTextLabel
+	var story := over.get_node_or_null("Step2-Story/Story View/Viewport/Content/Story") as RichTextLabel
 	assert_not_null(story, "OverNewController.Init derives hasStory from text_extra.Length")
 	if story != null:
 		assert_true(story.text.contains("吾为神王"))
 	over.do_next()
-	assert_not_null(over.get_node_or_null("After Story/AfterStoryRecords"), "open_after_story gates the stage after Story")
+	var story_controller := over.get_node_or_null("Step2-Story") as OverNewStep2StoryControllerView
+	assert_not_null(story_controller)
+	if story_controller != null:
+		assert_true(story_controller.has_after_story_items(), "the source config creates concrete AfterStoryItems")
+		assert_true((story_controller.get_node("After Story") as Control).visible)
 	over.do_next()
 	assert_not_null(over.get_node_or_null("Step3/MainMenuButton"), "live endings alone continue to result")
 

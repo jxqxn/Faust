@@ -21,6 +21,7 @@ var cards_by_str := {}     # id(str) -> card dict (config uses string keys)
 var rites := {}            # id(int) -> rite dict
 var loots := {}            # id(int) -> loot dict
 var events := {}           # id(int) -> event dict
+var after_stories := {}    # id(int/card id) -> AfterStoryNode dict
 var tags_by_code := {}     # code -> tag dict
 var tags_by_id := {}       # id(int) -> tag dict
 var tag_name_to_code := {} # name -> code
@@ -34,6 +35,7 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_cards(content_dir + "/cards.json")
 	_load_dir(content_dir + "/rite", rites)
 	_load_dir(content_dir + "/event", events)
+	_load_dir(content_dir + "/after_story", after_stories)
 	_load_dir(content_dir + "/loot", loots)
 	_load_init(content_dir + "/init/1.json")
 
@@ -129,6 +131,12 @@ func get_loot(id: int) -> Dictionary:
 
 func get_event(id: int) -> Dictionary:
 	return events.get(id, {})
+
+
+func get_after_story(id: int) -> Dictionary:
+	# [SRC: dump.cs Datapool.after_story @0x70 / AfterStoryNode fields
+	# @ dump.cs:389342] The source dictionary is keyed by the character card id.
+	return after_stories.get(id, {})
 
 
 func get_difficulty(index: int) -> Dictionary:

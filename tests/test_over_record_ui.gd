@@ -1,6 +1,7 @@
 extends GutTest
 
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
+const RNG = preload("res://core/rng.gd")
 const TEST_ROOT := "user://test_over_record_ui"
 const CORPUS_AUTO_SAVE := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/save_samples/auto_save.json"
 
@@ -141,13 +142,64 @@ func test_memory_click_loads_original_player_artifact_and_record_flow_closes_to_
 	over.do_next()
 	assert_not_null(over.get_node_or_null("Step2/CG"))
 	over.do_next()
-	assert_not_null(over.get_node_or_null("Step2-Story/StoryText"), "text_extra, not a clone story key, gates the story stage")
+	assert_not_null(over.get_node_or_null("Step2-Story/Story View/Viewport/Content/Story"), "text_extra, not a clone story key, gates the story stage")
 	over.do_next()
-	assert_not_null(over.get_node_or_null("After Story/AfterStoryRecords"))
+	var story_controller := over.get_node_or_null("Step2-Story") as OverNewStep2StoryControllerView
+	assert_not_null(story_controller)
+	if story_controller != null and story_controller.has_after_story_items():
+		assert_true((story_controller.get_node("After Story") as Control).visible)
 	over.do_next()
 	await wait_process_frames(2)
 	assert_false(host.visible, "record Hide returns to GalleryPanelNew instead of showing Step3")
 	assert_eq(host.get_child_count(), 0)
+
+
+func test_recorded_after_story_keys_replay_exact_source_settlements_and_sort_order() -> void:
+	var state := GameState.new()
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup_record(state, db, {
+		"id": 273,
+		"player_data": null,
+		"char_cards": [],
+		"after_storys": [{
+			"card_id": 2000001,
+			"pic": "cards/2000001",
+			"prior": "",
+			"extra": ["2000001_extra_1", "2000001_extra_12"],
+		}],
+	})
+	var stage := Control.new()
+	stage.size = Vector2(1152, 648)
+	add_child_autofree(stage)
+	stage.add_child(over)
+	await wait_process_frames(2)
+	over.do_next()
+	over.do_next()
+	var controller := over.get_node_or_null("Step2-Story") as OverNewStep2StoryControllerView
+	assert_not_null(controller)
+	if controller == null:
+		return
+	assert_eq(controller.item_count(), 2, "AfterStoryData.extra is a set of original settlement keys")
+	var content := controller.get_node("After Story/Viewport/Content") as Control
+	assert_eq(content.get_child(0).sort_index, 3, "items sort by Settlement.sort before card_id")
+	assert_eq(content.get_child(1).sort_index, 99)
+	assert_true(str(content.get_child(0).content).contains("歌谣"), "the item reads result_text directly from content/after_story")
+	over.do_next()
+	assert_true((controller.get_node("After Story") as Control).visible)
+
+
+func test_live_after_story_conditions_bind_the_matching_runtime_card() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(81))
+	var controller := OverNewStep2StoryControllerView.new()
+	controller.setup({}, state, db, {}, "")
+	var ctx: Dictionary = controller._runtime_condition_context(2000001)
+	assert_gt(int(ctx.get("card_uid", 0)), 0, "the source AfterStoryNode is evaluated around its matching total-card instance")
+	assert_eq(int(ctx.get("acting_card_id", 0)), 2000001)
+	assert_true(ConditionEval.evaluate({"self.主角": 1}, ctx), "self tag conditions read the matching runtime card")
+	assert_true(ConditionEval.evaluate({"type": "char", "rare": 3}, ctx), "type/rare conditions share the same card context")
+	assert_eq(controller._runtime_pic(2000001, db.get_after_story(2000001)), "cards/2000001", "resource arrays resolve to the active source image instead of an array string")
+	controller.free()
 
 
 func _find_node_by_name(node: Node, target: String) -> Node:

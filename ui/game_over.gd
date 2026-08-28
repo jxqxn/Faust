@@ -14,6 +14,7 @@ signal restart()
 signal closed()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
+const Step2StoryViewScript = preload("res://ui/over_new_step2_story.gd")
 
 enum Stage { SHOW_OVER, SHOW_CG, SHOW_STORY, SHOW_AFTER_STORY, SHOW_RESULT }
 
@@ -26,6 +27,7 @@ var _surface: Control
 var _is_record := false
 var _over_data: Dictionary = {}
 var _embedded_source_canvas := false
+var _story_controller: OverNewStep2StoryControllerView
 
 
 func setup(state, db) -> void:
@@ -103,6 +105,16 @@ func _finish_sequence() -> void:
 
 
 func _show_stage(next_stage: Stage) -> void:
+	if next_stage == Stage.SHOW_AFTER_STORY and _story_controller != null and is_instance_valid(_story_controller):
+		_stage = next_stage
+		_story_controller.show_after_story()
+		return
+	if next_stage == Stage.SHOW_STORY:
+		_stage = next_stage
+		if _surface != null:
+			_surface.queue_free()
+		_build_story_step()
+		return
 	_stage = next_stage
 	if _surface != null:
 		_surface.queue_free()
@@ -117,10 +129,6 @@ func _show_stage(next_stage: Stage) -> void:
 			_build_step1()
 		Stage.SHOW_CG:
 			_build_step2_cg()
-		Stage.SHOW_STORY:
-			_build_story_step()
-		Stage.SHOW_AFTER_STORY:
-			_build_after_story_step()
 		Stage.SHOW_RESULT:
 			_build_step3()
 
@@ -227,61 +235,13 @@ func _build_step3() -> void:
 
 
 func _build_story_step() -> void:
-	# [SRC: OverNewStep2StoryController.Init 0x57b740 and its async body]
-	# consumes OverNode.text followed by matching text_extra rows. It does not
-	# read a synthetic `story` property.
-	var mask := ColorRect.new()
-	mask.name = "StoryViewBlocker"
-	mask.color = Color(0, 0, 0, 0.94)
-	mask.size = DESIGN_SPACE
-	_surface.add_child(mask)
-	var title := Label.new()
-	title.name = "StoryTitle"
-	title.text = str(_entry.get("name", ""))
-	title.position = Vector2(720, 350)
-	title.size = Vector2(2400, 120)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 60)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	_surface.add_child(title)
-	var story := RichTextLabel.new()
-	story.name = "StoryText"
-	story.text = _story_text()
-	story.position = Vector2(760, 560)
-	story.size = Vector2(2320, 1100)
-	story.fit_content = false
-	story.add_theme_font_size_override("normal_font_size", 42)
-	_surface.add_child(story)
-
-
-func _build_after_story_step() -> void:
-	# The record artifact owns `after_storys`; render that source payload rather
-	# than inventing a clone-side ending table. Full AfterStoryItem controls stay
-	# separately tracked in METHOD_MAP.
-	var mask := ColorRect.new()
-	mask.name = "AfterStoryView"
-	mask.color = Color(0, 0, 0, 0.94)
-	mask.size = DESIGN_SPACE
-	_surface.add_child(mask)
-	var title := Label.new()
-	title.name = "AfterStoryTitle"
-	title.text = str(_entry.get("name", ""))
-	title.position = Vector2(720, 350)
-	title.size = Vector2(2400, 120)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 60)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	_surface.add_child(title)
-	var rows := Label.new()
-	rows.name = "AfterStoryRecords"
-	rows.text = _after_story_text()
-	rows.position = Vector2(760, 560)
-	rows.size = Vector2(2320, 1100)
-	rows.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rows.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	rows.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	rows.add_theme_font_size_override("font_size", 42)
-	_surface.add_child(rows)
+	# Keep the original class boundary instead of embedding a clone-only story
+	# panel in OverNewController.
+	_surface.queue_free()
+	_story_controller = Step2StoryViewScript.new()
+	_story_controller.setup(_entry, _state, _db, _over_data, _story_text())
+	_surface = _story_controller
+	add_child(_surface)
 
 
 func _load_endings() -> void:
@@ -291,7 +251,10 @@ func _load_endings() -> void:
 
 
 func _ending_entry() -> Dictionary:
-	var key := str(int(_state.over_reason)) if _state != null else "0"
+	# SetRecord is followed by Init(overData.id); record identity is not read
+	# back from the temporarily loaded Player.
+	var ending_id := int(_over_data.get("id", 1)) if _is_record else (int(_state.over_reason) if _state != null else 0)
+	var key := str(ending_id)
 	var entry = _endings.get(key, {})
 	return entry if entry is Dictionary else {}
 
@@ -311,7 +274,10 @@ func _has_story() -> bool:
 
 
 func _has_after_story() -> bool:
-	return int(_entry.get("open_after_story", 0)) != 0
+	# [SRC: OverNewController.<DoInit>b__18_1 0x57a510] Init starts with the
+	# config flag, then the story controller callback replaces it with whether
+	# any actual AfterStoryItem was created.
+	return int(_entry.get("open_after_story", 0)) != 0 and _story_controller != null and _story_controller.has_after_story_items()
 
 
 func _story_text() -> String:
@@ -336,23 +302,6 @@ func _story_text() -> String:
 		if not row_text.is_empty():
 			lines.append(row_text)
 	return "\n\n".join(lines.filter(func(line: String): return not line.is_empty()))
-
-
-func _after_story_text() -> String:
-	var rows = _over_data.get("after_storys", []) if _is_record else []
-	if not (rows is Array) or rows.is_empty():
-		return ""
-	var lines: Array[String] = []
-	for raw in rows:
-		if raw is Dictionary:
-			var row := raw as Dictionary
-			for key in ["title", "name", "text", "content"]:
-				var value := str(row.get(key, ""))
-				if not value.is_empty():
-					lines.append(value)
-		elif raw != null:
-			lines.append(str(raw))
-	return "\n\n".join(lines)
 
 
 func _stage_name(value: Stage) -> String:
