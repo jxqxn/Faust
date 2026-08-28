@@ -233,6 +233,57 @@ func test_live_after_story_writes_transient_source_keys_but_record_replay_is_rea
 	controller.free()
 
 
+func test_after_story_zoom_replays_source_width_ranges_without_moving_root_canvas() -> void:
+	var over = preload("res://ui/game_over.gd").new()
+	over.setup_record(GameState.new(), db, {
+		"id": 273,
+		"player_data": null,
+		"char_cards": [],
+		"after_storys": [{
+			"card_id": 2000001,
+			"pic": "cards/2000001",
+			"prior": "",
+			"extra": ["2000001_extra_1", "2000001_extra_12"],
+		}],
+	})
+	var stage := Control.new()
+	stage.size = Vector2(3840, 2160)
+	add_child_autofree(stage)
+	stage.add_child(over)
+	await wait_process_frames(2)
+	over.do_next()
+	over.do_next()
+	var controller := over.get_node("Step2-Story") as OverNewStep2StoryControllerView
+	var bg := controller.get_node("BG") as Control
+	var story := controller.get_node("Story View") as Control
+	var blocker := controller.get_node("Story View Blocker") as Control
+	var after_story := controller.get_node("After Story") as Control
+	var content := controller.get_node("After Story/Viewport/Content") as Control
+	assert_eq(controller.position, Vector2.ZERO, "source zoom never shifts the 3840x2160 root canvas")
+	assert_eq(Vector4(bg.size.x, story.size.x, blocker.size.x, after_story.size.x), Vector4(1707, 1050, 1000, 1000))
+
+	controller.toggle_zoom()
+	await get_tree().create_timer(0.15).timeout
+	assert_eq(controller.position, Vector2.ZERO, "expanded source geometry still keeps the root fixed")
+	assert_almost_eq(bg.size.x, 4800.0, 0.1, "BGWidthRange expands 1707 -> 4800")
+	assert_almost_eq(story.size.x, 3540.0, 0.1, "StoryWidthRange expands 1050 -> 3540")
+	assert_almost_eq(blocker.size.x, 3740.0, 0.1, "StoryBlockerWidthRange expands 1000 -> 3740")
+	assert_almost_eq(after_story.size.x, 3740.0, 0.1, "AfterStoryWidthRange expands 1000 -> 3740")
+	var first_item := content.get_child(0) as OverNewAfterStoryItemView
+	var icon := first_item.get_node("Icon") as Control
+	var scroll := first_item.get_node("Scroll View") as Control
+	assert_eq(Vector2(first_item.size.x, controller.after_story_view_width), Vector2(3740, 3740))
+	assert_eq(Rect2(icon.position, icon.size), Rect2(3269, 436, 471, 1028), "expanded reverse-horizontal layout places original art on the right")
+	assert_eq(Rect2(scroll.position, scroll.size), Rect2(0, 0, 3269, 1900), "expanded text scroll consumes the flexible left width")
+	controller.on_next()
+	assert_almost_eq(content.position.x, -3740.0, 0.1, "pagination step follows the zoomed AfterStoryViewWidth")
+
+	controller.toggle_zoom()
+	await get_tree().create_timer(0.15).timeout
+	assert_almost_eq(after_story.size.x, 1000.0, 0.1)
+	assert_eq(Rect2(first_item.get_node("Icon").position, first_item.get_node("Icon").size), Rect2(0, 0, 1000, 1028), "collapsed layout restores the prefab VerticalLayoutGroup geometry")
+
+
 func _find_node_by_name(node: Node, target: String) -> Node:
 	if node.name == target:
 		return node

@@ -4,7 +4,7 @@ extends Control
 ## the normal project startup path (window stretch settings included) applies,
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
-##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--after-story]
+##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--after-story] [--after-story-zoom]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -68,7 +68,7 @@ func _ready() -> void:
 					over_view.call("setup", shot_store, GlobalState.new())
 					over_view.call("refresh")
 				gallery.call("_show_mode", "Over")
-	if args.has("--after-story"):
+	if args.has("--after-story") or args.has("--after-story-zoom"):
 		await get_tree().create_timer(0.5).timeout
 		if main is CanvasItem:
 			(main as CanvasItem).visible = false
@@ -90,6 +90,11 @@ func _ready() -> void:
 		shot_over.do_next()
 		shot_over.do_next()
 		shot_over.do_next()
+		if args.has("--after-story-zoom"):
+			var story_controller := shot_over.get_node_or_null("Step2-Story")
+			if story_controller != null:
+				story_controller.call("toggle_zoom")
+				await get_tree().create_timer(0.2).timeout
 	var auto_start := args.has("--new-game")
 	if auto_start:
 		await get_tree().create_timer(1.5).timeout

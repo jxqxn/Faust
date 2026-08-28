@@ -10,6 +10,7 @@ var card_id := 0
 var sort_index := 10
 var sprite_source := ""
 var content := ""
+var _icon: TextureRect
 var _scroll: ScrollContainer
 
 
@@ -35,15 +36,15 @@ func _ready() -> void:
 func _build_surface() -> void:
 	# AfterStoryItem.prefab is a 1000x1900 VerticalLayoutGroup. Icon keeps its
 	# source aspect; Scroll View is the sole flexible-height child.
-	var icon := TextureRect.new()
-	icon.name = "Icon"
-	icon.position = Vector2.ZERO
-	icon.size = Vector2(1000, 1028)
-	icon.texture = _source_texture(sprite_source)
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(icon)
+	_icon = TextureRect.new()
+	_icon.name = "Icon"
+	_icon.position = Vector2.ZERO
+	_icon.size = Vector2(1000, 1028)
+	_icon.texture = _source_texture(sprite_source)
+	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_icon)
 	_scroll = ScrollContainer.new()
 	_scroll.name = "Scroll View"
 	_scroll.position = Vector2(0, 1028)
@@ -57,6 +58,27 @@ func _build_surface() -> void:
 	text.fit_content = true
 	text.add_theme_font_size_override("normal_font_size", 36)
 	_scroll.add_child(text)
+
+
+func set_zoom_layout(width: float, expanded: bool) -> void:
+	# [SRC: OverNewStep2StoryZoomController.UpdateSize 0x57c190] changes every
+	# item width with AfterStoryWidthRange and swaps the root VerticalLayoutGroup
+	# to a reverse HorizontalLayoutGroup when Range crosses 0.2. The prefab icon
+	# has source preferred size 471x1028; Scroll View owns flexible width/height.
+	size.x = width
+	custom_minimum_size.x = width
+	if _icon == null or _scroll == null:
+		return
+	if expanded:
+		_icon.position = Vector2(width - 471.0, 436.0)
+		_icon.size = Vector2(471, 1028)
+		_scroll.position = Vector2.ZERO
+		_scroll.size = Vector2(width - 471.0, 1900)
+	else:
+		_icon.position = Vector2.ZERO
+		_icon.size = Vector2(width, 1028)
+		_scroll.position = Vector2(0, 1028)
+		_scroll.size = Vector2(width, 872)
 
 
 func bind() -> void:

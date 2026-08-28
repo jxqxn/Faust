@@ -8,6 +8,13 @@ Runtime mapping: `ui/over_new_after_story_item.gd` corresponds to
 page's vertical scroll position. Text and art are read directly from the
 selected original `after_story` settlement and its saved/runtime `pic`.
 
+Zoom mapping: `OverNewStep2StoryZoomController.ctor/UpdateSize`
+(`0x57c8e0/0x57c190`) interpolates the parent widths from
+`1707/1050/1000/1000` to `4800/3540/3740/3740` over the controller's
+`ZoomTime=0.1`. At `Range=0.2` each item switches from the prefab's vertical
+layout to reverse-horizontal: flexible text on the left, the source-preferred
+`471x1028` illustration on the right. The root 3840x2160 canvas never moves.
+
 ## Nodes
 
 | path | anchors | pos | size | pivot | scale | rotZ | extras |

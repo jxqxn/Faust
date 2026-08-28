@@ -10,6 +10,12 @@ const DESIGN_SPACE := Vector2(3840, 2160)
 const STORY_VIEW_RECT := Rect2(2640, 200, 1050, 1760)
 const AFTER_STORY_RECT := Rect2(2790, 200, 1000, 1860)
 const ITEM_WIDTH := 1000.0
+const ZOOM_TIME := 0.1
+const ZOOM_SWITCH := 0.2
+const BG_WIDTH_RANGE := Vector2(1707, 4800)
+const STORY_WIDTH_RANGE := Vector2(1050, 3540)
+const STORY_BLOCKER_WIDTH_RANGE := Vector2(1000, 3740)
+const AFTER_STORY_WIDTH_RANGE := Vector2(1000, 3740)
 
 var _entry: Dictionary = {}
 var _state
@@ -21,10 +27,17 @@ var _story_blocker: Control
 var _after_story: Control
 var _after_viewport: Control
 var _after_content: Control
+var _bg: TextureRect
+var _ops: Control
 var _prev: Button
 var _next: Button
+var _confirm: Button
 var _items: Array[OverNewAfterStoryItemView] = []
 var after_story_item_index := 0
+var after_story_view_width := ITEM_WIDTH
+var _zoom_range := 0.0
+var _zoomed := false
+var _zoom_tween: Tween
 
 
 func setup(entry: Dictionary, state, db, over_data: Dictionary, story_text: String) -> void:
@@ -44,15 +57,15 @@ func _ready() -> void:
 
 
 func _build_surface() -> void:
-	var bg := TextureRect.new()
-	bg.name = "BG"
-	bg.position = Vector2(2133, 0)
-	bg.size = Vector2(1707, 2160)
-	bg.texture = _ui_texture("after_story_content_bg.png")
-	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	bg.stretch_mode = TextureRect.STRETCH_SCALE
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	_bg = TextureRect.new()
+	_bg.name = "BG"
+	_bg.position = Vector2(2133, 0)
+	_bg.size = Vector2(1707, 2160)
+	_bg.texture = _ui_texture("after_story_content_bg.png")
+	_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_bg.stretch_mode = TextureRect.STRETCH_SCALE
+	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bg)
 	_story_view = Control.new()
 	_story_view.name = "Story View"
 	_story_view.position = STORY_VIEW_RECT.position
@@ -114,19 +127,19 @@ func _build_after_story_surface() -> void:
 	_after_content.name = "Content"
 	_after_content.size = Vector2.ZERO
 	_after_viewport.add_child(_after_content)
-	var ops := Control.new()
-	ops.name = "Op Contents"
-	ops.position = Vector2(0, 1660)
-	ops.size = Vector2(1000, 200)
-	_after_story.add_child(ops)
+	_ops = Control.new()
+	_ops.name = "Op Contents"
+	_ops.position = Vector2(0, 1660)
+	_ops.size = Vector2(1000, 200)
+	_after_story.add_child(_ops)
 	_prev = _pager_button("Prev", Rect2(216, 31, 168, 156), "page_left_0.png")
 	_prev.pressed.connect(on_prev)
-	ops.add_child(_prev)
+	_ops.add_child(_prev)
 	_next = _pager_button("Next", Rect2(616, 31, 168, 156), "page_right.png")
 	_next.pressed.connect(on_next)
-	ops.add_child(_next)
-	var confirm := _pager_button("Confirm", Rect2(936, 139, 44, 51), "jump.png")
-	ops.add_child(confirm)
+	_ops.add_child(_next)
+	_confirm = _pager_button("Confirm", Rect2(936, 139, 44, 51), "jump.png")
+	_ops.add_child(_confirm)
 	var zoom := _pager_button("Zoom", Rect2(3647, 2007, 93, 93), "expand.png")
 	zoom.pressed.connect(toggle_zoom)
 	add_child(zoom)
@@ -305,7 +318,7 @@ func on_prev() -> void:
 		return
 	_items[after_story_item_index].unbind()
 	after_story_item_index -= 1
-	_after_content.position.x = -after_story_item_index * ITEM_WIDTH
+	_after_content.position.x = -after_story_item_index * after_story_view_width
 	_items[after_story_item_index].bind()
 	_refresh_pager()
 
@@ -315,17 +328,52 @@ func on_next() -> void:
 		return
 	_items[after_story_item_index].unbind()
 	after_story_item_index += 1
-	_after_content.position.x = -after_story_item_index * ITEM_WIDTH
+	_after_content.position.x = -after_story_item_index * after_story_view_width
 	_items[after_story_item_index].bind()
 	_refresh_pager()
 
 
 func toggle_zoom() -> void:
-	# The source tween expands/collapses the right panel. Keep the same binary
-	# control boundary; exact zoom interpolation remains a visual-only gap.
-	var expanded := bool(get_meta("zoom", false))
-	set_meta("zoom", not expanded)
-	position.x = 0 if expanded else -1707
+	# [SRC: OverNewStep2StoryController.DoZoom 0x57a970 + ctor 0x57c110]
+	# DOTween drives Range to 1/0 over 0.1s and toggles Zoom only on completion.
+	if _zoom_tween != null and _zoom_tween.is_running():
+		return
+	var target := 0.0 if _zoomed else 1.0
+	_zoom_tween = create_tween()
+	_zoom_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_zoom_tween.tween_method(_apply_zoom_range, _zoom_range, target, ZOOM_TIME)
+	_zoom_tween.finished.connect(func(): _zoomed = not _zoomed)
+
+
+func _apply_zoom_range(value: float) -> void:
+	# [SRC: OverNewStep2StoryZoomController.ctor/UpdateSize
+	# (RVA 0x57c8e0/0x57c190)] Range constants are authored source values.
+	_zoom_range = clampf(value, 0.0, 1.0)
+	var bg_width := lerpf(BG_WIDTH_RANGE.x, BG_WIDTH_RANGE.y, _zoom_range)
+	var story_width := lerpf(STORY_WIDTH_RANGE.x, STORY_WIDTH_RANGE.y, _zoom_range)
+	var blocker_width := lerpf(STORY_BLOCKER_WIDTH_RANGE.x, STORY_BLOCKER_WIDTH_RANGE.y, _zoom_range)
+	var after_width := lerpf(AFTER_STORY_WIDTH_RANGE.x, AFTER_STORY_WIDTH_RANGE.y, _zoom_range)
+	_bg.position.x = DESIGN_SPACE.x - bg_width
+	_bg.size.x = bg_width
+	_story_view.position.x = 3690.0 - story_width
+	_story_view.size.x = story_width
+	_story_blocker.position.x = 3790.0 - blocker_width
+	_story_blocker.size.x = blocker_width
+	_after_story.position.x = 3790.0 - after_width
+	_after_story.size.x = after_width
+	_after_viewport.size.x = after_width
+	_ops.size.x = after_width
+	_prev.position.x = after_width * 0.5 - 284.0
+	_next.position.x = after_width * 0.5 + 116.0
+	_confirm.position.x = after_width - 64.0
+	after_story_view_width = after_width
+	_after_content.position.x = -after_story_item_index * after_width
+	var expanded := _zoom_range >= ZOOM_SWITCH
+	for index in _items.size():
+		var item := _items[index]
+		item.position.x = index * after_width
+		item.set_zoom_layout(after_width, expanded)
+	_after_content.size.x = _items.size() * after_width
 
 
 func _refresh_pager() -> void:
