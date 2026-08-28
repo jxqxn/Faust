@@ -89,7 +89,7 @@
 
 这些权重只是首轮实验表结构，不是用户确认的产品权重。实际评分必须同时保留原始分、评分者身份、分歧和测量证据，不能只保留加权总分。
 
-机器可读记录见 [`../research/data/art-direction-exploration.json`](../research/data/art-direction-exploration.json)，未来实测逐评分者原始记录使用 [`../research/data/art-direction-scorecard.csv`](../research/data/art-direction-scorecard.csv)。CSV 当前所有行均为 `not_run`，不得填入推测分数。
+机器可读候选记录见 [`../research/data/art-direction-exploration.json`](../research/data/art-direction-exploration.json)，完整方法库见 [`../research/data/art-direction-methodology.json`](../research/data/art-direction-methodology.json)，未来实测逐评分者原始记录使用 [`../research/data/art-direction-scorecard.csv`](../research/data/art-direction-scorecard.csv)。CSV 当前所有行均为 `not_run`，不得填入推测分数。
 
 ## 5. 尚未取得的证据
 

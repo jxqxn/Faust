@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "status": "complete_methodology_intake_not_validated_result",
+  "recorded_at": "2026-08-28",
+  "provenance": {
+    "package": "indie_art_direction_codex_pack",
+    "source_files": [
+      "docs/00_EXECUTIVE_SUMMARY.md",
+      "docs/01_METHOD_FINDING_STYLE.md",
+      "docs/02_CASE_STUDIES.md",
+      "docs/04_STYLE_GRAMMAR.md",
+      "docs/05_ART_TEST_PROTOCOL.md",
+      "docs/06_PRODUCTION_BUDGET_AND_SCORECARD.md",
+      "templates/STYLE_EXPERIMENT_CARD.md",
+      "templates/DECISION_LOG.md"
+    ],
+    "interpretation": "Methods are preserved as candidate operating procedures. Case-study factual claims remain unverified source leads."
+  },
+  "authority": {
+    "type": "research_method",
+    "may_define_experiments": true,
+    "may_define_project_results": false,
+    "may_override_product_direction": false,
+    "may_override_current_visual_baseline": false
+  },
+  "style_system_model": {
+    "definition": "A style candidate is a visual production system, not a list of aesthetic tags or a single hero image.",
+    "equation_dimensions": [
+      "theme",
+      "medium",
+      "production_constraints",
+      "readability",
+      "identity",
+      "throughput"
+    ],
+    "required_questions": [
+      "What should the player feel over long-term play?",
+      "Through what material or medium does this world record itself?",
+      "Which production limits must become inputs to the style?",
+      "Which gameplay information must remain readable?",
+      "Can the project be recognized without a logo?",
+      "Can ordinary assets be produced repeatedly at measured cost?"
+    ],
+    "success_conditions": [
+      "one_sentence_rule",
+      "ordinary_assets_remain_coherent",
+      "works_in_motion",
+      "ui_belongs_to_same_world",
+      "crowds_remain_readable",
+      "low_cost_assets_do_not_look_accidental",
+      "rules_can_be_externalized",
+      "supports_gameplay_feedback",
+      "supports_large_asset_counts"
+    ]
+  },
+  "workflow": [
+    {
+      "phase": 0,
+      "name": "constraint_inventory",
+      "required_fields": [
+        "core_art_team_size",
+        "weekly_person_hours",
+        "skill_profile",
+        "weakest_capability",
+        "character_asset_target",
+        "environment_region_target",
+        "enemy_target",
+        "ui_page_target",
+        "card_target",
+        "target_resolution",
+        "camera",
+        "rendering_dimension",
+        "animation_method",
+        "outsourcing_capacity",
+        "target_platform"
+      ],
+      "exit_condition": "The hardest asset family to sustain is explicitly identified."
+    },
+    {
+      "phase": 1,
+      "name": "same_content_candidate_tests",
+      "rule": "Every candidate must solve the same content with the same constraints.",
+      "required_assets": [
+        "city_or_campus_cross_section_with_multiple_depth_or_social_zones",
+        "six_named_characters_covering_multiple_roles_and_groups",
+        "character_card",
+        "location_card",
+        "spell_or_action_card",
+        "real_game_ui",
+        "five_second_effect",
+        "thirty_second_motion_scene",
+        "ordinary_asset_at_approximately_seventy_percent_target_quality"
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "stress_tests",
+      "tests": [
+        {"id": "thumbnail", "variants": [960, 480, 240], "measures": ["subject_readability", "visual_hierarchy", "project_identity"]},
+        {"id": "grayscale", "measures": ["value_structure", "color_dependency"]},
+        {"id": "crowd", "target_count": "15_to_20", "measures": ["silhouette", "group_identity", "important_character_priority", "noise"]},
+        {"id": "ordinary_asset", "measures": ["style_tolerance_below_hero_quality"]},
+        {"id": "reuse", "variants": ["three_shops", "three_professions", "three_organizations"], "measures": ["modularity", "cheap_repetition_visibility"]},
+        {"id": "motion", "duration_seconds": 30, "measures": ["texture_flicker", "edge_stability", "background_competition", "ui_fatigue"]},
+        {"id": "store_grid", "comparison_count": 20, "measures": ["first_description", "blind_identity", "delayed_recall"]}
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "production_measurement",
+      "required_asset_timings": [
+        "ordinary_npc",
+        "key_npc",
+        "ordinary_enemy",
+        "room_module",
+        "landmark",
+        "prop",
+        "card",
+        "vfx",
+        "ui_page"
+      ],
+      "cost_formula": "estimated_total_hours = average_unit_hours * final_quantity * rework_multiplier",
+      "rework_multiplier": {"minimum_starting_hypothesis": 1.25, "early_project_range": [1.5, 2.0], "status": "provisional_not_measured"}
+    },
+    {
+      "phase": 4,
+      "name": "rule_replication",
+      "procedure": "Compress the candidate into one page and ask a person who did not participate in exploration to create one small asset.",
+      "measure": "cross_author_style_consistency",
+      "failure_interpretation": "First question whether the rules are externalizable; do not default to blaming the contributor."
+    },
+    {
+      "phase": 5,
+      "name": "vertical_slice",
+      "candidate_count_after_elimination": 2,
+      "duration_seconds": "30_to_60",
+      "required_content": ["movement", "character_exchange", "effect_or_magic", "ui_operation", "visual_rule_change", "five_or_more_npcs", "ordinary_asset", "hero_asset"],
+      "measures": ["sustainability", "concept_to_motion_consistency", "exception_hack_count"]
+    },
+    {
+      "phase": 6,
+      "name": "decision",
+      "rule": "Decide only after measured evidence is attached to raw scores and disagreements are preserved."
+    }
+  ],
+  "reference_method": {
+    "principles": [
+      "Study function from games rather than copying surfaces.",
+      "Use historical media, material aging, architecture and nature to generate visual vocabulary.",
+      "Do not let a moodboard substitute for rules.",
+      "Do not import external screenshots or protected assets into the project without an explicit licensed-asset decision."
+    ],
+    "required_annotation_fields": [
+      "source_type",
+      "what_to_learn",
+      "do_not_copy",
+      "production_implication",
+      "gameplay_implication",
+      "license_or_usage_status",
+      "verification_status"
+    ],
+    "case_study_transfer_model": [
+      "theme_or_constraint",
+      "chosen_medium_or_visual_rule",
+      "production_pipeline_consequence",
+      "gameplay_or_readability_consequence",
+      "project_specific_test"
+    ]
+  },
+  "style_grammar_method": {
+    "status": "must_be_revised_after_vertical_slice",
+    "domains": [
+      "shape",
+      "line",
+      "value",
+      "color",
+      "texture",
+      "character",
+      "anatomy_or_species",
+      "profession",
+      "architecture",
+      "ui_and_cards",
+      "vfx",
+      "animation",
+      "camera",
+      "exception_budget"
+    ],
+    "required_rule_types_per_domain": [
+      "default",
+      "allowed_variation",
+      "forbidden_pattern",
+      "readability_test",
+      "production_implication"
+    ],
+    "information_channel_separation": {
+      "species_or_race": ["anatomy", "proportion", "silhouette"],
+      "profession": ["tools", "pose", "hands", "wear"],
+      "organization": ["symbol", "frame", "small_accessory"],
+      "social_class": ["material", "maintenance", "craft_complexity"],
+      "magic_type": ["how_visual_rules_change"],
+      "individual_personality": ["small_exceptions"]
+    },
+    "texture_budget_method": "Allow one primary high-frequency texture region on screen and reduce noise elsewhere.",
+    "ordinary_character_detail_budget_method": [
+      "one_primary_silhouette_memory_point",
+      "one_professional_tool",
+      "one_organization_marker",
+      "one_personal_exception"
+    ],
+    "exception_method": {
+      "starting_hypothesis_percent": 10,
+      "rule": "Exceptions must be rare, narratively meaningful and explicitly logged.",
+      "status": "provisional"
+    }
+  },
+  "production_method": {
+    "asset_tiers": [
+      {"name": "commodity", "provisional_share": "70_to_80_percent", "goal": "stable_low_cost"},
+      {"name": "signature", "provisional_share": "15_to_25_percent", "goal": "system_or_region_identity"},
+      {"name": "hero", "provisional_share": "5_to_10_percent", "goal": "marketing_or_climax"}
+    ],
+    "required_cost_fields": [
+      "concept_hours",
+      "production_hours",
+      "implementation_hours",
+      "polish_hours",
+      "revision_count",
+      "dependency_count",
+      "unique_technology_required"
+    ],
+    "style_roi_discussion_model": {
+      "benefits": ["identity", "world_coherence", "readability", "reuse"],
+      "costs": ["hours", "revision_cost", "technical_risk"],
+      "warning": "Discussion aid only; not a financial metric."
+    },
+    "complexity_budget_example": {
+      "ordinary_npc_budget": 10,
+      "points": {
+        "unique_silhouette": 3,
+        "unique_clothing_module": 2,
+        "unique_head": 2,
+        "unique_prop": 2,
+        "unique_shader": 4,
+        "unique_animation": 5,
+        "unique_vfx": 5
+      },
+      "status": "example_not_approved_parameter"
+    },
+    "constraint_to_style_prompts": [
+      {"constraint": "few_animation_frames", "candidate_paths": ["strong_pose", "layered_puppet", "card_flip", "print_layer_shift"]},
+      {"constraint": "low_3d_detail", "candidate_paths": ["consistent_edges", "low_frequency_materials", "controlled_camera", "flattened_composition"]},
+      {"constraint": "few_environment_assets", "candidate_paths": ["modular_architecture", "replaceable_signage", "shared_landmarks", "maintenance_variants"]},
+      {"constraint": "many_characters", "candidate_paths": ["silhouette", "tool", "clothing_modules", "shared_rig"]},
+      {"constraint": "few_vfx_hours", "candidate_paths": ["shared_visual_rule_family", "avoid_unique_solution_per_spell"]},
+      {"constraint": "few_ui_hours", "candidate_paths": ["shared_layout_grid", "small_component_family"]}
+    ]
+  },
+  "scoring_method": {
+    "weights_source": "docs/research/data/art-direction-exploration.json",
+    "required_review_roles": ["art", "engineering_or_technical_art", "design", "non_project_observer"],
+    "rules": [
+      "Store raw scores and measured evidence before weighted totals.",
+      "Preserve disagreement instead of reporting only averages.",
+      "Do not create a separate beauty score; record functional reasons.",
+      "Do not score before the same-content assets exist."
+    ],
+    "provisional_entry_thresholds": {
+      "production_throughput_min": 7,
+      "readability_min": 7,
+      "identity_min": 7,
+      "world_coherence_min": 8,
+      "status": "discussion_hypothesis_not_project_gate"
+    }
+  },
+  "kill_criteria_library": [
+    "ordinary_asset_hours_exceed_baseline_without_measured_identity_gain",
+    "thumbnail_readability_fails_repeatedly",
+    "system_collapses_at_ten_or_more_characters",
+    "requires_per_asset_shader_or_postprocess_repairs",
+    "ui_cannot_share_the_world_language",
+    "praise_is_concentrated_on_one_hero_image",
+    "blind_description_is_only_another_game_name",
+    "ordinary_assets_look_like_reduced_hero_assets",
+    "each_character_requires_unique_technology",
+    "visual_detail_competes_with_gameplay_information",
+    "rules_cannot_be_explained_or_replicated"
+  ],
+  "style_experiment_record_schema": {
+    "required_fields": [
+      "experiment_id",
+      "candidate_name",
+      "hypothesis",
+      "non_art_experience_statement",
+      "material_metaphor",
+      "physical_visual_law",
+      "references_with_annotations",
+      "visual_grammar_by_domain",
+      "production_hypothesis",
+      "reuse_strategy",
+      "production_risk",
+      "readability_risk",
+      "originality_risk",
+      "exception_rule",
+      "required_test_asset_status",
+      "kill_criteria",
+      "measured_results",
+      "decision",
+      "lessons_kept_if_killed"
+    ],
+    "decision_values": ["continue", "merge_selected_rules", "kill"]
+  },
+  "decision_log_schema": {
+    "required_fields": [
+      "decision_id",
+      "date",
+      "question",
+      "context",
+      "options",
+      "evidence_screenshots",
+      "test_data",
+      "production_time",
+      "player_feedback",
+      "technical_constraints",
+      "decision",
+      "functional_reason",
+      "cost",
+      "rule_produced",
+      "revisit_trigger"
+    ],
+    "principles": [
+      "Make reversible decisions quickly.",
+      "Test irreversible or high-volume decisions first.",
+      "Do not retain a direction because of sunk cost.",
+      "Do not use one hero image as the representative sample.",
+      "Prefer real game captures over moodboards in decisions."
+    ]
+  },
+  "data_integrity_rules": [
+    "Empty or not-run measurements remain empty or explicitly not_run.",
+    "Hypotheses must not be converted to confirmed project decisions without a user decision or recorded experiment.",
+    "External case-study claims must be verified before registration as external facts.",
+    "Every score must retain reviewer role and evidence.",
+    "Every killed direction should retain transferable lessons.",
+    "Changes to approved grammar require a decision log and revisit trigger."
+  ]
+}
