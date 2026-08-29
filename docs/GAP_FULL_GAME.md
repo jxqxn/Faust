@@ -8,7 +8,7 @@
 
 ## 1. 规则引擎（DSL）
 
-- ✅ **DSL 三类全支持归零**（result 2119、condition 3988、action 2285 → 2026-08-17 扩域后 result 2134、condition 4001、action 2522，`tmp/dsl_audit`）
+- ✅ **DSL 三类全支持归零**（result 2119、condition 3988、action 2285 → 2026-08-17 扩域后 result 2134、condition 4001、action 2522；当前报告由 `tools/export_dsl_audit.gd` 按需生成到 `user://dsl_audit`）
 - ✅ **审计域扩展（2026-08-17）**：`case:opN` 子树内部键纳入扫描（hand_card_refresh 曾藏匿于此）；
   cards.json 的 `post_rite` 与 `vanish` 结算入审计（card 域）
 - ✅ **post_rite 执行链（2026-08-17）**：卡牌定义的 post_rite 在所属仪式结算后执行——
