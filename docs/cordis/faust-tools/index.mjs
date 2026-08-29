@@ -11,8 +11,8 @@ export default {
           "Use in the Faust repo for any task whose correctness depends on the original Sultan's Game: reverse-engineered mechanics, rite/event/loot generation, DSL semantics, card interactions, dice, counters, tags, scope filters, branches, gold dice, or source-backed fidelity claims. Do NOT treat wiki pages, project comments, prior summaries, or this skill as primary evidence.",
           "",
           "PATHS",
-          "- Clone workspace: C:/Users/User/Documents/GitHub/Faust",
-          "- Read-only corpus (never modify/copy): C:/Users/User/Documents/GitHub/Faust-local-source/_unpack",
+          "- Clone workspace: the Faust repo root (resolve from the current session cwd; typically Documents/GitHub/Faust)",
+          "- Read-only corpus (never modify/copy): <machine-specific>/Documents/GitHub/Faust-local-source/_unpack — the corpus only exists on the desktop machine; if it is absent on this machine, stop and say so instead of citing decompiled evidence from memory.",
           "- Decompiled code: _unpack/engine_spec/decompiled/*.c",
           "- Symbols/layouts: _unpack/il2cpp_dump/dump.cs",
           "- Original config: _unpack/data/config",
@@ -77,10 +77,11 @@ export default {
           render: (_args, value) => [{ type: 'text', text: String(value) }]
         },
         timeoutMs,
-        execute: async (_args, _exec) => {
+        execute: async (_args, exec) => {
+          const cwd = exec?.agent?.session?.header?.cwd ?? process.cwd()
           const spec = ctx.shell.resolve({
             command,
-            workdir: 'C:/Users/User/Documents/GitHub/Faust',
+            workdir: cwd,
             timeoutMs
           })
           const result = await ctx.shell.run(spec)
@@ -98,10 +99,12 @@ export default {
       120000
     )
 
+    const godotBin = process.env.FAUST_GODOT_BIN ?? 'C:/Tools/Godot/4.7-stable/Godot_v4.7-stable_win64.exe'
+
     runGate(
       'faust_audit_dsl',
       '审规则：导出 Faust DSL 覆盖审计（tools/export_dsl_audit.gd）：每个不受支持的 condition/result/action 键，含配置类型、ID、路径和位置。返回导出路径加摘要。',
-      'C:/Tools/Godot/4.7-stable/Godot_v4.7-stable_win64.exe --headless --path . --script tools/export_dsl_audit.gd',
+      '"' + godotBin + '" --headless --path . --script tools/export_dsl_audit.gd',
       120000
     )
 

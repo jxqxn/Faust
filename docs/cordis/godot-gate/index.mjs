@@ -12,7 +12,7 @@ export default {
       },
       timeoutMs: 300000,
       execute: async (_args, exec) => {
-        const cwd = exec.agent?.session?.header?.cwd ?? 'C:/Users/User/Documents/GitHub/Faust'
+        const cwd = exec.agent?.session?.header?.cwd ?? process.cwd()
         const spec = ctx.shell.resolve({
           command: 'powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_gut.ps1',
           workdir: cwd,

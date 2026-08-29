@@ -68,7 +68,7 @@ return {
       execute: async (args, exec) => {
         const shell = ctx.get('shell')
         if (shell === undefined) return 'shell 服务不可用'
-        const spec = shell.resolve({ command: '…', workdir: 'C:/Users/User/Documents/GitHub/Faust', timeoutMs: 120000 })
+        const spec = shell.resolve({ command: '…', workdir: '<Faust 仓库根目录>', timeoutMs: 120000 })  // 机器相关路径不要写死，从会话 cwd 或环境变量取
         const result = await shell.run(spec)   // { exitCode, timedOut, aborted, stdout:{text}, stderr:{text} }
         return (result.exitCode === 0 ? '通过\n' : '失败\n') + (result.stdout.text + result.stderr.text).trim()
       },
