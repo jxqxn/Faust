@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "record_id": "FAUST-ART-PHASE0-001",
+  "status": "phase0_complete_pending_user_review",
+  "recorded_at": "2026-08-30",
+  "method_source": "docs/research/data/art-direction-methodology.json workflow[0] constraint_inventory",
+  "authority": {
+    "may_constrain_style_candidates": true,
+    "may_decide_style": false,
+    "fields_marked_deferred": ["weekly_person_hours"]
+  },
+  "constraints": {
+    "core_art_team_size": "1 人（用户：判断/筛选/AI 图片编辑）+ 生成式 AI（执行）。用户原话：『我配合 AI 就是这个美术老师』（2026-08-30）",
+    "weekly_person_hours": null,
+    "weekly_person_hours_note": "按用户与 AI 协作模型的约定不预估；由 Phase 1 同题测试实测工时替代（对应 methodology production_method.required_cost_fields）",
+    "skill_profile": [
+      "能做出『这张图对不对』的判断与筛选（承担美术老师的『眼』）",
+      "能使用 AI 图片编辑功能做修正（局部重绘/调色/换背景）——修正循环本身也是生成式的",
+      "无手绘修正能力（不能精确修手/改图内文字）",
+      "无动画制作技能与 Live2D 绑骨技能"
+    ],
+    "weakest_capability": "跨资产一致性：AI 无肌肉记忆，同一角色/同一 UI 族在多资产间的一致性无法靠手修保证，只能靠参考图工作流 + 风格语法规则外挂",
+    "character_asset_target": "原作总卡池约 1300（cards.json 1292 / gallery_cards.json 1066 / 原作卡面 PNG 1268）；具名角色卡为其中子集，Phase 1 测试仅需 6 名测试角色，全量拆分推迟到风格定案后",
+    "environment_region_target": "原作为地点导向结构（制作组访谈自述参照 This Is The Police）；精确区域数未统计，Phase 1 同题测试仅需 1 个城市/校园切面",
+    "enemy_target": "包含于总卡池，未单独拆分；Phase 1 测试不单独要求敌人资产",
+    "ui_page_target": "29 个 UI 视图脚本（ui/*.gd），对应 29+ 个界面/组件族；UI 是一致性要求最高的资产族之一",
+    "card_target": "全量口径约 1300 张（用户已确认以原作为技术占位，替换规模在风格定案后另行立项评估）",
+    "target_resolution": "视口 3840x2160（project.godot，canvas_items stretch）；单资产输出尺寸按用途在风格语法中另定",
+    "camera": "双呈现模式：倾斜桌面（campaign desk）+ 横版场景（thought world），见 docs/design/thought-world-visual-references.md",
+    "rendering_dimension": "2D 光栅（手绘/生成图），无 3D 管线",
+    "animation_method": "静态为主 + 代码动效（着色器/视差/卡牌翻转/粒子，thought-world 已有实现）；不做逐帧动画；『异维度』点睛位（参照苏丹女术士/卡盒）保留分层木偶/卡牌翻转选项，竖切阶段验证。【2026-08-30 AI 建议，用户在对话中未反对，随本清单一并确认；竖切阶段可重开】",
+    "outsourcing_capacity": "零外包，全靠自己+AI（用户确认 2026-08-30）",
+    "target_platform": "PC 桌面（Godot 4.7；用户确认 2026-08-30）"
+  },
+  "derived_constraints_for_style_candidates": [
+    "风格候选必须容忍生成式瑕疵：大色块/装饰性构图优先于精细解剖与图内文字",
+    "图内文字原则上不放生成图，由引擎层解决",
+    "一致性只能来自参考图工作流 + 成文风格语法，不存在『手修兜底』",
+    "动效预算全部走代码层，美术候选按『为静态而生』评估",
+    "卡池量级（~1300）意味着候选风格必须先回答『第 1300 张卡怎么做』，再回答首图好不好看"
+  ],
+  "exit_condition": {
+    "hardest_asset_family": "具名角色的跨资产一致性（同一角色在卡面/立绘/缩略图/差分中保持同一身份）",
+    "justification": "AI 无肌肉记忆 + 无手绘修正 + 修正循环也是生成式；角色卡规模大（总池 ~1300）",
+    "runner_up": "图内文字与精细解剖（已通过『文字入引擎/风格规避』移出硬约束）",
+    "removed_from_pipeline": "逐帧动画（已决策移出美术管线，见 animation_method）"
+  },
+  "data_integrity_notes": [
+    "weekly_person_hours 为本清单唯一 deferred 字段，留待实测",
+    "animation_method 的『建议-确认』状态需用户在审阅本文件时显式追认或否决",
+    "所有数量统计来自 content/ 配置与 assets/original 文件计数，2026-08-30 实测"
+  ]
+}
