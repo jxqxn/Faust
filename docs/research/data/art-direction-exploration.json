@@ -12,11 +12,15 @@
     "highest_product_direction": "docs/design/autobattler-campus-direction.md",
     "current_visual_baseline": "docs/design/thought-world-visual-references.md",
     "does_not_override_either": true,
-    "unconfirmed_assumptions": [
-      "half_submerged_city",
-      "victorian_or_classical_primary_aesthetic",
-      "water_as_the_primary_world_metaphor"
-    ]
+      "unconfirmed_assumptions": [
+        "half_submerged_city",
+        "victorian_or_classical_primary_aesthetic",
+        "water_as_the_primary_world_metaphor"
+      ],
+      "assumption_status_notes": {
+        "half_submerged_city": "user_intuition_backed_lead since 2026-08-31 (FAUST-ART-FRAG-001); still not a confirmed worldbuilding decision",
+        "water_as_the_primary_world_metaphor": "indirectly supported by FAUST-ART-FRAG-001; remains unvalidated"
+      }
   },
   "hypotheses": [
     {
@@ -32,6 +36,12 @@
       "project_fit": "requires_in_engine_comparison"
     }
   ],
+  "candidates_status": {
+    "status": "all_rejected_as_directions_by_user_2026-08-31",
+    "verdict": "User judged candidates A (Tidal Etching), B (Enamel Registry), C (Drowned Naturalist) all unsuitable as style directions.",
+    "retained_use": "vocabulary_reference_only — their material word-lists may inform future directions but none of the three is a live candidate.",
+    "note": "Per the corrected exploration path, no replacement candidates are synthesized by AI; new directions must grow from user fragments and real-content iteration."
+  },
   "candidates": [
     {
       "id": "A",
@@ -66,6 +76,25 @@
     "five_second_effect",
     "thirty_second_motion_scene",
     "seventy_percent_quality_ordinary_asset"
+  ],
+  "mandatory_same_content_tests_status": "demoted_to_optional_toolkit_2026-08-31_FAUST-ART-AMEND-001",
+  "fragments": [
+    {
+      "fragment_id": "FAUST-ART-FRAG-001",
+      "date": "2026-08-31",
+      "source": "user_stated_spontaneously",
+      "content": "被水半浸泡的城市 (a city half-submerged in water)",
+      "meaning": "First genuine user visual fragment. Upgrades the half_submerged_city assumption from AI-proposed construct to user_intuition_backed_lead. Still a lead, not a worldbuilding decision."
+    }
+  ],
+  "exploration_attempts": [
+    {
+      "attempt_id": "FAUST-ART-EXP-001",
+      "date": "2026-08-31",
+      "method": "Four-language menu: same prompt (half-submerged city) rendered in four averaged visual languages (woodcut / enamel / naturalist plate / anime background) for user selection.",
+      "verdict": "method_rejected_by_user",
+      "reason": "Menu-of-averaged-wallpapers approach has no industry precedent (FAUST-ART-RESEARCH-002 cross_case_rules[0]); images contained no real project content and forced the user into judge-of-menu role instead of art-teacher role. Images retained in session workspace only as rejected-method reference, not evidence."
+    }
   ],
   "stress_tests": [
     "thumbnail_960_480_240",

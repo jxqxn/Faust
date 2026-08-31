@@ -79,6 +79,9 @@
     {
       "phase": 1,
       "name": "same_content_candidate_tests",
+      "status": "demoted_to_optional_toolkit_2026-08-31",
+      "demotion_reason": "Industry process research (FAUST-ART-RESEARCH-002) found no studied team used pre-frozen same-content test batteries or scored comparison menus to choose a style. Judgment happens on real content; requirements are distilled from failure.",
+      "usage_rule": "Run only after 2-3 directions already attract the user. Test content must be distilled from real project content and images the user responded to, not frozen in advance.",
       "rule": "Every candidate must solve the same content with the same constraints.",
       "required_assets": [
         "city_or_campus_cross_section_with_multiple_depth_or_social_zones",
@@ -256,6 +259,8 @@
     ]
   },
   "scoring_method": {
+    "status": "demoted_to_discussion_aid_2026-08-31",
+    "demotion_reason": "No studied team decided styles via weighted score comparison; final decisions were gameplay/reality/conviction/theme judgments by a single authority. See FAUST-ART-RESEARCH-002.",
     "weights_source": "docs/research/data/art-direction-exploration.json",
     "required_review_roles": ["art", "engineering_or_technical_art", "design", "non_project_observer"],
     "rules": [
@@ -335,6 +340,19 @@
       "Prefer real game captures over moodboards in decisions."
     ]
   },
+  "amendments": [
+    {
+      "amendment_id": "FAUST-ART-AMEND-001",
+      "date": "2026-08-31",
+      "trigger": "Industry style-decision process research FAUST-ART-RESEARCH-002 (docs/research/data/art-style-decision-process-research.json): ten studied teams (Splatoon, BotW, TF2, Hollow Knight, Disco Elysium, Sultan Game, Pentiment, Cuphead, GRIS, Darkest Dungeon) never selected styles via pre-frozen test batteries or scored menus.",
+      "changes": [
+        "workflow phase 1 (same_content_candidate_tests) demoted from mandatory phase to optional stress-test toolkit.",
+        "scoring_method demoted from decision procedure to discussion aid; scorecard remains not_run and must not gate decisions.",
+        "default exploration path replaced: single user-attracted direction -> one real content artifact at true spec -> confront in real use -> failures distill requirement list -> iterate. Final decision = user judgment on real content."
+      ],
+      "revisit_trigger": "If the user later requests a formal comparison of 2+ surviving directions, the demoted toolkit may be reactivated for that purpose only."
+    }
+  ],
   "data_integrity_rules": [
     "Empty or not-run measurements remain empty or explicitly not_run.",
     "Hypotheses must not be converted to confirmed project decisions without a user decision or recorded experiment.",

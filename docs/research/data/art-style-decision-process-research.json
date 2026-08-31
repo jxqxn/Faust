@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "record_id": "FAUST-ART-RESEARCH-002",
+  "status": "research_intake_verified_via_websearch",
+  "recorded_at": "2026-08-31",
+  "question": "已被验证成功的游戏团队实际通过什么流程确定美术风格？最终是什么让他们拍板？",
+  "method": "Web search of first-party interviews, GDC talks and developer discussions (single verification pass, 2026-08-31). Exact URLs for new cases pending backfill; earlier leads already registered in art-direction-exploration.json source_leads.",
+  "cases": [
+    {
+      "id": "splatoon",
+      "game": "Splatoon / 斯普拉遁",
+      "process": "70+ gameplay ideas in 6 months -> playable tofu-block ink prototype -> tried rabbit character, internally rejected ('why would a rabbit shoot ink') -> requirement list written by hands-on lead, including 'a motivation for which shooting ink makes sense' -> squid resolved all requirements at once.",
+      "decision_basis": "gameplay_logic",
+      "key_insight": "Style was chosen by what the gameplay already was, not by visual comparison. The requirement list came after failures, not before."
+    },
+    {
+      "id": "botw",
+      "game": "The Legend of Zelda: Breath of the Wild",
+      "process": "Gameplay prototype first -> art director placed real legacy assets (Wind Waker / Twilight Princess / Skyward Sword) into the same HD scene for direct comparison -> Wind Waker style stood out -> but found it 'tells too large a lie' (players cannot use real-world intuition to predict physics/chemistry) -> slogan '清爽而有韵味' (gaseous, crisp yet flavorful) -> final approval took under one minute pointing at the screen.",
+      "decision_basis": ["gameplay_logic", "real_content_comparison"],
+      "key_insight": "Comparison happened on real in-engine content, not moodboards; the decision itself was a single authority's instant judgment made after the context was fully prepared."
+    },
+    {
+      "id": "tf2",
+      "game": "Team Fortress 2",
+      "process": "8 years of development, discarded three or four entirely different games -> realistic military style failed in playtesting (art fights gameplay: soldiers hiding = invisible enemies; identical uniforms = indistinguishable classes) -> readability hierarchy distilled from failure (team > class > weapon) -> new concepts evaluated against the requirement list.",
+      "decision_basis": ["failure_distilled_requirements", "readability"],
+      "key_insight": "The requirement list was distilled from failures, never pre-written. Playtesting real content killed the wrong style."
+    },
+    {
+      "id": "hollow_knight",
+      "game": "Hollow Knight",
+      "process": "Game jam prototype -> 3-person team cannot do 3D -> sole artist (Ari Gibson): 'everything must be simply produced; characters must be really easy to draw, hence the minimal-line graphic style' -> whiteboard conversations, drawing on each other's work.",
+      "decision_basis": ["production_reality"],
+      "key_insight": "Style openly declared as a consequence of production capacity. No test battery existed."
+    },
+    {
+      "id": "disco_elysium",
+      "game": "Disco Elysium",
+      "process": "Rostov treats contemporary oil painting as the method itself -> hired painters first, game artists second -> even prop icons ground to oil-painting standard -> explicitly exempted from throughput and market constraints.",
+      "decision_basis": ["author_conviction"],
+      "key_insight": "The counter-example: conviction-driven style with no constraint negotiation. Requires a strong artistic authority."
+    },
+    {
+      "id": "sultan",
+      "game": "苏丹的游戏",
+      "process": "Trusted art lead free exploration ('3 days silent, then drops a finished image; design team packages it backwards') -> capacity reality (9 people, no animator -> static art carries the game, Live2D only on dimension-marked exceptions) -> character anchors are story prototypes from One Thousand and One Nights, not capacity parameters.",
+      "decision_basis": ["strong_individual_authority", "production_reality"],
+      "key_insight": "Style grows from a trusted individual's free exploration; constraints define the boundary of presentation, not the style itself."
+    },
+    {
+      "id": "pentiment",
+      "game": "Pentiment",
+      "process": "Style derived from the world's own recording media (woodcut + manuscript illumination) -> many creative decisions decided by 'what we want the player to feel walking into the scene' -> high-fidelity manuscript plan rejected because of how players actually read the scene.",
+      "decision_basis": ["theme_expression", "readability"],
+      "key_insight": "Medium-as-worldview: the style question equals 'what material does this world record itself with'."
+    },
+    {
+      "id": "cuphead",
+      "game": "Cuphead",
+      "process": "Author conviction (faithful 1930s cel animation) -> ~120,000 hand-drawn frames, ~80% slower than standard production -> accepted the cost knowingly.",
+      "decision_basis": ["author_conviction"],
+      "key_insight": "Constraint knowingly absorbed because the conviction was non-negotiable."
+    },
+    {
+      "id": "gris",
+      "game": "GRIS",
+      "process": "Painter-first origin (artist Conrad Roset's watercolor world preceded the game design) -> gameplay intentionally minimal, art carries the experience.",
+      "decision_basis": ["author_conviction", "theme_expression"],
+      "key_insight": "Same strong-individual route as Sultan; art precedes and leads design."
+    },
+    {
+      "id": "darkest_dungeon",
+      "game": "Darkest Dungeon",
+      "process": "Sole artist Bourassa externalized rules so he could 'art direct himself' -> hard edges / heavy blacks / no eyes all derived from gameplay systems (no compromise, lighting mechanic, soul consumption).",
+      "decision_basis": ["production_reality", "theme_expression"],
+      "key_insight": "The single-artist-with-rules route: closest precedent for a no-artist team using externalized rules."
+    }
+  ],
+  "cross_case_rules": [
+    "No studied team selected a style via a style beauty contest or scored comparison menu; the four-image menu approach has no industry precedent and is rejected.",
+    "Style judgment always happened on real content: playable prototypes, real legacy assets in-engine, or finished world-fragment images dropped by a trusted artist - never on abstract swatches or averaged prompt wallpapers.",
+    "Requirement lists were distilled from failures, not pre-written; pre-frozen test batteries (fixed character rosters, pre-declared exam criteria) have no precedent among the studied successes.",
+    "Final decision bases converge to four types: gameplay logic, production reality, author conviction, theme expression. Every project held at least one; most held two.",
+    "The final decision was a fast, single-authority judgment made after the context was fully prepared; process exists to accumulate that context, not to compute the answer."
+  ],
+  "implication_for_faust": {
+    "production_model": "user + AI as the 'art teacher' (user = eye/judgment, AI = hand). AI lacks muscle memory, so externalized style rules remain necessary - but they must be distilled from real-content iteration, not pre-declared.",
+    "default_exploration_path": "Pick one direction the user's eye reacts to -> produce one real content artifact at true spec (e.g. a real game card) -> confront it in real use context -> let failures distill the requirement list -> iterate.",
+    "demoted_tools": "same-content test battery, six-character exam roster, and scored weight comparison are downgraded to optional stress-test instruments, applied only after 2-3 directions already attract the user, with test content distilled from real content rather than frozen in advance.",
+    "authority_note": "Per methodology data integrity rules, final style decisions belong to the user."
+  },
+  "source_backfill_status": "new_case_exact_urls_pending_backfill; prior leads' verification recorded in art-direction-exploration.json"
+}
