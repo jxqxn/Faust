@@ -12,7 +12,7 @@
   "constraints": {
     "core_art_team_size": "1 人（用户：判断/筛选/AI 图片编辑）+ 生成式 AI（执行）。用户原话：『我配合 AI 就是这个美术老师』（2026-08-30）",
     "weekly_person_hours": null,
-    "weekly_person_hours_note": "按用户与 AI 协作模型的约定不预估；由 Phase 1 同题测试实测工时替代（对应 methodology production_method.required_cost_fields）",
+    "weekly_person_hours_note": "按用户与 AI 协作模型的约定不预估；在作者性方向由真实内容产生后，通过连续普通资产生产实测工时（对应 methodology production_method.required_cost_fields）",
     "skill_profile": [
       "能做出『这张图对不对』的判断与筛选（承担美术老师的『眼』）",
       "能使用 AI 图片编辑功能做修正（局部重绘/调色/换背景）——修正循环本身也是生成式的",
@@ -20,9 +20,9 @@
       "无动画制作技能与 Live2D 绑骨技能"
     ],
     "weakest_capability": "跨资产一致性：AI 无肌肉记忆，同一角色/同一 UI 族在多资产间的一致性无法靠手修保证，只能靠参考图工作流 + 风格语法规则外挂",
-    "character_asset_target": "原作总卡池约 1300（cards.json 1292 / gallery_cards.json 1066 / 原作卡面 PNG 1268）；具名角色卡为其中子集，Phase 1 测试仅需 6 名测试角色，全量拆分推迟到风格定案后",
-    "environment_region_target": "原作为地点导向结构（制作组访谈自述参照 This Is The Police）；精确区域数未统计，Phase 1 同题测试仅需 1 个城市/校园切面",
-    "enemy_target": "包含于总卡池，未单独拆分；Phase 1 测试不单独要求敌人资产",
+    "character_asset_target": "原作总卡池约 1300（cards.json 1292 / gallery_cards.json 1066 / 原作卡面 PNG 1268）；具名角色卡为其中子集。初始探索一次只做一个真实角色或事件片段；六角色测试仅在方向出现后作为可选压力测试，全量拆分推迟到风格定案后",
+    "environment_region_target": "原作为地点导向结构（制作组访谈自述参照 This Is The Police）；精确区域数未统计。初始探索不要求预设城市切面考试题；方向出现后可用一个真实校园/城市片段检验延展性",
+    "enemy_target": "包含于总卡池，未单独拆分；初始作者性探索不强制敌人资产，方向出现后的压力测试再按真实内容需要加入",
     "ui_page_target": "29 个 UI 视图脚本（ui/*.gd），对应 29+ 个界面/组件族；UI 是一致性要求最高的资产族之一",
     "card_target": "全量口径约 1300 张（用户已确认以原作为技术占位，替换规模在风格定案后另行立项评估）",
     "target_resolution": "视口 3840x2160（project.godot，canvas_items stretch）；单资产输出尺寸按用途在风格语法中另定",

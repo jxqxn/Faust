@@ -14,7 +14,7 @@
       "templates/STYLE_EXPERIMENT_CARD.md",
       "templates/DECISION_LOG.md"
     ],
-    "interpretation": "Methods are preserved as candidate operating procedures. Case-study factual claims remain unverified source leads."
+    "interpretation": "Methods are preserved as candidate operating procedures. Sultan case claims were source-checked on 2026-09-02; cross-case claims retain their individual verification limits."
   },
   "authority": {
     "type": "research_method",
@@ -78,9 +78,39 @@
     },
     {
       "phase": 1,
+      "name": "authorial_single_artifact_loop",
+      "status": "default_exploration_path_confirmed_2026-09-02",
+      "enforcement": "revisable_faust_working_default_not_a_hard_rule_inferred_from_interview_speech",
+      "inputs": [
+        "comprehensible_story_archetype",
+        "character_desire_or_conflict",
+        "emotional_intent",
+        "real_game_use",
+        "production_boundary",
+        "forbidden_surface_shortcuts"
+      ],
+      "procedure": [
+        "Give the visual author a bounded problem without prescribing the visual solution.",
+        "Produce one complete real-content artifact at true intended use and scale.",
+        "Let the user judge whether the work has life as a whole.",
+        "Record visual inventions worth absorbing backwards into world, narrative or mechanics.",
+        "Distill the next requirement from the observed success or failure.",
+        "Repeat one artifact at a time until a direction survives ordinary content."
+      ],
+      "exit_condition": "At least one real artifact is accepted as alive and a second ordinary artifact demonstrates that the relationship can continue.",
+      "forbidden_shortcuts": [
+        "style_menu_before_authorial_direction",
+        "surface_copy_of_reference_game",
+        "complete_style_grammar_before_accepted_artifact",
+        "weighted_score_as_initial_decision",
+        "moodboard_or_prompt_wallpaper_as_real_content"
+      ]
+    },
+    {
+      "phase": "1_optional",
       "name": "same_content_candidate_tests",
       "status": "demoted_to_optional_toolkit_2026-08-31",
-      "demotion_reason": "Industry process research (FAUST-ART-RESEARCH-002) found no studied team used pre-frozen same-content test batteries or scored comparison menus to choose a style. Judgment happens on real content; requirements are distilled from failure.",
+      "demotion_reason": "Faust's own four-image menu experiment failed to produce a living direction. The examined case summaries also do not show pre-frozen batteries or scored menus as the decisive mechanism, but that absence is only supporting context and not a universal industry rule.",
       "usage_rule": "Run only after 2-3 directions already attract the user. Test content must be distilled from real project content and images the user responded to, not frozen in advance.",
       "rule": "Every candidate must solve the same content with the same constraints.",
       "required_assets": [
@@ -169,6 +199,19 @@
       "gameplay_or_readability_consequence",
       "project_specific_test"
     ]
+  },
+  "oral_source_governance": {
+    "added_at": "2026-09-02",
+    "status": "user_confirmed_evidence_rule",
+    "principle": "Verifying that a developer said something does not make the statement a measured production fact or a hard project constraint.",
+    "speech_types": [
+      {"type": "specific_anecdote", "allowed_use": "evidence_that_this_kind_of_event_occurred_at_least_once", "forbidden_upgrade": "universal_or_fixed_workflow"},
+      {"type": "joke_or_hyperbole", "allowed_use": "creative_attitude_and_context", "forbidden_upgrade": "literal_staffing_budget_or_asset_rule"},
+      {"type": "metaphor_or_maxim", "allowed_use": "declared_philosophy", "forbidden_upgrade": "mandatory_step_or_numeric_parameter"},
+      {"type": "retrospective_causal_story", "allowed_use": "source_attributed_explanation", "forbidden_upgrade": "independently_proven_causality"},
+      {"type": "specific_visual_intent", "allowed_use": "interpretation_of_a_named_finished_feature", "forbidden_upgrade": "complete_style_discovery_chronology"}
+    ],
+    "hard_constraint_gate": "A hard Faust constraint requires verifiable project data, an observable product boundary, a formal production decision, or explicit user adoption after considering transfer fit. Interview speech alone is insufficient."
   },
   "style_grammar_method": {
     "status": "must_be_revised_after_vertical_slice",
@@ -260,7 +303,7 @@
   },
   "scoring_method": {
     "status": "demoted_to_discussion_aid_2026-08-31",
-    "demotion_reason": "No studied team decided styles via weighted score comparison; final decisions were gameplay/reality/conviction/theme judgments by a single authority. See FAUST-ART-RESEARCH-002.",
+    "demotion_reason": "Faust's four-image menu failed to produce a living project direction, and the examined case summaries do not show weighted scoring as the decisive mechanism. This is a Faust workflow decision, not a universal industry law; the evidence also does not support a universal single-authority decision model. See FAUST-ART-RESEARCH-002.",
     "weights_source": "docs/research/data/art-direction-exploration.json",
     "required_review_roles": ["art", "engineering_or_technical_art", "design", "non_project_observer"],
     "rules": [
@@ -344,13 +387,28 @@
     {
       "amendment_id": "FAUST-ART-AMEND-001",
       "date": "2026-08-31",
-      "trigger": "Industry style-decision process research FAUST-ART-RESEARCH-002 (docs/research/data/art-style-decision-process-research.json): ten studied teams (Splatoon, BotW, TF2, Hollow Knight, Disco Elysium, Sultan Game, Pentiment, Cuphead, GRIS, Darkest Dungeon) never selected styles via pre-frozen test batteries or scored menus.",
+      "trigger": "Faust's four-image menu failed, while the ten case summaries in FAUST-ART-RESEARCH-002 did not provide an observed example of pre-frozen test batteries or scored menus being decisive. This is evidence for revising Faust's workflow, not proof that successful teams never use such tools.",
       "changes": [
         "workflow phase 1 (same_content_candidate_tests) demoted from mandatory phase to optional stress-test toolkit.",
         "scoring_method demoted from decision procedure to discussion aid; scorecard remains not_run and must not gate decisions.",
         "default exploration path replaced: single user-attracted direction -> one real content artifact at true spec -> confront in real use -> failures distill requirement list -> iterate. Final decision = user judgment on real content."
       ],
       "revisit_trigger": "If the user later requests a formal comparison of 2+ surviving directions, the demoted toolkit may be reactivated for that purpose only."
+    },
+    {
+      "amendment_id": "FAUST-ART-AMEND-002",
+      "date": "2026-09-02",
+      "trigger": "User confirmed that Sultan-style differential validation must test whether the discovery process can independently produce a comparably strong solution, not whether the result resembles Sultan's Game.",
+      "changes": [
+        "Added authorial_single_artifact_loop as the default phase before optional comparison and stress testing.",
+        "Defined artistic freedom as bounded authorship over the solution, not an absent brief or random generation.",
+        "Made reverse absorption of useful visual accidents into world and design an explicit required step.",
+        "Made style grammar retrospective: it must compress accepted repeated work rather than prescribe the first artifact.",
+        "Defined four differential gates: process parity, functional parity, quality parity and transfer parity.",
+        "Recorded that prior exposure to Sultan's final style contaminates strict blind rediscovery; a future blind calibration must hide surface outcomes."
+      ],
+      "report": "docs/research/sultans-game-art-direction-process.md",
+      "revisit_trigger": "Revise after primary interview pages are captured and any exact chronology, staffing or iteration claims are verified or rejected."
     }
   ],
   "data_integrity_rules": [

@@ -23,6 +23,13 @@
         "present_day_shanghai_as_visual_template": "explicitly rejected by user on 2026-09-02; Shanghai supplies selected conceptual genes, not a directly recognizable contemporary streetscape"
       }
   },
+  "method_confirmation": {
+    "date": "2026-09-02",
+    "status": "user_confirmed",
+    "statement": "Art exploration may borrow differential testing from the clone project, but the gold standard is not visual similarity to Sultan's Game. The method passes only if it reproduces the discovery process and independently yields a comparably strong solution; successful transfer to Faust should produce a different visual system suited to Faust.",
+    "process_model": "bounded problem input -> visual author invention -> one finished real-content artifact -> user whole-work judgment -> reverse absorption into design -> requirements distilled from failure -> grammar distilled from repeated success",
+    "report": "docs/research/sultans-game-art-direction-process.md"
+  },
   "hypotheses": [
     {
       "id": "FAUST-ART-HYP-001",
@@ -101,7 +108,7 @@
       "date": "2026-08-31",
       "method": "Four-language menu: same prompt (half-submerged city) rendered in four averaged visual languages (woodcut / enamel / naturalist plate / anime background) for user selection.",
       "verdict": "method_rejected_by_user",
-      "reason": "Menu-of-averaged-wallpapers approach has no industry precedent (FAUST-ART-RESEARCH-002 cross_case_rules[0]); images contained no real project content and forced the user into judge-of-menu role instead of art-teacher role. Images retained in session workspace only as rejected-method reference, not evidence."
+      "reason": "The images contained no real project content and forced the user into a judge-of-menu role instead of the intended art-teacher role, so the experiment itself failed. The reviewed case summaries did not provide a countervailing example where such a menu was decisive, but that absence is not treated as a universal industry rule. Images remain session-only rejected-method references, not evidence."
     },
     {
       "attempt_id": "FAUST-ART-EXP-002",
@@ -140,9 +147,9 @@
     "notes"
   ],
   "source_leads": [
-    {"id": "sultan_ign", "title": "IGN JP《苏丹的游戏》访谈（TapTap 转录）", "url": "https://www.taptap.cn/moment/809350638671497907", "verification_status": "unverified_lead"},
-    {"id": "sultan_chule", "title": "《苏丹的游戏》9 人团队访谈", "url": "https://www.weibo.com/ttarticle/p/show?id=2309635096848497967217", "verification_status": "unverified_lead"},
-    {"id": "sultan_constraints", "title": "《苏丹的游戏》制作人谈限制", "url": "https://club.gamersky.com/activity/1521791", "verification_status": "unverified_lead"},
+    {"id": "sultan_ign", "title": "IGN JP《苏丹的游戏》访谈（TapTap 中文转录）", "url": "https://www.taptap.cn/moment/809350638671497907", "verification_status": "source_reopened_2026-09-02", "supports": ["story_archetypes", "mural_sculpture_visual_description", "weathered_black_lines", "deliberate_unusual_details", "static_tabletop_presentation", "witch_and_card_box_live2d_dimension_contrast"], "does_not_support": ["complete_style_discovery_chronology", "staffing_structure"]},
+    {"id": "sultan_chule", "title": "触乐：《苏丹的游戏》：9人团队如何做出一款优秀的‘黑暗料理’？", "url": "https://www.chuapp.com/article/290268.html", "verification_status": "source_reopened_2026-09-02", "supports": ["demo_stage_nine_person_description", "broad_art_brief", "artist_freedom", "three_day_finished_image_anecdote", "reverse_design_packaging", "body_chain_example", "retain_work_within_broad_direction"], "does_not_support": ["fixed_three_day_workflow", "single_art_director_authority", "full_release_team_size"]},
+    {"id": "sultan_constraints", "title": "游民星空：《苏丹的游戏》制作人：连续开三枪永远比瞄准三秒钟更重要", "url": "https://club.gamersky.com/activity/1521791", "verification_status": "speech_text_reopened_2026-09-02", "supports": ["retrospective_resource_constraint_story", "use_existing_team_strengths_philosophy", "completion_over_perfection_philosophy"], "does_not_support": ["literal_no_animator_staffing_fact", "mandatory_no_motion_rule", "universal_three_shots_rule"], "evidence_note": "Retrospective talk includes jokes and metaphors; use as stated philosophy, not measured production data or a hard project constraint."},
     {"id": "darkest_mash", "title": "A Talk with Darkest Dungeon's Chris Bourassa", "url": "https://mashthosebuttons.com/2013/11/a-talk-with-darkest-dungeons-chris-bourassa/", "verification_status": "unverified_lead"},
     {"id": "darkest_gamespot", "title": "The Gothic Sensibilities of Darkest Dungeon", "url": "https://www.gamespot.com/articles/the-gothic-sensibilities-of-darkest-dungeon/1100-6424880/", "verification_status": "unverified_lead"},
     {"id": "hollow_official", "title": "Introducing Hollow Knight", "url": "https://www.teamcherry.com.au/blog/introducing-hollow-knight", "verification_status": "unverified_lead"},

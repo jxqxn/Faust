@@ -44,7 +44,7 @@
 - 麻将、血流成河与自走棋共同结构：[共同结构](../design/mahjong-autobattler-common-origin.md)，对应 `MJ-MODEL-001`、`MJ-MODEL-002`、`MJ-HYP-001`。
 - 《循环勇者》自动“循环”结构与首次成型后继续运转：[循环结构参照](../design/loop-hero-loop-structure-reference.md)，对应 `LH-RULE-001`—`LH-RULE-011`、`LH-MKT-001`—`LH-MKT-002`、`LH-DEV-001`、`LH-EXPL-001`、`LH-GENRE-001`。
 - P5R 体验与有限日程：[MDA 基线](../design/p5r-mda-experience-baseline.md)，对应 `P5R-RULE-001`、`P5R-MODEL-001`。
-- 美术方向讨论入库：[美术方向探索](../design/art-direction-exploration.md)、[机器可读候选/测试数据库](data/art-direction-exploration.json)、[完整方法库](data/art-direction-methodology.json)与[未执行评分表](data/art-direction-scorecard.csv)，对应 `FAUST-ART-HYP-001`—`FAUST-ART-DATA-001`。方法库可以定义实验流程，但不是已验证结果；水城、维多利亚媒介、候选评分权重与来源链接均处于未验证状态，不覆盖最高产品方向或现有美术基线。
+- 美术方向讨论入库：[美术方向探索](../design/art-direction-exploration.md)、[《苏丹的游戏》美术探索流程还原](sultans-game-art-direction-process.md)、[机器可读候选/测试数据库](data/art-direction-exploration.json)、[完整方法库](data/art-direction-methodology.json)与[未执行评分表](data/art-direction-scorecard.csv)，对应 `FAUST-ART-HYP-001`—`FAUST-ART-DATA-001`。默认路径是“问题空间 → 单个真实作品 → 用户判断 → 反向吸收 → 规则后置”；同题测试与评分表只是在方向出现后的诊断工具。方法库不能定义项目结果；水城、历史媒介与来源转述仍处于待验证状态，不覆盖最高产品方向或现有美术基线。
 
 ## 当前证据状态
 

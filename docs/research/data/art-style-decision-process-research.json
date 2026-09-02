@@ -1,10 +1,27 @@
 {
   "schema_version": 1,
   "record_id": "FAUST-ART-RESEARCH-002",
-  "status": "research_intake_verified_via_websearch",
+  "status": "sultan_sources_reverified_cross_case_synthesis_provisional",
   "recorded_at": "2026-08-31",
   "question": "已被验证成功的游戏团队实际通过什么流程确定美术风格？最终是什么让他们拍板？",
-  "method": "Web search of first-party interviews, GDC talks and developer discussions (single verification pass, 2026-08-31). Exact URLs for new cases pending backfill; earlier leads already registered in art-direction-exploration.json source_leads.",
+  "method": "Cross-case synthesis originated in a single web-search pass on 2026-08-31. The three Sultan sources were reopened on 2026-09-02. Verification confirms that statements were published, but does not turn interview anecdotes, jokes or retrospective philosophy into measured production facts or hard constraints.",
+  "evidence_boundary": {
+    "confirmed_project_interpretation": "The transferable Sultan method is authorial discovery from a bounded problem space, judgment on finished real content, reverse absorption of visual invention, and rules distilled after work exists.",
+    "source_verified_statements": [
+      "The ChuApp interview contains the three-day finished-image anecdote, broad briefs, artistic freedom, reverse packaging and the Sultan body-chain example.",
+      "The IGN JP interview transcript contains the One Thousand and One Nights archetype rationale, mural-sculpture description, weathered black-line description, deliberate static tabletop presentation and the witch/card-box Live2D dimension contrast.",
+      "The Gamersky speech text contains the near-bankruptcy and no-moving-content joke, use-what-the-team-can-do philosophy, and completion-over-perfection maxim."
+    ],
+    "oral_statement_limit": "A published quote verifies that the speaker said it. Anecdotes, jokes, metaphors and retrospective maxims are evidence of creative philosophy or examples, not literal staffing records, mandatory durations, universal workflow rules or causal proof.",
+    "unsupported_and_removed": [
+      "no animator as a literal staffing fact",
+      "one trusted art lead or art director with sole authority",
+      "a known first style-defining image",
+      "a known number of style candidates or iteration rounds",
+      "a documented formal style-bible or scorecard sequence"
+    ],
+    "detailed_report": "docs/research/sultans-game-art-direction-process.md"
+  },
   "cases": [
     {
       "id": "splatoon",
@@ -44,9 +61,10 @@
     {
       "id": "sultan",
       "game": "苏丹的游戏",
-      "process": "Trusted art lead free exploration ('3 days silent, then drops a finished image; design team packages it backwards') -> capacity reality (9 people, no animator -> static art carries the game, Live2D only on dimension-marked exceptions) -> character anchors are story prototypes from One Thousand and One Nights, not capacity parameters.",
-      "decision_basis": ["strong_individual_authority", "production_reality"],
-      "key_insight": "Style grows from a trusted individual's free exploration; constraints define the boundary of presentation, not the style itself."
+      "process": "The team says it communicated only a broad desired thing, let artists work freely, sometimes received a finished image after three quiet days, and then adapted design around it; many character traits and parts of the game style were established this way. Separately, familiar story archetypes supported comprehension, static cards/maps built a tabletop presentation, and witch/card-box Live2D marked another dimension. This does not establish a single art lead, a fixed three-day cycle, or the complete chronology of style discovery.",
+      "decision_basis": ["artist_autonomy_with_team_retention", "production_reality", "narrative_legibility"],
+      "key_insight": "The supported pattern is empowered contribution plus reverse design absorption inside a broad-direction boundary. It is not evidence for unrestricted randomness or a single-authority art-director model.",
+      "source_ids": ["sultan_chule", "sultan_ign", "sultan_constraints"]
     },
     {
       "id": "pentiment",
@@ -67,7 +85,7 @@
       "game": "GRIS",
       "process": "Painter-first origin (artist Conrad Roset's watercolor world preceded the game design) -> gameplay intentionally minimal, art carries the experience.",
       "decision_basis": ["author_conviction", "theme_expression"],
-      "key_insight": "Same strong-individual route as Sultan; art precedes and leads design."
+      "key_insight": "Art can precede and lead design. Do not classify this as the same authority structure as Sultan: current Sultan sources do not establish a single art lead."
     },
     {
       "id": "darkest_dungeon",
@@ -78,11 +96,11 @@
     }
   ],
   "cross_case_rules": [
-    "No studied team selected a style via a style beauty contest or scored comparison menu; the four-image menu approach has no industry precedent and is rejected.",
-    "Style judgment always happened on real content: playable prototypes, real legacy assets in-engine, or finished world-fragment images dropped by a trusted artist - never on abstract swatches or averaged prompt wallpapers.",
-    "Requirement lists were distilled from failures, not pre-written; pre-frozen test batteries (fixed character rosters, pre-declared exam criteria) have no precedent among the studied successes.",
-    "Final decision bases converge to four types: gameplay logic, production reality, author conviction, theme expression. Every project held at least one; most held two.",
-    "The final decision was a fast, single-authority judgment made after the context was fully prepared; process exists to accumulate that context, not to compute the answer."
+    "Provisional research pattern, not a hard constraint: the examined summaries do not show a style beauty contest or weighted comparison menu selecting the final direction. Faust rejects its earlier four-image menu because its own experiment failed, not because an interview proves such menus can never work.",
+    "Provisional pattern: the cases emphasize real artifacts or playable content more often than abstract swatches. This supports testing Faust on real content but does not establish a universal rule.",
+    "Provisional pattern: several cases describe requirements emerging from failures. This does not prove that no successful team used advance requirements or test batteries.",
+    "Analytical grouping only: gameplay logic, production reality, author conviction and theme expression are useful categories, not categories stated by the studied teams.",
+    "Removed as unsupported generalization: the evidence does not show that final style decisions are universally fast or made by one authority; the Sultan evidence instead includes team discussion and retention."
   ],
   "implication_for_faust": {
     "production_model": "user + AI as the 'art teacher' (user = eye/judgment, AI = hand). AI lacks muscle memory, so externalized style rules remain necessary - but they must be distilled from real-content iteration, not pre-declared.",
@@ -90,5 +108,31 @@
     "demoted_tools": "same-content test battery, six-character exam roster, and scored weight comparison are downgraded to optional stress-test instruments, applied only after 2-3 directions already attract the user, with test content distilled from real content rather than frozen in advance.",
     "authority_note": "Per methodology data integrity rules, final style decisions belong to the user."
   },
-  "source_backfill_status": "new_case_exact_urls_pending_backfill; prior leads' verification recorded in art-direction-exploration.json"
+  "sultan_process_model": {
+    "status": "user_confirmed_faust_transfer_model_not_claimed_as_literal_sultan_sop",
+    "sequence": [
+      "Provide comprehensible story archetypes, emotional intent, real use and production boundaries without prescribing a surface style.",
+      "Give a visual contributor room to form a whole visual judgment and complete one real artifact.",
+      "Judge the finished artifact as a whole rather than selecting from an averaged style menu.",
+      "Treat strong unplanned visual elements as possible world facts and let design and narrative absorb them backwards.",
+      "Continue producing real content so production reality, ordinary assets and actual use expose failures.",
+      "Distill requirements from failures and externalize grammar from repeated successful work.",
+      "Use later stress tests to protect scalability and readability, not to compute the initial authorial answer."
+    ],
+    "invalid_reproductions": [
+      "copying Arabian, mural, sculpture or weathered-line surface traits",
+      "preselecting a style through prompt-wallpaper menus",
+      "writing a complete style bible before a living artifact exists",
+      "treating unrestricted randomness as artistic freedom",
+      "treating production constraints as sufficient to invent a style",
+      "accepting one hero illustration as proof of a game-wide production system"
+    ],
+    "differential_validation": {
+      "process_parity": "The discovery order and authorial rights match without leaking the original surface answer into the brief.",
+      "functional_parity": "The result solves narrative legibility, identity, static dramatic burden and production-scale problems at comparable strength.",
+      "quality_parity": "The final authority accepts real in-context assets as production-worthy, not merely similar.",
+      "transfer_parity": "The same process yields a distinct but equally coherent and producible Faust visual system."
+    }
+  },
+  "source_backfill_status": "Sultan source pages were reopened on 2026-09-02 and claim-level status was updated. Unknown chronology, staffing structure and discarded explorations remain unknown. Other cases retain the limitations of the original single-pass research."
 }
