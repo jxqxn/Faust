@@ -132,7 +132,46 @@
       "functional_parity": "The result solves narrative legibility, identity, static dramatic burden and production-scale problems at comparable strength.",
       "quality_parity": "The final authority accepts real in-context assets as production-worthy, not merely similar.",
       "transfer_parity": "The same process yields a distinct but equally coherent and producible Faust visual system."
-    }
+    },
+    "visual_detail_causal_traceability": [
+      {
+        "detail": "brushwork_between_mural_and_sculpture",
+        "source_status": "verified_final_style_description",
+        "origin_from_prior_input": "unknown",
+        "stated_purpose": "unknown"
+      },
+      {
+        "detail": "chaotic_black_facial_lines_like_weathered_rock",
+        "source_status": "verified_final_style_description",
+        "origin_from_prior_input": "unknown",
+        "stated_purpose": "unknown",
+        "guard": "Do not infer decay, oppression, history or card mechanics as the cause without new evidence."
+      },
+      {
+        "detail": "unnatural_facial_structure",
+        "source_status": "unsupported_removed",
+        "origin_from_prior_input": "not_applicable",
+        "stated_purpose": "not_applicable"
+      },
+      {
+        "detail": "deliberately_unusual_clothing_and_accessories",
+        "source_status": "verified",
+        "origin_from_prior_input": "generally_unknown; named body-chain example was artist-added and team-retained",
+        "stated_purpose": "stimulate_curiosity_and_unease"
+      },
+      {
+        "detail": "mostly_static_cards_and_maps",
+        "source_status": "verified",
+        "origin_from_prior_input": "resource_constraint_context_is_retrospective_and_not_complete_causal_proof",
+        "stated_purpose": "tabletop_overall_texture"
+      },
+      {
+        "detail": "witch_and_card_box_use_different_style_and_live2d",
+        "source_status": "verified",
+        "origin_from_prior_input": "initial_planning_chronology_unknown",
+        "stated_purpose": "signal_a_dimension_outside_the_world_inhabitants"
+      }
+    ]
   },
   "source_backfill_status": "Sultan source pages were reopened on 2026-09-02 and claim-level status was updated. Unknown chronology, staffing structure and discarded explorations remain unknown. Other cases retain the limitations of the original single-pass research."
 }

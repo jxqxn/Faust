@@ -211,7 +211,8 @@
       {"type": "retrospective_causal_story", "allowed_use": "source_attributed_explanation", "forbidden_upgrade": "independently_proven_causality"},
       {"type": "specific_visual_intent", "allowed_use": "interpretation_of_a_named_finished_feature", "forbidden_upgrade": "complete_style_discovery_chronology"}
     ],
-    "hard_constraint_gate": "A hard Faust constraint requires verifiable project data, an observable product boundary, a formal production decision, or explicit user adoption after considering transfer fit. Interview speech alone is insufficient."
+    "hard_constraint_gate": "A hard Faust constraint requires verifiable project data, an observable product boundary, a formal production decision, or explicit user adoption after considering transfer fit. Interview speech alone is insufficient.",
+    "causal_inference_guard": "A final visual detail being compatible with a prior theme, mechanic or constraint does not prove it was derived from that input. Preserve the origin as unknown unless the creator describes the link or a contemporaneous artifact records it."
   },
   "style_grammar_method": {
     "status": "must_be_revised_after_vertical_slice",
@@ -417,6 +418,7 @@
     "External case-study claims must be verified before registration as external facts.",
     "Every score must retain reviewer role and evidence.",
     "Every killed direction should retain transferable lessons.",
-    "Changes to approved grammar require a decision log and revisit trigger."
+    "Changes to approved grammar require a decision log and revisit trigger.",
+    "Do not reverse-engineer a deterministic cause for a visual invention merely because the final form fits earlier narrative or production information."
   ]
 }
