@@ -54,6 +54,38 @@ static func refresh_quest(global: GlobalState, state, db: ConfigDB, send_notify 
 	return completed_now
 
 
+## Claim one completed quest exactly at the original Global boundary.  The
+## misspelt source method is GetQuestRewqrd; keep the public clone spelling
+## readable while preserving its state transition and persistence order.
+## [SRC: decompiled/GlobalExtensions.c @ GetQuestRewqrd (RVA 0x4fc860);
+##       dump.cs:311845-311847, 385568-385576, 386600 QuestNode]
+static func get_quest_reward(global: GlobalState, quest_id: int, db: ConfigDB) -> bool:
+	if global == null or db == null:
+		return false
+	var quest := db.get_quest(quest_id)
+	if quest.is_empty() or not bool(quest.get("isComplete", false)):
+		return false
+	if bool(quest.get("isReceived", false)) or int(global.quests.get(quest_id, 0)) == 2:
+		return false
+	quest["isReceived"] = true
+	global.quests[quest_id] = 2
+	global.total_point += int(quest.get("upgrade_point", 0))
+	global.save()
+	global.set_has_quest_reward(_count_available_rewards(global, db) > 0)
+	return true
+
+
+static func _count_available_rewards(global: GlobalState, db: ConfigDB) -> int:
+	var count := 0
+	for raw_quest in db.quests.values():
+		var quest := raw_quest as Dictionary
+		var quest_id := int(quest.get("id", 0))
+		var received := bool(quest.get("isReceived", false)) or int(global.quests.get(quest_id, 0)) == 2
+		if bool(quest.get("isComplete", false)) and not received:
+			count += 1
+	return count
+
+
 static func _first_global_counter_value(condition: Dictionary, global: GlobalState) -> int:
 	for raw_key in condition.keys():
 		var key := str(raw_key)
