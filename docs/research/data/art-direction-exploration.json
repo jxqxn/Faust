@@ -19,7 +19,8 @@
       ],
       "assumption_status_notes": {
         "half_submerged_city": "user_intuition_backed_lead since 2026-08-31 (FAUST-ART-FRAG-001); still not a confirmed worldbuilding decision",
-        "water_as_the_primary_world_metaphor": "indirectly supported by FAUST-ART-FRAG-001; remains unvalidated"
+        "water_as_the_primary_world_metaphor": "indirectly supported by FAUST-ART-FRAG-001; remains unvalidated",
+        "present_day_shanghai_as_visual_template": "explicitly rejected by user on 2026-09-02; Shanghai supplies selected conceptual genes, not a directly recognizable contemporary streetscape"
       }
   },
   "hypotheses": [
@@ -85,6 +86,13 @@
       "source": "user_stated_spontaneously",
       "content": "被水半浸泡的城市 (a city half-submerged in water)",
       "meaning": "First genuine user visual fragment. Upgrades the half_submerged_city assumption from AI-proposed construct to user_intuition_backed_lead. Still a lead, not a worldbuilding decision."
+    },
+    {
+      "fragment_id": "FAUST-ART-FRAG-002",
+      "date": "2026-09-02",
+      "source": "user_correction_to_generated_world_fragment",
+      "content": "以上海为灵感原型，提取一些要素，但不等于直接把现在的上海当成视觉原型。",
+      "meaning": "Shanghai must be conceptually translated. Candidate images may inherit selected spatial, climatic, social or historical relationships, but recognizable present-day Shanghai architecture, streetwear and infrastructure cannot serve as the default fantasy-world surface."
     }
   ],
   "exploration_attempts": [
@@ -94,6 +102,13 @@
       "method": "Four-language menu: same prompt (half-submerged city) rendered in four averaged visual languages (woodcut / enamel / naturalist plate / anime background) for user selection.",
       "verdict": "method_rejected_by_user",
       "reason": "Menu-of-averaged-wallpapers approach has no industry precedent (FAUST-ART-RESEARCH-002 cross_case_rules[0]); images contained no real project content and forced the user into judge-of-menu role instead of art-teacher role. Images retained in session workspace only as rejected-method reference, not evidence."
+    },
+    {
+      "attempt_id": "FAUST-ART-EXP-002",
+      "date": "2026-09-02",
+      "method": "One real-content world fragment: an ordinary after-school notebook-retrieval interaction on a half-submerged magical campus; second pass flattened the rendering language while preserving content.",
+      "verdict": "partial_visual_interest_but_world_translation_failed",
+      "reason": "User judged the result acceptable in isolation but corrected its world premise: it treated recognizable present-day Shanghai streetscape, clothing and infrastructure as the direct visual template. Shanghai should contribute selected abstract elements only. The images remain session previews and are not project assets."
     }
   ],
   "stress_tests": [
