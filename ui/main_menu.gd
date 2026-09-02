@@ -33,6 +33,7 @@ const BUTTON_BG_PATH := "res://assets/original/ui/button_bg_new.png"
 const BUTTON_SIZE := Vector2(668, 174)
 const BUTTON_IMAGE_SIZE := Vector2(668, 140)
 const BUTTON_FONT_SIZE := 60
+const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 var _db = null
 var _column: VBoxContainer
@@ -211,6 +212,9 @@ func _build_buttons_group(vbox: VBoxContainer) -> void:
 		red.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		red.position = Vector2(405 + 56.5 - 57.0, 21 - 57.0)
 		red.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if String(entry[1]) == "ShopButton":
+			red.visible = _db != null and GlobalExtensionsScript.has_available_upgrade(
+				GlobalState.load_default(), _db)
 		button.add_child(red)
 		group.add_child(button)
 

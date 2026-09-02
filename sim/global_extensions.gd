@@ -75,6 +75,22 @@ static func get_quest_reward(global: GlobalState, quest_id: int, db: ConfigDB) -
 	return true
 
 
+## The title-screen red dot ignores an upgrade's visibility condition: it is
+## on when any unpurchased raw UpgradeNode costs no more than current
+## totalPoint. This deliberately does not use usedPoint or totalPoint-usedPoint.
+## [SRC: decompiled/GlobalExtensions.c @ HasAvailableUpgrade (RVA 0x4fcd00);
+##       dump.cs:311849-311851, 385575-385583]
+static func has_available_upgrade(global: GlobalState, db: ConfigDB) -> bool:
+	if global == null or db == null:
+		return false
+	for raw_upgrade in db.upgrades.values():
+		var upgrade := raw_upgrade as Dictionary
+		var upgrade_id := int(upgrade.get("id", 0))
+		if not global.upgrades.has(upgrade_id) and int(upgrade.get("cost", 0)) <= global.total_point:
+			return true
+	return false
+
+
 static func _count_available_rewards(global: GlobalState, db: ConfigDB) -> int:
 	var count := 0
 	for raw_quest in db.quests.values():

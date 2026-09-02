@@ -3,6 +3,8 @@
 class_name ConfigDB
 extends RefCounted
 
+const ResultExecScript = preload("res://sim/result.gd")
+
 const NORMAL_DEFAULT_CARDS: Array[int] = [2000001, 2000006, 2000523, 2000005]
 const NORMAL_DEFAULT_RITES: Array[int] = [
 	5000001, # 治理家业
@@ -23,6 +25,7 @@ var loots := {}            # id(int) -> loot dict
 var events := {}           # id(int) -> event dict
 var after_stories := {}    # id(int/card id) -> AfterStoryNode dict
 var quests := {}           # id(int) -> QuestNode dict
+var upgrades := {}         # id(int) -> UpgradeNode dict
 # Runtime-only Datapool.over_ids HashSet<string>. This is distinct from
 # Global.overID HashSet<int>, which unlocks gallery CG across runs.
 var over_ids := {}
@@ -42,6 +45,7 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_dir(content_dir + "/after_story", after_stories)
 	_load_dir(content_dir + "/loot", loots)
 	_load_map(content_dir + "/quest.json", quests)
+	_load_map(content_dir + "/upgrade.json", upgrades)
 	_load_init(content_dir + "/init/1.json")
 
 
@@ -158,6 +162,32 @@ func get_after_story(id: int) -> Dictionary:
 
 func get_quest(id: int) -> Dictionary:
 	return quests.get(id, {})
+
+
+func get_upgrade(id: int) -> Dictionary:
+	return upgrades.get(id, {})
+
+
+## Apply every active purchased UpgradeNode in ascending id order.  The raw
+## `effect` dictionary is passed straight to the operation dispatcher; there
+## is no clone-side upgrade DTO or rewritten effect table.
+## [SRC: Datapool.c @ DoUpgrade (RVA 0x410dc0): copy Global.upgrade.Keys,
+##       Sort, skip value==0, lookup raw UpgradeNode, execute effect ops]
+func do_upgrade(state) -> void:
+	if state == null or state.global_state == null:
+		return
+	var ids: Array[int] = []
+	for raw_id in state.global_state.upgrades.keys():
+		ids.append(int(raw_id))
+	ids.sort()
+	for upgrade_id in ids:
+		if int(state.global_state.upgrades.get(upgrade_id, 0)) == 0:
+			continue
+		var upgrade := get_upgrade(upgrade_id)
+		if upgrade.is_empty():
+			continue
+		var effect: Dictionary = upgrade.get("effect", {})
+		ResultExecScript.execute(effect, state, self, {"upgrade_id": upgrade_id})
 
 
 ## [SRC: Datapool.c @ ClearOverIds/SetOverId/HasOverId

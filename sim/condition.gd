@@ -35,6 +35,21 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 		return eval_any(val, ctx)
 	if k == "all":
 		return eval_all(val, ctx)
+	# HasUnlockUpgrade succeeds when ANY configured prerequisite has ever been
+	# purchased. Dictionary membership is the criterion, so a purchased but
+	# deactivated upgrade still unlocks its successor.
+	# [SRC: decompiled/HasUnlockUpgrade.c @ IsSatisfied (RVA 0x3feb40);
+	#       dump.cs:417365-417375]
+	if k == "unlock_upgrade":
+		var global = ctx.get("global_state")
+		if global == null and ctx.get("state") != null:
+			global = ctx.get("state").global_state
+		if global == null:
+			return false
+		for raw_id in val if val is Array else [val]:
+			if global.upgrades.has(int(raw_id)):
+				return true
+		return false
 	# Transient ending-settlement keys. Datapool.over_ids is a runtime
 	# HashSet<string>, unrelated to persisted Global.overID HashSet<int>.
 	# [SRC: HasOverId.c @ IsSatisfiedInternal (RVA 0x3fdc90);
@@ -182,7 +197,7 @@ static func eval_key(key: String, val: Variant, ctx: Dictionary) -> bool:
 ## such as an unimplemented control key out of the supported bucket.
 static func is_supported_key(key: String, known_tags: Dictionary = {}) -> bool:
 	var k := key.strip_edges()
-	if k in ["any", "all", "over_id", "!over_id", "~over_id", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "!is_rite", "~is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
+	if k in ["any", "all", "unlock_upgrade", "over_id", "!over_id", "~over_id", "have", "!have", "is", "!is", "type", "!type", "rare", "round", "difficulty", "rite", "!rite", "is_rite", "!is_rite", "~is_rite", "loot", "!loot", "金币", "coin", "g.coin"]:
 		return true
 	if k.begins_with("tag_tips.") or k.begins_with("!tag_tips.") or k.begins_with("~tag_tips."):
 		return true
@@ -265,7 +280,11 @@ static func eval_counter(k: String, val: Variant, ctx: Dictionary, is_global: bo
 	var parsed := _split_num_op(k, "global_counter." if is_global else "counter.")
 	var id: int = parsed.num
 	var op: String = parsed.op
-	var cur: int = st.get_global_counter(id) if is_global else st.get_counter(id)
+	var cur := 0
+	if is_global and ctx.get("global_state") != null:
+		cur = int(ctx.get("global_state").get_counter_value(id))
+	elif st != null:
+		cur = st.get_global_counter(id) if is_global else st.get_counter(id)
 	return apply_compare(cur, int(val), op)
 
 

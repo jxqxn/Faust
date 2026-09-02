@@ -788,6 +788,12 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	available_rites.clear()
 	for rid in db.get_default_rites():
 		add_available_rite(int(rid), db, rng)
+	# The source applies active cross-run upgrades only after the base Player,
+	# Sultan pool/cards and rites exist.  In particular, AddSudanCard appends to
+	# the already-shuffled pool, so those upgrade cards remain at the draw tail.
+	# [SRC: Datapool.c @ InitPlayer (RVA 0x413700) -> DoUpgrade (0x410dc0)]
+	if db.has_method("do_upgrade"):
+		db.do_upgrade(self)
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false

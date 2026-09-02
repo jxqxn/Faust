@@ -36,7 +36,13 @@ var save_time := ""
 var total_round := 0
 var total_point := 0
 var used_point := 0
+var upgrade_state := ""
 var quest_state := ""
+## Original Global.upgrade Dictionary<int,int>: key presence means purchased;
+## value 1 means active and value 0 means purchased but deactivated.
+## [SRC: dump.cs:385575-385584; PointShopController.c @ OnBuy/OnActivate/
+##       OnDeactivate (RVA 0x5802d0/0x580090/0x5805e0)]
+var upgrades: Dictionary = {}
 var quests: Dictionary = {}
 var counters: Dictionary = {}
 var has_enter_quest := false
@@ -133,6 +139,8 @@ func to_dict() -> Dictionary:
 		"totalRound": total_round,
 		"totalPoint": total_point,
 		"usedPoint": used_point,
+		"upgradeState": upgrade_state,
+		"upgrade": _serialize_int_dictionary(upgrades),
 		"questState": quest_state,
 		"quest": _serialize_int_dictionary(quests),
 		"counter": _serialize_int_dictionary(counters),
@@ -154,7 +162,9 @@ func _apply_dict(data: Dictionary) -> void:
 	total_round = int(data.get("totalRound", data.get("total_round", 0)))
 	total_point = int(data.get("totalPoint", data.get("total_point", 0)))
 	used_point = int(data.get("usedPoint", data.get("used_point", 0)))
+	upgrade_state = str(data.get("upgradeState", data.get("upgrade_state", "")))
 	quest_state = str(data.get("questState", data.get("quest_state", "")))
+	upgrades = _restore_int_dictionary(data.get("upgrade", data.get("upgrades", {})))
 	quests = _restore_int_dictionary(data.get("quest", data.get("quests", {})))
 	counters = _restore_int_dictionary(data.get("counter", data.get("counters", {})))
 	has_enter_quest = bool(data.get("hasEnterQuest", data.get("has_enter_quest", false)))

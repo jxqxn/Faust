@@ -11,6 +11,7 @@ const SettingsPanel = preload("res://ui/settings_panel.gd")
 const UserArchivePanel = preload("res://ui/user_archive_panel.gd")
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
 const StoryControllerView = preload("res://ui/story_controller.gd")
+const PointShopControllerView = preload("res://ui/point_shop_controller.gd")
 const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 # Transitional compat layer: screens not yet re-emitted in the original
@@ -31,6 +32,7 @@ var _menu_overlay: Control
 var _settings_overlay: Control
 var _gallery_overlay: Control
 var _story_overlay: Control
+var _shop_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
 var _current_rite_id := 0
@@ -84,6 +86,8 @@ func _show_menu() -> void:
 	# [SRC: StartScene Story button -> GameController.ShowStory ->
 	#       StoryController.OnEnable (RVA 0x557ab0/0x5b0f70).]
 	menu.story_pressed.connect(_show_story)
+	# [SRC: StartScene Shop button -> PointShopController.OnEnable]
+	menu.shop_pressed.connect(_show_point_shop)
 	menu.test_start_requested.connect(_on_test_start_requested)
 	add_child(menu)
 	_current = menu
@@ -342,6 +346,22 @@ func _close_story() -> void:
 	_story_overlay = null
 
 
+func _show_point_shop() -> void:
+	if _shop_overlay != null:
+		return
+	_shop_overlay = PointShopControllerView.new()
+	_shop_overlay.setup(db, GlobalState.load_default())
+	_shop_overlay.closed.connect(_close_point_shop)
+	add_child(_shop_overlay)
+
+
+func _close_point_shop() -> void:
+	if _shop_overlay == null:
+		return
+	_shop_overlay.queue_free()
+	_shop_overlay = null
+
+
 func _on_end_game_from_esc() -> void:
 	if state == null:
 		return
@@ -516,6 +536,7 @@ func _clear_current() -> void:
 	_close_game_menu()
 	_close_gallery()
 	_close_story()
+	_close_point_shop()
 	_close_user_archive_overlay()
 	_close_rite_overlay()
 	if _current:

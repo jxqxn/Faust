@@ -38,7 +38,7 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 
 static func is_supported_key(key: String) -> bool:
 	var k := key.strip_edges()
-	if k in ["coin", "金币", "g.coin", "card", "choose", "all", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "back_to_round_begin", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
+	if k in ["coin", "金币", "g.coin", "card", "g.card", "g.change", "sudan_card", "choose", "all", "clean.rite", "event_on", "event_off", "rite", "over", "back_to_prev_round_end", "back_to_round_begin", "confirm", "loot", "prompt", "no_show", "option", "success", "failed", "delay", "no_prompt", "sleep"]:
 		return true
 	if k.begins_with("case:"):
 		return true
@@ -107,20 +107,61 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k.begins_with("counter") or k.begins_with("global_counter"):
 		_apply_counter(k, val, state, db)
 		return
-	# Card grant.
-	if k == "card":
+	# Card grant. GenCard first adds the new card to Player (including
+	# MarkCardGen), then applies its optional TagModify, and finally dispatches
+	# OnCardBorn.
+	# [SRC: GenCard.c @ Do; upgrade.json raw `g.card` payloads]
+	if k == "card" or k == "g.card":
 		var granted_id := 0
+		var tag_modify := ""
 		if val is Array:
 			if not val.is_empty():
 				granted_id = int(val[0])
+			if val.size() > 1:
+				tag_modify = str(val[1])
 		else:
 			granted_id = int(val)
 		if granted_id > 0:
-			var granted_uid: int = state.add_card_to_hand(granted_id, db)
+			var granted_uid := _generate_card(granted_id, tag_modify, state, db)
 			# GenCard dispatches OnCardBorn after the card joins the player.
 			# [SRC: GenCard.c @ Do (line 298) -> EventTriggerExtensions.OnCardBorn]
 			if granted_uid > 0:
 				state.trigger_events("card_born", {"card": granted_id, "card_uid": granted_uid})
+		return
+	# ChangeCard replaces every matching Player.cards entry with a newly-created
+	# card, preserving only count; it is not an in-place definition mutation.
+	# [SRC: ChangeCard.c @ Do + ChangeCard.__c__DisplayClass4_0.c]
+	if k == "g.change":
+		var change: Array = val if val is Array else []
+		if change.size() >= 2:
+			var old_id := int(change[0])
+			var new_id := int(change[1])
+			var targets: Array[int] = []
+			for raw_uid in state.hand:
+				var old_instance = state.get_card_instance(int(raw_uid))
+				if old_instance != null and int(old_instance.card_id) == old_id:
+					targets.append(int(raw_uid))
+			for old_uid in targets:
+				var old_instance = state.get_card_instance(old_uid)
+				if old_instance == null:
+					continue
+				var old_index: int = state.hand.find(old_uid)
+				var new_uid := _generate_card(new_id, "", state, db)
+				var new_instance = state.get_card_instance(new_uid)
+				if new_instance != null:
+					new_instance.count = old_instance.count
+				state.remove_card_from_hand(old_uid)
+				state.card_instances.erase(old_uid)
+				state.insert_card_to_hand(new_uid, old_index, db)
+		return
+	# AddSudanCard appends every requested card to the existing (already
+	# shuffled) pool. The clone's pool host is the remaining-id deck.
+	# [SRC: AddSudanCard.c @ Do; PlayerExtensions.c @ AddSudanCard 0x38c440]
+	if k == "sudan_card":
+		for raw_id in val if val is Array else [val]:
+			var sudan_id := int(raw_id)
+			if sudan_id > 0:
+				state.sudan_deck.append(sudan_id)
 		return
 	# ChooseOperations: shuffle the nested operations and execute N of them
 	# (default 1). This is a random settlement-text/branch pick, not a player
@@ -840,6 +881,33 @@ static func _apply_bare_tag(k: String, val: Variant, state, db, context: Diction
 		var instance = state.get_card_instance(uid)
 		if instance != null:
 			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+
+
+static func _generate_card(card_id: int, tag_modify: String, state, db) -> int:
+	var instance = state.create_card_instance(card_id, db, "hand")
+	if instance == null:
+		return 0
+	state.add_card_to_hand(instance.uid, db)
+	# PlayerExtensions.AddCard performs MarkCardGen before GenCard applies its
+	# operation-local TagModify. add_card_to_hand sees this as an existing uid,
+	# so replay that source boundary explicitly once at the same point.
+	# [SRC: PlayerExtensions.c @ AddCard 0x38b620 -> MarkCardGen 0x38e450;
+	#       GenCard.c @ Do 0x5101d0 L259-273]
+	state.record_card_generation(instance, db)
+	if not tag_modify.is_empty():
+		var op_idx := _first_tag_op_index(tag_modify)
+		if op_idx > 0:
+			var tag_name := tag_modify.substr(0, op_idx)
+			var amount_text := tag_modify.substr(op_idx + 1)
+			var amount := int(amount_text) if amount_text.is_valid_int() else 1
+			TagSystem.apply(
+				instance.tags,
+				tag_name,
+				TagSystem.op_from_char(tag_modify[op_idx]),
+				amount,
+				_tag_can_add(db, tag_name)
+			)
+	return instance.uid
 
 
 static func _apply_copy_slot(k: String, val: Variant, state, db, context: Dictionary) -> void:

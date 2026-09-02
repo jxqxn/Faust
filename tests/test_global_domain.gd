@@ -174,6 +174,11 @@ func test_original_global_gallery_fields_load_without_translation() -> void:
 	assert_eq(global.over_records, original["overRecord"], "overRecord stays as source-shaped data")
 	assert_eq(GlobalState._serialize_int_set(global.over_ids), original["overID"])
 	assert_eq(GlobalState._serialize_int_set(global.showed_gallery_cards), original["showedGalleryCards"])
+	assert_eq(global.total_point, int(original["totalPoint"]))
+	assert_eq(global.used_point, int(original["usedPoint"]))
+	assert_eq(global.upgrade_state, str(original["upgradeState"]))
+	assert_eq(GlobalState._serialize_int_dictionary(global.upgrades), original["upgrade"],
+		"the original default upgrade dictionary is compared without a clone DTO")
 
 
 func test_gallery_global_hash_sets_deduplicate_and_keep_source_keys() -> void:

@@ -5,7 +5,7 @@ extends Control
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
 ##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--story-typewriter]
-##   [--after-story] [--after-story-zoom] [--story-notify]
+##   [--after-story] [--after-story-zoom] [--story-notify] [--point-shop]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -22,6 +22,10 @@ func _ready() -> void:
 			frames = int(args[i + 1])
 	var main: Node = (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	if args.has("--point-shop"):
+		await get_tree().create_timer(0.5).timeout
+		if main.has_method("_show_point_shop"):
+			main.call("_show_point_shop")
 	if args.has("--gallery-card-info"):
 		await get_tree().create_timer(0.5).timeout
 		# Follow the real title route: Game._show_gallery -> GalleryPanel, then
