@@ -1,6 +1,7 @@
 extends GutTest
 
 const CreditsControllerScript = preload("res://ui/credits_controller.gd")
+const CreditsGroupScript = preload("res://ui/credits_group.gd")
 const CreditsThanksScript = preload("res://ui/credits_page_thanks.gd")
 
 var db: ConfigDB
@@ -37,6 +38,36 @@ func test_thanks_get_names_replays_source_utf16_page_boundaries() -> void:
 	var large_supporter_list: Array[String] = CreditsThanksScript.build_name_pages(thanks[4])
 	assert_eq(large_supporter_list.size(), 39,
 		"the first large crowdfunding record has 39 pages under the source algorithm")
+	assert_eq(CreditsThanksScript._tmp_to_bbcode("<size=150%>2P</size>"),
+		"[font_size=120]2P[/font_size]")
+	assert_eq(CreditsThanksScript._tmp_to_bbcode("<size=60%>test</size>"),
+		"[font_size=48]test[/font_size]")
+	assert_eq(CreditsThanksScript._tmp_plain_text(
+		'祭司全肯定<font="ja/main/NotoSerifJP-Regular SDF">の</font>橘子'),
+		"祭司全肯定の橘子")
+
+
+func test_contributor_group_replays_active_hierarchy_and_text_alignment() -> void:
+	# [SRC: CreditsGroup.c Show @ RVA 0x3f7590;
+	# CreditsHelperGroup.prefab + CreditsNameWithJob.prefab]
+	var contributor: Dictionary = (db.credits.get("contributors", []) as Array)[0]
+	var source_group: Dictionary = (contributor.get("group", []) as Array)[0]
+	var group = CreditsGroupScript.new()
+	add_child_autofree(group)
+	group.setup(source_group)
+
+	assert_false(group.get_node("Title").visible,
+		"source Title is inactive and Show never activates it")
+	assert_false(group.get_node("seperator").visible)
+	var rows := group.get_node("NamesContainer").get_children()
+	assert_eq(rows.size(), (source_group.get("members", []) as Array).size())
+	var first: Control = rows[0]
+	assert_eq(first.position, Vector2.ZERO)
+	assert_eq(first.size, Vector2(1400, 52))
+	assert_eq(first.get_node("Left").horizontal_alignment, HORIZONTAL_ALIGNMENT_LEFT)
+	assert_eq(first.get_node("Right").horizontal_alignment, HORIZONTAL_ALIGNMENT_RIGHT)
+	assert_eq(first.get_node("Left").text, str(source_group.get("members", [])[0].get("job", "")))
+	assert_eq(first.get_node("Right").text, str(source_group.get("members", [])[0].get("name", "")))
 
 
 func test_controller_replays_source_page_order_navigation_and_geometry() -> void:
@@ -72,6 +103,14 @@ func test_controller_replays_source_page_order_navigation_and_geometry() -> void
 		credits.do_next()
 		assert_eq(credits.data_index, expected_index)
 	assert_eq(credits._thanks_page.page_position, 0)
+	assert_eq(credits._thanks_page._desc.position, Vector2(170, 480))
+	assert_almost_eq(credits._thanks_page._desc.size.y, 96.02, 0.01)
+	assert_eq(credits._thanks_page._names.position, Vector2(170, 616.02))
+	var first_name: Label = credits._thanks_page._names.get_node("Name0")
+	assert_eq(first_name.text, "AAA前排兜售双头龙·3M")
+	assert_eq(first_name.position, Vector2(210, 0),
+		"GetNames emits indent=6% for the first three-column name")
+	assert_eq(first_name.get_theme_color("font_color"), Color(0.70980394, 0.65882355, 0.46274513, 1.0))
 	credits.do_next()
 	assert_eq(credits.data_index, 6,
 		"thanks internal navigation must run before advancing the outer CreditsNode list")

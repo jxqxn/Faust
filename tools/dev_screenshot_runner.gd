@@ -5,7 +5,8 @@ extends Control
 ## then saves a viewport capture and quits.
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
 ##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--story-typewriter]
-##   [--after-story] [--after-story-zoom] [--story-notify] [--point-shop] [--credits]
+##   [--after-story] [--after-story-zoom] [--story-notify] [--point-shop]
+##   [--credits] [--credits-index N]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -30,6 +31,15 @@ func _ready() -> void:
 		await get_tree().create_timer(0.5).timeout
 		if main.has_method("_show_credits"):
 			main.call("_show_credits")
+			await get_tree().process_frame
+			var credits_index := 0
+			for i in range(args.size()):
+				if args[i] == "--credits-index" and i + 1 < args.size():
+					credits_index = maxi(0, int(args[i + 1]))
+			var credits: Node = main.get("_credits_overlay")
+			if credits != null:
+				for _step in range(credits_index):
+					credits.call("do_next")
 	if args.has("--gallery-card-info"):
 		await get_tree().create_timer(0.5).timeout
 		# Follow the real title route: Game._show_gallery -> GalleryPanel, then

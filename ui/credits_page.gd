@@ -6,6 +6,7 @@ extends Control
 
 const SOURCE_ART := "res://assets/original/ui/"
 const DESIGN_SPACE := Vector2(3840, 2160)
+const SOURCE_GOLD := Color(0.70980394, 0.65882355, 0.46274513, 1.0)
 
 # ICreditsPage.Position maps to page_position because Control.position is a
 # native Vector2 property in Godot.
@@ -28,6 +29,7 @@ func setup_page(title: String, type: String) -> void:
 		add_child(_title_border)
 		_title = label("TitleText", title, Rect2(), 140)
 		_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_title.add_theme_color_override("font_color", SOURCE_GOLD)
 		add_child(_title)
 	var title_width := 420.01 if type == "developer" else 560.01
 	_title.position = Vector2((DESIGN_SPACE.x - title_width) * 0.5, 160)

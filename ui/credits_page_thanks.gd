@@ -10,10 +10,12 @@ extends "res://ui/credits_page.gd"
 const DEFAULT_COLUMNS := 3
 const DEFAULT_CELL_SIZE := 13
 const DEFAULT_PAGE_SIZE := 40
+# The prefab's four-line placeholder resolves to 312.01px.
+const SOURCE_LINE_HEIGHT := 312.01 / 4.0
 
 var _thanks: Dictionary = {}
 var _name_pages: Array[String] = []
-var _names: RichTextLabel
+var _names: Control
 var _desc: RichTextLabel
 
 
@@ -25,19 +27,17 @@ func show_data(data: Variant, pos: int) -> void:
 		_desc = RichTextLabel.new()
 		_desc.name = "Talk"
 		_desc.position = Vector2(170, 480)
-		_desc.size = Vector2(3500, 180)
+		_desc.size = Vector2(3500, 96.02)
 		_desc.bbcode_enabled = true
-		_desc.fit_content = true
 		_desc.scroll_active = false
+		_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_desc.add_theme_font_size_override("normal_font_size", 80)
+		_desc.add_theme_color_override("default_color", SOURCE_GOLD)
 		add_child(_desc)
-		_names = RichTextLabel.new()
+		_names = Control.new()
 		_names.name = "Text"
-		_names.position = Vector2(170, 680)
-		_names.size = Vector2(3500, 1120)
-		_names.bbcode_enabled = false
-		_names.scroll_active = false
-		_names.add_theme_font_size_override("normal_font_size", 65)
+		_names.position = Vector2(170, 616.02)
+		_names.size = Vector2(3500, 1223.98)
 		add_child(_names)
 	_desc.text = _tmp_to_bbcode(str(_thanks.get("desc", "")))
 	_name_pages = build_name_pages(_thanks)
@@ -46,7 +46,7 @@ func show_data(data: Variant, pos: int) -> void:
 
 func set_page_position(value: int) -> void:
 	page_position = clampi(value, 0, maxi(0, _name_pages.size() - 1))
-	_names.text = _display_page(_name_pages[page_position]) if not _name_pages.is_empty() else ""
+	_render_name_page(_name_pages[page_position] if not _name_pages.is_empty() else "")
 
 
 func has_previous() -> bool:
@@ -96,15 +96,50 @@ static func build_name_pages(item: Dictionary) -> Array[String]:
 	return pages
 
 
-static func _display_page(source: String) -> String:
-	var out := source.replace("</indent>", "\t")
+func _render_name_page(source: String) -> void:
+	for child in _names.get_children():
+		_names.remove_child(child)
+		child.free()
 	var regex := RegEx.new()
-	regex.compile("<indent=[0-9]+%>")
-	return regex.sub(out, "", true)
+	regex.compile("<indent=([0-9]+)%>(.*?)</indent>")
+	var item_index := 0
+	var row_index := 0
+	for line in source.split("\n"):
+		for match in regex.search_all(line):
+			var indent_percent := int(match.get_string(1))
+			var x := 3500.0 * float(indent_percent) / 100.0
+			var view := Label.new()
+			view.name = "Name%d" % item_index
+			view.position = Vector2(x, float(row_index) * SOURCE_LINE_HEIGHT)
+			view.size = Vector2(3500.0 - x, SOURCE_LINE_HEIGHT)
+			view.text = _tmp_plain_text(match.get_string(2))
+			view.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+			view.add_theme_font_size_override("font_size", 65)
+			view.add_theme_color_override("font_color", SOURCE_GOLD)
+			view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			_names.add_child(view)
+			item_index += 1
+		row_index += 1
 
 
 static func _tmp_to_bbcode(source: String) -> String:
 	var regex := RegEx.new()
 	regex.compile("<size=([0-9]+)%>")
-	var out := regex.sub(source, "[font_size=80]", true)
+	var out := ""
+	var cursor := 0
+	for match in regex.search_all(source):
+		out += source.substr(cursor, match.get_start() - cursor)
+		var font_size := roundi(80.0 * float(match.get_string(1)) / 100.0)
+		out += "[font_size=%d]" % font_size
+		cursor = match.get_end()
+	out += source.substr(cursor)
 	return out.replace("</size>", "[/font_size]")
+
+
+static func _tmp_plain_text(source: String) -> String:
+	# The raw list only uses TMP's font override for Japanese glyph coverage.
+	# Godot cannot consume the TMP SDF asset, but the host font already covers
+	# those glyphs; remove only the wrapper and retain the exact visible name.
+	var regex := RegEx.new()
+	regex.compile("<font=\"[^\"]+\">")
+	return regex.sub(source, "", true).replace("</font>", "")
