@@ -26,6 +26,7 @@ var events := {}           # id(int) -> event dict
 var after_stories := {}    # id(int/card id) -> AfterStoryNode dict
 var quests := {}           # id(int) -> QuestNode dict
 var upgrades := {}         # id(int) -> UpgradeNode dict
+var credits := {}          # original singleton CreditsNode
 # Runtime-only Datapool.over_ids HashSet<string>. This is distinct from
 # Global.overID HashSet<int>, which unlocks gallery CG across runs.
 var over_ids := {}
@@ -46,6 +47,7 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_dir(content_dir + "/loot", loots)
 	_load_map(content_dir + "/quest.json", quests)
 	_load_map(content_dir + "/upgrade.json", upgrades)
+	_load_single(content_dir + "/credits.json", credits)
 	_load_init(content_dir + "/init/1.json")
 
 
@@ -57,6 +59,14 @@ func _load_init(path: String) -> void:
 	var parsed = JSON.parse_string(text)
 	if parsed is Dictionary:
 		init_config = parsed
+
+
+func _load_single(path: String, dest: Dictionary) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if parsed is Dictionary:
+		dest.assign(parsed)
 
 
 func _load_tags(path: String) -> void:

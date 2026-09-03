@@ -12,6 +12,7 @@ const UserArchivePanel = preload("res://ui/user_archive_panel.gd")
 const GalleryPanel = preload("res://ui/gallery_panel.gd")
 const StoryControllerView = preload("res://ui/story_controller.gd")
 const PointShopControllerView = preload("res://ui/point_shop_controller.gd")
+const CreditsControllerView = preload("res://ui/credits_controller.gd")
 const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 # Transitional compat layer: screens not yet re-emitted in the original
@@ -33,6 +34,7 @@ var _settings_overlay: Control
 var _gallery_overlay: Control
 var _story_overlay: Control
 var _shop_overlay: Control
+var _credits_overlay: Control
 var _user_archive_overlay: Control
 var _legacy_root: Control
 var _current_rite_id := 0
@@ -88,6 +90,8 @@ func _show_menu() -> void:
 	menu.story_pressed.connect(_show_story)
 	# [SRC: StartScene Shop button -> PointShopController.OnEnable]
 	menu.shop_pressed.connect(_show_point_shop)
+	# [SRC: StartScene Credits button -> scene-owned CreditsController.OnEnable]
+	menu.credits_pressed.connect(_show_credits)
 	menu.test_start_requested.connect(_on_test_start_requested)
 	add_child(menu)
 	_current = menu
@@ -362,6 +366,22 @@ func _close_point_shop() -> void:
 	_shop_overlay = null
 
 
+func _show_credits() -> void:
+	if _credits_overlay != null:
+		return
+	_credits_overlay = CreditsControllerView.new()
+	_credits_overlay.setup(db)
+	_credits_overlay.closed.connect(_close_credits)
+	add_child(_credits_overlay)
+
+
+func _close_credits() -> void:
+	if _credits_overlay == null:
+		return
+	_credits_overlay.queue_free()
+	_credits_overlay = null
+
+
 func _on_end_game_from_esc() -> void:
 	if state == null:
 		return
@@ -537,6 +557,7 @@ func _clear_current() -> void:
 	_close_gallery()
 	_close_story()
 	_close_point_shop()
+	_close_credits()
 	_close_user_archive_overlay()
 	_close_rite_overlay()
 	if _current:
