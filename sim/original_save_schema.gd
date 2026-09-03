@@ -75,9 +75,9 @@ const ORIGINAL_FIELDS := {
 	"disable_auto_gen_sudan_card": {"type": "bool", "clone": "auto_gen_sudan_card(取反)", "status": "mapped", "note": ""},
 	"custom_rite_name": {"type": "Dictionary<int,string>", "clone": "custom_rite_names", "status": "mapped", "note": "玩家级仪式显示名覆盖（按配置 id）"},
 	"player_card_name": {"type": "Dictionary<int,string>", "clone": "player_card_names", "status": "mapped", "note": "玩家级卡牌显示名覆盖（按配置 id，优先于 Card.custom_name）"},
-	"end_open": {"type": "bool", "clone": "", "status": "missing", "note": "终局开启"},
-	"is_armageddon": {"type": "bool", "clone": "", "status": "missing", "note": "末日决战态"},
-	"armageddon_rite_id": {"type": "int", "clone": "", "status": "missing", "note": "末日仪式 id"},
+	"end_open": {"type": "bool", "clone": "end_open", "status": "mapped", "note": "5010009 结算结果关闭后置位；MapController.Start/次日链切终局背景"},
+	"is_armageddon": {"type": "bool", "clone": "is_armageddon", "status": "mapped", "note": "仪式专属循环音乐状态，不是独立战斗规则模式"},
+	"armageddon_rite_id": {"type": "int", "clone": "armageddon_rite_id", "status": "mapped", "note": "当前 armageddon_music_loop 仪式配置 id"},
 }
 
 ## v5-only fields: present in the clone save, no original counterpart.

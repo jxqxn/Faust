@@ -49,9 +49,6 @@ const DROPPED_FIELDS := {
 	# notes 已承载（批次 O）：结构/分页/六个 type 语义 + 1/2/3 写点；
 	# 4/10001/10002 运行时写点待调用方反编译或标签门解出（见 METHOD_MAP）。
 	"BagIndex": "背包索引",
-	"end_open": "终局开启",
-	"is_armageddon": "末日决战态",
-	"armageddon_rite_id": "末日仪式 id",
 	"delay_ops": "原作 DelayOp 到期语义未逆向（样本为空则零损失）",
 	"sudan_card_pool": "带 uid 的池对象：克隆牌堆为 id 多重集（见 approximated）",
 	"wizard_first_show": "引导首见布尔（克隆 begin_guide 为指令字典）",
@@ -68,7 +65,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	var round_number := int(original.get("round", 1))
 	var min_round := maxi(1, int(original.get("min_round", 1)))
 	for scalar_field in ["difficulty(-1 基)", "round", "min_round", "card_uid_index",
-			"rite_uid_index", "sudan_redraw_count"]:
+			"rite_uid_index", "sudan_redraw_count", "end_open", "is_armageddon",
+			"armageddon_rite_id"]:
 		converted.append(scalar_field)
 
 	# Player stores the actual profile plus ordinary redraws already used. Keep
@@ -240,6 +238,9 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"sudan_redraw_times_recovery_round": redraw_recovery_round,
 		"success": bool(original.get("success", false)),
 		"over_reason": int(original.get("over_reason", -2147483648)),
+		"end_open": bool(original.get("end_open", false)),
+		"is_armageddon": bool(original.get("is_armageddon", false)),
+		"armageddon_rite_id": int(original.get("armageddon_rite_id", 0)),
 		"sudan_box_show": bool(original.get("sudan_box_show", false)),
 		"story_unshow": bool(original.get("story_unshow", false)),
 		"prestige_unshow": bool(original.get("prestige_unshow", false)),
@@ -322,6 +323,9 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("sudan_redraw_times_recovery_round", int(original.get("sudan_redraw_times_recovery_round", 7)), int(state.sudan_redraw_times_recovery_round)))
 	rows.append(_row("success", bool(original.get("success", false)), bool(state.success)))
 	rows.append(_row("over_reason", int(original.get("over_reason", -2147483648)), int(state.over_reason)))
+	rows.append(_row("end_open", bool(original.get("end_open", false)), bool(state.end_open)))
+	rows.append(_row("is_armageddon", bool(original.get("is_armageddon", false)), bool(state.is_armageddon)))
+	rows.append(_row("armageddon_rite_id", int(original.get("armageddon_rite_id", 0)), int(state.armageddon_rite_id)))
 	rows.append(_row("sudan_box_show", bool(original.get("sudan_box_show", false)), bool(state.sudan_box_show)))
 	rows.append(_row("story_unshow", bool(original.get("story_unshow", false)), bool(state.story_unshow)))
 	rows.append(_row("prestige_unshow", bool(original.get("prestige_unshow", false)), bool(state.prestige_unshow)))

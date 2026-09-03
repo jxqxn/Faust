@@ -67,8 +67,8 @@ func _synthetic_original() -> Dictionary:
 		"once_new_rites_is_show": {"5001001": false, "5001002": true}, "cached_event": [5310000], "BagIndex": 0,
 		"last_round_rite_data": {"5001001": {"s2": {"id": 2000010, "count": 1}}}, "rite_auto_result": false,
 		"disable_auto_gen_sudan_card": false, "custom_rite_name": {"5001001": "旧仪式名"},
-		"player_card_name": {"2000005": "旧卡名"}, "end_open": false, "is_armageddon": false,
-		"armageddon_rite_id": 0,
+		"player_card_name": {"2000005": "旧卡名"}, "end_open": true, "is_armageddon": true,
+		"armageddon_rite_id": 5010061,
 	}
 
 
@@ -88,6 +88,14 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(state.redraws_left, 2, "UI remainder derives from allowance minus used redraws")
 	assert_false(state.success, "terminal success flag imports")
 	assert_eq(state.over_reason, -2147483648, "unended runs keep the original int.MinValue reason")
+	assert_true(state.end_open, "terminal-map presentation state imports")
+	assert_true(state.is_armageddon, "rite-loop presentation state imports")
+	assert_eq(state.armageddon_rite_id, 5010061, "active rite-loop id imports")
+	var round_trip := SaveSystem.serialize(state)
+	assert_true(bool(round_trip.get("end_open", false)), "terminal-map state survives clone serialization")
+	assert_true(bool(round_trip.get("is_armageddon", false)), "rite-loop state survives clone serialization")
+	assert_eq(int(round_trip.get("armageddon_rite_id", 0)), 5010061,
+		"active rite-loop id survives clone serialization")
 	assert_true(state.sudan_box_show, "Sudan box visibility preference imports")
 	assert_true(state.story_unshow, "story hidden preference imports")
 	assert_false(state.prestige_unshow, "prestige hidden preference imports")
@@ -169,6 +177,9 @@ func test_report_flags_approximations_and_value_drops() -> void:
 	assert_false("gen_cards" in dropped_with_value, "card generation history is mapped, not dropped")
 	assert_false("gen_tags" in dropped_with_value, "tag generation history is mapped, not dropped")
 	assert_false("pins" in dropped_with_value, "completed rite pins are carried, not dropped")
+	assert_false("end_open" in dropped_with_value, "terminal-map state is mapped, not dropped")
+	assert_false("is_armageddon" in dropped_with_value, "rite-loop state is mapped, not dropped")
+	assert_false("armageddon_rite_id" in dropped_with_value, "rite-loop id is mapped, not dropped")
 	assert_has(dropped_with_value, "name")
 
 

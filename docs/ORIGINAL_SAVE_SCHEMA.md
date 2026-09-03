@@ -80,9 +80,9 @@ godot --headless --script tools/export_save_diff.gd -- \
 | disable_auto_gen_sudan_card | bool | auto_gen_sudan_card(取反) | mapped | |
 | custom_rite_name | Dict\<int,string\> | custom_rite_names | mapped | 玩家级仪式显示名覆盖（按配置 id） |
 | player_card_name | Dict\<int,string\> | player_card_names | mapped | 玩家级卡牌显示名覆盖（按配置 id，优先于 Card.custom_name） |
-| end_open | bool | — | missing | 终局开启 |
-| is_armageddon | bool | — | missing | 末日决战态 |
-| armageddon_rite_id | int | — | missing | 末日仪式 id |
+| end_open | bool | end_open | mapped | 仪式 5010009 的结果面板关闭后置位；地图载入/次日链据此切终局背景 |
+| is_armageddon | bool | is_armageddon | mapped | 仪式专属循环音乐状态，不是独立战斗规则模式 |
+| armageddon_rite_id | int | armageddon_rite_id | mapped | 当前 `armageddon_music_loop` 仪式配置 id |
 
 ## 嵌套 DTO
 
@@ -117,7 +117,7 @@ saveTime / finishTutorial / inGame / totalRound / totalPoint / usedPoint / upgra
 
 ## 阶段二：导入桥（2026-08-18 已落地）
 
-`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v8 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge payload）。语料 auto_save.json 实测 **46/46 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器/notes 日志/**Player.pins 终局图钉**等）。
+`sim/original_save_importer.gd`：原作 Player 存档 → 克隆 v8 payload → 正常 `SaveSystem.deserialize` 路径载入 GameState。`tools/export_save_diff.gd --bridge` 产出同刻对拍报告（user://save_diff/save_diff.md + bridge payload）。语料 auto_save.json 实测 **49/49 项全过**（回合/难度基数/两 uid 指针/计数器/事件状态/时机臂/仪式槽位/装备链接/手牌成员及 bag/bagpos/苏丹多重集及重抽 profile/终局结果/五项 HUD 可见性/每仪式首见标志/per-id 计数/金币 7000105 派生读/仪式上次投放缓存/cached_event 提示 id/两张玩家级名称覆盖表/两组唯一性登记/两组生成计数器/notes 日志/**Player.pins 终局图钉**及 end/armageddon 三字段）。
 
 导入桥当场抓到并修复的结构偏差：
 

@@ -293,6 +293,16 @@ var guide_cues: Array = []
 #       GameOver.c Do (0x50ff10) calls SetGameOver(false, operation.value)]
 var success := false
 var over_reason := -2147483648
+# Persistent end/armageddon presentation state. These are source Player
+# fields, not a clone-authored combat-mode abstraction: end_open switches the
+# map to its terminal background, while is_armageddon + armageddon_rite_id
+# restore the rite-specific loop-audio animator after loading/next round.
+# [SRC: dump.cs Player @0x178/@0x179/@0x17C; MapController.c Start
+#       (0x56a890); GameController.c Start (armageddon animator restore);
+#       GameController.__c__DisplayClass142_0.c b__5 (0x570850)]
+var end_open := false
+var is_armageddon := false
+var armageddon_rite_id := 0
 # Set when a silently-settled event chain requests game over; the UI checks
 # and clears it after its current surface closes.
 var over_pending := false
@@ -734,6 +744,9 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	once_new_rites_is_show.clear()
 	gen_cards.clear()
 	gen_tags.clear()
+	end_open = false
+	is_armageddon = false
+	armageddon_rite_id = 0
 	next_card_uid = 1
 	player_actor_uid = 0
 	rail_order.clear()
