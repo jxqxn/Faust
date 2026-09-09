@@ -133,10 +133,13 @@ func test_rite_title_is_independent_of_icon_bound_and_clicks_instance() -> void:
 		var card: Control = desk.rite_cards[uid]
 		var banner := card.get_node("TitleBG") as TextureButton
 		var title := banner.get_node("Title") as Label
-		assert_eq(title.get_theme_font_size("font_size"), 42)
+		# [SRC: RiteRender.Init 0x59a9e0 -> TextTranslate @RITE_TITLE
+		# (content/textstyle.json, md=40); GameScene camera half-height 1732
+		# and Map7621 scale 1.25 give one isotropic world-to-screen factor.]
+		assert_eq(title.get_theme_font_size("font_size"), 40)
 		assert_eq(banner.size.y, 77.0)
 		assert_gt(banner.size.x, 113.0)
-		assert_almost_eq(banner.scale.x, 3840.0 / 4200.0, 0.001)
+		assert_almost_eq(banner.scale.x, 2160.0 * 1.25 / 3464.0, 0.001)
 		banner.pressed.emit()
 		assert_signal_emitted_with_parameters(desk, "open_rite_instance", [uid])
 		break

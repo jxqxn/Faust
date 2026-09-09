@@ -136,6 +136,21 @@ const END_MAP_TEXTURE = preload("res://assets/original/situation_desk/table-map-
 #       LocationController components@12280..12291]
 const MAP_SIZE := Vector2(4200.0, 2600.0)
 const MAP_LOCAL_OFFSET := Vector2(0.0, -178.0)
+# [SRC: GameScene Desktop Camera Transform3970/Camera4419; Map7621.]
+const CAMERA_POSITION := Vector2(97, -106)
+const CAMERA_HALF_HEIGHT := 1732.0
+const MAP_SCALE := 1.25
+# Image children, independent of their LocationController container rectangles.
+# [SRC: GameScene RectTransforms 7684/7775/7695/7644/7632 and siblings.]
+const LOCATION_ART := {
+	"Palace": [["Palace.png", Vector2(-10, 21), Vector2(690, 446)]],
+	"Parish": [["Parish_1.png", Vector2(61, -4), Vector2(296, 170)]],
+	"Outside": [["Outside_1.png", Vector2(158, -625), Vector2(343, 222)]],
+	"Blackstreet": [["Blackstreet_1.png", Vector2(-184, 202.5), Vector2(340, 226)], ["Blackstreet_2.png", Vector2(8.5, -203), Vector2(736, 410)]],
+	"SelfHome": [["SelfHome.png", Vector2(37, 105), Vector2(321, 211)]],
+	"Uptown": [["Uptown.png", Vector2(3, 0), Vector2(723, 383)], ["Uptown_2.png", Vector2(-802, -714), Vector2(223, 279)]],
+	"Downtown": [["Downtown_1.png", Vector2(-98.5, 23.8), Vector2(261, 230)], ["Downtown_2.png", Vector2(-760.5, -200), Vector2(261, 210)]],
+}
 const LOCATION_SCENE_SPECS := [
 	{"node": "Palace", "location": "宫廷", "position": Vector2(-477, 508), "size": Vector2(690, 446), "active": true, "asset": "Palace.png", "rite_positions": [Vector2(-87, -108), Vector2(104, 58), Vector2(-264, 7), Vector2(159, -220), Vector2(229, -55), Vector2(484, -174), Vector2(-164, -220), Vector2(-405, -108), Vector2(-213, 122), Vector2(438, 62), Vector2(11, 257)]},
 	{"node": "Treasure", "location": "奇珍", "position": Vector2(-1238, 263), "size": Vector2(800, 500), "active": true, "rite_positions": [Vector2(1117, 714), Vector2(-152, 33), Vector2(604, -1079), Vector2(2174, -237), Vector2(449, 689), Vector2(2774, 536), Vector2(2736, -941), Vector2(-583, 570), Vector2(1287, -910), Vector2(1767, -1046), Vector2(3129, -777), Vector2(-167, -1122), Vector2(-922, 569), Vector2(3140, 566), Vector2(-802, -1171)]},
@@ -171,8 +186,8 @@ const RITE_CARD_BOUND_PIVOT := Vector2(0.5, 0.0)
 const RITE_CARD_BOUND_CENTER_OFFSET := Vector2(0.0, 48.5)
 const RITE_CARD_BOUND_EXTENTS := Vector2(61.5, 66.5)
 # MapController.SetRitesPosition converts the screen centre into Map-local
-# space before sorting.  Map is at (0,-178), so this is (0,178) in that space.
-const RITE_CARD_SORT_CENTER := Vector2(0.0, 178.0)
+# space before sorting, including camera translation and Map local scale.
+const RITE_CARD_SORT_CENTER := (CAMERA_POSITION - MAP_LOCAL_OFFSET) / MAP_SCALE
 # MapController.SetPos checks the moved RiteNew *bound centre* against `bg`;
 # it restores the old point when that centre leaves the background.  Scene
 # YAML: Map=4200x2600 scale 1.25 at (0,-178); bg=4095x2147 scale 1.5 at (0,0).
@@ -195,6 +210,7 @@ var lines: Dictionary = {}
 # instantiated RiteNew transform, never calls GetPosition a second time.
 var _rite_position_assignments: Dictionary = {} # uid -> {controller, position}
 var _rite_card_source_positions: Dictionary = {} # uid -> current Map-local root
+var _rite_bounds_dirty := false
 var last_rite: int = 0
 var ViewRange := Rect2()
 var DeskBGSpecial: TextureRect
@@ -243,17 +259,15 @@ func _build_locations() -> void:
 		# MapController.Awake indexes both GameObject name and location label.
 		maps[str(spec["node"])] = controller
 		maps[str(spec["location"])] = controller
-		var asset_name := str(spec.get("asset", ""))
-		if asset_name.is_empty():
-			continue
-		var art := TextureRect.new()
-		art.name = "Art"
-		art.texture = load("res://assets/original/ui/areas/%s" % asset_name) as Texture2D
-		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		location.add_child(art)
+		for entry in LOCATION_ART.get(str(spec["node"]), []):
+			var art := TextureRect.new()
+			art.name = "Art" if location.get_child_count() == 0 else "Art2"
+			art.set_meta("source_asset", entry[0])
+			art.texture = load("res://assets/original/ui/areas/%s" % entry[0]) as Texture2D
+			art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			art.stretch_mode = TextureRect.STRETCH_SCALE
+			art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			location.add_child(art)
 
 
 func _build_ithink_target() -> void:
@@ -307,9 +321,10 @@ func change_bg_to_end() -> void:
 			var controller := maps.get(str(spec["location"])) as LocationController
 			if controller == null:
 				continue
-			var art := controller.view.get_node_or_null("Art") as TextureRect
-			if art != null:
-				art.texture = _end_map_atlas.frame(asset_name)
+			for art in controller.view.get_children():
+				var frame_name := str(art.get_meta("source_asset", ""))
+				if art is TextureRect and _end_map_atlas.has_frame(frame_name):
+					art.texture = _end_map_atlas.frame(frame_name)
 	queue_redraw()
 
 
@@ -397,8 +412,14 @@ func _layout() -> void:
 		var source_position: Vector2 = spec["position"]
 		var source_size: Vector2 = spec["size"]
 		var center := _map_local_to_canvas(source_position + MAP_LOCAL_OFFSET)
-		location.size = Vector2(source_size.x * size.x / MAP_SIZE.x, source_size.y * size.y / MAP_SIZE.y)
+		location.size = source_size * _map_scale()
 		location.position = (center - location.size * 0.5).round()
+		var artwork: Array = LOCATION_ART.get(str(spec["node"]), [])
+		for i in artwork.size():
+			var art: Control = location.get_child(i)
+			var offset: Vector2 = artwork[i][1]
+			art.size = artwork[i][2] * _map_scale()
+			art.position = location.size * 0.5 + Vector2(offset.x, -offset.y) * _map_scale() - art.size * 0.5
 	if _think_drop_zone != null:
 		var k := minf(size.x / 3840.0, size.y / 2160.0)
 		_think_drop_zone.size = Vector2(400, 704) * k
@@ -414,10 +435,17 @@ func _layout() -> void:
 
 
 func _map_local_to_canvas(source_position: Vector2) -> Vector2:
-	return Vector2(
-		size.x * 0.5 + source_position.x * size.x / MAP_SIZE.x,
-		size.y * 0.5 - source_position.y * size.y / MAP_SIZE.y
-	)
+	var world := (source_position - MAP_LOCAL_OFFSET) * MAP_SCALE + MAP_LOCAL_OFFSET
+	return _world_to_canvas(world)
+
+
+func _map_scale() -> float:
+	return size.y / (CAMERA_HALF_HEIGHT * 2.0) * MAP_SCALE
+
+
+func _world_to_canvas(world: Vector2) -> Vector2:
+	var relative := (world - CAMERA_POSITION) * size.y / (CAMERA_HALF_HEIGHT * 2.0)
+	return size * 0.5 + Vector2(relative.x, -relative.y)
 
 
 func refresh_rite_pins() -> void:
@@ -434,7 +462,7 @@ func refresh_rite_pins() -> void:
 	var rite_ids: Array[int] = _state.rite_pins
 	for rite_id in rite_ids:
 		var rite: Dictionary = _db.rites.get(rite_id, {})
-		var texture := _pin_atlas.frame(str(rite.get("icon", "")) + ".png")
+		var texture := _rite_icon(rite)
 		var pin := RitePinView.new()
 		pin.name = "RitePin_%d" % rite_id
 		pin.rite_id = rite_id
@@ -624,7 +652,7 @@ func refresh_rite_cards() -> void:
 	var instances: Array = _state.available_rite_instances() if _state.has_method("available_rite_instances") else []
 	for instance in instances:
 		var rite: Dictionary = _db.rites.get(instance.id, {})
-		var texture := _pin_atlas.frame(str(rite.get("icon", "")) + ".png")
+		var texture := _rite_icon(rite)
 		var card := RiteCardButton.new()
 		card.name = "RiteNew_%d" % instance.uid
 		card.rite_uid = instance.uid
@@ -633,21 +661,29 @@ func refresh_rite_cards() -> void:
 		card.disabled = is_scene_blocked()
 		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 			card.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+		_build_rite_title(card, rite, instance)
+		# RiteNew child order: TitleBG, IconOutline, Icon.
 		if texture != null:
 			var icon := TextureRect.new()
 			icon.name = "Icon"
 			icon.texture = texture
 			icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.stretch_mode = TextureRect.STRETCH_SCALE
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(icon)
-		_build_rite_title(card, rite, instance)
 		card.pressed.connect(_on_rite_card_pressed.bind(instance.uid))
 		card.z_index = 7
 		add_child(card)
 		rite_cards[instance.uid] = card
+	_rite_bounds_dirty = true
 	_layout_rite_cards()
+
+
+func _rite_icon(rite: Dictionary) -> Texture2D:
+	# [SRC: Datapool.GetRiteSprite 0x4128a0; stringliteral @0x258A420.]
+	var texture := _pin_atlas.frame(str(rite.get("icon", "")) + ".png")
+	return texture if texture != null else _pin_atlas.frame("rite_0.png")
 
 
 func _on_rite_card_pressed(rite_uid: int) -> void:
@@ -663,9 +699,10 @@ func _build_rite_title(card: RiteCardButton, rite: Dictionary, instance) -> void
 	var title := Label.new()
 	title.name = "Title"
 	title.text = _state.rite_display_name(instance.id, _db)
-	var font := preload("res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf")
-	var text_width := ceilf(font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 42).x)
 	var gold := int(rite.get("type", 0)) == 3
+	preload("res://ui/source_text_style.gd").apply(title, "@RITE_TITLE_BLACK" if gold else "@RITE_TITLE")
+	var font := title.get_theme_font("font")
+	var text_width := ceilf(font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x)
 	var banner := TextureButton.new()
 	banner.name = "TitleBG"
 	banner.texture_normal = load("res://assets/original/ui/title_bg%s.png" % ("_gold" if gold else ""))
@@ -686,11 +723,34 @@ func _build_rite_title(card: RiteCardButton, rite: Dictionary, instance) -> void
 	title.position = Vector2(56, 0)
 	title.size = Vector2(text_width, 77)
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	title.add_theme_font_override("font", font)
-	title.add_theme_font_size_override("font_size", 42)
 	title.add_theme_color_override("font_color", Color.BLACK if gold else Color.WHITE)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	banner.add_child(title)
+	title.minimum_size_changed.connect(_on_rite_title_size_changed.bind(card))
+
+
+func _on_rite_title_size_changed(card: RiteCardButton) -> void:
+	if card.is_queued_for_deletion():
+		return
+	var title := card.get_node("TitleBG/Title") as Label
+	var width := ceilf(title.get_theme_font("font").get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, title.get_theme_font_size("font_size")).x)
+	var banner := title.get_parent() as Control
+	if is_equal_approx(banner.size.x, 113 + width):
+		return
+	banner.size.x = 113 + width
+	title.size.x = width
+	(banner.get_node("RightImage") as Control).position.x = 56 + width
+	_rite_bounds_dirty = true
+	_layout_rite_cards.call_deferred()
+
+
+func _rite_card_bound(rite_uid: int) -> Rect2:
+	# [SRC: RiteRender.OnUpdateBound 0x59be70; RiteNew.bound pivot(.5,0),
+	# pos.y=-18. Binary float at RVA0x1c92b4c is 0.5. Map-local Y is up.]
+	var card := rite_cards.get(rite_uid) as Control
+	var banner := card.get_node_or_null("TitleBG") as Control if card != null else null
+	var width := banner.size.x + 61.5 if banner != null else 123.0
+	return Rect2(-61.5, -18, width, 133)
 
 
 func _layout_rite_pins() -> void:
@@ -728,14 +788,14 @@ func _layout_rite_card(card: Control, source_position: Vector2) -> void:
 	_layout_map_rect(card, source_position, RITE_CARD_BOUND_SIZE, RITE_CARD_BOUND_ANCHORED_POSITION, RITE_CARD_BOUND_PIVOT)
 	var banner := card.get_node_or_null("TitleBG") as Control
 	if banner != null:
-		var source_scale := Vector2(size.x / MAP_SIZE.x, size.y / MAP_SIZE.y)
+		var source_scale := Vector2.ONE * _map_scale()
 		banner.scale = source_scale
 		# Root is (61.5,115) from bound top-left; TitleBG top=(0,-91.5).
 		banner.position = Vector2(61.5, 23.5) * source_scale
 
 
 func _layout_map_rect(view: Control, source_position: Vector2, rect_size: Vector2, anchored_position: Vector2, pivot: Vector2) -> void:
-	var source_scale := Vector2(size.x / MAP_SIZE.x, size.y / MAP_SIZE.y)
+	var source_scale := Vector2.ONE * _map_scale()
 	view.size = rect_size * source_scale
 	var root := _map_local_to_canvas(source_position + MAP_LOCAL_OFFSET)
 	var source_top_left := Vector2(
@@ -805,8 +865,9 @@ func _allocate_rite_card_positions() -> Dictionary:
 			_rite_position_assignments[rite_uid] = {"controller": controller, "position": position}
 			_rite_card_source_positions[rite_uid] = controller.source_position + position.add_rite(rite_uid)
 			added_any = true
-	if added_any:
+	if added_any or _rite_bounds_dirty:
 		_rite_card_source_positions = _resolve_rite_card_positions(_rite_card_source_positions)
+		_rite_bounds_dirty = false
 	return _rite_card_source_positions.duplicate()
 
 
@@ -834,8 +895,8 @@ func _resolve_rite_card_positions(source_positions: Dictionary) -> Dictionary:
 		else:
 			fixed_special.append(rite_uid)
 	primary.sort_custom(func(a: int, b: int) -> bool:
-		var a_center: Vector2 = result[a] + RITE_CARD_BOUND_CENTER_OFFSET
-		var b_center: Vector2 = result[b] + RITE_CARD_BOUND_CENTER_OFFSET
+		var a_center: Vector2 = result[a] + _rite_card_bound(a).get_center()
+		var b_center: Vector2 = result[b] + _rite_card_bound(b).get_center()
 		return a_center.distance_squared_to(RITE_CARD_SORT_CENTER) < b_center.distance_squared_to(RITE_CARD_SORT_CENTER)
 	)
 	fixed_special.sort()
@@ -860,7 +921,8 @@ func _apply_rite_card_pair_position(source_positions: Dictionary, fixed_uid: int
 	if not source_positions.has(fixed_uid) or not source_positions.has(moved_uid):
 		return
 	source_positions[moved_uid] = resolve_rite_card_pair_position(
-		source_positions[fixed_uid], source_positions[moved_uid]
+		source_positions[fixed_uid], source_positions[moved_uid],
+		_rite_card_bound(fixed_uid), _rite_card_bound(moved_uid)
 	)
 
 
@@ -868,22 +930,23 @@ func _apply_rite_card_pair_position(source_positions: Dictionary, fixed_uid: int
 ## and remains a SetPos hit, matching the source's strict `<` early returns.
 ## It tests only the candidate bound centre against bg and restores the full
 ## previous root position on failure; it never clamps an edge.
-static func resolve_rite_card_pair_position(fixed_root: Vector2, moved_root: Vector2) -> Vector2:
-	var fixed_center := fixed_root + RITE_CARD_BOUND_CENTER_OFFSET
-	var moved_center := moved_root + RITE_CARD_BOUND_CENTER_OFFSET
+static func resolve_rite_card_pair_position(fixed_root: Vector2, moved_root: Vector2, fixed_bound: Rect2 = Rect2(-61.5, -18, 123, 133), moved_bound: Rect2 = Rect2(-61.5, -18, 123, 133)) -> Vector2:
+	var fixed_center := fixed_root + fixed_bound.get_center()
+	var moved_center := moved_root + moved_bound.get_center()
+	var extent_sum := (fixed_bound.size + moved_bound.size) * 0.5
 	var delta := moved_center - fixed_center
-	if absf(delta.x) > RITE_CARD_BOUND_EXTENTS.x * 2.0:
+	if absf(delta.x) > extent_sum.x:
 		return moved_root
-	if absf(delta.y) > RITE_CARD_BOUND_EXTENTS.y * 2.0:
+	if absf(delta.y) > extent_sum.y:
 		return moved_root
-	var overlap_x := RITE_CARD_BOUND_EXTENTS.x * 2.0 - absf(delta.x)
-	var overlap_y := RITE_CARD_BOUND_EXTENTS.y * 2.0 - absf(delta.y)
+	var overlap_x := extent_sum.x - absf(delta.x)
+	var overlap_y := extent_sum.y - absf(delta.y)
 	var candidate := moved_root
 	if overlap_x <= overlap_y:
 		candidate.x += -overlap_x if moved_center.x < fixed_center.x else overlap_x
 	else:
 		candidate.y += -overlap_y if moved_center.y < fixed_center.y else overlap_y
-	var candidate_center := candidate + RITE_CARD_BOUND_CENTER_OFFSET
+	var candidate_center := candidate + moved_bound.get_center()
 	var right_bottom := RITE_CARD_BG_BOUNDS.position + RITE_CARD_BG_BOUNDS.size
 	if candidate_center.x < RITE_CARD_BG_BOUNDS.position.x or candidate_center.x > right_bottom.x:
 		return moved_root
@@ -937,13 +1000,12 @@ static func _location_range(raw_location: String) -> Dictionary:
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
-	var table_scale := minf(size.x / TABLE_TEXTURE.get_width(), size.y / TABLE_TEXTURE.get_height())
-	var table_size := TABLE_TEXTURE.get_size() * table_scale
-	draw_texture_rect(TABLE_TEXTURE, Rect2((size - table_size) * 0.5, table_size), false)
+	var world_scale := size.y / (CAMERA_HALF_HEIGHT * 2.0)
+	var table_size := Vector2(4896, 2947) * 2.0 * world_scale
+	draw_texture_rect(TABLE_TEXTURE, Rect2(_world_to_canvas(Vector2.ZERO) - table_size * 0.5, table_size), false)
 	var map_texture: Texture2D = END_MAP_TEXTURE if _end_background_active else MAP_TEXTURE
-	var map_scale := minf(size.x / map_texture.get_width(), size.y / map_texture.get_height())
-	var map_size := map_texture.get_size() * map_scale
-	draw_texture_rect(map_texture, Rect2((size - map_size) * 0.5, map_size), false)
+	var map_size := Vector2(4095, 2147) * 1.5 * world_scale
+	draw_texture_rect(map_texture, Rect2(_world_to_canvas(Vector2.ZERO) - map_size * 0.5, map_size), false)
 
 
 class RitePinView:

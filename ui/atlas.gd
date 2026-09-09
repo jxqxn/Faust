@@ -11,6 +11,7 @@ const CACHE_CAPACITY := 256
 var _atlas_texture: Texture2D
 var _frames: Dictionary = {}
 var _cache: Dictionary = {}
+var _frame_scale := Vector2.ONE
 
 
 static func load_atlas(atlas_path: String) -> OriginalAtlas:
@@ -23,6 +24,11 @@ static func load_atlas(atlas_path: String) -> OriginalAtlas:
 	var json_path := atlas_path.replace(".png", ".json")
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(json_path)) if FileAccess.file_exists(json_path) else null
 	if parsed is Dictionary:
+		var declared: Dictionary = parsed.get("meta", {}).get("size", {})
+		var declared_size := Vector2(float(declared.get("w", 0)), float(declared.get("h", 0)))
+		if declared_size.x > 0 and declared_size.y > 0:
+			# Source rites.png is 1024x2048; its authored JSON uses 2048x4096.
+			atlas._frame_scale = atlas._atlas_texture.get_size() / declared_size
 		for frame in parsed.get("frames", []):
 			if frame is Dictionary:
 				atlas._frames[str(frame.get("filename", ""))] = frame
@@ -42,6 +48,9 @@ func frame(frame_name: String) -> Texture2D:
 		int(rect.get("x", 0)), int(rect.get("y", 0)),
 		int(rect.get("w", 0)), int(rect.get("h", 0))
 	)
+	var scaled_end := Vector2(src.end) * _frame_scale
+	src.position = Vector2i((Vector2(src.position) * _frame_scale).round())
+	src.size = Vector2i(scaled_end.round()) - src.position
 	if src.size.x <= 0 or src.size.y <= 0 or src.position.x < 0 or src.position.y < 0:
 		return null
 	if src.position.x + src.size.x > image.get_width() or src.position.y + src.size.y > image.get_height():

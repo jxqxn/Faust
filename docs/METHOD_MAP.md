@@ -1,5 +1,13 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 地图投影与事件标牌（2026-09-09，局部链已验收）
+
+GameScene Desktop Camera Transform3970/Camera4419：位置(97,-106)、正交半高1732；Map7621缩放1.25、位置(0,-178)。建筑按Image子节点尺寸及偏移绘制，不使用Location容器尺寸。RiteRender.OnUpdateBound 0x59be70（dump.cs:324578）将bound宽设为TitleBG宽+Icon宽/2，中心X=(bound宽-Icon宽)/2，再调用MapController.SetRitesPosition 0x56a200 / SetPos 0x569cd0；GameAssembly RVA0x1c92b4c浮点常量实读0.5。原先123×133仅为初始bound，不能代表标题展开后的碰撞范围。RiteNew根子序TitleBG→IconOutline→Icon；RiteShows/TextTranslate按@RITE_TITLE读取字号。rites图集JSON标注2048×4096，实际PNG为1024×2048，裁切坐标必须同比换算；本地全部PNG/JSON配对检查仅此图集尺寸不符。
+
+验收（2026-09-09 续批，接手被中断的会话后完成）：tools/verify_situation_desk.gd 在 1920x1080、1280x720、1600x1000（16:10）三种窗口下做真实鼠标回放——SituationDesk 始终填满 3840x2160 画布（canvas_items expand，窗口只做整体缩放）；自宅同点 4 个仪式（5000003，范围 [2,12]）展开后的 bound 两两不相交；每张 RiteNew 的图标面与标题条分别点击都打开正确实例，关闭后 overlay 确实消失。截图 desktop_map_{1920,1280,1600}.png 与原作 original_runtime/desktop.jpg 同比例裁切比对：建筑位置与尺寸吻合，事件标牌高度差在 5% 内（原作 2560 宽截图标牌实测约 33 原生px → 49.5 画布px，克隆 52 画布px）。另独立复核 assets/original/ui 下 12 组 PNG/JSON 配对，仅 rites 一组尺寸不符，故共享裁图换算只影响该图集。全量 GUT 492/492、3667 断言，零引擎错误/泄漏/orphan 门禁通过（含 test_hand_pages 把旧自制 42px 与 3840÷4200 缩放常量改为 @RITE_TITLE md=40 与 2160×1.25÷3464 的世界投影）。
+
+保留差异：图标徽记在图集帧内的留白、TMP 基线、材质发光以及图标与标题条的重叠像素级对位未逐帧对拍；不同存档的事件名与数量不同，只比对结构不比对状态数值。此条不升级为"地图整页 1:1"。
+
 ## 桌面顶部三项修正（2026-09-09，局部链已验收）
 
 菜单/帮助锚节点的鼠标排序按引导修复同理置于SituationDesk之后、模态层之前；MenuButton关闭flat模式，恢复checkbox_bg底图。声望以PrestigeItemController.Init 0x582f50 / OnCounterChanged 0x583460的NumberToSprites和SetNativeSize为背书，GameScene Image底托52.5x54.6、Count40x50；TMP精灵GUID737d2853对应number_6，7100006源图160x236且旧宿主缺图。新增7100006、number_6及number_6_red的PNG/JSON共五份文件均与语料SHA256一致。

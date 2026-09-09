@@ -51,13 +51,13 @@ func test_authored_location_nodes_use_gamescene_coordinates_not_clone_ratios():
 	assert_not_null(uptown)
 	if home == null or palace == null or uptown == null:
 		return
-	# GameScene Map@7621: 4200x2600 at (0,-178); child authored positions.
-	assert_almost_eq(home.get_rect().get_center().x, 542.4, 1.0)
-	assert_almost_eq(home.get_rect().get_center().y, 1345.0, 1.0)
-	assert_almost_eq(palace.get_rect().get_center().x, 1484.1, 1.0)
-	assert_almost_eq(palace.get_rect().get_center().y, 805.0, 1.5)
-	assert_almost_eq(uptown.get_rect().get_center().x, 1860.6, 1.0)
-	assert_almost_eq(uptown.get_rect().get_center().y, 588.9, 1.5)
+	# GameScene camera (97,-106), half-height1732; Map scale1.25 at(0,-178).
+	assert_almost_eq(home.get_rect().get_center().x, 685.67, 1.0)
+	assert_almost_eq(home.get_rect().get_center().y, 1234.80, 1.0)
+	assert_almost_eq(palace.get_rect().get_center().x, 1487.72, 1.0)
+	assert_almost_eq(palace.get_rect().get_center().y, 728.94, 1.0)
+	assert_almost_eq(uptown.get_rect().get_center().x, 1808.85, 1.0)
+	assert_almost_eq(uptown.get_rect().get_center().y, 526.28, 1.0)
 	assert_null(desk.get_node_or_null("SiteHome"), "the invented location action buttons must be gone")
 	assert_null(desk.get_node_or_null("SituationDeskTitle"), "the invented desk title must be gone")
 	assert_false((desk.get_node("Location_Harem") as Control).visible, "Harem starts inactive in GameScene")
@@ -111,20 +111,28 @@ func test_rite_new_positions_follow_authored_children_range_selection_and_stack_
 	assert_not_null(desk)
 	if desk == null:
 		return
-	# GameScene SelfHome root @8644 plus integer-named RitePosition children.
-	var root := Vector2(-1506, -141)
-	# Normal/ranged live rites are sorted closest-first to the Map-local screen
-	# centre, then each later rectangle is pushed along its smallest overlap
-	# axis.  These values are the source SetPos result, not a clone spacing rule.
-	_assert_card_center(desk, fixed_first.uid, root + Vector2(1, 3))
+	# Range selection and the original 100px sibling slots are unchanged by
+	# title-width collision resolution; inspect their ownership separately.
+	var expected_slots := {fixed_first.uid: 1, ranged_first.uid: 2, ranged_second.uid: 3, ranged_third.uid: 4, fixed_second.uid: 1}
+	for uid in expected_slots:
+		assert_eq(desk._rite_position_assignments[uid].position.index, expected_slots[uid])
 	var first_card := desk.rite_cards.get(fixed_first.uid, null) as Control
 	if first_card != null:
-		assert_almost_eq(first_card.size.x, 123.0 * 3840.0 / 4200.0, 1.0, "RiteNew bound keeps its original 123 source-pixel width")
-		assert_almost_eq(first_card.size.y, 133.0 * 2160.0 / 2600.0, 1.0, "RiteNew bound keeps its original 133 source-pixel height")
-	_assert_card_center(desk, ranged_first.uid, root + Vector2(-295, 11))
-	_assert_card_center(desk, ranged_second.uid, root + Vector2(44, 136))
-	_assert_card_center(desk, ranged_third.uid, root + Vector2(338, -3))
-	_assert_card_center(desk, fixed_second.uid, root + Vector2(24 + 100, 3))
+		assert_almost_eq(first_card.size.x, 123.0 * 1.25 * 2160.0 / 3464.0, 1.0, "Icon uses isotropic world projection")
+		assert_almost_eq(first_card.size.y, 133.0 * 1.25 * 2160.0 / 3464.0, 1.0)
+	var roots := desk._allocate_rite_card_positions()
+	for i in roots.size():
+		var uid: int = roots.keys()[i]
+		var rect := desk._rite_card_bound(uid)
+		rect.position += roots[uid]
+		for j in range(i + 1, roots.size()):
+			var other_uid: int = roots.keys()[j]
+			var other := desk._rite_card_bound(other_uid)
+			other.position += roots[other_uid]
+			assert_false(rect.grow(-0.01).intersects(other), "Expanded titles must not overlap")
+	var before := roots.duplicate()
+	desk.refresh_context()
+	assert_eq(desk._allocate_rite_card_positions(), before, "A redraw must not shift settled placements")
 
 
 func test_rite_new_set_pos_uses_smallest_overlap_axis_and_reverts_outside_bg():
@@ -139,6 +147,10 @@ func test_rite_new_set_pos_uses_smallest_overlap_axis_and_reverts_outside_bg():
 	var near_edge := Vector2(2430, 0)
 	var reverted := MapController.resolve_rite_card_pair_position(Vector2(2380, 0), near_edge)
 	assert_eq(reverted, near_edge)
+	# OnUpdateBound adds half the icon to the title width, so this long title
+	# pushes vertically (133) instead of horizontally (336.5).
+	var wide := Rect2(-61.5, -18, 436.5, 133)
+	assert_eq(MapController.resolve_rite_card_pair_position(Vector2.ZERO, Vector2(100, 0), wide, wide), Vector2(100, 133))
 
 
 func test_rite_position_compacts_surviving_card_after_runtime_removal():
@@ -256,12 +268,36 @@ func _assert_card_center(desk: MapController, rite_uid: int, source_position: Ve
 		desk.RITE_CARD_BOUND_ANCHORED_POSITION.y + desk.RITE_CARD_BOUND_SIZE.y * (0.5 - desk.RITE_CARD_BOUND_PIVOT.y)
 	)
 	var expected := Vector2(
-		desk.size.x * 0.5 + (bound_center.x + desk.MAP_LOCAL_OFFSET.x) * desk.size.x / desk.MAP_SIZE.x,
-		desk.size.y * 0.5 - (bound_center.y + desk.MAP_LOCAL_OFFSET.y) * desk.size.y / desk.MAP_SIZE.y
+		desk.size.x * 0.5 + (bound_center.x * 1.25 - 97) * desk.size.y / 3464.0,
+		desk.size.y * 0.5 - (bound_center.y * 1.25 - 72) * desk.size.y / 3464.0
 	)
 	var actual := card.position + card.size * 0.5
 	assert_almost_eq(actual.x, expected.x, 1.0, "rite %d X uses the authored RitePosition child" % rite_uid)
 	assert_almost_eq(actual.y, expected.y, 1.0, "rite %d Y uses the authored RitePosition child" % rite_uid)
+
+
+func test_location_art_has_independent_rectangles_and_isotropic_scaling() -> void:
+	for viewport in [Vector2(1920, 1080), Vector2(1280, 800)]:
+		var desk := _desk(null, null, viewport)
+		await wait_process_frames(2)
+		var temple := desk.get_node("Location_Parish/Art") as Control
+		var k: float = viewport.y * 1.25 / 3464.0
+		assert_almost_eq(temple.size, Vector2(296, 170) * k, Vector2.ONE * 0.01)
+		assert_eq(desk.get_node("Location_Blackstreet").get_child_count(), 2)
+		assert_eq(desk.get_node("Location_Downtown").get_child_count(), 2)
+		assert_eq(desk.get_node("Location_Uptown").get_child_count(), 2)
+
+
+func test_rite_atlas_uses_actual_pixel_dimensions_for_every_frame() -> void:
+	var atlas := OriginalAtlas.load_atlas("res://assets/original/ui/rites.png")
+	var source := (load("res://assets/original/ui/rites.png") as Texture2D).get_image()
+	var icon := atlas.frame("rite_1.png")
+	assert_eq(icon.get_size(), Vector2(78, 87))
+	assert_eq(icon.get_image().get_data(), source.get_region(Rect2i(81, 1, 78, 87)).get_data(), "Frame must contain exactly the source icon, not adjacent sprites")
+	for frame_name in atlas.frame_names():
+		assert_not_null(atlas.frame(frame_name), "Scaled source frame must be in bounds: " + str(frame_name))
+	var desk := _desk() as MapController
+	assert_eq(desk._rite_icon({"icon": "missing"}).get_image().get_data(), atlas.frame("rite_0.png").get_image().get_data())
 
 
 func _desk(
