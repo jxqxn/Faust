@@ -2,6 +2,18 @@
 
 用户图一复现于1920×1080 Forward+；Compatibility得到同样结果。不是通过改渲染器修复。
 
+## 2026-09-09 续批：卡面壳层与材质亮度
+
+| 旧偏差 | 原作依据 | 修正 |
+| --- | --- | --- |
+| 卡面没有任何外圈描边 | CardNew.prefab：Outline `m_IsActive: 0`（原作不画），Flash `m_IsActive: 1` 256×512 + CardFlash.mat（`_INNEROUTLINEOUTLINEONLYTOGGLE_ON`、`_InnerOutlineColor` 0.882/0.728/0.337） | 新增 `ui/card_flash.gdshader`：用 card_outline.png 自身 alpha 轮廓做 2.5px 金色内描边，挂在 CardArt 之上的 `Flash` 节点 |
+| 数量底章用 checkbox_bg 75×78 | CardShow*/Stackable = 80×80 `Sprite/number_bg.asset`，底部锚 +50 → 左上 (57,332) | 复制 `Texture2D/number_bg.png`（SHA256 一致）并改位置/尺寸/底图 |
+| 只有 rare≥2 挂材质 | 12 个 `materials/card/{char,item,sudan}/{tier}.mat` 每档都有 _MainTex/_BumpMap/_MetallicGlossMap | `_apply_metal_surface` 对全部稀有度生效，并按档写入真值 `_BumpScale`/`_GlossMapScale` |
+| 卡面比原作暗约 2 倍 | canvas_item 自定义 shader 采样在线性空间、默认管线在 sRGB；Unity Standard 光照无导出函数体 | 采样统一 `to_display()` 还原；灯光按原作截图逐档校准 `material_light` |
+
+验收与保留差异见 METHOD_MAP 顶部「手牌卡面 1:1 第一批」；截图 `card_surface_1920.png`，对拍脚本 `tools/verify_card_surface.gd`。
+
+
 ## 原因与对应实现
 
 | 旧偏差 | 原作依据 | 修正 |

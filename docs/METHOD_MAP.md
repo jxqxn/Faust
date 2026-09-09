@@ -1,5 +1,15 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 手牌卡面 1:1 第一批（2026-09-09，卡面壳层已验收）
+
+CardNew.prefab（docs/ui_layout/CardNew.md）根 194×422，两个旧实现漏掉的壳层：**Outline** 256×525 pos(0,22) 的 `m_IsActive: 0`——原作从不绘制；**Flash** 256×512 pos(0,0) 且 `m_IsActive: 1`，sprite=Sprite/card_outline.asset（Texture2D/card_outline.png，256×512）+ Resources/materials/CardFlash.mat（keywords `_ENABLEINNEROUTLINE_ON`/`_INNEROUTLINEOUTLINEONLYTOGGLE_ON`，`_InnerOutlineColor` 0.882/0.728/0.337，`_InnerOutlineWidth` 0.08）——原作卡面边缘那圈金色内描边就是它，不是 Outline。CardShowChar/Item/Sudan 的 **Stackable 是 80×80 的 Sprite/number_bg.asset**（68×68 纹理）底部锚 +50 → 左上 (57,332)，旧实现的 checkbox_bg 75×78 是错的底图。12 个 `materials/card/{char,item,sudan}/{stone,copper,silver,gold}.mat` 的 `_MainTex`/`_BumpMap`/`_MetallicGlossMap`/`_BumpScale`/`_GlossMapScale` 已逐档取真值（stone 0.9027777/0.3020833、copper 0.3819444/0.7847222、silver 0.2847222/0.8090278、gold 0.3680556/0.75），材质对**所有稀有度**生效——旧实现 `rare<2` 直接 return 是自制捷径。
+
+色彩空间坑（本轮最大发现）：canvas_item 自定义 shader 里 `texture()`/sampler 采样已被解码到线性空间，而默认 2D 管线在 sRGB 空间，同一张底板挂 shader 会暗到约 0.4 倍；`ui/card_metal.gdshader` 用 `to_display()`（pow 0.5）还原后与不挂 shader 的同一纹理逐像素一致（探针实测 flat 0.5 → 0.2471 → 0.498）。`_DETAIL_MULX2`/`_EMISSION`/Standard 光照无导出函数体（DummyShaderTextExporter），故灯光项按原作截图逐档校准 `material_light`。
+
+验收：`tools/verify_card_surface.gd` 在 1920×1080 用与原作 `original_runtime/desktop.jpg` 相同的手牌（梅姬/阿尔图/金币 count=8/铁头/快脚/小圆）渲染并截图 `docs/ui_layout/card_surface_1920.png`；同坐标整卡均值实测 克隆 vs 原作：梅姬 93/98/76 vs 96/100/66、阿尔图 92/95/105 vs 89/94/100、快脚 112/95/86 vs 118/98/77、金币 94/90/70 vs 98/92/62；立绘区域逐像素一致（82/70/58 vs 81/68/55），说明差异只在底板材质。卡牌 UI 专项 80/80、1006 断言。
+
+保留差异：手牌整体比原作高约 2–3 px（1920 下，`HAND_MASK_HEIGHT` 470 与内容偏移 36 待按原作复核）；`_DetailAlbedoMap`（card_d_*/card_e_0，`_DETAIL_MULX2`）尚未接入；TMP 数字精灵（`<sprite=9>`）仍以文字替代；材质各向异性/环境反射与逐帧对拍未完成。
+
 ## 地图投影与事件标牌（2026-09-09，局部链已验收）
 
 GameScene Desktop Camera Transform3970/Camera4419：位置(97,-106)、正交半高1732；Map7621缩放1.25、位置(0,-178)。建筑按Image子节点尺寸及偏移绘制，不使用Location容器尺寸。RiteRender.OnUpdateBound 0x59be70（dump.cs:324578）将bound宽设为TitleBG宽+Icon宽/2，中心X=(bound宽-Icon宽)/2，再调用MapController.SetRitesPosition 0x56a200 / SetPos 0x569cd0；GameAssembly RVA0x1c92b4c浮点常量实读0.5。原先123×133仅为初始bound，不能代表标题展开后的碰撞范围。RiteNew根子序TitleBG→IconOutline→Icon；RiteShows/TextTranslate按@RITE_TITLE读取字号。rites图集JSON标注2048×4096，实际PNG为1024×2048，裁切坐标必须同比换算；本地全部PNG/JSON配对检查仅此图集尺寸不符。

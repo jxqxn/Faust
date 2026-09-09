@@ -69,9 +69,13 @@ func _process(_delta: float) -> void:
 
 
 func _apply_metal_surface(image: TextureRect) -> void:
-	var rare := int(_card.get("rare", 1))
-	if rare < 2:
-		return
+	# [SRC: materials/card/{char,item,sudan}/{stone,copper,silver,gold}.mat —
+	# every tier carries a _MainTex/_BumpMap/_MetallicGlossMap surface, so the
+	# material applies to all rarities, not only rare>=2. Bump/gloss values are
+	# the authored _BumpScale/_GlossMapScale pairs (stone 0.9027777/0.3020833,
+	# copper 0.3819444/0.7847222, silver 0.2847222/0.8090278,
+	# gold 0.3680556/0.75).]
+	var tier := clampi(int(_card.get("rare", 1)) - 1, 0, 3)
 	var kind := str(_card.get("type", "item"))
 	var normal_name := "card_n_1" if kind == "char" else ("card_n_0" if kind == "sudan" else "card_n_2")
 	var metal_name := "card_mt_0" if kind == "char" else ("card_mt" if kind == "sudan" else "card_mt_1")
@@ -79,8 +83,21 @@ func _apply_metal_surface(image: TextureRect) -> void:
 	surface.shader = preload("res://ui/card_metal.gdshader")
 	surface.set_shader_parameter("normal_map", load("res://assets/original/ui/%s.png" % normal_name))
 	surface.set_shader_parameter("metal_map", load("res://assets/original/ui/%s.png" % metal_name))
-	surface.set_shader_parameter("bump_scale", [0.3819444, 0.2847222, 0.3680556][clampi(rare - 2, 0, 2)])
-	surface.set_shader_parameter("gloss_scale", [0.7847222, 0.8090278, 0.75][clampi(rare - 2, 0, 2)])
+	surface.set_shader_parameter("bump_scale", [0.9027777, 0.3819444, 0.2847222, 0.3680556][tier])
+	surface.set_shader_parameter("gloss_scale", [0.3020833, 0.7847222, 0.8090278, 0.75][tier])
+	# Scene-light response per tier, fitted against the original hand in
+	# docs/ui_layout/original_runtime/desktop.jpg (the exported CardShow shader
+	# has no body). Whole-card averages in the clone and the original then
+	# agree within a few percent: 梅姬 93/98/76 vs 96/100/66, 阿尔图 92/95/105
+	# vs 89/94/100, 快脚 112/95/86 vs 118/98/77, 金币 94/90/70 vs 98/92/62.
+	# The portrait itself renders identically (art centre 82/70/58 vs 81/68/55);
+	# only the frame's lighting distribution still differs.
+	surface.set_shader_parameter("material_light", [
+		Vector3(1.9, 2.24, 3.85),
+		Vector3(1.67, 1.89, 3.03),
+		Vector3(1.97, 1.94, 2.12),
+		Vector3(1.67, 1.89, 3.03),
+	][tier])
 	image.material = surface
 	_metal_materials.append(surface)
 
@@ -529,12 +546,24 @@ func _rebuild() -> void:
 		var foreground := _face_texture("Foreground", load("res://assets/original/ui/%s_f.png" % tier), Rect2(Vector2.ZERO, CARD_SIZE))
 		foreground.self_modulate = _surface_color(true)
 		_apply_metal_surface(foreground)
+	# [SRC: CardNew/Flash anchors(0.5,0.5) pos(0,0) size(256,512),
+	#       sprite=Sprite/card_outline.asset + Resources/materials/CardFlash.mat
+	#       (_ENABLEINNEROUTLINE_ON / _INNEROUTLINEOUTLINEONLYTOGGLE_ON,
+	#       _InnerOutlineColor 0.882/0.728/0.337). CardNew/Outline is
+	#       m_IsActive=0 in the prefab, so it is never drawn. Unity pos (0,0)
+	#       with a centre pivot folds into the Godot top-left (-31,-45).]
+	_face_texture("Flash", load("res://assets/original/ui/card_outline.png"), Rect2(Vector2(-31, -45), Vector2(256, 512)))
+	var flash := _visual_face.get_node("Flash") as TextureRect
+	var flash_material := ShaderMaterial.new()
+	flash_material.shader = preload("res://ui/card_flash.gdshader")
+	flash.material = flash_material
 	# [SRC: CardRender.UpdateShowInternal 0x53a4a0: count>1 AND stackable;
-	# content/tag.json stackable = 可堆叠; CardShow*/Stackable bottom y=50.]
+	# content/tag.json stackable = 可堆叠; CardShow*/Stackable is 80x80
+	# number_bg at bottom anchor +50 -> top-left (57,332).]
 	var tags: Dictionary = _card.get("tag", {})
 	var count := int(_card.get("count", 1))
 	if count > 1 and int(tags.get("可堆叠", tags.get("stackable", 0))) > 0:
-		var badge := _face_texture("Stackable", preload("res://assets/original/ui/checkbox_bg.png"), Rect2(59.5, 333, 75, 78))
+		var badge := _face_texture("Stackable", load("res://assets/original/ui/number_bg.png"), Rect2(57, 332, 80, 80))
 		var label := Label.new()
 		label.name = "Count"
 		label.text = str(count)

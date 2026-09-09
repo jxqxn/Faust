@@ -1341,6 +1341,50 @@ func test_card_widget_face_only_shows_name_and_art():
 	assert_eq(face.get_node("Title").position, Vector2(9.5, 15))
 	assert_not_null(face.get_node_or_null("Foreground"))
 	assert_null(face.get_node_or_null("CardAttrRow"))
+	# [SRC: CardNew/Flash 256x512 at pos(0,0) with CardFlash.mat inner outline;
+	#       CardNew/Outline is m_IsActive=0 and must not be drawn.]
+	var flash := face.get_node_or_null("Flash") as TextureRect
+	assert_not_null(flash, "CardNew/Flash carries the card's gold inner outline")
+	if flash != null:
+		assert_eq(flash.position, Vector2(-31, -45))
+		assert_eq(flash.size, Vector2(256, 512))
+		assert_true(flash.material is ShaderMaterial)
+		assert_true(flash.texture.resource_path.ends_with("card_outline.png"))
+		assert_lt(face.get_node("CardArt").get_index(), flash.get_index(), "the outline sits above the portrait")
+	assert_null(face.get_node_or_null("Outline"), "the inactive CardNew/Outline is never instantiated")
+	assert_true(face.get_node("RarityFrame").material is ShaderMaterial, "every rarity carries its authored card material")
+
+
+func test_card_material_replays_authored_tier_values():
+	# [SRC: materials/card/{char,item,sudan}/{stone,copper,silver,gold}.mat
+	#       _BumpScale/_GlossMapScale and _MainTex/_BumpMap/_MetallicGlossMap.]
+	var tiers := {
+		1: {"bump": 0.9027777, "gloss": 0.3020833},
+		2: {"bump": 0.3819444, "gloss": 0.7847222},
+		3: {"bump": 0.2847222, "gloss": 0.8090278},
+		4: {"bump": 0.3680556, "gloss": 0.75},
+	}
+	for rare in tiers:
+		for kind in ["char", "item", "sudan"]:
+			var card := {"id": 2000001, "name": "Test", "type": kind, "rare": rare, "tag": {}}
+			var widget := CardWidget.make(card)
+			_stage().add_child(widget)
+			await wait_process_frames(1)
+			var frame := widget.get_node("CardVisualFace/RarityFrame") as TextureRect
+			var material := frame.material as ShaderMaterial
+			assert_not_null(material, "%s rare %d must use the card material" % [kind, rare])
+			if material == null:
+				continue
+			assert_almost_eq(float(material.get_shader_parameter("bump_scale")), float(tiers[rare]["bump"]), 0.0001)
+			assert_almost_eq(float(material.get_shader_parameter("gloss_scale")), float(tiers[rare]["gloss"]), 0.0001)
+			var expected_normal := "card_n_1" if kind == "char" else ("card_n_0" if kind == "sudan" else "card_n_2")
+			var expected_metal := "card_mt_0" if kind == "char" else ("card_mt" if kind == "sudan" else "card_mt_1")
+			var normal_map := material.get_shader_parameter("normal_map") as Texture2D
+			var metal_map := material.get_shader_parameter("metal_map") as Texture2D
+			assert_true(str(normal_map.resource_path).ends_with(expected_normal + ".png"))
+			assert_true(str(metal_map.resource_path).ends_with(expected_metal + ".png"))
+			assert_true(material.get_shader_parameter("material_light") is Vector3)
+			await wait_process_frames(1)
 
 func test_card_face_uses_resource_variant_and_runtime_badges():
 	var card := db.get_card(2000001).duplicate(true)
@@ -1354,6 +1398,11 @@ func test_card_face_uses_resource_variant_and_runtime_badges():
 	var face := widget.get_node("CardVisualFace")
 	assert_true(face.get_node("CardArt").texture.resource_path.ends_with("2000001_1.png"))
 	assert_eq(face.get_node("Stackable/Count").text, "8")
+	# [SRC: CardShowChar/Stackable 80x80 sprite=Sprite/number_bg.asset at the
+	#       bottom anchor +50 -> top-left (57,332).]
+	assert_true(str(face.get_node("Stackable").texture.resource_path).ends_with("number_bg.png"))
+	assert_eq(face.get_node("Stackable").position, Vector2(57, 332))
+	assert_eq(face.get_node("Stackable").size, Vector2(80, 80))
 	assert_eq(face.get_node("LifeBg/Life").text, "5")
 	assert_eq(face.get_node("LifeBg").position, Vector2(57.5, -45))
 	card["count"] = 1
