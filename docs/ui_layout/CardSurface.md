@@ -28,6 +28,11 @@
 
 `LifeBg/Image/DotText` 的 `'<sprite=21>'` 用的是 `rite_settlement_icon` sprite asset（索引 21 = `dot_0.png`，图集帧 50×30），不是 number_6。已复制该图集并在 LifeBg 内按 Unity 锚点折算加上 `DotText`（(-7.2,23.1)、50×30）。对拍脚本临时给小圆加 7 天寿命来覆盖这条链。
 
+## 2026-09-09 第四批：底板光照分布与详情面板
+
+- 光照：按"立绘透明像素"逐带对比克隆与原作，得到自上而下 1.21×→0.79× 的衰减、金属件 30% 漫反射损失、0.3 高光强度，写入 `ui/card_metal.gdshader` 三个 uniform；逐带误差 21%→15%，整卡均值仍 ≤6%。
+- 详情面板：`CardInfoNew/Equips` 缩略图复用 CardWidget 链，新增 `tools/verify_card_detail.gd` 校验装备缩略图的 RarityFrame/材质/CardArt/Flash/194×422 并输出 `card_detail_2560.png`；原作参考帧无装备，故只做结构与源几何验证。
+
 
 ## 原因与对应实现
 

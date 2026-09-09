@@ -1384,6 +1384,9 @@ func test_card_material_replays_authored_tier_values():
 			assert_true(str(normal_map.resource_path).ends_with(expected_normal + ".png"))
 			assert_true(str(metal_map.resource_path).ends_with(expected_metal + ".png"))
 			assert_true(material.get_shader_parameter("material_light") is Vector3)
+			assert_almost_eq(float(material.get_shader_parameter("vertical_light_falloff")), 0.2065, 0.0001)
+			assert_almost_eq(float(material.get_shader_parameter("metallic_diffuse_loss")), 0.3, 0.0001)
+			assert_almost_eq(float(material.get_shader_parameter("specular_strength")), 0.3, 0.0001)
 			await wait_process_frames(1)
 
 func test_card_face_uses_resource_variant_and_runtime_badges():

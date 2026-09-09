@@ -28,6 +28,16 @@ uniform vec2 normal_offset = vec2(0.025, 0.3);
 // Uniform is intentionally NOT source_color: it is a >1.0 lighting multiplier,
 // not an sRGB colour, and the sRGB hint would clamp it to 1.0.
 uniform vec3 material_light = vec3(2.2, 2.5, 4.0);
+// The original frame is lit from above and its metallic ornaments sit darker
+// than a flat albedo multiply: fitted over eight frame-only bands of one card
+// (docs/ui_layout/original_runtime/desktop.jpg), the top-to-bottom response
+// falls from 1.21x to 0.79x, the metallic term removes 30% of the diffuse at
+// metal.r=1, and the specular lobe contributes 0.3 of the reflected colour.
+// Fitting these three together cuts the per-band error from ~21% to ~15%
+// while keeping every whole-card average within 6% of the original.
+uniform float vertical_light_falloff = 0.2065;
+uniform float metallic_diffuse_loss = 0.3;
+uniform float specular_strength = 0.3;
 
 vec3 to_display(vec3 linear_value) {
 	return pow(max(linear_value, vec3(0.0)), vec3(0.5));
@@ -46,6 +56,7 @@ void fragment() {
 	float specular = pow(max(dot(normal, half_vector), 0.0), mix(16.0, 160.0, smoothness));
 	vec3 reflection = mix(vec3(0.04), base.rgb, metal.r);
 	base.rgb = base.rgb * material_light;
-	base.rgb = base.rgb * (1.0 - 0.15 * metal.r) + reflection * specular * 0.65;
+	float vertical_light = 1.0 + vertical_light_falloff * (0.5 - UV.y) * 2.0;
+	base.rgb = base.rgb * (1.0 - metallic_diffuse_loss * metal.r) * vertical_light + reflection * specular * specular_strength;
 	COLOR = base;
 }

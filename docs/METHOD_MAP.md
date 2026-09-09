@@ -1,5 +1,13 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 手牌卡面 1:1 第四批（2026-09-09，材质光照分布 + 详情面板装备缩略图）
+
+**材质光照分布**：用立绘 alpha 把一张卡（梅姬）切成 8 条竖带，只统计"立绘透明、纯底板"的像素，在克隆渲染与原作 `desktop.jpg` 同坐标下逐带求均值。原作底板是**自上而下变暗**的（带均值 R 0.454→0.564→0.445→0.365→0.378→0.322→0.224→0.169），而克隆此前是均匀灯光，导致卡顶偏暗、卡底偏亮。按带比值线性拟合出三项并写进 `ui/card_metal.gdshader`：`vertical_light_falloff` 0.2065（顶 1.21×→底 0.79×）、`metallic_diffuse_loss` 0.3（metal.r=1 时削去 30% 漫反射，对应原作金属件的暗化）、`specular_strength` 0.3（保留高光但不再过亮）。逐带误差从约 21% 降到约 15%，六张卡整卡均值仍在 ±6% 内（梅姬 94/97/66 vs 96/100/66、阿尔图 88/90/95 vs 90/95/101、金币 140/119/57 vs 142/122/60、铁头 96/90/62 vs 97/92/62、快脚 101/86/78 vs 106/90/78、小圆 111/93/77 vs 116/98/76）。
+
+**详情面板装备缩略图**：`CardInfoNew/Equips` 的缩略图本来就是同一条 CardWidget 链（`ui/card_info_view.gd` `_build_equips`，源几何 RefreshAllEquips 0x534c40 / .cctor 0x537e30 双列旋转），因此自动继承前三批的壳层修复。新增 `tools/verify_card_detail.gd`：给阿尔图装两件饰品 → 打开生产 CardInfoView → 校验每张装备缩略图都有 RarityFrame+材质、CardArt、CardNew/Flash，且尺寸为 194×422，并输出 `card_detail_2560.png`。原作参考 `original_runtime/card_info_artu.jpg` 那一帧没有装备，故装备缩略图只做结构+源几何验证，不与原作逐像素对拍。
+
+保留差异：逐带亮度分布仍是拟合近似（无方向光模型，卡顶/卡底两端仍各有约 15% 偏差）；装备缩略图缺原作同状态截图。
+
 ## 手牌卡面 1:1 第三批（2026-09-09，寿命牌 DotText）
 
 `CardShowChar/Item/Sudan` 的 `LifeBg/Image/DotText` 是 TMP 文本 `'<sprite=21>'`，其 `m_spriteAsset` 指向 **`Resources/sprite assets/rite_settlement_icon`**（不是 number_6）：该 sprite asset 的 character table 第 21 项是 `dot_0.png`（图集帧 471,107,50,30），fs28，`m_fontColor` 白——即原作寿命牌左侧时钟下方那枚 50×30 的黑色小药丸。落地：复制 `Resources/image/rite_settlement_icon.png/.json`（SHA256 与语料一致），在 LifeBg 内加 `DotText` TextureRect（LifeBg 局部 (-7.2,23.1)、50×30），位置由 Unity 锚点 (0,0)+pos(36.8,5.4)+pivot 中心折算。

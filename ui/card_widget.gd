@@ -102,11 +102,15 @@ func _apply_metal_surface(image: TextureRect) -> void:
 		Vector3(2.0, 2.31, 3.5),
 		Vector3(1.28, 1.44, 1.52),
 		Vector3(1.44, 1.52, 1.61),
-		Vector3(1.33, 1.61, 2.25),
+		Vector3(1.46, 1.77, 2.48),
 	][tier]
 	if not detail_name.is_empty():
 		light = light / (Vector3(CARD_DETAIL_MEANS[detail_name]) * 2.0)
 	surface.set_shader_parameter("material_light", light)
+	# Lighting shape fitted to the original hand (see ui/card_metal.gdshader).
+	surface.set_shader_parameter("vertical_light_falloff", 0.2065)
+	surface.set_shader_parameter("metallic_diffuse_loss", 0.3)
+	surface.set_shader_parameter("specular_strength", 0.3)
 	image.material = surface
 	_metal_materials.append(surface)
 
