@@ -76,7 +76,11 @@ var _background: ColorRect
 var _begin_guide_bar: BeginGuideBar
 var _menu_button: Button
 var _deadline_strip: PanelContainer
-var _deadline_number: Label
+var _deadline_number: HBoxContainer
+var _deadline_track: HBoxContainer
+var _deadline_title: Label
+var _deadline_pulse: Curve
+var _deadline_pulse_time := 0.0
 var _sudan_box: Control
 var _prestige_strip: Control
 var _prestige_slots: Array = []
@@ -147,6 +151,13 @@ func _process(delta: float) -> void:
 	):
 		return
 	_hand_idle_clock_seconds += delta
+	if _deadline_track != null and _deadline_strip.visible:
+		if int(_deadline_track.get_meta("remaining", 7)) < 2:
+			_deadline_pulse_time = fmod(_deadline_pulse_time + delta, 1.0)
+			var pulse := _deadline_pulse.sample(_deadline_pulse_time)
+			for control in [_deadline_title, _deadline_number]:
+				control.pivot_offset = control.size * 0.5
+				control.scale = Vector2.ONE * pulse
 
 
 func hand_idle_time_seconds() -> float:
@@ -158,37 +169,64 @@ func _build_ui() -> void:
 	_background.name = "ScreenBackground"
 	_background.color = Color("#17120e")
 	add_child(_background)
-	_begin_guide_bar = BeginGuideBar.new()
-	_begin_guide_bar.name = "BeginGuideBarRoot"
-	_begin_guide_bar.setup(_state)
-	_begin_guide_bar.z_index = PERSISTENT_CONTROL_Z + 2
-	add_child(_begin_guide_bar)
 	# The screen uses an explicit scaled layout; keep the background on the
 	# same top-left coordinate system so resizing it does not fight anchors.
 	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
 	# [SRC: docs/ui_layout/GameScene.md — RoundNumber BG top-right anchors (1,1)
 	#       pivot (1,1) pos (-80,0) height 204, countdown_bg_new strip;
-	#       children Left Space/RoundNumberTitle "处决日" fs60/NumberSprite/
+	#       children Left Space/RoundNumberTitle (translated) fs60/NumberSprite/
 	#       RoundNumber "N/7" fs60/Right Space (horizontal layout)]
 	_deadline_strip = PanelContainer.new()
 	_deadline_strip.name = "RoundNumberBG"
+	_deadline_strip.custom_minimum_size.y = 204
 	_deadline_strip.z_index = PERSISTENT_CONTROL_Z
-	_deadline_strip.add_theme_stylebox_override("panel", _nine_slice_style("res://assets/original/ui/countdown_bg_new.png"))
+	# Sprite/countdown_bg_new.asset has explicit slice borders, not 40% margins.
+	var deadline_style := StyleBoxTexture.new()
+	deadline_style.texture = load("res://assets/original/ui/countdown_bg_new.png")
+	deadline_style.texture_margin_left = 227
+	deadline_style.texture_margin_right = 245
+	deadline_style.texture_margin_top = 52
+	deadline_style.texture_margin_bottom = 71
+	deadline_style.content_margin_left = 150
+	deadline_style.content_margin_right = 180
+	deadline_style.content_margin_top = 37
+	deadline_style.content_margin_bottom = 67
+	_deadline_strip.add_theme_stylebox_override("panel", deadline_style)
+	_deadline_strip.minimum_size_changed.connect(_layout_deadline)
 	add_child(_deadline_strip)
 	var deadline_row := HBoxContainer.new()
-	deadline_row.add_theme_constant_override("separation", 36)
+	deadline_row.add_theme_constant_override("separation", 0)
 	deadline_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_deadline_strip.add_child(deadline_row)
 	var deadline_title := Label.new()
-	deadline_title.text = "处决日"
+	var ui_text: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	deadline_title.text = str(ui_text.GAME_MAIN_HEAD_TITLE.zhCN)
 	deadline_title.add_theme_font_size_override("font_size", 60)
-	deadline_title.add_theme_color_override("font_color", Color("#f4e6c0"))
+	deadline_title.add_theme_color_override("font_color", Color.WHITE)
+	deadline_title.custom_minimum_size.y = 100
+	deadline_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	preload("res://ui/source_text_style.gd").apply(deadline_title, "@EXECUTION_DAY_TITLE")
+	_deadline_title = deadline_title
 	deadline_row.add_child(deadline_title)
-	_deadline_number = Label.new()
-	_deadline_number.add_theme_font_size_override("font_size", 60)
-	_deadline_number.add_theme_color_override("font_color", Color("#f4e6c0"))
+	# GameScene GO 87/101/225: title Bottom/Right Border/Left Border are inactive.
+	_deadline_track = HBoxContainer.new()
+	_deadline_track.name = "NumberSprite"
+	_deadline_track.custom_minimum_size = Vector2(1115, 100)
+	_deadline_track.add_theme_constant_override("separation", 0)
+	_deadline_track.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	deadline_row.add_child(_deadline_track)
+	_deadline_number = preload("res://ui/source_number.gd").new()
+	_deadline_number.glyph_height = 60.0
+	_deadline_number.add_theme_constant_override("separation", 6)
 	deadline_row.add_child(_deadline_number)
+	# [SRC: Resources/anims/countdown/RedText.anim, one-second Hermite curve.]
+	_deadline_pulse = Curve.new()
+	_deadline_pulse.min_value = 0.9
+	_deadline_pulse.max_value = 1.1
+	for point in [Vector2(0, 1), Vector2(0.25, 0.95), Vector2(0.5, 1), Vector2(0.75, 1.05), Vector2(1, 1)]:
+		var tangent := 0.2 if point.x == 0.5 else 0.0
+		_deadline_pulse.add_point(point, tangent, tangent)
 
 	# [SRC: GameScene Quit — checkbox_bg 80x82 top-right pivot (0.5,1) pos
 	#       (-70,-30), child Image menu 49x43 centered]
@@ -200,7 +238,7 @@ func _build_ui() -> void:
 	_menu_button = Button.new()
 	_menu_button.name = "MenuButton"
 	_menu_button.tooltip_text = "菜单"
-	_menu_button.flat = true
+	_menu_button.flat = false
 	_menu_button.custom_minimum_size = Vector2(80, 82)
 	_menu_button.size = Vector2(80, 82)
 	var quit_style := _nine_slice_style("res://assets/original/ui/checkbox_bg.png")
@@ -288,6 +326,17 @@ func _build_ui() -> void:
 	_log_label.add_theme_constant_override("shadow_offset_x", 1)
 	_log_label.add_theme_constant_override("shadow_offset_y", 2)
 	_desk_content.add_child(_log_label)
+	# Control mouse picking follows tree order, independently of z_index.
+	move_child(quit_anchor, get_child_count() - 1)
+	move_child(help_anchor, get_child_count() - 1)
+
+	# Godot Control input follows sibling order, not z_index. Keep the guide
+	# above the full-screen desk for input, but below modal overlay children.
+	_begin_guide_bar = BeginGuideBar.new()
+	_begin_guide_bar.name = "BeginGuideBarRoot"
+	_begin_guide_bar.setup(_state)
+	_begin_guide_bar.z_index = PERSISTENT_CONTROL_Z + 2
+	add_child(_begin_guide_bar)
 
 	_overlay_layer = Control.new()
 	_overlay_layer.name = "OverlayLayer"
@@ -510,9 +559,7 @@ func _apply_layout() -> void:
 		_begin_guide_bar.apply_source_layout(view_size)
 	# [SRC: RoundNumber BG top-right pos (-80,0) height 204 — width wraps text]
 	if _deadline_strip != null:
-		_deadline_strip.size = Vector2(0, 204 * k.y)
-		_deadline_strip.reset_size()
-		_deadline_strip.position = Vector2(view_size.x - 80 * k.x - _deadline_strip.size.x, 0)
+		_layout_deadline()
 	# [SRC: Quit checkbox_bg 80x82, pivot (0.5,1) pos (-70,-30) top-right]
 	if _menu_button != null and _menu_button.get_parent() is Control:
 		var quit_anchor: Control = _menu_button.get_parent()
@@ -637,45 +684,113 @@ func _build_prestige_strip() -> void:
 		slot.size = slot_rects[i].size
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var icon := _sprite_child("res://assets/original/ui/prestige_bg.png", Vector2(231, 252))
+		icon.visible = i != 5
 		slot.add_child(icon)
 		# [SRC: Prestige/710000N/Icon — 710000N art 231x242 at (0,-3.77)]
 		var medal := _sprite_child(
 			"res://assets/original/ui/710000%d.png" % (i + 1),
-			Vector2(231, 242)
+			Vector2(160, 236) if i == 5 else Vector2(231, 242)
 		)
 		medal.set_anchors_preset(Control.PRESET_CENTER)
 		medal.position = Vector2(0, -3.77) - medal.size * 0.5
 		slot.add_child(medal)
-		var value := Label.new()
+		var count_bg := _sprite_child("res://assets/original/ui/checkbox_bg.png", Vector2(52.5, 54.6))
+		count_bg.position = Vector2(89.25, 196.8)
+		slot.add_child(count_bg)
+		var value = preload("res://ui/source_number.gd").new()
 		value.name = "Value"
 		value.text = "0"
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		value.add_theme_font_size_override("font_size", 56)
-		value.add_theme_color_override("font_color", Color("#f4e6c0"))
-		value.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-		value.offset_bottom = -18
+		value.position = Vector2(95.5, 199.1)
+		value.size = Vector2(40, 50)
 		value.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(value)
 		_prestige_slots.append(slot)
 		_prestige_strip.add_child(slot)
 
 
-## 处决日 counter: current day within the active Sultan card's window
-## (life+1 of card_vanishing; life grows while sheltered, matching the
-## visible-countdown model). Hidden by the original deadline_unshow flag.
+func _layout_deadline() -> void:
+	var view_size := size if size.x > 0 and size.y > 0 else get_viewport_rect().size
+	var k := view_size / Vector2(3840, 2160)
+	_deadline_strip.scale = k
+	_deadline_strip.size = Vector2(_deadline_strip.get_combined_minimum_size().x, 204)
+	_deadline_strip.position = Vector2(view_size.x - (80 + _deadline_strip.size.x) * k.x, 0)
+
+
+## UpdateSudanLife 0x55aeb0: show remaining life of the oldest Sudan card.
 func _update_deadline_strip() -> void:
 	if _deadline_strip == null or _state == null:
 		return
 	var hidden := bool(_state.get("deadline_unshow"))
-	var asc = _state.active_sudan_cards[0] if not _state.active_sudan_cards.is_empty() else null
-	if hidden or asc == null:
+	var oldest = null
+	var max_life := -1
+	# Player.cards is split into hand and active_sudan_cards in this host.
+	var candidates: Array = _state.hand.duplicate()
+	for candidate in _state.active_sudan_cards:
+		if candidate.card_uid not in candidates:
+			candidates.append(candidate.card_uid)
+	for rite_uid in _state.rite_instances:
+		candidates.append_array(_state.rite_slot_card_uids(rite_uid))
+	for uid in candidates:
+		var instance = _state.get_card_instance(uid)
+		if instance != null and RuntimeOperationFilter.matches_card_data(instance.card_id, instance.tags, _db, "sudan") and instance.life > max_life:
+			max_life = instance.life
+			oldest = instance
+	if hidden or oldest == null:
 		_deadline_strip.visible = false
 		return
 	_deadline_strip.visible = true
-	var card: Dictionary = _db.get_card(asc.card_id) if _db != null else {}
+	var card: Dictionary = _db.get_card(oldest.card_id) if _db != null else {}
 	var lifetime := int(card.get("card_vanishing", 7))
-	var day := clampi(lifetime - int(asc.days_left) + 1, 1, lifetime)
-	_deadline_number.text = " %d/%d" % [day, lifetime]
+	var remaining := lifetime - max_life
+	if remaining >= 2:
+		_deadline_pulse_time = 0.0
+		_deadline_title.scale = Vector2.ONE
+		_deadline_number.scale = Vector2.ONE
+	_deadline_number.atlas_path = "res://assets/original/ui/number_6_red.png" if remaining < 3 else "res://assets/original/ui/number_6.png"
+	_deadline_number.text = "%d/%d" % [maxi(0, remaining), _state.sudan_card_init_life]
+	_deadline_title.modulate = Color.RED if remaining < 3 else Color.WHITE
+	_update_deadline_track(remaining)
+	_layout_deadline()
+
+
+func _update_deadline_track(remaining: int) -> void:
+	if _deadline_track.get_meta("remaining", -999) == remaining:
+		return
+	_deadline_track.set_meta("remaining", remaining)
+	for child in _deadline_track.get_children():
+		_deadline_track.remove_child(child)
+		child.queue_free()
+	var atlas := OriginalAtlas.load_atlas("res://assets/original/ui/countdown_pics.png")
+	# Sprite index order comes from countdown_pics.asset, not atlas frame order.
+	var names := ["人.png", "红色的人‘.png", "刀.png", "染血的刀.png", "进度条（亮.png", "进度条（红色.png", "暗色点点.png", "进度条暗点.png"]
+	var warning := remaining < 3
+	var indices: Array[int] = [1 if warning else 0]
+	var variables: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var repeated := str(variables.get("MAIN_UI_TITLE_NUMBER_RED" if warning else "MAIN_UI_TITLE_NUMBER_NOMAL", ""))
+	var last := str(variables.get("MAIN_UI_TITLE_NUMBER_RED_TODAY" if warning else "MAIN_UI_TITLE_NUMBER_TODAY", ""))
+	var tokens := RegEx.create_from_string("<sprite=(\\d+)>")
+	for part in [repeated.repeat(maxi(0, remaining - 1)), last]:
+		for token in tokens.search_all(part):
+			indices.append(int(token.get_string(1)))
+	for index in indices:
+		# TMP normalizes each sprite to font size, then applies character scale.
+		# countdown_pics: character scale 2 (figures), 1 (lit), 0.9 (dim).
+		var cell := Control.new()
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var character_scale := 2.0 if index < 4 else (1.0 if index < 6 else 0.9)
+		var image := TextureRect.new()
+		image.texture = atlas.frame(names[index])
+		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		var glyph_size := image.texture.get_size()
+		var sprite_scale := 57.0 / glyph_size.y * character_scale
+		var advance := 80.0 if index < 2 else (61.0 if index < 4 else 25.0)
+		cell.custom_minimum_size = Vector2(advance * sprite_scale - 20.0 * 57.0 / 90.0, 100)
+		image.size = glyph_size * sprite_scale
+		image.position = Vector2(-11.6 * sprite_scale if index == 2 or index == 3 else 0.0, (100.0 - image.size.y) * 0.5)
+		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(image)
+		_deadline_track.add_child(cell)
 
 
 func _update_prestige_strip() -> void:
@@ -683,7 +798,7 @@ func _update_prestige_strip() -> void:
 		return
 	for i in range(_prestige_slots.size()):
 		var slot: Control = _prestige_slots[i]
-		var value_label := slot.get_node_or_null("Value") as Label
+		var value_label = slot.get_node_or_null("Value")
 		if value_label != null:
 			value_label.text = str(int(_state.get_counter(7100001 + i)))
 

@@ -16,6 +16,10 @@ gut-test.stderr.log
 gut-*.log
 parse-check.log
 
+# Verification logs written to the repo root by agent runs (local artifacts,
+# cited by name in docs but never committed).
+/*.log
+
 # Generated Godot import metadata for tracked layout evidence screenshots.
 docs/ui_layout/*.png.import
 

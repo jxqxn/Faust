@@ -1,5 +1,21 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 桌面顶部三项修正（2026-09-09，局部链已验收）
+
+菜单/帮助锚节点的鼠标排序按引导修复同理置于SituationDesk之后、模态层之前；MenuButton关闭flat模式，恢复checkbox_bg底图。声望以PrestigeItemController.Init 0x582f50 / OnCounterChanged 0x583460的NumberToSprites和SetNativeSize为背书，GameScene Image底托52.5x54.6、Count40x50；TMP精灵GUID737d2853对应number_6，7100006源图160x236且旧宿主缺图。新增7100006、number_6及number_6_red的PNG/JSON共五份文件均与语料SHA256一致。
+
+处刑日以GameController.UpdateSudanLife 0x55aeb0为背书：遍历手牌和仪式，选择sudan标签且life最大者，显示card_vanishing-life / Player.sudan_card_init_life（dump.cs Card+0x24、Player+0x64）。宿主沿现有sudan类型匹配器筛选hand、active_sudan_cards、仪式槽，替换旧life+1。标题取ui.GAME_MAIN_HEAD_TITLE与textstyle.@EXECUTION_DAY_TITLE；路径按variable MAIN_UI_TITLE_NUMBER_*和countdown_pics精灵表，数字剩余不足三天切number_6_red。固定204高度、LeftSpace150/RightSpace180、NumberSprite最小1115、上边距37、九宫格源边界227/245/52/71；GameScene GO87/101/225的标题装饰为inactive，保持不显示。最后一天标题和数字使用RedText.anim的0/0.25/0.5/0.75/1秒缩放曲线1/0.95/1/1.05/1，中点切线0.2。顶部更新仅重排自身，避免触发SituationDesk重建。
+
+验收：完整GUT490/490、3605断言，零引擎错误/泄漏（header-full-check.log）。tools/verify_desktop_header.gd在1280x720与1920x1080从main.tscn真实点击菜单、返回和帮助，并验证7/6/3/2/1天图集、最后一天动画、仪式槽内较老卡、不同分母、隐藏及无卡状态。截图desktop_header_{1280,1920}_day*.png与原作original_runtime/desktop.jpg作结构参考，不同存档不比较状态数值。parity3882文件/0违规。
+
+保留差异：TMP字体/精灵的精确基线、数字零的对齐、材质发光、整条进度的过渡动画及原作同状态逐帧对拍未完成；sudan筛选沿宿主现有类型边界，未宣称完整HasTag复合语义。此批不能升级为桌面整页1:1或所有交互问题均已解决。
+
+## 引导关闭命中修正（2026-09-09）
+
+BeginGuideController.OnCloseBtnClick 0x525fa0 / dump.cs:316765 是已有关闭入口，本批不改关闭语义。GPU鼠标回放证实宿主的 Default/Close 虽然显示在上层，命中却落在后创建的 SituationDesk；仅设置 z_index 未改变 Control 输入顺序。将引导节点移到桌面之后、两个模态层之前，保留视觉坐标和模态遮挡。验收脚本 tools/verify_guide_close.gd 覆盖中心、伸出面板的按钮边缘和刷新后保持关闭。
+
+验证：1280x720、1920x1080 GPU输入回放通过，事件提示遮挡时不会点击穿透，提示关闭后恢复叉号命中；guide_close_before/after截图留档。UI回归79/79、923断言，stderr空、无引擎错误或泄漏。仅修宿主输入层级，不据此声明完整教学时机链已还原。
+
 ## ConfirmNew按钮行（2026-09-09，已接局部链，整页未完成）
 
 ConfirmController.Show 0x53fc30调用AssignTranslateText分别设置确认/取消文字；Done 0x53fb70清Promise后Resolve(bool)，dump.cs:318365。ConfirmNew.prefab Operations锚(0,0)-(1,0)、pos(801,-6)、sizeDelta(983.4226,144.2)、pivot(.5,0)；横排间距60、右padding120、MiddleCenter，Cancel168x158在前、Confirm325x158在后。计算源2705宽时Cancel左1817、Confirm左2045、顶H-145.1。两标签24号、源颜色alpha0；手柄InputDisplay仍未移植。宿主已补正文居中与独立确认分支；精确PreferredSize、遮罩与短面板最终高度仍待实机校准。专项10/10、80断言通过。

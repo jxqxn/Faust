@@ -615,7 +615,7 @@ func test_game_screen_hud_uses_day_without_coin_or_round_labels():
 	var strip := _find_node_by_name(screen, "RoundNumberBG")
 	assert_not_null(strip, "the original deadline strip (RoundNumber BG) is the desktop HUD")
 	var hud_text := _collect_label_and_button_text(strip)
-	assert_true(hud_text.find("处决日") >= 0, "deadline strip keeps the original title")
+	assert_true(hud_text.find("处刑日") >= 0, "deadline strip uses the translated source title")
 	assert_eq(hud_text.find("回合"), -1, "HUD should not expose internal round wording")
 	assert_eq(hud_text.find("金币"), -1, "gold should be represented as cards instead of a HUD counter")
 
