@@ -1,5 +1,17 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 手牌卡面 1:1 第二批（2026-09-09，细节贴图/数字精灵/手牌基线）
+
+第一批之后的三项收口：
+
+1. **手牌垂直基线**：GameScene `MainUI/Hand` 锚 (0,0)-(1,0)、pos (-63.97,4)、sizeDelta (-1116.74,430)、pivot (0.52,0)——内容矩形底边距画布底 4 单位，卡牌贴其**底边**而非居中。克隆原来居中，1920 下比原作高 2px；改 `_card_items.size.y - card_size.y` 后卡顶 865→867px，与原作 867-868 对齐。
+2. **`_DetailAlbedoMap`（`_DETAIL_MULX2`）**：12 个卡材质的 detail 贴图逐档取真值——char copper/gold=card_d_1、char silver=card_e_0；item copper/gold=card_d_6、item silver=card_d_2；sudan copper/gold=card_d、sudan silver=card_d_3；stone 档无该贴图也无该 keyword。已复制 6 张纹理（SHA256 与语料一致）并在 shader 里按 `_UVSec: 0` 同 UV 做 `albedo × detail × 2`；灯光按 detail 均值除回，保持场景光常量。
+3. **数量底章按卡类分派**：`CardShowChar`/`CardShowSudan/Stackable` 是 number_bg 80×80@(57,332)，**`CardShowItem/Stackable` 是 checkbox_bg 75×78@(59.5,332)**——第一批统一用 number_bg 是错的（金币卡就是 item）。数量与寿命数字改用 `ui/source_number.gd` 的 TMP 数字精灵（spriteAsset 737d2853=number_6，fs48/fs52，`Utils.NumberToSprites 0x3ac420`），字号换算按原作截图校准到 glyph_height 58/63（克隆原来 48/52，数字明显偏小）。
+
+验收：`tools/verify_card_surface.gd` 六张卡（梅姬/阿尔图/金币 count=8/铁头/快脚/小圆）同坐标整卡均值 vs 原作 desktop.jpg：梅姬 99/103/70 vs 96/100/66、阿尔图 94/98/104 vs 90/95/101、金币 143/121/57 vs 142/122/60、铁头 100/95/65 vs 97/92/62、快脚 106/89/81 vs 106/90/78、小圆 116/97/80 vs 116/98/76——全部在 ±6% 内。截图 `card_surface_1920.png`、对比图 `card_surface_compare.png`。
+
+保留差异：材质高光/法线的空间分布仍是近似（顶部条带比原作暗约 20%，卡缘条带略亮）；`LifeBg/Image/DotText`（`<sprite=21>`）未接；装备槽、详情面板的卡面复用同一条 CardWidget 链但未逐屏对拍。
+
 ## 手牌卡面 1:1 第一批（2026-09-09，卡面壳层已验收）
 
 CardNew.prefab（docs/ui_layout/CardNew.md）根 194×422，两个旧实现漏掉的壳层：**Outline** 256×525 pos(0,22) 的 `m_IsActive: 0`——原作从不绘制；**Flash** 256×512 pos(0,0) 且 `m_IsActive: 1`，sprite=Sprite/card_outline.asset（Texture2D/card_outline.png，256×512）+ Resources/materials/CardFlash.mat（keywords `_ENABLEINNEROUTLINE_ON`/`_INNEROUTLINEOUTLINEONLYTOGGLE_ON`，`_InnerOutlineColor` 0.882/0.728/0.337，`_InnerOutlineWidth` 0.08）——原作卡面边缘那圈金色内描边就是它，不是 Outline。CardShowChar/Item/Sudan 的 **Stackable 是 80×80 的 Sprite/number_bg.asset**（68×68 纹理）底部锚 +50 → 左上 (57,332)，旧实现的 checkbox_bg 75×78 是错的底图。12 个 `materials/card/{char,item,sudan}/{stone,copper,silver,gold}.mat` 的 `_MainTex`/`_BumpMap`/`_MetallicGlossMap`/`_BumpScale`/`_GlossMapScale` 已逐档取真值（stone 0.9027777/0.3020833、copper 0.3819444/0.7847222、silver 0.2847222/0.8090278、gold 0.3680556/0.75），材质对**所有稀有度**生效——旧实现 `rare<2` 直接 return 是自制捷径。

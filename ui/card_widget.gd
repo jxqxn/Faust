@@ -85,19 +85,28 @@ func _apply_metal_surface(image: TextureRect) -> void:
 	surface.set_shader_parameter("metal_map", load("res://assets/original/ui/%s.png" % metal_name))
 	surface.set_shader_parameter("bump_scale", [0.9027777, 0.3819444, 0.2847222, 0.3680556][tier])
 	surface.set_shader_parameter("gloss_scale", [0.3020833, 0.7847222, 0.8090278, 0.75][tier])
+	var detail_name: String = str(CARD_DETAIL_MAPS.get(kind, ["", "", "", ""])[tier])
+	if not detail_name.is_empty():
+		surface.set_shader_parameter("detail_map", load("res://assets/original/ui/%s.png" % detail_name))
+		surface.set_shader_parameter("has_detail", true)
 	# Scene-light response per tier, fitted against the original hand in
 	# docs/ui_layout/original_runtime/desktop.jpg (the exported CardShow shader
 	# has no body). Whole-card averages in the clone and the original then
 	# agree within a few percent: 梅姬 93/98/76 vs 96/100/66, 阿尔图 92/95/105
 	# vs 89/94/100, 快脚 112/95/86 vs 118/98/77, 金币 94/90/70 vs 98/92/62.
 	# The portrait itself renders identically (art centre 82/70/58 vs 81/68/55);
-	# only the frame's lighting distribution still differs.
-	surface.set_shader_parameter("material_light", [
-		Vector3(1.9, 2.24, 3.85),
-		Vector3(1.67, 1.89, 3.03),
-		Vector3(1.97, 1.94, 2.12),
-		Vector3(1.67, 1.89, 3.03),
-	][tier])
+	# only the frame's lighting distribution still differs. The detail albedo
+	# multiply is divided back out here so this light stays a scene constant
+	# while the detail texture keeps its authored spatial variation.
+	var light: Vector3 = [
+		Vector3(2.0, 2.31, 3.5),
+		Vector3(1.28, 1.44, 1.52),
+		Vector3(1.44, 1.52, 1.61),
+		Vector3(1.33, 1.61, 2.25),
+	][tier]
+	if not detail_name.is_empty():
+		light = light / (Vector3(CARD_DETAIL_MEANS[detail_name]) * 2.0)
+	surface.set_shader_parameter("material_light", light)
 	image.material = surface
 	_metal_materials.append(surface)
 
@@ -558,21 +567,17 @@ func _rebuild() -> void:
 	flash_material.shader = preload("res://ui/card_flash.gdshader")
 	flash.material = flash_material
 	# [SRC: CardRender.UpdateShowInternal 0x53a4a0: count>1 AND stackable;
-	# content/tag.json stackable = 可堆叠; CardShow*/Stackable is 80x80
-	# number_bg at bottom anchor +50 -> top-left (57,332).]
+	# content/tag.json stackable = 可堆叠. CardShowChar/Sudan use number_bg
+	# 80x80 at bottom anchor +50 -> top-left (57,332); CardShowItem uses
+	# checkbox_bg 75x78 -> top-left (59.5,332).]
 	var tags: Dictionary = _card.get("tag", {})
 	var count := int(_card.get("count", 1))
 	if count > 1 and int(tags.get("可堆叠", tags.get("stackable", 0))) > 0:
-		var badge := _face_texture("Stackable", load("res://assets/original/ui/number_bg.png"), Rect2(57, 332, 80, 80))
-		var label := Label.new()
-		label.name = "Count"
-		label.text = str(count)
-		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.add_theme_font_size_override("font_size", 48)
-		badge.add_child(label)
+		var item_badge := str(_card.get("type", "item")) == "item"
+		var badge_texture := "checkbox_bg" if item_badge else "number_bg"
+		var badge_rect := Rect2(59.5, 332, 75, 78) if item_badge else Rect2(57, 332, 80, 80)
+		var badge := _face_texture("Stackable", load("res://assets/original/ui/%s.png" % badge_texture), badge_rect)
+		badge.add_child(_source_number("Count", str(count), 58.0, Rect2(Vector2.ZERO, badge_rect.size)))
 	# [SRC: CardRender.Init / UpdateShowInternal; lifetime = config minus
 	# Card.life. CardShow*/LifeBg sits above the card, not in its footer.]
 	var lifetime := int(_card.get("card_vanishing", 0))
@@ -585,16 +590,28 @@ func _rebuild() -> void:
 		clock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		life_bg.add_child(clock)
-		var remaining := Label.new()
-		remaining.name = "Life"
-		remaining.text = str(int(_card.get("remaining_life", lifetime - int(_card.get("life", 0)))))
-		remaining.position = Vector2(24, -2.5)
-		remaining.size = Vector2(74, 50)
-		remaining.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		remaining.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		remaining.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		remaining.add_theme_font_size_override("font_size", 52)
-		life_bg.add_child(remaining)
+		life_bg.add_child(_source_number(
+			"Life",
+			str(int(_card.get("remaining_life", lifetime - int(_card.get("life", 0))))),
+			63.0,
+			Rect2(24, -2.5, 74, 50)
+		))
+
+
+## [SRC: CardShowChar/Stackable/Count and LifeBg/Life both use
+##       m_spriteAsset 737d2853a5e0b98488e2cf3c384d60f3 (number_6) with
+##       white m_fontColor at fs48 / fs52, so the digits are atlas sprites,
+##       not font glyphs. Utils.NumberToSprites 0x3ac420 builds the same
+##       left-to-right sprite row.]
+func _source_number(node_name: String, value: String, glyph_height: float, rect: Rect2) -> Control:
+	var number := preload("res://ui/source_number.gd").new()
+	number.name = node_name
+	number.glyph_height = glyph_height
+	number.text = value
+	number.position = rect.position
+	number.size = rect.size
+	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return number
 
 ## Original card art extracted from the game assets, keyed by card id.
 func _card_art_texture() -> Texture2D:
@@ -643,6 +660,24 @@ const ATTRIBUTE_TAG_RESOURCES := {
 	"体魄": "tag_1", "魅力": "tag_2", "智慧": "tag_3",
 	"隐匿": "tag_4", "战斗": "tag_5", "社交": "tag_6",
 	"生存": "tag_8", "魔力": "tag_9",
+}
+
+## [SRC: materials/card/{kind}/{tier}.mat _DetailAlbedoMap (UV0, _UVSec: 0).
+## Stone has no detail map; the _DETAIL_MULX2 keyword is only on the other
+## tiers. The second value is the map's measured mean RGB, used to keep the
+## calibrated scene light independent of the detail texture's average.]
+const CARD_DETAIL_MAPS := {
+	"char": ["", "card_d_1", "card_e_0", "card_d_1"],
+	"item": ["", "card_d_6", "card_d_2", "card_d_6"],
+	"sudan": ["", "card_d", "card_d_3", "card_d"],
+}
+const CARD_DETAIL_MEANS := {
+	"card_d": Vector3(0.52, 0.54, 0.32),
+	"card_d_1": Vector3(0.52, 0.54, 0.32),
+	"card_d_6": Vector3(0.52, 0.54, 0.32),
+	"card_e_0": Vector3(0.53, 0.63, 0.70),
+	"card_d_2": Vector3(0.72, 0.77, 0.80),
+	"card_d_3": Vector3(0.64, 0.71, 0.75),
 }
 
 

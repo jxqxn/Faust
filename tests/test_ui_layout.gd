@@ -1403,6 +1403,20 @@ func test_card_face_uses_resource_variant_and_runtime_badges():
 	assert_true(str(face.get_node("Stackable").texture.resource_path).ends_with("number_bg.png"))
 	assert_eq(face.get_node("Stackable").position, Vector2(57, 332))
 	assert_eq(face.get_node("Stackable").size, Vector2(80, 80))
+	# [SRC: CardShowItem/Stackable is the 75x78 checkbox_bg sprite at (59.5,332).]
+	var item_card := db.get_card(2000029).duplicate(true)
+	item_card["count"] = 3
+	var item_widget := CardWidget.make(item_card)
+	_stage().add_child(item_widget)
+	await wait_process_frames(1)
+	var item_badge := item_widget.get_node("CardVisualFace/Stackable") as TextureRect
+	assert_not_null(item_badge)
+	if item_badge != null:
+		assert_true(str(item_badge.texture.resource_path).ends_with("checkbox_bg.png"))
+		assert_eq(item_badge.position, Vector2(59.5, 332))
+		assert_eq(item_badge.size, Vector2(75, 78))
+		assert_eq(str(item_widget.get_node("CardVisualFace/Stackable/Count").get("text")), "3")
+	await wait_process_frames(1)
 	assert_eq(face.get_node("LifeBg/Life").text, "5")
 	assert_eq(face.get_node("LifeBg").position, Vector2(57.5, -45))
 	card["count"] = 1

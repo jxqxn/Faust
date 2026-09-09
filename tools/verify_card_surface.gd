@@ -97,11 +97,13 @@ func _run() -> void:
 		if card_id == COIN_CARD_ID:
 			_check(stackable != null, "stackable coin must show the count badge")
 			if stackable != null:
-				_check(stackable.position.is_equal_approx(Vector2(57, 332)), "Stackable position %s" % stackable.position)
-				_check(stackable.size.is_equal_approx(Vector2(80, 80)), "Stackable size %s" % stackable.size)
-				_check(str(stackable.texture.resource_path).ends_with("number_bg.png"), "Stackable must use number_bg")
-				var count_label := stackable.get_node_or_null("Count") as Label
-				_check(count_label != null and count_label.text == str(COIN_COUNT), "Stackable count label")
+				_check(stackable.position.is_equal_approx(Vector2(59.5, 332)), "Stackable position %s" % stackable.position)
+				_check(stackable.size.is_equal_approx(Vector2(75, 78)), "Stackable size %s" % stackable.size)
+				_check(str(stackable.texture.resource_path).ends_with("checkbox_bg.png"), "item Stackable must use checkbox_bg")
+				var count_number: Control = stackable.get_node_or_null("Count")
+				_check(count_number != null and str(count_number.get("text")) == str(COIN_COUNT), "Stackable count sprites")
+				if count_number != null:
+					_check(count_number.get_child_count() == len(str(COIN_COUNT)), "Stackable digit sprite count")
 		else:
 			_check(stackable == null, "card %d must not show a count badge" % card_id)
 

@@ -12,6 +12,10 @@ render_mode unshaded;
 // custom shader).
 uniform sampler2D normal_map : filter_linear;
 uniform sampler2D metal_map : filter_linear;
+// [SRC: Standard shader _DETAIL_MULX2 with _DetailAlbedoMap at UV0
+//       (_UVSec: 0); enabled for copper/silver/gold, absent for stone.]
+uniform sampler2D detail_map : filter_linear;
+uniform bool has_detail = false;
 uniform float bump_scale = 0.3680556;
 uniform float gloss_scale = 0.75;
 uniform vec2 normal_offset = vec2(0.025, 0.3);
@@ -31,6 +35,9 @@ vec3 to_display(vec3 linear_value) {
 
 void fragment() {
 	vec4 base = vec4(to_display(texture(TEXTURE, UV).rgb), texture(TEXTURE, UV).a) * COLOR;
+	if (has_detail) {
+		base.rgb *= to_display(texture(detail_map, UV).rgb) * 2.0;
+	}
 	vec3 normal = to_display(texture(normal_map, UV).rgb) * 2.0 - 1.0;
 	normal = normalize(vec3(normal.xy * bump_scale + normal_offset, max(normal.z, 0.2)));
 	vec4 metal = vec4(to_display(texture(metal_map, UV).rgb), texture(metal_map, UV).a);

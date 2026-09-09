@@ -1110,10 +1110,16 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 		var slot_index := index
 		if _hand_drop_preview_index >= 0 and slot_index >= _hand_drop_preview_index:
 			slot_index += 1
+		# [SRC: GameScene MainUI/Hand anchors(0,0)-(1,0) pos(-63.97,4)
+		#       sizeDelta(-1116.74,430) pivot(0.52,0): the cards sit on the
+		#       content rect's bottom edge. Measured against
+		#       docs/ui_layout/original_runtime/desktop.jpg, the original card
+		#       top is 2px lower at 1920 than a vertically centred card, which
+		#       matches bottom alignment (2156-422=1734 canvas units).]
 		card.set_hand_pose(
 			Vector2(
 				float(slot_positions[slot_index]),
-				maxf(0.0, (_card_items.size.y - card.card_size().y) * 0.5)
+				maxf(0.0, _card_items.size.y - card.card_size().y)
 			),
 			0.0,
 			slot_index

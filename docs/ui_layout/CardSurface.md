@@ -13,6 +13,17 @@
 
 验收与保留差异见 METHOD_MAP 顶部「手牌卡面 1:1 第一批」；截图 `card_surface_1920.png`，对拍脚本 `tools/verify_card_surface.gd`。
 
+## 2026-09-09 第二批：手牌基线、细节贴图、数字精灵
+
+| 旧偏差 | 原作依据 | 修正 |
+| --- | --- | --- |
+| 手牌卡比原作高 2px | GameScene MainUI/Hand 内容矩形底边距画布底 4 单位，卡牌贴底边 | `_layout_hand_cards` 的 Y 由居中改为 `size.y - card_size.y` |
+| 缺 `_DETAIL_MULX2` 细节层 | 12 个卡材质逐档的 `_DetailAlbedoMap`（stone 档没有） | 复制 6 张 detail 纹理，shader 里同 UV 做 `albedo × detail × 2`，灯光按 detail 均值除回 |
+| 数量底章统一用 number_bg | CardShowItem/Stackable 是 checkbox_bg 75×78@(59.5,332) | 按卡类分派：char/sudan 用 number_bg 80×80@(57,332)，item 用 checkbox_bg |
+| 数量/寿命数字是普通字体 | 两个 TMP 组件都用 spriteAsset number_6（fs48/fs52） | 改用 `ui/source_number.gd` 数字精灵，glyph_height 58/63 |
+
+六张卡整卡均值与原作差 ≤6%（见 METHOD_MAP）；对比图 `card_surface_compare.png`。
+
 
 ## 原因与对应实现
 
