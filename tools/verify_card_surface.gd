@@ -157,6 +157,42 @@ func _run() -> void:
 			_check(merged_objects == 1, "stacking must merge the two coin objects")
 			_check(merged_total == COIN_COUNT, "stacking must preserve the total count")
 
+	# Hold hint through the production game screen: a 0.2s press on a noble card
+	# must highlight the rites whose slots accept it (CardController.Update ->
+	# ShowSatisfiedRite), and releasing clears it.
+	var noble_widget: CardWidget = null
+	var current_rail: Control = screen.find_child("CardRailItems", true, false) as Control
+	if current_rail != null:
+		for child in current_rail.get_children():
+			if child is CardWidget and int(child.card_id) == 2000001:
+				noble_widget = child
+				break
+	var desk: Control = screen.find_child("SituationDesk", true, false) as Control
+	_check(desk != null, "SituationDesk missing")
+	if noble_widget != null and desk != null:
+		var press := InputEventMouseButton.new()
+		press.button_index = MOUSE_BUTTON_LEFT
+		press.pressed = true
+		press.position = Vector2(10, 10)
+		noble_widget._gui_input(press)
+		await create_timer(0.35).timeout
+		var highlighted := 0
+		for uid in desk.rite_cards:
+			if bool(desk.rite_cards[uid].get("satisfied_hint")):
+				highlighted += 1
+		_check(highlighted > 0, "holding a noble card must highlight the rites it satisfies")
+		var release := InputEventMouseButton.new()
+		release.button_index = MOUSE_BUTTON_LEFT
+		release.pressed = false
+		release.position = Vector2(10, 10)
+		noble_widget._gui_input(release)
+		await _settle(2)
+		var still_highlighted := 0
+		for uid in desk.rite_cards:
+			if bool(desk.rite_cards[uid].get("satisfied_hint")):
+				still_highlighted += 1
+		_check(still_highlighted == 0, "releasing the card clears the satisfied-rite hint")
+
 	await RenderingServer.frame_post_draw
 	var size := DisplayServer.window_get_size()
 	var path := "res://docs/ui_layout/card_surface_%d.png" % size.x

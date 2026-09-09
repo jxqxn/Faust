@@ -1052,6 +1052,8 @@ func refresh() -> void:
 		widget.clicked.connect(_show_card_detail)
 		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
 		widget.split_requested.connect(_on_hand_card_split_requested)
+		widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
+		widget.hold_hint_cleared.connect(_clear_satisfied_rite_hint)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
 		if has_drop_origin:
@@ -1404,6 +1406,22 @@ func _on_hand_card_split_requested(card_uid: int) -> void:
 		return
 	if _state.split_card_stack(card_uid) > 0:
 		refresh()
+
+
+## [SRC: CardController.Update 0x52c890 — a 0.2s hold calls
+##       GameController.ShowSatisfiedRite 0x557a80, which highlights every rite
+##       whose open slot accepts the card.]
+func _on_hand_card_hold_hint(card_uid: int) -> void:
+	if _state == null or _desk_content == null or not _desk_content.has_method("show_satisfied_rites"):
+		return
+	if not _state.has_method("satisfied_rite_uids_for_card"):
+		return
+	_desk_content.show_satisfied_rites(_state.satisfied_rite_uids_for_card(card_uid, _db, _rng))
+
+
+func _clear_satisfied_rite_hint() -> void:
+	if _desk_content != null and _desk_content.has_method("show_satisfied_rites"):
+		_desk_content.show_satisfied_rites([])
 
 
 func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order

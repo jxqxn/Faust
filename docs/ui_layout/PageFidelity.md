@@ -38,6 +38,7 @@
 
 ### 2026-09-09 连续验收批次
 
+- 按住提示（2026-09-09）：按 CardController.Update 0x52c890 的 0.2s 阈值接上 `ShowSatisfiedRite 0x557a80`——`GameState.satisfied_rite_uids_for_card` 复刻 `GetCardSatisfiedRite 0x532e10`（跳过已开始仪式、跳过 open_adsorb 与已占用槽），CardWidget 按住计时发出 hold_hint_requested/cleared，地图对命中的 RiteNew 卡做脉冲高亮（ShowEffect(1) 的 clip 无导出体，为近似）。新增 tests/test_card_hold_hint.gd（4/14）与 verify_card_surface.gd 端到端「按住阿尔图 → 高亮 ≥1 → 松开清空」。
 - 卡牌堆叠/拆分（2026-09-09）：按 CardController.CardSplit 0x528390 / CardStack 0x5286b0 落地 `split_card_stack`（count>n，副本继承 bag/bagpos 回手牌）与 `stack_cards`（同 id + 双可堆叠，目标累加、源卡移除）；CardWidget 支持拖到同 id 可堆叠手牌合并，仪式槽已占用且同 id 可堆叠时也合并（CardSlotController.CardStack）。新增 tests/test_card_stacking.gd（7/33）与 verify_card_surface.gd 端到端 8→4+4→8。🟡 拆分手势暂绑 Shift+左键（原作是 SplitCard 提示 A+B）；⬜ 0.2s 按住 ShowSatisfiedRite 提示未接。
 - 手牌卡面第四批（2026-09-09）：按"立绘透明像素"逐带拟合出底板光照分布（自上而下 1.21×→0.79×、金属件 30% 漫反射损失、高光 0.3），逐带误差 21%→15%，六张卡整卡均值仍 ≤6%；详情面板 `CardInfoNew/Equips` 装备缩略图复用同一 CardWidget 链，新增 verify_card_detail.gd 校验壳层并输出 card_detail_2560.png（原作参考帧无装备，只做结构验证）。
 - 手牌卡面第三批（2026-09-09）：补上寿命牌 `LifeBg/Image/DotText`——`<sprite=21>` 的真身是 `rite_settlement_icon` 图集索引 21 的 `dot_0.png`（50×30，不是 number_6），已复制图集并按锚点折算落位；对拍脚本临时给小圆 7 天寿命覆盖这条链。仍缺：材质高光/法线空间分布、详情面板装备缩略图未按 card_info_artu.jpg 单独对拍。

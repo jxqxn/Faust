@@ -18,6 +18,9 @@ signal drag_visibility_changed(card_uid: int, hidden: bool)
 signal stack_dropped(target_uid: int, source_uid: int)
 ## Split half of a stackable stack (host binding for the source's SplitCard prompt).
 signal split_requested(card_uid: int)
+## [SRC: CardController.Update 0x52c890 hold threshold -> ShowSatisfiedRite.]
+signal hold_hint_requested(card_uid: int)
+signal hold_hint_cleared()
 
 ## Authored RectTransforms, not clone-side presentation measurements.
 ## [SRC: Resources/prefab/CardNew.prefab CardNew 194x422;
@@ -26,6 +29,8 @@ const CARD_SIZE := Vector2(194, 422)
 const SUDAN_CARD_SIZE := Vector2(185, 330)
 const SELECTED_LIFT := CARD_SIZE.y * 0.2
 const HOVER_Z_INDEX := 20
+## [SRC: CardController ctor writes 0x3e4ccccd (0.2) into its hold threshold.]
+const HOLD_HINT_SECONDS := 0.2
 const DEAL_DURATION := 0.30
 const DEAL_STAGGER := 0.055
 const REFLOW_DURATION := 0.22
@@ -47,6 +52,8 @@ var _drag_selected_tilt := Vector2.ZERO
 var _hidden_for_drag := false
 var _hovered := false
 var _pressed := false
+var _press_elapsed := 0.0
+var _hold_hint_sent := false
 var _selected := false
 var _drag_preview := false
 var _dealing := false
@@ -60,7 +67,15 @@ var _presentation_paused := false
 var _metal_materials: Array[ShaderMaterial] = []
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	# [SRC: CardController.Update 0x52c890 — a press held for 0x15c seconds
+	#       (ctor default 0x3e4ccccd = 0.2) fires ShowSatisfiedRite once per
+	#       press and then clears the press timer.]
+	if _pressed and not _hold_hint_sent and not _presentation_paused:
+		_press_elapsed += delta
+		if _press_elapsed >= HOLD_HINT_SECONDS:
+			_hold_hint_sent = true
+			hold_hint_requested.emit(card_uid)
 	if _presentation_paused or _metal_materials.is_empty():
 		return
 	# [SRC: CardRender.Update 0x53a8e0 -> GetScreenOffset 0x5508a0;
@@ -408,6 +423,13 @@ static func _card_is_stackable(card: Dictionary) -> bool:
 	return int(tags.get("可堆叠", tags.get("stackable", 0))) > 0
 
 
+func _clear_hold_hint() -> void:
+	if not _hold_hint_sent:
+		return
+	_hold_hint_sent = false
+	hold_hint_cleared.emit()
+
+
 func _gui_input(event: InputEvent) -> void:
 	if _presentation_paused:
 		return
@@ -415,8 +437,11 @@ func _gui_input(event: InputEvent) -> void:
 		if event.pressed:
 			_press_position = event.position
 			_pressed = true
+			_press_elapsed = 0.0
+			_hold_hint_sent = false
 		elif event.position.distance_to(_press_position) <= 8.0:
 			_pressed = false
+			_clear_hold_hint()
 			# [SRC: CardController.OnPointerUp 0x52afe0 — a stackable card with
 			#       count>1 splits count/2 when the SplitCard prompt (A+B) is
 			#       held. The host has no prompt layer yet, so the same action is
@@ -427,6 +452,7 @@ func _gui_input(event: InputEvent) -> void:
 			clicked.emit(card_id, _card.duplicate(true))
 		else:
 			_pressed = false
+			_clear_hold_hint()
 
 
 func _drop_delegate() -> Control:
@@ -491,6 +517,11 @@ func _set_hovered(is_hovered: bool) -> void:
 	if _presentation_paused or _drag_preview or _dealing or _hidden_for_drag or _hovered == is_hovered:
 		return
 	_hovered = is_hovered
+	if not is_hovered:
+		# [SRC: CardController.OnPointerExit 0x52af50 -> CardResetMove clears the
+		#       hold state, so the satisfied-rite hint disappears with it.]
+		_pressed = false
+		_clear_hold_hint()
 	z_index = _base_z_index + HOVER_Z_INDEX if (_hovered or _selected) else _base_z_index
 	_apply_rest_pose()
 	_set_card_style()

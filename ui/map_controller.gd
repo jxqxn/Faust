@@ -997,6 +997,20 @@ static func _location_range(raw_location: String) -> Dictionary:
 	return {"name": name, "min": fixed_position, "max": fixed_position}
 
 
+## [SRC: GameController.ShowSatisfiedRite 0x557a80 — every rite returned by
+##       CardHandler.GetCardSatisfiedRite 0x532e10 gets RiteController.ShowEffect(1);
+##       an empty list clears the hint.]
+func show_satisfied_rites(rite_uids: Array) -> void:
+	var wanted: Dictionary = {}
+	for uid in rite_uids:
+		wanted[int(uid)] = true
+	for uid in rite_cards:
+		var card := rite_cards[uid] as Control
+		if card == null or not card.has_method("set_satisfied_hint"):
+			continue
+		card.call("set_satisfied_hint", wanted.has(int(uid)))
+
+
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
@@ -1017,3 +1031,19 @@ class RiteCardButton:
 	extends Button
 	var rite_uid := 0
 	var rite_id := 0
+	var satisfied_hint := false
+	var _hint_tween: Tween
+
+	## [SRC: RiteRender.ShowEffect 0x59be70 — the pin restarts an Animation clip
+	##       (the exported clip has no body), so the host pulses modulate.]
+	func set_satisfied_hint(on: bool) -> void:
+		satisfied_hint = on
+		if _hint_tween != null and _hint_tween.is_valid():
+			_hint_tween.kill()
+		_hint_tween = null
+		modulate = Color.WHITE
+		if not on or not is_inside_tree():
+			return
+		_hint_tween = create_tween().set_loops()
+		_hint_tween.tween_property(self, "modulate", Color(1.45, 1.35, 0.95, 1.0), 0.22)
+		_hint_tween.tween_property(self, "modulate", Color.WHITE, 0.22)

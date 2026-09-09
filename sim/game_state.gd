@@ -1544,11 +1544,46 @@ func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Di
 		"rng": rng,
 		"rite_state": rite_state,
 		"attr_slots": attr_slots,
+		"rite_uid": int(instance.uid),
+		"rite_id": int(instance.id),
+		"slot_entries": cards_in_slot_entries_for_rite(int(instance.uid)),
 		"acting_card": card,
 		"acting_card_id": int(card.get("id", 0)),
 		"acting_card_uid": int(card.get("instance_uid", 0)),
 		"acting_card_only": true,
 	})
+
+
+## Rites whose open slots would accept this card.
+## [SRC: CardHandler.GetCardSatisfiedRite 0x532e10 — walk the player's rites,
+##       skip started ones (Rite.start +0x22), and keep those where
+##       RiteExtensions.GetSatisfiedSlotIndex 0x392ac0 finds a slot; the caller
+##       GameController.ShowSatisfiedRite 0x557a80 then plays
+##       RiteController.ShowEffect(1) on each of them.]
+func satisfied_rite_uids_for_card(card_uid: int, db, rng = null) -> Array[int]:
+	var out: Array[int] = []
+	var card: Dictionary = card_data_for(card_uid, db)
+	if card.is_empty():
+		return out
+	var rite_uids: Array = rite_instances.keys()
+	rite_uids.sort()
+	for raw_uid in rite_uids:
+		var rite_uid := int(raw_uid)
+		var instance = get_rite_instance(rite_uid)
+		if instance == null or bool(instance.start):
+			continue
+		var definition: Dictionary = db.get_rite(instance.id) if db != null else {}
+		var slots: Dictionary = definition.get("cards_slot", {})
+		for slot_key in slots.keys():
+			var slot_def: Dictionary = slots[slot_key]
+			if int(slot_def.get("open_adsorb", 0)) == 1:
+				continue
+			if instance.slot_cards.has(slot_key):
+				continue
+			if _can_adsorb_card(slot_def, card, instance, definition, db, rng):
+				out.append(rite_uid)
+				break
+	return out
 
 
 func _reback_absorbed_cards(absorbed: Array[Dictionary], rite_uid: int) -> void:

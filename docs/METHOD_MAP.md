@@ -1,5 +1,13 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 按住提示：卡牌满足的仪式高亮（2026-09-09）
+
+`CardController.Update 0x52c890`：指针按住 ≥ **0.2s**（字段 0x15c，ctor 写入 `0x3e4ccccd`）时调用 `GameController.ShowSatisfiedRite 0x557a80`，随后清零计时（每次按住只触发一次）。`ShowSatisfiedRite` → `CardHandler.GetCardSatisfiedRite 0x532e10`：遍历玩家仪式，**跳过已开始的仪式**（`Rite.start +0x22`），对每个仪式调用 `RiteExtensions.GetSatisfiedSlotIndex 0x392ac0`，命中就收进列表；再对列表里每个仪式 `RiteController.ShowEffect(1)` → `RiteRender.ShowEffect 0x59be70`（重启动画 clip，导出体为空）。`CardController.OnPointerExit 0x52af50` 在 `IsShowCardInfo` 为假时 `CardResetMove` 收回。
+
+落地：`GameState.satisfied_rite_uids_for_card(uid, db, rng)`（跳过 `start`、跳过 `open_adsorb` 槽与已占用槽，槽条件复用 `_can_adsorb_card`，其上下文补上 `slot_entries`/`rite_uid`）；`CardWidget` 新增 `HOLD_HINT_SECONDS = 0.2` 按住计时 → `hold_hint_requested` / `hold_hint_cleared`（松开、移出、拖拽时清除）；`GameScreen` 转给 `MapController.show_satisfied_rites(uids)`，命中的 RiteNew 卡置 `satisfied_hint` 并做 modulate 脉冲（对应 `ShowEffect(1)`，clip 无导出体故为近似）。新增 `tests/test_card_hold_hint.gd`（4 测试 / 14 断言：槽条件命中与不命中、`start` 跳过、槽占满后不再提示、0.2s 阈值与每次按住只发一次、地图只高亮命中的卡），并在 `verify_card_surface.gd` 里经生产 GameScreen 按住阿尔图验证「高亮 ≥1 个仪式 → 松开清空」。
+
+保留差异：`ShowEffect(1)` 的原动画 clip 未导出，脉冲为近似（🟡）；0x160/0x18c 的其它按住分支未接。
+
 ## 卡牌堆叠/拆分交互（2026-09-09，源语义落地）
 
 `CardController.CardSplit 0x528390`：要求 `count > n`，源卡 `count -= n`，副本走 `CardExtensions.Copy`（bag/bagpos 一并继承）后由 `CardDropManager.BackToHandOrBag` 放回手牌；`OnPointerUp 0x52afe0` 在"可堆叠且 count>1 + SplitCard 提示（A+B）被按住"时调用 `CardSplit(count/2)`。`CardController.CardStack 0x5286b0`：同卡 id 且双方带 `可堆叠` 时 `目标.count += 源.count`，源卡 `PlayerExtensions.RemoveCard` 移除、目标回到自己的 bag/bagpos；`CardDropManager.DropCard` 对**手牌目标**调 CardStack、对**已占用的仪式槽**调 `CardSlotController.CardStack`。`CardController.Update` 另有 0.2s（0x3e4ccccd）按住阈值 → `GameController.ShowSatisfiedRite` 提示（宿主未接，见下）。
