@@ -38,6 +38,7 @@
 
 ### 2026-09-09 连续验收批次
 
+- 手牌卡面第三批（2026-09-09）：补上寿命牌 `LifeBg/Image/DotText`——`<sprite=21>` 的真身是 `rite_settlement_icon` 图集索引 21 的 `dot_0.png`（50×30，不是 number_6），已复制图集并按锚点折算落位；对拍脚本临时给小圆 7 天寿命覆盖这条链。仍缺：材质高光/法线空间分布、详情面板装备缩略图未按 card_info_artu.jpg 单独对拍。
 - 手牌卡面第二批（2026-09-09）：手牌基线改贴内容矩形底边（原作 1920 下卡顶 867px）、接入 `_DETAIL_MULX2` 细节贴图（6 张纹理，逐档真值）、数量底章按卡类分派（item 用 checkbox_bg 75×78@(59.5,332)）、数量/寿命数字改用 number_6 数字精灵（glyph_height 58/63）。六张卡整卡均值与原作差 ≤6%。仍缺：高光/法线空间分布近似、LifeBg/Image/DotText 未接。
 - 手牌卡面壳层（2026-09-09 续批）：补上 CardNew/Flash（card_outline.png + CardFlash 金色内描边；Outline 在预制体里 m_IsActive=0，原作不画）、数量底章改 number_bg 80×80@(57,332)、卡牌材质对全部稀有度生效并逐档写入真值 _BumpScale/_GlossMapScale；修掉自定义 canvas_item shader 线性/sRGB 采样不一致导致卡面暗约 2 倍的问题，并按原作截图逐档校准灯光项。对拍脚本 tools/verify_card_surface.gd + 截图 card_surface_1920.png：同坐标卡面顶部条带与原作差 ≤10%，卡牌 UI 专项 80/80、1006 断言。保留：手牌整体高 2–3px、_DetailAlbedoMap 未接、TMP 数字精灵仍为文字。
 - 桌面地图与事件标牌（2026-09-09 续批）：地图改按 GameScene 相机(97,-106)/正交半高1732 与 Map 缩放1.25 做等比投影，建筑改用 Image 子节点自身尺寸与偏移（不再用 Location 容器矩形），rites 图集按实际 PNG 尺寸同比换算裁切；事件标题宽度参与 bound，避免多个事件挤在一起。1920x1080、1280x720、1600x1000（16:10）三窗口 GPU 真实点击：图标面与标题条分别打开正确实例、自宅同点4个仪式展开后不重叠、画布始终 3840x2160；截图 desktop_map_{1920,1280,1600}.png 与原作 desktop.jpg 同比例裁切，建筑吻合、标牌高度差<5%。图标留白、TMP基线、发光与像素级重叠对位仍缺，详见METHOD_MAP顶部条目。

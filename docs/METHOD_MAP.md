@@ -1,5 +1,13 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 手牌卡面 1:1 第三批（2026-09-09，寿命牌 DotText）
+
+`CardShowChar/Item/Sudan` 的 `LifeBg/Image/DotText` 是 TMP 文本 `'<sprite=21>'`，其 `m_spriteAsset` 指向 **`Resources/sprite assets/rite_settlement_icon`**（不是 number_6）：该 sprite asset 的 character table 第 21 项是 `dot_0.png`（图集帧 471,107,50,30），fs28，`m_fontColor` 白——即原作寿命牌左侧时钟下方那枚 50×30 的黑色小药丸。落地：复制 `Resources/image/rite_settlement_icon.png/.json`（SHA256 与语料一致），在 LifeBg 内加 `DotText` TextureRect（LifeBg 局部 (-7.2,23.1)、50×30），位置由 Unity 锚点 (0,0)+pos(36.8,5.4)+pivot 中心折算。
+
+验收：`tools/verify_card_surface.gd` 给小圆临时加 7 天寿命（改的是 game screen 自己的 ConfigDB 实例，不是工具的），校验 LifeBg 98×45@(57.5,-45)、Life 数字为 6、DotText 位置/尺寸；截图 `card_surface_1920.png` 与原作 desktop.jpg 第六张卡的寿命牌逐元素对照（时钟 + 绿色条 + 数字 + 小药丸齐备）。卡牌 UI 专项 80/80、1011 断言。
+
+保留差异：材质高光/法线的空间分布仍是均匀近似（卡顶条带比原作暗约 20%、卡缘略亮）——要逐区一致需要方向光模型；卡牌详情面板的装备缩略图复用同一条 CardWidget 链，但尚未按 `original_runtime/card_info_artu.jpg` 单独对拍。
+
 ## 手牌卡面 1:1 第二批（2026-09-09，细节贴图/数字精灵/手牌基线）
 
 第一批之后的三项收口：

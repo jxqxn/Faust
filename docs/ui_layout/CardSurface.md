@@ -24,6 +24,10 @@
 
 六张卡整卡均值与原作差 ≤6%（见 METHOD_MAP）；对比图 `card_surface_compare.png`。
 
+## 2026-09-09 第三批：寿命牌 DotText
+
+`LifeBg/Image/DotText` 的 `'<sprite=21>'` 用的是 `rite_settlement_icon` sprite asset（索引 21 = `dot_0.png`，图集帧 50×30），不是 number_6。已复制该图集并在 LifeBg 内按 Unity 锚点折算加上 `DotText`（(-7.2,23.1)、50×30）。对拍脚本临时给小圆加 7 天寿命来覆盖这条链。
+
 
 ## 原因与对应实现
 

@@ -45,14 +45,25 @@ func _run() -> void:
 	state.active_sudan_cards.clear()
 	for card_id in ORIGINAL_HAND:
 		var uid := int(state.add_card_to_hand(card_id, db))
+		var instance = state.get_card_instance(uid)
+		if instance == null:
+			continue
 		if card_id == COIN_CARD_ID:
-			var instance = state.get_card_instance(uid)
-			if instance != null:
-				instance.count = COIN_COUNT
+			instance.count = COIN_COUNT
+		if card_id == 2000371:
+			instance.life = 1
 	main.state = state
 	main.call("_show_game")
 	await _settle(12)
 	var screen = main.get("_game_screen")
+	# Give 小圆 a lifetime in the game screen's own config so the LifeBg
+	# clock/digit/DotText chain is exercised; the original hand shows the same
+	# badge on its sixth card.
+	var screen_db = screen.get("_db")
+	if screen_db != null and screen_db.has_method("get_card"):
+		var life_card: Dictionary = screen_db.get_card(2000371)
+		if not life_card.is_empty():
+			life_card["card_vanishing"] = 7
 	screen.refresh()
 	await _settle(8)
 
@@ -106,6 +117,19 @@ func _run() -> void:
 					_check(count_number.get_child_count() == len(str(COIN_COUNT)), "Stackable digit sprite count")
 		else:
 			_check(stackable == null, "card %d must not show a count badge" % card_id)
+		if card_id == 2000371:
+			var life_bg := face.get_node_or_null("LifeBg") as TextureRect
+			_check(life_bg != null, "lifetime card must show LifeBg")
+			if life_bg != null:
+				_check(life_bg.position.is_equal_approx(Vector2(57.5, -45)), "LifeBg position %s" % life_bg.position)
+				_check(life_bg.size.is_equal_approx(Vector2(98, 45)), "LifeBg size %s" % life_bg.size)
+				var life_number: Control = life_bg.get_node_or_null("Life")
+				_check(life_number != null and str(life_number.get("text")) == "6", "life digits must show 6")
+				var dot := life_bg.get_node_or_null("DotText") as TextureRect
+				_check(dot != null, "LifeBg must draw the <sprite=21> DotText")
+				if dot != null:
+					_check(dot.position.is_equal_approx(Vector2(-7.2, 23.1)), "DotText position %s" % dot.position)
+					_check(dot.size.is_equal_approx(Vector2(50, 30)), "DotText size %s" % dot.size)
 
 	await RenderingServer.frame_post_draw
 	var size := DisplayServer.window_get_size()

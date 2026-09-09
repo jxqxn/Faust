@@ -478,6 +478,15 @@ func _set_card_style() -> void:
 
 
 static var _rarity_frames: Dictionary = {}
+static var _rite_settlement_atlas_cache: OriginalAtlas = null
+
+
+## [SRC: Resources/sprite assets/rite_settlement_icon.asset; index 21 is
+##       dot_0.png, the LifeBg/Image/DotText '<sprite=21>' glyph.]
+static func _rite_settlement_atlas() -> OriginalAtlas:
+	if _rite_settlement_atlas_cache == null:
+		_rite_settlement_atlas_cache = OriginalAtlas.load_atlas("res://assets/original/ui/rite_settlement_icon.png")
+	return _rite_settlement_atlas_cache
 
 
 func _rarity_frame_texture() -> Texture2D:
@@ -590,6 +599,19 @@ func _rebuild() -> void:
 		clock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		life_bg.add_child(clock)
+		# [SRC: CardShow*/LifeBg/Image/DotText anchors(0,0) of the clock image,
+		#       pos(36.8,5.4) pivot centre -> centre (17.8,6.9) in LifeBg space;
+		#       text '<sprite=21>' of spriteAsset rite_settlement_icon, whose
+		#       character table index 21 is dot_0.png (50x30).]
+		var dot := TextureRect.new()
+		dot.name = "DotText"
+		dot.texture = _rite_settlement_atlas().frame("dot_0.png")
+		dot.position = Vector2(-7.2, 23.1)
+		dot.size = Vector2(50, 30)
+		dot.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		dot.stretch_mode = TextureRect.STRETCH_SCALE
+		dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		life_bg.add_child(dot)
 		life_bg.add_child(_source_number(
 			"Life",
 			str(int(_card.get("remaining_life", lifetime - int(_card.get("life", 0))))),
