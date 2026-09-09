@@ -128,6 +128,7 @@ class LocationController:
 
 const TABLE_TEXTURE = preload("res://assets/original/situation_desk/table.png")
 const MAP_TEXTURE = preload("res://assets/original/situation_desk/table-map.png")
+const END_MAP_TEXTURE = preload("res://assets/original/situation_desk/table-map-end.png")
 
 # GameScene/Map RectTransform = 4200 x 2600, local scale 1.25 and position
 # (0,-178).  Each entry below is a direct Scene YAML value, not gameplay data.
@@ -201,6 +202,8 @@ var DeskBGSpecial: TextureRect
 var _think_drop_zone: ThinkDropZone
 var _thinking := false
 static var _pin_atlas: OriginalAtlas = null
+static var _end_map_atlas: OriginalAtlas = null
+var _end_background_active := false
 
 
 func setup(state, db = null, rng = null) -> void:
@@ -213,6 +216,8 @@ func _ready() -> void:
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	_build_locations()
+	if _state != null and bool(_state.end_open):
+		change_bg_to_end()
 	_build_ithink_target()
 	resized.connect(_layout)
 	_layout()
@@ -257,23 +262,59 @@ func _build_ithink_target() -> void:
 	_think_drop_zone.owner_map = self
 	_think_drop_zone.tooltip_text = "将手牌或苏丹卡拖到这里"
 	_think_drop_zone.mouse_default_cursor_shape = Control.CURSOR_CAN_DROP
-	var style := StyleBoxTexture.new()
-	style.texture = preload("res://assets/original/ui/IThink_01.png")
-	style.texture_margin_left = 30
-	style.texture_margin_right = 30
-	style.texture_margin_top = 24
-	style.texture_margin_bottom = 24
-	_think_drop_zone.add_theme_stylebox_override("panel", style)
+	# [SRC: GameScene MainUI/IThink/BG (388x704) and Folder (400x700),
+	# both bottom-left. Keep the existing live rite drop handler.]
+	_think_drop_zone.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	for asset in ["bg_0", "open_03"]:
+		var art := TextureRect.new()
+		art.name = asset
+		art.texture = load("res://assets/original/ui/%s.png" % asset)
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_SCALE
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_think_drop_zone.add_child(art)
 	_think_drop_zone.mouse_exited.connect(_set_think_drop_highlight.bind(false))
 	_think_drop_zone.z_index = 8
 	add_child(_think_drop_zone)
 
 
 func refresh_context() -> void:
+	if _state != null and bool(_state.end_open):
+		change_bg_to_end()
 	refresh_rite_cards()
 	refresh_rite_pins()
 	refresh_rite_pin_lines()
 	queue_redraw()
+
+
+## Direct counterpart of MapController.ChangeBGToEnd. The source replaces
+## `bg` with `bg_end`, then replaces every location child Image by looking up
+## its current sprite name in Datapool.end_map_sprites. EftEnd is a separate,
+## deeply-authored particle hierarchy and remains explicitly unported.
+## [SRC: MapController.c ChangeBGToEnd (RVA 0x567b70);
+##       dump.cs MapController.bg/bg_end/EftEnd @0x68/0x70/0x78;
+##       Resources/image/end_map.json; GameScene.unity bg_end guid
+##       80246786a586a354f936cf6047ef6b07.]
+func change_bg_to_end() -> void:
+	_end_background_active = true
+	if _end_map_atlas == null:
+		_end_map_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/end_map.png")
+	if _end_map_atlas != null:
+		for spec in LOCATION_SCENE_SPECS:
+			var asset_name := str(spec.get("asset", ""))
+			if asset_name.is_empty() or not _end_map_atlas.has_frame(asset_name):
+				continue
+			var controller := maps.get(str(spec["location"])) as LocationController
+			if controller == null:
+				continue
+			var art := controller.view.get_node_or_null("Art") as TextureRect
+			if art != null:
+				art.texture = _end_map_atlas.frame(asset_name)
+	queue_redraw()
+
+
+func is_end_background_active() -> bool:
+	return _end_background_active
 
 
 func set_scene_blocker(source: String, blocking: bool, _hide_chrome: bool = true) -> void:
@@ -289,6 +330,9 @@ func set_scene_blocker(source: String, blocking: bool, _hide_chrome: bool = true
 		var button := card as Button
 		if button != null:
 			button.disabled = is_scene_blocked()
+			var banner := button.get_node_or_null("TitleBG") as TextureButton
+			if banner != null:
+				banner.disabled = button.disabled
 
 
 func is_scene_blocked() -> bool:
@@ -338,8 +382,14 @@ func _layout() -> void:
 		location.size = Vector2(source_size.x * size.x / MAP_SIZE.x, source_size.y * size.y / MAP_SIZE.y)
 		location.position = (center - location.size * 0.5).round()
 	if _think_drop_zone != null:
-		_think_drop_zone.size = Vector2(146, 58) * minf(size.x / 3840.0, size.y / 2160.0)
-		_think_drop_zone.position = Vector2(size.x * 0.075, size.y * 0.735) - _think_drop_zone.size * 0.5
+		var k := minf(size.x / 3840.0, size.y / 2160.0)
+		_think_drop_zone.size = Vector2(400, 704) * k
+		_think_drop_zone.position = Vector2(0, size.y - 704 * k)
+		var back := _think_drop_zone.get_node("bg_0") as TextureRect
+		back.size = Vector2(388, 704) * k
+		var front := _think_drop_zone.get_node("open_03") as TextureRect
+		front.size = Vector2(400, 700) * k
+		front.position = Vector2(0, 4 * k)
 	_layout_rite_cards()
 	_layout_rite_pins()
 	refresh_rite_pin_lines()
@@ -574,24 +624,7 @@ func refresh_rite_cards() -> void:
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(icon)
-		var title := Label.new()
-		title.name = "Title"
-		title.text = str(rite.get("name", instance.id))
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		title.add_theme_font_size_override("font_size", 18)
-		title.add_theme_color_override("font_color", Color("#f5e7c0"))
-		title.add_theme_color_override("font_shadow_color", Color("#21120a"))
-		title.add_theme_constant_override("shadow_offset_x", 1)
-		title.add_theme_constant_override("shadow_offset_y", 1)
-		title.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		title.offset_left = 4.0
-		title.offset_top = 6.0
-		title.offset_right = -4.0
-		title.offset_bottom = -6.0
-		title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		card.add_child(title)
+		_build_rite_title(card, rite, instance)
 		card.pressed.connect(_on_rite_card_pressed.bind(instance.uid))
 		card.z_index = 7
 		add_child(card)
@@ -604,6 +637,42 @@ func _on_rite_card_pressed(rite_uid: int) -> void:
 		return
 	last_rite = rite_uid
 	open_rite_instance.emit(rite_uid)
+
+
+func _build_rite_title(card: RiteCardButton, rite: Dictionary, instance) -> void:
+	# [SRC: RiteRender.Init 0x59a9e0; RiteNew/TitleBG HorizontalLayoutGroup
+	# Left=56, Title=PreferredWidth, Right=57, height=77; RiteShows.asset.]
+	var title := Label.new()
+	title.name = "Title"
+	title.text = _state.rite_display_name(instance.id, _db)
+	var font := preload("res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf")
+	var text_width := ceilf(font.get_string_size(title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 42).x)
+	var gold := int(rite.get("type", 0)) == 3
+	var banner := TextureButton.new()
+	banner.name = "TitleBG"
+	banner.texture_normal = load("res://assets/original/ui/title_bg%s.png" % ("_gold" if gold else ""))
+	banner.ignore_texture_size = true
+	banner.stretch_mode = TextureButton.STRETCH_SCALE
+	banner.size = Vector2(56 + text_width + 57, 77)
+	banner.disabled = card.disabled
+	banner.pressed.connect(_on_rite_card_pressed.bind(instance.uid))
+	card.add_child(banner)
+	var ending := TextureRect.new()
+	ending.name = "RightImage"
+	ending.texture = load("res://assets/original/ui/title_bg%s_end.png" % ("_gold" if gold else ""))
+	ending.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ending.position = Vector2(56 + text_width, 0)
+	ending.size = Vector2(57, 77)
+	ending.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.add_child(ending)
+	title.position = Vector2(56, 0)
+	title.size = Vector2(text_width, 77)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", font)
+	title.add_theme_font_size_override("font_size", 42)
+	title.add_theme_color_override("font_color", Color.BLACK if gold else Color.WHITE)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.add_child(title)
 
 
 func _layout_rite_pins() -> void:
@@ -639,6 +708,12 @@ func _layout_rite_pin(pin: Control, source_position: Vector2) -> void:
 
 func _layout_rite_card(card: Control, source_position: Vector2) -> void:
 	_layout_map_rect(card, source_position, RITE_CARD_BOUND_SIZE, RITE_CARD_BOUND_ANCHORED_POSITION, RITE_CARD_BOUND_PIVOT)
+	var banner := card.get_node_or_null("TitleBG") as Control
+	if banner != null:
+		var source_scale := Vector2(size.x / MAP_SIZE.x, size.y / MAP_SIZE.y)
+		banner.scale = source_scale
+		# Root is (61.5,115) from bound top-left; TitleBG top=(0,-91.5).
+		banner.position = Vector2(61.5, 23.5) * source_scale
 
 
 func _layout_map_rect(view: Control, source_position: Vector2, rect_size: Vector2, anchored_position: Vector2, pivot: Vector2) -> void:
@@ -847,9 +922,10 @@ func _draw() -> void:
 	var table_scale := minf(size.x / TABLE_TEXTURE.get_width(), size.y / TABLE_TEXTURE.get_height())
 	var table_size := TABLE_TEXTURE.get_size() * table_scale
 	draw_texture_rect(TABLE_TEXTURE, Rect2((size - table_size) * 0.5, table_size), false)
-	var map_scale := minf(size.x / MAP_TEXTURE.get_width(), size.y / MAP_TEXTURE.get_height())
-	var map_size := MAP_TEXTURE.get_size() * map_scale
-	draw_texture_rect(MAP_TEXTURE, Rect2((size - map_size) * 0.5, map_size), false)
+	var map_texture: Texture2D = END_MAP_TEXTURE if _end_background_active else MAP_TEXTURE
+	var map_scale := minf(size.x / map_texture.get_width(), size.y / map_texture.get_height())
+	var map_size := map_texture.get_size() * map_scale
+	draw_texture_rect(map_texture, Rect2((size - map_size) * 0.5, map_size), false)
 
 
 class RitePinView:

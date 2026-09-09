@@ -737,7 +737,7 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	assert_true(advance.disabled, "rite overlay blocks progression controls")
 	assert_true(redraw.disabled, "rite overlay blocks redraw controls")
 	assert_true(menu.disabled, "rite overlay blocks the global menu entry")
-	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_IGNORE, "rite overlay blocks direct rail input")
+	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_STOP, "rite must retain hand input for slot placement")
 
 
 func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
@@ -759,10 +759,8 @@ func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
 	if target == null or desk == null:
 		return
 	assert_false(target is Button, "drag-only affordances must not be exposed as clickable buttons")
-	var target_style := target.get_theme_stylebox("panel") as StyleBoxTexture
-	assert_not_null(target_style, "the original IThink affordance is a textured panel")
-	if target_style != null:
-		assert_not_null(target_style.texture, "the thought target must use its original texture")
+	assert_not_null(target.get_node_or_null("bg_0"), "IThink uses the source full-size backplate")
+	assert_not_null(target.get_node_or_null("open_03"), "IThink uses the source skeleton folder")
 	assert_lt(target.position.x, desk.size.x * 0.2, "the thought drop zone stays in the desk lower-left position")
 	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk drop zone should accept valid card drops")
 
@@ -845,7 +843,14 @@ func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
 	choice.pressed.emit()
 	await wait_process_frames(2)
 
-	assert_eq(str(state.event_prompts[0].get("id", "")), "pop.test", "clicking a choice should execute the selected operation")
+	assert_eq(str(state.pending_operation().get("kind", "")), "choice", "selection must keep the operation blocked")
+	var confirm := _find_node_by_name(screen, "EventPromptConfirmButton") as Button
+	assert_not_null(confirm)
+	if confirm == null:
+		return
+	confirm.pressed.emit()
+	await wait_process_frames(2)
+	assert_eq(str(state.event_prompts[0].get("id", "")), "pop.test", "confirming a choice executes the selected operation")
 	var text := _collect_label_and_button_text(_find_node_by_name(screen, "EventPromptPanel"))
 	assert_true(text.find("hello") >= 0, "choice follow-up prompt should be visible")
 
@@ -904,8 +909,15 @@ func test_game_screen_option_choice_uses_configured_label():
 	assert_not_null(choice)
 	if choice == null:
 		return
-	assert_eq(choice.text, "给钱", "button should show option text instead of its action dictionary")
+	assert_eq(choice.get_node("OptionText").get_parsed_text(), "给钱", "button should show option text instead of its action dictionary")
 	choice.pressed.emit()
+	await wait_process_frames(2)
+	assert_eq(state.coin_count, 0, "selecting a branch must not grant its reward")
+	var confirm := _find_node_by_name(screen, "EventPromptConfirmButton") as Button
+	assert_not_null(confirm)
+	if confirm == null:
+		return
+	confirm.pressed.emit()
 	await wait_process_frames(2)
 	assert_eq(state.coin_count, 2)
 
@@ -914,7 +926,11 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 	var rng := RNG.new(20)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
-	state.queue_event(5310008)
+	# 5310008 is an existing source event. Use an actually absent fixture
+	# here so the fallback test does not demand an internal id on real text.
+	const MISSING_EVENT_ID := 999999999
+	assert_true(db.get_event(MISSING_EVENT_ID).is_empty())
+	state.queue_event(MISSING_EVENT_ID)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -926,7 +942,7 @@ func test_game_screen_event_overlay_displays_missing_event_placeholder():
 	var body := _find_node_by_name(panel, "EventPromptBody") as RichTextLabel
 	var title := _find_node_by_name(panel, "EventPromptTitle") as Label
 	var text := (body.text if body != null else "") + "|" + (title.text if title != null else "")
-	assert_true(text.find("5310008") >= 0, "missing event configs should fall back to a visible event id (body='%s' title='%s')" % [(body.text if body != null else ""), (title.text if title != null else "")])
+	assert_true(text.find(str(MISSING_EVENT_ID)) >= 0, "an actually missing event retains a diagnostic placeholder")
 
 	var cont := _find_node_by_name(screen, "EventPromptContinueButton") as Button
 	if cont != null:
@@ -1123,7 +1139,7 @@ func test_game_menu_replays_source_esc_geometry_and_end_game_call_chain():
 	var settings_panel := _find_node_by_name(game, "SettingsController") as Control
 	assert_not_null(settings_panel, "source SettingsController opens above the ESC panel")
 	if settings_panel != null:
-		var source_settings := _find_node_by_name(settings_panel, "SettingsPanel") as Control
+		var source_settings := _find_node_by_name(settings_panel, "SettingsPanelNew") as Control
 		var panel_bg := _find_node_by_name(settings_panel, "PanelBG") as Control
 		var music := _find_node_by_name(settings_panel, "MusicVolume") as Control
 		var sound := _find_node_by_name(settings_panel, "SoundVolume") as Control
@@ -1132,14 +1148,13 @@ func test_game_menu_replays_source_esc_geometry_and_end_game_call_chain():
 		assert_not_null(music)
 		assert_not_null(sound)
 		if source_settings != null:
-			assert_eq(source_settings.size, Vector2(1920, 1080), "SettingsPanel retains the source canvas")
-			assert_eq(source_settings.scale, Vector2(2, 2), "SettingsPanel retains the source root scale")
+			assert_eq(source_settings.size, Vector2(3840, 2160), "SettingsPanelNew uses the composed source design space")
 		if panel_bg != null:
-			assert_eq(panel_bg.size, Vector2(1788, 1200), "PanelBG replays its source prefab dimensions")
+			assert_eq(panel_bg.size * panel_bg.scale, Vector2(3840, 2160), "New PanelBG fills the source canvas")
 		if music != null:
 			assert_eq(music.position, Vector2(0, 0), "MusicVolume remains first in SliderGroup")
 		if sound != null:
-			assert_eq(sound.position, Vector2(0, 80.5), "SoundVolume keeps the source 30.5px row separation")
+			assert_eq(sound.position, Vector2(0, 179.35), "SoundVolume follows SettingsPanelNew layout")
 		settings_panel.closed.emit()
 		await wait_process_frames(1)
 		assert_null(_find_node_by_name(game, "SettingsController"), "SettingsController.OnClose returns to ESCPanel")
@@ -1303,8 +1318,8 @@ func test_card_widget_uses_source_prefab_rect_by_card_kind():
 
 	assert_eq(ordinary.card_size(), Vector2(194, 422), "CardNew prefab root is 194x422")
 	assert_eq(ordinary.size, Vector2(194, 422), "normal card Control uses CardNew's direct RectTransform")
-	assert_eq(sudan.card_size(), Vector2(185, 330), "SudanCard prefab root is 185x330")
-	assert_eq(sudan.size, Vector2(185, 330), "Sudan card must not inherit CardNew's size")
+	assert_eq(sudan.card_size(), Vector2(194, 422), "live Sultan cards use CardNew, not the pool token prefab")
+	assert_eq(sudan.size, Vector2(194, 422), "hand cards share the CardNew rectangle")
 
 
 func test_card_widget_face_only_shows_name_and_art():
@@ -1319,6 +1334,34 @@ func test_card_widget_face_only_shows_name_and_art():
 	assert_true(text.find("Test") >= 0, "compact card should show the card name")
 	assert_eq(text.find("智慧"), -1, "compact card should not show attributes")
 	assert_eq(text.find("主角"), -1, "compact card should not show tags")
+	var face := widget.get_node("CardVisualFace")
+	assert_eq(face.get_node("RarityFrame").texture.resource_path, "res://assets/original/ui/card_0.png", "use material MainTex, not the unrelated card_bg_silver image")
+	assert_lt(face.get_node("RarityFrame").get_index(), face.get_node("CardArt").get_index(), "backplate must never occlude the portrait")
+	assert_eq(face.get_node("CardArt").size, Vector2(194, 422))
+	assert_eq(face.get_node("Title").position, Vector2(9.5, 15))
+	assert_not_null(face.get_node_or_null("Foreground"))
+	assert_null(face.get_node_or_null("CardAttrRow"))
+
+func test_card_face_uses_resource_variant_and_runtime_badges():
+	var card := db.get_card(2000001).duplicate(true)
+	card["tag"] = {"pic": 1, "可堆叠": 1}
+	card["count"] = 8
+	card["card_vanishing"] = 7
+	card["life"] = 2
+	var widget := CardWidget.make(card)
+	_stage().add_child(widget)
+	await wait_process_frames(1)
+	var face := widget.get_node("CardVisualFace")
+	assert_true(face.get_node("CardArt").texture.resource_path.ends_with("2000001_1.png"))
+	assert_eq(face.get_node("Stackable/Count").text, "8")
+	assert_eq(face.get_node("LifeBg/Life").text, "5")
+	assert_eq(face.get_node("LifeBg").position, Vector2(57.5, -45))
+	card["count"] = 1
+	card["card_vanishing"] = 0
+	widget.set_card(card)
+	assert_null(widget.get_node("CardVisualFace").get_node_or_null("Stackable"))
+	assert_null(widget.get_node("CardVisualFace").get_node_or_null("LifeBg"))
+	await wait_process_frames(1) # Let the replaced face's queued children free.
 
 func test_card_widget_inner_art_does_not_block_dragging():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
@@ -1786,7 +1829,7 @@ func test_game_screen_can_open_card_detail_overlay():
 	var subtitle := _find_node_by_name(screen, "CardDetailSubtitle") as Label
 	assert_not_null(subtitle)
 	if subtitle != null:
-		assert_string_contains(subtitle.text, "自身", "the protagonist card should expose its single-character role")
+		assert_eq(subtitle.text, str(state.card_data_for(int(state.hand[0]), db).get("title", "")), "source subtitle contains only CardNode.title")
 	var selected_widget := _find_card_widget_by_uid(screen, int(state.hand[0]))
 	assert_not_null(selected_widget)
 	if selected_widget != null:
@@ -1822,8 +1865,30 @@ func test_card_detail_lists_attached_equipment() -> void:
 	await wait_process_frames(1)
 	var detail := _find_node_by_name(screen, "CardDetailPanel")
 	var text := _collect_label_and_button_text(detail)
-	assert_true(text.find("装备") >= 0, "card detail exposes an equipment section")
+	var slots := _find_node_by_name(detail, "EquipState") as Control
+	assert_eq(slots.get_child_count(), 3, "source equipment section shows slot icons")
+	assert_true(bool(slots.get_child(0).get_meta("occupied")), "equipped weapon occupies the first slot")
+	assert_not_null((_find_node_by_name(detail, "EquippedCard_0") as CardWidget), "equipment uses the actual card surface")
 	assert_true(text.find("匕首") >= 0, "the attached equipment name is visible to the player")
+
+
+func test_card_detail_help_covers_canvas_and_uses_source_text():
+	var stage := _stage(Vector2(3840, 2160))
+	var view := CardInfoView.new()
+	view.setup(null, db)
+	stage.add_child(view)
+	view.show_card(db.get_card(2000001), 0)
+	view._toggle_help()
+	await wait_process_frames(2)
+	var help := view._help_overlay
+	assert_eq((help.get_node("Mask") as Control).size, Vector2(10000, 10000))
+	assert_not_null((help.get_node("Prompt") as TextureRect).texture)
+	assert_eq((help.get_node("HelpBubble_RARE") as Control).position, Vector2(670, 340))
+	var text := help.get_node("HelpBubble_EQUIP") as RichTextLabel
+	assert_string_contains(text.text, "[font_size=86]角色")
+	assert_eq(text.get_meta("source_text_style"), "@HELP_TEXT")
+	view.hide_help()
+	assert_null(view._help_overlay)
 
 
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():
@@ -2112,10 +2177,54 @@ func test_card_info_attributes_replay_source_order_and_tag_names():
 	var social_at := states_text.find("社交")
 	assert_true(combat_at >= 0 and social_at >= 0 and combat_at < social_at, "the source order puts 战斗 before 社交 (cfg 2000001 order)")
 	assert_true(states_text.find("3") >= 0, "attributes keep their values (体魄 3)")
+	var grid := _find_node_by_name(view, "States") as Control
+	var physique := grid.get_node("CardTag_体魄") as Control
+	var social := grid.get_node("CardTag_社交") as Control
+	assert_eq(physique.size, Vector2(400, 120), "source GridLayout owns the cell dimensions")
+	assert_almost_eq(social.position.y - physique.position.y, 120.0, 0.1, "fifth attribute starts the second row")
+	assert_not_null((physique.get_node("Icon") as TextureRect).texture, "attribute uses the original badge atlas")
+	assert_not_null((grid.get_node("CardTag_支持/Icon") as TextureRect).texture, "support badge is resolved through TagNode.resource too")
+	assert_eq((physique.get_node("Value") as Label).get_theme_font_size("font_size"), 30, "auto-size range without size must not become zero")
 	assert_true(tags_text.find("已拥有") >= 0, "non-attribute tags render in the 标签 column")
 	var value_pattern := RegEx.new()
 	value_pattern.compile("[0-9]+\\s*$")
 	assert_null(value_pattern.search(tags_text), "标签 chips are name-only, no values")
+	var preferences = preload("res://ui/game_application_settings.gd")
+	var previous_size: String = preferences.font_size
+	preferences.font_size = "lg"
+	view.show_card(state.card_data_for(hand_uid, db), hand_uid)
+	assert_eq(view._panel.scale, Vector2(1.1, 1.1), "source ui_size scales the whole card panel on Show")
+	preferences.font_size = previous_size
+
+
+func test_card_detail_groups_configured_tags_and_compares_initial_values():
+	# [SRC: RefreshAllTags 0x535270, GetTagWithDiff 0x3811e0,
+	# tag.json visibility flags/ranks and variable.card_state_icon.]
+	var card := db.get_card(2000001).duplicate(true)
+	card["tag"] = {"支持": 1, "隐匿": 0, "体魄": -1, "男性": 1, "受伤": 2, "未知测试标签": 1}
+	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	# Use the source name rather than guessing a translated state identifier.
+	var hurt_name := str(db.tags_by_code["hurt"]["name"])
+	card["tag"].erase("受伤")
+	card["tag"][hurt_name] = 2
+	var groups := preload("res://ui/card_tag_presentation.gd").group(card, db, variable["card_state_icon"])
+	assert_eq(groups["tags"].map(func(node): return node["code"]), ["physique", "conceal", "support"], "all numeric tags use source rank, including zero and negative allowed values")
+	assert_eq(groups["tags"][0]["_source_value"], -1)
+	assert_eq(groups["tags"][0]["_source_diff"], -4, "current -1 is compared with configuration 3")
+	assert_eq(groups["states"].size(), 1)
+	assert_eq(groups["states"][0]["_source_value"], 2)
+	assert_eq(groups["attributes"].size(), 1, "unknown and state tags never leak into name-only attributes")
+	var stage := _stage(Vector2(3840, 2160))
+	var view := CardInfoView.new()
+	view.setup(null, db)
+	stage.add_child(view)
+	view.show_card(card, 0)
+	await wait_process_frames(2)
+	assert_eq((_find_node_by_name(view, "StateIcons") as Control).get_child_count(), 2, "a state renders once per positive count")
+	var value := _find_node_by_name(view, "CardTag_体魄").get_node("Value") as Label
+	assert_eq(value.get_theme_color("font_color"), Color.RED)
+	assert_not_null((_find_node_by_name(view, "CardTag_体魄").get_node("Modify") as TextureRect).texture)
+	assert_eq((_find_node_by_name(view, "CardTag_隐匿").get_node("Value") as Label).text, "0")
 
 
 func test_prestige_slots_replay_source_pivot_geometry():
@@ -2236,6 +2345,31 @@ func test_cached_event_click_removes_notice():
 	assert_null(tray.get_node_or_null("CachedEvent_5300003"), "clicked notice leaves the tray")
 
 
+func test_event_prompt_long_body_scrolls_without_covering_choices():
+	var stage := _stage(Vector2(3840, 2160))
+	var view = preload("res://ui/event_prompt_view.gd").new()
+	stage.add_child(view)
+	view.show_prompt({"text": "<b>长正文</b> 3 > 2\n".repeat(70), "choices": {"保留": {"text": "<b>保留</b> 3 > 2", "value": "a"}, "返回": "b"}}, Callable())
+	await wait_process_frames(4)
+	var body: RichTextLabel = view.find_child("EventPromptBody", true, false)
+	var choices: Control = view.find_child("OptionGroup", true, false)
+	assert_eq(body.get_parsed_text().split("\n")[0], "长正文 3 > 2")
+	assert_eq(choices.get_child(0).get_node("OptionText").get_parsed_text(), "保留 3 > 2")
+	assert_eq(body.size.y, 1100.0, "OptionNew caps the preferred height at 1100")
+	assert_gt(body.get_v_scroll_bar().max_value, body.size.y)
+	assert_gte(choices.get_child(0).position.y, body.position.y + body.size.y + 50.0)
+	assert_eq(body.mouse_filter, Control.MOUSE_FILTER_STOP, "the scrollable body must receive wheel input")
+	assert_eq(choices.get_child(1).position.y - choices.get_child(0).position.y - choices.get_child(0).size.y, 20.0)
+	view.show_prompt({"text": "普通提示长正文\n".repeat(70)}, Callable())
+	await wait_process_frames(4)
+	assert_eq(body.size.y, 1300.0, "PromptNew has a separate 1300 cap")
+	view.show_prompt({"text": "短正文"}, Callable())
+	await wait_process_frames(4)
+	assert_lt(body.size.y, 1300.0, "reusing the prompt restores short content height")
+	assert_eq(choices.get_child_count(), 0)
+	assert_eq(body.get_v_scroll_bar().value, 0.0)
+
+
 func test_event_prompt_replays_prompt_new_geometry():
 	# [SRC: docs/ui_layout/PromptNew.md — OptionBG 2705 wide (prompt_bg +
 	# prompt_bg_mask_2 Full), Border decorate 250x323, Confirm rite_op_confirm
@@ -2263,7 +2397,7 @@ func test_event_prompt_replays_prompt_new_geometry():
 	var body := _find_node_by_name(screen, "EventPromptBody") as RichTextLabel
 	assert_not_null(body, "prompt keeps the body text")
 	if body != null:
-		assert_eq(body.get_theme_font_size("font_size"), 40, "body uses the authored fs40")
+		assert_eq(body.get_meta("source_text_style"), "@PROMPT_TEXT", "runtime TextTranslate style overrides prefab sample size")
 		assert_true(body.text.length() > 0, "body carries the event text")
 	var border := _find_node_by_name(panel, "Border") as Control
 	assert_not_null(border, "prompt keeps the decorate Border")
@@ -2283,7 +2417,7 @@ func test_event_prompt_replays_prompt_new_geometry():
 	if first != null:
 		assert_almost_eq(first.size.x, 2200.0, 1.0, "option rows are full-width")
 		assert_almost_eq(first.size.y, 100.0, 1.0, "option rows keep the row height")
-		assert_eq(first.get_theme_font_size("font_size"), 40, "option text uses OptionNewItem fs40")
+		assert_eq(first.get_meta("source_text_style"), "@OPTION_ITEM_TEXT", "option text follows the configured size class")
 		assert_almost_eq(first.position.y, 320.0, 1.0, "first row sits below the body text")
 
 
@@ -2395,8 +2529,8 @@ func test_rite_view_replays_source_canvas_geometry():
 	if slot_layer != null:
 		assert_eq(slot_layer.size, Vector2(3840, 2160), "SlotsContainer coordinates are not remapped to a legacy mockup")
 	if template_bg != null:
-		assert_eq(template_bg.position, Vector2(-128, -414), "template bg_pos is replayed from the original JSON")
-		assert_eq(template_bg.size, Vector2(4096, 2148), "Position/bg retains the original source size")
+		assert_eq(template_bg.position, Vector2(246, 160), "Show assigns Position=bg_pos once, then SetNativeSize")
+		assert_eq(template_bg.size, Vector2(3348, 1420), "template retains native sprite canvas instead of prefab placeholder size")
 	if slot_1 != null:
 		assert_eq(slot_1.position, Vector2(1472, 733), "template s1 uses the original SlotsContainer lower-left coordinate system")
 		assert_eq(slot_1.size, Vector2(272, 496), "CardSlot root keeps the original 272x496 geometry")

@@ -45,8 +45,11 @@ static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant =
 			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db"), ctx))
 			_merge_deferred(res.deferred, ResultExec.execute(entry.get("action", {}), ctx.get("state"), ctx.get("db"), ctx))
 			break
-	# 2. settlement: first match wins.
-	for entry in rite.get("settlement", []):
+	# A matched prior resolves true and bypasses the normal+extra branch.
+	# [SRC: DisplayClass77_0 b__7 0x5b6120 -> Resolve(true);
+	# DisplayClass56_0 b__1 0x5b34e0 only calls DoNormalSettlement when false.]
+	var normal_candidates: Array = rite.get("settlement", []) if res.prior_log.is_empty() else []
+	for entry in normal_candidates:
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.normal_entry = entry
 			_merge_deferred(res.deferred, ResultExec.execute(entry.get("result", {}), ctx.get("state"), ctx.get("db"), ctx))
@@ -54,7 +57,8 @@ static func resolve(rite: Dictionary, ctx: Dictionary, gold_dice_used: Variant =
 			break
 	# 3. settlement_extre: all matches execute.
 	var matched_extre: Array = []
-	for entry in rite.get("settlement_extre", []):
+	var extra_candidates: Array = rite.get("settlement_extre", []) if res.prior_log.is_empty() else []
+	for entry in extra_candidates:
 		if ConditionEval.evaluate(entry.get("condition", {}), ctx):
 			res.extre_log.append(entry)
 			matched_extre.append(entry)

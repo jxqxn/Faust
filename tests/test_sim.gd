@@ -337,6 +337,26 @@ func test_settlement_normal_first_match_only():
 	# Only first match (1 gold), not 100.
 	assert_eq(st.coin_count, 1)
 
+func test_matching_prior_bypasses_normal_and_rite_extra_settlements():
+	# [SRC: DisplayClass77_0 b__7 0x5b6120 -> true;
+	# DisplayClass56_0 b__1 0x5b34e0 bypasses normal+extra on true.]
+	var st := GameState.new()
+	var fake := {
+		"settlement_prior": [{"condition": {}, "result": {"金币": 1}}],
+		"settlement": [{"condition": {}, "result": {"金币": 10}}],
+		"settlement_extre": [{"condition": {}, "result": {"金币": 100}}],
+	}
+	var res := RiteResolver.resolve(fake, _make_ctx(st, RNG.new(1)))
+	assert_eq(st.coin_count, 1)
+	assert_true(res.normal_entry.is_empty())
+	assert_true(res.extre_log.is_empty())
+	fake.settlement_prior[0].condition = {"round>=": 999}
+	res = RiteResolver.resolve(fake, _make_ctx(st, RNG.new(1)))
+	assert_eq(st.coin_count, 111)
+	assert_false(res.normal_entry.is_empty())
+	assert_eq(res.extre_log.size(), 1)
+
+
 func test_settlement_prior_executes_action_after_result():
 	var st := GameState.new()
 	var ctx := _make_ctx(st, RNG.new(1))
@@ -609,7 +629,8 @@ func test_card_trigger_event_keeps_the_runtime_card_context():
 	assert_true(st.enable_event(990041, local_db))
 	var card_uid := st.card_uid_for(2000005, "hand")
 	assert_eq(st.trigger_events("card_clean", {"card": 2000005, "card_uid": card_uid}), [990041])
-	assert_eq(int(st.event_contexts[990041].get("card_uid", 0)), card_uid)
+	assert_eq(int(st.pending_operation().context.get("card_uid", 0)), card_uid)
+	assert_eq(st.pending_operations.size(), 1, "one real prompt, no duplicate event summary")
 
 
 # ---- option/case:opN branching ----
@@ -666,9 +687,8 @@ func test_option_event_end_to_end_through_execute_event():
 	assert_false(merged.get("choose", {}).is_empty(), "event option produced a choose")
 	assert_false(st.event_prompts.is_empty(), "choose prompt queued for display")
 	# Simulate player picking "给钱" (op1).
-	st.event_prompts.clear()
-	var choices: Dictionary = merged.choose.get("choices", {})
-	DeferredEffects.execute_choice("case:op1", choices["case:op1"].value, st, db, RNG.new(1))
+	var operation := st.consume_pending_operation()
+	OperationsSequence.resume(operation, st, db, RNG.new(1), "option:0")
 	assert_eq(st.coin_count, -5, "picking op1 applied its case subtree (coin -5)")
 
 
@@ -766,12 +786,12 @@ func test_real_event_5300258_option_branch_executes():
 		return
 	var merged := DeferredEffects.execute_event(event, st, db, RNG.new(1))
 	var choose: Dictionary = merged.get("choose", {})
-	if choose.is_empty():
-		return  # condition gated it; acceptable for some starting states
+	assert_false(choose.is_empty(), "the source event has no condition gate")
 	var choices: Dictionary = choose.get("choices", {})
-	assert_true(choices.has("case:op1") and choices.has("case:op2") and choices.has("case:op3"), "all 3 options present")
+	assert_eq(choices.size(), event.settlement[0].action.option.items.size(), "all source options present")
 	# Pick op2: should add rite 5001027 and disable event 5300258.
-	DeferredEffects.execute_choice("case:op2", choices["case:op2"].value, st, db, RNG.new(1))
+	var operation := st.consume_pending_operation()
+	OperationsSequence.resume(operation, st, db, RNG.new(1), "option:1")
 	assert_true(5001027 in st.available_rites, "op2 opened rite 5001027")
 	assert_true(st.event_runtime._disabled.has(5300258), "event_off disabled 5300258")
 

@@ -234,9 +234,9 @@ static func draw_weekly_sudan(state, db, _rng) -> int:
 	if instance != null:
 		instance.life = maxi(lifetime - init_life, 0)
 		# New sudan cards enter the bag page the player currently views
-		# (set_bag(player.BagIndex); the clone has a single page, bag 0).
+		# (set_bag(player.BagIndex)).
 		# [SRC: GameController.c @ GenSudanCard 0x54f6f0 L3657]
-		instance.bag = 0
+		instance.bag = state.current_bag_index
 	state.active_sudan_cards.append(
 		ActiveSudan.new(cid, mini(init_life, lifetime), state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):

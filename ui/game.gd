@@ -57,6 +57,11 @@ func _legacy_layer() -> Control:
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Actual main-scene startup owns display restoration. Embedded test scenes
+	# must not resize the host desktop just by constructing a Game node.
+	if get_tree().current_scene == self:
+		if not GameApplicationSettings.initialize_display(get_window()):
+			push_warning(GameApplicationSettings.display_error)
 	theme = FaustTheme.get_theme()
 	db = ConfigDB.new()
 	db.load_all()

@@ -1,0 +1,1500 @@
+[
+	{
+		"name": "俺寻思",
+		"rite": 5000002,
+		"status": "rendered",
+		"template": "8000001"
+	},
+	{
+		"name": "欢愉的代价",
+		"rite": 5000553,
+		"status": "rendered",
+		"template": "8000002"
+	},
+	{
+		"name": "治理家业",
+		"rite": 5000001,
+		"status": "rendered",
+		"template": "8000003"
+	},
+	{
+		"name": "打碎提灯",
+		"rite": 5000064,
+		"status": "rendered",
+		"template": "8000004"
+	},
+	{
+		"name": "在家行淫",
+		"rite": 5000003,
+		"status": "rendered",
+		"template": "8000005"
+	},
+	{
+		"name": "看书",
+		"rite": 5000010,
+		"status": "rendered",
+		"template": "8000006"
+	},
+	{
+		"name": "房屋出租",
+		"rite": 5000055,
+		"status": "rendered",
+		"template": "8000007"
+	},
+	{
+		"name": "苏丹的捉弄",
+		"rite": 5000667,
+		"status": "rendered",
+		"template": "8000008"
+	},
+	{
+		"name": "幕后真凶",
+		"rite": 5000504,
+		"status": "rendered",
+		"template": "8000009"
+	},
+	{
+		"status": "unreferenced",
+		"template": "8000010"
+	},
+	{
+		"name": "模板 8000011",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000011"
+	},
+	{
+		"name": "模板 8000012",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000012"
+	},
+	{
+		"name": "模板 8000013",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000013"
+	},
+	{
+		"name": "燃烧的城市",
+		"rite": 5010012,
+		"status": "rendered",
+		"template": "8000014"
+	},
+	{
+		"name": "苏丹的城墙",
+		"rite": 5010011,
+		"status": "rendered",
+		"template": "8000015"
+	},
+	{
+		"name": "直面苏丹",
+		"rite": 5006080,
+		"status": "rendered",
+		"template": "8000016"
+	},
+	{
+		"name": "光之舞",
+		"rite": 5010017,
+		"status": "rendered",
+		"template": "8000017"
+	},
+	{
+		"name": "剑之舞",
+		"rite": 5010018,
+		"status": "rendered",
+		"template": "8000018"
+	},
+	{
+		"name": "试刃之锋",
+		"rite": 5006081,
+		"status": "rendered",
+		"template": "8000019"
+	},
+	{
+		"name": "近卫的承诺",
+		"rite": 5010015,
+		"status": "rendered",
+		"template": "8000020"
+	},
+	{
+		"name": "为所欲为",
+		"rite": 5010016,
+		"status": "rendered",
+		"template": "8000021"
+	},
+	{
+		"name": "阶梯",
+		"rite": 5010023,
+		"status": "rendered",
+		"template": "8000022"
+	},
+	{
+		"name": "果实",
+		"rite": 5010024,
+		"status": "rendered",
+		"template": "8000023"
+	},
+	{
+		"name": "最后的纵欲卡",
+		"rite": 5010026,
+		"status": "rendered",
+		"template": "8000024"
+	},
+	{
+		"name": "岩石奢靡卡",
+		"rite": 5005103,
+		"status": "rendered",
+		"template": "8000025"
+	},
+	{
+		"name": "逃亡倒计时",
+		"rite": 5010000,
+		"status": "rendered",
+		"template": "8000027"
+	},
+	{
+		"name": "囚牢",
+		"rite": 5001008,
+		"status": "rendered",
+		"template": "8000028"
+	},
+	{
+		"name": "搜寻提尔亚遗物",
+		"rite": 5000531,
+		"status": "rendered",
+		"template": "8000029"
+	},
+	{
+		"name": "模板 8000030",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000030"
+	},
+	{
+		"name": "装备商人",
+		"rite": 5002010,
+		"status": "rendered",
+		"template": "8000031"
+	},
+	{
+		"name": "赃物商人",
+		"rite": 5000109,
+		"status": "rendered",
+		"template": "8000032"
+	},
+	{
+		"name": "书店偶遇",
+		"rite": 5000575,
+		"status": "rendered",
+		"template": "8000033"
+	},
+	{
+		"name": "群山深处",
+		"rite": 5000165,
+		"status": "rendered",
+		"template": "8000034"
+	},
+	{
+		"name": "誓师",
+		"rite": 5010009,
+		"status": "rendered",
+		"template": "8000035"
+	},
+	{
+		"name": "远方的歌",
+		"rite": 5000347,
+		"status": "rendered",
+		"template": "8000036"
+	},
+	{
+		"name": "异色花园",
+		"rite": 5000206,
+		"status": "rendered",
+		"template": "8000037"
+	},
+	{
+		"name": "救命",
+		"rite": 5006129,
+		"status": "rendered",
+		"template": "8000038"
+	},
+	{
+		"name": "决战奈费勒",
+		"rite": 5007001,
+		"status": "rendered",
+		"template": "8000039"
+	},
+	{
+		"name": "突袭贫民窟",
+		"rite": 5007008,
+		"status": "rendered",
+		"template": "8000040"
+	},
+	{
+		"name": "积累优势",
+		"rite": 5008034,
+		"status": "rendered",
+		"template": "8000041"
+	},
+	{
+		"name": "模板 8000042",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000042"
+	},
+	{
+		"name": "模板 8000043",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000043"
+	},
+	{
+		"name": "模板 8000044",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000044"
+	},
+	{
+		"name": "模板 8000045",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000045"
+	},
+	{
+		"name": "奇怪的流言",
+		"rite": 5006712,
+		"status": "rendered",
+		"template": "8000046"
+	},
+	{
+		"name": "屠龙的勇行",
+		"rite": 5006038,
+		"status": "rendered",
+		"template": "8000047"
+	},
+	{
+		"name": "模板 8000048",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000048"
+	},
+	{
+		"name": "为她们复仇",
+		"rite": 5000512,
+		"status": "rendered",
+		"template": "8000049"
+	},
+	{
+		"name": "医馆",
+		"rite": 5002001,
+		"status": "rendered",
+		"template": "8000050"
+	},
+	{
+		"name": "贿赂主管",
+		"rite": 5000560,
+		"status": "rendered",
+		"template": "8000051"
+	},
+	{
+		"name": "法尔达克的友谊",
+		"rite": 5000680,
+		"status": "rendered",
+		"template": "8000052"
+	},
+	{
+		"name": "残忍的牺牲",
+		"rite": 5000004,
+		"status": "rendered",
+		"template": "8000053"
+	},
+	{
+		"name": "苏丹的套子",
+		"rite": 5000577,
+		"status": "rendered",
+		"template": "8000054"
+	},
+	{
+		"name": "模板 8000055",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000055"
+	},
+	{
+		"name": "星灵之夜",
+		"rite": 5006520,
+		"status": "rendered",
+		"template": "8000056"
+	},
+	{
+		"name": "模板 8000057",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000057"
+	},
+	{
+		"name": "逆转时光",
+		"rite": 5000158,
+		"status": "rendered",
+		"template": "8000058"
+	},
+	{
+		"name": "芮尔的匪帮",
+		"rite": 5000812,
+		"status": "rendered",
+		"template": "8000059"
+	},
+	{
+		"status": "unreferenced",
+		"template": "8000060"
+	},
+	{
+		"name": "社交教习",
+		"rite": 5000616,
+		"status": "rendered",
+		"template": "8000061"
+	},
+	{
+		"name": "弑兄",
+		"rite": 5000605,
+		"status": "rendered",
+		"template": "8000062"
+	},
+	{
+		"name": "消除妻子的不满",
+		"rite": 5000009,
+		"status": "rendered",
+		"template": "8000063"
+	},
+	{
+		"name": "妻子的茶会",
+		"rite": 5008005,
+		"status": "rendered",
+		"template": "8000064"
+	},
+	{
+		"name": "鼓励",
+		"rite": 5008006,
+		"status": "rendered",
+		"template": "8000065"
+	},
+	{
+		"name": "我们也许不该这样",
+		"rite": 5006516,
+		"status": "rendered",
+		"template": "8000066"
+	},
+	{
+		"status": "unreferenced",
+		"template": "8000067"
+	},
+	{
+		"name": "魔力熔炉",
+		"rite": 5010066,
+		"status": "rendered",
+		"template": "8000068"
+	},
+	{
+		"name": "蚁群",
+		"rite": 5010075,
+		"status": "rendered",
+		"template": "8000069"
+	},
+	{
+		"name": "祈雨献祭",
+		"rite": 5000669,
+		"status": "rendered",
+		"template": "8000100"
+	},
+	{
+		"name": "女战士的挑战",
+		"rite": 5000638,
+		"status": "rendered",
+		"template": "8000101"
+	},
+	{
+		"name": "处刑",
+		"rite": 5003009,
+		"status": "rendered",
+		"template": "8000102"
+	},
+	{
+		"name": "镜子的援军",
+		"rite": 5000352,
+		"status": "rendered",
+		"template": "8000103"
+	},
+	{
+		"name": "密会",
+		"rite": 5000641,
+		"status": "rendered",
+		"template": "8000104"
+	},
+	{
+		"name": "另谋出路",
+		"rite": 5000780,
+		"status": "rendered",
+		"template": "8000105"
+	},
+	{
+		"name": "夜盗",
+		"rite": 5008071,
+		"status": "rendered",
+		"template": "8000106"
+	},
+	{
+		"name": "风暴预兆",
+		"rite": 5003004,
+		"status": "rendered",
+		"template": "8000107"
+	},
+	{
+		"name": "白肚皮",
+		"rite": 5008074,
+		"status": "rendered",
+		"template": "8000108"
+	},
+	{
+		"name": "书店门口的乞丐",
+		"rite": 5002008,
+		"status": "rendered",
+		"template": "8000109"
+	},
+	{
+		"name": "贼的志愿生",
+		"rite": 5008076,
+		"status": "rendered",
+		"template": "8000110"
+	},
+	{
+		"name": "无法追溯的罪行",
+		"rite": 5000511,
+		"status": "rendered",
+		"template": "8000111"
+	},
+	{
+		"name": "做牛马",
+		"rite": 5008080,
+		"status": "rendered",
+		"template": "8000112"
+	},
+	{
+		"name": "做羔羊",
+		"rite": 5008081,
+		"status": "rendered",
+		"template": "8000113"
+	},
+	{
+		"name": "做人",
+		"rite": 5008085,
+		"status": "rendered",
+		"template": "8000114"
+	},
+	{
+		"name": "最后的解惑",
+		"rite": 5000621,
+		"status": "rendered",
+		"template": "8000115"
+	},
+	{
+		"name": "宝石镶嵌",
+		"rite": 5006137,
+		"status": "rendered",
+		"template": "8000116"
+	},
+	{
+		"name": "硕鼠",
+		"rite": 5008098,
+		"status": "rendered",
+		"template": "8000117"
+	},
+	{
+		"name": "探访奈费勒",
+		"rite": 5000640,
+		"status": "rendered",
+		"template": "8000118"
+	},
+	{
+		"name": "老乡见老乡",
+		"rite": 5008065,
+		"status": "rendered",
+		"template": "8000119"
+	},
+	{
+		"name": "酩酊一醉",
+		"rite": 5000773,
+		"status": "rendered",
+		"template": "8000121"
+	},
+	{
+		"name": "夏玛的葬礼",
+		"rite": 5002029,
+		"status": "rendered",
+		"template": "8000122"
+	},
+	{
+		"name": "复原的神迹",
+		"rite": 5006558,
+		"status": "rendered",
+		"template": "8000123"
+	},
+	{
+		"name": "谢肉祭",
+		"rite": 5008106,
+		"status": "rendered",
+		"template": "8000124"
+	},
+	{
+		"name": "如何款待尊贵的客人",
+		"rite": 5008118,
+		"status": "rendered",
+		"template": "8000125"
+	},
+	{
+		"name": "收手吧",
+		"rite": 5008126,
+		"status": "rendered",
+		"template": "8000126"
+	},
+	{
+		"name": "能吃吗？好吃吗？怎么吃？",
+		"rite": 5008132,
+		"status": "rendered",
+		"template": "8000127"
+	},
+	{
+		"name": "在宴会上演出",
+		"rite": 5003023,
+		"status": "rendered",
+		"template": "8000128"
+	},
+	{
+		"name": "烂纸头",
+		"rite": 5000831,
+		"status": "rendered",
+		"template": "8000129"
+	},
+	{
+		"name": "唯一的答案",
+		"rite": 5008151,
+		"status": "rendered",
+		"template": "8000130"
+	},
+	{
+		"name": "流浊之地",
+		"rite": 5006671,
+		"status": "rendered",
+		"template": "8000131"
+	},
+	{
+		"name": "一线生机",
+		"rite": 5000566,
+		"status": "rendered",
+		"template": "8000132"
+	},
+	{
+		"name": "城外的骚乱",
+		"rite": 5000600,
+		"status": "rendered",
+		"template": "8000133"
+	},
+	{
+		"name": "勇武的证明",
+		"rite": 5000551,
+		"status": "rendered",
+		"template": "8000134"
+	},
+	{
+		"name": "促成谈判",
+		"rite": 5000674,
+		"status": "rendered",
+		"template": "8000135"
+	},
+	{
+		"name": "模板 8000136",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000136"
+	},
+	{
+		"name": "袭击者的巢穴",
+		"rite": 5000601,
+		"status": "rendered",
+		"template": "8000137"
+	},
+	{
+		"name": "逃离苏丹的游戏",
+		"rite": 5003027,
+		"status": "rendered",
+		"template": "8000138"
+	},
+	{
+		"name": "舍馆",
+		"rite": 5006561,
+		"status": "rendered",
+		"template": "8000139"
+	},
+	{
+		"name": "舍馆",
+		"rite": 5006563,
+		"status": "rendered",
+		"template": "8000140"
+	},
+	{
+		"name": "舍馆",
+		"rite": 5006565,
+		"status": "rendered",
+		"template": "8000141"
+	},
+	{
+		"name": "舍馆",
+		"rite": 5006567,
+		"status": "rendered",
+		"template": "8000142"
+	},
+	{
+		"name": "诡异的镜子",
+		"rite": 5000301,
+		"status": "rendered",
+		"template": "8000143"
+	},
+	{
+		"name": "以神的名义",
+		"rite": 5000506,
+		"status": "rendered",
+		"template": "8000144"
+	},
+	{
+		"name": "探索未知绿洲",
+		"rite": 5000660,
+		"status": "rendered",
+		"template": "8000145"
+	},
+	{
+		"name": "赌马",
+		"rite": 5002512,
+		"status": "rendered",
+		"template": "8000146"
+	},
+	{
+		"name": "爱情诗",
+		"rite": 5000105,
+		"status": "rendered",
+		"template": "8000147"
+	},
+	{
+		"name": "神圣的襄助",
+		"rite": 5000508,
+		"status": "rendered",
+		"template": "8000148"
+	},
+	{
+		"name": "无妄之灾",
+		"rite": 5008177,
+		"status": "rendered",
+		"template": "8000149"
+	},
+	{
+		"name": "降神仪式",
+		"rite": 5008182,
+		"status": "rendered",
+		"template": "8000150"
+	},
+	{
+		"name": "怪异的降临",
+		"rite": 5008183,
+		"status": "rendered",
+		"template": "8000151"
+	},
+	{
+		"name": "密室中",
+		"rite": 5008187,
+		"status": "rendered",
+		"template": "8000152"
+	},
+	{
+		"name": "最后的解惑",
+		"rite": 5000620,
+		"status": "rendered",
+		"template": "8000153"
+	},
+	{
+		"name": "囚犯与绑匪",
+		"rite": 5006672,
+		"status": "rendered",
+		"template": "8000154"
+	},
+	{
+		"name": "召唤龙卷风",
+		"rite": 5000063,
+		"status": "rendered",
+		"template": "8000155"
+	},
+	{
+		"name": "星神的契约",
+		"rite": 5000579,
+		"status": "rendered",
+		"template": "8000156"
+	},
+	{
+		"name": "猎神",
+		"rite": 5000581,
+		"status": "rendered",
+		"template": "8000157"
+	},
+	{
+		"name": "焚星",
+		"rite": 5000582,
+		"status": "rendered",
+		"template": "8000158"
+	},
+	{
+		"name": "王狮猎场",
+		"rite": 5000632,
+		"status": "rendered",
+		"template": "8000159"
+	},
+	{
+		"name": "诸地暴乱",
+		"rite": 5000679,
+		"status": "rendered",
+		"template": "8000160"
+	},
+	{
+		"name": "初步调查",
+		"rite": 5000686,
+		"status": "rendered",
+		"template": "8000161"
+	},
+	{
+		"name": "无尽黄沙",
+		"rite": 5000702,
+		"status": "rendered",
+		"template": "8000162"
+	},
+	{
+		"name": "狂风峡谷",
+		"rite": 5000703,
+		"status": "rendered",
+		"template": "8000163"
+	},
+	{
+		"name": "暗影神殿",
+		"rite": 5000704,
+		"status": "rendered",
+		"template": "8000164"
+	},
+	{
+		"name": "妖精森林",
+		"rite": 5000705,
+		"status": "rendered",
+		"template": "8000165"
+	},
+	{
+		"name": "召唤邪物",
+		"rite": 5000738,
+		"status": "rendered",
+		"template": "8000166"
+	},
+	{
+		"name": "黑暗火锅仪式",
+		"rite": 5000743,
+		"status": "rendered",
+		"template": "8000167"
+	},
+	{
+		"name": "将军夜猎",
+		"rite": 5000754,
+		"status": "rendered",
+		"template": "8000168"
+	},
+	{
+		"name": "肉体展览",
+		"rite": 5000767,
+		"status": "rendered",
+		"template": "8000169"
+	},
+	{
+		"name": "你所能做到的",
+		"rite": 5000788,
+		"status": "rendered",
+		"template": "8000170"
+	},
+	{
+		"name": "最受欢迎的男人",
+		"rite": 5000795,
+		"status": "rendered",
+		"template": "8000171"
+	},
+	{
+		"name": "苏丹的游戏",
+		"rite": 5000796,
+		"status": "rendered",
+		"template": "8000172"
+	},
+	{
+		"name": "青铜征服卡",
+		"rite": 5005104,
+		"status": "rendered",
+		"template": "8000173"
+	},
+	{
+		"name": "安苏亚的请求I",
+		"rite": 5000522,
+		"status": "rendered",
+		"template": "8000174"
+	},
+	{
+		"name": "帮派斗争",
+		"rite": 5000810,
+		"status": "rendered",
+		"template": "8000175"
+	},
+	{
+		"name": "追猎豺狼",
+		"rite": 5000813,
+		"status": "rendered",
+		"template": "8000176"
+	},
+	{
+		"name": "惊天大姐案",
+		"rite": 5000816,
+		"status": "rendered",
+		"template": "8000177"
+	},
+	{
+		"name": "我，白嫖",
+		"rite": 5000817,
+		"status": "rendered",
+		"template": "8000178"
+	},
+	{
+		"name": "赤裸的茶会",
+		"rite": 5000819,
+		"status": "rendered",
+		"template": "8000179"
+	},
+	{
+		"name": "从实招来",
+		"rite": 5000820,
+		"status": "rendered",
+		"template": "8000180"
+	},
+	{
+		"name": "猎团余党",
+		"rite": 5000822,
+		"status": "rendered",
+		"template": "8000181"
+	},
+	{
+		"name": "猎团余党",
+		"rite": 5000824,
+		"status": "rendered",
+		"template": "8000182"
+	},
+	{
+		"name": "神的诞生",
+		"rite": 5010059,
+		"status": "rendered",
+		"template": "8000183"
+	},
+	{
+		"name": "神圣的烙印",
+		"rite": 5010034,
+		"status": "rendered",
+		"template": "8000184"
+	},
+	{
+		"name": "纠纷的任务",
+		"rite": 5000828,
+		"status": "rendered",
+		"template": "8000185"
+	},
+	{
+		"name": "模板 8000186",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000186"
+	},
+	{
+		"name": "终极羞辱",
+		"rite": 5000856,
+		"status": "rendered",
+		"template": "8000187"
+	},
+	{
+		"name": "偷窃圣血",
+		"rite": 5000863,
+		"status": "rendered",
+		"template": "8000188"
+	},
+	{
+		"name": "改朝换代",
+		"rite": 5001023,
+		"status": "rendered",
+		"template": "8000189"
+	},
+	{
+		"name": "调查罪证",
+		"rite": 5001024,
+		"status": "rendered",
+		"template": "8000190"
+	},
+	{
+		"name": "破坏证据",
+		"rite": 5001025,
+		"status": "rendered",
+		"template": "8000191"
+	},
+	{
+		"name": "宫中传信",
+		"rite": 5001100,
+		"status": "rendered",
+		"template": "8000192"
+	},
+	{
+		"name": "书店密会",
+		"rite": 5002007,
+		"status": "rendered",
+		"template": "8000193"
+	},
+	{
+		"name": "处理尸体",
+		"rite": 5002024,
+		"status": "rendered",
+		"template": "8000194"
+	},
+	{
+		"name": "师出有名",
+		"rite": 5002031,
+		"status": "rendered",
+		"template": "8000195"
+	},
+	{
+		"name": "淘书",
+		"rite": 5002036,
+		"status": "rendered",
+		"template": "8000196"
+	},
+	{
+		"name": "淘书",
+		"rite": 5002037,
+		"status": "rendered",
+		"template": "8000197"
+	},
+	{
+		"name": "风向变化",
+		"rite": 5003011,
+		"status": "rendered",
+		"template": "8000198"
+	},
+	{
+		"name": "最后的愿望",
+		"rite": 5006678,
+		"status": "rendered",
+		"template": "8000199"
+	},
+	{
+		"name": "神的秘密",
+		"rite": 5004907,
+		"status": "rendered",
+		"template": "8000200"
+	},
+	{
+		"name": "荆棘与塔",
+		"rite": 5000205,
+		"status": "rendered",
+		"template": "8000201"
+	},
+	{
+		"name": "清流交汇",
+		"rite": 5006662,
+		"status": "rendered",
+		"template": "8000202"
+	},
+	{
+		"name": "穷人到底需要什么？",
+		"rite": 5006646,
+		"status": "rendered",
+		"template": "8000203"
+	},
+	{
+		"name": "进贡",
+		"rite": 5006639,
+		"status": "rendered",
+		"template": "8000204"
+	},
+	{
+		"name": "背叛和逃亡",
+		"rite": 5006620,
+		"status": "rendered",
+		"template": "8000205"
+	},
+	{
+		"name": "餐盒收购",
+		"rite": 5006624,
+		"status": "rendered",
+		"template": "8000206"
+	},
+	{
+		"name": "初梦",
+		"rite": 5004801,
+		"status": "rendered",
+		"template": "8000207"
+	},
+	{
+		"name": "赤字滔天",
+		"rite": 5006585,
+		"status": "rendered",
+		"template": "8000208"
+	},
+	{
+		"name": "老兵不死",
+		"rite": 5006572,
+		"status": "rendered",
+		"template": "8000209"
+	},
+	{
+		"name": "他们的复仇",
+		"rite": 5006549,
+		"status": "rendered",
+		"template": "8000210"
+	},
+	{
+		"name": "刺杀的阴影",
+		"rite": 5006544,
+		"status": "rendered",
+		"template": "8000211"
+	},
+	{
+		"name": "三角漩涡",
+		"rite": 5006539,
+		"status": "rendered",
+		"template": "8000212"
+	},
+	{
+		"name": "锻造龙鳞装备",
+		"rite": 5006078,
+		"status": "rendered",
+		"template": "8000213"
+	},
+	{
+		"name": "与神沟通",
+		"rite": 5006073,
+		"status": "rendered",
+		"template": "8000214"
+	},
+	{
+		"name": "学会藏书室",
+		"rite": 5000161,
+		"status": "rendered",
+		"template": "8000215"
+	},
+	{
+		"name": "以凡人的方式",
+		"rite": 5000203,
+		"status": "rendered",
+		"template": "8000216"
+	},
+	{
+		"name": "自然新生",
+		"rite": 5006023,
+		"status": "rendered",
+		"template": "8000217"
+	},
+	{
+		"name": "神圣的会晤",
+		"rite": 5004808,
+		"status": "rendered",
+		"template": "8000218"
+	},
+	{
+		"name": "长袖善舞",
+		"rite": 5008206,
+		"status": "rendered",
+		"template": "8000219"
+	},
+	{
+		"name": "苏丹的召见",
+		"rite": 5008215,
+		"status": "rendered",
+		"template": "8000220"
+	},
+	{
+		"name": "讨伐无道",
+		"rite": 5000830,
+		"status": "rendered",
+		"template": "8000221"
+	},
+	{
+		"name": "舞乐之宴",
+		"rite": 5008230,
+		"status": "rendered",
+		"template": "8000222"
+	},
+	{
+		"name": "拥挤的王座",
+		"rite": 5008251,
+		"status": "rendered",
+		"template": "8000223"
+	},
+	{
+		"name": "美人的武装",
+		"rite": 5008242,
+		"status": "rendered",
+		"template": "8000224"
+	},
+	{
+		"name": "游猎会",
+		"rite": 5006800,
+		"status": "rendered",
+		"template": "8000230"
+	},
+	{
+		"name": "趁生命气息逗留",
+		"rite": 5010069,
+		"status": "rendered",
+		"template": "8000231"
+	},
+	{
+		"status": "unreferenced",
+		"template": "8000232"
+	},
+	{
+		"name": "成神",
+		"rite": 5010070,
+		"status": "rendered",
+		"template": "8000233"
+	},
+	{
+		"name": "倾覆之塔",
+		"rite": 5010080,
+		"status": "rendered",
+		"template": "8000234"
+	},
+	{
+		"name": "近卫的职责",
+		"rite": 5010074,
+		"status": "rendered",
+		"template": "8000235"
+	},
+	{
+		"name": "朱娜的游戏",
+		"rite": 5000801,
+		"status": "rendered",
+		"template": "8000500"
+	},
+	{
+		"name": "无妄之灾",
+		"rite": 5000854,
+		"status": "rendered",
+		"template": "8000501"
+	},
+	{
+		"name": "夏玛的游戏",
+		"rite": 5000803,
+		"status": "rendered",
+		"template": "8000502"
+	},
+	{
+		"name": "乱军",
+		"rite": 5000825,
+		"status": "rendered",
+		"template": "8000503"
+	},
+	{
+		"name": "并非为人类准备的",
+		"rite": 5006131,
+		"status": "rendered",
+		"template": "8000504"
+	},
+	{
+		"name": "模板 8000505",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000505"
+	},
+	{
+		"name": "苗圃",
+		"rite": 5006676,
+		"status": "rendered",
+		"template": "8000506"
+	},
+	{
+		"name": "孤高之人",
+		"rite": 5003019,
+		"status": "rendered",
+		"template": "8000507"
+	},
+	{
+		"name": "裂魂之夜",
+		"rite": 5010002,
+		"status": "rendered",
+		"template": "8000508"
+	},
+	{
+		"name": "夜的栖身地",
+		"rite": 5000507,
+		"status": "rendered",
+		"template": "8000509"
+	},
+	{
+		"name": "混沌之王",
+		"rite": 5010064,
+		"status": "rendered",
+		"template": "8000510"
+	},
+	{
+		"name": "讨伐",
+		"rite": 5010058,
+		"status": "rendered",
+		"template": "8000511"
+	},
+	{
+		"name": "脱罪的希望",
+		"rite": 5001014,
+		"status": "rendered",
+		"template": "8000512"
+	},
+	{
+		"name": "稍加整修",
+		"rite": 5000005,
+		"status": "rendered",
+		"template": "8000513"
+	},
+	{
+		"name": "镀金",
+		"rite": 5010038,
+		"status": "rendered",
+		"template": "8000514"
+	},
+	{
+		"name": "最后的诱惑",
+		"rite": 5010041,
+		"status": "rendered",
+		"template": "8000515"
+	},
+	{
+		"name": "模板 8000516",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000516"
+	},
+	{
+		"name": "神临仪式",
+		"rite": 5010042,
+		"status": "rendered",
+		"template": "8000517"
+	},
+	{
+		"name": "教领的特权",
+		"rite": 5010044,
+		"status": "rendered",
+		"template": "8000518"
+	},
+	{
+		"name": "暗影渐起",
+		"rite": 5010060,
+		"status": "rendered",
+		"template": "8000519"
+	},
+	{
+		"name": "造化歧路",
+		"rite": 5010063,
+		"status": "rendered",
+		"template": "8000520"
+	},
+	{
+		"name": "世界之眼",
+		"rite": 5010045,
+		"status": "rendered",
+		"template": "8000521"
+	},
+	{
+		"name": "大猎捕",
+		"rite": 5010046,
+		"status": "rendered",
+		"template": "8000522"
+	},
+	{
+		"name": "转生的真神",
+		"rite": 5010049,
+		"status": "rendered",
+		"template": "8000523"
+	},
+	{
+		"name": "模板 8000524",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000524"
+	},
+	{
+		"name": "宫廷决斗",
+		"rite": 5001029,
+		"status": "rendered",
+		"template": "8000525"
+	},
+	{
+		"name": "子宫",
+		"rite": 5010055,
+		"status": "rendered",
+		"template": "8000527"
+	},
+	{
+		"name": "选光者",
+		"rite": 5004526,
+		"status": "rendered",
+		"template": "8000528"
+	},
+	{
+		"name": "书库辖员",
+		"rite": 5000346,
+		"status": "rendered",
+		"template": "8000529"
+	},
+	{
+		"name": "石之天平的研究",
+		"rite": 5000166,
+		"status": "rendered",
+		"template": "8000530"
+	},
+	{
+		"name": "复活死者",
+		"rite": 5000167,
+		"status": "rendered",
+		"template": "8000531"
+	},
+	{
+		"name": "奴隶与主人",
+		"rite": 5006801,
+		"status": "rendered",
+		"template": "8000532"
+	},
+	{
+		"name": "奇怪的攻击",
+		"rite": 5006697,
+		"status": "rendered",
+		"template": "8000533"
+	},
+	{
+		"name": "百科全书",
+		"rite": 5006718,
+		"status": "rendered",
+		"template": "8000534"
+	},
+	{
+		"name": "模板 8000537",
+		"rite": 0,
+		"status": "rendered",
+		"template": "8000537"
+	},
+	{
+		"name": "染血的钻石坑",
+		"rite": 5006139,
+		"status": "rendered",
+		"template": "8000538"
+	},
+	{
+		"name": "宝石之宴",
+		"rite": 5006143,
+		"status": "rendered",
+		"template": "8000539"
+	},
+	{
+		"name": "献给苏丹的珍宝",
+		"rite": 5006151,
+		"status": "rendered",
+		"template": "8000540"
+	},
+	{
+		"name": "三岔路口",
+		"rite": 5006172,
+		"status": "rendered",
+		"template": "8000541"
+	},
+	{
+		"name": "恳求女王",
+		"rite": 5006173,
+		"status": "rendered",
+		"template": "8000542"
+	},
+	{
+		"name": "女王的逃亡",
+		"rite": 5006178,
+		"status": "rendered",
+		"template": "8000543"
+	},
+	{
+		"name": "炎日天平",
+		"rite": 5004517,
+		"status": "rendered",
+		"template": "8000544"
+	},
+	{
+		"name": "异端之战",
+		"rite": 5004521,
+		"status": "rendered",
+		"template": "8000545"
+	},
+	{
+		"name": "神之硕鼠",
+		"rite": 5004527,
+		"status": "rendered",
+		"template": "8000546"
+	},
+	{
+		"name": "往新世界",
+		"rite": 5010201,
+		"status": "rendered",
+		"template": "8000547"
+	},
+	{
+		"name": "臣服",
+		"rite": 5008257,
+		"status": "rendered",
+		"template": "8000548"
+	},
+	{
+		"name": "尘世墨水",
+		"rite": 5010203,
+		"status": "rendered",
+		"template": "8000549"
+	},
+	{
+		"name": "自我认同",
+		"rite": 5010204,
+		"status": "rendered",
+		"template": "8000550"
+	},
+	{
+		"name": "虚空之火",
+		"rite": 5010205,
+		"status": "rendered",
+		"template": "8000551"
+	},
+	{
+		"name": "造化之风",
+		"rite": 5010206,
+		"status": "rendered",
+		"template": "8000552"
+	},
+	{
+		"name": "陶土之门",
+		"rite": 5010207,
+		"status": "rendered",
+		"template": "8000553"
+	},
+	{
+		"name": "终极问题",
+		"rite": 5010208,
+		"status": "rendered",
+		"template": "8000554"
+	},
+	{
+		"name": "苏丹的近卫们",
+		"rite": 5010010,
+		"status": "rendered",
+		"template": "8000555"
+	}
+]

@@ -6,7 +6,7 @@ extends Control
 ## Usage: godot res://tools/dev_screenshot_runner.tscn -- --out <path> [--frames N]
 ##   [--gallery-card-info] [--gallery-cg] [--gallery-over] [--story-typewriter]
 ##   [--after-story] [--after-story-zoom] [--story-notify] [--point-shop]
-##   [--credits] [--credits-index N]
+##   [--credits] [--credits-index N] [--end-map]
 
 const GALLERY_OVER_SHOT_ROOT := "user://dev_gallery_over_shot"
 
@@ -145,9 +145,15 @@ func _ready() -> void:
 			drained += 1
 		if drained == 128:
 			push_warning("Screenshot capture reached the intro-queue safety cap")
+		if args.has("--end-map") and state != null:
+			# Screenshot-only entry into the source-backed Player.end_open state;
+			# runtime reaches this through closing rite 5010009's committed result.
+			state.end_open = true
 		var screen: Node = main.get("_game_screen")
 		if screen != null and screen.has_method("refresh"):
 			screen.call("refresh")
+		if args.has("--rite"):
+			main.call("_on_open_rite", 5000001)
 		if args.has("--card-detail"):
 			var state_c = main.get("state")
 			var db_c = main.get("db")

@@ -14,9 +14,8 @@ extends RefCounted
 ##   all point at 梅姬/easy = clone index 0).
 ##   Original rite cards[i] is 0-based and maps to slot s{i+1}; the array
 ##   length matches the config's cards_slot count (5001001 = s1..s7).
-##   Hand = top-level cards with bag=0; bagpos>=1 cards are hand-visible
-##   (ordered by bagpos), bagpos=0 cards are bag storage the clone flattens
-##   into the same hand zone (bag/bagpos system stays METHOD_MAP D).
+##   Hand owns top-level cards on all pages; the visible rail filters by
+##   Player.BagIndex. bagpos=0 storage still shares that page's rail.
 ##   Equipment travels as nested `equips` on the host card; the original does
 ##   not persist which equip slot each object occupies, so the slot is
 ##   inferred from the equipment definition's slot tag when unique.
@@ -48,7 +47,6 @@ const DROPPED_FIELDS := {
 	"random_cache": "RNG 续航缓存",
 	# notes 已承载（批次 O）：结构/分页/六个 type 语义 + 1/2/3 写点；
 	# 4/10001/10002 运行时写点待调用方反编译或标签门解出（见 METHOD_MAP）。
-	"BagIndex": "背包索引",
 	"delay_ops": "原作 DelayOp 到期语义未逆向（样本为空则零损失）",
 	"sudan_card_pool": "带 uid 的池对象：克隆牌堆为 id 多重集（见 approximated）",
 	"wizard_first_show": "引导首见布尔（克隆 begin_guide 为指令字典）",
@@ -66,7 +64,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	var min_round := maxi(1, int(original.get("min_round", 1)))
 	for scalar_field in ["difficulty(-1 基)", "round", "min_round", "card_uid_index",
 			"rite_uid_index", "sudan_redraw_count", "end_open", "is_armageddon",
-			"armageddon_rite_id"]:
+			"armageddon_rite_id", "BagIndex"]:
 		converted.append(scalar_field)
 
 	# Player stores the actual profile plus ordinary redraws already used. Keep
@@ -100,8 +98,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		hand_uids.append(uid)
 		if player_actor_uid == 0 and _is_protagonist(card_id, db):
 			player_actor_uid = uid
-	# Hand order: hand-visible bagpos>=1 first (by bagpos), then bag storage
-	# (bagpos=0) by uid. The clone has no bag pages, so storage flattens in.
+	# Hand order: bagpos>=1 first, then bagpos=0 by UID. The shared ownership
+	# list retains all bags; the visible rail selects Player.BagIndex.
 	var by_uid := {}
 	for row in card_rows:
 		by_uid[int(row["uid"])] = row
@@ -113,8 +111,6 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		var card_id := int(card.get("id", 0))
 		if card_id >= SUDAN_ID_MIN and card_id <= SUDAN_ID_MAX:
 			continue
-		if int(card.get("bag", 0)) != 0:
-			approximated.append("bag>0 卡片进入手牌区（背包分页未迁移）")
 		var entry := {"uid": int(card.get("uid", 0)), "bagpos": int(card.get("bagpos", 0))}
 		if entry["bagpos"] >= 1:
 			visible.append(entry)
@@ -248,6 +244,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"helpbtn_unshow": bool(original.get("helpbtn_unshow", false)),
 		"hand": ordered_hand,
 		"rail_order": rail_order,
+		"current_bag_index": int(original.get("BagIndex", 0)),
 		"sudan_deck": sudan_deck,
 		"sudan_pool_tags": {},
 		"auto_gen_sudan_card": not bool(original.get("disable_auto_gen_sudan_card", false)),
@@ -349,6 +346,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("pins", _unique_int_list(original.get("pins", [])), state.rite_pins))
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
 	rows.append(_row("bag_positions", _original_bag_positions(original_cards), _clone_bag_positions(state)))
+	rows.append(_row("current_bag_index", int(original.get("BagIndex", 0)), state.current_bag_index))
 	rows.append(_row("last_round_rite_data", _last_round_rite_data(original), state.last_round_rite_data))
 	rows.append(_row("custom_rite_name", _nonempty_string_map(original.get("custom_rite_name", {})), state.custom_rite_names))
 	rows.append(_row("player_card_name", _nonempty_string_map(original.get("player_card_name", {})), state.player_card_names))

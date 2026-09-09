@@ -1,0 +1,92 @@
+{"frames": [
+
+{
+	"filename": "Uptown_2.png",
+	"frame": {"x":723,"y":446,"w":223,"h":279},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":223,"h":279},
+	"sourceSize": {"w":223,"h":279}
+},
+{
+	"filename": "Uptown.png",
+	"frame": {"x":0,"y":446,"w":723,"h":383},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":723,"h":383},
+	"sourceSize": {"w":723,"h":383}
+},
+{
+	"filename": "SelfHome.png",
+	"frame": {"x":683,"y":829,"w":321,"h":211},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":321,"h":211},
+	"sourceSize": {"w":321,"h":211}
+},
+{
+	"filename": "Parish_1.png",
+	"frame": {"x":0,"y":1055,"w":296,"h":170},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":296,"h":170},
+	"sourceSize": {"w":296,"h":170}
+},
+{
+	"filename": "Palace.png",
+	"frame": {"x":0,"y":0,"w":596,"h":446},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":596,"h":446},
+	"sourceSize": {"w":596,"h":446}
+},
+{
+	"filename": "Outside_1.png",
+	"frame": {"x":340,"y":829,"w":343,"h":222},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":343,"h":222},
+	"sourceSize": {"w":343,"h":222}
+},
+{
+	"filename": "Downtown_2.png",
+	"frame": {"x":1004,"y":829,"w":261,"h":210},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":261,"h":210},
+	"sourceSize": {"w":261,"h":210}
+},
+{
+	"filename": "Downtown_1.png",
+	"frame": {"x":946,"y":446,"w":261,"h":230},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":261,"h":230},
+	"sourceSize": {"w":261,"h":230}
+},
+{
+	"filename": "Blackstreet_2.png",
+	"frame": {"x":596,"y":0,"w":736,"h":410},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":736,"h":410},
+	"sourceSize": {"w":736,"h":410}
+},
+{
+	"filename": "Blackstreet_1.png",
+	"frame": {"x":0,"y":829,"w":340,"h":226},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":340,"h":226},
+	"sourceSize": {"w":340,"h":226}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "end_map.png",
+	"format": "RGBA8888",
+	"size": {"w":1332,"h":1332},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:2aa7afc6c40effd3d43dd9a7accec2bd:69469de2b85a2912c68704092908f793:7a6ba7b1aaf2e68acbc95736ca3ae7b7$"
+}
+}

@@ -7,8 +7,9 @@
 ##   s<n>+/-<tag>, s<n>+回收 (ModifyTag)
 ##   event_on <id>, event_off, rite <id>
 ##   back_to_prev_round_end, over, confirm
-## Returns a list of "effects" the UI/sim can apply (some are immediate state
-## mutations; choose/event_on/rite produce deferred actions).
+## Eager atomic/legacy executor. Events use OperationsSequence to await UI.
+## Rite settlement orchestration still uses this eager entry and is unfinished.
+## Some effects mutate state immediately; other effects are returned to apply.
 class_name ResultExec
 extends RefCounted
 
@@ -25,8 +26,8 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 	}
 	# Option branching: if the payload has an `option` key, convert it to a
 	# choose prompt and stash the case:opN subtrees as choices. The remaining
-	# keys are skipped — only the player's chosen case executes (via
-	# execute_choice), matching the original's last_op_tag state machine.
+	# keys are skipped in this LEGACY path. This is not source-equivalent for
+	# common siblings or numeric/default cases; events use OperationsSequence.
 	if result.has("option"):
 		_apply_option(result, deferred, context)
 		return deferred
@@ -498,8 +499,8 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			var prompt: Dictionary = val.duplicate(true)
 			prompt["kind"] = "confirm"
 			prompt["choices"] = {
-				"confirm_ok": {"text": _strip_rich(str(val.get("confirm_text", "确定")))},
-				"confirm_cancel": {"text": _strip_rich(str(val.get("cancel_text", "取消")))},
+				"confirm_ok": {"text": str(val.get("confirm_text", "确定"))},
+				"confirm_cancel": {"text": str(val.get("cancel_text", "取消"))},
 			}
 			deferred.prompts.append(prompt)
 			_record_effect(deferred, "prompt", prompt, context)

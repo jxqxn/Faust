@@ -1,17 +1,131 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## ConfirmNew按钮行（2026-09-09，已接局部链，整页未完成）
+
+ConfirmController.Show 0x53fc30调用AssignTranslateText分别设置确认/取消文字；Done 0x53fb70清Promise后Resolve(bool)，dump.cs:318365。ConfirmNew.prefab Operations锚(0,0)-(1,0)、pos(801,-6)、sizeDelta(983.4226,144.2)、pivot(.5,0)；横排间距60、右padding120、MiddleCenter，Cancel168x158在前、Confirm325x158在后。计算源2705宽时Cancel左1817、Confirm左2045、顶H-145.1。两标签24号、源颜色alpha0；手柄InputDisplay仍未移植。宿主已补正文居中与独立确认分支；精确PreferredSize、遮罩与短面板最终高度仍待实机校准。专项10/10、80断言通过。
+
+## 提示人物与卡组参数（2026-09-09，进行中）
+
+PromptControllerBase.ShowInternal 0x589890按三个位置处理外层数组，标量字符串只放中位；full前缀由TrySetupFull 0x589d60处理（stringliteral 0x25ACD30）。PromptIconController.SetIcon 0x58a210处理单位置：字符串pic/前缀（stringliteral 0x25821F8）先FindCard再配置GetPic，数字数组生成配置卡而非运行时卡，最多三张、零值跳过但保留索引。静态PosYRotZ由.cctor 0x58ab00给出(280,18)/(430,10)/(580,2)，一张取中、两张取中和末，scale=1.8、后生成移到首子节点。dump.cs:323572 Holder/Icon/PosYRotZ；content/event/5300000及5300177给出外层图像数组实例。当前先补参数解释和既有素材展示；外层IconGroup与正文的完整原布局分配仍未移植。
+
+FindCard 0x38c740补查：Player.cards@0x88优先，其后依Player.rites@0x90枚举Rite.cards@0x30（dump.cs Player/Rite字段独立核对）。不能使用宿主全实例注册表按UID查询；消费后残留条目不应覆盖配置立绘。
+
+## 事件正文高度与富文本（2026-09-09，已接局部链，整页未完成）
+
+取 ScrollViewContentHightWatcher.LateUpdate 0x4342c0（dump.cs:420520，LastHeight+0x20 / MaxHeight+0x24 / layoutElement+0x30）：正文内容高度写回 preferredHeight，上限来自 PromptNew.prefab:1790 的1300。PromptController.Show 0x58a020重建布局；正文@PROMPT_TEXT、选项@OPTION_ITEM_TEXT由两个prefab的TextTranslate键确认。先替换固定正文高度和失效的滚动输入，选项随正文下移、底部装饰随面板下缘移动。外围水平位置、选项行高及根布局分配仍沿现有近似，不宣称完整LayoutGroup复刻。保留选择后确认及队列等待语义。
+
+增量普查发现OptionNew.prefab:1780的MaxHeight是1100，并非PromptNew的1300；Options节点GO1313026266067498 / LayoutGroup114855482821919830间距20。OptionController.Show 0x576b50将OptionNewItem挂到options根（+0x90，dump.cs:321643），不能沿用ContentGroup的50间距。ConfirmNew没有这个ScrollView高度观察器，继续作为独立表面缺口，不用普通提示的参数声称已映射。
+
+上限分流与20间距已接。最终UI79/79、923断言；此前完整回归487/487、3574断言；两分辨率GPU长正文及原配置5300102的实际选择/改选/确认/提示后event_on均通过，stderr空。测试只证明所述宿主路径，外围几何与人物图组未达原作一致。
+
+## 卡牌详情标签与数值差异（2026-09-09，已接局部链，整页未完成）
+
+本批取 CardInfoNewController.RefreshAllTags 0x535270：TagNode+0x40/41/43 控制显示，Variable.card_state_icon 优先分到状态栏，type=attribute 分到纯名称行，其余分到徽记网格；排序比较器 0x393940 返回 b.tag_rank-a.tag_rank（dump.cs:386926）。GetTagWithDiff 0x3811e0 的差值是当前 GetTag 减 Card.data 的配置值（Card.data+0x68，dump.cs:389593），不是只统计装备。CardTagNewController.FormatValue 0x53ec20 按差值正/负/零使用原 variable 文本颜色。Show 0x537000 的 Title 仅取 CardNode.title。状态图由 CardStateTagController.SetState 0x53dbb0 读取 variable.card_state_icon；原配置 sacrifices 指向拼错的 staet_sacrifices，语料只有 state_sacrifices，保留为源资源缺口，不擅自改配置。
+
+已接上述分组、排序、差值色及静态箭头，状态按正值重复；16张槽位/状态/箭头纹理与语料hash一致。装备区依 RefreshAllEquips 0x534c40/.cctor 0x537e30 摆放真实CardWidget；槽位依GetEquipStats 0x37fa50逐装备一次匹配、CardEquipSlot.SetType 0x52dc70/set_Equiped 0x52e090切换原图。RareIcon经CardShows_FaceUnlit.asset:123和dump.cs:541824确认石/铜/银/金数组；RareText原色黑。装备拖放、取回、提示和动态数值变化监听仍未完整接到此视图。
+
+帮助页原作实机证据original_runtime/card_info_help.jpg：原来的1920再翻倍假设错误，Help嵌套Canvas是WorldSpace/overrideSorting而非独立1920画布。按3840根空间的anchors/pivot重放四段、50%黑遮罩、card_info圈线、@HELP_TEXT与content/ui.json全文；RichTextLabel补TMP Overflow绘制边界，实际打开/遮罩关闭/详情关闭已通过。共享富文本转换仅转换完整已识别样式token，保留普通比较符和不支持的sprite/相对字号token，不宣称完整TMP解析器。UI78/78、912断言（card-complete-ui.log），全量回归进行中。
+
+## 仪式滚动正文（2026-09-09，已接块布局，TMP差异未完成）
+
+取 RitePanelTitleController.Show 0x5992a0（dump.cs:324417），拼接variable.RITE_PANEL_TIPS_TEXT_HEADER/ICON/CONTENT/FOOT；RitePanelTitle.prefab正文@MAIN_BODY、paragraphSpacing80、viewport宽比ScrollView少17。TextTranslate.Start 0x15667e0缓存TMP初始段落间距，再在UpdateTextInternal加TextStyleNode段距。提示CONTENT indent120，ICON size100，颜色#FCE29A；sprite索引3=分隔线、12=rite_tips。原作截图rite_household_font_reference.jpg交叉核对。宿主将这些块放进同一滚动树；TMP sprite基线与逐字行高仍需单独校准。
+
+宿主实测lg正文两行的contentHeight=214，含末段80；因此VBox不能再加80。取消重复间距，分隔图后用Margin保留80；此修正只消除宿主双计数，未宣称TMP按字体face比例的段距算法已完整移植。
+
+## 卡牌详情属性结构纠正（2026-09-08 实机）
+
+原作右击阿尔图截图 original_runtime/card_info_artu.jpg 显示带徽记的四列属性与底部名称标签。此前把 CardAttribute 无图结构推广到数值属性区的结论错误：CardInfoNew.prefab:1311 TagPrefab GUID06679e1929ab016419ec8700bfc39f3f 指向 CardTag.prefab，AttributePrefab GUID7b2c7f38735de4144bc235b272548f0e 才指向 CardAttribute。RefreshAllTags 0x535270（dump.cs:317550类字段）为前者调用 CardTagNewController.Show 0x53f040，后者用于纯名称标签。
+
+已恢复 TagContainer 的1700x419.49容器、400x120网格/水平间隔20/MiddleLeft、四列徽记+名称+值，标签按 Attributes authored底部矩形摆放。图标从 TagNode.resource 读取tags图集（含支持，旧CardWidget属性helper未包含支持）。导出CardTag.md作为几何证据。当前仍只展示原有六属性集合，完整can_visible/can_add/can_nagative_and_zero分组、tag_rank排序、状态栏、装备diff箭头/颜色/点击提示未迁，不标整详情完成。原作样本有装备加成，克隆开局样本不同，截图仅验证结构。
+
+CardInfoNewController.Show 0x537000 L556-575 读取 Variable.ui_size@0x58（dump.cs:387285）按 Datapool.fontSize@0x218 设置整面板scale；原配置md=1/lg=1.1/xl=1.2/xxl=1.3。已接打开时以中心为轴整体缩放，不能把原作lg截图和克隆md截图的大小差异当成静态prefab错误。
+
+共享SourceText发现自动字号样式可能只有enableAutoSize/sizeRange而没有size：原0回退会使文字近乎不可见，现从上限起始；完整TMP缩小拟合算法仍缺失。最新卡牌截图card_info_grid_1280.png；专项记录见card-info-grid-tests.log。
+
+## 应用字号联动（2026-09-08）
+
+GameApplicationConfig..cctor 0x300380 写 GAME_FONT_SIZE@0x78，stringliteral 0x25C2418 为 md；dump.cs:542495/542496 定义字段与 GameFontSize 偏好键。SettingDropDownController.InitFontSizeDropDown 0x5a96a0 枚举 variable.support_font_size，显示“小”对应 md，“普通”对应 lg，不能按界面名称推断代码。GameApplication.SetFontSize 0x43ee10 经 Datapool.OnFontSizeChanged 更新文本后写 PlayerPrefs；TextTranslate.UpdateFontSize 0x1566920 按 css_size 查找并回退 size。
+
+已接应用偏好持久化、源配置五档下拉、已打开仪式/设置页的动态字号、关闭页面时订阅释放；固定标题不随档位变化。KeyItem 样式纠正为 @MAIN_BODY。SourceText.apply 显式指定档位仍用于独立样式测量，运行时省略档位即订阅偏好。其他未使用 SourceText 的页面尚未逐节点迁移。下拉背景导入 dropdown_bg，hash A7556C6DD1AF99EF28CB73AC08294DA5EF4B94FF5433AC16629E2E1DFD116864 与原图一致；PopupMenu 选项位置/滚动模板尚未达到源 TMP 布局。
+
+专项2/2、15断言；全量482/482、3537断言（34脚本，2条既有警告，无引擎错误或泄漏）。GPU 测试隔离偏好文件，鼠标打开菜单后经输入分发器选择普通，确认 lg 生效；直接向弹窗 viewport 注入按键不经过原生窗口分发，已修正测试输入方式。
+
+## 设置页新版结构（2026-09-08 实机续批，部分已接）
+
+实机 1.0.2feaceb3 使用 SettingsPanelNew，旧宿主依据 SettingsPanel 的单面板结构不匹配。依据 SettingsController.ShowSettings 0x5ab420 / OnEnable 0x5ab270（dump.cs:325897），SettingsPanelNew.prefab 的分页 ToggleGroup→SetActive 序列，SettingToggleGroupsController.Start 0x5aadc0，以及 KeyMapController.OnEnable 0x565aa0 / KeyItemController.SetKey 0x5656e0 + Resources/InputActions.asset，迁移三分页、原图背景、源字号与键位列表。实机截图见 docs/ui_layout/original_runtime/settings_*.jpg；新版几何见 SettingsPanelNew.md / KeyItem.md。原作存档与注册表在启动前已备份于 C:/Users/User/Documents/Faust-backups/original-ui-20260908-212447。UI76/76、显示设置6/6；两种GPU分辨率实际切页/滚动/关闭通过。功能与视觉缺口详见 PageFidelity，整页尚未完成。
+
+RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定ScrollViewTextController，源实际样式@MAIN_BODY；@RITE_TEXT在OpenTips，已修正旧正文误用。Stop@0x70仅start且start_round等于Player.round才显示；LastState@0x60按!start显示且有缓存才可操作。已接两个显隐门及停止处理函数边界，仍保留完整富文本/字号档/预览提交链缺口。
+
+## 事件提示运行时背景（2026-09-08 续批）
+
+`PromptControllerBase.Awake 0x589430` / `UIImageExtensions.LoadSprite 0x40c210` + stringliteral 0x25ACDA8=`full/item_bg`：FullImage 父容器首位动态加载背景，LoadSprite 的 native-size 后才设置 stretch anchors。PromptNew Full 的 Mask m_ShowMaskGraphic=0，Sprite prompt_bg_mask_2 border=(284,234,248,255)，矩形按锚点换算为(38,52)/2629x828；旧克隆误把 mask 画成黑块且 y/高度符号反了。已导入源 item_bg.png（SHA256 7E4B1EBC32F2D695EECEEA3221EBFA5ADECA66077A4644D0C80F9DCD3B67C024），恢复仅裁切子项与底图。Prompt.Do 0x519340 的 icon@0x20 保留到显示层，当前标量图已接；数组/嵌套图及 full CG 仍缺。事件专项10/10、72断言；原配置事件5300102的鼠标选择/确认/后继提示/事件启用两种分辨率通过，截图与限制见 PageFidelity。
+
+## 仪式成熟门与前置分支（2026-09-08 续批）
+
+- `GameController.UpdateSingleRite 0x55ab10`：started 且 life < round_number 时不结算；独立字段 `dump.cs:392403` life@0x2c / `393174` round_number@0x44。RiteView 重开入口与确认按钮共用该门，0/1天拒绝、2天允许的专项通过；修复“重开正在运行的仪式便能提前领结果”。
+- `DisplayClass77_0.<DoPriorSettlement>b__7 0x5b6120` 成功返回 true；`DisplayClass56_0.<Settlement>b__1 0x5b34e0` 仅在 false 时进入普通结算并 Then DoExtraSettlement。script.json 的 MethodAddress 5907056 / Address 39473456 对应 DoExtraSettlement / DAT_1825a5130；克隆命中前置后跳过普通与仪式额外结算，卡牌自带额外结算是另一链，不据此跳过。
+- 串行链调查纠正：DoExtraSettlement 0x5a2270 的逐条 DoSequence 是 **PreStart/展示/EnqueueSettlement**。EnqueueSettlement 0x5a2d10 将 Settlement.result@0x30 与 action@0x38 分别排入 controller+0x110/+0x118，之后 DisplayClass56_3 b__13 0x5b4f20 / DisplayClass56_5 b__15 0x5b5070 才 Start。不能将其解释成逐条实际 result+action。现有同步 resolver 缺独立预演及提交阶段，完整迁移需同时处理预演语义、骰子、上下文、队列与存档；本批未把这部分标成完成。
+
+## 仪式结果等待边界（2026-09-08，部分接通）
+
+`RiteResultPanelController.Settlement 0x5a4800` / `RiteResultPanelController.__c__DisplayClass56_0.<Settlement>b__8 0x5b4850` 在尾段 RemoveRite。宿主 rite_view 已在 pending_operations 非空时锁确认、取消、金骰、重掷；零日 auto_result 延后关闭，结果产生后刷新提示。GameScreen 阻塞提示固定前景并吸收背景点击，解决仪式升层后的视觉遮挡。仪式专项28/28、110断言；两种分辨率的实际鼠标路径和截图见 [页面验收](ui_layout/PageFidelity.md)。仍缺 RiteResolver 串行执行、post_rite 清理等待、NextDay、结果预览读档与重新打开时成熟门；不登记整链完成。
+
+## 仪式空槽与运行中编辑（2026-09-08，部分接通）
+
+后续排序批次：`HandCardSortByCondition` 比较器在 dump.cs:319328 指向 0x56f1c0，与反编译 `GameController.__c.c` 的 FlashAndSortCard 比较器共享函数体；合格卡优先，再经 `CardExtensions.CompareBagPos 0x37eff0` 比较正 bagpos（非正视为 int.MaxValue）、id、uid。当前页排序后写 bagpos=1..N；宿主 `GameState.sort_current_hand_by_condition` 同步 rail_order/hand，其他页保持。分页专项6/6、44断言；仪式26/26、92断言；原作 auto_save 导入桥50/50、stderr空。该桥只验证同刻导入，不证明排序后原作运行对拍；候选动画、真实输入与结算串行链仍未验收。
+
+`CardSlotController.OnPointerClick 0x53c050` -> `GameController.HandCardSortByCondition 0x5515a0`，独立字段 `dump.cs:319849` qualified_bags_has_cards/index：空槽查找合格背包，首次保留当前合格页，重复点击轮换升序合格页，无匹配不改页。宿主 rite_view 与 game_screen 已接页切换及候选焦点；原作 bagpos 重排、CardFlash/背包/槽动画、精确高亮及设备输入切换仍未接，不标整链完成。
+
+运行中编辑门：`RitePanelShowController.Show 0x596450` L649-658/L892-900 的 `!open_adsorb && !start` -> `CardSlotController.can_move`（dump.cs:317927 附近）。宿主共用 rite_slot_access 拦截点击、拖出、跨槽及桌面返卡，停止后恢复。当前专项 26/26、92 断言，无引擎错误或泄漏；最新空槽修改尚无可见输入与原作同状态截图对拍。前一轮完整回归 473/473、3469 断言，不作为最新变更全量回归。
+
+## 全页面验收标准（2026-09-08）
+
+用户要求全部页面按同一严格标准还原。见 [页面清单与验收门](ui_layout/PageFidelity.md)：逐节点字体/字号、布局、可见输入和状态证据分别验收。当前仪式统一 HY 字体不符合原作 textstyle 的多字体配置，上一轮字体完成结论撤回；先验证 TextTranslate/TMPTextExtensions 共用样式链，再续仪式选卡与锁槽，随后逐页推进。既有测试全绿不等于该清单已验收。
+
+## 2026-09-08 全仪式模板普查
+
+`RitePanelShowController.Show 0x596450` → 共用 `ui/rite_view.gd`：补齐全部 65 背景/43 前景/10 卡槽资产与原 Sprite 网格；保留原槽根尺寸并按中心变换整个子树；fg_in_slot_index、title_bg_hide/title_help_btn_hide 接线；映射长度不足按原作退回 mapping 0。1495 个仪式映射检查、251 模板检查（247 个有映射模板 GPU 截图），GUT 471/471、3454 断言，无引擎错误；content parity 3881/0。🟡：模板分支全覆盖不等于全部剧情状态/字体/结算表现 1:1。证据与图集见 [全仪式模板验收](ui_layout/RiteTemplateCoverage.md)。
+
+## 2026-09-08 治理家业页面续修
+
+来源：`RitePanelShowController.Show` 0x596450（原生精灵尺寸、Position=bg_pos、slot_open 映射、fg）；`RitePanelTitleController.Show` 0x5992a0（tips_text、标题、回合）；`CardSlotController.Init` 0x53b940（类型图标）。独立信号为 dump.cs 对应类字段、RitePanelShow/RitePanelTitle/CardSlot prefab、8001002→8000003 原配置和用户原版截图。修正既有批次 X 的固定背景拉伸、bg_pos 重复偏移、未应用 slot_open 和漏前景；验收记录见 `docs/ui_layout/RitePageCorrection.md`。
+
+## 2026-09-08 桌面续修
+
+- 四页入口：GameController.ChangeCurrentBag 0x54cb60 → PlayerExtensions.SetCurrentBagIndex 0x38f500（合法索引 0..3）→ UpdateHandCards；CardExtensions.IsCurrentHandCard 0x3826a0 比较 Card.bag 与 Player.BagIndex。独立信号：dump.cs:391594、GameScene BagBtnGroup 四个 Toggle。接入实例分页与存档，保留全部卡的状态域。
+- 仪式标牌：RiteRender.Init 0x59a9e0 / OnLanguageChanged 0x59bab0，dump.cs:324578 与 RiteNew.prefab TitleBG/Title/RightImage；标题条独立于 123×133 bound，字体 42、背景高 77，宽度由文本 PreferredSize 决定。
+- 金属反光：CardRender.Update 0x53a8e0 → GameController.GetScreenOffset 0x5508a0，dump.cs:317732/319746 与 cardshow.shader 材质属性、char/*.mat。原 fragment 已丢失；Godot 光照响应只能登记为近似，不把周期扫光当作原作。
+
+以上三项已接入。四页选择进入存档和原作导入桥，拖放索引在当前页与全局顺序间换算；苏丹新卡遵循当前页。金属贴图使用原类型对应的法线/金属图，位置偏移范围取 GameScene (0,.05)/(.2,.4)，无自动周期扫光。仪式标题改为独立可点击背景条，随地图同比缩放、读取改名覆盖。仍为 🟡：完整 HandBagPanel 整理/跨页搬运、分页计数/首见提示；反射算法与 Unity 光环境；仪式特殊类型原生尺寸/专用位移及状态装饰。详细验收见 `docs/ui_layout/DesktopContinuation.md`。
+
 > 2026-08-17 建立（复刻工作法，见 AGENTS.md 同名节）。**本表是复刻工作的主 TODO**：
 > 新工作从这里取项，不从零散错误报告取。实现行为前先在此登记原作方法背书
 > （`.c` 反编译 + `dump.cs`/配置，双信号）；批次收尾时更新对应行。
 
 ## 状态图例
 
+**已落地首批，整体仍🟡，2026-09-07 卡面与窗口启动纠偏**：从 CardNew 自制卡面项继续。CardController.Init 0x528f40 调用 GetCardShowPrefab / CardRender.Init；CardRenderChar.Init 0x538030、CardRenderItem.Init、dump.cs:317717 的 bg/image/text/stackable/life 字段与 CardShowChar/Item/Sudan.prefab、materials/card/{char,item,sudan} 独立确认真正卡面。旧 card_bg_* 是错误素材，不能充当前景边框。恢复原材质 MainTex 底板与 char *_f 前景、全幅 Icon、Title，删除 VBox 属性行。原 Shader 导出是 DummyShaderTextExporter，动态金属光照暂不宣称一致。窗口默认按用户明确要求改 Windowed/1920x1080，并尊重 --windowed；原常量 ExclusiveFullScreen 不足以证明用户请求窗口模式时应切换物理屏幕。
+
+**显示设置输入遮挡修正（2026-09-06）**：实测设置页KeyMap覆盖显示模式行；直读SettingsPanel.prefab:24843-24867，KeyMap底部锚(0,0)、pos(487,284)、size(405,174)、pivot(.5,.5)，父高1200，Godot左上应为(284.5,829)。旧y229错误，随显示设置接线修正，以保证下拉框实际可点击。
+
+**已接通：显示设置完整接线（2026-09-06）**。从显示启动未迁项继续：`SettingDropDownController.InitResolutionDropDown`0x5aa0b0→Screen.resolutions，闭包0x5b2af0/0x5b2b60按宽/高降序并转WxH后Distinct；模式来自原 `content/variable.json.support_fullScreen`。OnChangeScreenModeClicked0x5aab30/OnChangeResolutionClicked0x5aaab0分别调用GameApplication.SetFullScreen0x43eea0/SetResolution0x43f700并写PlayerPrefs。启动MoveNext0x4520e0读取同键，dump.cs:542497-542500确认默认与键名。Godot缺少物理显示模式设置接口，新增Windows平台适配（EnumDisplaySettingsEx/ChangeDisplaySettingsEx）承载Unity Screen接口；不另造分辨率内容表。宿主守护进程恢复游戏退出时的桌面模式，用户偏好保存在现有应用设置中。实际1920×1080物理模式/1280×720窗口切换、独立进程启动恢复及异常退出恢复桌面均已验；专项5/5+UI75/75。详见 [DISPLAY_SETTINGS.md](DISPLAY_SETTINGS.md)。
+
+**历史记录：显示启动推断（2026-09-06，强制独占默认已由2026-09-07用户要求纠正）**：原 `GameApplication.<DoInit>d__43.MoveNext` 0x4520e0 在L883起读取 `GameResolution`，再读取 `GameFullScreen` 并调用 Screen.SetResolution；独立常量 `dump.cs:542497-542500` 为 ExclusiveFullScreen / 1920x1080。Unity ProjectSettings 的初始1920×1080/windowed（mode3）随后被此应用初始化覆盖，不能只抄工程窗口模式。克隆撤销临时1280×720窗口，项目初始请求改1920×1080/Godot exclusive fullscreen；3840×2160仍仅为UI画布。此为上一批临时落点；本批已由Windows平台适配补齐物理分辨率切换、枚举与偏好恢复，当前实现与验收以DISPLAY_SETTINGS.md为准。
+
+**事件路径已接、整体仍🟡：串行操作链（2026-09-06）**。`OperationsExtensions.Start(IList<IOperation>,ctx)` 0x500a70 → `ListExtensions.DoSequence` 0x38b120 → `Promise.Sequence`，独立符号 `dump.cs:311993-312024`；`AllOperations.Do` 0x4ee520 使用同一入口。`Confirm` 回调0x5061a0 → `OperationContext.SetLastOpState` 0x3a0230（true→0、false→1）；`Option` 回调0x51f250 写 index+3/tag；`SuccessOperations`0x3a7930/`FailedOperations`0x39d5a0/`CaseOperations`0x399570 只在匹配执行后清状态，未匹配保持。已用 `sim/operations_extensions.gd` 承载原方法的串行等待：事件在 prompt/option/confirm/sleep/改名边界暂停，继续时恢复同级与嵌套操作，原配置 JSON（保序）+游标保留在现有运行队列中，不新增 content 转换表。已接 EventTrigger/DeferredEffects.execute_event，移除多余事件摘要；仪式结果收尾与NextDay整条Promise链继续单独登记，不能宣称本批全覆盖。
+
+**确认框边界（2026-09-06）**：`ConfirmController.OnConfirm` 0x53fc20 / `OnClose` 0x53fc10 分别 `Done(true/false)`，`Done` 0x53fb70 直接隐藏并 Resolve；`dump.cs:318365` 的独立 ConfirmController 与 Promise<bool> 定义、`Confirm.Do` 0x4f4e30 → ShowConfirm 为第二信号。不能把 OptionController 的“选择后再确认”套到确认/取消两按钮。共享浮层按已有 payload.kind=confirm 保留直接提交，完整 Confirm prefab 视觉仍未迁。
+
+**2026-09-05 核心准确性优先**：当前主线返回卡牌 → 仪式投放/结算 → 事件交互 → 桌面反馈的完整游玩链。详见 [核心复刻验收与当前证据](CORE_FIDELITY.md)。本表 ✅ 仅表示该行已有的方法证据，不代表所属系统已通过连续游玩或像素对拍；旁支完成数量不作为核心准确性的替代指标。
+
+**2026-09-05—09-06 已修，事件选择提交链（取自下方 PromptNew 近似项）**：`OptionController.Show` 0x576b50 初始化 CurrentOptionIndex=-1、CurrentOption/CurrentToggle=null 并禁用 Confirm；`OptionController.<>c__DisplayClass11_1.<Show>b__0` 0x588f00 只设置选择并启用 Confirm；`OptionController.OnConfirm` 0x576900 才隐藏并 Resolve。独立信号 `dump.cs:321643-321673` 的 Confirm/OptionsGroup/CurrentOption/CurrentToggle/Promise 字段；键盘链 `OptionItemController.OnSubmit` 0x577490 → 闭包 0x588ec0 把焦点移到 Confirm。已删除“点击即执行”，改为单选/改选/确认一次；普通 prompt 才发 close_prompt。另从正式主场景 GPU 渲染确认并修正 GameScreen/事件浮层零尺寸根、无效 RichTextLabel 字号键及自制配置ID标题。首批新增7测试/54断言，第二批扩至9测试/64断言。**整体仍🟡**：完整立绘传递、动态布局、仪式/NextDay Promise链及原作同帧对拍未完成；旧行的“已完成核心”不能作为系统完成结论。证据与后续唯一优先项见 CORE_FIDELITY.md。
+
 - ✅ **已对齐**：克隆实现有原作方法级 SRC 背书（双信号），语义经反编译验证。
 - 🟡 **近似**：行为大体一致，但缺方法级背书、宿主结构自制、或只覆盖原作的一部分。
 - ❌ **自制**：克隆存在、原作无对应——待消灭、降级为兼容层、或证明为等价承载。
 - ⬜ **缺失**：原作存在、克隆没有——按玩家影响排期补齐。
 
-## A. 已对齐 ✅（核心循环有原作方法背书）
+## A. 已有方法级对齐证据（不代表系统整体完成）
 
 | 原作证据（双信号） | 克隆落点 | 说明 |
 | --- | --- | --- |
@@ -55,7 +169,7 @@
 | 克隆落点 | 缺口 |
 | --- | --- |
 | `sim/game_state.gd` v8 存档（serialize） | 原作存档 schema 已全解码（60 字段，`docs/ORIGINAL_SAVE_SCHEMA.md` + `sim/original_save_schema.gd`）；**阶段二导入桥已落地**（`sim/original_save_importer.gd` + `tools/export_save_diff.gd --bridge`，语料 auto_save 49/49 同刻对拍全过，含 Player.pins 与 end/armageddon 三字段）；续局行为对拍待实机样本 |
-| `GameState.pending_operations` / `delayed_operations` | 原作 Promise/Pop 队列模型的宿主等价物；事件日内 Promise 阻塞语义留档未对齐 |
+| `GameState.pending_operations` / `delayed_operations` | 原作 Promise/Pop 队列的宿主承载；2026-09-06 事件进入 OperationsSequence，支持 UI 等待、分支响应与存读档保序。仪式收尾/NextDay/延迟操作及旧 ResultExec 调用仍未整体串行化，保持🟡 |
 | `sim/condition.gd` AttrExprParser | 文法已对齐（四则/e() 敌方/sN.tag/counter.N）；解析器宿主为自制递归下降，非原作方法映射 |
 | `ui/game_audio.gd` GameAudio | 仅 main/tutorial BGM + 部分音效；拖放音、弹窗出现音、BGM 分层（level2/3）、结局 BGM、`sfx_*.json` 全量缺 |
 | `ui/begin_guide_bar.gd` 引导条 | 文案/键族/存档对齐；`WizardController` 完整演示宿主与 magic_sudan 演出缺，5310004 后序列未实机校对 |
@@ -91,7 +205,7 @@
 | 任务完成通知（Global / Quest / StoryNotify） | **2026-08-29 任务链批次已迁**：`content/quest.json` 与语料逐字节一致，`ConfigDB.quests` 直接承载 `Datapool.quest`；`sim/global_extensions.gd` 1:1 映射 `GlobalExtensions.RefreshQuest 0x4fcee0`，`Global.counter/quest` 与 `totalPoint/usedPoint/questState/hasEnterQuest` 使用原键持久化；`ModifyGlobalCounter.Do 0x5176a0 → RefreshQuest(true,false) → Global.OnQuestCompleted → StoryNotifyController.Show 0x5b9c00` 已直连。`ui/story_notify_controller.gd` 回放 StoryNotify.prefab 630×444 顶中几何、原 prompt/point_0 纹理、0.333s 入场+5s 停留+0.333s 退场与 FIFO；点击发出原作形状的 Story target 请求。原 `save_samples/global.json` 未包含非默认 quest/counter，故目前以反编译+配置/Prefab 双信号验证，**不宣称真实非默认存档逐字段对拍**。真值表见 `docs/ui_layout/StoryNotify.md`。**2026-09-02 任务面板与领奖链已迁**：`GameController.ShowStory 0x557ab0` 直接实例化 `ui/story_controller.gd = StoryController`；`StoryController.OnEnable/OnItemClicked/OnRewardClicked/OnRewardAllClicked/Sort/UpdateQuestRewardIcon`（0x5b0f70/0x5b1370/0x5b20b0/0x5b1d20/0x5b2370/0x5b2680）、`StoryItemController.Init/UpdateState/OnRewardClick`（0x5b9450/0x5b96a0/0x5b9520）和 `StoryTargetItemController.Init 0x5b9e80` 均拆成同名控制器边界。领取落在 `GlobalExtensions.GetQuestRewqrd 0x4fc860`：完成门/重复领取门、`Global.quest[id]=2`、`totalPoint += upgrade_point`、保存和 `HasQuestReward` 重算已回放。任务、目标与格式均直接读取原作 `quest.json`/`variable.json`；StoryPanel/StoryItem/StoryTargetItem 三份 Prefab 真值表与 15 张原图已落地，其中目标完成图 `Finish` 由 Prefab GUID 校正，不再误用 point。**2026-09-03 命运商店批次已迁**：原样 `content/upgrade.json` 50 个 `UpgradeNode` 由 `ConfigDB.upgrades` 直载；`Global.upgrade Dictionary<int,int>` 按原字段存读（key=已购买，value 0/1=停用/激活），`PointShopController.OnBuy/OnActivate/OnDeactivate`（0x5802d0/0x580090/0x5805e0）精确回放购买自动激活、`totalPoint -= cost`、`usedPoint += cost`、停用不退款。`HasUnlockUpgrade 0x3feb40` 按购买成员资格而非激活值，`HasAvailableUpgrade 0x4fcd00` 按未购买且可负担、刻意不看可见条件。新局 `Datapool.InitPlayer 0x413700 → DoUpgrade 0x410dc0` 以升级 id 升序执行 active 节点的原始 effect；新增的 `g.card`、`g.change`、`sudan_card` 回放本配置实际使用路径，尤其苏丹卡追加在已洗牌池尾。UI 拆为同名 `ui/point_shop_controller.gd` / `ui/point_shop_item_controller.gd`，按 Shop/ShopItem prefab 3840×2160 真值重放主块、行、按钮与链接卡预览；截图 `docs/ui_layout/pointshop_screenshot.png`。原 `save_samples/global.json` 已逐字段对拍 totalPoint/usedPoint/upgradeState/upgrade 的默认值；因样本没有已购买升级，**不宣称非默认升级存档已有真实样本对拍**。 | 🟡 原作 `Player.sudan_cards` 同时保存隐藏 Card 对象，而宿主仍以 id 队列+抽取时实例化承载；本配置 `g.change` 的开局手牌目标已覆盖，但该 Operation 对其他 Player.cards 区域的通用替换尚未迁。商店手柄 InputDisplay、LoopScrollRect 的选择保持/滚动插值、原 TMP 字体渲染细差及原作运行时截图逐帧对拍仍待完成；任务面板 TMP 字体细差同理 |
 | Live2D | 语料库 `live2d/` 已提取 | 大（既定策略：第一版静态图） |
 | ~~背包/手牌位系统（bag/bagpos/BagIndex）~~ | 已落地（2026-08-18 批次 E）：CardInstance.bag/bag_pos 持久化 + 日终压缩 + 导入桥透传与对拍（24 项）；三标签资格判据与多页包 UI 未做（三标签名留档） | — |
-| end/armageddon 表现状态（`end_open/is_armageddon/armageddon_rite_id`） | **2026-09-03 状态边界已迁**：三字段按 Player@0x178/@0x179/@0x17C 原键进入 GameState、v8 存读档、原作导入桥与 49 项同刻对拍；`end_open` 由 `RiteResultPanelController.<OnClose>b__0 0x5b51c0` 在仪式 5010009 关闭结果时置位，`MapController.Start 0x56a890` 与次日 b__5 据此 `ChangeBGToEnd`。`is_armageddon/armageddon_rite_id` 实为 `sfx_config.armageddon_music_loop` 的仪式循环音乐恢复状态：`StartRite.Do 0x51bcf0` 处理 `play_in_rite_create=true`，结果关闭链处理 false，`GameController.Start`/次日 b__5 还原 Animator 参数。 | 🟡 状态存读已对齐；原始 `sfx_config.json` 尚未接入 `ConfigDB`，`LoopArmageddonController` 音频播放、两处写点和终局地图背景切换仍待下一批迁移；不得把此字段族扩写成自制“决战玩法模式” |
+| end/armageddon 表现状态（`end_open/is_armageddon/armageddon_rite_id`） | **2026-09-03 状态边界已迁**：三字段按 Player@0x178/@0x179/@0x17C 原键进入 GameState、v8 存读档、原作导入桥与 49 项同刻对拍。**同日终局地图批次**：`RiteResultPanelController.<OnClose>b__0 0x5b51c0` 已在已提交的 5010009 结果关闭时精确写 `end_open`，不把其他 `final_pin` 仪式误判为终局；`ui/map_controller.gd.change_bg_to_end` 直接映射 `MapController.ChangeBGToEnd 0x567b70`，加载与语料 SHA-256 等值的 `table_map_end` 2048×1076 原图和 `Resources/image/end_map` 10 帧原图集，并按当前地点图名替换存在的同名帧；`MapController.Start 0x56a890` 的读档恢复由 `_ready` 回放，次日链通过桌面 refresh 幂等消费同一状态。实机渲染走查见 `docs/ui_layout/end_map_screenshot.png`。`is_armageddon/armageddon_rite_id` 实为 `sfx_config.armageddon_music_loop` 的仪式循环音乐恢复状态：`StartRite.Do 0x51bcf0` 处理 `play_in_rite_create=true`，结果关闭链处理 false，`GameController.Start`/次日 b__5 还原 Animator 参数。 | 🟡 终局主地图与地点帧已接；`Eft_End_Map` 是 GameScene 中含多层 ParticleSystem 的独立层级，尚未迁且未用自制效果替代。原始 `sfx_config.json` 尚未接入 `ConfigDB`，`LoopArmageddonController` 音频播放与两处写点仍待下一批；不得把此字段族扩写成自制“决战玩法模式” |
 | RNG 续航（random_cache） | 存档字段双信号 | 小-中 |
 | ~~激活苏丹卡的期限存档承载~~ | 已解（2026-08-18 批次 D）：期限 = 卡寿命模型（出生抢跑 + 每日 life+1 + 模板 card_vanishing 死亡），存档承载即 Card.life 本身；导入桥 days_left = vanish−life 精确恢复，仅 drawn_round 仍近似（难度中途切换后不可反推） | — |
 | ~~原作苏丹抽牌序（sudan_pool_cards 顺序语义）~~ | 已解（2026-08-18 批次 D）：sudan_shuffle 开启时每次抽取先 Shuffle 再 RemoveLast，顺序无意义；克隆 pop_back 尾抽对齐 | — |
@@ -123,3 +237,4 @@
 - **阶段 2 ✅（2026-09-03 状态行增量）**：导入桥——原作存档 → 克隆 GameState → v8 payload → 同刻值对拍；语料 auto_save **49/49** 全过（含 only_cards / only_rites / gen_cards / gen_tags / 苏丹重抽 profile / 终局结果 / cached_event / HUD 标志族 / Player.pins / end_open / is_armageddon / armageddon_rite_id），差异按 converted / approximated / dropped 防静默登记。此后涉及状态的批次验收 = GUT 全绿 + 对拍零差异（或差异均有原作语义解释）。
 - **远期**：固定种子 trace 对拍（同一操作脚本下原作 vs 克隆的事件/结算日志序列）。
 - **UI 布局对拍 ✅（2026-08-18 批次 P）**：`tools/export_ui_layout.gd` 解析语料 AssetRipper 场景/prefab YAML，产出 RectTransform 真值表（锚点/位置/尺寸/pivot/缩放 + CanvasScaler + LayoutGroup 参数 + sprite guid→语料路径）至 `docs/ui_layout/`；主画布设计空间 = **3840×2160**。表现层批次的验收 = 每个摆位数字能回指真值表行；视觉证据用 `tools/dev_screenshot_runner.tscn` 截图。
+

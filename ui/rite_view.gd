@@ -38,6 +38,7 @@ signal game_over_requested()
 # direct GameScene overlay, not a legacy 1280x800 mockup.
 # [SRC: GameScene.unity MainUI CanvasScaler; RitePanelShow.prefab root]
 const SOURCE_CANVAS_SIZE := Vector2(3840, 2160)
+const SOURCE_FONT = preload("res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf")
 const SOURCE_POSITION_CENTER := Vector2(1920, 870) # Position: (0, +210) in Unity y-up.
 const SOURCE_SLOTS_CONTAINER_SIZE := Vector2(3692, 2132)
 const SOURCE_SLOT_SIZE := Vector2(272, 496) # CardSlot.prefab root.
@@ -64,10 +65,14 @@ var _rerolls_left := 0
 var _reroll_btn: Button
 var _last_state_btn: Button
 var _resolution_committed := false
+var _last_result_waiting := false
+var _close_after_commit := false
 
 var _shade: ColorRect
 var _source_canvas: Control
-var _template_backdrop: TextureRect
+var _template_backdrop: Control
+var _template_foreground: Control
+var _tag_values: Dictionary = {}
 var _slot_layer: Control
 var _rite_panel: Panel
 var _gold_dice_label: Label
@@ -78,6 +83,9 @@ var _close_btn: Button
 var _result_label: RichTextLabel
 var _log_label: Label
 var _selected_card_uid: int = 0
+var _qualified_slot := ""
+var _qualified_bags: Array[int] = []
+var _qualified_bag_index := -1
 var _slot_buttons: Dictionary = {}
 var _slot_titles: Dictionary = {}
 var _slot_details: Dictionary = {}
@@ -123,9 +131,8 @@ func _ready() -> void:
 func _build_ui() -> void:
 	_shade = ColorRect.new()
 	_shade.name = "RiteModalShade"
-	# The original RitePanelShow blocks interaction through its full template;
-	# it does not add the clone's black modal veil.
-	_shade.color = Color(0, 0, 0, 0)
+	# Desktop dimming matched to the supplied original runtime frame.
+	_shade.color = Color(0, 0, 0, 0.55)
 	_shade.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_shade)
 
@@ -134,11 +141,9 @@ func _build_ui() -> void:
 	_source_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_source_canvas)
 
-	_template_backdrop = TextureRect.new()
+	_template_backdrop = preload("res://ui/rite_sprite_surface.gd").new()
 	_template_backdrop.name = "RiteTemplateBackground"
-	_template_backdrop.texture = _rite_bg_texture()
-	_template_backdrop.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_template_backdrop.stretch_mode = TextureRect.STRETCH_SCALE
+	_template_backdrop.setup(_rite_bg_texture().resource_path)
 	_template_backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_source_canvas.add_child(_template_backdrop)
 
@@ -149,15 +154,34 @@ func _build_ui() -> void:
 	_slot_layer.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_source_canvas.add_child(_slot_layer)
 	_build_slot_placeholders()
+	var foreground_path := "res://assets/original/ui/rite_bg/%s.png" % _rite_template_data().get("fg", "")
+	if ResourceLoader.exists(foreground_path):
+		_template_foreground = preload("res://ui/rite_sprite_surface.gd").new()
+		_template_foreground.name = "RiteTemplateForeground"
+		_template_foreground.setup(foreground_path)
+		_template_foreground.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_source_canvas.add_child(_template_foreground)
+		# Nonzero fg_in_slot_index inserts within the slot siblings; zero puts
+		# the foreground above the whole SlotsContainer.
+		# [SRC: RitePanelShowController.Show 0x596450 L930-966; dump.cs RiteTemplateNode+0x38]
+		var foreground_index := int(_rite_template_data().get("fg_in_slot_index", 0))
+		if foreground_index > 0:
+			_template_foreground.reparent(_slot_layer, false)
+			_slot_layer.move_child(_template_foreground, mini(foreground_index, _slot_layer.get_child_count() - 1))
 
 	_rite_panel = _panel("RiteOverlayPanel")
-	_rite_panel.clip_contents = true
+	_rite_panel.clip_contents = false
 	_source_canvas.add_child(_rite_panel)
 	_build_panel_content()
+	var template := _rite_template_data()
+	if bool(template.get("title_bg_hide", false)):
+		_rite_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	_rite_panel.get_node("RiteHelpButton").visible = not bool(template.get("title_help_btn_hide", false))
 
 	_log_label = Label.new()
 	_log_label.name = "RiteOverlayToast"
 	_log_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_log_label.add_theme_font_override("font", SOURCE_FONT)
 	_log_label.add_theme_font_size_override("font_size", 14)
 	_log_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	_source_canvas.add_child(_log_label)
@@ -180,6 +204,34 @@ func _build_slot_placeholders() -> void:
 		btn.pressed.connect(_on_slot_pressed.bind(slot_key))
 		_slot_layer.add_child(btn)
 		_slot_buttons[slot_key] = btn
+		for style_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+			btn.add_theme_stylebox_override(style_name, StyleBoxEmpty.new())
+		var template := _rite_template_data()
+		var mapping: Dictionary = _load_json("res://content/rite_template_mappings.json")
+		var entry: Dictionary = _resolved_mapping(_rite)
+		var index := _slot_keys().find(slot_key)
+		var open: Array = entry.get("slot_open", [])
+		var template_key: String = str(open[index]) if index < open.size() else slot_key
+		var slot_layout: Dictionary = template.get("slots", {}).get(template_key, {})
+		# Source IsNullOrEmpty treats JSON null like an empty override, preserving
+		# the prefab background. [SRC: RitePanelShowController.c Show 0x596450 L848-866]
+		var slot_art := str(slot_layout.get("slot_bg")) if slot_layout.get("slot_bg") != null else ""
+		if slot_art.is_empty():
+			slot_art = str(template.get("nomal_slot_bg")) if template.get("nomal_slot_bg") != null else ""
+		if slot_art.is_empty():
+			slot_art = "nomal_slot_bg"
+		var backdrop := _picture(btn, "SlotBackground", "rite_slot/" + slot_art, Rect2(6, -12, 260, 520))
+		# Source Image.SetNativeSize uses the selected slot sprite's dimensions.
+		backdrop.size = backdrop.texture.get_size()
+		backdrop.position = SOURCE_SLOT_SIZE * 0.5 - backdrop.size * 0.5
+		backdrop.visible = not bool(slot_layout.get("is_hide_bg", false))
+		backdrop.set_meta("hide_empty_and_filled", bool(slot_layout.get("is_hide_bg", false)))
+		backdrop.set_meta("hide_when_filled", bool(slot_layout.get("is_set_card_hide_bg", false)))
+		var type_name := str(_rite.get("cards_slot", {}).get(slot_key, {}).get("condition", {}).get("type", ""))
+		if ResourceLoader.exists("res://assets/original/ui/card_type_%s.png" % type_name):
+			var icon := _picture(btn, "SlotType", "card_type_" + type_name, Rect2())
+			var icon_size := icon.texture.get_size() * 1.7
+			_set_rect(icon, Rect2(SOURCE_SLOT_SIZE * 0.5 + Vector2(0, 25) - icon_size * 0.5, icon_size))
 
 		var box := VBoxContainer.new()
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -193,6 +245,7 @@ func _build_slot_placeholders() -> void:
 
 		var title := Label.new()
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		title.add_theme_font_override("font", SOURCE_FONT)
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		title.add_theme_font_size_override("font_size", 18)
 		title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
@@ -202,6 +255,7 @@ func _build_slot_placeholders() -> void:
 		var detail := Label.new()
 		detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		detail.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		detail.add_theme_font_override("font", SOURCE_FONT)
 		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		detail.add_theme_font_size_override("font_size", 9)
 		detail.add_theme_color_override("font_color", FaustTheme.TEXT_DIM)
@@ -211,117 +265,212 @@ func _build_slot_placeholders() -> void:
 
 
 func _build_panel_content() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_bottom", 14)
-	_rite_panel.add_child(margin)
-
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 6)
-	margin.add_child(col)
-
-	var title := Label.new()
-	title.text = _state.rite_display_name(_rite_id, _db) if _state != null else "%s" % _rite.get("name", str(_rite_id))
+	# Authored CommonContent child rects; the painted frame lives in the template BG.
+	# [SRC: RitePanelTitle.prefab; RitePanelTitleController.Show 0x5992a0]
+	_picture(_rite_panel, "TitleBG", "rite_title_bg_0", Rect2(559, -48, 304, 78))
+	var title := _source_label(_rite_panel, "RiteTitle", Rect2(559, -48, 304, 78), 60)
+	title.text = _state.rite_display_name(_rite_id, _db) if _state != null else str(_rite.get("name", ""))
+	preload("res://ui/source_text_style.gd").apply(title, "@RITE_PANEL_TITLE")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 60)
-	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	col.add_child(title)
-
-	var desc := Label.new()
+	title.add_theme_color_override("font_color", Color("#111711"))
+	_picture(_rite_panel, "RoundIcon", "rite_round", Rect2(754, -100, 38, 42))
+	var round_label := _source_label(_rite_panel, "Round", Rect2(798, -106, 65, 50), 50)
+	round_label.text = str(int(_rite.get("round_number", 0)))
+	var scroll := ScrollContainer.new()
+	scroll.name = "RiteDescriptionScroll"
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	# Source Viewport width is Scroll View minus 17 (RitePanelTitle.prefab).
+	scroll.get_v_scroll_bar().custom_minimum_size.x = 17.0
+	_rite_panel.add_child(scroll)
+	_set_rect(scroll, Rect2(167, 70, 710, 870))
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# RichTextLabel includes paragraph_separation after its final paragraph.
+	# Adding the same gap to VBox would count the body-to-separator gap twice.
+	content.add_theme_constant_override("separation", 0)
+	scroll.add_child(content)
+	var body := str(_rite.get("text", ""))
+	if _state != null:
+		body = _state.substitute_text(body)
+	var desc := _rich_text(body, 36)
 	desc.name = "RiteMainContent"
-	desc.text = "%s" % _rite.get("text", "")
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 36)
-	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
-	col.add_child(desc)
-
-	var sep := HSeparator.new()
-	col.add_child(sep)
-
-	var action_row := HBoxContainer.new()
-	action_row.add_theme_constant_override("separation", 8)
-	col.add_child(action_row)
-
+	# RitePanelTitle/Main Content/Scroll View/Viewport/Text is @MAIN_BODY;
+	# @RITE_TEXT belongs to the separate OpenTips node, not this content.
+	# [SRC: RitePanelTitle.prefab:4021/4345; Show 0x5992a0 text@0x48.]
+	preload("res://ui/source_text_style.gd").apply(desc, "@MAIN_BODY")
+	desc.add_theme_color_override("default_color", Color(0.86666673, 0.8352942, 0.7686275))
+	desc.add_theme_constant_override("paragraph_separation", 80)
+	content.add_child(desc)
+	var tips: Array = _rite.get("tips_text", [])
+	if not tips.is_empty():
+		var separator := TextureRect.new()
+		separator.name = "RiteTipsSeparator"
+		separator.texture = load("res://assets/original/ui/rite_log_sperator.png")
+		separator.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		separator.stretch_mode = TextureRect.STRETCH_SCALE
+		separator.custom_minimum_size.y = 6
+		separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var separator_spacing := MarginContainer.new()
+		separator_spacing.add_theme_constant_override("margin_bottom", 80)
+		content.add_child(separator_spacing)
+		separator_spacing.add_child(separator)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 0)
+		content.add_child(row)
+		var indent := Control.new()
+		indent.custom_minimum_size.x = 120
+		indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(indent)
+		var icon := TextureRect.new()
+		icon.texture = load("res://assets/original/ui/rite_tips.png")
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size = Vector2(100, 100)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		indent.add_child(icon)
+		var tip_lines: Array[String] = []
+		for tip in tips:
+			tip_lines.append(_state.substitute_text(str(tip)) if _state != null else str(tip))
+		var tip_text := _rich_text("\n".join(tip_lines), 36)
+		preload("res://ui/source_text_style.gd").apply(tip_text, "@MAIN_BODY")
+		tip_text.name = "RiteTipsText"
+		tip_text.add_theme_color_override("default_color", Color("#FCE29A"))
+		tip_text.add_theme_constant_override("paragraph_separation", 80)
+		row.add_child(tip_text)
+	var tags: Array = _rite.get("tag_tips", [])
+	for i in tags.size():
+		var tag := str(tags[i])
+		var icon := TextureRect.new()
+		icon.texture = preload("res://ui/card_widget.gd")._attribute_icon(tag)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_rite_panel.add_child(icon)
+		_set_rect(icon, Rect2(973, 410 + i * 136, 75, 75))
+		var value := _source_label(_rite_panel, "TagValue%d" % i, Rect2(1060, 410 + i * 136, 64, 75), 30)
+		value.tooltip_text = tag
+		_tag_values[tag] = value
+	_last_state_btn = _source_button("RestoreLastRiteStateButton", "rite_op_last_state", Rect2(104.9, 948, 168, 158), "恢复上次投放", _restore_last_state)
+	_close_btn = _source_button("CloseRiteButton", "rite_op_cancel", Rect2(291, 948, 168, 158), "关闭", _close_panel)
+	_resolve_btn = _source_button("ResolveRiteButton", "rite_op_confirm", Rect2(473, 948, 325, 158), "开始仪式", _resolve)
+	_stop_btn = _source_button("StopRiteButton", "rite_op_stop", Rect2(776, 944, 188, 160), "停止仪式", _stop_started_rite)
+	_source_button("RiteHelpButton", "help_button", Rect2(998, -117.5, 88, 91), "帮助", _show_rite_help)
+	var auto_btn := _source_button("AutoResult", "auto_result_deactive", Rect2(934, 947, 240, 88), "自动结算", _toggle_auto_result)
+	auto_btn.set_meta("active", false)
+	_refresh_auto_result()
+	# Settlement-only controls stay available when a result actually exists.
+	var result_tools := HBoxContainer.new()
+	result_tools.name = "ResultTools"
+	_rite_panel.add_child(result_tools)
+	_set_rect(result_tools, Rect2(167, 815, 710, 90))
 	_gold_dice_label = Label.new()
-	_gold_dice_label.add_theme_font_size_override("font_size", 14)
-	_gold_dice_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	action_row.add_child(_gold_dice_label)
-
+	result_tools.add_child(_gold_dice_label)
 	_gold_dice_btn = Button.new()
 	_gold_dice_btn.text = "投入金骰"
 	_gold_dice_btn.disabled = true
-	_gold_dice_btn.custom_minimum_size = Vector2(96, 34)
 	_gold_dice_btn.pressed.connect(_use_gold_dice_reactive)
-	action_row.add_child(_gold_dice_btn)
-
-	# Reroll: rejects the settlement with RetryException semantics — every
-	# die of the check re-rolls (unlike gold dice which add successes). The
-	# quota is the 重投 tag sum across the slotted cards.
-	# [SRC: RiteResultDiceCountPromptController.c @ OnRedraw (0x59dc40):
-	#       +0xd8 count -1, confirm gate; OnRedrawConfirm (0x59db60):
-	#       Promise.Reject(RetryException); RiteExtensions.c @ GetRerollCount
-	#       (0x392990) reads rite.cards]
+	result_tools.add_child(_gold_dice_btn)
 	_reroll_btn = Button.new()
 	_reroll_btn.text = "重掷"
-	_reroll_btn.tooltip_text = "重新掷出本场全部检定骰"
 	_reroll_btn.disabled = true
-	_reroll_btn.custom_minimum_size = Vector2(64, 34)
 	_reroll_btn.pressed.connect(_use_reroll)
-	action_row.add_child(_reroll_btn)
-
-	_last_state_btn = Button.new()
-	_last_state_btn.name = "RestoreLastRiteStateButton"
-	_last_state_btn.text = "恢复上次投放"
-	_last_state_btn.tooltip_text = "恢复此仪式上一次确认时的手动投放"
-	_last_state_btn.custom_minimum_size = Vector2(122, 34)
-	_last_state_btn.pressed.connect(_restore_last_state)
-	action_row.add_child(_last_state_btn)
-
-	_result_label = RichTextLabel.new()
+	result_tools.add_child(_reroll_btn)
+	_result_label = _rich_text("", 32)
 	_result_label.name = "RiteResult"
-	_result_label.bbcode_enabled = true
+	preload("res://ui/source_text_style.gd").apply(_result_label, "@RITE_SETTLEMENT_TEXT")
 	_result_label.fit_content = false
-	_result_label.scroll_active = true
-	_result_label.add_theme_font_size_override("normal_font_size", 12)
-	_result_label.custom_minimum_size = Vector2(0, 58)
-	col.add_child(_result_label)
-
-	var bottom_row := HBoxContainer.new()
-	bottom_row.add_theme_constant_override("separation", 10)
-	col.add_child(bottom_row)
-
-	var bottom_spacer := Control.new()
-	bottom_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bottom_row.add_child(bottom_spacer)
-
-	_close_btn = _round_button("×")
-	_close_btn.name = "CloseRiteButton"
-	_close_btn.tooltip_text = "关闭"
-	_close_btn.custom_minimum_size = Vector2(44, 42)
-	_close_btn.pressed.connect(_close_panel)
-	bottom_row.add_child(_close_btn)
-
-	_stop_btn = _round_button("⏸")
-	_stop_btn.name = "StopRiteButton"
-	_stop_btn.tooltip_text = "停止仪式"
-	_stop_btn.custom_minimum_size = Vector2(44, 42)
-	_stop_btn.pressed.connect(_stop_started_rite)
-	bottom_row.add_child(_stop_btn)
-
-	_resolve_btn = _round_button("✓")
-	_resolve_btn.name = "ResolveRiteButton"
-	_resolve_btn.tooltip_text = "结算仪式"
-	_resolve_btn.custom_minimum_size = Vector2(52, 42)
-	_resolve_btn.pressed.connect(_resolve)
-	bottom_row.add_child(_resolve_btn)
-
+	_rite_panel.add_child(_result_label)
+	_set_rect(_result_label, Rect2(167, 70, 710, 720))
+	result_tools.visible = false
+	_result_label.visible = false
 	_update_stop_button()
 	_update_last_state_button()
 
-	_result_label.text = ""
+func _source_label(parent: Control, node_name: String, rect: Rect2, font_size: int) -> Label:
+	var label := Label.new()
+	label.name = node_name
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_font_override("font", SOURCE_FONT)
+	label.add_theme_color_override("font_color", Color("#c9bd7b"))
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(label)
+	_set_rect(label, rect)
+	return label
+
+func _rich_text(value: String, font_size: int) -> RichTextLabel:
+	var text := RichTextLabel.new()
+	text.bbcode_enabled = true
+	text.fit_content = true
+	text.scroll_active = false
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text.add_theme_font_size_override("normal_font_size", font_size)
+	text.add_theme_font_override("normal_font", SOURCE_FONT)
+	text.add_theme_color_override("default_color", Color("#c1c2ac"))
+	text.text = preload("res://ui/source_rich_text.gd").to_bbcode(value)
+	return text
+
+func _picture(parent: Control, node_name: String, asset: String, rect: Rect2) -> TextureRect:
+	var picture := TextureRect.new()
+	picture.name = node_name
+	picture.texture = load("res://assets/original/ui/%s.png" % asset)
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(picture)
+	_set_rect(picture, rect)
+	return picture
+
+func _source_button(node_name: String, asset: String, rect: Rect2, hint: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.add_theme_font_override("font", SOURCE_FONT)
+	button.name = node_name
+	button.tooltip_text = hint
+	for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+	_rite_panel.add_child(button)
+	_set_rect(button, rect)
+	var art := _picture(button, "Art", asset, Rect2(Vector2.ZERO, rect.size))
+	button.mouse_entered.connect(func(): art.modulate = Color(1.2, 1.2, 1.2))
+	button.mouse_exited.connect(func(): art.modulate = Color.WHITE)
+	button.pressed.connect(callback)
+	return button
+
+func _toggle_auto_result() -> void:
+	# [SRC: RitePanelShowController.SetAutoResult 0x595c30; Player +0x130]
+	if _state.auto_result_rites.has(_rite_id):
+		_state.auto_result_rites.erase(_rite_id)
+	elif int(_rite.get("auto_result", 0)) != 0:
+		_state.auto_result_rites.append(_rite_id)
+	_refresh_auto_result()
+
+func _refresh_auto_result() -> void:
+	var button := _rite_panel.get_node("AutoResult") as Button
+	button.disabled = int(_rite.get("auto_result", 0)) == 0
+	var active: bool = _state != null and _state.auto_result_rites.has(_rite_id)
+	button.get_node("Art").texture = load("res://assets/original/ui/auto_result_%s.png" % ("active" if active else "deactive"))
+
+func _show_rite_help() -> void:
+	var help := Control.new()
+	help.name = "RiteHelp"
+	help.size = SOURCE_CANVAS_SIZE
+	_source_canvas.add_child(help)
+	var mask := ColorRect.new()
+	mask.color = Color(0, 0, 0, 0.82)
+	mask.size = SOURCE_CANVAS_SIZE
+	help.add_child(mask)
+	mask.gui_input.connect(func(event: InputEvent):
+		if event is InputEventMouseButton and event.pressed:
+			help.queue_free()
+	)
+	_picture(help, "Prompt", "rite_help", Rect2(0, 0, 3840, 2160))
+	var labels: Dictionary = _load_json("res://content/ui.json")
+	var rows := [["MAIN", Vector2(448, 1583), Vector2(1000, 200)], ["DESC", Vector2(1879, 1583), Vector2(600, 200)], ["TIME", Vector2(2187, 356), Vector2(600, 200)], ["TAG", Vector2(2543, 1334), Vector2(600, 200)]]
+	for row in rows:
+		var value: String = str(labels.get("RITE_HELP_%s_PROMPT" % row[0], {}).get("zhCN", ""))
+		var label := _rich_text(preload("res://ui/main_help.gd")._to_bbcode(value), 50)
+		preload("res://ui/source_text_style.gd").apply(label, "@HELP_TEXT")
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		help.add_child(label)
+		_set_rect(label, Rect2(row[1] - row[2] * Vector2(0.5, 1), row[2]))
 
 
 func _build_slot_summary() -> void:
@@ -350,12 +499,17 @@ func _apply_layout() -> void:
 	_set_rect(_slot_layer, Rect2(Vector2.ZERO, SOURCE_CANVAS_SIZE))
 	var template := _rite_template_data()
 	var bg_offset := _template_pos(template.get("bg_pos", {}))
+	var native_size: Vector2 = _template_backdrop.texture.get_size()
+	var position_center := SOURCE_CANVAS_SIZE * 0.5 + Vector2(bg_offset.x, -bg_offset.y)
 	_set_rect(_template_backdrop, Rect2(
-		SOURCE_TEMPLATE_BG_RECT.position + Vector2(bg_offset.x, -bg_offset.y),
-		SOURCE_TEMPLATE_BG_RECT.size
+		position_center - native_size * 0.5,
+		native_size
 	))
+	if _template_foreground != null:
+		var foreground_size: Vector2 = _template_foreground.texture.get_size()
+		_set_rect(_template_foreground, Rect2(position_center - foreground_size * 0.5, foreground_size))
 	var title_pos := _template_pos(template.get("title_pos", {}), SOURCE_DEFAULT_TITLE_POS)
-	var title_pivot := SOURCE_POSITION_CENTER + Vector2(title_pos.x, -title_pos.y)
+	var title_pivot := position_center + Vector2(title_pos.x, -title_pos.y)
 	_set_rect(_rite_panel, Rect2(
 		title_pivot - Vector2(SOURCE_TITLE_SIZE.x, SOURCE_TITLE_SIZE.y * 0.5),
 		SOURCE_TITLE_SIZE
@@ -380,9 +534,36 @@ func _set_rect(node: Control, rect: Rect2) -> void:
 func refresh() -> void:
 	_refresh_slot_visuals()
 	_refresh_gold_label()
+	_update_result_wait_controls()
+
+
+# Result actions await their prompt promises before Settlement b__8 can
+# remove the rite (RVA 0x5b4850). The legacy resolver is still eager, but
+# its UI must not permit commit/retry/rollback across an unresolved prompt.
+func _waiting_for_result_operations() -> bool:
+	return _resolution_pending and _state != null and not _state.pending_operations.is_empty()
+
+
+func _process(_delta: float) -> void:
+	var waiting := _waiting_for_result_operations()
+	if waiting != _last_result_waiting:
+		_update_result_wait_controls()
+	if _close_after_commit and _resolution_pending and not waiting:
+		_commit_resolution()
+
+
+func _update_result_wait_controls() -> void:
+	_last_result_waiting = _waiting_for_result_operations()
+	_update_resolve_button()
+	_update_gold_button()
+	_update_reroll_button()
+	if _close_btn != null:
+		_close_btn.disabled = _last_result_waiting
 
 
 func _on_slot_pressed(slot_key: String) -> void:
+	if not _can_edit_slot(slot_key):
+		return
 	if _resolution_pending or _resolution_committed:
 		set_log("请先确认结果或关闭仪式")
 		return
@@ -392,7 +573,7 @@ func _on_slot_pressed(slot_key: String) -> void:
 			set_log("%s 已清空" % slot_key.to_upper())
 			_after_placement_changed()
 		else:
-			set_log("先选择一张牌")
+			_focus_qualified_hand(slot_key)
 		return
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(_selected_card_uid, _db)
@@ -406,6 +587,10 @@ func _on_slot_pressed(slot_key: String) -> void:
 
 
 func can_drop_card_on_slot(slot_key: String, data: Variant) -> bool:
+	if not (data is Dictionary) or not _can_edit_slot(slot_key):
+		return false
+	if not preload("res://ui/rite_slot_access.gd").can_move_source(_state, _db, data):
+		return false
 	if _resolution_pending or _resolution_committed:
 		return false
 	var card_uid := _dragged_card_uid(data)
@@ -417,6 +602,10 @@ func can_drop_card_on_slot(slot_key: String, data: Variant) -> bool:
 
 
 func drop_card_on_slot(slot_key: String, data: Variant) -> void:
+	if not (data is Dictionary) or not _can_edit_slot(slot_key):
+		return
+	if not preload("res://ui/rite_slot_access.gd").can_move_source(_state, _db, data):
+		return
 	if _resolution_pending or _resolution_committed:
 		return
 	var card_uid := _dragged_card_uid(data)
@@ -465,6 +654,9 @@ func _dragged_card_uid(data: Variant) -> int:
 
 
 func _after_placement_changed() -> void:
+	_qualified_slot = ""
+	_qualified_bags.clear()
+	_qualified_bag_index = -1
 	_resolve_baseline.clear()
 	_last_result = null
 	_gold_used_this_resolve = 0
@@ -493,16 +685,38 @@ func _refresh_slot_visuals() -> void:
 			var card: Dictionary = _state.card_data_for(card_uid, _db)
 			title.text = ""
 			detail.text = ""
-			btn.add_theme_stylebox_override("normal", _slot_style(FaustTheme.GOLD_BRIGHT, true))
+			btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 			_render_slot_card(btn, slot_key, card_uid, card)
 		else:
-			title.text = slot_key.to_upper()
-			detail.text = _slot_brief(slot_def)
-			btn.add_theme_stylebox_override("normal", _slot_style())
+			title.text = ""
+			detail.text = ""
+			btn.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
 			_clear_slot_card(btn)
+		var type_icon := btn.get_node_or_null("SlotType") as TextureRect
+		var backdrop := btn.get_node_or_null("SlotBackground") as TextureRect
+		if backdrop != null:
+			backdrop.visible = not bool(backdrop.get_meta("hide_empty_and_filled", false)) and not (
+				_placed.has(slot_key) and bool(backdrop.get_meta("hide_when_filled", false)))
+		if type_icon != null:
+			type_icon.visible = not _placed.has(slot_key)
+	_refresh_tag_values()
+
+
+func _refresh_tag_values() -> void:
+	for tag in _tag_values:
+		var total := 0
+		for uid in _placed.values():
+			var card: Dictionary = _state.card_data_for(int(uid), _db)
+			var slot_key: String = str(_placed.find_key(uid))
+			if bool(_rite.get("cards_slot", {}).get(slot_key, {}).get("is_enemy", false)):
+				continue
+			total += int(card.get("tag", {}).get(tag, 0))
+		_tag_values[tag].text = str(total)
 
 
 func _resolve() -> void:
+	if _running_before_settlement():
+		return
 	if _resolution_pending:
 		_commit_resolution()
 		return
@@ -523,6 +737,7 @@ func _resolve() -> void:
 			_state.record_last_round_rite_data(_rite_uid, _db)
 			if not _state.start_rite_instance(_rite_uid):
 				return
+			_update_last_state_button()
 			if int(_rite.get("auto_result", 0)) == 1:
 				# auto_result rites settle without player interaction.
 				# [SRC: GameController.c @ Settlement (0x556ae0) lines 4520-4526
@@ -542,8 +757,8 @@ func _resolve() -> void:
 				_resolve_baseline = SaveSystem.serialize(_state)
 				_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
 				_do_resolve()
+				_close_after_commit = true
 				_commit_resolution()
-				closed.emit()
 				return
 			if int(_rite.get("round_number", 0)) > 0:
 				_log_label.text = "仪式开始，将在 %d 天后结算。" % int(_rite.get("round_number", 0))
@@ -597,6 +812,8 @@ func _do_resolve() -> void:
 	_refresh_gold_label()
 	_update_resolve_button()
 	_update_reroll_button()
+	_update_result_wait_controls()
+	_refresh_game_screen()
 
 
 ## Commit the already-previewed settlement after any gold-dice retries are
@@ -607,6 +824,8 @@ func _do_resolve() -> void:
 ##       (RVA 0x5b4850), RiteResultDiceCountPromptController.c @ OnGoldConfirm
 ##       (RVA 0x59d8b0)]
 func _commit_resolution() -> void:
+	if _waiting_for_result_operations():
+		return
 	if not _resolution_pending or _last_result == null:
 		return
 	var instance = _state.get_rite_instance(_rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
@@ -622,12 +841,20 @@ func _commit_resolution() -> void:
 	# A rite-driven game over fires only after the result is committed.
 	if bool(_last_result.deferred.get("over", false)):
 		game_over_requested.emit()
+	if _close_after_commit:
+		_close_after_commit = false
+		closed.emit()
 
 
 ## Closing while dice/result preview is open abandons the uncommitted result.
 ## The baseline is taken after card placement, so the rite remains open with
 ## the same placed cards, while coin/events/loot and spent gold dice roll back.
 func _close_panel() -> void:
+	if _waiting_for_result_operations():
+		return
+	_qualified_slot = ""
+	_qualified_bags.clear()
+	_qualified_bag_index = -1
 	if _resolution_pending and not _resolve_baseline.is_empty() and _state != null:
 		SaveSystem.deserialize(_resolve_baseline, _state, _db)
 		_resolution_pending = false
@@ -640,6 +867,14 @@ func _close_panel() -> void:
 		_update_gold_button()
 		_update_resolve_button()
 		_refresh_game_screen()
+	# The source writes this only when the committed 5010009 result panel is
+	# closed. It does not make `final_pin` rites in general terminal rites.
+	# GameController then consumes its transient flag at the next-day boundary;
+	# MapController.Start also restores the background directly from Player.
+	# [SRC: RiteResultPanelController.<>c__DisplayClass62_0.<OnClose>b__0
+	#       (RVA 0x5b51c0); MapController.Start (RVA 0x56a890).]
+	if _resolution_committed and _rite_id == 5010009 and _state != null:
+		_state.end_open = true
 	closed.emit()
 
 
@@ -675,7 +910,7 @@ func _update_gold_button() -> void:
 	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null and _resolution_pending
 	if _gold_dice_btn == null:
 		return
-	_gold_dice_btn.disabled = not can_spend
+	_gold_dice_btn.disabled = not can_spend or _waiting_for_result_operations()
 	if can_spend:
 		_gold_dice_btn.text = "投入金骰"
 	else:
@@ -683,6 +918,8 @@ func _update_gold_button() -> void:
 
 
 func _use_gold_dice_reactive() -> void:
+	if _waiting_for_result_operations():
+		return
 	if not _resolution_pending or _state.gold_dice <= 0:
 		return
 	GameAudio.cue("drop_card_gold.ogg")
@@ -697,6 +934,8 @@ func _use_gold_dice_reactive() -> void:
 ## previous result first). [SRC: OnRedrawConfirm (0x59db60) rejects the
 ## settlement promise with RetryException; dice re-roll, gold dice do not]
 func _use_reroll() -> void:
+	if _waiting_for_result_operations():
+		return
 	if not _resolution_pending or _rerolls_left <= 0:
 		return
 	_rerolls_left -= 1
@@ -717,7 +956,7 @@ func _reroll_count() -> int:
 func _update_reroll_button() -> void:
 	if _reroll_btn == null:
 		return
-	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0)
+	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0) or _waiting_for_result_operations()
 
 
 ## OnStop: a started multi-day rite can be halted. Cards stay in their slots,
@@ -726,7 +965,7 @@ func _update_reroll_button() -> void:
 func _stop_started_rite() -> void:
 	if _state == null or _rite_uid <= 0 or not _state.has_method("stop_rite_instance"):
 		return
-	if _resolution_pending or _resolution_committed:
+	if _resolution_pending or _resolution_committed or not _can_stop_this_round():
 		return
 	if _state.stop_rite_instance(_rite_uid):
 		_log_label.text = "仪式已停止，卡牌保留在槽位中。"
@@ -738,11 +977,16 @@ func _stop_started_rite() -> void:
 func _update_stop_button() -> void:
 	if _stop_btn == null:
 		return
-	var started := false
-	if _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
-		var instance = _state.get_rite_instance(_rite_uid)
-		started = instance != null and instance.start
-	_stop_btn.visible = started and int(_rite.get("round_number", 0)) > 0
+	_stop_btn.visible = _can_stop_this_round()
+
+
+func _can_stop_this_round() -> bool:
+	# [SRC: RitePanelTitleController.Show 0x5992a0: Stop@0x70 is active
+	# only when start && start_round == Player.round; dump.cs:324430.]
+	if _state == null or _rite_uid <= 0:
+		return false
+	var instance = _state.get_rite_instance(_rite_uid)
+	return instance != null and instance.start and instance.start_round == _state.round_number
 
 
 func _update_last_state_button() -> void:
@@ -754,6 +998,7 @@ func _update_last_state_button() -> void:
 		started = instance != null and instance.start
 	var has_snapshot: bool = _state != null and _state.has_method("get_last_round_rite_data") \
 		and not _state.get_last_round_rite_data(_rite_id).is_empty()
+	_last_state_btn.visible = not started
 	_last_state_btn.disabled = not has_snapshot or started or _resolution_pending or _resolution_committed
 
 
@@ -809,10 +1054,19 @@ func _restore_last_state() -> void:
 	_after_placement_changed()
 
 
+## [SRC: GameController.UpdateSingleRite 0x55ab10: Rite.life@0x2c
+## < RiteNode.round_number@0x44 skips Settlement; dump.cs:392403/393174.]
+func _running_before_settlement() -> bool:
+	if _state == null or _rite_uid <= 0:
+		return false
+	var instance = _state.get_rite_instance(_rite_uid)
+	return instance != null and instance.start and instance.life < int(_rite.get("round_number", 0))
+
+
 func _update_resolve_button() -> void:
 	if _resolve_btn == null:
 		return
-	_resolve_btn.disabled = _resolution_committed
+	_resolve_btn.disabled = _resolution_committed or _waiting_for_result_operations() or _running_before_settlement()
 	if _resolution_pending:
 		_resolve_btn.tooltip_text = "确认结果"
 	elif _state != null and _rite_uid > 0 and _state.has_method("get_rite_instance"):
@@ -829,6 +1083,11 @@ func _update_resolve_button() -> void:
 func _refresh_gold_label() -> void:
 	if _gold_dice_label and _state != null:
 		_gold_dice_label.text = "金骰: %d" % _state.gold_dice
+	if _rite_panel != null:
+		var has_result := _last_result != null
+		_rite_panel.get_node("ResultTools").visible = has_result
+		_rite_panel.get_node("RiteDescriptionScroll").visible = not has_result
+		_result_label.visible = has_result
 
 
 func _prepare_table_from_placements() -> void:
@@ -866,6 +1125,8 @@ func _place_card_in_slot(slot_key: String, card_uid: int, source: String, source
 
 
 func _return_slot_to_hand(slot_key: String) -> void:
+	if not _can_edit_slot(slot_key):
+		return
 	if _resolution_pending or _resolution_committed:
 		return
 	if not _placed.has(slot_key):
@@ -883,6 +1144,8 @@ func _return_slot_to_hand(slot_key: String) -> void:
 
 
 func return_card_to_hand(card_uid: int, source_slot: String) -> void:
+	if not _can_edit_slot(source_slot):
+		return
 	if _resolution_pending or _resolution_committed:
 		return
 	var slot_num: int = source_slot.substr(1).to_int() if source_slot.begins_with("s") else int(_state.slot_for_table_card(card_uid, _rite_uid))
@@ -912,6 +1175,7 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 		var dec = SudanCards.decode(int(card_copy.get("id", 0)))
 		card_copy["name"] = "%s%s" % [dec.rank, dec.action]
 	var widget := CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
+	widget.drag_allowed = func(): return _can_edit_slot(slot_key)
 	widget.name = "PlacedCard_%s" % slot_key.to_upper()
 	widget.set_anchors_preset(Control.PRESET_FULL_RECT)
 	widget.offset_left = 0
@@ -920,6 +1184,10 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 	widget.offset_bottom = 0
 	widget.clicked.connect(func(_id: int, _card: Dictionary): _return_slot_to_hand(slot_key); _after_placement_changed())
 	btn.add_child(widget)
+
+
+func _can_edit_slot(slot_key: String) -> bool:
+	return not _resolution_pending and not _resolution_committed and preload("res://ui/rite_slot_access.gd").can_edit(_state, _db, _rite_uid, slot_key)
 
 
 func _rite_state_from_placements() -> Dictionary:
@@ -943,6 +1211,37 @@ func _refresh_game_screen() -> void:
 			p.refresh()
 			return
 		p = p.get_parent()
+
+
+# CardSlotController.OnPointerClick 0x53c050 ->
+# GameController.HandCardSortByCondition 0x5515a0 L8175-8240/8430-8470.
+# dump.cs GameController qualified_bags_has_cards/index +0x310/+0x318.
+func _focus_qualified_hand(slot_key: String) -> void:
+	var slot: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
+	if _qualified_slot != slot_key:
+		_qualified_bags.clear()
+		_qualified_bag_index = -1
+	_qualified_slot = slot_key
+	if _qualified_bags.is_empty():
+		for page in range(4):
+			for uid in _state.visible_rail_card_uids(page):
+				if _slot_accepts_card(slot, _state.card_data_for(uid, _db)):
+					_qualified_bags.append(page)
+					break
+		if _qualified_bags.is_empty():
+			return
+		_qualified_bag_index = maxi(0, _qualified_bags.find(_state.current_bag_index))
+	else:
+		_qualified_bag_index = (_qualified_bag_index + 1) % _qualified_bags.size()
+	_state.set_current_bag_index(_qualified_bags[_qualified_bag_index])
+	_state.sort_current_hand_by_condition(_db, func(card: Dictionary): return _slot_accepts_card(slot, card))
+	_refresh_game_screen()
+	var screen := get_parent()
+	while screen != null:
+		if screen.has_method("focus_qualified_hand"):
+			screen.call_deferred("focus_qualified_hand", func(card: Dictionary): return _slot_accepts_card(slot, card))
+			return
+		screen = screen.get_parent()
 
 
 func _slot_accepts_sudan(slot_def: Dictionary) -> bool:
@@ -1043,21 +1342,13 @@ static var _rite_bg_cache: Dictionary = {}
 ## rite.mapping_id -> rite_template_mappings.json entry -> template bg name
 ## -> assets/original/ui/rite_bg/<name>.png.
 static func _rite_bg_texture_for(rite: Dictionary) -> Texture2D:
-	var mapping_id := int(rite.get("mapping_id", 0))
-	var cache_key := "m%d" % mapping_id
+	var entry := _resolved_mapping(rite)
+	var template_id := int(entry.get("template_id", 8000001))
+	var cache_key := "t%d" % template_id
 	if _rite_bg_cache.has(cache_key):
 		return _rite_bg_cache[cache_key]
-	var bg_name := "nomal_rite_bg"
-	var mapping: Variant = _load_json("res://content/rite_template_mappings.json")
-	if mapping is Dictionary:
-		var entry = mapping.get(str(mapping_id))
-		if not (entry is Dictionary) or entry.is_empty():
-			entry = mapping.get("0")
-		if entry is Dictionary:
-			var template_id := int(entry.get("template_id", 8000001))
-			var template = _load_json("res://content/rite_template/%d.json" % template_id)
-			if template is Dictionary and str(template.get("bg", "")) != "":
-				bg_name = str(template["bg"])
+	var template: Dictionary = _load_json("res://content/rite_template/%d.json" % template_id)
+	var bg_name := str(template.get("bg", "nomal_rite_bg"))
 	var path := "res://assets/original/ui/rite_bg/%s.png" % bg_name
 	var texture: Texture2D = null
 	if ResourceLoader.exists(path):
@@ -1153,24 +1444,32 @@ func _slot_rects_for_keys(keys: Array[String]) -> Dictionary:
 	#       CardSlot.prefab root = 272x496]
 	var template := _rite_template_data()
 	var template_slots: Dictionary = template.get("slots", {}) if template.get("slots", {}) is Dictionary else {}
+	var mappings: Dictionary = _load_json("res://content/rite_template_mappings.json")
+	var mapping: Dictionary = _resolved_mapping(_rite)
+	var slot_open: Array = mapping.get("slot_open", [])
+	var bg_offset := _template_pos(template.get("bg_pos", {}))
+	var position_center := SOURCE_CANVAS_SIZE * 0.5 + Vector2(bg_offset.x, -bg_offset.y)
 	for slot_key in keys:
-		var slot_def: Dictionary = template_slots.get(slot_key, {}) if template_slots.get(slot_key, {}) is Dictionary else {}
+		var index := keys.find(slot_key)
+		var template_key: String = str(slot_open[index]) if index < slot_open.size() else slot_key
+		var slot_def: Dictionary = template_slots.get(template_key, {})
 		if slot_def.is_empty():
 			continue
 		var pos := _template_pos(slot_def.get("pos", {}))
 		var scale_xy := _template_pos(slot_def.get("scale", {}), Vector2.ONE)
 		var btn := _slot_buttons.get(slot_key) as Control
 		if btn != null:
+			btn.pivot_offset = SOURCE_SLOT_SIZE * 0.5
 			btn.rotation_degrees = -float(slot_def.get("rotation_z", 0))
-			btn.scale = Vector2.ONE
+			btn.scale = scale_xy
 		# Template `pos` is measured from SlotsContainer's lower-left. The
 		# original controller converts it to a centered localPosition by
 		# subtracting half the RectTransform width/height before assigning it.
-		var center := SOURCE_POSITION_CENTER + Vector2(
+		var center := position_center + Vector2(
 			pos.x - SOURCE_SLOTS_CONTAINER_SIZE.x * 0.5,
 			SOURCE_SLOTS_CONTAINER_SIZE.y * 0.5 - pos.y
 		)
-		rects[slot_key] = _slot_rect_from_center(center, SOURCE_SLOT_SIZE * scale_xy)
+		rects[slot_key] = _slot_rect_from_center(center, SOURCE_SLOT_SIZE)
 	return rects
 
 
@@ -1182,14 +1481,7 @@ func _template_pos(value: Variant, fallback := Vector2.ZERO) -> Vector2:
 
 ## The resolved rite_template entry driving this panel's layout.
 func _rite_template_data() -> Dictionary:
-	var mapping: Variant = _load_json("res://content/rite_template_mappings.json")
-	if not (mapping is Dictionary):
-		return {}
-	var entry = mapping.get(str(int(_rite.get("mapping_id", 0))))
-	if not (entry is Dictionary) or entry.is_empty():
-		entry = mapping.get("0")
-	if not (entry is Dictionary):
-		return {}
+	var entry := _resolved_mapping(_rite)
 	var template: Variant = _load_json("res://content/rite_template/%d.json" % int(entry.get("template_id", 8000001)))
 	return template if template is Dictionary else {}
 
@@ -1222,3 +1514,15 @@ func _slot_brief(slot_def: Dictionary) -> String:
 	if cond.is_empty():
 		return "任意"
 	return " / ".join(cond.keys())
+
+
+## Source resolves absent/undersized mappings to mapping 0 before loading the
+## template, so BG, slots and title must all share this decision.
+## [SRC: RitePanelShowController.Show 0x596450 L380-438;
+##       dump.cs RiteNode.cards_slot / RiteTemplateMappingNode.slot_open]
+static func _resolved_mapping(rite: Dictionary) -> Dictionary:
+	var mappings: Dictionary = _load_json("res://content/rite_template_mappings.json")
+	var entry: Dictionary = mappings.get(str(int(rite.get("mapping_id", 0))), mappings["0"])
+	if entry.get("slot_open", []).size() < rite.get("cards_slot", {}).size():
+		return mappings["0"]
+	return entry

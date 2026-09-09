@@ -33,6 +33,7 @@ var hand: Array[int] = []
 # Visual order for the unified bottom card rail, including hand and active
 # sudan cards. Gameplay ownership still lives in hand/active_sudan_cards.
 var rail_order: Array[int] = []
+var current_bag_index := 0
 # Compatibility read view for table queries. Placement is owned exclusively by
 # CardInstance.zone/rite_uid/slot_key; this list is rebuilt for every read so
 # callers cannot create a second mutable card/tag state.
@@ -398,6 +399,7 @@ func card_data_for(uid: int, db) -> Dictionary:
 	card["instance_uid"] = instance.uid
 	card["tag"] = effective_card_tags(instance.uid, db)
 	card["count"] = instance.count
+	card["life"] = instance.life
 	card["is_lost"] = instance.is_lost
 	card["rare"] = clampi(int(card.get("rare", 1)) + instance.rare_up, 1, 4)
 	var player_name := str(player_card_names.get(instance.card_id, ""))
@@ -750,6 +752,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	next_card_uid = 1
 	player_actor_uid = 0
 	rail_order.clear()
+	current_bag_index = 0
 	difficulty_index = diff_index
 	difficulty_config = db.get_difficulty(diff_index)
 	# A fresh run starts from fresh counters (new Player) and the unlimited
@@ -1324,15 +1327,65 @@ func sync_rail_order() -> void:
 	_sync_hand_order_from_rail()
 
 
-func visible_rail_card_uids() -> Array[int]:
+func set_current_bag_index(index: int) -> int:
+	# [SRC: PlayerExtensions.SetCurrentBagIndex 0x38f500; Player.BagIndex@0x150.]
+	if index >= 0 and index < 4:
+		current_bag_index = index
+	return current_bag_index
+
+
+func visible_rail_card_uids(bag_index: int = -1) -> Array[int]:
 	sync_rail_order()
+	var page := current_bag_index if bag_index < 0 else bag_index
 	var out: Array[int] = []
 	for uid in rail_order:
 		if card_is_on_table(int(uid)):
 			continue
+		var instance = get_card_instance(int(uid))
+		if instance == null or int(instance.bag) != page:
+			continue
 		if int(uid) in hand or is_active_sudan_card(int(uid)):
 			out.append(int(uid))
 	return out
+
+
+## [SRC: GameController.HandCardSortByCondition 0x5515a0 writes bagpos=i+1;
+## comparator 0x56f1c0 shared with FlashAndSortCard (dump.cs:319328),
+## CardExtensions.CompareBagPos 0x37eff0; Card id/uid/bagpos offsets
+## independently confirmed in dump.cs:389593.]
+func sort_current_hand_by_condition(db, validator: Callable) -> Array[int]:
+	var page := visible_rail_card_uids()
+	var qualified := {}
+	for uid in page:
+		qualified[uid] = bool(validator.call(card_data_for(uid, db)))
+	page.sort_custom(func(a: int, b: int) -> bool:
+		if qualified[a] != qualified[b]:
+			return qualified[a]
+		var left = get_card_instance(a)
+		var right = get_card_instance(b)
+		var left_pos: int = left.bag_pos if left.bag_pos > 0 else 2147483647
+		var right_pos: int = right.bag_pos if right.bag_pos > 0 else 2147483647
+		if left_pos != right_pos:
+			return left_pos < right_pos
+		if left.card_id != right.card_id:
+			return left.card_id < right.card_id
+		return left.uid < right.uid
+	)
+	var page_uids := {}
+	var matches: Array[int] = []
+	for index in page.size():
+		var uid := page[index]
+		page_uids[uid] = true
+		get_card_instance(uid).bag_pos = index + 1
+		if qualified[uid]:
+			matches.append(uid)
+	var next := 0
+	for index in rail_order.size():
+		if page_uids.has(rail_order[index]):
+			rail_order[index] = page[next]
+			next += 1
+	_sync_hand_order_from_rail()
+	return matches
 
 
 func add_available_rite(id: int, db = null, rng = null) -> int:
@@ -1935,10 +1988,8 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 			trigger_ctx["acting_card"] = card
 			trigger_ctx["acting_card_id"] = int(card.get("id", 0))
 	var matched: Array[int] = event_runtime.fire(timing, trigger_ctx)
-	# Matched events run their settlements immediately; only the ones whose
-	# settlement carries interaction (prompts/choices) enter the display
-	# queue. World-initialization events (hospital activation, scheduled
-	# rite generation, counters) stay silent like the original's DoSettlements.
+	# Matched events enter the serial operation runner. Interaction suspends
+	# the remaining actions; silent actions need no additional event panel.
 	# [SRC: EventTrigger.c @ DoSettlements (0x4fb1c0): fire -> settle;
 	#       UI panels only for interaction-bearing payloads]
 	if _event_rng == null:
@@ -1951,8 +2002,6 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 		var merged: Dictionary = DeferredEffects.execute_event(event, self, event_runtime._db, settle_rng, trigger_ctx)
 		if bool(merged.get("over", false)):
 			over_pending = true
-		if not merged.get("prompts", []).is_empty() or not merged.get("choose", {}).is_empty():
-			queue_event(int(eid), trigger_ctx)
 	return matched
 
 

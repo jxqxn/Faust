@@ -131,6 +131,7 @@ static func serialize(state) -> Dictionary:
 		"armageddon_rite_id": state.armageddon_rite_id,
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
+		"current_bag_index": state.current_bag_index,
 		"sudan_deck": state.sudan_deck.duplicate(),
 		"sudan_pool_tags": state.sudan_pool_tags.duplicate(true),
 		"auto_gen_sudan_card": state.auto_gen_sudan_card,
@@ -258,6 +259,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		)
 		state.active_sudan_cards.append(asc)
 	state.rail_order.clear()
+	state.set_current_bag_index(int(data.get("current_bag_index", 0)))
 	for cid in data.get("rail_order", []):
 		state.rail_order.append(int(cid))
 	state.rite_instances.clear()

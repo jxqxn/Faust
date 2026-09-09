@@ -175,6 +175,9 @@ func test_rite_view_builds_dynamic_slots_from_config():
 
 	assert_eq(view._slot_buttons.size(), 7, "rite UI should render every configured slot")
 	assert_true(view._slot_buttons.has("s7"), "slot generation should not stop at s4")
+	for button in view._slot_buttons.values():
+		var background := button.get_node("SlotBackground") as TextureRect
+		assert_not_null(background.texture, "null template background retains the default slot texture")
 
 func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	var rng := RNG.new(94)
@@ -364,6 +367,24 @@ func test_manual_rite_settlement_waits_for_confirmation_before_removing_instance
 	assert_signal_emitted(view, "resolved", "only the committed settlement emits resolved")
 
 
+func test_closing_committed_5010009_result_opens_terminal_map_state():
+	var rng := RNG.new(9609)
+	var state := GameState.new()
+	state.setup_new_run(db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5010009)
+	view._resolution_committed = true
+	view._close_panel()
+	assert_true(state.end_open, "OnClose b__0 writes Player.end_open for exactly rite 5010009")
+
+	state.end_open = false
+	var other := _owned(RiteView.new()) as RiteView
+	other.setup(state, db, rng, 5000001)
+	other._resolution_committed = true
+	other._close_panel()
+	assert_false(state.end_open, "other final_pin or ordinary rites cannot synthesize terminal map state")
+
+
 func test_rite_view_binds_to_existing_runtime_instance_when_no_uid_is_supplied():
 	var rng := RNG.new(98)
 	var state := GameState.new()
@@ -440,6 +461,162 @@ func _db_with_manual_rites() -> ConfigDB:
 		"settlement_extre": [], "auto_begin": 0, "auto_result": 0,
 	}
 	return local_db
+
+
+func test_started_rite_blocks_slot_click_drag_and_desktop_return_until_stopped():
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(510)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992003)
+	add_child(view)
+	await wait_process_frames(2)
+	var uid: int = state.player_actor_uid
+	view._place_card_in_slot("s1", uid, "hand", "")
+	view._refresh_slot_visuals()
+	var data := {"type": "card", "card_uid": uid, "source": "slot", "source_slot": "s1", "source_rite_uid": view._rite_uid}
+	var screen = _owned(preload("res://ui/game_screen.gd").new())
+	screen._state = state
+	screen._db = local_db
+	assert_false(view._can_edit_slot("s3"), "automatic adsorption never allows manual editing")
+	state.get_rite_instance(view._rite_uid).start = true
+	state.get_rite_instance(view._rite_uid).start_round = state.round_number
+	view._on_slot_pressed("s1")
+	view.return_card_to_hand(uid, "s1")
+	view.drop_card_on_slot("s2", data)
+	screen.drop_card_to_hand(data)
+	assert_eq(state.cards_in_slot(1, view._rite_uid).size(), 1, "all return and move routes retain the running card")
+	assert_true(state.cards_in_slot(2, view._rite_uid).is_empty())
+	assert_false(screen.can_drop_card_to_hand(data))
+	assert_false(view.can_drop_card_on_slot("s2", data))
+	var widget = view._slot_buttons["s1"].get_node("PlacedCard_S1")
+	assert_null(widget._get_drag_data(Vector2.ZERO), "running slot cannot initiate a drag")
+	view._stop_started_rite()
+	assert_true(view._can_edit_slot("s1"), "stop reopens the same slot without rebuilding state")
+	assert_true(screen.can_drop_card_to_hand(data))
+	view.return_card_to_hand(uid, "s1")
+	assert_true(state.has_card_in_hand(uid))
+
+
+func test_empty_slot_cycles_qualified_bags_and_keeps_empty_match_state():
+	var local_db := _db_with_manual_rites()
+	var state := GameState.new()
+	var rng := RNG.new(511)
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992003)
+	view._rite["cards_slot"]["s1"]["condition"] = {"type": "char"}
+	view._rite["cards_slot"]["s2"]["condition"] = {"type": "unmatched"}
+	for uid in state.hand:
+		state.get_card_instance(uid).bag = 0
+	state.get_card_instance(state.player_actor_uid).bag = 2
+	state.current_bag_index = 2
+	var slots_before := view._placed.duplicate(true)
+	view._on_slot_pressed("s1")
+	assert_eq(state.current_bag_index, 2, "first click retains current qualified page")
+	view._on_slot_pressed("s1")
+	assert_eq(state.current_bag_index, 0, "repeat cycles sorted qualified pages")
+	view._on_slot_pressed("s2")
+	assert_eq(state.current_bag_index, 0, "no matches does not change page")
+	assert_eq_deep(view._placed, slots_before)
+
+
+func test_reopened_running_rite_cannot_settle_before_source_life_boundary():
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(514)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992001)
+	add_child(view)
+	await wait_process_frames(2)
+	state.start_rite_instance(view._rite_uid)
+	var instance = state.get_rite_instance(view._rite_uid)
+	for age in [0, 1]:
+		instance.life = age
+		view._update_resolve_button()
+		assert_true(view._resolve_btn.disabled)
+		var before := SaveSystem.serialize(state)
+		view._resolve()
+		assert_eq_deep(SaveSystem.serialize(state), before)
+		assert_false(view._resolution_pending)
+	instance.life = 2
+	view._update_resolve_button()
+	assert_false(view._resolve_btn.disabled)
+	view._resolve()
+	assert_true(view._resolution_pending)
+	assert_eq(state.coin_count, 6)
+
+
+func test_result_prompt_blocks_commit_cancel_and_retry_until_response():
+	var local_db := _db_with_manual_rites()
+	local_db.rites[992002]["settlement"][0]["action"] = {"prompt": {"id": "result_wait", "text": "Wait"}}
+	var rng := RNG.new(512)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	state.gold_dice = 2
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992002)
+	add_child(view)
+	await wait_process_frames(2)
+	watch_signals(view)
+	view._resolve()
+	view._rerolls_left = 1
+	view._update_result_wait_controls()
+	var before := SaveSystem.serialize(state)
+	view._commit_resolution()
+	view._close_panel()
+	view._use_gold_dice_reactive()
+	view._use_reroll()
+	assert_eq_deep(SaveSystem.serialize(state), before)
+	assert_eq(view._rerolls_left, 1)
+	assert_not_null(state.get_rite_instance(view._rite_uid))
+	assert_signal_not_emitted(view, "resolved")
+	assert_signal_not_emitted(view, "closed")
+	assert_true(view._resolve_btn.disabled)
+	assert_true(view._close_btn.disabled)
+	assert_true(view._gold_dice_btn.disabled)
+	assert_true(view._reroll_btn.disabled)
+	var screen = _owned(preload("res://ui/game_screen.gd").new())
+	screen._state = state
+	screen._db = local_db
+	screen._rng = rng
+	# Actual queue completion path, including close_prompt and continuations.
+	screen._consume_event_display()
+	await wait_process_frames(2)
+	assert_false(view._resolve_btn.disabled)
+	view._commit_resolution()
+	assert_null(state.get_rite_instance(view._rite_uid))
+	assert_eq(state.coin_count, 6, "waiting must not replay the reward")
+	assert_signal_emitted(view, "resolved")
+
+
+func test_zero_day_auto_result_waits_for_prompt_before_closing():
+	var local_db := _db_with_manual_rites()
+	local_db.rites[992002]["auto_result"] = 1
+	local_db.rites[992002]["settlement"][0]["action"] = {"prompt": {"id": "auto_wait", "text": "Wait"}}
+	var rng := RNG.new(513)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992002)
+	add_child(view)
+	await wait_process_frames(2)
+	watch_signals(view)
+	view._resolve()
+	await wait_process_frames(2)
+	assert_signal_not_emitted(view, "closed")
+	assert_not_null(state.get_rite_instance(view._rite_uid))
+	var screen = _owned(preload("res://ui/game_screen.gd").new())
+	screen._state = state
+	screen._db = local_db
+	screen._rng = rng
+	screen._consume_event_display()
+	await wait_process_frames(3)
+	assert_signal_emitted(view, "resolved")
+	assert_signal_emitted(view, "closed")
+	assert_null(state.get_rite_instance(view._rite_uid))
 
 
 func test_confirm_records_manual_rite_slots_for_last_state_restore():
@@ -532,6 +709,26 @@ func test_zero_day_rite_confirms_then_settles_in_one_press():
 	view._commit_resolution()
 	assert_eq(state.coin_count, 6, "zero-day rite settles immediately after starting")
 	assert_null(state.get_rite_instance(view._rite_uid), "committed settlement removes the instance")
+
+
+func test_stop_visibility_and_handler_share_original_start_round_gate():
+	var local_db := _db_with_manual_rites()
+	var rng := RNG.new(113)
+	var state := GameState.new()
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	add_child(view)
+	view.setup(state, local_db, rng, 992001)
+	view._resolve()
+	var instance = state.get_rite_instance(view._rite_uid)
+	assert_true(view._stop_btn.visible)
+	assert_false(view._last_state_btn.visible)
+	state.round_number += 1
+	view._update_stop_button()
+	assert_false(view._stop_btn.visible, "prior-round rites cannot expose Stop")
+	view._stop_started_rite()
+	assert_true(instance.start, "direct handler calls cannot bypass the visible gate")
+	assert_eq(view.find_child("RiteMainContent", true, false).get_meta("source_text_style"), "@MAIN_BODY")
 
 
 func test_stop_started_rite_rolls_back_life_and_keeps_cards():

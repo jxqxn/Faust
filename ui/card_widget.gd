@@ -17,7 +17,7 @@ signal drag_visibility_changed(card_uid: int, hidden: bool)
 
 ## Authored RectTransforms, not clone-side presentation measurements.
 ## [SRC: Resources/prefab/CardNew.prefab CardNew 194x422;
-##       Resources/prefab/SudanCard.prefab SudanCard 185x330]
+##       Resources/prefab/SudanCard.prefab 185x330 belongs to the pool only.]
 const CARD_SIZE := Vector2(194, 422)
 const SUDAN_CARD_SIZE := Vector2(185, 330)
 const SELECTED_LIFT := CARD_SIZE.y * 0.2
@@ -33,6 +33,7 @@ var card_uid: int = 0
 var drag_source := "hand"
 var drag_slot := ""
 var drag_rite_uid := 0
+var drag_allowed: Callable
 var _press_position := Vector2.ZERO
 var _drag_grab_offset := CARD_SIZE * 0.5
 var _drag_selected_position := Vector2.ZERO
@@ -50,8 +51,38 @@ var _idle_elapsed_seconds := 0.0
 var _idle_time_source := Callable()
 var _drag_payload_ref: Dictionary = {}
 var _pose_tween: Tween
-var _visual_face: PanelContainer
+var _visual_face: Control
 var _presentation_paused := false
+var _metal_materials: Array[ShaderMaterial] = []
+
+
+func _process(_delta: float) -> void:
+	if _presentation_paused or _metal_materials.is_empty():
+		return
+	# [SRC: CardRender.Update 0x53a8e0 -> GetScreenOffset 0x5508a0;
+	# GameScene ScreenXOffsetRange=(0,.05), ScreenYOffsetRange=(.2,.4).]
+	var center := get_global_transform_with_canvas() * (_card_size * 0.5 + offset_transform_position)
+	var viewport_size := get_viewport_rect().size
+	var offset := Vector2(center.x / viewport_size.x * 0.05, 0.4 - center.y / viewport_size.y * 0.2)
+	for surface in _metal_materials:
+		surface.set_shader_parameter("normal_offset", offset)
+
+
+func _apply_metal_surface(image: TextureRect) -> void:
+	var rare := int(_card.get("rare", 1))
+	if rare < 2:
+		return
+	var kind := str(_card.get("type", "item"))
+	var normal_name := "card_n_1" if kind == "char" else ("card_n_0" if kind == "sudan" else "card_n_2")
+	var metal_name := "card_mt_0" if kind == "char" else ("card_mt" if kind == "sudan" else "card_mt_1")
+	var surface := ShaderMaterial.new()
+	surface.shader = preload("res://ui/card_metal.gdshader")
+	surface.set_shader_parameter("normal_map", load("res://assets/original/ui/%s.png" % normal_name))
+	surface.set_shader_parameter("metal_map", load("res://assets/original/ui/%s.png" % metal_name))
+	surface.set_shader_parameter("bump_scale", [0.3819444, 0.2847222, 0.3680556][clampi(rare - 2, 0, 2)])
+	surface.set_shader_parameter("gloss_scale", [0.7847222, 0.8090278, 0.75][clampi(rare - 2, 0, 2)])
+	image.material = surface
+	_metal_materials.append(surface)
 
 
 func set_card(card: Dictionary) -> void:
@@ -65,7 +96,9 @@ func set_card(card: Dictionary) -> void:
 
 
 static func size_for_card(card: Dictionary) -> Vector2:
-	return SUDAN_CARD_SIZE if str(card.get("type", "")) == "sudan" else CARD_SIZE
+	# GameController.AddCard 0x54ad40 uses cardPrefab for all live cards;
+	# SudanCard belongs to SudanPoolController (dump.cs:327241), not the hand.
+	return CARD_SIZE
 
 
 func card_size() -> Vector2:
@@ -241,6 +274,8 @@ func _style_for_card() -> StyleBoxFlat:
 
 
 func _get_drag_data(at_position: Vector2) -> Variant:
+	if drag_allowed.is_valid() and not drag_allowed.call():
+		return null
 	if _presentation_paused or card_id <= 0:
 		return null
 	_drag_grab_offset = at_position
@@ -412,143 +447,135 @@ func _idle_time_seconds() -> float:
 
 
 func _set_card_style() -> void:
-	if is_instance_valid(_visual_face):
-		_visual_face.add_theme_stylebox_override("panel", _style_for_card())
-		# Original rarity frame overlay: copper/silver/gold card borders
-		# painted over the face (stone for the lowest tier).
-		# [SRC: Texture2D/card_bg_copper.png / card_bg_silver.png /
-		#       card_bg_gold.png / card_bg_stone.png]
-		var frame := _rarity_frame_texture()
-		if frame != null:
-			var frame_rect := _find_or_add_frame("RarityFrame")
-			frame_rect.texture = frame
+	# Rarity is rendered behind the painting, never over its center.
+	pass
 
 
 static var _rarity_frames: Dictionary = {}
 
 
 func _rarity_frame_texture() -> Texture2D:
-	var rare := int(_card.get("rare", 0))
-	var tier := "card_bg_stone"
-	if rare >= 4:
-		tier = "card_bg_gold"
-	elif rare >= 3:
-		tier = "card_bg_silver"
-	elif rare >= 2:
-		tier = "card_bg_copper"
-	if _rarity_frames.has(tier):
-		return _rarity_frames[tier]
-	var path := "res://assets/original/ui/%s.png" % tier
-	var texture: Texture2D = null
-	if ResourceLoader.exists(path):
-		texture = load(path) as Texture2D
-	_rarity_frames[tier] = texture
-	return texture
+	# [SRC: materials/card/{char,item,sudan}/{stone,copper,silver,gold}.mat
+	# _MainTex; CardRenderChar.Init 0x538030 / CardRenderItem.Init.]
+	var kind := str(_card.get("type", "item"))
+	var silver := int(_card.get("rare", 1)) == 3
+	var surface := "card_0" if silver else "card_4"
+	if kind == "item":
+		surface = "card_2" if silver else "card_3"
+	elif kind == "sudan":
+		surface = "card" if silver else "card_1"
+	return load("res://assets/original/ui/%s.png" % surface) as Texture2D
 
 
-func _find_or_add_frame(node_name: String) -> TextureRect:
-	if is_instance_valid(_visual_face):
-		var existing := _visual_face.get_node_or_null(NodePath(node_name))
-		if existing is TextureRect:
-			return existing
-		var rect := TextureRect.new()
-		rect.name = node_name
-		rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		rect.stretch_mode = TextureRect.STRETCH_SCALE
-		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_visual_face.add_child(rect)
-		return rect
-	var stub := TextureRect.new()
-	return stub
+func _surface_color(foreground: bool = false) -> Color:
+	# Authored material _Color, independent of the old UI rarity palette.
+	if foreground and int(_card.get("rare", 1)) == 1:
+		return Color(0.83137256, 0.7647059, 0.79607844, 1)
+	match int(_card.get("rare", 1)):
+		2: return Color(0.7048611, 0.8541666, 1, 1)
+		3: return Color(0.944445, 0.8506945, 0.798611, 1)
+		4: return Color(1, 0.8333333, 0.63888, 1)
+		_: return Color(0.6901961, 0.6039216, 0.92156863, 1)
+
+
+func _face_texture(node_name: String, texture: Texture2D, rect: Rect2) -> TextureRect:
+	var image := TextureRect.new()
+	image.name = node_name
+	image.texture = texture
+	image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	image.stretch_mode = TextureRect.STRETCH_SCALE
+	image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	image.position = rect.position
+	image.size = rect.size
+	_visual_face.add_child(image)
+	return image
 
 
 func _rebuild() -> void:
-	for c in get_children():
-		c.queue_free()
-	# The face is a container anchored to the stable card rectangle: the
-	# widget root stays a plain Control so the face's content minimums can
-	# never inflate the card's layout size.
-	_visual_face = PanelContainer.new()
+	_metal_materials.clear()
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	# [SRC: CardController.Init -> GetCardShowPrefab -> CardRender.Init;
+	# CardShowChar/Item/Sudan.prefab. Icon occupies the complete card, Title
+	# folds top anchor y=-55 and pivot y=0 into top-left (9.5,15).]
+	_visual_face = Control.new()
 	_visual_face.name = "CardVisualFace"
 	_visual_face.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_visual_face.clip_contents = true
-	_visual_face.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_visual_face.size = CARD_SIZE
+	_visual_face.scale = _card_size / CARD_SIZE
 	add_child(_visual_face)
-
-	var col := VBoxContainer.new()
-	col.name = "CardFaceContent"
-	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	col.add_theme_constant_override("separation", 6)
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_visual_face.add_child(col)
-
-	var title := Label.new()
-	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title.text = str(_card.get("name", "?"))
-	_fit_card_label(title)
-	title.add_theme_font_size_override("font_size", 15)
-	title.add_theme_color_override("font_color", Color("#2d2118"))
-	col.add_child(title)
-
-	# Prefer the original card art (extracted per card id). Cards that ship
-	# without art in the original data show the type icon instead — the
-	# original renders no painting for them either.
-	# [SRC: Texture2D/cards/<id>.png; Texture2D/card_type_char/item/sudan]
+	var background := _face_texture("RarityFrame", _rarity_frame_texture(), Rect2(Vector2.ZERO, CARD_SIZE))
+	background.self_modulate = _surface_color()
+	_apply_metal_surface(background)
 	var art_texture := _card_art_texture()
 	if art_texture != null:
-		var art_tex := TextureRect.new()
-		art_tex.name = "CardArt"
-		art_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		art_tex.texture = art_texture
-		art_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		art_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		art_tex.custom_minimum_size = Vector2(88, 112)
-		art_tex.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		art_tex.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		col.add_child(art_tex)
-	else:
-		var type_icon := _card_type_icon()
-		if type_icon != null:
-			var icon_box := CenterContainer.new()
-			icon_box.name = "CardArt"
-			icon_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			icon_box.custom_minimum_size = Vector2(88, 112)
-			icon_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			icon_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
-			var icon := TextureRect.new()
-			icon.texture = type_icon
-			icon.custom_minimum_size = Vector2(48, 48)
-			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon_box.add_child(icon)
-			col.add_child(icon_box)
-	# Attribute row: the original tag icons for the six attribute tags
-	# (tags atlas, keyed by tag.json `resource` like "tag_1" for 体魄).
-	var attr_row := HBoxContainer.new()
-	attr_row.name = "CardAttrRow"
-	attr_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	attr_row.add_theme_constant_override("separation", 2)
-	attr_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	col.add_child(attr_row)
-	for tag_name in ["体魄", "魅力", "智慧", "隐匿", "战斗", "社交", "生存", "魔力"]:
-		var icon := _attribute_icon(tag_name)
-		if icon == null:
-			continue
-		var icon_rect := TextureRect.new()
-		icon_rect.texture = icon
-		icon_rect.custom_minimum_size = Vector2(16, 16)
-		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_rect.tooltip_text = tag_name
-		attr_row.add_child(icon_rect)
-	_set_card_style()
-
+		_face_texture("CardArt", art_texture, Rect2(Vector2.ZERO, CARD_SIZE))
+	var title := Label.new()
+	title.name = "Title"
+	title.text = str(_card.get("name", "?"))
+	title.position = Vector2(9.5, 15)
+	title.size = Vector2(175, 40)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", preload("res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf"))
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color.BLACK)
+	_fit_card_label(title)
+	_visual_face.add_child(title)
+	if str(_card.get("type", "")) == "char":
+		var tier: String = ["stone", "copper", "silver", "gold"][clampi(int(_card.get("rare", 1)) - 1, 0, 3)]
+		var foreground := _face_texture("Foreground", load("res://assets/original/ui/%s_f.png" % tier), Rect2(Vector2.ZERO, CARD_SIZE))
+		foreground.self_modulate = _surface_color(true)
+		_apply_metal_surface(foreground)
+	# [SRC: CardRender.UpdateShowInternal 0x53a4a0: count>1 AND stackable;
+	# content/tag.json stackable = 可堆叠; CardShow*/Stackable bottom y=50.]
+	var tags: Dictionary = _card.get("tag", {})
+	var count := int(_card.get("count", 1))
+	if count > 1 and int(tags.get("可堆叠", tags.get("stackable", 0))) > 0:
+		var badge := _face_texture("Stackable", preload("res://assets/original/ui/checkbox_bg.png"), Rect2(59.5, 333, 75, 78))
+		var label := Label.new()
+		label.name = "Count"
+		label.text = str(count)
+		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", 48)
+		badge.add_child(label)
+	# [SRC: CardRender.Init / UpdateShowInternal; lifetime = config minus
+	# Card.life. CardShow*/LifeBg sits above the card, not in its footer.]
+	var lifetime := int(_card.get("card_vanishing", 0))
+	if lifetime > 0 or _card.has("remaining_life"):
+		var life_bg := _face_texture("LifeBg", load("res://assets/original/ui/bg_green.png"), Rect2(57.5, -45, 98, 45))
+		var clock := TextureRect.new()
+		clock.texture = load("res://assets/original/ui/rite_round.png")
+		clock.position = Vector2(-19, 1.5)
+		clock.size = Vector2(38, 42)
+		clock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		clock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		life_bg.add_child(clock)
+		var remaining := Label.new()
+		remaining.name = "Life"
+		remaining.text = str(int(_card.get("remaining_life", lifetime - int(_card.get("life", 0)))))
+		remaining.position = Vector2(24, -2.5)
+		remaining.size = Vector2(74, 50)
+		remaining.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		remaining.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		remaining.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		remaining.add_theme_font_size_override("font_size", 52)
+		life_bg.add_child(remaining)
 
 ## Original card art extracted from the game assets, keyed by card id.
 func _card_art_texture() -> Texture2D:
-	var art_path := "res://assets/original/cards/%d.png" % int(_card.get("id", 0))
+	# [SRC: CardExtensions.GetPic 0x3803b0, resource SingleOrListValues;
+	# CardRender.InitImage 0x5390f0. Config id is not the artwork id.]
+	var resource = _card.get("resource", "cards/%d" % int(_card.get("id", 0)))
+	if resource is Array:
+		var tags: Dictionary = _card.get("tag", {})
+		resource = resource[clampi(int(tags.get("pic", 0)), 0, resource.size() - 1)] if not resource.is_empty() else ""
+	var art_path := "res://assets/original/%s.png" % str(resource)
 	if ResourceLoader.exists(art_path):
 		return load(art_path) as Texture2D
 	return null

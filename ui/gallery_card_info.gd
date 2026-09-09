@@ -305,48 +305,7 @@ func _build_tags(parent: Control) -> void:
 
 
 func _source_tag_nodes() -> Dictionary:
-	var out := {"tags": [], "attributes": []}
-	if _db == null:
-		return out
-	var card_tags = _card.get("tag", {})
-	if not (card_tags is Dictionary):
-		return out
-	var source_index := 0
-	for raw_name in (card_tags as Dictionary).keys():
-		var tag_name := str(raw_name)
-		var code := str(_db.tag_name_to_code.get(tag_name, ""))
-		if code.is_empty() or not _db.tags_by_code.has(code):
-			source_index += 1
-			continue
-		var tag_node: Dictionary = (_db.tags_by_code[code] as Dictionary).duplicate(true)
-		var value := int((card_tags as Dictionary).get(raw_name, 0))
-		# Exact RefreshAllTags gates: visible && (can_add || value != 0) &&
-		# (can_nagative_and_zero || value > 0).
-		if int(tag_node.get("can_visible", 0)) == 0:
-			source_index += 1
-			continue
-		if int(tag_node.get("can_add", 0)) == 0 and value == 0:
-			source_index += 1
-			continue
-		if int(tag_node.get("can_nagative_and_zero", 0)) == 0 and value <= 0:
-			source_index += 1
-			continue
-		tag_node["_source_name"] = tag_name
-		tag_node["_source_value"] = value
-		tag_node["_source_index"] = source_index
-		var bucket: Array = out["attributes"] if str(tag_node.get("type", "")) == "attribute" else out["tags"]
-		bucket.append(tag_node)
-		source_index += 1
-	for bucket_key in ["tags", "attributes"]:
-		var bucket: Array = out[bucket_key]
-		bucket.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-			var a_rank := int(a.get("tag_rank", 0))
-			var b_rank := int(b.get("tag_rank", 0))
-			if a_rank == b_rank:
-				return int(a.get("_source_index", 0)) < int(b.get("_source_index", 0))
-			return a_rank > b_rank
-		)
-	return out
+	return preload("res://ui/card_tag_presentation.gd").group(_card, _db)
 
 
 func _card_tag_new(tag_node: Dictionary) -> Control:

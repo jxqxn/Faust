@@ -109,8 +109,8 @@ static func _add_rite_and_note(rite_id: int, state, db, rng) -> void:
 static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:
 	if choice_key == "":
 		return
-	# Confirm dialogs only record which button the player pressed; the
-	# branches were selected during settlement execution.
+	# Legacy eager callers only record the button. Event sequences bypass this
+	# fallback: OperationsSequence.resume chooses the branch after the response.
 	# [SRC: Confirm.c @ Do (0x4f4e30) writes SetLastOpState]
 	if choice_key == "confirm_ok" or choice_key == "confirm_cancel":
 		if state != null:
@@ -129,9 +129,9 @@ static func execute_choice(choice_key: String, choice_value: Variant, state, db,
 
 ## Execute an event's settlement payloads and apply their deferred effects.
 ## Real events nest their payload at `settlement[].action` (no result/condition
-## per entry — the condition is top-level). Mirrors RiteResolver's per-entry
-## pattern. Returns the merged deferred dict so callers can inspect flags like
-## `over`. Falls back to top-level result/action for synthetic/test events.
+## per entry — the condition is top-level). Returns effects executed so far;
+## a queued UI operation owns the remaining serial continuation. Falls back
+## to top-level result/action for synthetic/test events.
 static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictionary = {}) -> Dictionary:
 	if event.is_empty():
 		return {}
@@ -148,11 +148,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 			ctx["attr_slots"] = ["s1", "s2"]
 		if not ConditionEval.evaluate(cond, ctx):
 			return {}
-	var merged := {
-		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
-		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
-		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
-	}
+	var payloads: Array = []
 	var settlements: Array = event.get("settlement", [])
 	if not settlements.is_empty():
 		for entry in settlements:
@@ -161,20 +157,19 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 			var payload: Dictionary = entry.get("action", {})
 			if payload.is_empty():
 				continue
-			var deferred := ResultExec.execute(payload, state, db, trigger_ctx)
-			_merge(merged, deferred)
+			payloads.append(payload)
 	else:
 		# Fallback for synthetic/test events using top-level result/action.
 		for key in ["result", "action"]:
 			var payload_alt: Dictionary = event.get(key, {})
 			if payload_alt.is_empty():
 				continue
-			var deferred := ResultExec.execute(payload_alt, state, db, trigger_ctx)
-			_merge(merged, deferred)
-	apply(merged, state, db, rng)
+			payloads.append(payload_alt)
+	# [SRC: EventTrigger.DoSettlements 0x4fb1c0 unregisters non-replay events
+	# before ListExtensions.DoSequence, including when UI awaits a response.]
 	if state != null and state.has_method("complete_event"):
 		state.complete_event(int(event.get("id", 0)), bool(event.get("is_replay", false)))
-	return merged
+	return OperationsSequence.start(payloads, state, db, rng, trigger_ctx)
 
 
 ## Execute each due DelayOp once at the Next Day boundary. `delay` carries

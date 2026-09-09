@@ -82,6 +82,7 @@ func _add_bubble(parent: Control, node_name: String, anchor: Vector2, pos: Vecto
 	bubble.scroll_active = false
 	bubble.mouse_filter = Control.MOUSE_FILTER_STOP
 	bubble.add_theme_font_size_override("normal_font_size", BUBBLE_FONT_SIZE)
+	preload("res://ui/source_text_style.gd").apply(bubble, "@HELP_TEXT")
 	bubble.add_theme_color_override("default_color", Color("#f2e3c0"))
 	bubble.text = _to_bbcode(text)
 	parent.add_child(bubble)
@@ -91,15 +92,7 @@ func _add_bubble(parent: Control, node_name: String, anchor: Vector2, pos: Vecto
 ## (<b><color=white><size=86>…</size></color></b>); Godot 4 RichTextLabel only
 ## parses [b]/[color]/[font_size], so convert the token forms.
 static func _to_bbcode(text_value: String) -> String:
-	var out := text_value
-	out = out.replace("<color=white>", "[color=white]")
-	out = out.replace("</color>", "[/color]")
-	# The corpus emphasis size is always 86 (Unity <size=86> -> [font_size=86]).
-	out = out.replace("<size=86>", "[font_size=86]")
-	out = out.replace("</size>", "[/font_size]")
-	out = out.replace("<b>", "[b]")
-	out = out.replace("</b>", "[/b]")
-	return out
+	return preload("res://ui/source_rich_text.gd").to_bbcode(text_value)
 
 
 func _apply_layout() -> void:

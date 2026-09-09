@@ -65,6 +65,7 @@ const LEGACY_OVERLAY_DESIGN := Vector2(1280, 800)
 const SCENE_CONTENT_Z_MAX := 99
 const OVERLAY_LAYER_Z := 100
 const PERSISTENT_CONTROL_Z := 200
+const BLOCKING_PROMPT_Z := 400
 
 var _state
 var _db
@@ -85,6 +86,7 @@ var _desk_content: Control
 var _overlay_layer: Control
 var _source_overlay_layer: Control
 var _hand_bg_sprite: TextureRect
+var _bag_tabs: HandBagTabs
 var _card_rail_view: Control
 var _rail_padding: MarginContainer
 var _card_items: Control
@@ -109,6 +111,7 @@ var _story_notify = null
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
+var _shown_event_operation: Dictionary = {}
 var _event_panel = null  # PromptNew OptionBG (plain Control after batch AL)
 var _rename_input: LineEdit
 var _sleep_waiting := false
@@ -126,7 +129,10 @@ func setup(state, db, rng) -> void:
 
 func _ready() -> void:
 	theme = FaustTheme.get_theme()
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Runtime-created Controls start at size zero. Reset offsets as well as
+	# anchors; otherwise child overlays inherit an empty rect even though
+	# the desktop's explicit layout falls back to the viewport size.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
@@ -298,6 +304,17 @@ func _build_ui() -> void:
 	_source_overlay_layer.z_index = OVERLAY_LAYER_Z + 1
 	add_child(_source_overlay_layer)
 
+	# [SRC: GameScene MainUI/Hand BG, hand_bg, bottom-stretched 356.]
+	_hand_bg_sprite = _sprite_child("res://assets/original/ui/hand_bg.png", Vector2(3840, 356))
+	_hand_bg_sprite.name = "HandBG"
+	# Background belongs below the interactive desk and modal overlays.
+	_hand_bg_sprite.z_index = 7
+	add_child(_hand_bg_sprite)
+	_bag_tabs = HandBagTabs.new()
+	_bag_tabs.name = "BagBtnGroup"
+	_bag_tabs.z_index = 21
+	_bag_tabs.page_selected.connect(_change_hand_bag)
+	add_child(_bag_tabs)
 	_card_rail_view = HandRailDrop.new()
 	_card_rail_view.name = "CardRail"
 	_card_rail_view.z_index = PERSISTENT_CONTROL_Z
@@ -372,7 +389,7 @@ func _build_ui() -> void:
 	# Disabled is a distinct theme state. Without this explicit style Godot falls
 	# back to a rectangular default, making the paused primary action look
 	# malformed even though its layout rectangle has not changed.
-	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)))
+	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	_advance_button.pressed.connect(func(): advance_pressed.emit())
 	_right_actions.add_child(_advance_button)
 
@@ -420,6 +437,14 @@ func _build_ui() -> void:
 		_back_to_prev_button.add_child(back_icon)
 	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
 	_right_actions.add_child(_back_to_prev_button)
+	# Source buttons are icon images, not the 516px text-button strip. That
+	# strip's 316px content margins forced both controls wider than their rect.
+	for icon_button in [_redraw_button, _back_to_prev_button]:
+		for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+			icon_button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+		for child in icon_button.get_children():
+			if child is TextureRect:
+				child.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 
 ## [SRC: GameScene MainUI/CachedEvents (rect 7782, custom layout group
@@ -555,6 +580,9 @@ func _apply_layout() -> void:
 		_source_overlay_layer.scale = Vector2.ONE
 		_source_overlay_layer.size = view_size
 	# [SRC: Hand BG hand_bg 4096x356 anchors (0,0)-(1,0) bottom stretched]
+	if _bag_tabs != null:
+		_bag_tabs.scale = k
+		_bag_tabs.position = Vector2(420 * k.x, view_size.y - 340 * k.y)
 	if _hand_bg_sprite != null:
 		_hand_bg_sprite.scale = k
 		_hand_bg_sprite.position = Vector2(0, view_size.y - 356 * k.y)
@@ -848,6 +876,7 @@ func refresh() -> void:
 		_cached_event_mask.visible = not _state.cached_event.is_empty()
 	_update_deadline_strip()
 	_update_prestige_strip()
+	_bag_tabs.update_page(_state.current_bag_index)
 	var previous_positions := _capture_hand_visual_positions()
 	for child in _card_items.get_children():
 		child.queue_free()
@@ -901,17 +930,9 @@ func refresh() -> void:
 		var is_stackable: bool = card.get("tag", {}).has("可堆叠")
 		if is_stackable and int(stack_first_uid.get(stack_id, uid)) != uid:
 			continue
+		if is_stackable:
+			card["count"] = int(stack_totals.get(stack_id, 1))
 		var widget := CardWidget.make(card, "hand")
-		if is_stackable and int(stack_totals.get(stack_id, 1)) > 1:
-			var badge := Label.new()
-			badge.text = "×%d" % int(stack_totals[stack_id])
-			badge.add_theme_font_size_override("font_size", 26)
-			badge.add_theme_color_override("font_color", Color(1, 0.95, 0.7))
-			badge.add_theme_color_override("font_outline_color", Color(0.12, 0.08, 0.05))
-			badge.add_theme_constant_override("outline_size", 6)
-			badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-			badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			widget.add_child(badge)
 		widget.custom_minimum_size = widget.card_size()
 		widget.clicked.connect(_show_card_detail)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
@@ -942,6 +963,16 @@ func refresh() -> void:
 ## centred row with complete borders at ordinary hand sizes.
 ## [SRC: decompiled/HandCardsController.c @ Update (RVA 0x563520),
 ## dump.cs:320760]
+func _change_hand_bag(index: int) -> void:
+	if not _presentation_blockers.is_empty():
+		return
+	if _state.current_bag_index == index:
+		return
+	_state.set_current_bag_index(index)
+	_hand_drop_preview_index = -1
+	refresh()
+
+
 func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 	if _card_items == null or not is_instance_valid(_card_items):
 		return
@@ -1128,7 +1159,7 @@ func _active_sudan_for_card(card_or_uid: int) -> Variant:
 
 
 func _make_sudan_card(asc, life: int) -> CardWidget:
-	var dec = SudanCards.decode(int(asc.card_id))
+
 	var card: Dictionary = _state.card_data_for(int(asc.card_uid), _db)
 	if card.is_empty():
 		# Legacy fixtures may construct an ActiveSudan directly. Runtime play
@@ -1137,28 +1168,17 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 		card["instance_uid"] = int(asc.card_uid)
 	card["id"] = int(asc.card_id)
 	card["type"] = "sudan"
-	card["name"] = "%s%s" % [dec.rank, dec.action]
+	card["remaining_life"] = int(asc.days_left)
 	var widget := CardWidget.make(card, "active_sudan")
 	widget.custom_minimum_size = widget.card_size()
 	widget.clip_contents = false
 	widget.clicked.connect(_show_card_detail)
-	var days := Label.new()
-	days.name = "SudanCountdown"
-	days.text = str(int(asc.days_left))
-	days.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	days.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	days.position = Vector2(widget.card_size().x - 38, -20)
-	days.size = Vector2(28, 24)
-	days.add_theme_font_size_override("font_size", 18)
-	days.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	days.add_theme_color_override("font_shadow_color", Color("#100c0a"))
-	days.add_theme_constant_override("shadow_offset_x", 1)
-	days.add_theme_constant_override("shadow_offset_y", 1)
-	widget.add_child(days)
 	return widget
 
 
 func can_drop_card_to_hand(data: Variant) -> bool:
+	if data is Dictionary and not preload("res://ui/rite_slot_access.gd").can_move_source(_state, _db, data):
+		return false
 	if not (data is Dictionary):
 		return false
 	if str(data.get("type", "")) != "card":
@@ -1225,6 +1245,10 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 			else int(_state.slot_for_table_card(card_uid, source_rite_uid))
 		)
 		_state.remove_card_from_slot(card_uid, slot_num, source_rite_uid)
+		var returned_instance = _state.get_card_instance(card_uid)
+		if returned_instance != null:
+			returned_instance.bag = _state.current_bag_index
+		insert_index = _global_rail_insert_index(insert_index, card_uid)
 		if is_sudan:
 			var instance = _state.get_card_instance(card_uid)
 			if instance != null:
@@ -1234,8 +1258,25 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 			_state.add_card_to_hand_at_rail(card_uid, insert_index, _db)
 		_notify_card_returned_to_hand(card_uid, source_slot)
 	elif source == "hand" or source == "active_sudan":
+		insert_index = _global_rail_insert_index(insert_index, card_uid)
 		_state.reorder_rail_card(card_uid, insert_index)
 	refresh()
+
+
+func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:
+	# A screen insertion index belongs to the visible bag, while rail_order
+	# retains all bags. Translate without permuting cards on other pages.
+	var remaining: Array[int] = []
+	for uid in _state.rail_order:
+		if int(uid) != dragged_uid:
+			remaining.append(int(uid))
+	var page: Array[int] = _state.visible_rail_card_uids()
+	page.erase(dragged_uid)
+	if page.is_empty():
+		return remaining.size()
+	if page_index >= page.size():
+		return remaining.find(page.back()) + 1
+	return remaining.find(page[maxi(0, page_index)])
 
 
 func _rail_insert_index_at(rail_position: Vector2, dragged_card_uid: int = 0) -> int:
@@ -1337,17 +1378,31 @@ func set_presentation_frozen(frozen: bool) -> void:
 ## background controls instead: they remain visible under the selector shade,
 ## but cannot receive input or keep animating independently.
 func _set_underlying_presentation_paused(paused: bool) -> void:
+	var rite_open := _presentation_blockers.has("rite")
+	var rite_only := rite_open and _presentation_blockers.size() == 1
+	# The rite is above desktop chrome, while its hand remains a live input
+	# surface. [SRC: RitePanelShowController.BindCardHandler/ChooseSlotCard]
+	_source_overlay_layer.z_index = PERSISTENT_CONTROL_Z + 1 if rite_open else OVERLAY_LAYER_Z + 1
+	_card_rail_view.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
+	_bag_tabs.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else 21
+	_right_actions.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
+	_next_day_label.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
+	_begin_guide_bar.z_index = PERSISTENT_CONTROL_Z if rite_open else PERSISTENT_CONTROL_Z + 2
+	var hand_paused := paused and not rite_only
+	if _bag_tabs != null:
+		for button in _bag_tabs.buttons:
+			button.disabled = not rite_only and (paused or not _presentation_blockers.is_empty())
 	if _menu_button != null:
 		_menu_button.disabled = paused
 	if _card_rail_view != null:
 		_card_rail_view.mouse_filter = (
-			Control.MOUSE_FILTER_IGNORE if paused else Control.MOUSE_FILTER_STOP
+			Control.MOUSE_FILTER_IGNORE if hand_paused else Control.MOUSE_FILTER_STOP
 		)
 	if _card_items == null or not is_instance_valid(_card_items):
 		return
 	for child in _card_items.get_children():
 		if child is CardWidget and not child.is_queued_for_deletion():
-			(child as CardWidget).set_presentation_paused(paused)
+			(child as CardWidget).set_presentation_paused(hand_paused)
 
 
 func _update_persistent_action_availability() -> void:
@@ -1409,7 +1464,12 @@ func _next_event_display() -> Dictionary:
 			"speaker_actor_id": str(payload.get("speaker_actor_id", "protagonist")),
 			"text": str(payload.get("text", payload.get("desc", ""))),
 			"choices": payload.get("choices", {}),
-			"presentation": str(payload.get("presentation", "")),
+			# Preserve this operation's icon; searching the whole event can pick
+			# an unrelated branch. [SRC: Prompt.Do 0x519340 -> ShowPrompt(icon@0x20);
+			# PromptControllerBase.ShowInternal 0x589890 / SetIcon.]
+			"icon": _choice_icon_texture(str(payload.get("icon", ""))) if payload.get("icon", "") is String else null,
+			"source_icon": payload.get("icon", null),
+			"presentation": str(payload.get("presentation", payload.get("kind", ""))),
 		}
 	if kind == "rename_card":
 		return {
@@ -1440,7 +1500,14 @@ func _show_event_overlay(display: Dictionary) -> void:
 	if str(display.get("kind", "")) == "rename_card":
 		_show_change_name(display)
 		return
+	# Keep selection/focus while the same blocking operation is visible.
+	# Compare queue-object identity: two identical consecutive prompts are
+	# different occurrences and must each start with no selection.
+	var operation: Dictionary = _state.pending_operations[0] if not _state.pending_operations.is_empty() else {}
+	if _event_overlay != null and is_same(_shown_event_operation, operation):
+		return
 	_clear_event_overlay()
+	_shown_event_operation = operation
 	set_world_scene_blocker("event_prompt", true)
 	# [SRC: PromptNew.prefab / PromptController.Show 0x58a020 —
 	# the event prompt is the 2705-wide OptionBG parchment with body text,
@@ -1449,13 +1516,17 @@ func _show_event_overlay(display: Dictionary) -> void:
 	_event_overlay = EventPromptViewScript.new()
 	_event_overlay.name = "EventPromptOverlay"
 	_event_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_event_overlay.z_index = OVERLAY_LAYER_Z
+	# Result operations can open prompts over an already-raised rite panel.
+	_event_overlay.z_index = BLOCKING_PROMPT_Z
 	add_child(_event_overlay)
+	_event_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_event_panel = _event_overlay.get_node_or_null("PromptNewCanvas/EventPromptPanel")
 	_event_overlay.choice_clicked.connect(
 		func(key: String, value: Variant): _consume_event_display(key, value)
 	)
 	_event_overlay.confirm_clicked.connect(func(): _consume_event_display())
+	if display.has("source_icon"):
+		display["resolved_icons"] = preload("res://ui/source_prompt_icons.gd").resolve(display.source_icon, _state, _db)
 	_event_overlay.show_prompt(display, Callable())
 	_apply_layout()
 
@@ -1476,6 +1547,7 @@ func _choice_icon_texture(resource_ref: String) -> Texture2D:
 
 
 func _clear_event_overlay() -> void:
+	_shown_event_operation = {}
 	# Rename prompts live on their own source surface.
 	if _change_name_view != null and is_instance_valid(_change_name_view):
 		var old_view = _change_name_view
@@ -1504,21 +1576,27 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 	var operation: Dictionary = _state.consume_pending_operation() if _state.has_method("consume_pending_operation") else {}
 	if operation.is_empty():
 		return
+	var queued_tail: Array = _state.pending_operations.duplicate()
+	_state.pending_operations.clear()
 	var kind := str(operation.get("kind", ""))
 	var payload: Dictionary = operation.get("payload", {}) if operation.get("payload", {}) is Dictionary else {}
 	var trigger_ctx: Dictionary = operation.get("context", {}).duplicate(true) if operation.get("context", {}) is Dictionary else {}
 	if kind in ["prompt", "choice"]:
-		# [SRC: PromptController.c:133 -> OnClosePrompt; report 6 A5]
-		_state.trigger_events("close_prompt", {})
+		# [SRC: PromptController.Hide 0x589e20 emits OnClosePrompt;
+		# OptionController.OnConfirm 0x576900 resolves the choice directly.]
+		if kind == "prompt":
+			_state.trigger_events("close_prompt", {})
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
-			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
+			if not operation.has("sequence_response"):
+				DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
 	elif kind == "rename_card":
 		var card_uid := int(trigger_ctx.get("card_uid", payload.get("card_uid", 0)))
 		if _rename_input == null or not _state.set_card_custom_name(card_uid, _rename_input.text):
 			# Keep the operation in front until the player submits a non-empty
 			# name; the original naming overlay is likewise a blocking promise.
 			_state.pending_operations.push_front(operation)
+			_state.pending_operations.append_array(queued_tail)
 			return
 		set_log("卡牌已命名")
 	elif kind == "event":
@@ -1530,10 +1608,10 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 		if choice_key != "":
 			set_log("选择：%s" % str(choice_value))
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
+	OperationsSequence.resume(operation, _state, _db, _rng, choice_key)
+	_state.pending_operations.append_array(queued_tail)
 	# A silently-settled event chain may have requested game over.
-	if _state != null and bool(_state.get("over_pending")):
-		_state.over_pending = false
-		game_over_requested.emit()
+	if _request_pending_game_over():
 		return
 	# An event whose action opens a rite should surface that rite to the player
 	# immediately (showing the rite's narration text), not silently park it.
@@ -1548,9 +1626,22 @@ func _wait_for_queued_sleep(seconds: float) -> void:
 	await get_tree().create_timer(maxf(0.0, seconds)).timeout
 	if _state != null and _state.has_method("pending_operation") and _state.has_method("consume_pending_operation"):
 		if str(_state.pending_operation().get("kind", "")) == "sleep":
-			_state.consume_pending_operation()
+			var completed: Dictionary = _state.consume_pending_operation()
+			var queued_tail: Array = _state.pending_operations.duplicate()
+			_state.pending_operations.clear()
+			OperationsSequence.resume(completed, _state, _db, _rng)
+			_state.pending_operations.append_array(queued_tail)
 	_sleep_waiting = false
-	_refresh_event_overlay()
+	if not _request_pending_game_over():
+		refresh()
+
+
+func _request_pending_game_over() -> bool:
+	if _state != null and _state.over_pending:
+		_state.over_pending = false
+		game_over_requested.emit()
+		return true
+	return false
 
 
 ## Original portrait for an event: its first `icon` resource (like
@@ -1702,9 +1793,15 @@ func _consume_rename_input(text_value: String) -> void:
 
 func _cancel_rename() -> void:
 	if _state != null and _state.has_method("consume_pending_operation"):
-		_state.consume_pending_operation()
+		# [SRC: PromptChangeNameController.DoClose 0x5849b0 resolves its promise.]
+		var completed: Dictionary = _state.consume_pending_operation()
+		var queued_tail: Array = _state.pending_operations.duplicate()
+		_state.pending_operations.clear()
+		OperationsSequence.resume(completed, _state, _db, _rng)
+		_state.pending_operations.append_array(queued_tail)
 	_clear_event_overlay()
-	refresh()
+	if not _request_pending_game_over():
+		refresh()
 
 
 func _find_node_by_name(node: Node, target: String) -> Node:
@@ -1826,3 +1923,18 @@ func _sync_card_selection_visuals(selected_uid: int = 0, selected_id: int = 0) -
 		if selected_uid <= 0 and selected_id > 0:
 			matches = widget.card_id == selected_id
 		widget.set_selected(matches)
+
+
+func focus_qualified_hand(validator: Callable) -> void:
+	if _card_items == null or not validator.is_valid():
+		return
+	var focused := false
+	for child in _card_items.get_children():
+		if not (child is CardWidget) or child.is_queued_for_deletion():
+			continue
+		var matches: bool = validator.call(_state.card_data_for(child.card_uid, _db))
+		child.set_selected(matches)
+		if matches and not focused:
+			child.focus_mode = Control.FOCUS_ALL
+			child.grab_focus()
+			focused = true

@@ -1,6 +1,7 @@
 extends Control
 
-## Event prompt — 1:1 of Resources/prefab/PromptNew.prefab (GameScene MainUI/Prompt).
+## Shared prompt surface. Choice interaction maps OptionController;
+## geometry remains approximate (see docs/CORE_FIDELITY.md).
 ##
 ## [SRC: docs/ui_layout/PromptNew.md truth table; PromptController.Show
 ##   0x58a020 (ProcessPlaceholders -> set_Text -> ForceRebuildLayoutImmediate);
@@ -9,27 +10,30 @@ extends Control
 ##   OptionNewItem.prefab (option row: Text fs40 centred, row bg
 ##   option_item_bg, hover option_item_highlight, root Button + Toggle).]
 ##
-## User-supplied original-game screenshots (2026-08-23, 苏丹雅兴 3-选项 /
-## 贵族品级 4-选项事件, 16:9 全窗) cross-check the structure: title/body
-## paragraph, full-width option rows, right-side portrait, bottom confirm.
+## Older screenshot-derived body/row/portrait rectangles below remain
+## approximate; they do not establish full source layout fidelity.
 ##
-## OptionBG height is a runtime layout-group computation (ForceRebuild
-## LayoutImmediate); statically unresolvable -> 🟡 constant from the
-## screenshot ratio + truth table (wall-clock measured 2026-08-23), to be
-## replaced in place once a full-window original capture has been measured.
+## Body height follows the source watcher; outer layout still keeps the
+## screenshot-derived minimum and horizontal insets. Full root LayoutGroup
+## allocation, portrait groups and TMP line metrics remain unported.
 
 signal choice_clicked(choice_key: String, choice_value: Variant)
 signal confirm_clicked
 
 const DESIGN_SIZE := Vector2(3840, 2160)
 const SOURCE_ART := "res://assets/original/ui/"
+const SourceText = preload("res://ui/source_text_style.gd")
+const SourceRichText = preload("res://ui/source_rich_text.gd")
+const MAX_BODY_HEIGHT := 1300.0
+const MAX_OPTION_BODY_HEIGHT := 1100.0
+const OPTION_GAP := 20.0
 
 # OptionBG: authored width 2705; height = runtime layout -> 🟡 960
 # (screenshot measure: panel height/width ≈ 0.355 => 2705 * 0.355 ≈ 960).
 const OPTION_BG_SIZE := Vector2(2705, 960)
 # Full mask: stretch offsets left 38 / right -38 / bottom 80 / top -52
 # (anchors (0,0)-(1,1), pos (0,14), sizeDelta (-76,-132)).
-const FULL_RECT := Rect2(38, -52, 2629, 1092)
+const FULL_RECT := Rect2(38, 52, 2629, 828)
 # Border: decorate 250x323, anchors (1,0), pos (-126,164), pivot (0.5,0.5).
 const BORDER_RECT := Rect2(2454, 634.5, 250, 323)
 # Confirm: rite_op_confirm 325x158, anchors (1,0), pos (-483,73).
@@ -41,58 +45,89 @@ const TEXT_RECT := Rect2(280, 150, 1820, 300)
 # Option rows: full-width rows under the ContentGroup (vertical layout
 # spacing 50); row height 100 and stride 150 are screenshot-derived 🟡.
 const OPTION_ROW_SIZE := Vector2(2200, 100)
-const OPTION_ROW_STRIDE := 150.0
+const OPTION_ROW_STRIDE := 120.0
 const OPTION_ROW_Y0 := 320.0
 # Portrait: screenshot-derived 🟡 (right side, bottom-anchored block).
 const PORTRAIT_RECT := Rect2(2147, 440, 400, 500)
 
 var _canvas: Control
 var _panel: Control
-var _title: Label
 var _body: RichTextLabel
 var _options_box: Control
 var _confirm_button: Button
 var _portrait: TextureRect
-var _on_choice_key_value: Callable
+var _icon_slots: Array[Control] = []
+var _full_image: TextureRect
+var _choice_group: ButtonGroup
+var _selected_key := ""
+var _selected_value: Variant
+var _has_choices := false
+var _direct_choices := false
+var _submitted := false
+var _last_content_height := -1
 
-## [SRC: PromptController.Show — the prompt is the game's choice surface;
-## the clone keeps its op-queue semantics and only swaps presentation.]
-func show_prompt(display: Dictionary, on_choice: Callable) -> void:
+## [SRC: PromptController.Show / OptionController.Show / ConfirmController.Show:
+## shared presentation, distinct selection and completion semantics.]
+func show_prompt(display: Dictionary, _on_choice: Callable) -> void:
 	clear_prompt()
-	_on_choice_key_value = on_choice
 	var text := str(display.get("text", ""))
 	if text.strip_edges().is_empty():
 		text = str(display.get("title", ""))
 	if _body != null:
-		_body.text = text
-	if _title != null:
-		_title.text = str(display.get("title", ""))
+		_body.text = SourceRichText.to_bbcode(text)
 	var choices: Dictionary = display.get("choices", {})
-	if choices.is_empty():
+	_has_choices = not choices.is_empty()
+	# ConfirmController already presents final OK/Cancel actions, unlike
+	# OptionController's selection + separate confirmation.
+	_direct_choices = _has_choices and str(display.get("presentation", "")) == "confirm"
+	if _direct_choices and _body != null:
+		_body.text = "[center]" + SourceRichText.to_bbcode(text) + "[/center]"
+	if not _direct_choices:
 		_build_confirm()
-	else:
+	if _has_choices:
 		_build_choices(choices)
 	var portrait: Texture2D = display.get("icon", null)
 	if portrait != null and _portrait != null:
 		_portrait.texture = portrait
+	if display.has("resolved_icons"):
+		_show_icons(display.resolved_icons)
+	call_deferred("_layout_content")
 
 
 func clear_prompt() -> void:
+	_last_content_height = -1
+	_selected_key = ""
+	_selected_value = null
+	_has_choices = false
+	_direct_choices = false
+	_submitted = false
+	_choice_group = null
 	if _options_box != null and is_instance_valid(_options_box):
 		for child in _options_box.get_children():
+			_options_box.remove_child(child)
 			child.queue_free()
 	if _confirm_button != null and is_instance_valid(_confirm_button):
+		_confirm_button.get_parent().remove_child(_confirm_button)
 		_confirm_button.queue_free()
 		_confirm_button = null
 	if _body != null:
 		_body.text = ""
 	if _portrait != null:
 		_portrait.texture = null
+	for slot in _icon_slots:
+		for child in slot.get_children():
+			if child == _portrait:
+				continue
+			slot.remove_child(child)
+			child.queue_free()
+	if _full_image != null:
+		_full_image.texture = null
+		_full_image.hide()
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_canvas()
 	resized.connect(_layout_canvas)
 	call_deferred("_layout_canvas")
@@ -117,36 +152,52 @@ func _build_canvas() -> void:
 	var bg := _texture_rect("prompt_bg.png", OPTION_BG_SIZE, float(0))
 	bg.name = "PromptBG"
 	_panel.add_child(bg)
-	var full := _texture_rect("prompt_bg_mask_2.png", FULL_RECT.size, float(0))
+	# [SRC: PromptNew Full Mask m_ShowMaskGraphic=0; Awake 0x589430
+	# creates full/item_bg as its first child. The mask is not black artwork.]
+	var full := NinePatchRect.new()
 	full.name = "Full"
+	full.texture = load(SOURCE_ART + "prompt_bg_mask_2.png")
 	full.position = FULL_RECT.position
+	full.size = FULL_RECT.size
+	full.patch_margin_left = 284
+	full.patch_margin_right = 248
+	full.patch_margin_top = 255
+	full.patch_margin_bottom = 234
+	full.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+	full.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(full)
+	# LoadSprite(..., true, true) sets native size before anchors become stretch.
+	# item_bg.asset: 2048x1560, PPU=74.963394 (canvas reference PPU=100).
+	var native_size := Vector2(2048, 1560) * (100.0 / 74.963394)
+	var interior := _texture_rect("prompt_full_item_bg.png", FULL_RECT.size + native_size, 0.0)
+	interior.name = "RuntimeBackground"
+	interior.position = -native_size * 0.5
+	full.add_child(interior)
+	_full_image = TextureRect.new()
+	_full_image.name = "FullImage"
+	_full_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_full_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_full_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	full.add_child(_full_image)
+	_full_image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_full_image.hide()
 
-	# [SRC: user screenshots — the prompt carries an event title strip above
-	# the body; the authored top-notch strip lives outside OptionBG, so the
-	# title node stays a screenshot-derived placeholder for now (🟡).]
-	_title = Label.new()
-	_title.name = "EventPromptTitle"
-	_title.position = Vector2(280, 80)
-	_title.size = Vector2(1820, 64)
-	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 38)
-	_title.add_theme_color_override("font_color", Color("#e6d7a8"))
-	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_panel.add_child(_title)
+	# [SRC: PromptControllerBase.ShowInternal 0x589890 writes Content;
+	# PromptNew.prefab has no event-ID title. Do not display operation ids.]
 
 	_body = RichTextLabel.new()
 	_body.name = "EventPromptBody"
 	_body.bbcode_enabled = true
-	_body.fit_content = true
+	_body.fit_content = false
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.scroll_active = true
 	_body.position = TEXT_RECT.position
 	_body.size = TEXT_RECT.size
-	_body.custom_minimum_size = TEXT_RECT.size
-	_body.add_theme_font_size_override("font_size", 40)
+	# RichTextLabel uses normal_font_size (font_size is a Label-only key).
+	# The previous override passed a getter test but did not affect glyphs.
+	SourceText.apply(_body, "@PROMPT_TEXT")
 	_body.add_theme_color_override("default_color", Color("#eee2c4"))
-	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_body.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.add_child(_body)
 
 	_options_box = Control.new()
@@ -161,23 +212,126 @@ func _build_canvas() -> void:
 
 	_portrait = TextureRect.new()
 	_portrait.name = "PromptPortrait"
-	_portrait.position = PORTRAIT_RECT.position
+	_portrait.position = Vector2(-PORTRAIT_RECT.size.x * 0.5, -PORTRAIT_RECT.size.y)
 	_portrait.size = PORTRAIT_RECT.size
 	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_panel.add_child(_portrait)
+	for i in range(3):
+		var slot := Control.new()
+		slot.name = "PromptIconSlot%d" % (i + 1)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_panel.add_child(slot)
+		_icon_slots.append(slot)
+	_icon_slots[1].add_child(_portrait)
+
+
+func _show_icons(presentation: Dictionary) -> void:
+	_full_image.texture = presentation.get("full")
+	_full_image.visible = _full_image.texture != null
+	var slots: Array = presentation.get("slots", [])
+	for i in mini(slots.size(), 3):
+		var data: Variant = slots[i]
+		if not data is Dictionary:
+			continue
+		if data.has("texture"):
+			var portrait := _portrait if i == 1 else TextureRect.new()
+			if i != 1:
+				portrait.name = "PromptPortrait%d" % (i + 1)
+				portrait.position = _portrait.position
+				portrait.size = PORTRAIT_RECT.size
+				portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				_icon_slots[i].add_child(portrait)
+			portrait.texture = data.texture
+		for entry in data.get("cards", []):
+			var widget := CardWidget.new()
+			widget.name = "PromptCard%d" % int(entry.card.id)
+			widget.set_card(entry.card)
+			_icon_slots[i].add_child(widget)
+			widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			widget.pivot_offset = widget.size * 0.5
+			widget.position = Vector2(0, -entry.pose.x) - widget.pivot_offset
+			widget.rotation_degrees = -entry.pose.y
+			widget.scale = Vector2.ONE * 1.8
+			_icon_slots[i].move_child(widget, 0)
+
+
+func _process(_delta: float) -> void:
+	if _body != null and _last_content_height != _body.get_content_height():
+		_layout_content()
+
+
+# [SRC: ScrollViewContentHightWatcher.LateUpdate 0x4342c0,
+# dump.cs:420520; PromptNew.prefab MaxHeight=1300.]
+# Only the body height watcher is mapped here. The surrounding horizontal
+# layout and row metrics still retain the documented approximation.
+func _layout_content() -> void:
+	if _body == null or _options_box == null:
+		return
+	_last_content_height = _body.get_content_height()
+	# OptionNew.prefab:1780 is 1100; PromptNew.prefab:1790 is 1300.
+	# ConfirmNew has a different non-scroll layout, still pending migration.
+	var height_limit := MAX_OPTION_BODY_HEIGHT if _has_choices and not _direct_choices else MAX_BODY_HEIGHT
+	_body.size.y = minf(float(_last_content_height), height_limit)
+	if _direct_choices:
+		# [SRC: ConfirmNew.prefab ContentGroup + ContentSizeFitter; ConfirmController.Show
+		# 0x53fc30 calls ForceRebuildLayoutImmediate. Confirm has no ScrollView and its
+		# short confirmation panel shrinks around the translated content.]
+		_body.position.x = (OPTION_BG_SIZE.x - 2000.0) * 0.5
+		_body.size.x = 2000.0
+		for row in _options_box.get_children():
+			var accepted := str(row.get_meta("choice_key")) == "confirm_ok"
+			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 145.1)
+		return
+	var row_y := maxf(OPTION_ROW_Y0, _body.position.y + _body.size.y + 50.0)
+	var row_gap := 50.0 if _direct_choices else OPTION_GAP
+	for row in _options_box.get_children():
+		if _direct_choices:
+			continue
+		row.position.y = row_y
+		row_y += row.size.y + row_gap
+	var bottom := _body.position.y + _body.size.y
+	if _options_box.get_child_count() > 0 and not _direct_choices:
+		bottom = row_y - row_gap
+	_panel.size.y = maxf(OPTION_BG_SIZE.y, bottom + 200.0)
+	_panel.position.y = (DESIGN_SIZE.y - _panel.size.y) * 0.5
+	_panel.get_node("PromptBG").size = _panel.size
+	var full := _panel.get_node("Full") as Control
+	full.size.y = _panel.size.y - 132.0
+	full.get_node("RuntimeBackground").size.y = full.size.y + 1560.0 * (100.0 / 74.963394)
+	_panel.get_node("Border").position.y = _panel.size.y - 325.5
+	# PromptNew IconGroup children are 400 wide with -200 spacing. The group
+	# origin still uses the documented host approximation pending root layout.
+	for i in _icon_slots.size():
+		_icon_slots[i].position = Vector2(PORTRAIT_RECT.get_center().x + (i - 1) * 200.0, _panel.size.y - 20.0)
+	if _confirm_button != null:
+		_confirm_button.position.y = _panel.size.y - 152.0
+	if _direct_choices:
+		for row in _options_box.get_children():
+			var accepted := str(row.get_meta("choice_key")) == "confirm_ok"
+			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 145.1)
 
 
 func _build_choices(choices: Dictionary) -> void:
+	# [SRC: decompiled/OptionController.c @ Show (RVA 0x576b50,
+	# dump.cs:321643-321673): a ToggleGroup, no initial option, Confirm disabled.]
+	_choice_group = ButtonGroup.new()
+	_choice_group.allow_unpress = false
 	var index := 0
 	for key in choices.keys():
 		var entry = choices[key]
-		var choice_text := str(entry.get("text", key)) if entry is Dictionary and entry.has("value") else str(entry)
+		var choice_text := str(entry.get("text", key)) if entry is Dictionary else str(entry)
 		var choice_value: Variant = entry.get("value") if entry is Dictionary and entry.has("value") else entry
 		var row := Button.new()
-		row.text = choice_text
+		# [SRC: OptionItemController.Init 0x5772b0, dump.cs:321676:
+		# option.text is assigned to its child TMP, not rendered by Toggle.]
 		row.name = "EventPromptChoiceButton"
+		row.set_meta("choice_key", str(key))
+		row.toggle_mode = not _direct_choices
+		if not _direct_choices:
+			row.button_group = _choice_group
 		row.position = Vector2(
 			(OPTION_BG_SIZE.x - OPTION_ROW_SIZE.x) * 0.5,
 			OPTION_ROW_Y0 + float(index) * OPTION_ROW_STRIDE
@@ -185,6 +339,7 @@ func _build_choices(choices: Dictionary) -> void:
 		row.size = OPTION_ROW_SIZE
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		row.add_theme_font_size_override("font_size", 40)
+		SourceText.apply(row, "@OPTION_ITEM_TEXT")
 		row.add_theme_color_override("font_color", Color("#dccf9c"))
 		row.add_theme_color_override("font_hover_color", Color("#fff0b6"))
 		row.add_theme_stylebox_override("normal", _row_style("option_item_bg.png"))
@@ -192,15 +347,45 @@ func _build_choices(choices: Dictionary) -> void:
 		row.add_theme_stylebox_override("pressed", _row_style("option_item_highlight.png"))
 		row.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		row.add_theme_stylebox_override("disabled", _row_style("option_item_bg.png"))
-		row.pressed.connect(_emit_choice.bind(str(key), choice_value))
+		if _direct_choices:
+			row.pressed.connect(_submit_direct_choice.bind(str(key), choice_value))
+		else:
+			row.pressed.connect(_select_choice.bind(row, str(key), choice_value))
+			row.focus_entered.connect(_select_choice.bind(row, str(key), choice_value))
+			row.gui_input.connect(_on_choice_input.bind(row))
 		_options_box.add_child(row)
+		var caption := RichTextLabel.new()
+		caption.name = "OptionText"
+		caption.bbcode_enabled = true
+		caption.scroll_active = false
+		caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(caption)
+		caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		caption.offset_left = 24.0
+		caption.offset_right = -24.0
+		if not _direct_choices:
+			SourceText.apply(caption, "@OPTION_ITEM_TEXT")
+		caption.add_theme_color_override("default_color", Color(0.8627451, 0.8117647, 0.6039216))
+		caption.text = "[center]" + SourceRichText.to_bbcode(choice_text) + "[/center]"
+		if _direct_choices:
+			var accepted := str(key) == "confirm_ok"
+			row.size = Vector2(325 if accepted else 168, 158)
+			var button_style := _row_style("rite_op_confirm.png" if accepted else "rite_op_cancel.png", 0)
+			for style in ["normal", "hover", "pressed", "focus", "disabled"]:
+				row.add_theme_stylebox_override(style, button_style)
+			for font_key in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size"]:
+				caption.add_theme_font_size_override(font_key, 24)
+			caption.add_theme_color_override("default_color", Color(0.8666667, 0.8666667, 0.8, 0))
 		index += 1
 
 
 func _build_confirm() -> void:
 	_confirm_button = Button.new()
-	_confirm_button.name = "EventPromptContinueButton"
-	_confirm_button.text = "继续"
+	_confirm_button.name = "EventPromptConfirmButton" if _has_choices else "EventPromptContinueButton"
+	_confirm_button.text = "确认" if _has_choices else "继续"
+	_confirm_button.disabled = _has_choices
 	_confirm_button.position = CONFIRM_RECT.position
 	_confirm_button.size = CONFIRM_RECT.size
 	_confirm_button.add_theme_font_size_override("font_size", 30)
@@ -209,12 +394,52 @@ func _build_confirm() -> void:
 	var confirm_style := _row_style("rite_op_confirm.png")
 	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
 		_confirm_button.add_theme_stylebox_override(state, confirm_style)
-	_confirm_button.pressed.connect(func(): confirm_clicked.emit())
+	_confirm_button.pressed.connect(_submit_prompt)
 	_panel.add_child(_confirm_button)
 
 
-func _emit_choice(choice_key: String, choice_value: Variant) -> void:
+func _submit_direct_choice(choice_key: String, choice_value: Variant) -> void:
+	# [SRC: ConfirmController.c @ OnConfirm/OnClose (0x53fc20/0x53fc10)
+	# -> Done (0x53fb70); dump.cs:318365: Promise<bool>, no selected option.]
+	if _submitted or not is_inside_tree():
+		return
+	_submitted = true
 	choice_clicked.emit(choice_key, choice_value)
+
+
+func _select_choice(row: Button, choice_key: String, choice_value: Variant) -> void:
+	# [SRC: decompiled/OptionController.__c__DisplayClass11_1.c @ <Show>b__0
+	# (RVA 0x588f00): selection only; no Promise resolution or result execution.]
+	if _submitted or not row.is_inside_tree():
+		return
+	for other in _choice_group.get_buttons():
+		other.set_pressed_no_signal(other == row)
+	_selected_key = choice_key
+	_selected_value = choice_value
+	_confirm_button.disabled = false
+
+
+func _on_choice_input(event: InputEvent, row: Button) -> void:
+	# [SRC: OptionItemController.c @ OnSubmit (0x577490) ->
+	# OptionController.__c__DisplayClass11_0.c @ <Show>b__1 (0x588ec0):
+	# submit on a selected row moves focus to Confirm; it does not confirm.]
+	if event.is_action_pressed("ui_accept") and not event.is_echo():
+		row.accept_event()
+		if not _submitted and not _confirm_button.disabled:
+			_confirm_button.grab_focus()
+
+
+func _submit_prompt() -> void:
+	# [SRC: decompiled/OptionController.c @ OnConfirm (RVA 0x576900):
+	# interactable + CurrentToggle gates; clear Promise before resolving once.]
+	if _submitted or not is_inside_tree() or _confirm_button.disabled:
+		return
+	_submitted = true
+	_confirm_button.disabled = true
+	if _has_choices:
+		choice_clicked.emit(_selected_key, _selected_value)
+	else:
+		confirm_clicked.emit()
 
 
 func _row_style(file_name: String, texture_margin := 20.0) -> StyleBox:

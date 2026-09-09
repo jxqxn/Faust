@@ -1,29 +1,32 @@
-## Source-shaped SettingsPanel / SettingsController host.
-##
-## SettingsController.ShowSettings opens a 2x 1920x1080 root and receives
-## `show_mask=false` from ESCGameController.OnSettings.  GameApplication owns
-## persistent application preferences; player save data is intentionally not
-## involved here.
-## [SRC: Resources/prefab/SettingsPanel.prefab; GameScene.unity SettingsPanel;
-##       decompiled/ESCGameController.c @ OnSettings (RVA 0x542f60);
-##       decompiled/SettingsController.c @ ShowSettings (RVA 0x5ab420)]
+## [SRC: SettingsPanelNew.prefab; SettingsController.ShowSettings 0x5ab420 /
+## OnEnable 0x5ab270 (dump.cs:325897). Coordinates include scene root scale.]
 extends Control
 
 signal closed
 
 const DESIGN_SPACE := Vector2(3840, 2160)
-const SOURCE_CANVAS := Vector2(1920, 1080)
-const SOURCE_ROOT_SCALE := Vector2(2, 2)
-const PANEL_SIZE := Vector2(1788, 1200)
 const AppSettings = preload("res://ui/game_application_settings.gd")
+const SourceText = preload("res://ui/source_text_style.gd")
+const INK := Color("c6bd83")
+# SettingsPanelNew KeyMapController.keys order; Resources/InputActions.asset
+# keyboard bindings; KeyItemController.SetKey 0x5656e0 skips composites.
+const KEY_BINDINGS := [
+	["Submit", "Space / Enter"], ["Cancel", "Escape"], ["Sort", "O"],
+	["IThink", "Z"], ["ShowCardInfo", "X"], ["Help", "/"],
+	["MapMove", "W / S / A / D"], ["MapZoom", "Q / E"],
+	["Bag1", "1"], ["Bag2", "2"], ["Bag3", "3"], ["Bag4", "4"],
+	["BagSwitch", "Tab"], ["BagOpen", "B"], ["Notes", "I"], ["RestoreRite", "R"],
+]
 
 var _audio: GameAudio
 var _music_slider: HSlider
 var _sound_slider: HSlider
-var _music_toggle: Button
-var _sound_toggle: Button
-var _data_collect_toggle: Button
-var _harmonious_toggle: Button
+var _screen_mode: OptionButton
+var _resolution: OptionButton
+var _pages: Array[Control] = []
+var _tabs: Array[Button] = []
+var _ui: Dictionary
+var _fonts: Dictionary = {}
 
 
 func setup(audio: GameAudio) -> void:
@@ -33,10 +36,17 @@ func setup(audio: GameAudio) -> void:
 func _ready() -> void:
 	name = "SettingsController"
 	theme = FaustTheme.get_theme()
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 1001
 	AppSettings.load_preferences()
+	_ui = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	_build_source_tree()
+	_on_viewport_resized()
+	get_viewport().size_changed.connect(_on_viewport_resized)
+
+
+func _on_viewport_resized() -> void:
 	apply_source_layout(get_viewport_rect().size)
 
 
@@ -47,269 +57,363 @@ func apply_source_layout(view_size: Vector2) -> void:
 
 
 func _build_source_tree() -> void:
-	var root := Control.new()
-	root.name = "SettingsPanel"
-	root.size = SOURCE_CANVAS
-	root.scale = SOURCE_ROOT_SCALE
+	var root := _group(self, "SettingsPanelNew", Rect2(Vector2.ZERO, DESIGN_SPACE))
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(root)
-
-	# ShowSettings(false) leaves the shared mask transparent for the ESC route.
-	var mask := ColorRect.new()
-	mask.name = "Mask"
-	mask.size = SOURCE_CANVAS
-	mask.color = Color(0, 0, 0, 0)
-	mask.mouse_filter = Control.MOUSE_FILTER_STOP
-	mask.gui_input.connect(_on_mask_gui_input)
-	root.add_child(mask)
-
-	var panel := Panel.new()
-	panel.name = "PanelBG"
-	panel.position = Vector2(66, -60)
-	panel.size = PANEL_SIZE
-	panel.mouse_filter = Control.MOUSE_FILTER_STOP
-	panel.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
-	root.add_child(panel)
-
-	_add_label(panel, "Title", "系统设置", Vector2(398.2, 176), Vector2(300, 50), 36, HORIZONTAL_ALIGNMENT_LEFT)
+	var bg := NinePatchRect.new()
+	bg.name = "PanelBG"
+	bg.size = DESIGN_SPACE
+	bg.texture = _texture("bg_2")
+	# Sprite border145/155 at PPU50; referencePixelsPerUnit100.
+	bg.patch_margin_left = 145
+	bg.patch_margin_right = 145
+	bg.patch_margin_top = 155
+	bg.patch_margin_bottom = 155
+	bg.size = DESIGN_SPACE / 2
+	bg.scale = Vector2(2, 2)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(bg)
+	var nav := _group(root, "Group1", Rect2(240, 380, 950, 1400))
+	_image(nav, "TitleIcon", "setting_icon", Rect2(0, 0, 132, 124))
+	_label(nav, "Title", "SETTING_PANEL", Rect2(165, -13, 500, 150), "@TITLE_H1")
+	# 3x150 + 2x20, pivot .5 at authored y692 => top447 in Group1.
+	var tabs := _group(nav, "ToggleGroup", Rect2(0, 447, 950, 490))
+	for i in range(3):
+		var button := Button.new()
+		button.name = ["ScreenSound", "KayMap", "Other"][i]
+		button.position = Vector2(0, i * 170)
+		button.size = Vector2(950, 150)
+		button.flat = true
+		button.toggle_mode = true
+		button.pressed.connect(_select_page.bind(i))
+		tabs.add_child(button)
+		_image(button, "HighLight", "hightlight", Rect2(150, 0, 800, 150))
+		_image(button, "Line", "slash", Rect2(0, 135, 950, 30))
+		_label(button, "Text", ["SCREEN_SOUND_SETTING", "KEYMAP_KEYBOARD", "OTHER_SETTING"][i], Rect2(50, 0, 850, 150), "@TITLE_H3")
+		_tabs.append(button)
+	var content := _group(root, "Group2", Rect2(1340, 180, 2345, 1800))
+	_pages.append(_group(content, "ScreenSound", Rect2(130, 150, 2115, 1480)))
+	_pages.append(_group(content, "KeyMapKeyboard", Rect2(40, 0, 2280, 1800)))
+	_pages.append(_group(content, "TriggerGroup", Rect2(0, 0, 2345, 1800)))
+	_build_display(_pages[0])
+	_build_keymap(_pages[1])
+	_build_other(_pages[2])
 	var close := Button.new()
-	close.name = "Button"
-	close.text = "×"
-	close.position = Vector2(1449.8, 217)
-	close.size = Vector2(80, 82)
+	close.name = "Close"
+	close.position = Vector2(3722.3, 46.3)
+	close.size = Vector2(75, 78)
 	close.flat = true
-	close.add_theme_font_size_override("font_size", 42)
+	close.tooltip_text = "关闭"
 	close.pressed.connect(_close)
-	panel.add_child(close)
-
-	_build_dropdown_group(panel)
-	_build_slider_group(panel)
-	_build_trigger_group(panel)
-	_build_keymap_button(panel)
+	root.add_child(close)
+	_image(close, "Background", "checkbox_bg", Rect2(0, 0, 75, 78))
+	_image(close, "Image", "close_2", Rect2(16, 20.5, 43, 37))
+	_select_page(0)
 
 
-func _build_dropdown_group(panel: Control) -> void:
-	var group := Control.new()
-	group.name = "DropDownGroup"
-	group.position = Vector2(334.43, 290.4)
-	group.size = Vector2(940, 333.2)
-	panel.add_child(group)
-	# The controller has four fields.  The original binds platform and language
-	# APIs not yet present in the Godot host, so they stay visibly explicit,
-	# instead of pretending that selecting one changes the OS.
-	_add_source_dropdown(group, "ShowMode", "显示模式：", "全屏模式", 0)
-	_add_source_dropdown(group, "Language", "语言：", "", 1)
-	_add_source_dropdown(group, "Resolution", "分辨率：", "1920x1080", 2)
-	_add_source_dropdown(group, "FontSize", "字体大小：", "", 3)
+func _select_page(index: int) -> void:
+	for i in range(_pages.size()):
+		_pages[i].visible = i == index
+		_tabs[i].set_pressed_no_signal(i == index)
+		_tabs[i].get_node("HighLight").visible = i == index
 
 
-func _add_source_dropdown(group: Control, node_name: String, title: String, value: String, index: int) -> void:
-	var row := Control.new()
-	row.name = node_name
-	row.position = Vector2(0, 78.0 * index)
-	row.size = Vector2(940, 50)
-	group.add_child(row)
-	_add_label(row, "Text (TMP)", title, Vector2(0, 0), Vector2(180, 50), 24, HORIZONTAL_ALIGNMENT_LEFT)
-	var dropdown := Button.new()
+func _build_display(page: Control) -> void:
+	_label(page, "SenceTitle", "SCREEN_SETTING_TITLE", Rect2(0, 0, 2115, 116.2), "@TITLE_H2")
+	var scene := _group(page, "Sence", Rect2(0, 150.4, 2115, 585))
+	_screen_mode = _dropdown(scene, "ShowMode", "SCREEN_MODE_SETTING", 0)
+	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var modes: Array = variable.get("support_fullScreen", [])
+	for i in range(modes.size()):
+		_screen_mode.add_item(_text("SCREEN_MODE_%d" % i))
+		_screen_mode.set_item_metadata(i, str(modes[i]))
+		if str(modes[i]) == AppSettings.full_screen:
+			_screen_mode.select(i)
+	_screen_mode.item_selected.connect(_on_screen_mode_selected)
+	var language := _dropdown(scene, "Language", "LANGUAGE_SETTING", 1)
+	language.add_item("简体中文")
+	language.disabled = true
+	_resolution = _dropdown(scene, "Resolution", "RESOLUTION_SETTING", 2)
+	for value in AppSettings.supported_resolutions():
+		_resolution.add_item(value)
+		if value == AppSettings.resolution:
+			_resolution.select(_resolution.item_count - 1)
+	_resolution.disabled = _resolution.item_count == 0
+	if _resolution.disabled:
+		_resolution.add_item(AppSettings.resolution)
+	_resolution.item_selected.connect(_on_resolution_selected)
+	var font_size := _dropdown(scene, "FontSize", "FONT_SIZE_SETTING", 3)
+	var sizes := AppSettings.font_size_options()
+	for key in sizes:
+		font_size.add_item(_text(key))
+		var index := font_size.item_count - 1
+		font_size.set_item_metadata(index, sizes[key])
+		if sizes[key] == AppSettings.font_size:
+			font_size.select(index)
+	font_size.item_selected.connect(func(index: int):
+		AppSettings.set_font_size(str(font_size.get_item_metadata(index))))
+	_image(page, "Line", "rite_log_sperator", Rect2(0, 926.6, 2115, 6))
+	_label(page, "SoundTitle", "SOUND_SETTING_TITLE", Rect2(0, 1003.79, 2115, 116.2), "@TITLE_H2")
+	var sound := _group(page, "Sound", Rect2(0, 1154.19, 2115, 358.7))
+	_music_slider = _volume_row(sound, "MusicVolume", "MUSIC_VALUE_SLIDER", 0, AppSettings.music_value)
+	_sound_slider = _volume_row(sound, "SoundVolume", "SOUND_VALUE_SLIDER", 179.35, AppSettings.sound_value)
+
+
+func _dropdown(parent: Control, node_name: String, title: String, index: int) -> OptionButton:
+	var row := _group(parent, node_name, Rect2(0, index * 155, 1045, 60))
+	row.scale = Vector2(2, 2)
+	_label(row, "Title", title, Rect2(80, 5, 175, 50), "@SETTING_OPTION_TITLE")
+	var dropdown := OptionButton.new()
 	dropdown.name = "Dropdown"
-	dropdown.position = Vector2(114.9, -3)
-	dropdown.size = Vector2(760, 56)
-	dropdown.text = value
-	dropdown.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	dropdown.add_theme_font_size_override("font_size", 22)
-	dropdown.tooltip_text = "SettingDropDownController 的平台/语言绑定尚未迁移。"
-	dropdown.disabled = true
+	dropdown.position = Vector2(255, 2)
+	dropdown.size = Vector2(790, 56)
+	dropdown.fit_to_longest_item = false
+	dropdown.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	SourceText.apply(dropdown, "@SETTING_OPTION_ITEM")
+	_use_distance_field_font(dropdown)
+	dropdown.add_theme_color_override("font_color", INK)
+	dropdown.add_theme_color_override("font_disabled_color", INK.darkened(0.25))
+	dropdown.add_theme_icon_override("arrow", _texture("dropdown_arrow"))
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var style := StyleBoxTexture.new()
+		style.texture = _texture("setting_button_bg")
+		style.texture_margin_left = 29
+		style.texture_margin_right = 50
+		style.texture_margin_top = 15
+		style.texture_margin_bottom = 15
+		dropdown.add_theme_stylebox_override(state, style)
 	row.add_child(dropdown)
-	var outline := Control.new()
-	outline.name = "Outline"
-	outline.position = Vector2(10, 6.5)
-	outline.size = Vector2(725, 43)
-	dropdown.add_child(outline)
-	var label := Label.new()
-	label.name = "Label"
-	label.text = value
-	label.position = Vector2(10, 7)
-	label.size = Vector2(680, 43)
-	label.add_theme_font_size_override("font_size", 22)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dropdown.add_child(label)
-	var arrow := Label.new()
-	arrow.name = "Arrow"
-	arrow.text = "⌄"
-	arrow.position = Vector2(690, 8)
-	arrow.size = Vector2(33, 30)
-	arrow.add_theme_font_size_override("font_size", 24)
-	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dropdown.add_child(arrow)
+	var popup := dropdown.get_popup()
+	popup.add_theme_font_override("font", dropdown.get_theme_font("font"))
+	popup.add_theme_font_size_override("font_size", 22)
+	# SettingsPanelNew Dropdown/Template: dropdown_bg borders14/22/37/31,
+	# option height56. PopupMenu still places checkmarks/text differently from TMP.
+	var panel := StyleBoxTexture.new()
+	panel.texture = _texture("dropdown_bg")
+	panel.texture_margin_left = 14
+	panel.texture_margin_bottom = 22
+	panel.texture_margin_right = 37
+	panel.texture_margin_top = 31
+	popup.add_theme_stylebox_override("panel", panel)
+	var hover := StyleBoxTexture.new()
+	hover.texture = _texture("setting_button_bg")
+	hover.texture_margin_left = 29
+	hover.texture_margin_right = 50
+	hover.texture_margin_top = 15
+	hover.texture_margin_bottom = 15
+	popup.add_theme_stylebox_override("hover", hover)
+	popup.add_theme_color_override("font_color", INK)
+	popup.add_theme_color_override("font_hover_color", INK)
+	popup.add_theme_constant_override("v_separation", 30)
+	popup.add_theme_icon_override("radio_checked", _texture("checkbox_selected"))
+	return dropdown
 
 
-func _build_slider_group(panel: Control) -> void:
-	var group := Control.new()
-	group.name = "SliderGroup"
-	group.position = Vector2(335.43, 606.05)
-	group.size = Vector2(1043.6, 147.9)
-	panel.add_child(group)
-	_music_slider = _add_volume_row(group, "MusicVolume", "游戏音乐音量：", 0, AppSettings.music_value, AppSettings.music_state == AppSettings.STATE_ON)
-	_sound_slider = _add_volume_row(group, "SoundVolume", "游戏音效音量：", 1, AppSettings.sound_value, AppSettings.sound_state == AppSettings.STATE_ON)
-
-
-func _add_volume_row(group: Control, node_name: String, title: String, index: int, value: float, enabled: bool) -> HSlider:
-	var row := Control.new()
-	row.name = node_name
-	row.position = Vector2(0, 80.5 * index)
-	row.size = Vector2(1043.6, 50)
-	group.add_child(row)
-	_add_label(row, "Text (TMP)", title, Vector2(0, 0), Vector2(205, 50), 24, HORIZONTAL_ALIGNMENT_LEFT)
+func _volume_row(parent: Control, node_name: String, title: String, y: float, value: float) -> HSlider:
+	var row := _group(parent, node_name, Rect2(0, y, 1049.59, 60))
+	row.scale = Vector2(2, 2)
+	_label(row, "Title", title, Rect2(80, 0.65, 203.14, 58.7), "@SETTING_OPTION_TITLE")
 	var slider := HSlider.new()
 	slider.name = "Slider"
-	slider.position = Vector2(83, 10)
+	slider.position = Vector2(283.135, 15)
 	slider.size = Vector2(766.45, 30)
-	slider.min_value = 0.0
-	slider.max_value = 100.0
-	slider.step = 0.0
+	slider.max_value = 100
+	slider.step = 0
 	slider.value = value
-	slider.editable = enabled
+	var track := StyleBoxTexture.new()
+	track.texture = _texture("slider_bg")
+	track.content_margin_top = 2.45
+	track.content_margin_bottom = 2.45
+	slider.add_theme_stylebox_override("slider", track)
+	slider.add_theme_stylebox_override("grabber_area", StyleBoxEmpty.new())
+	slider.add_theme_stylebox_override("grabber_area_highlight", StyleBoxEmpty.new())
+	var thumb := _texture("slider_block").get_image()
+	thumb.resize(9, 30, Image.INTERPOLATE_LANCZOS)
+	var thumb_texture := ImageTexture.create_from_image(thumb)
+	slider.add_theme_icon_override("grabber", thumb_texture)
+	slider.add_theme_icon_override("grabber_highlight", thumb_texture)
 	row.add_child(slider)
-	var value_label := Label.new()
-	value_label.name = "Value"
-	value_label.position = Vector2(445, -33)
-	value_label.size = Vector2(42, 40)
-	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	value_label.add_theme_font_size_override("font_size", 20)
-	value_label.text = str(roundi(value))
-	slider.add_child(value_label)
-	var min_label := Label.new()
-	min_label.name = "Min"
-	min_label.text = "0"
-	min_label.position = Vector2(0, 35)
-	min_label.size = Vector2(30, 35)
-	slider.add_child(min_label)
-	var max_label := Label.new()
-	max_label.name = "Max"
-	max_label.text = "100"
-	max_label.position = Vector2(720, 35)
-	max_label.size = Vector2(45, 35)
-	slider.add_child(max_label)
-	var toggle := Button.new()
-	toggle.name = "Toggle"
-	toggle.position = Vector2(849.44, -8)
-	toggle.size = Vector2(102, 56)
-	toggle.text = "ON" if enabled else "OFF"
-	toggle.add_theme_font_size_override("font_size", 16)
-	row.add_child(toggle)
-	if node_name == "MusicVolume":
-		_music_toggle = toggle
-		slider.value_changed.connect(_on_music_value_changed.bind(value_label))
-		toggle.pressed.connect(_on_music_toggled)
-	else:
-		_sound_toggle = toggle
-		slider.value_changed.connect(_on_sound_value_changed.bind(value_label))
-		toggle.pressed.connect(_on_sound_toggled)
+	var number := _label(slider, "Value", "", Rect2(0, -39.735, 42.08, 39.67), "@SETTING_OPTION_ITEM")
+	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_update_volume_label(value, slider, number)
+	_label(slider, "Min", "", Rect2(30.4, 20.165, 30, 39.67), "@SETTING_OPTION_ITEM").text = "0"
+	_label(slider, "Max", "", Rect2(716.1, 20.165, 45, 39.67), "@SETTING_OPTION_ITEM").text = "100"
+	slider.value_changed.connect(func(v: float):
+		_update_volume_label(v, slider, number)
+		if node_name == "MusicVolume":
+			AppSettings.set_music_value(v)
+			if _audio != null:
+				_audio.set_music_settings(v, AppSettings.music_state == AppSettings.STATE_ON)
+		else:
+			AppSettings.set_sound_value(v)
+			if _audio != null:
+				_audio.set_sound_settings(v, AppSettings.sound_state == AppSettings.STATE_ON)
+	)
 	return slider
 
 
-func _build_trigger_group(panel: Control) -> void:
-	var group := Control.new()
-	group.name = "TriggerGroup"
-	group.position = Vector2(294, 768)
-	group.size = Vector2(1200, 100)
-	panel.add_child(group)
-	_data_collect_toggle = _add_boolean_row(group, "DataCollect", "数据收集：", 176, AppSettings.data_collect)
-	_harmonious_toggle = _add_boolean_row(group, "Harmonious", "主播配置：", 711.4, AppSettings.harmonious)
-	_data_collect_toggle.pressed.connect(_on_data_collect_toggled)
-	_harmonious_toggle.pressed.connect(_on_harmonious_toggled)
+func _update_volume_label(value: float, slider: HSlider, label: Label) -> void:
+	label.text = str(roundi(value))
+	label.position.x = 33 + (slider.size.x - 66) * value / 100.0 - label.size.x / 2
 
 
-func _add_boolean_row(group: Control, node_name: String, title: String, x: float, value: bool) -> Button:
-	var row := Control.new()
-	row.name = node_name
-	row.position = Vector2(x - 130, 29)
-	row.size = Vector2(330, 56)
-	group.add_child(row)
-	_add_label(row, "Text (TMP)", title, Vector2(0, 0), Vector2(200, 50), 24, HORIZONTAL_ALIGNMENT_LEFT)
+func _build_keymap(page: Control) -> void:
+	# KeyItem.prefab120 high, Content VerticalLayoutGroup spacing8.
+	var scroll := ScrollContainer.new()
+	scroll.name = "Keys"
+	scroll.size = page.size
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	page.add_child(scroll)
+	var content := Control.new()
+	content.name = "Content"
+	content.mouse_filter = Control.MOUSE_FILTER_PASS
+	content.custom_minimum_size = Vector2(2260, KEY_BINDINGS.size() * 128 - 8)
+	scroll.add_child(content)
+	for i in range(KEY_BINDINGS.size()):
+		var binding: Array = KEY_BINDINGS[i]
+		var row := _group(content, str(binding[0]), Rect2(0, i * 128, 2260, 120))
+		for x in [0, 1129]:
+			var cell := NinePatchRect.new()
+			cell.position = Vector2(x, 0)
+			# KeyItem Images use pixelsPerUnitMultiplier4.
+			cell.size = Vector2(1131, 120) * 4
+			cell.scale = Vector2(0.25, 0.25)
+			cell.texture = _texture("grid_0")
+			cell.patch_margin_left = 20
+			cell.patch_margin_right = 20
+			cell.patch_margin_top = 20
+			cell.patch_margin_bottom = 20
+			cell.modulate = Color(0.5943396, 0.57878023, 0.49061054)
+			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			row.add_child(cell)
+		var title := _label(row, "DisplayNameText", "KEYMAP_%s_Keyboard&Mouse" % binding[0], Rect2(10, 0, 1111, 120), "@MAIN_BODY")
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var keys := _label(row, "KeyText", "", Rect2(1139, 0, 1111, 120), "@MAIN_BODY")
+		keys.text = str(binding[1])
+		keys.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+
+func _build_other(page: Control) -> void:
+	_boolean_row(page, "DataCollect", "DATA_COLLECT_TOGGLE", "DATA_COLLECT_TIPS", 0, AppSettings.data_collect, AppSettings.set_data_collect)
+	_boolean_row(page, "Harmonious", "HARMONIOUS_TOGGLE", "HARMONIOUS_TIPS", 630, AppSettings.harmonious, AppSettings.set_harmonious)
+	_boolean_row(page, "MobileUI", "MOBILE_UI_TOGGLE", "MOBILE_UI_TIPS", 1260, AppSettings.mobile_ui, AppSettings.set_mobile_ui)
+
+
+func _boolean_row(page: Control, node_name: String, title: String, tips: String, y: float, value: bool, setter: Callable) -> void:
+	var row := _group(page, node_name, Rect2(0, y, 2345, 200))
+	_label(row, "Title", title, Rect2(0, 0, 600, 200), "@TITLE_H2")
 	var toggle := Button.new()
 	toggle.name = "Toggle"
-	toggle.position = Vector2(170, -7.6)
-	toggle.size = Vector2(102, 56)
-	toggle.text = "ON" if value else "OFF"
-	toggle.add_theme_font_size_override("font_size", 16)
+	toggle.position = Vector2(614.5, 56)
+	toggle.size = Vector2(208, 88)
+	toggle.flat = true
+	toggle.toggle_mode = true
+	toggle.button_pressed = value
+	toggle.tooltip_text = _text(title).trim_suffix("：")
 	row.add_child(toggle)
-	return toggle
+	var icon := _image(toggle, "Image", "toggle_on" if value else "toggle_off", Rect2(0, 0, 208, 88))
+	toggle.toggled.connect(func(enabled: bool):
+		setter.call(enabled)
+		icon.texture = _texture("toggle_on" if enabled else "toggle_off"))
+	var description := _label(page, node_name + "Tips", tips, Rect2(0, y + 250, 2345, 240), "@PROMPT_TEXT")
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	if y < 1260:
+		_image(page, node_name + "Line", "rite_log_sperator", Rect2(0, y + 557, 2345, 6))
 
 
-func _build_keymap_button(panel: Control) -> void:
-	var keymap := Button.new()
-	keymap.name = "KeyMap"
-	keymap.position = Vector2(284.5, 229)
-	keymap.size = Vector2(405, 174)
-	keymap.text = "键位说明"
-	keymap.disabled = true
-	keymap.tooltip_text = "KeyMapController 的输入动作清单尚未迁移。"
-	keymap.add_theme_font_size_override("font_size", 36)
-	panel.add_child(keymap)
+func _on_screen_mode_selected(index: int) -> void:
+	if not AppSettings.set_full_screen(str(_screen_mode.get_item_metadata(index))):
+		for i in range(_screen_mode.item_count):
+			if str(_screen_mode.get_item_metadata(i)) == AppSettings.full_screen:
+				_screen_mode.select(i)
+		_show_display_error()
 
 
-func _add_label(parent: Control, node_name: String, text: String, pos: Vector2, node_size: Vector2, font_size: int, alignment: HorizontalAlignment) -> Label:
+func _on_resolution_selected(index: int) -> void:
+	if not AppSettings.set_resolution(_resolution.get_item_text(index)):
+		for i in range(_resolution.item_count):
+			if _resolution.get_item_text(i) == AppSettings.resolution:
+				_resolution.select(i)
+		_show_display_error()
+
+
+func _show_display_error() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "无法切换显示设置"
+	dialog.dialog_text = AppSettings.display_error
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered()
+
+
+func _group(parent: Node, node_name: String, rect: Rect2) -> Control:
+	var control := Control.new()
+	control.name = node_name
+	control.position = rect.position
+	control.size = rect.size
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(control)
+	return control
+
+
+func _texture(asset: String) -> Texture2D:
+	if asset == "rite_log_sperator":
+		var frames: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://assets/original/ui/rite_settlement_icon.json"))
+		var frame: Dictionary = {}
+		for entry in frames.get("frames", []):
+			if entry.get("filename", "") == "rite_log_sperator.png":
+				frame = entry.get("frame", {})
+		var atlas := AtlasTexture.new()
+		atlas.atlas = load("res://assets/original/ui/rite_settlement_icon.png")
+		atlas.region = Rect2(frame.get("x", 0), frame.get("y", 0), frame.get("w", 0), frame.get("h", 0))
+		return atlas
+	return load("res://assets/original/ui/%s.png" % asset)
+
+
+func _image(parent: Control, node_name: String, asset: String, rect: Rect2) -> TextureRect:
+	var control := TextureRect.new()
+	control.name = node_name
+	control.position = rect.position
+	control.size = rect.size
+	control.texture = _texture(asset)
+	control.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(control)
+	return control
+
+
+func _text(key: String) -> String:
+	return str(_ui.get(key, {}).get("zhCN", ""))
+
+
+func _label(parent: Control, node_name: String, key: String, rect: Rect2, style: String) -> Label:
 	var label := Label.new()
 	label.name = node_name
-	label.text = text
-	label.position = pos
-	label.size = node_size
-	label.horizontal_alignment = alignment
+	label.text = _text(key)
+	label.position = rect.position
+	label.size = rect.size
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	SourceText.apply(label, style)
+	_use_distance_field_font(label)
+	label.add_theme_color_override("font_color", INK)
 	parent.add_child(label)
 	return label
 
 
-func _on_music_value_changed(value: float, value_label: Label) -> void:
-	value_label.text = str(roundi(value))
-	AppSettings.set_music_value(value)
-	if _audio != null:
-		_audio.set_music_settings(value, AppSettings.music_state == AppSettings.STATE_ON)
-
-
-func _on_sound_value_changed(value: float, value_label: Label) -> void:
-	value_label.text = str(roundi(value))
-	AppSettings.set_sound_value(value)
-	if _audio != null:
-		_audio.set_sound_settings(value, AppSettings.sound_state == AppSettings.STATE_ON)
-
-
-func _on_music_toggled() -> void:
-	var enabled := AppSettings.music_state == AppSettings.STATE_OFF
-	AppSettings.set_music_state(AppSettings.STATE_ON if enabled else AppSettings.STATE_OFF)
-	_music_toggle.text = "ON" if enabled else "OFF"
-	_music_slider.editable = enabled
-	if _audio != null:
-		_audio.set_music_settings(AppSettings.music_value, enabled)
-
-
-func _on_sound_toggled() -> void:
-	var enabled := AppSettings.sound_state == AppSettings.STATE_OFF
-	AppSettings.set_sound_state(AppSettings.STATE_ON if enabled else AppSettings.STATE_OFF)
-	_sound_toggle.text = "ON" if enabled else "OFF"
-	_sound_slider.editable = enabled
-	if _audio != null:
-		_audio.set_sound_settings(AppSettings.sound_value, enabled)
-
-
-func _on_data_collect_toggled() -> void:
-	AppSettings.set_data_collect(not AppSettings.data_collect)
-	_data_collect_toggle.text = "ON" if AppSettings.data_collect else "OFF"
-
-
-func _on_harmonious_toggled() -> void:
-	AppSettings.set_harmonious(not AppSettings.harmonious)
-	_harmonious_toggle.text = "ON" if AppSettings.harmonious else "OFF"
-
-
-func _on_mask_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_close()
-		accept_event()
+func _use_distance_field_font(control: Control) -> void:
+	# Source TMP uses SDF. Keep this renderer choice local to the scaled panel.
+	var original := control.get_theme_font("font")
+	var key := original.resource_path
+	if not _fonts.has(key):
+		var font := original.duplicate() as FontFile
+		if font == null:
+			return
+		font.multichannel_signed_distance_field = true
+		font.msdf_size = 96
+		_fonts[key] = font
+	control.add_theme_font_override("font", _fonts[key])
 
 
 func _close() -> void:

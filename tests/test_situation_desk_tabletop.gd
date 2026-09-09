@@ -5,6 +5,7 @@ const MapController = preload("res://ui/map_controller.gd")
 
 const TABLE_PATH := "res://assets/original/situation_desk/table.png"
 const MAP_PATH := "res://assets/original/situation_desk/table-map.png"
+const END_MAP_PATH := "res://assets/original/situation_desk/table-map-end.png"
 
 var db: ConfigDB
 
@@ -15,13 +16,28 @@ func before_all():
 
 
 func test_source_table_and_map_assets_load():
-	for path in [TABLE_PATH, MAP_PATH]:
+	for path in [TABLE_PATH, MAP_PATH, END_MAP_PATH]:
 		assert_true(ResourceLoader.exists(path), "%s should be an original map asset" % path)
 		var texture := load(path) as Texture2D
 		assert_not_null(texture, "%s should load" % path)
 		if texture != null:
 			assert_gt(texture.get_width(), 0)
 			assert_gt(texture.get_height(), 0)
+
+
+func test_end_open_replays_change_bg_to_end_and_source_location_atlas() -> void:
+	var rng := RNG.new(8810)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.end_open = true
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	assert_true(desk.is_end_background_active(), "MapController.Start restores Player.end_open")
+	var palace_art := desk.get_node_or_null("Location_Palace/Art") as TextureRect
+	assert_not_null(palace_art, "authored Palace image remains the location child surface")
+	if palace_art != null and palace_art.texture != null:
+		assert_eq(palace_art.texture.get_width(), 596, "Datapool.end_map_sprites supplies the Palace frame")
+		assert_eq(palace_art.texture.get_height(), 446)
 
 
 func test_authored_location_nodes_use_gamescene_coordinates_not_clone_ratios():
