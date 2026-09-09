@@ -10,6 +10,7 @@ extends Control
 signal dismiss_requested()
 
 const DESIGN_SPACE := Vector2(3840, 2160)
+const SourceText = preload("res://ui/source_text_style.gd")
 # BeginGuide/Default: center anchors, anchoredPosition (747.3,-785), 1200x460.
 const DEFAULT_POSITION := Vector2(2067.3, 65.0)
 const DEFAULT_SIZE := Vector2(1200, 460)
@@ -105,8 +106,12 @@ func _build_source_default() -> void:
 	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	SourceText.apply(_label, "@GUIDE_TEXT")
 	_label.add_theme_font_size_override("font_size", 75)
-	_label.add_theme_color_override("font_color", Color("#f5e5b4"))
+	# BeginGuideItem prefab uses the black TMP face color; the parchment
+	# background supplies the contrast. The previous gold override made the
+	# guide unreadable on bright text_bg_2 pixels.
+	_label.add_theme_color_override("font_color", Color("#000000"))
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_default.add_child(_label)
 

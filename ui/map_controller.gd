@@ -349,9 +349,27 @@ func can_drop_card_on_think_button(data: Variant) -> bool:
 func drop_card_on_think_button(data: Variant) -> void:
 	if not can_drop_card_on_think_button(data):
 		return
+	_play_think_animation()
 	var screen := get_parent()
 	if screen != null and screen.has_method("drop_card_on_methinks"):
 		screen.drop_card_on_methinks(data)
+
+
+func _play_think_animation() -> void:
+	if _think_drop_zone == null:
+		return
+	var front := _think_drop_zone.get_node_or_null("open_03") as Control
+	if front == null:
+		return
+	front.pivot_offset = front.size * 0.5
+	front.rotation = -0.045
+	front.scale = Vector2(0.96, 0.96)
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(front, "rotation", 0.0, 0.18)
+	tween.parallel().tween_property(front, "scale", Vector2.ONE, 0.22)
+	tween.tween_property(front, "rotation", -0.018, 0.12)
+	tween.tween_property(front, "rotation", 0.0, 0.12)
 
 
 func _set_think_drop_highlight(highlighted: bool) -> void:
