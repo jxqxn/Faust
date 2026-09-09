@@ -1,5 +1,13 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 卡牌堆叠/拆分交互（2026-09-09，源语义落地）
+
+`CardController.CardSplit 0x528390`：要求 `count > n`，源卡 `count -= n`，副本走 `CardExtensions.Copy`（bag/bagpos 一并继承）后由 `CardDropManager.BackToHandOrBag` 放回手牌；`OnPointerUp 0x52afe0` 在"可堆叠且 count>1 + SplitCard 提示（A+B）被按住"时调用 `CardSplit(count/2)`。`CardController.CardStack 0x5286b0`：同卡 id 且双方带 `可堆叠` 时 `目标.count += 源.count`，源卡 `PlayerExtensions.RemoveCard` 移除、目标回到自己的 bag/bagpos；`CardDropManager.DropCard` 对**手牌目标**调 CardStack、对**已占用的仪式槽**调 `CardSlotController.CardStack`。`CardController.Update` 另有 0.2s（0x3e4ccccd）按住阈值 → `GameController.ShowSatisfiedRite` 提示（宿主未接，见下）。
+
+落地：`GameState.split_card_stack(uid, amount=-1)`（默认 count/2）与 `GameState.stack_cards(target_uid, source_uid)`（同 id + 双可堆叠 + 移除源卡）；`CardWidget` 增加 `stack_dropped`（拖到同 id 可堆叠手牌上合并，`CardDropManager` 手牌分支）与 `split_requested`；`rite_view.drop_card_on_slot` 对已占用且同 id 可堆叠的槽改为合并（`CardSlotController.CardStack`）。新增 `tests/test_card_stacking.gd`（7 测试 / 33 断言）覆盖拆分计数与 bag/bagpos 继承、`count>n` 门槛、合并移除源卡、非同 id/非可堆叠拒绝、拖放门禁；`tools/verify_card_surface.gd` 追加端到端：经生产 GameScreen 的处理器拆分 8→4+4（对象数 2、总数不变）再合并回 1 个 8。
+
+🟡 宿主适配：原作拆分手势是手柄/键盘的 SplitCard 提示（A+B）按住后点击；宿主还没有输入提示层，暂时绑成 **Shift+左键**点击，已在 CardWidget 与测试里注明。⬜ `CardController.Update` 的 0.2s 按住 → `ShowSatisfiedRite` 提示未接。
+
 ## 手牌卡面 1:1 第四批（2026-09-09，材质光照分布 + 详情面板装备缩略图）
 
 **材质光照分布**：用立绘 alpha 把一张卡（梅姬）切成 8 条竖带，只统计"立绘透明、纯底板"的像素，在克隆渲染与原作 `desktop.jpg` 同坐标下逐带求均值。原作底板是**自上而下变暗**的（带均值 R 0.454→0.564→0.445→0.365→0.378→0.322→0.224→0.169），而克隆此前是均匀灯光，导致卡顶偏暗、卡底偏亮。按带比值线性拟合出三项并写进 `ui/card_metal.gdshader`：`vertical_light_falloff` 0.2065（顶 1.21×→底 0.79×）、`metallic_diffuse_loss` 0.3（metal.r=1 时削去 30% 漫反射，对应原作金属件的暗化）、`specular_strength` 0.3（保留高光但不再过亮）。逐带误差从约 21% 降到约 15%，六张卡整卡均值仍在 ±6% 内（梅姬 94/97/66 vs 96/100/66、阿尔图 88/90/95 vs 90/95/101、金币 140/119/57 vs 142/122/60、铁头 96/90/62 vs 97/92/62、快脚 101/86/78 vs 106/90/78、小圆 111/93/77 vs 116/98/76）。

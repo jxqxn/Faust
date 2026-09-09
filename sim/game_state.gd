@@ -1,4 +1,4 @@
-﻿## Mutable game state during a run.
+## Mutable game state during a run.
 ## Holds local/global counters, the player's hand, cards on the table (slots),
 ## gold (as the coin-card stack per spec sec 10.2), calendar/round, difficulty,
 ## and resource counters (gold dice, redraws, back-to-prev).
@@ -1221,6 +1221,59 @@ func _copy_card_for_stack(source, amount: int):
 	copied.zone = "hand"
 	card_instances[copied.uid] = copied
 	return copied
+
+
+## Splits `amount` (default half, rounded down) off a stackable hand card.
+## [SRC: CardController.CardSplit 0x528390 — `count > n` is required; the source
+##       card keeps count-n and a CardExtensions.Copy takes n with the same
+##       bag/bagpos, returned to the hand by CardDropManager.BackToHandOrBag.
+##       CardController.OnPointerUp calls it with count/2 for a stackable card
+##       whose count is above 1.]
+func split_card_stack(uid: int, amount: int = -1) -> int:
+	var source = get_card_instance(uid)
+	if source == null:
+		return 0
+	var count := int(source.count)
+	if count <= 1:
+		return 0
+	var n := amount if amount > 0 else count / 2
+	if n <= 0 or n >= count:
+		return 0
+	var copy = _copy_card_for_stack(source, n)
+	source.count = count - n
+	var source_index: int = rail_order.find(uid)
+	var insert_at: int = (source_index + 1) if source_index >= 0 else rail_order.size()
+	add_card_to_hand_at_rail(copy.uid, insert_at)
+	return copy.uid
+
+
+## Merges `source_uid` into `target_uid`.
+## [SRC: CardController.CardStack 0x5286b0 — same card id, both cards carry the
+##       可堆叠 tag; the target takes `count += other.count`, the other card is
+##       removed from the player, and the target returns to its own bag/bagpos.
+##       CardDropManager.DropCard 0x53b??? calls it for hand targets and
+##       CardSlotController.CardStack for occupied slots.]
+func stack_cards(target_uid: int, source_uid: int) -> bool:
+	if target_uid <= 0 or source_uid <= 0 or target_uid == source_uid:
+		return false
+	var target = get_card_instance(target_uid)
+	var source = get_card_instance(source_uid)
+	if target == null or source == null:
+		return false
+	if int(target.card_id) != int(source.card_id):
+		return false
+	if not _instance_is_stackable(target) or not _instance_is_stackable(source):
+		return false
+	target.count = int(target.count) + int(source.count)
+	remove_card_instance_from_play(source_uid)
+	return true
+
+
+## [SRC: content/tag.json 可堆叠 (code stackable); CardExtensions.HasTag.]
+func _instance_is_stackable(instance) -> bool:
+	if instance == null:
+		return false
+	return instance.tags.has("可堆叠") or instance.tags.has("stackable")
 
 
 func insert_card_to_hand(card_or_uid: int, index: int, db = null) -> void:

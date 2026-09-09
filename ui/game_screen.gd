@@ -1050,6 +1050,8 @@ func refresh() -> void:
 		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = widget.card_size()
 		widget.clicked.connect(_show_card_detail)
+		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
+		widget.split_requested.connect(_on_hand_card_split_requested)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
 		if has_drop_origin:
@@ -1384,8 +1386,27 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 	refresh()
 
 
-func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:
-	# A screen insertion index belongs to the visible bag, while rail_order
+## [SRC: CardDropManager.DropCard -> CardController.CardStack 0x5286b0 — a
+##       stackable card dropped on a same-id stackable hand card merges into it
+##       instead of reordering the rail.]
+func _on_hand_card_stack_dropped(target_uid: int, source_uid: int) -> void:
+	if _state == null or not _state.has_method("stack_cards"):
+		return
+	if _state.stack_cards(target_uid, source_uid):
+		refresh()
+
+
+## [SRC: CardController.OnPointerUp 0x52afe0 -> CardSplit(count/2). The host
+##       binds the source's SplitCard prompt to Shift+click until the prompt
+##       layer exists.]
+func _on_hand_card_split_requested(card_uid: int) -> void:
+	if _state == null or not _state.has_method("split_card_stack"):
+		return
+	if _state.split_card_stack(card_uid) > 0:
+		refresh()
+
+
+func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order
 	# retains all bags. Translate without permuting cards on other pages.
 	var remaining: Array[int] = []
 	for uid in _state.rail_order:

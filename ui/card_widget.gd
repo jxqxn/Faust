@@ -14,6 +14,10 @@ extends Control
 
 signal clicked(card_id: int, card: Dictionary)
 signal drag_visibility_changed(card_uid: int, hidden: bool)
+## Dropping a same-id stackable card onto this one merges the two stacks.
+signal stack_dropped(target_uid: int, source_uid: int)
+## Split half of a stackable stack (host binding for the source's SplitCard prompt).
+signal split_requested(card_uid: int)
 
 ## Authored RectTransforms, not clone-side presentation measurements.
 ## [SRC: Resources/prefab/CardNew.prefab CardNew 194x422;
@@ -365,6 +369,8 @@ func _notification(what: int) -> void:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+	if _can_stack_dropped_card(data):
+		return true
 	var target := _drop_delegate()
 	if target == null or not target.has_method("_can_drop_data"):
 		return false
@@ -372,9 +378,34 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if _can_stack_dropped_card(data):
+		stack_dropped.emit(card_uid, int(data.get("card_uid", 0)))
+		return
 	var target := _drop_delegate()
 	if target != null and target.has_method("_drop_data"):
 		target._drop_data(target.get_local_mouse_position() if target is Control else at_position, data)
+
+
+## [SRC: CardController.CardStack 0x5286b0 — dropping a stackable card of the
+##       same card id onto another stackable card merges the counts instead of
+##       reordering. CardDropManager.DropCard calls it for hand targets.]
+func _can_stack_dropped_card(data: Variant) -> bool:
+	if not (data is Dictionary) or str(data.get("type", "")) != "card":
+		return false
+	var source_uid := int(data.get("card_uid", 0))
+	if source_uid <= 0 or source_uid == card_uid:
+		return false
+	if str(data.get("source", "")) != "hand":
+		return false
+	var source_card: Dictionary = data.get("card", {})
+	if int(source_card.get("id", 0)) != card_id:
+		return false
+	return _card_is_stackable(source_card) and _card_is_stackable(_card)
+
+
+static func _card_is_stackable(card: Dictionary) -> bool:
+	var tags: Dictionary = card.get("tag", {})
+	return int(tags.get("可堆叠", tags.get("stackable", 0))) > 0
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -386,6 +417,13 @@ func _gui_input(event: InputEvent) -> void:
 			_pressed = true
 		elif event.position.distance_to(_press_position) <= 8.0:
 			_pressed = false
+			# [SRC: CardController.OnPointerUp 0x52afe0 — a stackable card with
+			#       count>1 splits count/2 when the SplitCard prompt (A+B) is
+			#       held. The host has no prompt layer yet, so the same action is
+			#       bound to Shift+click and registered as a host adaptation.]
+			if event.shift_pressed and _card_is_stackable(_card) and int(_card.get("count", 1)) > 1:
+				split_requested.emit(card_uid)
+				return
 			clicked.emit(card_id, _card.duplicate(true))
 		else:
 			_pressed = false

@@ -613,6 +613,16 @@ func drop_card_on_slot(slot_key: String, data: Variant) -> void:
 		return
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(card_uid, _db)
+	# [SRC: CardDropManager.DropCard -> CardSlotController.CardStack: dropping a
+	#       stackable card onto an occupied slot holding the same card id merges
+	#       the counts into the placed card instead of routing to a free slot.]
+	if _placed.has(slot_key):
+		var placed_uid := int(_placed[slot_key])
+		if _state.has_method("stack_cards") and _state.stack_cards(placed_uid, card_uid):
+			set_log("%s 与槽内同类卡合并" % _card_display_name(card, int(card.get("id", 0))))
+			_selected_card_uid = 0
+			_after_placement_changed()
+			return
 	if not _slot_accepts_card(slot_def, card) or _placed.has(slot_key):
 		# Auto-route to the first satisfied slot instead of rejecting: the
 		# original highlights GetSatisfiedSlotIndex during the drag and drops

@@ -43,6 +43,7 @@ func _run() -> void:
 	state.hand.clear()
 	state.rail_order.clear()
 	state.active_sudan_cards.clear()
+	var coin_uid := 0
 	for card_id in ORIGINAL_HAND:
 		var uid := int(state.add_card_to_hand(card_id, db))
 		var instance = state.get_card_instance(uid)
@@ -50,6 +51,7 @@ func _run() -> void:
 			continue
 		if card_id == COIN_CARD_ID:
 			instance.count = COIN_COUNT
+			coin_uid = uid
 		if card_id == 2000371:
 			instance.life = 1
 	main.state = state
@@ -130,6 +132,30 @@ func _run() -> void:
 				if dot != null:
 					_check(dot.position.is_equal_approx(Vector2(-7.2, 23.1)), "DotText position %s" % dot.position)
 					_check(dot.size.is_equal_approx(Vector2(50, 30)), "DotText size %s" % dot.size)
+
+	# Split/merge through the production hand wiring.
+	if coin_uid > 0:
+		screen.call("_on_hand_card_split_requested", coin_uid)
+		await _settle(4)
+		var coin_uids: Array = []
+		var total := 0
+		for instance in state.card_instances.values():
+			if int(instance.card_id) == COIN_CARD_ID and str(instance.zone) == "hand":
+				coin_uids.append(int(instance.uid))
+				total += int(instance.count)
+		_check(coin_uids.size() == 2, "Shift+click split must create a second coin object")
+		_check(total == COIN_COUNT, "split must preserve the total count")
+		if coin_uids.size() == 2:
+			screen.call("_on_hand_card_stack_dropped", coin_uids[0], coin_uids[1])
+			await _settle(4)
+			var merged_total := 0
+			var merged_objects := 0
+			for instance in state.card_instances.values():
+				if int(instance.card_id) == COIN_CARD_ID and str(instance.zone) == "hand":
+					merged_objects += 1
+					merged_total += int(instance.count)
+			_check(merged_objects == 1, "stacking must merge the two coin objects")
+			_check(merged_total == COIN_COUNT, "stacking must preserve the total count")
 
 	await RenderingServer.frame_post_draw
 	var size := DisplayServer.window_get_size()
