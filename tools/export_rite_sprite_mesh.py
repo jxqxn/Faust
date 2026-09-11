@@ -2,11 +2,12 @@
 import json, re, struct, shutil
 from pathlib import Path
 from PIL import Image
+from audit_source_duplicate_keys import strip_comments
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT.parent / 'Faust-local-source/_unpack/unity_export/ExportedProject/Assets'
 
 def export_all():
-    templates = [json.loads(p.read_text(encoding='utf-8-sig')) for p in sorted((ROOT / 'content/rite_template').glob('*.json'))]
+    templates = [json.loads(strip_comments(p.read_text(encoding='utf-8-sig'))) for p in sorted((ROOT / 'content/rite_template').glob('*.json'))]
     count = 0
     for layer in ('bg', 'fg'):
         for name in sorted({t[layer] for t in templates if t.get(layer)}):

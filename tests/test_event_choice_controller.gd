@@ -65,6 +65,7 @@ func test_original_option_waits_for_confirmation_and_allows_reselection() -> voi
 	if confirm == null:
 		return
 	assert_true(confirm.disabled, "Show starts without an option")
+	assert_eq(confirm.text, "", "source confirm image must not carry a second text overlay")
 	var portrait := screen._event_overlay._portrait as TextureRect
 	assert_not_null(portrait.texture, "current source option icon reaches the prompt")
 	assert_eq(portrait.texture.resource_path, "res://assets/original/cards/2000001.png")
@@ -77,7 +78,7 @@ func test_original_option_waits_for_confirmation_and_allows_reselection() -> voi
 	assert_null(_node(screen, "EventPromptTitle"), "internal option id is not a source-authored title")
 	var initial_body := _node(screen, "EventPromptBody") as RichTextLabel
 	var prefs = preload("res://ui/game_application_settings.gd")
-	var styles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
+	var styles: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
 	assert_eq(initial_body.get_theme_font_size("normal_font_size"), int(styles["@PROMPT_TEXT"].css_size[prefs.font_size]))
 	assert_gt(initial_body.get_content_height(), 40, "real glyph layout must use the source-sized text")
 	first.pressed.emit()

@@ -41,8 +41,6 @@ func test_save_load_round_trip_preserves_state():
 	state.day = 3
 	state.round_number = 2
 	state.world_location_id = "riverbank"
-	state.world_spawn_id = "from_rooftop"
-	state.world_position_ratio = 0.37
 	state.visited_world_locations = ["school_rooftop", "riverbank"]
 	state.add_card_to_slot(2000001, 1, db)
 	var global_slot_uid := int(state.cards_in_slot(1)[0].get("card_uid", 0))
@@ -65,7 +63,8 @@ func test_save_load_round_trip_preserves_state():
 	state.once_new_rites_is_show = {5000001: true, 5000003: false}
 	state.gen_cards = {2000001: 3, 2000029: 2}
 	state.gen_tags = {"physique": 3, "money": 2, "custom_runtime_tag": 1}
-	var first_instance = state.find_rite_instance_by_id(5000001)
+	# Explicit save fixture; initial rites now correctly await story creation.
+	var first_instance = state.create_rite_instance(5000001)
 	var second_instance = state.create_rite_instance(5000003)
 	state.start_rite_instance(first_instance.uid)
 	second_instance.life = 2
@@ -94,8 +93,6 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(state2.round_number, 2, "round_number preserved")
 	assert_eq(state2.day, 3, "day preserved")
 	assert_eq(state2.world_location_id, "riverbank", "lateral location preserved")
-	assert_eq(state2.world_spawn_id, "from_rooftop", "lateral spawn preserved")
-	assert_almost_eq(state2.world_position_ratio, 0.37, 0.001, "lateral position preserved")
 	assert_eq(
 		state2.visited_world_locations,
 		["school_rooftop", "riverbank"],
@@ -347,16 +344,12 @@ func test_v5_save_without_world_fields_resumes_on_default_rooftop():
 	var old_v5 := SaveSystem.serialize(state)
 	for key in [
 		"world_location_id",
-		"world_spawn_id",
-		"world_position_ratio",
 		"visited_world_locations",
 	]:
 		old_v5.erase(key)
 	var loaded := GameState.new()
 	SaveSystem.deserialize(old_v5, loaded, db)
 	assert_eq(loaded.world_location_id, "school_rooftop")
-	assert_eq(loaded.world_spawn_id, "default")
-	assert_almost_eq(loaded.world_position_ratio, 0.5, 0.001)
 	assert_eq(loaded.visited_world_locations, ["school_rooftop"])
 
 

@@ -136,7 +136,7 @@ func test_result_surface_replays_source_play_rate_button():
 	# The source has two rates, both from variable.json, selected by the
 	# auto-play flag — there is no x1/x2 cycle.
 	# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed 0x5a74a0]
-	var rates: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var rates: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	var manual_rate := float(rates.get("result_text_play_rate", 1))
 	var auto_rate := float(rates.get("result_text_auto_play_rate", 15))
 	view._toggle_play_rate()
@@ -337,6 +337,10 @@ func test_drop_card_moves_between_hand_slot_and_back():
 	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	view._slot_buttons = {"s1": _owned(Button.new()) as Button}
+	# The slot renderer inserts its card below the authored hover surface.
+	var highlight := TextureRect.new()
+	highlight.name = "SourceHighlight"
+	view._slot_buttons.s1.add_child(highlight)
 	view._slot_titles = {"s1": _owned(Label.new()) as Label}
 	view._slot_details = {"s1": _owned(Label.new()) as Label}
 	var initial_hand_size := state.hand.size()
@@ -487,7 +491,7 @@ func test_rite_view_binds_to_existing_runtime_instance_when_no_uid_is_supplied()
 	var rng := RNG.new(98)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
-	var instance = state.find_rite_instance_by_id(5000001)
+	var instance = state.create_rite_instance(5000001)
 	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, db, rng, 5000001)
 	assert_not_null(instance)

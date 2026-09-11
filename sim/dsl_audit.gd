@@ -64,7 +64,7 @@ static func audit_configs(rites: Dictionary, events: Dictionary = {}, loots: Dic
 				_scan_condition_dict(entry.get("condition", {}), out.condition, _with_field(entry_source, "condition"), known_tags)
 				_scan_result_dict(entry.get("result", {}), out.result, _with_field(entry_source, "result"))
 				_scan_result_dict(entry.get("action", {}), out.action, _with_field(entry_source, "action"))
-		var vanish: Dictionary = card.get("vanish", {})
+		var vanish: Variant = card.get("vanish", {})
 		if not vanish.is_empty():
 			_scan_result_dict(vanish, out.result, _with_field(card_source, "vanish"))
 	_scan_loots(loots, out, known_tags)
@@ -288,6 +288,10 @@ static func _scan_open_conditions(open_conditions: Variant, bucket: Dictionary, 
 
 
 static func _scan_condition_dict(cond: Variant, bucket: Dictionary, source: Dictionary, known_tags: Dictionary) -> void:
+	if cond is Array:
+		for entry in cond:
+			_scan_condition_dict(entry, bucket, source, known_tags)
+		return
 	if not (cond is Dictionary):
 		return
 	for key in cond:
@@ -298,46 +302,18 @@ static func _scan_condition_dict(cond: Variant, bucket: Dictionary, source: Dict
 
 
 static func _scan_result_dict(result: Variant, bucket: Dictionary, source: Dictionary) -> void:
+	if result is Array:
+		for entry in result:
+			_scan_result_dict(entry, bucket, source)
+		return
 	if not (result is Dictionary):
 		return
 	for key in result:
 		var k := str(key)
 		_record(bucket, k, ResultExec.is_supported_key(k), source)
-		if k == "choose" and result[key] is Dictionary:
-			_scan_choose_labels(result[key], bucket, source)
-		# `case:opN` labels hold full operation subtrees executed after an
-		# `option` choice; their interior keys are real result ops and must
-		# not silently escape the audit (hand_card_refresh once hid here).
-		# Display payloads inside the subtree (prompt/option/delay bodies)
-		# stay opaque — only nested op subtrees recurse.
-		if k.begins_with("case:") and result[key] is Dictionary:
-			_scan_case_dict(result[key], bucket, _with_field(source, k))
-
-
-static func _scan_case_dict(ops: Dictionary, bucket: Dictionary, source: Dictionary) -> void:
-	for case_key in ops:
-		var case_op := str(case_key)
-		var case_value = ops[case_key]
-		_record(bucket, case_op, ResultExec.is_supported_key(case_op), source)
-		if case_op.begins_with("case:") and case_value is Dictionary:
-			_scan_case_dict(case_value, bucket, _with_field(source, case_op))
-		elif case_op == "choose" and case_value is Dictionary:
-			_scan_choose_labels(case_value, bucket, source)
-
-
-static func _scan_choose_labels(choose: Dictionary, bucket: Dictionary, source: Dictionary) -> void:
-	for choose_key in choose:
-		var choose_op := str(choose_key)
-		# `all` is a ChooseOperations candidate-list wrapper, not a
-		# standalone label. It is an AllOperations subtree and runs each
-		# concrete nested operation.
-		if choose_op == "all" and choose[choose_key] is Dictionary:
-			_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.all"))
-			for nested_key in choose[choose_key]:
-				var nested_op := str(nested_key)
-				_record(bucket, nested_op, ResultExec.is_supported_key(nested_op), _with_field(source, "choose.all.%s" % nested_op))
-			continue
-		_record(bucket, choose_op, ResultExec.is_supported_key(choose_op), _with_field(source, "choose.%s" % choose_op))
+		if k in ["all", "no_show", "no_prompt", "success", "failed", "delay", "choose"] or k.begins_with("choose:") or k.begins_with("case:"):
+			var nested = SourceJSON.without(result[key], ["id", "round"]) if k == "delay" else result[key]
+			_scan_result_dict(nested, bucket, _with_field(source, k))
 
 
 static func _scan_loots(loots: Dictionary, out: Dictionary, known_tags: Dictionary) -> void:

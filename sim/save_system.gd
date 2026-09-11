@@ -116,8 +116,6 @@ static func serialize(state) -> Dictionary:
 		"day": state.day,
 		"min_round": state.min_round,
 		"world_location_id": state.world_location_id,
-		"world_spawn_id": state.world_spawn_id,
-		"world_position_ratio": state.world_position_ratio,
 		"visited_world_locations": state.visited_world_locations.duplicate(),
 		"redraws_left": state.redraws_left,
 		"sudan_redraw_count": state.sudan_redraw_count,
@@ -141,6 +139,7 @@ static func serialize(state) -> Dictionary:
 		"active_sudan_cards": sudan_cards_data,
 		"card_instances": state.card_instances.values().map(func(instance): return instance.to_save_dict()),
 		"next_card_uid": state.next_card_uid,
+		"player_card_order": state.source_player_cards().map(func(card): return card.uid),
 		"player_actor_uid": state.player_actor_uid,
 		"player_display_name": state.player_display_name,
 		"rite_instances": rite_instances_data,
@@ -243,8 +242,6 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.day = int(data.get("day", 1))
 	state.min_round = maxi(1, int(data.get("min_round", 1)))
 	state.world_location_id = str(data.get("world_location_id", "school_rooftop"))
-	state.world_spawn_id = str(data.get("world_spawn_id", "default"))
-	state.world_position_ratio = clampf(float(data.get("world_position_ratio", 0.5)), 0.04, 0.96)
 	state.visited_world_locations.clear()
 	for raw_location_id in data.get("visited_world_locations", [state.world_location_id]):
 		var location_id := str(raw_location_id)
@@ -299,6 +296,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 		state.hand.append(int(cid))
 	state.sudan_deck.clear()
 	_restore_sudan_pool(state, data)
+	state.repair_pool_uid_collisions()
+	state.player_card_order.assign(data.get("player_card_order", state.card_instances.keys()))
 	state.auto_gen_sudan_card = bool(data.get("auto_gen_sudan_card", true))
 	state.active_sudan_cards.clear()
 	var ASC = preload("res://sim/round_loop.gd").ActiveSudan

@@ -245,7 +245,7 @@ func _collect_runtime_items(out: Array[Dictionary]) -> void:
 			continue
 		var ctx := _runtime_condition_context(card_id)
 		var close_condition = node.get("close_condition", {})
-		if close_condition is Dictionary and not close_condition.is_empty() and ConditionEval.evaluate(close_condition, ctx):
+		if (close_condition is Dictionary or close_condition is Array) and not close_condition.is_empty() and ConditionEval.evaluate(close_condition, ctx):
 			continue
 		var pic := _runtime_pic(card_id, node)
 		var prior_added := false
@@ -267,7 +267,7 @@ func _settlement_matches(settlement: Dictionary, ctx: Dictionary) -> bool:
 	if not _has_text(settlement):
 		return false
 	var condition = settlement.get("condition", {})
-	return not (condition is Dictionary) or condition.is_empty() or ConditionEval.evaluate(condition, ctx)
+	return condition == null or condition.is_empty() or ConditionEval.evaluate(condition, ctx)
 
 
 func _has_text(settlement: Dictionary) -> bool:

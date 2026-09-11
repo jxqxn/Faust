@@ -103,7 +103,7 @@ func _build_panel(card: Dictionary) -> void:
 	# @0x58 using Datapool.fontSize@0x218, then scales the whole panel.]
 	var preferences = preload("res://ui/game_application_settings.gd")
 	preferences.load_preferences()
-	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var variable: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	_state_icons = variable.get("card_state_icon", {})
 	_tag_groups = preload("res://ui/card_tag_presentation.gd").group(card, _db, _state_icons)
 	var panel_scale := float(variable.get("ui_size", {}).get(preferences.font_size, 1.0))
@@ -709,7 +709,7 @@ static func _to_bbcode(text_value: String) -> String:
 
 
 func _help_text(kind: String) -> String:
-	var text: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var text: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	return str(text.get("CARD_INFO_HELP_%s_PROMPT" % kind, {}).get("zhCN", ""))
 
 

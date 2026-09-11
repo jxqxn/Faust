@@ -33,7 +33,7 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 	for delay_entry in deferred.get("delays", []):
 		if not (delay_entry is Dictionary) or not state.has_method("schedule_delay"):
 			continue
-		var payload: Dictionary = delay_entry.get("payload", {}) if delay_entry.get("payload", {}) is Dictionary else {}
+		var payload: Variant = delay_entry.get("payload", {})
 		var context: Dictionary = delay_entry.get("context", {}) if delay_entry.get("context", {}) is Dictionary else {}
 		state.schedule_delay(payload, context)
 	for sleep_entry in deferred.get("sleeps", []):
@@ -58,13 +58,13 @@ static func apply(deferred: Dictionary, state, db, rng) -> void:
 
 static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 	var kind := str(effect.get("kind", ""))
-	var payload: Dictionary = effect.get("payload", {}) if effect.get("payload", {}) is Dictionary else {}
+	var payload: Variant = effect.get("payload", {})
 	var context: Dictionary = effect.get("context", {}) if effect.get("context", {}) is Dictionary else {}
 	match kind:
 		"event":
 			state.queue_event(int(payload.get("id", 0)), context)
 		"prompt":
-			var prompt := payload.duplicate(true)
+			var prompt: Dictionary = payload.duplicate(true)
 			if not prompt.has("context"):
 				prompt["context"] = context
 			state.queue_prompt(prompt)
@@ -136,7 +136,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 	if event.is_empty():
 		return {}
 	# Gate on the event's top-level condition (events have no per-entry conditions).
-	var cond: Dictionary = event.get("condition", {})
+	var cond: Variant = event.get("condition", {})
 	if not cond.is_empty():
 		var ctx := trigger_ctx.duplicate(true)
 		ctx["db"] = db
@@ -154,7 +154,7 @@ static func execute_event(event: Dictionary, state, db, rng, trigger_ctx: Dictio
 		for entry in settlements:
 			if not (entry is Dictionary):
 				continue
-			var payload: Dictionary = entry.get("action", {})
+			var payload: Variant = entry.get("action", {})
 			if payload.is_empty():
 				continue
 			payloads.append(payload)
@@ -179,14 +179,12 @@ static func execute_due_delays(state, db, rng) -> Array[Dictionary]:
 	if state == null or not state.has_method("take_due_delayed_operations"):
 		return executed
 	for delayed in state.take_due_delayed_operations():
-		var payload: Dictionary = delayed.get("payload", {}) if delayed.get("payload", {}) is Dictionary else {}
+		var payload: Variant = JSON.parse_string(delayed.payload_json) if delayed.has("payload_json") else delayed.get("payload", {})
 		var context: Dictionary = delayed.get("context", {}) if delayed.get("context", {}) is Dictionary else {}
-		payload.erase("id")
-		payload.erase("round")
+		payload = SourceJSON.without(payload, ["id", "round"])
 		if payload.is_empty():
 			continue
-		var deferred := ResultExec.execute(payload, state, db, context)
-		apply(deferred, state, db, rng)
+		OperationsSequence.start([payload], state, db, rng, context)
 		executed.append(delayed)
 	return executed
 
@@ -246,7 +244,7 @@ static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 	var condition_ok := Callable(func(item):
 		if not (item is Dictionary):
 			return true
-		var cond: Dictionary = item.get("condition", {})
+		var cond: Variant = item.get("condition", {})
 		if cond.is_empty():
 			return true
 		return ConditionEval.evaluate(cond, ctx))
@@ -311,7 +309,7 @@ static func can_generate_loot(loot_id: int, ctx: Dictionary) -> bool:
 	for item in loot.get("item", []):
 		if not (item is Dictionary):
 			continue
-		var condition: Dictionary = item.get("condition", {})
+		var condition: Variant = item.get("condition", {})
 		if not condition.is_empty() and not ConditionEval.evaluate(condition, ctx):
 			continue
 		var item_id := int(item.get("id", 0))

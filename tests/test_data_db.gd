@@ -52,20 +52,16 @@ func test_sudan_pool_loaded():
 	# First entries are 2010001 (岩石杀戮) repeated.
 	assert_eq(int(pool[0]), 2010001)
 
-func test_normal_starting_cards_are_separate_from_test_init():
-	assert_eq(db.get_default_cards(), [2000001, 2000006, 2000523, 2000005])
-	assert_true(db.get_test_default_cards().size() > 50, "init/1 test card list is still available explicitly")
+func test_starting_population_comes_from_original_init():
+	assert_eq(db.get_default_cards(), db.init_config.default_cards)
+	assert_true(db.get_default_cards().any(func(id): return int(id) == 2000199), "bookshop owner exists before rite adsorption")
 
-func test_normal_starting_rites_seed_the_runtime_pool():
-	var default_rites := db.get_default_rites()
-	assert_true(5000001 in default_rites, "estate rite remains in the normal runtime pool")
-	assert_true(5001001 in default_rites, "daily palace rites are generated through the same runtime pool")
-	assert_true(5002006 in default_rites, "daily market rites are generated through the same runtime pool")
-	assert_false(5002036 in default_rites, "loot-generated book-search variants should not all appear at normal start")
-	assert_false(5002037 in default_rites, "loot-generated book-search variants should not all appear at normal start")
-	assert_false(5002038 in default_rites, "loot-generated book-search variants should not all appear at normal start")
-	assert_false(5002003 in default_rites, "loot-generated pleasure-house variants should wait for their generator")
-	assert_true(default_rites.size() < db.rites.size(), "normal start should not expose every configured rite")
+func test_initial_rites_follow_source_array_without_inventing_defaults():
+	assert_eq(db.get_default_rites(), [], "original init/1.json starts with no rites")
+	var original: Array = db.init_config.default_rite
+	db.init_config.default_rite = [5002036, 5000001, 5002036]
+	assert_eq(db.get_default_rites(), [5002036, 5000001, 5002036], "preserve order, generated entries and duplicates")
+	db.init_config.default_rite = original
 
 func test_generated_rite_ids_are_detected_from_loot_and_cards():
 	var generated := db.get_generated_rite_ids()

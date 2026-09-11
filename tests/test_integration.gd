@@ -61,6 +61,9 @@ func test_auto_begin_starts_rites_without_resolving_results():
 	var rng := RNG.new(201)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
+	# This unit exercises auto-begin after the story has generated a rite;
+	# InitNode.default_rite is empty, so setup alone cannot supply one.
+	state.add_available_rite(5000001, db, rng)
 	var opened := RoundLoop.start_auto_begin_rites(state, db)
 	assert_eq(opened.size(), 1, "only daily rites whose auto-adsorb prerequisites exist are opened")
 	assert_true(5000001 in state.started_rites, "治理家业 is marked started")
@@ -136,6 +139,7 @@ func test_auto_result_rite_settles_on_advance_day_with_empty_slots():
 	var rng := RNG.new(300)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
+	state.add_available_rite(5000001, db, rng)
 	# Draw a sudan so advance_day doesn't start a new round mid-test.
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	# Start the auto_begin rite.
@@ -155,6 +159,7 @@ func test_auto_result_rite_with_slotted_card_grants_reward():
 	var rng := RNG.new(301)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
+	state.add_available_rite(5000001, db, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	RoundLoop.start_auto_begin_rites(state, db)
 	# Manually place a card with high 智慧+社交 into slot 1.

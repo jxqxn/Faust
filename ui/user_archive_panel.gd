@@ -39,7 +39,7 @@ var _confirmation: Control
 var _delete_confirmation: Control
 
 func _text(key: String) -> String:
-	return JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))[key].zhCN
+	return SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))[key].zhCN
 
 func refresh_archives(archives: Array) -> void:
 	setup(archives, _save_mode)
@@ -142,7 +142,7 @@ func _build_source_tree() -> void:
 	header.add_child(icon)
 	var title := Label.new()
 	title.name = "Title"
-	var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var captions: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	title.text = captions.USER_ARCHIVE_SAVE_TITLE.zhCN if _save_mode else captions.USER_ARCHIVE_LOAD_TITLE.zhCN
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 80)
@@ -308,7 +308,7 @@ func _on_item_clicked(index: int) -> void:
 		var confirmation := SourceDialog.new()
 		_confirmation = confirmation
 		confirmation.name = "LoadArchiveConfirm"
-		var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+		var captions: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 		confirmation.dialog_text = captions.USER_ARCHIVE_LOAD_PROMPT.zhCN
 		add_child(confirmation)
 		confirmation.confirmed.connect(func():

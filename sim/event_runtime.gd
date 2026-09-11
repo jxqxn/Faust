@@ -11,7 +11,7 @@
 class_name EventRuntime
 extends RefCounted
 
-# timing string -> { event_id(int): trigger_value(int|Array) }. This contains
+# timing string -> { event_id(int): Array[trigger_value(int|Array)] }. This contains
 # only events currently enabled on the player, not every definition in db.
 var _by_timing := {}
 # Round-based timings follow the original TimingRoundBase lifecycle: armed on
@@ -60,17 +60,24 @@ func enable_event(event_id: int) -> bool:
 	if event.is_empty():
 		return false
 	_disabled.erase(event_id)
-	var on: Dictionary = event.get("on", {})
+	var on = event.get("on", {})
 	var state = _state.get_ref() if _state is WeakRef else _state
-	for timing in on:
+	# TimingJsonConverter.Read 0x3a7bc0 appends every authored timing;
+	# repeated rite_end/card_clean properties are separate trigger candidates.
+	for bucket in _by_timing.values():
+		bucket.erase(event_id)
+	for entry in SourceJSON.entries(on):
+		var timing: String = entry.keys()[0]
 		if not _by_timing.has(timing):
 			_by_timing[timing] = {}
-		_by_timing[timing][event_id] = on[timing]
+		if not _by_timing[timing].has(event_id):
+			_by_timing[timing][event_id] = []
+		_by_timing[timing][event_id].append(entry[timing])
 		if state != null and timing in ROUND_TIMINGS:
 			# OnStart: arm the next fire round (idempotent, keeps saved arms).
 			var key := _timing_key(timing, event_id)
 			if not state.timing_rounds.has(key):
-				state.timing_rounds[key] = next_round(on[timing], int(state.round_number), {})
+				state.timing_rounds[key] = next_round(entry[timing], int(state.round_number), {})
 	return true
 
 
@@ -88,13 +95,17 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 	if bucket.is_empty():
 		return out
 	for eid in bucket:
-		var trigger_value = bucket[eid]
 		if _disabled.has(eid):
 			continue
-		if timing in ROUND_TIMINGS:
-			if not _round_timing_fires(timing, int(eid), trigger_value, ctx):
-				continue
-		elif not _value_matches(timing, trigger_value, ctx):
+		var matched := false
+		for trigger_value in bucket[eid]:
+			if timing in ROUND_TIMINGS:
+				matched = _round_timing_fires(timing, int(eid), trigger_value, ctx)
+			else:
+				matched = _value_matches(timing, trigger_value, ctx)
+			if matched:
+				break
+		if not matched:
 			continue
 		if not _condition_holds(eid, ctx):
 			continue
@@ -238,7 +249,7 @@ func _condition_holds(event_id: int, trigger_ctx: Dictionary = {}) -> bool:
 	if state == null:
 		return true
 	var event: Dictionary = _db.get_event(event_id)
-	var cond: Dictionary = event.get("condition", {})
+	var cond: Variant = event.get("condition", {})
 	if cond.is_empty():
 		return true
 	var ctx := trigger_ctx.duplicate(true)

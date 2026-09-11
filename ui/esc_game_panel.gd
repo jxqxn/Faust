@@ -77,7 +77,7 @@ func _build_source_tree() -> void:
 
 	# Top-anchor centres y=-227/-426/-625/-824 minus half the row height.
 	# GamepadReturn is an input hint, not a fifth PC menu button.
-	var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var captions: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	_add_source_button(group, "Settings", captions.SETTINGS.zhCN, Vector2(498.5, 140), BUTTON_SIZE, settings_requested.emit)
 	_add_source_button(group, "SaveGame", captions.USER_ARCHIVE_SAVE.zhCN, Vector2(498.5, 339), BUTTON_SIZE, save_requested.emit)
 	_add_source_button(group, "SaveAndExit", captions.SAVE_EXIT.zhCN, Vector2(488.5, 538), Vector2(688, 174), main_menu_requested.emit)

@@ -81,13 +81,13 @@ func test_full_new_run_setup():
 	var rng := RNG.new(1)
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng) # normal difficulty
-	# Normal runs use a curated starting hand; the huge init/1 list is a test profile.
+	# Source default_cards is the population; visibility is a separate predicate.
 	var hand_card_ids: Array[int] = []
 	for card_uid in state.hand:
 		hand_card_ids.append(int(state.get_card_instance(int(card_uid)).card_id))
-	assert_eq(hand_card_ids, [2000001, 2000006, 2000523, 2000005])
-	assert_true(5000001 in state.available_rites)
-	assert_true(state.available_rites.size() < db.rites.size(), "normal start should not expose every configured rite")
+	assert_true(2000199 in hand_card_ids, "initial bookshop NPC exists")
+	assert_eq(state.visible_rail_card_uids(), [state.player_actor_uid])
+	assert_true(state.available_rites.is_empty(), "init/1 default_rite=[]; story creates map rites later")
 	# Sudan pool built from init config as Card objects (one per entry).
 	assert_true(state.sudan_deck.size() > 20)
 	# Normal difficulty: 2 gold dice, 5-day... wait 7-day life, 1 redraw.
@@ -267,6 +267,7 @@ func test_sudan_pool_tag_operations_apply_per_pool_object():
 	state.setup_new_run(db, 1, RNG.new(42))
 	state.reset_sudan_pool_to_ids([2010001, 2010002, 2010001])
 	var next_uid := state.next_card_uid
+	var instance_count := state.card_instances.size()
 	# The original's OperationFilter walks player.sudan_card_pool, so the two
 	# 2010001 OBJECTS are separate targets even though they share a card id.
 	# [SRC: SudanPoolModifyTag.c @ DoTemplate 0x51c2e0]
@@ -274,7 +275,7 @@ func test_sudan_pool_tag_operations_apply_per_pool_object():
 	ResultExec.execute({"sudan_pool.2010001-牌池测试": 1}, state, db)
 	ResultExec.execute({"sudan_pool.2010001=牌池测试": 3}, state, db)
 	assert_eq(state.next_card_uid, next_uid, "pool filtering must not create probe instances")
-	assert_eq(state.card_instances.size(), state.hand.size(), "pool filtering leaves runtime instances untouched")
+	assert_eq(state.card_instances.size(), instance_count, "pool filtering leaves runtime instances including initial equipment untouched")
 	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 3, "both duplicate-id objects receive the op")
 	assert_eq(int(state.sudan_deck[2].tags.get("牌池测试", 0)), 3)
 	# The last entry is consumed first, and its own tag state travels with it.

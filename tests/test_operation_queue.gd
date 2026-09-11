@@ -102,7 +102,7 @@ func test_focused_rite_loot_and_table_clean_dsl_uses_runtime_instances() -> void
 	state.add_card_to_slot(card_a.uid, 1, db, rite_a.uid)
 	state.add_card_to_slot(card_b.uid, 1, db, rite_b.uid)
 	ResultExec.execute({"table.clean.2000005": 1}, state, db, {"rite_uid": rite_a.uid, "card_uid": card_a.uid})
-	assert_eq(card_a.zone, "removed")
+	assert_eq(card_a.zone, "slot", "table.clean ignores even the context card when it is in a rite")
 	assert_eq(card_b.zone, "slot", "same-id cards in other rites are not cleaned")
 
 

@@ -22,7 +22,7 @@ static func refresh_quest(global: GlobalState, state, db: ConfigDB, send_notify 
 		var targets: Array = quest.get("target", [])
 		for raw_target in targets:
 			var target := raw_target as Dictionary
-			var condition: Dictionary = target.get("condition", {})
+			var condition: Variant = target.get("condition", {})
 			var is_complete := ConditionEval.evaluate(condition, {"state": state, "db": db})
 			target["isComplete"] = is_complete
 			if is_complete:
@@ -102,9 +102,9 @@ static func _count_available_rewards(global: GlobalState, db: ConfigDB) -> int:
 	return count
 
 
-static func _first_global_counter_value(condition: Dictionary, global: GlobalState) -> int:
-	for raw_key in condition.keys():
-		var key := str(raw_key)
+static func _first_global_counter_value(condition: Variant, global: GlobalState) -> int:
+	for entry in SourceJSON.entries(condition):
+		var key: String = entry.keys()[0]
 		if not key.begins_with("global_counter."):
 			continue
 		var tail := key.trim_prefix("global_counter.")

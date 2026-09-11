@@ -272,6 +272,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"deadline_unshow": bool(original.get("deadline_unshow", false)),
 		"helpbtn_unshow": bool(original.get("helpbtn_unshow", false)),
 		"hand": ordered_hand,
+		"player_card_order": original.get("cards", []).map(func(card): return int(card.uid)),
 		"rail_order": rail_order,
 		"current_bag_index": int(original.get("BagIndex", 0)),
 		"sudan_deck": sudan_deck,

@@ -82,5 +82,5 @@ func _delete_over_node(file_name: String) -> void:
 
 
 func _load_definitions() -> void:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(OVER_CONFIG_PATH))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(OVER_CONFIG_PATH))
 	_over_definitions = parsed as Dictionary if parsed is Dictionary else {}

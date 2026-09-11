@@ -269,17 +269,20 @@ func test_have_family_counts_values_across_hand_and_slots() -> void:
 	var state := GameState.new()
 	# 巴拉特 2000005: 智慧 2, 社交 2, 异国商人 1 — one copy in hand, one in a
 	# rite slot: `have` must see both zones, `hand_have` only the hand copy.
-	state.add_card_to_hand(2000005, local_db)
+	var owned_uid := state.add_card_to_hand(2000005, local_db)
+	state.get_card_instance(owned_uid).tags["own"] = 1
 	var instance = state.create_rite_instance(992001)
-	_place_in_slot(state, 2000005, 1, local_db, instance.uid)
+	var slot_uid := state.add_card_to_hand(2000005, local_db)
+	state.remove_card_from_hand(slot_uid)
+	state.add_card_to_slot(slot_uid, 1, local_db, instance.uid)
 	var ctx := {"state": state, "db": local_db, "rite_state": {}, "attr_slots": ["s1", "s2"]}
 	assert_true(ConditionEval.eval_key("have.智慧", 4, ctx), "have sums tag values across hand + slots")
 	assert_false(ConditionEval.eval_key("have.智慧", 5, ctx), "default compare is >=")
 	assert_true(ConditionEval.eval_key("hand_have.智慧", 2, ctx), "hand_have only sees the hand copy")
 	assert_false(ConditionEval.eval_key("hand_have.智慧", 3, ctx), "hand_have ignores rite slots")
 	assert_true(ConditionEval.eval_key("have.2000005", 2, ctx), "id selector counts stacked cards in both zones")
-	assert_true(ConditionEval.eval_key("table_have.2000005", 2, ctx), "the desk surface sees the hand rail and rite slots")
-	assert_false(ConditionEval.eval_key("table_have.2000005", 3, ctx), "table_have caps at the copies on the desk")
+	assert_true(ConditionEval.eval_key("table_have.2000005", 1, ctx), "table_have reads Player.cards")
+	assert_false(ConditionEval.eval_key("table_have.2000005", 2, ctx), "table_have excludes rite slots")
 
 
 func test_rite_have_zero_spans_every_rite_instance() -> void:

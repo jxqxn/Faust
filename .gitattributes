@@ -3,6 +3,8 @@
 *.tscn text eol=lf
 *.tres text eol=lf
 *.json text eol=lf
+# Original JSONC is an exact byte artifact (including CRLF and authored spaces).
+content/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 *.md text eol=lf
 *.png binary
 *.ogg binary

@@ -22,7 +22,7 @@ static func load_atlas(atlas_path: String) -> OriginalAtlas:
 	if atlas._atlas_texture == null:
 		return null
 	var json_path := atlas_path.replace(".png", ".json")
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(json_path)) if FileAccess.file_exists(json_path) else null
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(json_path)) if FileAccess.file_exists(json_path) else null
 	if parsed is Dictionary:
 		var declared: Dictionary = parsed.get("meta", {}).get("size", {})
 		var declared_size := Vector2(float(declared.get("w", 0)), float(declared.get("h", 0)))

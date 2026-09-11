@@ -209,7 +209,7 @@ func test_gallery_card_info_replays_plot_unlock_and_content_switch():
 func test_gallery_card_resources_resolve_directly_from_original_config():
 	# Configuration is the judge: every GalleryCardNode.ResourceNode.pic_res
 	# must resolve directly, with no clone-side resource-name translation table.
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
 	assert_true(parsed is Dictionary)
 	if not (parsed is Dictionary):
 		return
@@ -279,7 +279,7 @@ func test_gallery_cg_replays_source_unlock_layout_and_big_resource():
 
 
 func test_gallery_cg_resources_resolve_directly_from_original_config():
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cg.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cg.json"))
 	assert_true(parsed is Dictionary)
 	if not (parsed is Dictionary):
 		return
@@ -297,7 +297,7 @@ func test_gallery_cg_resources_resolve_directly_from_original_config():
 
 
 func test_gallery_card_info_replays_source_tag_controllers_and_sorting():
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/gallery_cards.json"))
 	assert_true(parsed is Dictionary)
 	if not (parsed is Dictionary):
 		return
@@ -611,7 +611,7 @@ func test_game_screen_uses_bottom_card_rail_for_sudan_and_hand():
 	assert_not_null(bottom_actions, "advance-day actions should share the bottom band with cards")
 	if card_rail == null or bottom_actions == null:
 		return
-	assert_eq(_count_card_widgets(card_rail), state.hand.size() + state.active_sudan_cards.size(), "sudan cards and hand cards share one bottom rail")
+	assert_eq(_count_card_widgets(card_rail), state.visible_rail_card_uids().size(), "only visible hand cards and active Sultan cards get widgets")
 	assert_not_null(_find_node_by_name(bottom_actions, "AdvanceDayButton"), "advance-day button belongs beside the bottom card rail")
 	assert_eq(_count_nodes_by_name(screen, "SultanPanel"), 0, "sudan cards should not live in a separate top panel")
 
@@ -1664,7 +1664,7 @@ func test_game_screen_card_rail_replays_source_hand_and_mask_rects():
 func test_game_screen_idle_hand_is_centered_spaced_and_straight():
 	var rng := RNG.new(10)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -1690,7 +1690,7 @@ func test_game_screen_idle_hand_is_centered_spaced_and_straight():
 func test_game_screen_dragging_card_out_closes_gap_immediately():
 	var rng := RNG.new(10)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -1714,7 +1714,7 @@ func test_game_screen_dragging_card_out_closes_gap_immediately():
 func test_game_screen_hand_drop_preview_opens_insertion_gap():
 	var rng := RNG.new(10)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -1751,7 +1751,7 @@ func test_game_screen_hand_drop_preview_opens_insertion_gap():
 func test_game_screen_remaining_cards_take_new_slots_after_one_is_played():
 	var rng := RNG.new(10)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var stage := _stage()
 	var screen = GameScreen.new()
 	screen.setup(state, db, rng)
@@ -1775,7 +1775,7 @@ func test_game_screen_remaining_cards_take_new_slots_after_one_is_played():
 func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 	var rng := RNG.new(10)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var returned_id := int(state.hand[2])
 	var first_id := int(state.hand[0])
 	var second_id := int(state.hand[1])
@@ -1826,7 +1826,7 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 func test_game_screen_reorders_hand_card_by_hand_drop_position():
 	var rng := RNG.new(11)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var moved_id := int(state.hand[2])
 	var first_id := int(state.hand[0])
 	var second_id := int(state.hand[1])
@@ -1849,7 +1849,7 @@ func test_game_screen_reorders_hand_card_by_hand_drop_position():
 func test_game_screen_reorders_hand_card_to_left_and_right_edges():
 	var rng := RNG.new(12)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	var moved_left_id := int(state.hand[3])
 	var stage := _stage()
 	var screen = GameScreen.new()
@@ -1876,7 +1876,7 @@ func test_game_screen_reorders_hand_card_to_left_and_right_edges():
 func test_game_screen_can_insert_hand_card_left_of_sudan_card():
 	var rng := RNG.new(13)
 	var state := GameState.new()
-	state.setup_new_run(db, 0, rng)
+	_setup_owned_hand_fixture(state, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	var sudan_uid := int(state.active_sudan_cards[0].card_uid)
 	var moved_uid := int(state.hand[1])
@@ -2331,7 +2331,7 @@ func test_card_detail_groups_configured_tags_and_compares_initial_values():
 	# tag.json visibility flags/ranks and variable.card_state_icon.]
 	var card := db.get_card(2000001).duplicate(true)
 	card["tag"] = {"支持": 1, "隐匿": 0, "体魄": -1, "男性": 1, "受伤": 2, "未知测试标签": 1}
-	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var variable: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	# Use the source name rather than guessing a translated state identifier.
 	var hurt_name := str(db.tags_by_code["hurt"]["name"])
 	card["tag"].erase("受伤")
@@ -2607,7 +2607,7 @@ func test_title_buttons_center_art_and_preserve_source_footer_spacing():
 	var menu = MainMenu.new()
 	stage.add_child(menu)
 	await wait_process_frames(3)
-	var styles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/imagestyle.json"))
+	var styles: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/imagestyle.json"))
 	var logo: Control = _find_node_by_name(menu, "MenuLogo")
 	assert_almost_eq(logo.size.x, float(styles.START_UI_LOGO.width) * 1.1, 0.01)
 	for name in ["NewGameButton", "ContinueGameButton", "StoryButton", "ShopButton", "CollectButton"]:
@@ -2800,6 +2800,9 @@ func test_card_info_replays_source_geometry():
 ## The real new-run entry fires the opening round_begin_ba chain (intro
 ## events) like the original startup; UI tests drain it to reach the desk.
 func _drain_intro_events(game) -> void:
+	# Geometry fixture only: discard the entire opening continuation, not
+	# just its prompt. Actual UI choices are covered by test_opening_ui.gd.
+	game.state.round_transition.clear()
 	while not game.state.pending_operation().is_empty():
 		game.state.consume_pending_operation()
 	if game._game_screen != null:
@@ -2945,3 +2948,17 @@ func _collect_label_and_button_text(node: Node) -> String:
 		if child_text != "":
 			parts.append(child_text)
 	return " ".join(parts)
+
+
+## Explicit small owned hand for geometry/input tests, independent of the real
+## starting population. Production startup is covered by test_startup_rites.
+func _setup_owned_hand_fixture(state: GameState, rng) -> void:
+	var original_cards: Array = db.init_config.default_cards
+	var original_equips: Dictionary = db.init_config.card_equips
+	db.init_config.default_cards = [2000001, 2000006, 2000523, 2000005]
+	db.init_config.card_equips = {}
+	state.setup_new_run(db, 0, rng)
+	db.init_config.default_cards = original_cards
+	db.init_config.card_equips = original_equips
+	for uid in state.hand:
+		state.get_card_instance(uid).tags["own"] = 1

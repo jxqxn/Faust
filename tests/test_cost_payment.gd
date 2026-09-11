@@ -130,7 +130,7 @@ func test_payment_records_a_copy_operation() -> void:
 
 # ---- Slot cost lookup against real configured rites -------------------------
 #
-# 653 of the 1863 rite files carry a `cost.` key inside a slot condition, nested
+# 665 of the 1495 raw rite files carry a `cost.` key inside a slot condition, nested
 # under any/all/none. The operator is part of the key.
 
 func test_bare_cost_key_reads_its_value() -> void:
@@ -154,9 +154,10 @@ func test_a_slot_without_a_cost_key_asks_for_nothing() -> void:
 
 
 func test_cost_lookup_distribution_is_what_the_audit_claimed_to_lack() -> void:
-	# Fixture guard on the corpus reading quoted in slot_cost_needed's docstring.
-	assert_eq(_count_rites_with_slot_cost(), 653,
-		"653 rite files carry cost. inside a slot condition")
+	# Independent Python object_pairs_hook scan of StreamingAssets confirms
+	# 665. The old dictionary export erased cost alternatives in 12 rites.
+	assert_eq(_count_rites_with_slot_cost(), 665,
+		"665 raw rite files carry cost. inside a slot condition")
 
 
 func _count_rites_with_slot_cost() -> int:
@@ -179,11 +180,14 @@ func _count_rites_with_slot_cost() -> int:
 ## Independent copy of the search, so the test does not merely mirror the
 ## implementation it is checking.
 func _find_cost_key_independently(condition: Variant) -> String:
-	if not (condition is Dictionary):
+	if not (condition is Dictionary or condition is Array):
 		return ""
 	var stack: Array = [condition]
 	while not stack.is_empty():
 		var current: Variant = stack.pop_back()
+		if current is Array:
+			stack.append_array(current)
+			continue
 		if not (current is Dictionary):
 			continue
 		for raw_key in (current as Dictionary):

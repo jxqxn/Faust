@@ -233,6 +233,10 @@ func test_replaced_equipment_returns_to_host_page_end_without_reordering_other_p
 	var old_weapon := state.add_card_to_hand(2000246, db)
 	var new_weapon := state.add_card_to_hand(2000252, db)
 	var other_page := state.add_card_to_hand(2000029, db)
+	# Fixture grants ownership; adding an NPC/item to Player.cards alone does
+	# not make it a hand card (CardExtensions.IsHandCard 0x3827c0).
+	for uid in [host, old_weapon, new_weapon]:
+		state.get_card_instance(uid).tags["own"] = 1
 	state.get_card_instance(host).bag = 2
 	state.get_card_instance(host).bag_pos = 1
 	state.get_card_instance(new_weapon).bag = 2

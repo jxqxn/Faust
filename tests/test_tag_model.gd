@@ -78,7 +78,7 @@ func test_non_positive_sum_is_masked_unless_the_tag_allows_it() -> void:
 		"体魄 has can_nagative_and_zero=1, so the negative sum survives")
 
 
-func test_equipment_term_is_the_whole_row_when_any_tag_inherits() -> void:
+func test_equipment_term_filters_each_requested_tag() -> void:
 	var local_db := _local_db()
 	var st := GameState.new()
 	var host = CardInstanceData.new(1, 2000001, {})
@@ -91,8 +91,9 @@ func test_equipment_term_is_the_whole_row_when_any_tag_inherits() -> void:
 	host.equipped_uids.append(2)
 	var mixed_row: Dictionary = st.effective_card_tags(1, local_db)
 	assert_eq(int(mixed_row.get("体魄", 0)), 5, "host 3 + 梅姬 2")
-	assert_eq(int(mixed_row.get("女性", 0)), 1,
-		"GetTag adds the equip's whole row once any of its tags passes can_inherit")
+	assert_eq(int(mixed_row.get("女性", 0)), 0,
+		"GetTag gates each requested tag; physique does not grant inheritance of female")
+	assert_false(st.effective_card_tag_names(1, local_db).has("女性"), "GetTags uses the same per-tag filter")
 	# 2000380 (星光之源) carries exactly one tag (消耗品) and it is
 	# can_inherit=0, so the gate blocks the whole term.
 	var blocked = CardInstanceData.new(3, 2000380, {})
@@ -111,7 +112,7 @@ func test_equipment_term_is_the_whole_row_when_any_tag_inherits() -> void:
 	assert_eq(int(detached.get("智慧", 0)), 1)
 
 
-func test_equipment_term_ignores_the_equip_count() -> void:
+func test_equipment_term_multiplies_equip_count_before_host_count() -> void:
 	var local_db := _local_db()
 	var st := GameState.new()
 	var host = CardInstanceData.new(1, 2000001, {})
@@ -123,8 +124,8 @@ func test_equipment_term_ignores_the_equip_count() -> void:
 	st.card_instances[2] = equips
 	host.equipped_uids.append(2)
 	var tags: Dictionary = st.effective_card_tags(1, local_db)
-	# host 体魄 3 + equip 体魄 2 (per unit, count 5 ignored) -> 5, then × host count 2.
-	assert_eq(int(tags.get("体魄", 0)), 10, "only the host count multiplies the row")
+	# GetTag(equip, raw=true) still returns value * equip.count.
+	assert_eq(int(tags.get("体魄", 0)), 26, "(host 3 + equip 2 * 5) * host count 2")
 
 
 func test_tag_name_union_covers_definition_and_delta() -> void:
@@ -258,24 +259,14 @@ func _source_expectation(original: Dictionary, local_db) -> Dictionary:
 			var equip_id := int(equip.get("id", 0))
 			var equip_definition: Dictionary = local_db.get_card(equip_id)
 			var equip_tags: Variant = equip_definition.get("tag", {})
-			var inherits := false
-			if equip_tags is Dictionary:
-				for name in equip_tags:
-					var code := str(local_db.tag_name_to_code.get(str(name), ""))
-					if not code.is_empty() and int(local_db.tags_by_code[code].get("can_inherit", 0)) != 0:
-						inherits = true
-						break
-			if not inherits:
-				continue
-			if equip_tags is Dictionary:
-				for name in equip_tags:
-					per_unit[str(name)] = int(per_unit.get(str(name), 0)) + int(equip_tags[name])
-			var equip_delta: Variant = equip.get("tag", {})
-			if equip_delta is Dictionary:
-				for raw_name in equip_delta:
+			# Source GetTag's gate belongs to the requested tag (not the gear).
+			for term in [equip_tags, equip.get("tag", {})]:
+				for raw_name in term:
 					var name := str(local_db.tag_code_to_name.get(str(raw_name), raw_name))
-					per_unit[name] = int(per_unit.get(name, 0)) + int(equip_delta[raw_name])
-		var count := maxi(int(card.get("count", 1)), 1)
+					var code := str(local_db.tag_name_to_code.get(name, name))
+					if int(local_db.tags_by_code.get(code, {}).get("can_inherit", 0)) != 0:
+						per_unit[name] = int(per_unit.get(name, 0)) + int(term[raw_name]) * int(equip.get("count", 1))
+		var count := int(card.get("count", 1))
 		var row: Dictionary = {}
 		for name in per_unit:
 			var value := int(per_unit[name])

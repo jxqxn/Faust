@@ -49,7 +49,7 @@ static func _fits_at(font: Font, text: String, box: Vector2, point_size: int) ->
 	return float(lines) * line_height <= box.y
 
 static func apply(control: Control, key: String, size_class: String = "") -> void:
-	var styles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
+	var styles: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
 	if not styles.has(key):
 		push_error("Unknown source text style: " + key)
 		return

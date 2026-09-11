@@ -16,6 +16,9 @@ static func can_edit(state, db, rite_uid: int, slot_key: String) -> bool:
 	return slots.has(slot_key) and int(slots[slot_key].get("open_adsorb", 0)) == 0
 
 static func can_move_source(state, db, data: Dictionary) -> bool:
+	if bool(data.get("detached_from_slot", false)):
+		var card = state.get_card_instance(int(data.get("card_uid", 0)))
+		return card != null and card.zone == "drag"
 	if str(data.get("source", "")) != "slot":
 		return true
 	return can_edit(state, db, int(data.get("source_rite_uid", 0)), str(data.get("source_slot", "")))

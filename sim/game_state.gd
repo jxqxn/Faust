@@ -21,6 +21,7 @@ var _nonneg_ids := {CounterSystem.SPECIAL_NONNEG_ID: true}
 # remain compatibility views while callers migrate to uid-based APIs.
 var card_instances: Dictionary = {} # uid(int) -> CardInstanceData
 var next_card_uid := 1
+var player_card_order: Array[int] = []
 # The player always acts through one concrete protagonist instance. Other
 # character cards remain world people that the protagonist can involve in an
 # action; moving one into a rite never changes the player actor.
@@ -70,8 +71,6 @@ var min_round := 1
 # spawn and normalized position makes saves independent from viewport size and
 # allows the presentation to be rebuilt safely after loading.
 var world_location_id := "school_rooftop"
-var world_spawn_id := "default"
-var world_position_ratio := 0.5
 var visited_world_locations: Array[String] = ["school_rooftop"]
 
 # Difficulty index (0=easy,1=normal,2=hard) and its config.
@@ -349,11 +348,8 @@ func _init() -> void:
 ## Build (or rebuild) the pool from init_config sudan_pool, in config order.
 func build_sudan_pool(db) -> void:
 	sudan_deck.clear()
-	sudan_pool_next_uid = 1
 	for raw_id in db.get_sudan_pool():
-		var entry = SudanPoolCardData.new(sudan_pool_next_uid, int(raw_id))
-		sudan_pool_next_uid += 1
-		sudan_deck.append(entry)
+		add_sudan_pool_card(int(raw_id))
 
 
 func sudan_pool_size() -> int:
@@ -374,8 +370,10 @@ func reset_sudan_pool_to_ids(ids: Array) -> void:
 func add_sudan_pool_card(card_id: int) -> void:
 	if card_id <= 0:
 		return
-	var entry = SudanPoolCardData.new(sudan_pool_next_uid, card_id)
-	sudan_pool_next_uid += 1
+	# [SRC: PlayerExtensions.GetNextCardUId 0x38da40 is shared by all Cards.]
+	var entry = SudanPoolCardData.new(next_card_uid, card_id)
+	next_card_uid += 1
+	sudan_pool_next_uid = next_card_uid
 	sudan_deck.append(entry)
 
 
@@ -462,6 +460,8 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 	next_card_uid += 1
 	instance.zone = zone
 	card_instances[instance.uid] = instance
+	if zone in ["hand", "sudan"]:
+		player_card_order.append(instance.uid)
 	_initialize_tag_attributes(instance, db)
 	_record_card_op(CARD_OP_NEW, instance.uid)
 	return instance
@@ -568,7 +568,7 @@ func card_data_for(uid: int, db) -> Dictionary:
 
 ## Effective runtime tag row for one card object, in the config (localized name)
 ## key domain. Mirrors CardExtensions.GetTag: the definition value plus the
-## runtime delta plus every inheritable equip's per-unit value, with the
+## runtime delta plus each eligible equip's recursive GetTag value, with the
 ## can_nagative_and_zero mask on a non-positive sum and a final × Card.count.
 ## [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0): base read at
 ##       Card.data+0x58, delta at Card+0x30, equip recursion gated on
@@ -603,12 +603,9 @@ func effective_card_tag_names(uid: int, db) -> Array:
 		var equipped = get_card_instance(int(equipped_uid))
 		if equipped == null or equipped.zone != "equipped":
 			continue
-		if not _equipment_tag_inherits(db, int(equipped.card_id)):
-			continue
-		for raw_name in _base_tag_row(int(equipped.card_id), db):
-			names[_tag_key_name(raw_name, db)] = true
-		for raw_name in equipped.tags:
-			names[_tag_key_name(raw_name, db)] = true
+		for raw_name in effective_card_tag_names(int(equipped_uid), db):
+			if _tag_can_inherit(str(raw_name), db):
+				names[_tag_key_name(raw_name, db)] = true
 	return names.keys()
 
 
@@ -622,13 +619,14 @@ func _card_tag_terms(instance, db) -> Dictionary:
 		var equipped = get_card_instance(int(equipped_uid))
 		if equipped == null or equipped.zone != "equipped":
 			continue
-		if not _equipment_tag_inherits(db, int(equipped.card_id)):
-			continue
-		# The equip term is per unit: the recursion passes raw=true, which also
-		# skips the non-positive mask for the equip's own contribution.
-		# [SRC: CardExtensions.c @ GetTag equip loop lines 1603-1618.]
-		_add_tag_row(per_unit, _base_tag_row(int(equipped.card_id), db), db)
-		_add_tag_row(per_unit, equipped.tags, db)
+		# Gate the REQUESTED tag, not the equipment's entire row. raw=true
+		# skips the non-positive mask, but still multiplies that equip's count.
+		# [SRC: CardExtensions.GetTag 0x3814a0 L1603-1625; TagNode@0x42;
+		# GetTags predicate 0x393980 independently filters each tag.]
+		var equip_terms := _card_tag_terms(equipped, db)
+		for tag_name in equip_terms:
+			if _tag_can_inherit(str(tag_name), db):
+				per_unit[tag_name] = int(per_unit.get(tag_name, 0)) + int(equip_terms[tag_name]) * int(equipped.count)
 	return per_unit
 
 
@@ -668,19 +666,6 @@ func _tag_key_name(raw_name: Variant, db) -> String:
 	if db.get("tag_code_to_name") != null and db.tag_code_to_name.has(key):
 		return str(db.tag_code_to_name[key])
 	return key
-
-
-## TagNode.can_inherit gate for the whole equip term (not per tag), reached
-## through the equip's own definition tag row.
-## [SRC: CardExtensions.c @ GetTag line 1604 reads TagNode+0x42 before the
-##       List<Card>_Enumerator loop at 1611-1616.]
-func _equipment_tag_inherits(db, equipped_card_id: int) -> bool:
-	if db == null:
-		return false
-	for raw_name in _base_tag_row(equipped_card_id, db):
-		if _tag_can_inherit(str(raw_name), db):
-			return true
-	return false
 
 
 func _tag_can_inherit(tag_name: String, db) -> bool:
@@ -985,7 +970,7 @@ func attach_equipment(host_uid: int, equipment_uid: int, db, recover_replaced :=
 		return -1
 	if enforce_slot and (
 		host.zone != "hand"
-		or equipment.zone not in ["hand", "slot"]
+		or equipment.zone not in ["hand", "slot", "drag"]
 		or int(_card_tag_value(equipment_uid, "装备", db)) < 1
 	):
 		return -1
@@ -1192,6 +1177,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	is_armageddon = false
 	armageddon_rite_id = 0
 	next_card_uid = 1
+	player_card_order.clear()
 	player_actor_uid = 0
 	player_display_name = ""
 	player_card_names.clear()
@@ -1224,20 +1210,16 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	# How many new sudan cards each redraw produces (init_config sudan_redraw_count).
 	# [SRC: GameController.c @ RedrawSudanCard: loops sudan_redraw_count times]
 	sudan_redraw_count = int(db.init_config.get("sudan_redraw_count", 1))
-	# Starting hand comes through ConfigDB so normal and test profiles stay split.
-	for cid in db.get_default_cards():
-		add_card_to_hand(int(cid), db)
-	ensure_player_actor(db)
 	# Sudan pool: one Card object per configured entry, shuffled in place on
 	# each draw (init_config sudan_shuffle) exactly like the source.
 	build_sudan_pool(db)
+	_initialize_source_cards(db)
+	ensure_player_actor(db)
 	auto_gen_sudan_card = true
 	# Day/round. The first round begins after initial events are armed (see
 	# below); day counts start at 1.
 	day = 1
 	world_location_id = "school_rooftop"
-	world_spawn_id = "default"
-	world_position_ratio = 0.5
 	visited_world_locations = ["school_rooftop"]
 	# Gold starts at a sane default (protagonist begins solvent).
 	coin_count = 0
@@ -1287,6 +1269,36 @@ func _configured_redraws_per_round(db) -> int:
 		"sudan_redraw_times_per_round",
 		db.init_config.get("sudan_redraw_times_per_round", 1)
 	))
+
+
+## [SRC: Datapool.InitPlayer 0x413700; default_cards@0x58/card_equips@0x60,
+## dump.cs:390539-390543. Binary 0x413b80-0x413c24 restores the .c missing
+## success branch: stackable duplicates increment count, others AddCard.]
+func _initialize_source_cards(db) -> void:
+	var first_by_id := {}
+	for raw_id in db.get_default_cards():
+		var id := int(raw_id)
+		var definition: Dictionary = db.get_card(id)
+		var stack_tag: String = db.tag_code_to_name.get("stackable", "stackable")
+		if int(definition.get("tag", {}).get(stack_tag, 0)) > 0 and first_by_id.has(id):
+			get_card_instance(first_by_id[id]).count += 1
+			continue
+		var uid := add_card_to_hand(id, db)
+		if uid > 0 and not first_by_id.has(id):
+			first_by_id[id] = uid
+	# AddCard(no_add=true) creates equipment outside Player.cards and does not
+	# MarkCardGen. Initial AddEquip also bypasses the interactive CanEquip gate.
+	# [SRC: Datapool.c 0x413d53/0x413d69; PlayerExtensions.AddCard 0x38b620.]
+	for raw_id in db.init_config.get("card_equips", {}):
+		var host_uid := int(first_by_id.get(int(raw_id), 0))
+		if host_uid == 0:
+			push_error("Initial equipment host missing: %s" % raw_id)
+			continue
+		for equip_id in db.init_config.card_equips[raw_id]:
+			var equipment = create_card_instance(int(equip_id), db, "equipped")
+			if equipment != null:
+				attach_equipment(host_uid, equipment.uid, db)
+				record_only_card(int(equip_id), db)
 
 
 func _sync_redraws_left() -> void:
@@ -1594,6 +1606,8 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 			return 0
 		uid = instance.uid
 		is_new_instance = true
+	if uid not in player_card_order:
+		player_card_order.append(uid)
 	instance.zone = "hand"
 	instance.rite_uid = 0
 	instance.slot_key = ""
@@ -1625,7 +1639,7 @@ func take_hand_card_count(card_id: int, amount: int) -> int:
 	var total := 0
 	for uid in hand:
 		var instance = get_card_instance(int(uid))
-		if instance != null and instance.card_id == card_id:
+		if instance != null and instance.card_id == card_id and is_hand_card(int(uid)):
 			candidates.append(instance)
 			total += int(instance.count)
 	if total < amount or candidates.is_empty():
@@ -1791,6 +1805,7 @@ func remove_card_from_hand(card_or_uid: int) -> bool:
 		hand.remove_at(idx)
 		_erase_one_from_rail(uid)
 		instance.zone = "removed"
+		player_card_order.erase(uid)
 		return true
 	return false
 
@@ -1976,6 +1991,22 @@ func set_current_bag_index(index: int) -> int:
 	return current_bag_index
 
 
+## The historical `hand` collection represents unassigned Player.cards,
+## including NPCs. Eligibility is derived, so gaining/losing ownership changes
+## visibility without deleting or recreating a character.
+## [SRC: CardExtensions.IsHandCard 0x3827c0, dump.cs:388147;
+## stringliteral 0x2580360=own, 0x258ac48=adherent, 0x25828f8=player.]
+func is_hand_card(uid: int, db = null) -> bool:
+	if get_card_instance(uid) == null:
+		return false
+	var config = db if db != null else _runtime_db()
+	var tags := effective_card_tags(uid, config)
+	for code in ["own", "adherent", "player"]:
+		if int(tags.get(config.tag_code_to_name.get(code, code), 0)) > 0:
+			return true
+	return false
+
+
 func visible_rail_card_uids(bag_index: int = -1) -> Array[int]:
 	sync_rail_order()
 	var page := current_bag_index if bag_index < 0 else bag_index
@@ -1986,7 +2017,9 @@ func visible_rail_card_uids(bag_index: int = -1) -> Array[int]:
 		var instance = get_card_instance(int(uid))
 		if instance == null or int(instance.bag) != page:
 			continue
-		if int(uid) in hand or is_active_sudan_card(int(uid)):
+		# The host's active-Sultan rail is a separate presentation path. The
+		# three-tag gate applies to the ordinary Player.cards population.
+		if (int(uid) in hand and is_hand_card(int(uid))) or is_active_sudan_card(int(uid)):
 			out.append(int(uid))
 	return out
 
@@ -2091,11 +2124,9 @@ func _adsorb_open_slots(instance, rite: Dictionary, db, rng) -> bool:
 
 
 func _adsorbable_card_uids() -> Array[int]:
-	var out: Array[int] = hand.duplicate()
-	for active_sudan in active_sudan_cards:
-		var uid := int(active_sudan.card_uid)
-		if uid > 0 and uid not in out:
-			out.append(uid)
+	var out: Array[int] = []
+	for card in source_player_cards():
+		out.append(card.uid)
 	return out
 
 
@@ -2173,7 +2204,7 @@ func _remove_adsorb_candidate(card_uid: int) -> bool:
 func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Dictionary, db, rng) -> bool:
 	if card.is_empty():
 		return false
-	var condition: Dictionary = slot_def.get("condition", {})
+	var condition: Variant = slot_def.get("condition", {})
 	var rite_state := {}
 	for slot_key in instance.slot_cards:
 		var slotted_card = card_data_for(int(instance.slot_cards[slot_key]), db)
@@ -2237,6 +2268,8 @@ func _reback_absorbed_cards(absorbed: Array[Dictionary], rite_uid: int) -> void:
 		if is_active_sudan_card(card_uid):
 			var sudan_instance = get_card_instance(card_uid)
 			if sudan_instance != null:
+				if card_uid not in player_card_order:
+					player_card_order.append(card_uid)
 				sudan_instance.zone = "sudan"
 				sudan_instance.rite_uid = 0
 				sudan_instance.slot_key = ""
@@ -2372,6 +2405,8 @@ func return_rite_cards(rite_uid: int, _db) -> void:
 		if is_active_sudan_card(card_uid):
 			var sudan_instance = get_card_instance(card_uid)
 			if sudan_instance != null:
+				if card_uid not in player_card_order:
+					player_card_order.append(card_uid)
 				sudan_instance.zone = "sudan"
 				sudan_instance.rite_uid = 0
 				sudan_instance.slot_key = ""
@@ -2490,6 +2525,7 @@ func remove_card_instance_from_play(uid: int) -> bool:
 				if int(active_sudan.card_uid) == uid:
 					active_sudan_cards.erase(active_sudan)
 	instance.zone = "removed"
+	player_card_order.erase(uid)
 	_record_card_op(CARD_OP_DELETE, uid)
 	return true
 
@@ -2573,19 +2609,21 @@ func consume_pending_operation() -> Dictionary:
 	return operation
 
 
-func schedule_delay(payload: Dictionary, context: Dictionary = {}) -> void:
+func schedule_delay(payload: Variant, context: Dictionary = {}) -> void:
 	if payload.is_empty():
 		return
 	# DelayOp.round is a remaining Next Day countdown. The original decrements
 	# it in UpdateSingleDelayOps on every NextDay, regardless of Player.round.
 	# [SRC: PlayerExtensions.c @ AddDelayOp (RVA 0x38be90);
 	#       GameController.c @ UpdateSingleDelayOps (RVA 0x55a700)]
-	var delay_round := maxi(int(payload.get("round", 0)), 0)
+	var delay_round := maxi(int(SourceJSON.member(payload, "round", 0)), 0)
 	delayed_operations.append({
-		"id": int(payload.get("id", 0)),
+		"id": int(SourceJSON.member(payload, "id", 0)),
 		"round": delay_round,
 		"delay_mode": "next_day_countdown",
 		"payload": payload.duplicate(true),
+		# Keep nested unique-key operation order across sorted save JSON too.
+		"payload_json": JSON.stringify(payload, "", false),
 		"context": context.duplicate(true),
 	})
 
@@ -2860,20 +2898,40 @@ func hand_has_card_id(card_id: int) -> bool:
 
 # ---- Table (derived slot queries) ----
 ## [SRC: ChangeCardName.DoTemplate0x4f2130 reads Player.cards@0x88.
-## The host separates active Sudan cards from hand; neither list grants
-## membership while the card is in a rite. Full interleaved source order
-## across those two lists remains a presentation-sequencing boundary.]
+## Unified insertion order is independent of bag/rail display sorting.
+## Neither ordinary nor active Sudan cards remain members while in a rite.]
 func source_player_cards() -> Array:
 	var out: Array = []
-	for uid in hand:
+	var valid: Array[int] = []
+	# Migration fallback preserves known insertion order, not the visual rail.
+	for uid in card_instances:
+		if int(uid) not in player_card_order:
+			player_card_order.append(int(uid))
+	for uid in player_card_order:
 		var card = get_card_instance(uid)
-		if card != null and card.zone == "hand":
+		if card != null and card.zone in ["hand", "sudan"]:
 			out.append(card)
-	for entry in active_sudan_cards:
-		var card = get_card_instance(int(entry.card_uid))
-		if card != null and card.zone == "sudan":
-			out.append(card)
+			valid.append(uid)
+	player_card_order = valid
 	return out
+
+
+func repair_pool_uid_collisions() -> void:
+	# Legacy saves used a separate pool allocator. Preserve live-card UIDs;
+	# only unreferenced pool objects need a replacement identity on collision.
+	var occupied := {}
+	for uid in card_instances:
+		occupied[int(uid)] = true
+		next_card_uid = maxi(next_card_uid, int(uid) + 1)
+	for entry in sudan_deck:
+		next_card_uid = maxi(next_card_uid, int(entry.uid) + 1)
+	for entry in sudan_deck:
+		if int(entry.uid) <= 0 or occupied.has(int(entry.uid)):
+			entry.uid = next_card_uid
+			next_card_uid += 1
+		occupied[int(entry.uid)] = true
+	sudan_pool_next_uid = next_card_uid
+
 
 
 ## [SRC: PlayerExtensions.GetTotalCards0x38de90, dump.cs:388887;
@@ -3029,23 +3087,20 @@ func remove_table_card_id(card_id: int, rite_uid: int = 0) -> void:
 			_remove_slot_instance(int(entry.get("card_uid", 0)))
 
 
-## Remove matching slotted instances for `table.clean.<card>`. A card_uid in
-## the triggering context wins over config-id matching, preventing an event
-## from cleaning the same-id card in another rite instance.
-func clean_table_card_instances(card_id: int, rite_uid: int = 0, card_uid: int = 0, count: int = 0) -> Array:
+## [SRC: DesktopCleanCard.DoTemplate 0x4f8250 / callback 0x5208b0:
+## Player.cards in order, positive value is a count budget, <=0 means all.]
+func clean_table_card_instances(selector: String, count: int, db) -> Array:
 	var cleaned: Array = []
-	for entry in table_card_entries():
-		if rite_uid > 0 and int(entry.get("rite_uid", 0)) != rite_uid:
-			continue
-		if card_uid > 0 and int(entry.get("card_uid", 0)) != card_uid:
-			continue
-		if int(entry.get("id", 0)) != card_id:
-			continue
-		cleaned.append(entry.duplicate(true))
-		if count > 0 and cleaned.size() >= count:
+	var remaining := count if count > 0 else 99999999
+	for instance in preload("res://sim/operation_filter.gd").select_desktop(self, db, selector):
+		if remaining <= 0:
 			break
-	for entry in cleaned:
-		_remove_slot_instance(int(entry.get("card_uid", 0)))
+		if instance.count > remaining:
+			instance.count -= remaining
+			break
+		remaining -= instance.count
+		cleaned.append({"id": instance.card_id, "card_uid": instance.uid, "rite_uid": 0})
+		remove_card_instance_from_play(instance.uid)
 	return cleaned
 
 
@@ -3091,6 +3146,7 @@ func add_card_to_slot(card_or_uid: int, slot: int, db, rite_uid: int = 0) -> voi
 	if uid in hand:
 		hand.erase(uid)
 		_erase_one_from_rail(uid)
+	player_card_order.erase(uid)
 	instance.zone = "slot"
 	instance.rite_uid = rite_uid
 	instance.slot_key = "s%d" % slot

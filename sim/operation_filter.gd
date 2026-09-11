@@ -8,11 +8,20 @@ static func select_total(state, db, selector: String) -> Array:
 	var out: Array = []
 	if state == null:
 		return out
-	for uid in state.card_instances.keys():
-		var instance = state.get_card_instance(int(uid))
+	for instance in state.source_total_cards():
 		if instance == null or instance.is_lost or instance.zone == "removed":
 			continue
 		if _matches(instance, state, db, selector):
+			out.append(instance)
+	return out
+
+
+# [SRC: DesktopModifyEquip 0x50d820 / DesktopModifyRare 0x50df50:
+# OperationFilter.Filter(Player.cards@0x88), also for the g alias.]
+static func select_desktop(state, db, selector: String) -> Array:
+	var out: Array = []
+	for instance in state.source_player_cards():
+		if instance != null and not instance.is_lost and _matches(instance, state, db, selector):
 			out.append(instance)
 	return out
 

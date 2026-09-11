@@ -19,9 +19,10 @@ const OPS := [">=", "<=", "<>", "!=", "=", "<", ">"]
 ## Evaluate a condition dictionary. Returns true if ALL top-level keys match
 ## (AND semantics). `ctx` carries: db, state, rng, rite_state{s1..s4->card_id},
 ## dice_cache, gold_dice_used.
-static func evaluate(cond: Dictionary, ctx: Dictionary) -> bool:
-	for key in cond:
-		var val = cond[key]
+static func evaluate(cond: Variant, ctx: Dictionary) -> bool:
+	for entry in SourceJSON.entries(cond):
+		var key: String = entry.keys()[0]
+		var val = entry[key]
 		if not eval_key(key, val, ctx):
 			return false
 	return true
@@ -242,16 +243,18 @@ static func _is_known_generic_tag_condition(key: String, known_tags: Dictionary)
 	return known_tags.has(str(parsed.name))
 
 
-static func eval_any(group: Dictionary, ctx: Dictionary) -> bool:
-	for key in group:
-		if eval_key(key, group[key], ctx):
+static func eval_any(group: Variant, ctx: Dictionary) -> bool:
+	for entry in SourceJSON.entries(group):
+		var key: String = entry.keys()[0]
+		if eval_key(key, entry[key], ctx):
 			return true
 	return false
 
 
-static func eval_all(group: Dictionary, ctx: Dictionary) -> bool:
-	for key in group:
-		if not eval_key(key, group[key], ctx):
+static func eval_all(group: Variant, ctx: Dictionary) -> bool:
+	for entry in SourceJSON.entries(group):
+		var key: String = entry.keys()[0]
+		if not eval_key(key, entry[key], ctx):
 			return false
 	return true
 
@@ -742,7 +745,7 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 
 ## Have-family counting core, shared by have / hand_have / table_have /
 ## rite_have. Domain modes: "all" = hand + every rite slot (player.cards plus
-## each Rite.cards in the original), "hand", "table" (slots), "rite" (slots of
+## each Rite.cards in the original), "hand" (IsHandCard), "table" (Player.cards), "rite" (slots of
 ## the given rite id across all instances; <= 0 = every rite). Matching uses
 ## the runtime operation filter; counting sums tag values when the selector
 ## carries a tag, stacking count (max(count,1)) otherwise. Default compare >=.
@@ -763,11 +766,13 @@ static func _have_domain(st, mode: String, rite_id: int = 0) -> Array:
 		var in_slot: bool = inst.zone == "slot"
 		match mode:
 			"hand":
-				if not in_hand: continue
+				# [SRC: HandHaveCardCount.IsSatisfied 0x3fd4f0 reads
+				# Player.cards then explicitly gates each with IsHandCard.]
+				if not (in_hand or inst.zone == "sudan") or not st.is_hand_card(inst.uid): continue
 			"table":
-				# Desk-visible cards: hand rail, rite slots, and active Sultan
-				# cards on the rail (all sit on the table surface).
-				if not (in_hand or in_slot or inst.zone == "sudan"): continue
+				# [SRC: TableHaveCardCount.IsSatisfied 0x409b10 reads only
+				# Player.cards@0x88, without IsHandCard or rite traversal.]
+				if not (in_hand or inst.zone == "sudan"): continue
 			"rite":
 				if not in_slot: continue
 				if rite_id > 0 and inst.rite_uid > 0:
@@ -775,8 +780,8 @@ static func _have_domain(st, mode: String, rite_id: int = 0) -> Array:
 					if owner == null or int(owner.id) != rite_id:
 						continue
 			_:
-				# "all": player.cards plus every rite's cards — every live card.
-				pass
+				# Player.cards + rite cards, not nested equipment objects.
+				if not (in_hand or in_slot or inst.zone == "sudan"): continue
 		out.append(inst)
 	return out
 
@@ -1046,7 +1051,7 @@ static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:
 
 # [SRC: RiteExtensions.CanPutCard 0x3918b0: evaluate conditions first, then
 # main.GetTag(adsorb_spec)>0 requires ConditionContext.is_adsorb_spec@0x21.]
-static func can_put_card(condition: Dictionary, ctx: Dictionary) -> bool:
+static func can_put_card(condition: Variant, ctx: Dictionary) -> bool:
 	if not evaluate(condition, ctx):
 		return false
 	var card: Dictionary = ctx.get("acting_card", {})

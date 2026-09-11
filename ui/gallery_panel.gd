@@ -106,7 +106,7 @@ func _load_source_data() -> void:
 
 
 func _read_object(path: String) -> Dictionary:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	return parsed as Dictionary if parsed is Dictionary else {}
 
 

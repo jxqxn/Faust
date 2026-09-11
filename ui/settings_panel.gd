@@ -40,7 +40,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	z_index = 1001
 	AppSettings.load_preferences()
-	_ui = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	_ui = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	_build_source_tree()
 	_on_viewport_resized()
 	get_viewport().size_changed.connect(_on_viewport_resized)
@@ -121,7 +121,7 @@ func _build_display(page: Control) -> void:
 	_label(page, "SenceTitle", "SCREEN_SETTING_TITLE", Rect2(0, 0, 2115, 116.2), "@TITLE_H2")
 	var scene := _group(page, "Sence", Rect2(0, 150.4, 2115, 585))
 	_screen_mode = _dropdown(scene, "ShowMode", "SCREEN_MODE_SETTING", 0)
-	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var variable: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	var modes: Array = variable.get("support_fullScreen", [])
 	for i in range(modes.size()):
 		_screen_mode.add_item(_text("SCREEN_MODE_%d" % i))

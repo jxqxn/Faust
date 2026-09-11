@@ -263,7 +263,7 @@ func _build_ui() -> void:
 	deadline_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_deadline_strip.add_child(deadline_row)
 	var deadline_title := Label.new()
-	var ui_text: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var ui_text: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	deadline_title.text = str(ui_text.GAME_MAIN_HEAD_TITLE.zhCN)
 	deadline_title.add_theme_font_size_override("font_size", 60)
 	deadline_title.add_theme_color_override("font_color", Color.WHITE)
@@ -888,7 +888,7 @@ func _update_deadline_track(remaining: int) -> void:
 	var names := ["人.png", "红色的人‘.png", "刀.png", "染血的刀.png", "进度条（亮.png", "进度条（红色.png", "暗色点点.png", "进度条暗点.png"]
 	var warning := remaining < 3
 	var indices: Array[int] = [1 if warning else 0]
-	var variables: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var variables: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	var repeated := str(variables.get("MAIN_UI_TITLE_NUMBER_RED" if warning else "MAIN_UI_TITLE_NUMBER_NOMAL", ""))
 	var last := str(variables.get("MAIN_UI_TITLE_NUMBER_RED_TODAY" if warning else "MAIN_UI_TITLE_NUMBER_TODAY", ""))
 	var tokens := RegEx.create_from_string("<sprite=(\\d+)>")
@@ -1155,6 +1155,7 @@ func refresh() -> void:
 		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = widget.card_size()
 		widget.clicked.connect(_show_card_detail)
+		widget.quick_action_requested.connect(_on_hand_card_quick_action)
 		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
 		widget.stack_drop_allowed = _can_drop_stack
 		widget.equipment_drop_allowed = _can_drop_equipment
@@ -1414,6 +1415,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	widget.custom_minimum_size = widget.card_size()
 	widget.clip_contents = false
 	widget.clicked.connect(_show_card_detail)
+	widget.quick_action_requested.connect(_on_hand_card_quick_action)
 	return widget
 
 
@@ -1537,7 +1539,8 @@ func _can_drop_stack(target_uid: int, data: Variant) -> bool:
 
 
 func _can_release_drag_source(source) -> bool:
-	if source.zone == "hand":
+	# OnBeginDrag has already checked CanMove and detached the source slot.
+	if source.zone in ["hand", "drag"]:
 		return true
 	if source.zone != "slot" or not preload("res://ui/rite_slot_access.gd").can_edit(_state, _db, source.rite_uid, source.slot_key):
 		return false
@@ -1625,6 +1628,21 @@ func _on_hand_card_hold_hint(card_uid: int) -> void:
 	if not _presentation_blockers.is_empty() or _presentation_frozen:
 		return
 	_desk_content.show_satisfied_rites(_state.satisfied_rite_uids_for_card(card_uid, _db, _rng))
+
+
+# [SRC: CardController.OnPointerUp 0x52afe0: right click dispatches to the
+# open, unstarted rite panel; without a panel it calls ShowSatisfiedRite.]
+func _on_hand_card_quick_action(card_uid: int) -> void:
+	if _source_overlay_layer != null:
+		for child in _source_overlay_layer.get_children():
+			if child.is_queued_for_deletion() or not child.has_method("panel_drop_slot"):
+				continue
+			var data := {"type": "card", "card_uid": card_uid, "source": "active_sudan" if _state.is_active_sudan_card(card_uid) else "hand"}
+			var key: String = child.panel_drop_slot(data)
+			if not key.is_empty():
+				child.drop_card_on_slot(key, data)
+			return
+	_on_hand_card_hold_hint(card_uid)
 
 
 func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order
@@ -1745,6 +1763,16 @@ func _set_underlying_presentation_paused(paused: bool) -> void:
 		_cached_event_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE if paused else Control.MOUSE_FILTER_STOP
 	var rite_open := _presentation_blockers.has("rite")
 	var rite_only := rite_open and _presentation_blockers.size() == 1
+	# Godot mouse picking follows tree order, not z_index. The full-screen
+	# rite shade otherwise swallows the hand despite drawing beneath it.
+	# [SRC: CardDropManager.DropCard 0x4ef4f0 and CardController.OnPointerUp
+	# 0x52afe0 require live hand input while RitePanelShow is active.]
+	if rite_only:
+		move_child(_card_rail_view, -1)
+		move_child(_bag_tabs, -1)
+	else:
+		move_child(_overlay_layer, -1)
+		move_child(_source_overlay_layer, -1)
 	# The rite is above desktop chrome, while its hand remains a live input
 	# surface. [SRC: RitePanelShowController.BindCardHandler/ChooseSlotCard]
 	_source_overlay_layer.z_index = PERSISTENT_CONTROL_Z + 1 if rite_open else OVERLAY_LAYER_Z + 1

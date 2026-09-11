@@ -51,6 +51,8 @@ func test_screen_preview_ignores_painter_order_and_old_gap_and_absorbs_equipment
 	var host := state.add_card_to_hand(2001193, db)
 	state.add_card_to_hand(2000001, db)
 	var equipment := state.add_card_to_hand(2000246, db)
+	for uid in [host, equipment]:
+		state.get_card_instance(uid).tags["own"] = 1
 	var screen := preload("res://ui/game_screen.gd").new()
 	screen.size = Vector2(3840, 2160)
 	screen.setup(state, db, rng)

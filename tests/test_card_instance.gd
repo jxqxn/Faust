@@ -125,7 +125,7 @@ func test_v5_save_restores_instance_uids_and_runtime_tags() -> void:
 	assert_eq(int(restored.get_card_instance(card_uid).tags.get("临时标记", 0)), 4)
 
 
-func test_event_context_modifies_only_the_triggering_sultan_instance() -> void:
+func test_desktop_tag_selector_is_not_narrowed_by_triggering_instance() -> void:
 	var state := GameState.new()
 	var first_uid: int = state.create_card_instance(2000024, db, "sudan").uid
 	var second_uid: int = state.create_card_instance(2000024, db, "sudan").uid
@@ -135,10 +135,10 @@ func test_event_context_modifies_only_the_triggering_sultan_instance() -> void:
 	}, state, db, RNG.new(17), {"card_uid": first_uid, "card": 2000024})
 
 	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 1)
-	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0)
+	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 1)
 	ResultExec.execute({"table.2000024=上朝": 0}, state, db, {"card_uid": first_uid})
-	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 0, "set-zero removes the triggering Sultan state")
-	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0, "set-zero remains scoped to the triggering instance")
+	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 0, "set-zero applies to matching desktop cards")
+	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0, "set-zero applies to both matching instances")
 
 
 func test_option_prompt_preserves_triggering_card_context() -> void:
@@ -156,7 +156,7 @@ func test_option_prompt_preserves_triggering_card_context() -> void:
 	DeferredEffects.execute_choice("case:op1", choice.value, state, db, RNG.new(18), prompt.context)
 
 	assert_eq(int(state.get_card_instance(first_uid).tags.get("上朝", 0)), 1)
-	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 0)
+	assert_eq(int(state.get_card_instance(second_uid).tags.get("上朝", 0)), 1)
 
 
 func test_rite_cleanup_consumes_the_exact_sultan_instance() -> void:
@@ -177,13 +177,12 @@ func test_rite_cleanup_consumes_the_exact_sultan_instance() -> void:
 	assert_eq(second_instance.zone, "removed", "the slotted instance is the one consumed")
 
 
-func test_power_game_event_adsorbs_the_tagged_active_sultan_instance() -> void:
+func test_power_game_event_adsorbs_the_existing_sultan_character() -> void:
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(91))
-	var sudan = RoundLoop.ActiveSudan.new(2000024, 3, state.round_number, 0)
-	var sultan_instance = state.create_card_instance(2000024, db, "sudan")
-	sudan.card_uid = sultan_instance.uid
-	state.active_sudan_cards.append(sudan)
+	# Original 2000024 is the Sultan character, already in default_cards,
+	# not an active deadline card and not a second instance.
+	var sultan_instance = state.get_card_instance(state.card_uid_for(2000024, "hand"))
 
 	var event := db.get_event(5300089)
 	assert_false(event.is_empty(), "the configured power-game event must be available")
@@ -212,9 +211,9 @@ func test_power_game_insurance_event_removes_tag_from_same_instance() -> void:
 	# tutorial/result prompts. Completing a whole day is a separate UI flow.
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(91))
-	var sultan_instance = state.create_card_instance(2000024, db, "sudan")
+	# The source table_have gate requires him on the desktop, outside rites.
+	var sultan_instance = state.get_card_instance(state.card_uid_for(2000024, "hand"))
 	sultan_instance.tags["上朝"] = 1
-	state.add_card_to_slot(sultan_instance.uid, 1, db)
 	assert_null(state.find_rite_instance_by_id(5001001), "source !rite gate is satisfied")
 	DeferredEffects.execute_event(db.get_event(5300357), state, db, RNG.new(91))
 	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 0, "the configured follow-up removes 上朝 from the same Sultan instance")

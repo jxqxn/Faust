@@ -94,7 +94,7 @@ func test_preference_updates_open_text_and_survives_restart() -> void:
 	var title := Label.new()
 	Style.apply(body, "@MAIN_BODY")
 	Style.apply(title, "@RITE_PANEL_TITLE")
-	var source: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
+	var source: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
 	assert_true(settings.set_font_size("lg"))
 	assert_eq(body.get_theme_font_size("normal_font_size"), int(source["@MAIN_BODY"].css_size.lg))
 	assert_eq(title.get_theme_font_size("font_size"), 60)

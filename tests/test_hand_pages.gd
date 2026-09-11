@@ -19,6 +19,8 @@ func test_condition_sort_uses_source_ties_and_persists_only_current_page() -> vo
 	var first := state.add_card_to_hand(2000001, db)
 	var second := state.add_card_to_hand(2000001, db)
 	var rejected := state.add_card_to_hand(2000005, db)
+	for uid in [last, rejected]:
+		state.get_card_instance(uid).tags["own"] = 1
 	state.get_card_instance(last).bag_pos = 0
 	state.get_card_instance(first).bag_pos = 4
 	state.get_card_instance(second).bag_pos = 4
@@ -86,6 +88,8 @@ func test_insertion_uses_page_order_not_global_index() -> void:
 	var other := state.add_card_to_hand(2000006, db)
 	var second := state.add_card_to_hand(2000007, db)
 	var last := state.add_card_to_hand(2000008, db)
+	for uid in [other, second, last]:
+		state.get_card_instance(uid).tags["own"] = 1
 	state.get_card_instance(other).bag = 1
 	state.set_current_bag_index(0)
 	var screen := GameScreen.new()
@@ -122,6 +126,7 @@ func test_rite_title_is_independent_of_icon_bound_and_clicks_instance() -> void:
 	var state := GameState.new()
 	var rng := preload("res://core/rng.gd").new(182)
 	state.setup_new_run(db, 0, rng)
+	state.add_available_rite(5000001, db, rng)
 	var stage := Control.new()
 	stage.size = Vector2(3840, 2160)
 	add_child_autofree(stage)

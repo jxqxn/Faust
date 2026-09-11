@@ -1,4 +1,19 @@
-{
+﻿{
+  // 死亡: over_game_dead（已有资源）
+  // 困兽: over_game_trapped_beast
+  // 伟业: over_game_great_cause（已有资源）
+  // 小幸福: over_game_happiness（已有资源）
+  // 中国: over_game_china
+  // 虚无？: over_game_nothingness
+  // 升华： over_game_sublime
+
+  "-1": {
+    // 结局id
+    "clip": "over_game_dead", // 音频名称
+    "start": 0, // 音频开始播放的位置（单位秒）
+    "loop_start": 0, // 音频循环播放开始的位置（单位秒）
+    "loop_end": -1 // 音频循环播放结束的位置（单位秒），配置-1表示音频的最后一秒
+  },
   "1": {
     "clip": "over_game_dead",
     "start": 0,
@@ -83,6 +98,7 @@
     "loop_start": 0,
     "loop_end": -1
   },
+
   "16": {
     "clip": "over_game_dead",
     "start": 0,
@@ -889,12 +905,6 @@
   },
   "604": {
     "clip": "over_game_great_cause",
-    "start": 0,
-    "loop_start": 0,
-    "loop_end": -1
-  },
-  "-1": {
-    "clip": "over_game_dead",
     "start": 0,
     "loop_start": 0,
     "loop_end": -1

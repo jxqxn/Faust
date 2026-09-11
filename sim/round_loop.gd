@@ -19,10 +19,24 @@ class ActiveSudan:
 		drawn_round = rnd
 
 
-## Advance one visible day and decrement active sudan deadlines.
-## New sudan cards are generated only when no sudan card is active, matching
-## TryGenSudanCard's HasSudanCard gate rather than a fixed day modulo.
-## [SRC: GameController.c @ TryGenSudanCard (0x559730)]
+## Start the first day's serial opening without advancing another day.
+static func begin_opening(state, db, rng) -> Dictionary:
+	# [SRC: GameController.Start b__5 0x56f9c0 -> b__8/b__9/b__10:
+	# OnRoundBeginBa resolves before HandCardArrange and TryGenSudanCard.]
+	# Use the persisted transition rather than a UI-only pending-draw flag.
+	if not state.round_transition.is_empty():
+		return state.round_transition
+	var result := {
+		"game_over": false, "expired": [], "auto_rites": [],
+		"drawn_sudan": -1, "new_round": false, "interactive": true,
+		"phase": "opening_events",
+	}
+	state.round_transition = result
+	_pump_day(state, db, rng, result)
+	return result
+
+
+## Advance one visible day; TryGenSudanCard 0x559730 draws only if absent.
 static func advance_day(state, db, rng, interactive: bool = false) -> Dictionary:
 	if not state.round_transition.is_empty():
 		return state.round_transition
@@ -51,6 +65,17 @@ static func _pump_day(state, db, rng, result: Dictionary) -> void:
 			state.round_transition = {}
 			return
 		match str(result.get("phase", "rites")):
+			"opening_events":
+				result.phase = "opening_draw"
+				state.trigger_events("round_begin_ba", {"round": state.round_number, "rng": rng})
+			"opening_draw":
+				result.phase = "opening_complete"
+				update_hand_card_pos(state)
+				if state.auto_gen_sudan_card and state.active_sudan_cards.is_empty():
+					result.drawn_sudan = draw_weekly_sudan(state, db, rng)
+			"opening_complete":
+				state.round_transition = {}
+				return
 			"auto_start":
 				result.phase = "cards"
 				result.auto_rites = start_auto_begin_rites(state, db)
@@ -169,7 +194,7 @@ static func _update_card_lives(state, db, rng, progress: Dictionary = {}) -> Arr
 		if sheltered or lifetime < 1 or inst.life < lifetime:
 			continue
 		dead.append({"id": int(inst.card_id), "card_uid": int(uid), "sudan": is_sudan})
-		var vanish: Dictionary = card.get("vanish", {})
+		var vanish: Variant = card.get("vanish", {})
 		# No card_dead timing is fired here. EventTriggerExtensions.OnCardDead
 		# exists (28 On* entry points) but has NO call site anywhere in the
 		# decompiled corpus and no `on.card_dead` in any of the 1863 event
@@ -427,7 +452,9 @@ static func _promote_sudan_pool_entry(state, db, entry, life_override: int = -1)
 	var card_id := int(entry.card_id)
 	# Reuse the original Card.uid; do not consume a fresh one from the counter.
 	var instance = CardInstanceData.new()
+	assert(not state.card_instances.has(int(entry.uid)), "Pool UID must not overwrite an existing card")
 	state.card_instances[int(entry.uid)] = instance
+	state.player_card_order.append(int(entry.uid))
 	instance.uid = int(entry.uid)
 	instance.card_id = card_id
 	instance.zone = "sudan"
@@ -670,18 +697,16 @@ static func _redraws_per_round(state, db) -> int:
 
 
 ## UpdateHandCardPos: normalize bag positions on the current page to 1..N in
-## hand order. The original collects IsCurrentHandCard (bag == BagIndex plus
-## the unresolved three-tag hand test), sorts, and writes bagpos = i + 1; the
-## clone keeps one page (bag 0) and the hand array as its order source, so the
-## invariant is bag_pos == hand index + 1. Cards on other pages keep theirs.
+## hand order. IsCurrentHandCard checks BagIndex and own/adherent/player;
+## hidden NPCs and other pages retain their existing positions.
 ## [SRC: GameController.c @ UpdateHandCardPos (0x559a70) L1060-1097]
 static func update_hand_card_pos(state) -> void:
 	if state == null or not state.has_method("get_card_instance"):
 		return
-	for index in state.hand.size():
-		var inst = state.get_card_instance(int(state.hand[index]))
-		if inst != null and inst.bag == 0:
-			inst.bag_pos = index + 1
+	# Active Sultan presentation is a host rail extension, not IsHandCard.
+	var page: Array = state.visible_rail_card_uids().filter(func(uid): return state.is_hand_card(int(uid)))
+	for index in page.size():
+		state.get_card_instance(int(page[index])).bag_pos = index + 1
 
 
 ## Shelter for ANY card (sudan execution included) is presence in any rite

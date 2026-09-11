@@ -115,14 +115,14 @@ func _build_title_view() -> void:
 	# Unity layout includes child scale; Godot Containers reset child scale.
 	# ImageTranslate.Start/UpdateImg (0x1565d30/0x1565f70) applies config
 	# sizeDelta before the layout group places its children.
-	var image_styles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/imagestyle.json"))
+	var image_styles: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/imagestyle.json"))
 	var logo_style: Dictionary = image_styles.START_UI_LOGO
 	logo.custom_minimum_size = Vector2(logo_style.width, logo_style.height) * 1.1
 	logo.size = logo.custom_minimum_size
 	logo.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(logo)
 
-	var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var captions: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	var new_game := _title_button(captions.NEW_GAME.zhCN, "NewGameButton")
 	# The original starts the run right away: the opening show (event
 	# 5310006) presents the narrator/difficulty pick in-game via the
@@ -193,7 +193,7 @@ func _build_buttons_group(vbox: VBoxContainer) -> void:
 	group.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(group)
 	var entries := [
-		[JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json")).STORY.zhCN, "StoryButton", story_pressed],
+		[SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json")).STORY.zhCN, "StoryButton", story_pressed],
 		["命运商店", "ShopButton", shop_pressed],
 		["游戏画廊", "CollectButton", collect_pressed],
 	]

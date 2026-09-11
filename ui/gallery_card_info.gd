@@ -159,7 +159,7 @@ func _build_plots(plots: Control) -> void:
 	_place(_plot_mask, Rect2(255, 500, 390.3, 80), prompt)
 	var confirm := Button.new()
 	confirm.name = "Confirm"
-	confirm.text = "确认"
+	confirm.text = "" # GalleryCardInfo.prefab Confirm is an image, no overlaid label.
 	confirm.position = Vector2(287.5, 862)
 	confirm.size = Vector2(325, 158)
 	confirm.add_theme_font_size_override("font_size", 36)

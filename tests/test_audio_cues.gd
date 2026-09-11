@@ -259,7 +259,7 @@ func test_over_music_ids_are_real_endings() -> void:
 	# [SRC: _unpack/data/config/over_music_config.json has 150 entries: ids
 	#       1..604 plus a -1 fallback; content/over.json is a 159-key object.]
 	var local_db := _db()
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/over.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/over.json"))
 	assert_true(parsed is Dictionary, "content/over.json parses as the ending table")
 	var endings: Dictionary = parsed
 	assert_gt(endings.size(), 100, "the ending table is the full one")
@@ -284,5 +284,5 @@ func test_over_music_ids_are_real_endings() -> void:
 	for key in endings:
 		if not local_db.over_music.has(str(key)):
 			without_music.append(str(key))
-	assert_eq(without_music, ["0", "15", "40", "204", "273", "274", "289", "290", "291", "999"],
+	assert_eq(without_music, ["0", "15", "40", "999", "204", "273", "274", "289", "290", "291"],
 		"exactly these endings declare no ending music of their own")

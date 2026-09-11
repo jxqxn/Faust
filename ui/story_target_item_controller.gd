@@ -71,7 +71,7 @@ func _formats() -> Dictionary:
 	if not _source_formats.is_empty():
 		return _source_formats
 	if FileAccess.file_exists(VARIABLE_PATH):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(VARIABLE_PATH))
+		var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(VARIABLE_PATH))
 		if parsed is Dictionary:
 			_source_formats = parsed
 	return _source_formats

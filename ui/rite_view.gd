@@ -15,6 +15,16 @@
 ## [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 extends Control
 
+class RiteDropSurface:
+	extends ColorRect
+	var owner_view: Control
+	func _can_drop_data(_point: Vector2, data: Variant) -> bool:
+		return not owner_view.panel_drop_slot(data).is_empty()
+	func _drop_data(_point: Vector2, data: Variant) -> void:
+		var slot: String = owner_view.panel_drop_slot(data)
+		if not slot.is_empty():
+			owner_view.drop_card_on_slot(slot, data)
+
 class RiteSlotButton:
 	extends Button
 
@@ -56,6 +66,7 @@ var _rite_id: int = 5000001
 var _rite_uid: int = 0
 var _rite: Dictionary = {}
 var _placed: Dictionary = {}  # slot_key -> CardInstance uid
+var _dragged_slot_widgets: Dictionary = {}
 var _managed_slots: Array[int] = []
 var _gold_used_this_resolve: int = 0
 var _gold_dice_map: Dictionary = {}
@@ -104,8 +115,9 @@ var _dice_count_title: Label
 var _dice_count_value: Label
 var _dice_count_kind := ""
 var _gold_selected: int = 0
-var _log_label: Label
 var _selected_card_uid: int = 0
+var _effect_drag_uid: int = 0
+var _slot_effect_tweens: Dictionary = {}
 var _slot_tips: Control
 var _settlement_context: Dictionary = {}
 var _settlement_phase := "selection"
@@ -155,7 +167,8 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	_shade = ColorRect.new()
+	_shade = RiteDropSurface.new()
+	_shade.owner_view = self
 	_shade.name = "RiteModalShade"
 	# Desktop dimming matched to the supplied original runtime frame.
 	_shade.color = Color(0, 0, 0, 0.55)
@@ -174,6 +187,7 @@ func _build_ui() -> void:
 	_source_canvas.add_child(_template_backdrop)
 
 	_slot_layer = Control.new()
+	_slot_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_slot_layer.name = "RiteSlotOverlay"
 	# This layer receives literal source-canvas coordinates; full-rect anchors
 	# would fight its 3840x2160 source size on every resize.
@@ -206,13 +220,7 @@ func _build_ui() -> void:
 		_rite_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	_rite_panel.get_node("RiteHelpButton").visible = not bool(template.get("title_help_btn_hide", false))
 
-	_log_label = Label.new()
-	_log_label.name = "RiteOverlayToast"
-	_log_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_log_label.add_theme_font_override("font", SOURCE_FONT)
-	_log_label.add_theme_font_size_override("font_size", 14)
-	_log_label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	_source_canvas.add_child(_log_label)
+
 
 	_refresh_slot_visuals()
 	_refresh_gold_label()
@@ -264,11 +272,26 @@ func _build_slot_placeholders() -> void:
 		# [SRC: CardSlot.prefab Highlight + Selectable state relay:
 		# HighlightEnabled=1, other states=0; 256x512 centered at (0,-19).]
 		var highlight := _picture(btn, "SourceHighlight", "card_outline", Rect2(8, 11, 256, 512))
+		# Same GUI SSU inner-outline variant as CardFlash (DXBC blob118),
+		# with slot_highlight.mat's own color and permanently enabled fade.
+		var highlight_material := ShaderMaterial.new()
+		highlight_material.shader = preload("res://ui/card_flash.gdshader")
+		highlight_material.set_shader_parameter("outline_color", Color(0.94639033, 0.8695029, 0.6157619, 1))
+		highlight_material.set_shader_parameter("outline_width", 0.08)
+		highlight_material.set_shader_parameter("outline_fade", 1.0)
+		highlight.material = highlight_material
 		highlight.visible = false
 		btn.mouse_entered.connect(func(): highlight.visible = not btn.disabled and not btn.has_focus())
 		btn.mouse_exited.connect(func(): highlight.visible = false)
 		btn.button_down.connect(func(): highlight.visible = false)
 		btn.focus_entered.connect(func(): highlight.visible = false)
+		btn.focus_exited.connect(func(): highlight.visible = btn.is_hovered() and not btn.disabled and not btn.is_pressed())
+		btn.button_up.connect(func(): highlight.visible = btn.is_hovered() and not btn.disabled and not btn.has_focus())
+		var outline := _picture(btn, "SourceSatisfiedOutline", "rite_slot_outline", Rect2(37.5, 55.5, 197, 423))
+		# Authored sibling order: BG, Prompt, OutlineNew, Types, Container,
+		# Highlight. The broad drag glow must remain below the hover outline.
+		btn.move_child(outline, 1)
+		outline.modulate.a = 0.0
 		var box := VBoxContainer.new()
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1012,7 +1035,6 @@ func _apply_layout() -> void:
 		title_pivot - Vector2(SOURCE_TITLE_SIZE.x, SOURCE_TITLE_SIZE.y * 0.5),
 		SOURCE_TITLE_SIZE
 	))
-	_set_rect(_log_label, Rect2(Vector2(1510, 1700), Vector2(820, 60)))
 
 	var slot_rects := _slot_rects_for_keys(_slot_keys())
 	for slot_key in _slot_buttons:
@@ -1042,6 +1064,7 @@ func _waiting_for_result_operations() -> bool:
 
 
 func _process(_delta: float) -> void:
+	_update_drag_slot_effects()
 	if _awaiting_confirmation:
 		RiteSettlement.pump_confirmations(_state)
 		_complete_confirmation()
@@ -1086,23 +1109,17 @@ func _on_slot_pressed(slot_key: String) -> void:
 	if not _can_edit_slot(slot_key):
 		return
 	if _resolution_pending or _resolution_committed:
-		set_log("请先确认结果或关闭仪式")
 		return
 	if _selected_card_uid <= 0:
-		if _placed.has(slot_key):
-			_return_slot_to_hand(slot_key)
-			set_log("%s 已清空" % slot_key.to_upper())
-			_after_placement_changed()
-		else:
+		if not _placed.has(slot_key):
 			_focus_qualified_hand(slot_key)
+			_play_slot_effect(slot_key, "flash")
 		return
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(_selected_card_uid, _db)
 	if not _slot_accepts_card(slot_def, card):
-		set_log("这张牌不能放入 %s" % slot_key.to_upper())
 		return
 	_place_card_in_slot(slot_key, _selected_card_uid, "hand", "")
-	set_log("%s 放入 %s" % [_card_display_name(card, int(card.get("id", 0))), slot_key.to_upper()])
 	_selected_card_uid = 0
 	_after_placement_changed()
 
@@ -1141,10 +1158,8 @@ func drop_card_on_slot(slot_key: String, data: Variant) -> void:
 		_after_placement_changed()
 		return
 	if not _try_update_card(slot_key, card):
-		set_log("这张牌不能放入 %s" % slot_key.to_upper())
 		return
 	_place_card_in_slot(slot_key, card_uid, str(data.get("source", "")), str(data.get("source_slot", "")), int(data.get("source_rite_uid", _rite_uid)))
-	set_log("%s 放入 %s" % [_card_display_name(card, int(card.get("id", 0))), slot_key.to_upper()])
 	_selected_card_uid = 0
 	_after_placement_changed()
 
@@ -1164,6 +1179,74 @@ func _first_satisfied_slot(card: Dictionary) -> String:
 	return ""
 
 
+# [SRC: CardDropManager.DropCard 0x4ef4f0: two ordered passes over Slots;
+# current==null first, current!=null second, can_move and CanPutCard/is_cost.]
+func panel_drop_slot(data: Variant) -> String:
+	if not (data is Dictionary) or _resolution_pending or _resolution_committed:
+		return ""
+	if not preload("res://ui/rite_slot_access.gd").can_move_source(_state, _db, data):
+		return ""
+	var uid := _dragged_card_uid(data)
+	if uid <= 0 or _state.get_card_instance(uid) == null:
+		return ""
+	var card: Dictionary = _state.card_data_for(uid, _db)
+	for occupied in [false, true]:
+		for key in _slot_keys():
+			if _placed.has(key) != occupied or not _can_edit_slot(key):
+				continue
+			var ctx := _slot_condition_context(_rite.cards_slot[key], card, false)
+			if bool(ctx.get("accepted", false)) or bool(ctx.get("is_cost", false)):
+				# The source dispatches the first candidate once, even if the
+				# subsequent destination-cleared TryUpdateCard rejects it.
+				return key if can_drop_card_on_slot(key, data) else ""
+	return ""
+
+
+func _update_drag_slot_effects() -> void:
+	if _state == null or not is_inside_tree():
+		return
+	var data: Variant = get_viewport().gui_get_drag_data() if get_viewport().gui_is_dragging() else null
+	var uid := _dragged_card_uid(data)
+	if uid == _effect_drag_uid:
+		return
+	_effect_drag_uid = uid
+	show_satisfied_slots(uid)
+
+
+# [SRC: RitePanelShowController.ShowSatisfiedSlot 0x596070;
+# CardSlotController.ShowEffect 0x53cb50; CardSlot.prefab OutlineNew.]
+func show_satisfied_slots(card_uid: int) -> void:
+	var card: Dictionary = _state.card_data_for(card_uid, _db) if card_uid > 0 else {}
+	for key in _slot_buttons:
+		var matched := false
+		if not card.is_empty() and not _placed.has(key) and _can_edit_slot(key):
+			var ctx := _slot_condition_context(_rite.cards_slot[key], card, false)
+			matched = bool(ctx.get("accepted", false)) or bool(ctx.get("is_cost", false))
+		_play_slot_effect(key, "show" if matched else "hide")
+
+
+func _play_slot_effect(key: String, clip: String) -> void:
+	if not _slot_buttons.has(key) or not is_inside_tree():
+		return
+	var outline := _slot_buttons[key].get_node("SourceSatisfiedOutline") as TextureRect
+	if str(outline.get_meta("clip", "hide")) == clip and clip != "flash":
+		return
+	if _slot_effect_tweens.has(key):
+		_slot_effect_tweens[key].kill()
+	outline.set_meta("clip", clip)
+	# Original show/hide and flash OutlineNew alpha keys have zero tangents:
+	# 0 -> 1 over .33333334s, flash returns to 0 at .6666667s.
+	# Hermite with zero tangents is smoothstep, not a guessed easing curve.
+	var tween := create_tween()
+	_slot_effect_tweens[key] = tween
+	var start := 1.0 if clip == "hide" else 0.0
+	var finish := 0.0 if clip == "hide" else 1.0
+	outline.modulate.a = start
+	tween.tween_method(func(t: float): outline.modulate.a = lerpf(start, finish, smoothstep(0.0, 1.0, t)), 0.0, 1.0, 0.33333334)
+	if clip == "flash":
+		tween.tween_method(func(t: float): outline.modulate.a = 1.0 - smoothstep(0.0, 1.0, t), 0.0, 1.0, 0.33333336)
+
+
 func _dragged_card_uid(data: Variant) -> int:
 	if not (data is Dictionary):
 		return 0
@@ -1173,6 +1256,7 @@ func _dragged_card_uid(data: Variant) -> int:
 
 
 func _after_placement_changed() -> void:
+	_effect_drag_uid = -1
 	_qualified_slot = ""
 	_qualified_bags.clear()
 	_qualified_bag_index = -1
@@ -1523,7 +1607,6 @@ func _stop_started_rite() -> void:
 	if _waiting_for_result_operations() or _resolution_pending or _resolution_committed or not _can_stop_this_round():
 		return
 	if _state.stop_rite_instance(_rite_uid):
-		_log_label.text = "仪式已停止，卡牌保留在槽位中。"
 		_update_resolve_button()
 		_update_stop_button()
 		_update_last_state_button()
@@ -1602,10 +1685,6 @@ func _restore_last_state() -> void:
 			continue
 		_place_card_in_slot(slot_key, card_uid, "hand", "")
 		restored += 1
-	if restored > 0:
-		_log_label.text = "已恢复 %d 个上次投放槽位。" % restored
-	else:
-		_log_label.text = "上次投放中的卡牌暂不可用。"
 	_after_placement_changed()
 
 
@@ -1807,6 +1886,9 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 		card_copy["name"] = "%s%s" % [dec.rank, dec.action]
 	var widget := CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
 	widget.drag_allowed = func(): return _can_edit_slot(slot_key)
+	widget.drag_started.connect(_begin_slot_drag.bind(widget))
+	widget.drag_finished.connect(_finish_slot_drag.bind(widget))
+	widget.quick_action_requested.connect(func(_uid: int): return_card_to_hand(card_uid, slot_key))
 	widget.name = "PlacedCard_%s" % slot_key.to_upper()
 	# [SRC: CardSlotController.SetCard 0x53c7d0; CardSlot.prefab Container]
 	# Preserve the card's own size and centre it in
@@ -1817,9 +1899,71 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 	container.size = Vector2(100, 100)
 	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(container)
+	btn.move_child(container, btn.get_node("SourceHighlight").get_index())
 	widget.position = (container.size - widget.card_size()) * 0.5
-	widget.clicked.connect(func(_id: int, _card: Dictionary): _return_slot_to_hand(slot_key); _after_placement_changed())
+	# [SRC: CardController.OnPointerUp 0x52afe0: ordinary short click toggles
+	# ShowCardInfo; RemoveFromSlot belongs to the separate quick-action branch.]
+	widget.clicked.connect(func(_id: int, _card: Dictionary):
+		var screen := get_parent()
+		while screen != null:
+			if screen.has_method("show_card_detail"):
+				screen.show_card_detail(card_uid)
+				return
+			screen = screen.get_parent())
 	container.add_child(widget)
+
+
+func _begin_slot_drag(data: Dictionary, widget: CardWidget) -> void:
+	var slot := str(data.source_slot)
+	var uid := int(data.card_uid)
+	if not _can_edit_slot(slot) or int(_placed.get(slot, 0)) != uid:
+		return
+	# [SRC: CardController.OnBeginDrag 0x5294e0 -> ICardSlot.RemoveCard;
+	# CardSlotController.RemoveCard 0x53c7b0 -> SetCard(null).]
+	# Keep Godot's source alive for DRAG_END while rebuilding the empty slot.
+	widget.reparent(self)
+	_dragged_slot_widgets[uid] = widget
+	_placed.erase(slot)
+	var instance = _state.get_card_instance(uid)
+	_state._unlink_slot_instance(instance)
+	instance.zone = "drag"
+	instance.rite_uid = 0
+	instance.slot_key = ""
+	data.detached_from_slot = true
+	_after_placement_changed()
+
+
+func _finish_slot_drag(data: Dictionary, _accepted: bool, widget: CardWidget) -> void:
+	var uid := int(data.card_uid)
+	var instance = _state.get_card_instance(uid)
+	# Check actual ownership too: a GUI target may accept without transferring.
+	# [SRC: OnEndDrag 0x52a570 AddCard -> BackToHandOrBag, never old slot.]
+	if instance != null and instance.zone == "drag":
+		var screen := get_parent()
+		while screen != null and not screen.has_method("drop_card_to_hand"):
+			screen = screen.get_parent()
+		if screen != null:
+			screen.drop_card_to_hand(data, screen._card_rail_view.get_local_mouse_position())
+		else:
+			_return_detached_card(uid)
+	_dragged_slot_widgets.erase(uid)
+	widget.queue_free()
+
+
+func _return_detached_card(uid: int) -> void:
+	var instance = _state.get_card_instance(uid)
+	if instance == null or instance.zone != "drag":
+		return
+	if str(_state.card_data_for(uid, _db).get("type", "")) == "sudan":
+		instance.zone = "sudan"
+	else:
+		_state.add_card_to_hand(uid)
+
+
+func _exit_tree() -> void:
+	# Closing/replacing the overlay during a drag must not orphan the UID.
+	for uid in _dragged_slot_widgets:
+		_return_detached_card(int(uid))
 
 
 func _can_edit_slot(slot_key: String) -> bool:
@@ -1894,8 +2038,8 @@ func _focus_qualified_hand(slot_key: String) -> void:
 
 
 func _slot_accepts_sudan(slot_def: Dictionary) -> bool:
-	var cond: Dictionary = slot_def.get("condition", {})
-	return str(cond.get("type", "")) == "sudan"
+	var cond: Variant = slot_def.get("condition", {})
+	return str(SourceJSON.member(cond, "type", "")) == "sudan"
 
 
 # [SRC: RitePanelShowController.TryUpdateCard 0x598140 temporarily nulls
@@ -1916,7 +2060,7 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 func _slot_condition_context(slot_def: Dictionary, card: Dictionary, first_drop: bool) -> Dictionary:
 	if slot_def.is_empty():
 		return {"accepted": false}
-	var cond: Dictionary = slot_def.get("condition", {})
+	var cond: Variant = slot_def.get("condition", {})
 	# Slot conditions evaluate against the rite's currently placed cards too
 	# (e.g. `s1.xxx` references), not just the card being tried.
 	# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) lines
@@ -1982,9 +2126,9 @@ func _gold_type_for_reactive_spend() -> String:
 	return "r1"
 
 
-func set_log(text: String) -> void:
-	if _log_label:
-		_log_label.text = text
+# Compatibility sink for the host; the source rite has no debug toast surface.
+func set_log(_text: String) -> void:
+	pass
 
 
 func _panel(node_name: String) -> Panel:
@@ -2043,7 +2187,7 @@ func _rite_bg_texture() -> Texture2D:
 static func _load_json(path: String) -> Variant:
 	if not FileAccess.file_exists(path):
 		return null
-	return JSON.parse_string(FileAccess.get_file_as_string(path))
+	return SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 
 
 func _round_button(label: String) -> Button:
@@ -2189,10 +2333,10 @@ func _slot_brief(slot_def: Dictionary) -> String:
 	var text := str(slot_def.get("text", ""))
 	if text != "":
 		return text
-	var cond: Dictionary = slot_def.get("condition", {})
+	var cond: Variant = slot_def.get("condition", {})
 	if cond.is_empty():
 		return "任意"
-	return " / ".join(cond.keys())
+	return " / ".join(SourceJSON.entries(cond).map(func(entry): return entry.keys()[0]))
 
 
 ## Source resolves absent/undersized mappings to mapping 0 before loading the

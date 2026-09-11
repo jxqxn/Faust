@@ -18,7 +18,7 @@ const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
-static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
+static func execute(result: Variant, state, db, context: Dictionary = {}) -> Dictionary:
 	context["db"] = db
 	var deferred: Dictionary = {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
@@ -36,12 +36,13 @@ static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> 
 	# choose prompt and stash the case:opN subtrees as choices. The remaining
 	# keys are skipped in this LEGACY path. This is not source-equivalent for
 	# common siblings or numeric/default cases; events use OperationsSequence.
-	if result.has("option"):
+	if SourceJSON.member(result, "option") != null:
 		_apply_option(result, deferred, context)
 		_collect_card_ops(state, deferred)
 		return deferred
-	for key in result:
-		var val = result[key]
+	for entry in SourceJSON.entries(result):
+		var key: String = entry.keys()[0]
+		var val = entry[key]
 		_apply_key(key, val, state, db, deferred, context)
 	_collect_card_ops(state, deferred)
 	return deferred
@@ -199,13 +200,14 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# [SRC: ChooseOperations.c @ GetOperations (0x4f3830): copy + Shuffle +
 	#       GetRange(0, N); Do (0x4f3750) executes in order; ctor (0x4f3a20)
 	#       clamps N < 1 to 1]
-	if (k == "choose" or k.begins_with("choose:")) and val is Dictionary and not val.is_empty():
+	if (k == "choose" or k.begins_with("choose:")) and (val is Dictionary or val is Array) and not val.is_empty():
 		var pick_n := 1
 		if k != "choose":
 			var suffix := k.substr("choose:".length())
 			if suffix.is_valid_int():
 				pick_n = maxi(int(suffix), 1)
-		var keys: Array = val.keys().duplicate()
+		var candidates := SourceJSON.entries(val)
+		var keys: Array = range(candidates.size())
 		var rng = context.get("rng", null)
 		if rng != null and rng.has_method("randi_range"):
 			# Fisher-Yates with the settlement RNG keeps replays deterministic.
@@ -218,21 +220,23 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			keys.shuffle()
 		var take := mini(pick_n, keys.size())
 		for i in take:
-			var sub_key: String = str(keys[i])
-			_apply_key(sub_key, val[sub_key], state, db, deferred, context)
+			var candidate: Dictionary = candidates[keys[i]]
+			var sub_key: String = candidate.keys()[0]
+			_apply_key(sub_key, candidate[sub_key], state, db, deferred, context)
 		return
-	if k == "all" and val is Dictionary:
+	if k == "all" and (val is Dictionary or val is Array):
 		# AllOperations starts every nested operation in source order.
 		# [SRC: decompiled/AllOperations.c @ Do (RVA 0x4ee520)]
-		for nested_key in val:
-			_apply_key(str(nested_key), val[nested_key], state, db, deferred, context)
+		for entry in SourceJSON.entries(val):
+			var nested_key: String = entry.keys()[0]
+			_apply_key(nested_key, entry[nested_key], state, db, deferred, context)
 		return
-	if k == "delay" and val is Dictionary:
+	if k == "delay" and (val is Dictionary or val is Array):
 		var delay_effect := {"payload": val.duplicate(true), "context": _queue_context(context)}
 		deferred.delays.append(delay_effect)
 		_record_effect(deferred, "delay", val, context)
 		return
-	if k == "no_prompt" and val is Dictionary:
+	if k == "no_prompt" and (val is Dictionary or val is Array):
 		# NoPrompt runs its nested operation immediately and only suppresses the
 		# source UI wrapper. The clone has no separate result-popup operation, so
 		# execute the nested payload through the same state path.
@@ -567,7 +571,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		deferred.loots.append(val)
 		_record_effect(deferred, "loot", {"value": val}, context)
 		return
-	if k == "no_show" and val is Dictionary:
+	if k == "no_show" and (val is Dictionary or val is Array):
 		# NoShowOperations hides the card-operation presentation, then starts
 		# its nested AllOperations payload. [SRC: decompiled/NoShowOperations.c
 		# @ PreDo (RVA 0x500410); dump.cs:312597-312612.]
@@ -575,7 +579,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# case:opN reached via execute_choice: run the matched case subtree as a
 	# nested result dict. This is the player's chosen branch from an option.
-	if k.begins_with("case:") and val is Dictionary:
+	if k.begins_with("case:") and (val is Dictionary or val is Array):
 		var case_deferred := execute(val, state, db, context)
 		# Merge the case's effects into the current deferred (in-place).
 		_merge_case(deferred, case_deferred)
@@ -587,7 +591,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# [SRC: SuccessOperations.c @ Do (0x3a7930): != 1 then reset;
 	#       FailedOperations.c @ Do (0x39d5a0): == 1 then reset;
 	#       OperationContext.c @ SetLastOpState (0x3a0230)]
-	if (k == "success" or k == "failed") and val is Dictionary:
+	if (k == "success" or k == "failed") and (val is Dictionary or val is Array):
 		var status := int(deferred.get("last_op_status", 0))
 		deferred["last_op_status"] = 0
 		var should_run := (status != 1) if k == "success" else (status == 1)
@@ -677,8 +681,8 @@ static func _merge_case(into: Dictionary, src: Dictionary) -> void:
 ##       CaseOperations.c @ Do (matches last_op_tag, or 'def' wildcard
 ##       when last_op_status - 2 >= 3, runs case subtree, resets state),
 ##       RVA 0x518ac0 / 0x399570, dump.cs:315655 / 394112]
-static func _apply_option(action: Dictionary, deferred: Dictionary, context: Dictionary = {}) -> void:
-	var opt: Dictionary = action.get("option", {})
+static func _apply_option(action: Variant, deferred: Dictionary, context: Dictionary = {}) -> void:
+	var opt: Dictionary = SourceJSON.member(action, "option", {})
 	if opt.is_empty():
 		return
 	var items: Array = opt.get("items", [])
@@ -693,7 +697,7 @@ static func _apply_option(action: Dictionary, deferred: Dictionary, context: Dic
 		var case_key := "case:" + tag
 		choices[case_key] = {
 			"text": str(item.get("text", tag)),
-			"value": action.get(case_key, {}),
+			"value": SourceJSON.member(action, case_key, {}),
 		}
 	# Stash as a choose prompt; DeferredEffects.apply routes it to the UI via
 	# queue_choice_prompt. The option text is the body narration; the title is
@@ -720,7 +724,7 @@ static func _prepare_choose(choices: Dictionary) -> Dictionary:
 	return prepared
 
 
-static func _record_effect(deferred: Dictionary, kind: String, payload: Dictionary, context: Dictionary = {}) -> void:
+static func _record_effect(deferred: Dictionary, kind: String, payload: Variant, context: Dictionary = {}) -> void:
 	deferred.ordered_effects.append({
 		"kind": kind,
 		"payload": payload.duplicate(true),
@@ -837,7 +841,10 @@ static func _is_equip_key(k: String) -> bool:
 static func _is_equip_slot_key(k: String) -> bool:
 	for suffix in ["+equip_slot", "-equip_slot"]:
 		if k.ends_with(suffix):
-			return _is_slot_op_selector(k.substr(0, k.length() - suffix.length()))
+			var selector := k.substr(0, k.length() - suffix.length())
+			if selector.begins_with("table.") or selector.begins_with("g."):
+				return RuntimeOperationFilter.supports_selector(selector.substr(selector.find(".") + 1))
+			return _is_slot_op_selector(selector)
 	return false
 
 
@@ -1002,10 +1009,8 @@ static func _apply_modify_rare(k: String, val: Variant, state, db, context: Dict
 		targets = _slot_target_uids(k.substr(0, k.find(".")), state, context)
 	else:
 		var selector := k.get_slice(".", 1)
-		var contextual_uid := int(context.get("card_uid", 0))
-		for instance in RuntimeOperationFilter.select_total(state, db, selector):
-			if contextual_uid <= 0 or int(instance.uid) == contextual_uid:
-				targets.append(int(instance.uid))
+		for instance in RuntimeOperationFilter.select_desktop(state, db, selector):
+			targets.append(int(instance.uid))
 	for uid in targets:
 		state.modify_card_rarity(uid, int(val), db)
 
@@ -1078,7 +1083,14 @@ static func _apply_equip_slot(k: String, val: Variant, state, db, context: Dicti
 	var suffix := "+equip_slot" if add else "-equip_slot"
 	var selector := k.substr(0, k.length() - suffix.length())
 	var values: Array = val if val is Array else [val]
-	for uid in _slot_target_uids(selector, state, context):
+	# [SRC: DesktopModifyEquipSlot.Do 0x50d330 reads Player.cards@0x88.]
+	var targets: Array[int] = []
+	if selector.begins_with("table.") or selector.begins_with("g."):
+		for card in RuntimeOperationFilter.select_desktop(state, db, selector.substr(selector.find(".") + 1)):
+			targets.append(card.uid)
+	else:
+		targets = _slot_target_uids(selector, state, context)
+	for uid in targets:
 		for slot in values:
 			if add:
 				state.add_card_equip_slot(uid, str(slot), db)
@@ -1206,23 +1218,19 @@ static func _apply_slot_tag(k: String, val: Variant, state, db, context: Diction
 
 
 static func _apply_table_clean(k: String, val: Variant, state, context: Dictionary = {}) -> void:
-	var card_id_text := k.substr("table.clean.".length())
-	if not card_id_text.is_valid_int() or state == null or not state.has_method("clean_table_card_instances"):
-		return
-	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
-	var card_uid := int(context.get("card_uid", 0))
-	var cleaned: Array = state.clean_table_card_instances(card_id_text.to_int(), rite_uid, card_uid, int(val))
+	var selector := k.substr("table.clean.".length())
+	var cleaned: Array = state.clean_table_card_instances(selector, int(val), context.get("db"))
 	for entry in cleaned:
 		var clean_context := context.duplicate(true)
 		clean_context["card_uid"] = int(entry.get("card_uid", 0))
 		clean_context["card"] = int(entry.get("id", 0))
-		clean_context["rite_uid"] = int(entry.get("rite_uid", rite_uid))
+		clean_context["rite_uid"] = int(entry.get("rite_uid", 0))
 		state.trigger_events("card_clean", clean_context)
 
 
 static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictionary = {}) -> void:
-	# table.<card-or-tag>+/-<tag> or g.<...>. An event card_uid takes
-	# precedence, so two same-id Sultan instances cannot cross-modify each other.
+	# [SRC: DesktopModifyTag.DoTemplate 0x50e400, dump.cs:314110-314147]
+	# table/g filters Player.cards, independently of the operation context.
 	var rest := k.substr(k.find(".") + 1)
 	var op_idx := -1
 	var op_char := ""
@@ -1240,21 +1248,8 @@ static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictio
 	if amount == 0 and op != TagSystem.Op.SET:
 		amount = 1
 	var can_add := _tag_can_add(db, tag_name)
-	var target_uid := int(context.get("card_uid", 0))
-	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
-	for tc in state.surface_card_entries():
-		var instance = state.get_card_instance(int(tc.get("card_uid", 0)))
-		if instance == null:
-			continue
-		if target_uid > 0 and instance.uid != target_uid:
-			continue
-		if target_uid <= 0 and selector.is_valid_int() and instance.card_id != selector.to_int():
-			continue
-		if rite_uid > 0 and instance.rite_uid != rite_uid:
-			continue
+	for instance in RuntimeOperationFilter.select_desktop(state, db, selector):
 		var effective: Dictionary = state.effective_card_tags(instance.uid, db)
-		if target_uid <= 0 and not selector.is_valid_int() and int(effective.get(selector, 0)) == 0:
-			continue
 		_mutate_tag(
 			instance.tags, state, instance.uid, tag_name, op, amount, can_add,
 			int(effective.get(tag_name, 0)), db)
@@ -1392,19 +1387,8 @@ static func _apply_domain_equip(k: String, val: Variant, state, db) -> void:
 	var selector := k.substr(dot + 1, op_index - dot - 1)
 	var op := k[op_index]
 	var hosts: Array[int] = []
-	if scope == "g":
-		for inst in RuntimeOperationFilter.select_total(state, db, selector):
-			hosts.append(int(inst.uid))
-	else:
-		for tc in state.surface_card_entries():
-			var inst = state.get_card_instance(int(tc.get("card_uid", 0)))
-			if inst == null:
-				continue
-			if not RuntimeOperationFilter.matches_card_data(
-				int(inst.card_id), state.effective_card_tags(int(inst.uid), db), db, selector
-			):
-				continue
-			hosts.append(int(inst.uid))
+	for inst in RuntimeOperationFilter.select_desktop(state, db, selector):
+		hosts.append(int(inst.uid))
 	for host_uid in hosts:
 		var host = state.get_card_instance(host_uid)
 		if host == null:

@@ -310,7 +310,7 @@ func _set_story_panel_fade(value: float) -> void:
 
 
 func _load_endings() -> void:
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/over.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/over.json"))
 	if parsed is Dictionary:
 		_endings = parsed
 
@@ -357,7 +357,7 @@ func _story_text() -> String:
 		# Player installed by LoadPlayerOverData.
 		var include := _is_record and player_data == null
 		if not include:
-			include = ConditionEval.evaluate(row.get("condition", {}) as Dictionary, {"db": _db, "state": _state})
+			include = ConditionEval.evaluate(row.get("condition", {}), {"db": _db, "state": _state})
 		if not include:
 			continue
 		var row_title := str(row.get("result_title", ""))

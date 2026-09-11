@@ -414,7 +414,8 @@ func _build_choices(choices: Dictionary) -> void:
 func _build_confirm() -> void:
 	_confirm_button = Button.new()
 	_confirm_button.name = "EventPromptConfirmButton" if _has_choices else "EventPromptContinueButton"
-	_confirm_button.text = "确认" if _has_choices else "继续"
+	# [SRC: PromptNew.prefab Confirm: image + InputDisplay only.]
+	_confirm_button.text = ""
 	_confirm_button.disabled = _has_choices
 	_confirm_button.position = CONFIRM_RECT.position
 	_confirm_button.size = CONFIRM_RECT.size

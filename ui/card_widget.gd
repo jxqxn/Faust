@@ -13,7 +13,10 @@ class_name CardWidget
 extends Control
 
 signal clicked(card_id: int, card: Dictionary)
+signal quick_action_requested(card_uid: int)
 signal drag_visibility_changed(card_uid: int, hidden: bool)
+signal drag_started(payload: Dictionary)
+signal drag_finished(payload: Dictionary, accepted: bool)
 ## Dropping a same-id stackable card onto this one merges the two stacks.
 signal stack_dropped(target_uid: int, source_uid: int)
 signal equipment_dropped(target_uid: int, source_uid: int)
@@ -53,6 +56,7 @@ var drag_rite_uid := 0
 var drag_allowed: Callable
 var stack_drop_allowed: Callable
 var _press_position := Vector2.ZERO
+var _quick_pressed := false
 var _drag_grab_offset := CARD_SIZE * 0.5
 var _drag_selected_position := Vector2.ZERO
 var _drag_selected_rotation := 0.0
@@ -243,6 +247,7 @@ func set_presentation_paused(paused: bool) -> void:
 	_presentation_paused = paused
 	if paused:
 		_pressed = false
+		_quick_pressed = false
 		_clear_hold_hint()
 		_kill_pose_tween()
 		_dealing = false
@@ -378,6 +383,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	preview_root.add_child(preview)
 	set_drag_preview(preview_root)
 	_hide_source_for_drag()
+	drag_started.emit(payload)
 	return payload
 
 
@@ -424,6 +430,12 @@ func drag_payload() -> Dictionary:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END and _hidden_for_drag:
 		var drag_succeeded := get_viewport() != null and get_viewport().gui_is_drag_successful()
+		if bool(_drag_payload_ref.get("detached_from_slot", false)):
+			_hidden_for_drag = false
+			var payload := _drag_payload_ref
+			_drag_payload_ref = {}
+			drag_finished.emit(payload, drag_succeeded)
+			return
 		if drag_succeeded:
 			_hidden_for_drag = false
 			_drag_payload_ref = {}
@@ -518,6 +530,18 @@ func _clear_hold_hint() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if _presentation_paused:
+		return
+	# [SRC: CardController.OnPointerDown 0x52abc0 / OnPointerUp 0x52afe0;
+	# dump.cs:264038-264042 Mouse left/middle/rightButton offsets.]
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.pressed:
+			_quick_pressed = not get_viewport().gui_is_dragging() and (event.button_mask & (MOUSE_BUTTON_MASK_LEFT | MOUSE_BUTTON_MASK_MIDDLE)) == 0
+		else:
+			var activate := _quick_pressed
+			_quick_pressed = false
+			if activate and not get_viewport().gui_is_dragging():
+				quick_action_requested.emit(card_uid)
+		accept_event()
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:

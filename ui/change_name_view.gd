@@ -270,7 +270,7 @@ func _validate_name(value: String) -> bool:
 	if error != null:
 		error.text = ""
 		if not valid and not value.is_empty():
-			var strings: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+			var strings: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 			error.text = str(strings["ILLEGAL_NAME"]["zhCN"])
 	var confirm := find_child("CardRenameConfirmButton", true, false) as Button
 	if confirm != null:

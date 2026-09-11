@@ -37,7 +37,7 @@ func _ready() -> void:
 	name = "PointShopController"
 	theme = FaustTheme.get_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
 	if parsed is Dictionary:
 		_ui = parsed
 	_build_source_surface()
@@ -167,7 +167,7 @@ func refresh_item_container() -> void:
 
 
 func _is_visible(upgrade: Dictionary) -> bool:
-	var condition: Dictionary = upgrade.get("condition", {})
+	var condition: Variant = upgrade.get("condition", {})
 	return condition.is_empty() or ConditionEvalScript.evaluate(condition, {
 		"db": _db,
 		"global_state": _global,

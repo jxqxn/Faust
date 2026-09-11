@@ -13,10 +13,13 @@ static func start(payloads: Array, state, db, rng, context: Dictionary = {}, ini
 	return _run(sequence, state, db, rng)
 
 
-static func _push(sequence: Dictionary, payload: Dictionary, keys: Array = []) -> void:
+static func _push(sequence: Dictionary, payload: Variant, keys: Array = []) -> void:
 	# Outer save JSON sorts dictionaries. Retain raw nested operation order too,
 	# including a case body that has not been entered at the save boundary.
-	sequence.frames.append({"source_json": JSON.stringify(payload, "", false), "keys": payload.keys() if keys.is_empty() else keys, "index": 0})
+	var operations := SourceJSON.entries(payload)
+	if not keys.is_empty():
+		operations = keys.map(func(index): return operations[index])
+	sequence.frames.append({"operations_json": JSON.stringify(operations, "", false), "index": 0})
 
 
 static func _attach(operation: Dictionary, sequences: Array) -> void:
@@ -69,17 +72,24 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 			sequence.frames.clear()
 			return summary
 		var frame: Dictionary = sequence.frames.back()
-		if int(frame.index) >= frame.keys.size():
+		var operations: Array
+		if frame.has("operations_json"):
+			operations = JSON.parse_string(frame.operations_json)
+		else:
+			# Older saves stored unique-key frames.
+			var legacy: Dictionary = JSON.parse_string(frame.source_json)
+			operations = frame.keys.map(func(key): return {key: legacy[key]})
+		if int(frame.index) >= operations.size():
 			sequence.frames.pop_back()
 			continue
-		var key: String = str(frame.keys[int(frame.index)])
+		var entry: Dictionary = operations[int(frame.index)]
+		var key: String = entry.keys()[0]
 		frame.index = int(frame.index) + 1
-		var payload: Dictionary = JSON.parse_string(frame.source_json)
-		var value = payload[key]
-		if value is Dictionary and key in ["all", "no_show", "no_prompt"]:
+		var value = entry[key]
+		if (value is Dictionary or value is Array) and key in ["all", "no_show", "no_prompt"]:
 			_push(sequence, value)
 			continue
-		if value is Dictionary and (key in ["success", "failed"] or key.begins_with("case:")):
+		if (value is Dictionary or value is Array) and (key in ["success", "failed"] or key.begins_with("case:")):
 			# Unmatched branches preserve the status; only an executed branch resets.
 			# [SRC: SuccessOperations.Do 0x3a7930; FailedOperations.Do 0x39d5a0;
 			# CaseOperations.Do 0x399570; Option callback 0x51f250.]
@@ -97,8 +107,8 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 				sequence.tag = ""
 				_push(sequence, value)
 			continue
-		if value is Dictionary and (key == "choose" or key.begins_with("choose:")):
-			var keys: Array = value.keys()
+		if (value is Dictionary or value is Array) and (key == "choose" or key.begins_with("choose:")):
+			var keys: Array = range(SourceJSON.entries(value).size())
 			var count := maxi(1, int(key.substr(7))) if key.begins_with("choose:") else 1
 			# [SRC: ChooseOperations.GetOperations 0x4f3830: N > Count keeps order.]
 			if count <= keys.size():

@@ -166,7 +166,7 @@ static func _apply_display(mode: String, selected: String) -> bool:
 ## [SRC: SettingDropDownController.InitFontSizeDropDown 0x5a96a0;
 ## variable.json support_font_size; dump.cs:387283. Preserve source order.]
 static func font_size_options() -> Dictionary:
-	var variable: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var variable: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
 	return variable.get("support_font_size", {})
 
 

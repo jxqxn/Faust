@@ -36,8 +36,9 @@ func test_day_boundary_compacts_hand_positions() -> void:
 		var instance = state.get_card_instance(int(uid))
 		assert_eq(int(instance.bag_pos), 0, "freshly granted cards start unplaced")
 	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(3))
-	for index in state.hand.size():
-		var instance = state.get_card_instance(int(state.hand[index]))
+	var page := state.visible_rail_card_uids().filter(func(uid): return state.is_hand_card(int(uid)))
+	for index in page.size():
+		var instance = state.get_card_instance(int(page[index]))
 		assert_eq(int(instance.bag_pos), index + 1,
 			"UpdateHandCardPos compacts positions to 1..N in hand order")
 

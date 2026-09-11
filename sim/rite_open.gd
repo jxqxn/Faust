@@ -20,7 +20,7 @@ static func is_rite_open(rite: Dictionary, state, db, rng = null) -> bool:
 		if not (fallback_open_conditions is Array) or fallback_open_conditions.is_empty():
 			return true
 		for entry in fallback_open_conditions:
-			if entry is Dictionary and not (entry.get("condition", {}) as Dictionary).is_empty():
+			if entry is Dictionary and not entry.get("condition", {}).is_empty():
 				return false
 		return true
 	# `round_number` is a lifetime threshold for an already-created rite
@@ -33,7 +33,7 @@ static func is_rite_open(rite: Dictionary, state, db, rng = null) -> bool:
 	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": {}, "attr_slots": ["s1", "s2"]}
 	for entry in open_conditions:
 		if entry is Dictionary:
-			var condition: Dictionary = entry.get("condition", {})
+			var condition: Variant = entry.get("condition", {})
 			if not ConditionEval.evaluate(condition, ctx):
 				return false
 	return true

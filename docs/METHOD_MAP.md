@@ -1,5 +1,70 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 全清单收敛（2026-09-11，本批已验收）
+
+- DesktopModifyEquip.DoTemplate 0x50d820 / DesktopModifyRare.DoTemplate 0x50df50 / DesktopCleanCard.DoTemplate 0x4f8250：Player.cards@0x88；TotalModifyTag.DoTemplate 0x51d6c0：GetTotalCards。统一 table/g 目标域，total 排除嵌套装备；保留独立槽选择器语义。
+- InitPlayer 0x413700 先建苏丹池，再建普通卡；GenSudanCard 0x54f6f0 搬移同一 Card，不能让两个 UID 分配器覆盖普通实例。统一分配并对旧档碰撞做保留普通卡的池 UID 迁移。
+- GalleryCardInfo.prefab Confirm 无居中“确认”标签，清除额外文字；world_spawn_id/world_position_ratio 无运行时消费者，停止写入并兼容忽略旧字段。
+- 原始配置迁移与重复成员执行：3889文件字节/成员双对拍零差异；全量67脚本747/747测试、7042断言，补充8项边界复验通过；实际Vulkan开局选择/奖励/四仪式对拍通过，无引擎错误或泄漏。详 [本批证据与限制](audit/RemainingCloneConvergence.md)。这里的验收覆盖本批列出的偏差，不把整个METHOD_MAP的其余🟡/⬜改为完成。
+
+
+## 开局奖励、抽卡串行边界与遗留文字（2026-09-11）
+
+- DesktopModifyTag.DoTemplate 0x50e400 / dump.cs:314110–314147：table/g 遍历 Player.cards@0x88，不是仪式槽，亦不被 context.card_uid/rite_uid 限制。event/5310000–5310003 的授予所有权/追随者配置为独立信号。本批修正该遍历入口。
+- GameController.Start b__5 0x56f9c0 → b__8 0x56ff30 → b__9 0x56ffa0 → b__10 0x56f780：开场事件 Promise 完成、检查终局、排列手牌，然后 TryGenSudanCard（受 player@0x161 禁用门控制）。复用可存档 round_transition 承载开场等待。
+- PromptNew.prefab Confirm 只有图片与 InputDisplay，无居中“确认/继续”文本；移除克隆 Button 的额外 text。RiteOverlayToast 是克隆自制表面，移除成功拖放/停止/恢复的文字输出，不改槽位高亮与合法性判定。
+- 已验收本批边界：七组 140/140，1901 断言；真实新游戏按钮链、原作存档奖励清单、开场存读档与实际拖放走查通过。详见 `docs/audit/OpeningRewardsAndLegacyText.md`，不等于全开局地图与所有动画已验收。
+
+
+## 初始人物与可见手牌（2026-09-11，本批实施）
+
+- InitPlayer 0x413700 / dump.cs:390539-390543：default_cards 与 card_equips 是正式初始化输入。
+  .c 漏掉 default_cards 成功分支，已查 GameAssembly.dll RVA 0x413b65–0x413c24：
+  TryGetValue 成功 → HasTag(stackable) 时合并既有实例，否则 AddCard(false,false)，登记 is_only。
+- IsHandCard 0x3827c0 / dump.cs:388147：GetTag(own/adherent/player)>0 任一成立；
+  stringliteral 0x2580360/0x258AC48/0x25828F8 与 tag.json 独立确认。
+  GetHandCards 0x38d430 的谓词 0x3938f0 调用此方法；不能把 Player.cards 等同于可见手牌。
+- 初始装备：InitPlayer 0x413d53 AddCard(no_add=true)，0x413d69 AddEquip；
+  auto_save 中 2000061/2000328/2000791 的嵌套装备为独立证据。
+- 实施：去四卡替代表，保留未占槽人物集合、按标签过滤手牌呈现，初始化装备，
+  复验原作存档与书店老板吸附、开场至第二/三日。验收结果见 audit/StartupCardPopulation.md。
+- 同源边界：HandHaveCardCount 0x3fd4f0 = Player.cards + IsHandCard；
+  TableHaveCardCount 0x409b10 = Player.cards（不含仪式槽）；
+  UpdateHandCardPos 0x559a70 = IsCurrentHandCard，整理不得给隐藏人物写手牌位置。
+- 连带根因：GetTag 0x3814a0在所查询TagNode@0x42上判断can_inherit，
+  GetTags谓词0x393980逐tag读取同一字段；不是装备中任一标签可继承就继承整行。
+  tag.json的own/adherent/player均can_inherit=0，防止装备归属泄漏使NPC变成手牌。
+  GetTag(equip,tag,raw=true)仍乘equip.count；本批同时修正递归与标签名并集。
+
+## 开局仪式重复根因（2026-09-11）
+
+`Datapool.InitPlayer 0x413700` 逐项读取 InitNode.default_rite@0x68
+（dump.cs:390543），空数组不创建仪式；原作 init/1.json 的 default_rite=[]。
+事件 5300066.action.rite 创建家业，家业结算 action 再创建后继。
+ConfigDB.get_default_rites 的空数组回退 NORMAL_DEFAULT_RITES 是自制行为，
+导致事件之前已有家业并形成两条后继链。本批移除该回退与生成来源过滤，
+按原配置顺序原样读取；多实例模型保留，禁止靠名称/ID 去重掩盖错误。
+旧存档不自动删实例。专项从真实开场选择链到第2/3日，验证仅一份家业及后继；
+但当前首日生成仍只有家业，原作auto_save包含家业/宫廷/浴场/书店四份。
+后续人物批次已移除NORMAL_DEFAULT_CARDS四卡替代表，恢复原作default_cards、初始装备
+及手牌归属过滤；书店已自然生成，宫廷/浴场首次入口仍待复核，详本页最上方记录。
+详 [开局证据与剩余缺口](audit/StartupRiteDefaults.md)。
+
+## 仪式投放与高亮复核（2026-09-11，交互批次已修）
+
+- CardController.OnPointerUp 0x52afe0：普通单击槽内卡查看详情；旧克隆误接回手。
+- GameController.DragCard 0x54ef50 → RitePanelShowController.ShowSatisfiedSlot 0x596070：
+  拖牌向所有可移动空槽广播 CanPutCard / is_cost，旧克隆未接。
+- CardDropManager.DropCard 0x4ef4f0：面板投放先检查空槽，再检查有卡槽；旧克隆无入口。
+- CardSlot.prefab Highlight 的 slot_highlight.mat 为 GUI SSU 内描边，旧克隆遗漏材质。
+  OutlineNew 是独立 197×423 图层，show/hide/flash.anim 控制 alpha；不等同于悬停 Highlight。
+  双信号：dump.cs CardSlotController 字段与方法、CardSlot.prefab、原始 .mat/.anim。
+  已修：内描边材质、独立合格槽淡入/淡出与点击闪动、面板自动选槽、左键详情/
+  右键投放取回，以及全屏遮罩截获手牌输入（Godot 绘制 z_index 不改变点击树顺序）。
+  验收：122 项专项、1291 断言；1920×1080 / 2560×1440 实际 viewport 拖放与点击通过。
+  原作同帧像素对拍、CheckSlotPops 对话链及旧仪式结算缺口仍未验收。
+  详 [投放与高亮复核](audit/RiteInputCorrection.md)。
+
 ## 仪式整体重新验收（2026-09-11）
 
 用户明确功能、交互、时序也属于像素级复刻要求。旧布局/方法级完成不代表仪式系统完成。
@@ -109,7 +174,7 @@ A21：克隆 cue 面 25/25 全部存在（23 个 SFX 在语料 `AudioClip/`、25
 
 ## A24 卡牌标签模型：配置基准 + 运行时增量（第十九批，有效行边界已验）
 
-CardExtensions.GetTag0x3814a0 = `Card.data+0x58`（配置行，中文名）+ `Card+0x30`（运行时增量，英文code）+ 可继承装备整行（TagNode+0x42门控，raw=true跳过掩码），非正和按TagNode+0x43掩码，最后×`Card+0x20`count；GetTags0x381940为三段键并集；AddTag0x37e6a0只写`Card+0x30`，配置字典从不被写。独立信号：dump.cs Card.tag@0x30 / CardNode.tag@0x58两字典、tag.json 442条name↔code双向唯一、auto_save uid29 `{"social":1,"charm":1}`对cards.json 2000001（社交1魅力2）。克隆原把英文code增量当整行、无基准、无×count、装备逐标签判门。第十九批拆分配置行与增量、桥接双键域、补×count与掩码、6处写入点改"写增量读有效行"、存档加tags_are_delta标记并rebase旧存档，并修掉create_card_instance把配置整行当增量的根因。12测试/38断言，含从存档JSON+配置独立重算185张卡GetTag行零不一致；全量46脚本/566测试/4298断言（两条既有UI失败与本批无关，已基线对照），详[标签模型证据](audit/TagModelCorrection.md)。key域全局统一、苏丹池对象域(A17)、copy.*标签携带仍开放。
+CardExtensions.GetTag0x3814a0 = `Card.data+0x58`（配置行，中文名）+ `Card+0x30`（运行时增量，英文code）+ 按所查询标签can_inherit门控的装备递归值（raw=true跳过掩码但仍乘装备count；2026-09-11纠正旧“整行”误读），非正和按TagNode+0x43掩码，最后×`Card+0x20`count；GetTags0x381940为三段键并集；AddTag0x37e6a0只写`Card+0x30`，配置字典从不被写。独立信号：dump.cs Card.tag@0x30 / CardNode.tag@0x58两字典、tag.json 442条name↔code双向唯一、auto_save uid29 `{"social":1,"charm":1}`对cards.json 2000001（社交1魅力2）。克隆原把英文code增量当整行、无基准、无×count；该批将装备逐标签判门误改为整行，2026-09-11已复核原作并纠正。第十九批拆分配置行与增量、桥接双键域、补×count与掩码、6处写入点改"写增量读有效行"、存档加tags_are_delta标记并rebase旧存档，并修掉create_card_instance把配置整行当增量的根因。12测试/38断言，含从存档JSON+配置独立重算185张卡GetTag行零不一致；全量46脚本/566测试/4298断言（两条既有UI失败与本批无关，已基线对照），详[标签模型证据](audit/TagModelCorrection.md)。key域全局统一、苏丹池对象域(A17)、copy.*标签携带仍开放。
 
 ## A08 剧情名称/描述多目标与根对象域（第十八批，数字ID根成员边界已验）
 
@@ -550,18 +615,18 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 | `MapController.SetRitesPosition/SetPos` + `RefreshRitePinLines` | 批次 U 已拆出 live `RiteNew/RiteController` 卡层与 `Player.pins` endpoint；批次 V 已补 RiteNew 123×133 bound 的跨点碰撞与 bg 外整位回退（只测 bound 中心、不钳边）；批次 W 已接 8 个原作 `RiteNode.from_pins`：仅已完成 pin 可作起点、终点可为 pin 或 live RiteNew、键为 `(target rite-id, source pin-id)`、原始二次 Bézier/保留区/虚线/箭头参数直读配置。不得把 SetPos 或 from_pins 起点误套到 RitePin 之外的运行时卡 |
 | `ui/map_controller.gd` `MapController.SetRitesPosition` / `SetPos` / `RefreshRitePinLines` | `LocationController.RitePosition` 子点、范围选位与同点叠放已精确；批次 V：NORMAL/`[` 组按屏幕中心排序后两两推开，固定特殊仪式只避开该组；候选出 bg 则恢复旧位。批次 W：重建线层等价 `CleanUnexistsPinLines`，且不因 live source 或无关 pin 合成边；已覆盖的 8 条配置同为 50 段、20 像素、起始保留 .08、100/40 箭头、RGBA(207,187,161,255)、虚线。|
 | 苏丹卡视觉（稀有边框、倒计时红光） | 部分接入；细节原作化未完成 |
-| `ui/*.gd` 旧屏坐标（game_screen / rite_view / card_widget / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**；**批次 R 已把桌面地图换为 `ui/map_controller.gd`**；**批次 X 已将 `rite_view` 迁至 `GameScreen.SourceOverlayLayer`**：`RitePanelShow` 固定 3840×2160 源画布，`Position/bg` 4096×2148、`RitePanelTitle` 1148×1124、`CardSlot` 272×496 都直接回放 prefab；`rite_template` 的 `bg_pos/title_pos/slots.{pos,scale,rotation_z}` 按 `RitePanelShowController` 的实际坐标链写入，旧“网格 + 手牌安全区”已删。**批次 Y 已将 `card_widget` 与 `GameScene/MainUI/Hand` 改为源码直连**：CardNew `194×422`、SudanCard `185×330` 分型；Hand 的解析矩形 `516.7349,1726 / 2723.264×430` 和 `HandCardsController` 的 Space=10 / minVisibleWidth=20 直接落地，移除全局 3× mockup 缩放。**批次 Z 已删除无原作桌面对应、且无实际发射点的 `rite_selector` 自制分支**；桌面仪式入口仅保留 `MapController` 的 `RiteNew/RiteController -> RitePanelShow` 直接链。**批次 AA 已将 BeginGuide `Default` 迁至源 3840×2160 坐标，回放 1200×460 面板、400×400 溢出图标、75px 文本和 80px Close**；**批次 AB 已将结局从 LegacyLayer 的自制单页迁到 `OverNewController` 结构：Step1 标题 → 配置 CG → Step3 主菜单；`DoNext` 的 Story/AfterStory 枚举与分支保留，但 after_story 播放宿主仍缺。**批次 AC 已将 ESC 从 LegacyLayer 自制菜单迁至 `ESCGameController` 结构：源 `ESCPanel` 2×根、Mask、1021px ButtonGroup、四个激活项与 `Return/EndGame/MainMenu` 调用链；`NewGame` 保持 prefab 禁用。**批次 AD 已接 `ESCGameController.OnSettings -> SettingsController.ShowSettings(false)`：`SettingsPanel` 2×根、1788×1200 `PanelBG`、四个源 dropdown、音乐/音效 0–100 slider+独立 ON/OFF、数据收集/主播配置和 KeyMap 入口均按 Prefab 真值表重建；音量/开关经 `GameApplication` 等价应用偏好持久化，不进入 Player 存档。平台显示/语言/分辨率/字体和 KeyMap 的 Godot 宿主尚缺，仍显式禁用。**批次 AE 已将手工档案从 LegacyLayer 迁到 `UserArchiveController` 结构**：全屏 3840×2160 `UserArchive`、左侧 28% 信息栏、右侧滚动档位、固定 50 个 2760×240 的 `UserArchiveItem`（空位也显示）、覆盖确认 → 1–20 字 `UserArchiveNameInput`、改名只走 `Datapool.UpdateUserArchive` 等价索引更新而不重写玩家档。`bg_1`/按钮/卷轴原始贴图未从语料导出，保留源几何与逻辑载体，不自制替图。**批次 AJ 按原作运行时截图对拍修正卡牌详情内容行**：属性行顺序改为 体魄/魅力/智慧/**战斗**/社交/支持（原文 cfg 2000001 与截图一致：战斗在社交前；旧实现是社交在前）；标签行改为**纯名称**无数值（截图：男性 贵族 主角 已拥有；旧实现显示"名 值"）。🟡：属性徽记图标（tag_N 精灵资源未独立导出为纹理，仅 Resource/image/*.asset 存在）留待资源提取。**批次 AI 修正声望条槽位几何**：`_build_prestige_strip` 六个槽按 GameScene 真值表 `MainUI/Prestige/710000N` 行的 anchor/pivot 混合（7100001 为 (0,1)+(−6.5)，其余 (0,0)+各 y；pivot 恒 (0.52,0.94)）用 pivot 折叠后的左上角矩形摆放（−80.12/−8.62 … 751.88/43.88）。旧实现把 authored `pos` 当左上角，六槽位置全错（批次 P 时代的未对拍偏差）。补 710000N 勋章贴图与计数标签（宿主视图 🟡，原作计数走 Image/Count 精灵）。**批次 AH 已把改名提示迁至 `ChangeNameView`（`ui/change_name_view.gd`，`GameScreen._source_overlay_layer`）**：`PromptChangeName` 源几何——PromptBG 2534.4×220 居中（prompt_bg）、"修改名称"标题 fs40、InputField 826×90（input_bg，占位符"请输入名称" fs50，`PromptChangeNameController.IsValidName 0x584de0` 的 **1–20 字符**上限——旧克隆 max_length=32 是偏差，一并修正）、Content Invalid Prompt 324×48 校验错误行、Icon 471×1028 卡立绘（(1,0)(−274,66)）、Border decorate 236×324、Confirm rite_op_confirm 325×158、Cancel rite_op_cancel 168×158+"取消" fs24；控制器无显式尺寸写（高度为 ContentSizeFitter PreferredSize，语料无法静态解出）→ **🟡 登记：PromptBG 高度用 220 宿主常量**，子几何全部走 authored 锚点数学，后续实机样本可只替换该常量；i18n `PROMPT_CHANGE_NAME_TITLE/_INPUT_PLACEHOLDER`（zhTW→简体）。**批次 AG 已接桌面帮助**：`GameScreen` 新增 `MainHelpTrigger`（help_button 88×91，top-right pivot (0.5,1) pos (−70,−143.5)，z=50 位于局部模态之下、随 `Player.helpbtn_unshow` 显隐）+ `ui/main_help.gd`（`MainUI/MainHelp` 源浮层：Mask + 指针图 `main.asset` + 11 条 602×200 fs50 气泡，锚点/位置直读 GameScene 真值表；文案 = i18n `MAIN_HELP_*`（zhTW→简体，Unity `<b><color=white><size=86>` 标记转 Godot BBCode））。已知渲染差异：Godot RichTextLabel 的 86px 行内强调字形基线偏移（原作 TMP 无此表现）；InputDisplay 手柄提示未做。**批次 AF 已将卡牌详情迁至 `CardInfoView`（`ui/card_info_view.gd`，`GameScreen` 的 `_source_overlay_layer`）**：源 `CardInfoNew` 面板 2510×1077 居中（3840×2160 设计空间）、`bg_7` 全板、Name（(1911,-89)/435.55×71.58 + 卡名与 TypeIcon fs30 标题）、Content（(270,80)/1550×185 fs34，custom_text‖config.text+占位符）、RareBG（rare_stone 147×249 + CARD_RARE_1..4 石/铜/银/金 fs60）、TagInfo 左列（1336.7×647.76，属性/标签两栏）、MainIconMask（1000×1100 + 471×1028 立绘）、Equips（402.65×500.57 + EquipState 顶部）、Close（checkbox_bg 80×82 + close_2）、BottomDecorate、HelpButton → Help 浮层（card_info 四条 CARD_INFO_HELP_* 气泡）；全部直读 prefab 真值表。详见 `docs/ui_layout/RitePanelShow.md`、`docs/ui_layout/HandCards.md`、`docs/ui_layout/MapController.md`、`docs/ui_layout/BeginGuide.md`、`docs/ui_layout/Over.md`、`docs/ui_layout/ESCPanel.md`、`docs/ui_layout/SettingsPanel.md`、`docs/ui_layout/UserArchive.md`、`docs/ui_layout/CardInfoNew.md`。 |
+| `ui/*.gd` 旧屏坐标（game_screen / rite_view / card_widget / begin_guide_bar / game_over / ESC·档案 overlay） | **2026-08-18 批次 P 起列入 UI 布局对拍**：视口已切原作 3840×2160 设计空间（旧 `window/size/viewport=Vector2i(...)` 键无效、从未生效，游戏一直跑在引擎默认 1152×648）。**批次 Q 已将 `game_screen` 的桌面 chrome 与手牌带移出 LegacyLayer**；**批次 R 已把桌面地图换为 `ui/map_controller.gd`**；**批次 X 已将 `rite_view` 迁至 `GameScreen.SourceOverlayLayer`**：`RitePanelShow` 固定 3840×2160 源画布，`Position/bg` 4096×2148、`RitePanelTitle` 1148×1124、`CardSlot` 272×496 都直接回放 prefab；`rite_template` 的 `bg_pos/title_pos/slots.{pos,scale,rotation_z}` 按 `RitePanelShowController` 的实际坐标链写入，旧“网格 + 手牌安全区”已删。**批次 Y 已将 `card_widget` 与 `GameScene/MainUI/Hand` 改为源码直连**：CardNew `194×422`、SudanCard `185×330` 分型；Hand 的解析矩形 `516.7349,1726 / 2723.264×430` 和 `HandCardsController` 的 Space=10 / minVisibleWidth=20 直接落地，移除全局 3× mockup 缩放。**批次 Z 已删除无原作桌面对应、且无实际发射点的 `rite_selector` 自制分支**；桌面仪式入口仅保留 `MapController` 的 `RiteNew/RiteController -> RitePanelShow` 直接链。**批次 AA 已将 BeginGuide `Default` 迁至源 3840×2160 坐标，回放 1200×460 面板、400×400 溢出图标、75px 文本和 80px Close**；**批次 AB 已将结局从 LegacyLayer 的自制单页迁到 `OverNewController` 结构：Step1 标题 → 配置 CG → Step3 主菜单；`DoNext` 的 Story/AfterStory 枚举与分支保留，但 after_story 播放宿主仍缺。**批次 AC 已将 ESC 从 LegacyLayer 自制菜单迁至 `ESCGameController` 结构：源 `ESCPanel` 2×根、Mask、1021px ButtonGroup、四个激活项与 `Return/EndGame/MainMenu` 调用链；`NewGame` 保持 prefab 禁用。**批次 AD 已接 `ESCGameController.OnSettings -> SettingsController.ShowSettings(false)`：`SettingsPanel` 2×根、1788×1200 `PanelBG`、四个源 dropdown、音乐/音效 0–100 slider+独立 ON/OFF、数据收集/主播配置和 KeyMap 入口均按 Prefab 真值表重建；音量/开关经 `GameApplication` 等价应用偏好持久化，不进入 Player 存档。平台显示/语言/分辨率/字体和 KeyMap 的 Godot 宿主尚缺，仍显式禁用。**批次 AE 已将手工档案从 LegacyLayer 迁到 `UserArchiveController` 结构**：全屏 3840×2160 `UserArchive`、左侧 28% 信息栏、右侧滚动档位、固定 50 个 2760×240 的 `UserArchiveItem`（空位也显示）、覆盖确认 → 1–20 字 `UserArchiveNameInput`、改名只走 `Datapool.UpdateUserArchive` 等价索引更新而不重写玩家档。`bg_1`/按钮/卷轴原始贴图未从语料导出，保留源几何与逻辑载体，不自制替图。**批次 AJ 按原作运行时截图对拍修正卡牌详情内容行**：属性行顺序改为 体魄/魅力/智慧/**战斗**/社交/支持（原文 cfg 2000001 与截图一致：战斗在社交前；旧实现是社交在前）；标签行改为**纯名称**无数值（截图：男性 贵族 主角 已拥有；旧实现显示"名 值"）。🟡：属性徽记图标（tag_N 精灵资源未独立导出为纹理，仅 Resource/image/*.asset 存在）留待资源提取。**批次 AI 修正声望条槽位几何**：`_build_prestige_strip` 六个槽按 GameScene 真值表 `MainUI/Prestige/710000N` 行的 anchor/pivot 混合（7100001 为 (0,1)+(−6.5)，其余 (0,0)+各 y；pivot 恒 (0.52,0.94)）用 pivot 折叠后的左上角矩形摆放（−80.12/−8.62 … 751.88/43.88）。旧实现把 authored `pos` 当左上角，六槽位置全错（批次 P 时代的未对拍偏差）。补 710000N 勋章贴图与计数标签（宿主视图 🟡，原作计数走 Image/Count 精灵）。**批次 AH 已把改名提示迁至 `ChangeNameView`（`ui/change_name_view.gd`，`GameScreen._source_overlay_layer`）**：`PromptChangeName` 源几何——PromptBG 2534.4×220 居中（prompt_bg）、"修改名称"标题 fs40、InputField 826×90（input_bg，占位符"请输入名称" fs50，`PromptChangeNameController.IsValidName 0x584de0` 的 **1–20 字符**上限——旧克隆 max_length=32 是偏差，一并修正）、Content Invalid Prompt 324×48 校验错误行、Icon 471×1028 卡立绘（(1,0)(−274,66)）、Border decorate 236×324、Confirm rite_op_confirm 325×158、Cancel rite_op_cancel 168×158+"取消" fs24；控制器无显式尺寸写（高度为 ContentSizeFitter PreferredSize，语料无法静态解出）→ **历史记录（已被首选尺寸布局纠偏批次取代）：原先 PromptBG 高度用 220 宿主常量**，子几何全部走 authored 锚点数学，后续实机样本可只替换该常量；i18n `PROMPT_CHANGE_NAME_TITLE/_INPUT_PLACEHOLDER`（zhTW→简体）。**批次 AG 已接桌面帮助**：`GameScreen` 新增 `MainHelpTrigger`（help_button 88×91，top-right pivot (0.5,1) pos (−70,−143.5)，z=50 位于局部模态之下、随 `Player.helpbtn_unshow` 显隐）+ `ui/main_help.gd`（`MainUI/MainHelp` 源浮层：Mask + 指针图 `main.asset` + 11 条 602×200 fs50 气泡，锚点/位置直读 GameScene 真值表；文案 = i18n `MAIN_HELP_*`（zhTW→简体，Unity `<b><color=white><size=86>` 标记转 Godot BBCode））。已知渲染差异：Godot RichTextLabel 的 86px 行内强调字形基线偏移（原作 TMP 无此表现）；InputDisplay 手柄提示未做。**批次 AF 已将卡牌详情迁至 `CardInfoView`（`ui/card_info_view.gd`，`GameScreen` 的 `_source_overlay_layer`）**：源 `CardInfoNew` 面板 2510×1077 居中（3840×2160 设计空间）、`bg_7` 全板、Name（(1911,-89)/435.55×71.58 + 卡名与 TypeIcon fs30 标题）、Content（(270,80)/1550×185 fs34，custom_text‖config.text+占位符）、RareBG（rare_stone 147×249 + CARD_RARE_1..4 石/铜/银/金 fs60）、TagInfo 左列（1336.7×647.76，属性/标签两栏）、MainIconMask（1000×1100 + 471×1028 立绘）、Equips（402.65×500.57 + EquipState 顶部）、Close（checkbox_bg 80×82 + close_2）、BottomDecorate、HelpButton → Help 浮层（card_info 四条 CARD_INFO_HELP_* 气泡）；全部直读 prefab 真值表。详见 `docs/ui_layout/RitePanelShow.md`、`docs/ui_layout/HandCards.md`、`docs/ui_layout/MapController.md`、`docs/ui_layout/BeginGuide.md`、`docs/ui_layout/Over.md`、`docs/ui_layout/ESCPanel.md`、`docs/ui_layout/SettingsPanel.md`、`docs/ui_layout/UserArchive.md`、`docs/ui_layout/CardInfoNew.md`。 |
 
 ## C. 自制 ❌（原作无对应，待消灭/降级）
 
 | 克隆物 | 处置 |
 | --- | --- |
-| `set_world_scene_blocker`、`world_spawn_id`、`world_position_ratio` 存档字段 | 横版世界探针遗留；清理需评估 v5 存档兼容（GAP 留档） |
+| `set_world_scene_blocker`；~~`world_spawn_id`、`world_position_ratio`~~ | 2026-09-11：两个无消费者的旧存档字段已移除，旧档额外键兼容忽略。blocker 目前承载模态输入拦截，不可当作无用代码直接删。 |
 | ~~`GameState.coin_count` 标量金币~~ | 已消灭（2026-08-17）：金币卡多对象模型落地，coin_count 变为求和计算属性，v6 存档不再持久化标量 |
 | ~~`GameState.gold_dice` 标量骰子~~ | 已消灭（2026-08-17）：金骰 = counter 7100006（dump.cs:542529 + Add/SubCounter + 存档样本三重信号），计算属性落地 |
 | ~~`GameState.back_to_prev_left` 局内回退配额标量~~ | 已消灭（2026-08-18）：配额 = counter 7100007 存全局域 GlobalState（原作 Global.backToPrevRound），v7 局内存档不再携带；快照恢复后"补回预算"hack 一并删除（配额天然在恢复范围外） |
 | ~~`event_runtime._timing_key` 字符串键 `"timing:event_id"`~~ | 已消灭（2026-08-18，导入桥发现）：改为原作 int 键 event_id×100（TimingRoundBase+0x20 int 直址 player+0x128），旧键加载时迁移 |
-| `GameState.hand`/`rail_order` 独立手牌数组 | 部分收敛（2026-08-18 批次 E）：CardInstance 已承载 bag/bag_pos 并由日终压缩维护（bag_pos = 手牌序+1 不变式）；数组彻底退役仍阻塞于 IsHandCard 三标签名未反查（成员资格判据）与包页 UI 缺失 |
+| `GameState.hand`/`rail_order` 独立手牌数组 | 部分收敛（2026-08-18 批次 E）：CardInstance 已承载 bag/bag_pos 并由日终压缩维护（bag_pos = 手牌序+1 不变式）；2026-09-11已接IsHandCard三标签与四页过滤；数组仍承载Player.cards，2026-09-11 已新增统一 Player.cards 顺序并存读档，普通牌/苏丹牌操作不再按两类拼接，显示排序独立；卡池共用 UID 分配器，旧池碰撞迁移 |
 | `MethinksEngine` / `drop_card_on_methinks` 命名族 | 复刻期兼容接口；玩家可见概念统一为"思考"，方向定后重命名 |
 | ~~弹簧积分器、透视/阴影 shader、SubViewport 双通道、ui_motion.gd~~ | 已于 2026-08-17 去 Balatro 批次删除（git 历史可恢复） |
 
@@ -578,7 +643,7 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 | 制作人员名单（Credits） | **2026-09-03 Credits 批次已迁**：`content/credits.json` 与语料逐字节一致，`ConfigDB.credits` 原样直载 19 名开发者、3 个 contributor 记录、12 个 thanks 记录及 11,006 个名字；代码按 `CreditsController`、`CreditsPage`、`CreditsPageDeveloper`、`CreditsPageContributor`、`CreditsPageThanks`、`CreditsGroup`、`CreditsMember` 原类边界拆分。`CreditsController.OnEnable/DoPrev/DoNext`（0x3f6f60/0x3f6ce0/0x3f6aa0）回放 developer → contributor → thanks 外层顺序、页面实例复用、内部页优先翻动与位置保存；`CreditsPageContributor` 每页两个 group；`CreditsPageThanks.GetNames 0x3f8070` 保留 column/cell_size/page_size 限幅、.NET UTF-16 长度、跨行补齐及分页边界（原配置“测试玩家”3 页、首个大型众筹名单 39 页已锁入对拍测试）。`Credits.prefab` 与三个子 prefab 的 3840×2160 根、关闭/翻页按钮、标题、logo、19 张开发者卡 authored transform 及静态字体/装饰几何均直接回放；图片逐文件从语料拷入并由内容哈希核验。**同日排版补证**：`CreditsHelperGroup.prefab` 的旧 `Title/seperator/spacer/Names` 均为 inactive，`CreditsGroup.Show 0x3f7590` 只向 active `NamesContainer` 实例化 `CreditsNameWithJob`；职位/姓名已按 prefab 恢复为左列左对齐、右列右对齐及源金色。thanks 的 Talk/Text 起点、四行占位推导行高、`<indent=N%>` 绝对列位和配置实际使用的 `<size>`/`<font>` TMP 标记均已按源语义承载。截图：`docs/ui_layout/credits_screenshot.png`、`credits_contributor_screenshot.png`、`credits_thanks_screenshot.png`。 | 🟡 尚无原作同帧运行截图，不能宣称像素级视觉对拍；剩余差异限于源 TMP 字体与 PreferredSize/自动字号度量、contributor 动态行高、`CreditsMember` 淡入淡出时长及 InputDisplay/手柄选择链。thanks 百分比 indent 已不再是缺口。 |
 | 任务完成通知（Global / Quest / StoryNotify） | **2026-08-29 任务链批次已迁**：`content/quest.json` 与语料逐字节一致，`ConfigDB.quests` 直接承载 `Datapool.quest`；`sim/global_extensions.gd` 1:1 映射 `GlobalExtensions.RefreshQuest 0x4fcee0`，`Global.counter/quest` 与 `totalPoint/usedPoint/questState/hasEnterQuest` 使用原键持久化；`ModifyGlobalCounter.Do 0x5176a0 → RefreshQuest(true,false) → Global.OnQuestCompleted → StoryNotifyController.Show 0x5b9c00` 已直连。`ui/story_notify_controller.gd` 回放 StoryNotify.prefab 630×444 顶中几何、原 prompt/point_0 纹理、0.333s 入场+5s 停留+0.333s 退场与 FIFO；点击发出原作形状的 Story target 请求。原 `save_samples/global.json` 未包含非默认 quest/counter，故目前以反编译+配置/Prefab 双信号验证，**不宣称真实非默认存档逐字段对拍**。真值表见 `docs/ui_layout/StoryNotify.md`。**2026-09-02 任务面板与领奖链已迁**：`GameController.ShowStory 0x557ab0` 直接实例化 `ui/story_controller.gd = StoryController`；`StoryController.OnEnable/OnItemClicked/OnRewardClicked/OnRewardAllClicked/Sort/UpdateQuestRewardIcon`（0x5b0f70/0x5b1370/0x5b20b0/0x5b1d20/0x5b2370/0x5b2680）、`StoryItemController.Init/UpdateState/OnRewardClick`（0x5b9450/0x5b96a0/0x5b9520）和 `StoryTargetItemController.Init 0x5b9e80` 均拆成同名控制器边界。领取落在 `GlobalExtensions.GetQuestRewqrd 0x4fc860`：完成门/重复领取门、`Global.quest[id]=2`、`totalPoint += upgrade_point`、保存和 `HasQuestReward` 重算已回放。任务、目标与格式均直接读取原作 `quest.json`/`variable.json`；StoryPanel/StoryItem/StoryTargetItem 三份 Prefab 真值表与 15 张原图已落地，其中目标完成图 `Finish` 由 Prefab GUID 校正，不再误用 point。**2026-09-03 命运商店批次已迁**：原样 `content/upgrade.json` 50 个 `UpgradeNode` 由 `ConfigDB.upgrades` 直载；`Global.upgrade Dictionary<int,int>` 按原字段存读（key=已购买，value 0/1=停用/激活），`PointShopController.OnBuy/OnActivate/OnDeactivate`（0x5802d0/0x580090/0x5805e0）精确回放购买自动激活、`totalPoint -= cost`、`usedPoint += cost`、停用不退款。`HasUnlockUpgrade 0x3feb40` 按购买成员资格而非激活值，`HasAvailableUpgrade 0x4fcd00` 按未购买且可负担、刻意不看可见条件。新局 `Datapool.InitPlayer 0x413700 → DoUpgrade 0x410dc0` 以升级 id 升序执行 active 节点的原始 effect；新增的 `g.card`、`g.change`、`sudan_card` 回放本配置实际使用路径，尤其苏丹卡追加在已洗牌池尾。UI 拆为同名 `ui/point_shop_controller.gd` / `ui/point_shop_item_controller.gd`，按 Shop/ShopItem prefab 3840×2160 真值重放主块、行、按钮与链接卡预览；截图 `docs/ui_layout/pointshop_screenshot.png`。原 `save_samples/global.json` 已逐字段对拍 totalPoint/usedPoint/upgradeState/upgrade 的默认值；因样本没有已购买升级，**不宣称非默认升级存档已有真实样本对拍**。 | 🟡 原作 `Player.sudan_cards` 同时保存隐藏 Card 对象，而宿主仍以 id 队列+抽取时实例化承载；本配置 `g.change` 的开局手牌目标已覆盖，但该 Operation 对其他 Player.cards 区域的通用替换尚未迁。商店手柄 InputDisplay、LoopScrollRect 的选择保持/滚动插值、原 TMP 字体渲染细差及原作运行时截图逐帧对拍仍待完成；任务面板 TMP 字体细差同理 |
 | Live2D | 语料库 `live2d/` 已提取 | 大（既定策略：第一版静态图） |
-| ~~背包/手牌位系统（bag/bagpos/BagIndex）~~ | 已落地（2026-08-18 批次 E）：CardInstance.bag/bag_pos 持久化 + 日终压缩 + 导入桥透传与对拍（24 项）；三标签资格判据与多页包 UI 未做（三标签名留档） | — |
+| ~~背包/手牌位系统（bag/bagpos/BagIndex）~~ | 已落地（2026-08-18 批次 E）：CardInstance.bag/bag_pos 持久化 + 日终压缩 + 导入桥透传与对拍（24 项）；2026-09-11已补own/adherent/player资格判据，四页UI已有；原作全局排序/苏丹呈现分支仍待对拍 | — |
 | end/armageddon 表现状态（`end_open/is_armageddon/armageddon_rite_id`） | **2026-09-03 状态边界已迁**：三字段按 Player@0x178/@0x179/@0x17C 原键进入 GameState、v8 存读档、原作导入桥与 49 项同刻对拍。**同日终局地图批次**：`RiteResultPanelController.<OnClose>b__0 0x5b51c0` 已在已提交的 5010009 结果关闭时精确写 `end_open`，不把其他 `final_pin` 仪式误判为终局；`ui/map_controller.gd.change_bg_to_end` 直接映射 `MapController.ChangeBGToEnd 0x567b70`，加载与语料 SHA-256 等值的 `table_map_end` 2048×1076 原图和 `Resources/image/end_map` 10 帧原图集，并按当前地点图名替换存在的同名帧；`MapController.Start 0x56a890` 的读档恢复由 `_ready` 回放，次日链通过桌面 refresh 幂等消费同一状态。实机渲染走查见 `docs/ui_layout/end_map_screenshot.png`。`is_armageddon/armageddon_rite_id` 实为 `sfx_config.armageddon_music_loop` 的仪式循环音乐恢复状态：`StartRite.Do 0x51bcf0` 处理 `play_in_rite_create=true`，结果关闭链处理 false，`GameController.Start`/次日 b__5 还原 Animator 参数。 | 🟡 终局主地图与地点帧已接；`Eft_End_Map` 是 GameScene 中含多层 ParticleSystem 的独立层级，尚未迁且未用自制效果替代。原始 `sfx_config.json` 尚未接入 `ConfigDB`，`LoopArmageddonController` 音频播放与两处写点仍待下一批；不得把此字段族扩写成自制“决战玩法模式” |
 | RNG 续航（random_cache） | 存档字段双信号 | 小-中 |
 | ~~激活苏丹卡的期限存档承载~~ | 已解（2026-08-18 批次 D）：期限 = 卡寿命模型（出生抢跑 + 每日 life+1 + 模板 card_vanishing 死亡），存档承载即 Card.life 本身；导入桥 days_left = vanish−life 精确恢复，仅 drawn_round 仍近似（难度中途切换后不可反推） | — |
@@ -613,6 +678,23 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 - **UI 布局对拍 ✅（2026-08-18 批次 P）**：`tools/export_ui_layout.gd` 解析语料 AssetRipper 场景/prefab YAML，产出 RectTransform 真值表（锚点/位置/尺寸/pivot/缩放 + CanvasScaler + LayoutGroup 参数 + sprite guid→语料路径）至 `docs/ui_layout/`；主画布设计空间 = **3840×2160**。表现层批次的验收 = 每个摆位数字能回指真值表行；视觉证据用 `tools/dev_screenshot_runner.tscn` 截图。
 
 ## 仪式实机复核纠偏（2026-09-10，进行中）
+
+2026-09-11 二次复核登记：`GameController.<Start>b__5 0x56f9c0` 的委托
+`0x25ac328/0x25ac3a0/0x25ac058` 经 script.json 核实为终局检查/整理手牌/苏丹抽卡，
+并非自动开始。`DoStartAutoBeginRite 0x54ebc0` 的 `0x2599300` 引用在 OnNextRound。
+删除 ui/game.gd 新局及重建界面的提前自动开始调用；运行锁本身保留。
+原作实机治理家业点击空槽会选中合格手牌，鼠标仍在槽上时轮廓保留；不可用手工 stop
+掩盖启动时序错误。整体验收仍开放，详见 `docs/audit/RiteInputCorrection.md`。
+逐细节复核、失败模式与验收表：`docs/audit/RiteFidelityReviewProtocol.md`。
+拖出槽位批次登记：`CardController.OnBeginDrag 0x5294e0` 调用 ICardSlot.RemoveCard
+（dump.cs:312118，接口 slot 3），`CardSlotController.RemoveCard 0x53c7b0` 立即 SetCard(null)。
+`OnEndDrag 0x52a570` 未被目标接收时 AddCard → BackToHandOrBag，不能恢复到源槽。
+克隆须在拖动开始清空槽并刷新汇总，保留拖动源节点至结束；失败落点回手。
+已落地共享拖出生命周期并同步装备/合堆入口；11/56 专项、相关套件合计 83/520
+及实际 viewport 无效落点/直接回手/跨槽通过。原作拖出动画逐帧对拍仍开放，
+SlotPop 仅完成源码定位与原作气泡观察，未实现；详 RiteInputCorrection 的槽卡拖出节。
+本次 5 项输入/重建测试与 14 项集成测试通过；真实 viewport 家业/浴场交互通过。
+原作实机已观察两者点击后保留轮廓并选中合格手牌；全状态/全像素差分仍未完成。
 
 原作实机 `original_runtime/rite_result_power_20260910.jpg` 与 `.prefab` 双信号确认此前结果表面存在坐标换算错误；以下修正优先于旧批次中的几何完成声明。
 
@@ -659,3 +741,15 @@ DeepSeek 第十九至三十六批已在工作区，接手记录见 [DeepSeekHand
 第42批验证见 [AdsorbSpecGateCorrection](audit/AdsorbSpecGateCorrection.md)：87测试/459断言通过；真实auto_save uid120哲瓦德的标记验证了通用拒绝/指定允许和生产拖卡路径。无引擎错误或泄漏；下一批补标签附属属性写入生命周期，A19尚未全部完成。
 
 第43批 A19属性生命周期：PlayerExtensions.AddCard 0x38b620遍历CardNode.tag的键（不按值过滤）并AddTag每个TagNode.attributes；ValidateTagAttributes 0x3831c0根据源tag.GetTag>0添加或移除attributes，Copy0x37f4e0在写入每个运行态增量后校验，最后赋count。Datapool.BuildInTags0x40d9b0/AddBuildInTag0x40c610将adsorb_spec注册为不可叠加、不可见内建tag；stringliteral0x25B3468=吸附指定，当前tag.json所有非空attributes均只含此键。普通标签基础AddTag/RemoveTag/ConvertToAddOrSub仍需另批全面修正，不把增量减法近似当作已完成。
+
+
+## 审计基准冲突（2026-09-11，已授权修复）
+
+原版 StreamingAssets/config/event/5300066.json 同一 action 连续 rite=5001001、5001501、5000001；data/config 整理版只保留最后一个。原作 OperationJsonConverter.Read 0x3a2850 委托 ReadInternal 返回操作列表，原始重复操作不能先折叠成字典。真实 auto_save 首日 notes 对应宫廷、浴场、书店、家业。旧“数据零转译”校验基准本身有损，现已替换为原始文件。
+
+只读审计 tools/audit_source_duplicate_keys.py 扫描已集成的原始 JSONC：842 个文件、2966 组重复属性，0 解析错误。详 docs/audit/SourceDuplicateKeys.json。用户已明确授权升级原始数据基准；3889 个 content 文件保持原文件字节，运行时直接读取。
+
+旧“改名高度220”“缓存抖动近似”均为历史批次记录：当前 change_name_view 使用首选内容高度；source_shaker_math 已引用 UnityPlayer 原生噪声置换表与 float32 衰减。后续以相应修正批次为准，不从旧段落重新立项。
+
+### 2026-09-11 原始配置授权与读取修复
+用户已明确授权改用 StreamingAssets/config 原文件并升级校验。OperationJsonConverter.ReadInternal<object> 0x70d1d0（dump.cs:394250）逐成员追加操作；ConditionJsonConverter.Read 0x386350 逐成员追加条件；TimingJsonConverter.Read 0x3a7bc0 保留重复时机。SourceJSON + OperationsSequence 现保留重复项，原始 5300066 顺序、重复条件、两次暂停续执行、延迟存档顺序均有回归。SHA256 与独立完整成员树对拍各 3889 文件、零差异。详 audit/RemainingCloneConvergence.md。本批不把已保留的未知 DSL 视为已实现。

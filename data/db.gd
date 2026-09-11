@@ -5,19 +5,6 @@ extends RefCounted
 
 const ResultExecScript = preload("res://sim/result.gd")
 
-const NORMAL_DEFAULT_CARDS: Array[int] = [2000001, 2000006, 2000523, 2000005]
-const NORMAL_DEFAULT_RITES: Array[int] = [
-	5000001, # 治理家业
-	5001001, # 权力的游戏
-	5001501, # 浴场里的消息
-	5002006, # 书店营业
-	5001006, # 探访监狱
-	5001008, # 囚牢
-	5002001, # 医馆
-	5002036, 5002037, 5002038, # 淘书 variants
-	5002003, 5002004, 5002005, 5002035, # 欢愉之馆 variants
-]
-
 var cards := {}            # id(int) -> card dict
 var cards_by_str := {}     # id(str) -> card dict (config uses string keys)
 var rites := {}            # id(int) -> rite dict
@@ -84,7 +71,7 @@ var settle_card_new := {}
 # over.json also uses.
 # [SRC: _unpack/data/config/over_music_config.json]
 var over_music := {}
-var use_test_starting_cards := false
+var use_test_starting_cards := false # Legacy API flag; both paths now read original default_cards.
 # [SRC: Datapool.custom_card_text@0x110; MergeCustomTextToDefaultLanguage
 # 0x417dc0. Runtime index of original operation values, not rewritten content.]
 var custom_card_translates: Dictionary = {}
@@ -205,7 +192,7 @@ func _load_translations(content_dir: String) -> void:
 func _load_captions(path: String, dest: Dictionary) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
 		return
 	for key in parsed:
@@ -224,7 +211,7 @@ func _load_init(path: String) -> void:
 		push_warning("ConfigDB: missing init at %s" % path)
 		return
 	var text := FileAccess.get_file_as_string(path)
-	var parsed = JSON.parse_string(text)
+	var parsed = SourceJSON.parse_string(text)
 	if parsed is Dictionary:
 		init_config = parsed
 
@@ -232,7 +219,7 @@ func _load_init(path: String) -> void:
 func _load_single(path: String, dest: Dictionary) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	if parsed is Dictionary:
 		dest.assign(parsed)
 
@@ -240,7 +227,7 @@ func _load_single(path: String, dest: Dictionary) -> void:
 func _load_tags(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
 		return
 	for code in parsed:
@@ -258,7 +245,7 @@ func _load_tags(path: String) -> void:
 func _load_cards(path: String) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
 		return
 	for key in parsed:
@@ -271,7 +258,7 @@ func _load_cards(path: String) -> void:
 func _load_map(path: String, dest: Dictionary) -> void:
 	if not FileAccess.file_exists(path):
 		return
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (parsed is Dictionary):
 		return
 	for key in parsed:
@@ -289,7 +276,7 @@ func _load_dir(dir_path: String, dest: Dictionary) -> void:
 	while fname != "":
 		if not dir.current_is_dir() and fname.ends_with(".json"):
 			var full := dir_path + "/" + fname
-			var parsed = JSON.parse_string(FileAccess.get_file_as_string(full))
+			var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(full))
 			if parsed is Dictionary:
 				var id := int(parsed.get("id", fname.get_basename().to_int()))
 				dest[id] = parsed
@@ -310,7 +297,7 @@ func _load_dir_by_string_id(dir_path: String, dest: Dictionary) -> void:
 	var fname := dir.get_next()
 	while fname != "":
 		if not dir.current_is_dir() and fname.ends_with(".json"):
-			var parsed = JSON.parse_string(FileAccess.get_file_as_string(dir_path + "/" + fname))
+			var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(dir_path + "/" + fname))
 			if parsed is Dictionary:
 				var id := str(parsed.get("id", fname.get_basename()))
 				dest[id] = parsed
@@ -386,7 +373,7 @@ func do_upgrade(state) -> void:
 		var upgrade := get_upgrade(upgrade_id)
 		if upgrade.is_empty():
 			continue
-		var effect: Dictionary = upgrade.get("effect", {})
+		var effect: Variant = upgrade.get("effect", {})
 		ResultExecScript.execute(effect, state, self, {"upgrade_id": upgrade_id})
 
 
@@ -420,20 +407,21 @@ func get_sudan_pool() -> Array:
 
 
 func get_default_cards() -> Array:
-	if use_test_starting_cards:
-		return get_test_default_cards()
-	return NORMAL_DEFAULT_CARDS.duplicate()
+	# [SRC: Datapool.InitPlayer 0x413700; InitNode.default_cards@0x58.]
+	# These include non-hand NPCs. IsHandCard controls presentation, not creation.
+	return init_config.get("default_cards", []).duplicate()
 
 
 func get_test_default_cards() -> Array:
-	return init_config.get("default_cards", [])
+	# Compatibility entry point; the source has no separate four-card profile.
+	return get_default_cards()
 
 
 func get_default_rites() -> Array:
-	var configured: Array = init_config.get("default_rite", [])
-	if not configured.is_empty():
-		return _filter_generated_rites(configured)
-	return _filter_generated_rites(NORMAL_DEFAULT_RITES)
+	# [SRC: Datapool.InitPlayer 0x413700 reads InitNode.default_rite@0x68;
+	# dump.cs:390543; content/init/1.json default_rite is deliberately empty.]
+	# Empty means no initial rites. Story events own their later creation.
+	return init_config.get("default_rite", []).duplicate()
 
 
 func get_generated_rite_ids() -> Array[int]:
@@ -451,19 +439,6 @@ func get_generated_rite_ids() -> Array[int]:
 	for rid in generated.keys():
 		out.append(int(rid))
 	out.sort()
-	return out
-
-
-func _filter_generated_rites(rite_ids: Array) -> Array[int]:
-	var generated: Dictionary = {}
-	for rid in get_generated_rite_ids():
-		generated[int(rid)] = true
-	var out: Array[int] = []
-	for rid in rite_ids:
-		var id := int(rid)
-		if generated.has(id):
-			continue
-		out.append(id)
 	return out
 
 

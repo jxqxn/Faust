@@ -1,6 +1,6 @@
 extends GutTest
 
-const CORPUS_QUEST := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/data/config/quest.json"
+const CORPUS_QUEST := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/StreamingAssets/config/quest.json"
 const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 const ResultExecScript = preload("res://sim/result.gd")
 const StoryNotifyControllerScript = preload("res://ui/story_notify_controller.gd")

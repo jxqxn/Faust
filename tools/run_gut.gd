@@ -29,7 +29,8 @@ func _start() -> void:
 	_gut.test_scripts(gut_config.options.unit_test_name == "")
 
 func _on_end_run() -> void:
-	_exit_code = 1 if _gut.get_fail_count() > 0 else 0
+	# A parse failure can leave zero collected tests; that is not a green run.
+	_exit_code = 1 if _gut.get_fail_count() > 0 or _gut.get_test_count() == 0 else 0
 	# Do not await while handling Gut.end_run: that signal stack keeps the test
 	# runner and its cached script resources alive.  Tear down on the next idle
 	# turn instead.

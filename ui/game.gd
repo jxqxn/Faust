@@ -146,13 +146,11 @@ func _start_new_run(index: int, use_test_cards: bool) -> void:
 	state.setup_new_run(db, index, rng, use_test_cards)
 	db.set_test_starting_cards_enabled(false)
 	# The original startup chain increments Player.round to 1, fires
-	# OnRoundBeginBa, then runs auto-begin and the first Sultan draw in that
-	# order. Opening round_begin_ba events (intro chain) display from here.
+	# OnRoundBeginBa, checks game-over, arranges the hand and draws the Sultan.
+	# Auto-begin belongs to OnNextRound, not startup or presentation rebuild.
 	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (0x56f9c0)
-	#       lines 120-150]
-	state.trigger_events("round_begin_ba", {"round": state.round_number})
-	RoundLoop.start_auto_begin_rites(state, db)
-	RoundLoop.draw_weekly_sudan(state, db, rng)
+	#       b__8/b__9/b__10; script.json metadata 0x25ac328/0x25ac3a0/0x25ac058]
+	RoundLoop.begin_opening(state, db, rng)
 	_show_game()
 
 
@@ -164,7 +162,8 @@ func _show_game() -> void:
 		# [SRC: StartController.c RefreshQuest(false, true);
 		#       GlobalExtensions.RefreshQuest 0x4fcee0]
 		GlobalExtensionsScript.refresh_quest(state.global_state, state, db, false, true)
-		RoundLoop.start_auto_begin_rites(state, db)
+		# Preserve loaded/preparing/running rite states. Merely showing the
+		# desktop cannot execute the next-round automatic-start transition.
 	_audio.play_bgm("main")
 	var gs := GameScreen.new()
 	gs.setup(state, db, rng)
