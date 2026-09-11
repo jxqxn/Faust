@@ -175,3 +175,44 @@ func test_zero_cost_slice_survives_save_load_without_creating_one_gold() -> void
 	assert_eq(restored.get_card_instance(paid).count, 0)
 	assert_eq(restored.gold_total(), 4)
 	assert_eq(int(restored.get_rite_instance(f.rite_uid).slot_cards.s2), paid)
+
+
+func test_replacement_aggregate_excludes_destination_but_keeps_other_slot() -> void:
+	var f := _fixture(3)
+	await wait_process_frames(2)
+	_drop(f, f.uid)
+	var old_uid: int = f.state.add_card_to_hand(2000029, db)
+	f.state.get_card_instance(old_uid).count = 2
+	f.state.add_card_to_slot(old_uid, 1, db, f.rite_uid)
+	f.view._placed["s1"] = old_uid
+	var incoming: int = f.state.add_card_to_hand(2000001, db)
+	# Explicit source-boundary condition, not a mutation to original content.
+	f.view._rite = f.view._rite.duplicate(true)
+	f.view._rite.cards_slot.s1.condition = {"type": "char", "all.金币=": 3}
+	assert_true(f.view._try_update_card("s1", f.state.card_data_for(incoming, db)))
+	assert_eq(int(f.view._placed.s1), old_uid)
+	f.view._rite.cards_slot.s1.condition = {"all.金币=": 5}
+	assert_false(f.view._try_update_card("s1", f.state.card_data_for(incoming, db)))
+	assert_eq(int(f.view._placed.s1), old_uid)
+	assert_eq(f.state.get_card_instance(old_uid).zone, "slot")
+	f.view._rite.cards_slot.s1.condition = {"type": "char", "all.金币=": 3}
+	f.view.drop_card_on_slot("s1", {"type": "card", "card_uid": incoming, "source": "hand"})
+	assert_eq(int(f.view._placed.s1), incoming)
+	assert_true(f.state.has_card_in_hand(old_uid))
+	assert_eq(int(f.view._placed.s2), int(f.uid))
+
+
+func test_cost_stack_retains_source_is_cost_gate_when_special_marker_rejects_can_put() -> void:
+	var f := _fixture(4)
+	await wait_process_frames(2)
+	# Synthetic boundary: original CardStack ignores CanPutCard's boolean once
+	# cost processing has set is_cost, including its later adsorb_spec veto.
+	f.state.get_card_instance(f.uid).tags["adsorb_spec"] = 1
+	var probe: Dictionary = f.view._cost_stack_context("s2", f.uid)
+	assert_false(bool(probe.accepted))
+	assert_true(bool(probe.is_cost))
+	_drop(f, f.uid)
+	var paid := int(f.view._placed.get("s2", 0))
+	assert_gt(paid, 0)
+	assert_eq(f.state.get_card_instance(paid).count, 3)
+	assert_eq(f.state.get_card_instance(f.uid).count, 1)

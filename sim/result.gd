@@ -1332,6 +1332,8 @@ static func _tag_can_visible(db, tag_name: String) -> bool:
 ##       CardExtensions.c @ AddTag 0x37e6a0 / RemoveTag 0x382e40 never read tag+0x41.]
 static func _mutate_tag(tags: Dictionary, state, card_uid: int, tag_name: String, op: int, amount: int, can_add: bool, effective_value: int, db) -> bool:
 	var changed := TagSystem.apply(tags, tag_name, op, amount, can_add, effective_value)
+	if state != null and state.get_card_instance(card_uid) != null:
+		state.validate_tag_attributes(card_uid, tag_name, db)
 	if _tag_can_visible(db, tag_name) and state != null and state.has_method("record_tag_op"):
 		state.record_tag_op(card_uid, tag_name, op, amount, tags)
 	return changed

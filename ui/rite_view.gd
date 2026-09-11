@@ -1870,7 +1870,7 @@ func _slot_condition_context(slot_def: Dictionary, card: Dictionary, first_drop:
 		"slot_entries": _slot_entries_from_placements(),
 		"use_slot_snapshot": true,
 	}
-	ctx["accepted"] = ConditionEval.evaluate(cond, ctx)
+	ctx["accepted"] = ConditionEval.can_put_card(cond, ctx)
 	return ctx
 
 

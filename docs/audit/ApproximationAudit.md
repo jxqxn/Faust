@@ -84,3 +84,9 @@
 第39批：[SlotReplacementCorrection.md](SlotReplacementCorrection.md)，A19指定槽TryUpdateCard替换路径已接，取消无证据的自动改投。临时排除目标槽和旧卡返回手牌已验；零成本、聚合快照全域与表现链仍开放。
 
 第40批：[ZeroCountBoundaryCorrection.md](ZeroCountBoundaryCorrection.md)。A19零成本底层切片与手牌/槽/苏丹池零数量存读档已修；当前槽配置零成本入口为0处，不声明原机可达。54测试/389断言通过，A19其余边界继续开放。
+
+第41批：[SlotAggregationCorrection.md](SlotAggregationCorrection.md)。A19替换预检的all/friend/enemy统一使用排除目标的快照；SlotHasTag从逐卡任一满足改为求和后比较。原Enemy枚举闭包保留is_enemy=false，friend与enemy同路；与FuncCompare独立分组规则明确分开。验证结果见该报告，清单其余项未宣称完成。
+
+第42批：[AdsorbSpecGateCorrection.md](AdsorbSpecGateCorrection.md)。A19手动/候选/吸附验证接入CanPutCard的adsorb_spec门，HasTag按实际执行顺序设置允许标志。原存档哲瓦德覆盖已有标记路径；新建与标签增删的ValidateTagAttributes附属属性维护仍缺，不宣称完整闭环。
+
+第43批：[TagAttributeLifecycleCorrection.md](TagAttributeLifecycleCorrection.md)。新建、复制/拆分及Result标签修改接入当前语料的附属属性维护；普通标签底层增删/SET完整语义、池对象与通知链继续开放。

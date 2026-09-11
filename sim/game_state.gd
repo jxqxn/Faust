@@ -454,6 +454,7 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 	next_card_uid += 1
 	instance.zone = zone
 	card_instances[instance.uid] = instance
+	_initialize_tag_attributes(instance, db)
 	_record_card_op(CARD_OP_NEW, instance.uid)
 	return instance
 
@@ -697,6 +698,52 @@ func _tag_node_for(tag_name: String, db) -> Dictionary:
 	if db.get("tags_by_code") != null and db.tags_by_code.has(code):
 		return db.tags_by_code[code]
 	return {}
+
+
+# [SRC: PlayerExtensions.AddCard 0x38b620 enumerates definition KEYS and
+# applies their attributes, without a GetTag/value gate during construction.]
+func _initialize_tag_attributes(instance, db) -> void:
+	for tag_name in _base_tag_row(int(instance.card_id), db):
+		_write_tag_attributes(instance, _tag_node_for(str(tag_name), db), true)
+
+
+# [SRC: CardExtensions.ValidateTagAttributes 0x3831c0; called after tag writes.
+# Read the effective source tag once, then apply the attribute dictionary.]
+func validate_tag_attributes(uid: int, tag_name: String, db) -> void:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return
+	var node := _tag_node_for(tag_name, db)
+	if node.get("attributes", {}).is_empty():
+		return
+	var effective := effective_card_tags(uid, db)
+	_write_tag_attributes(instance, node, int(effective.get(_tag_key_name(tag_name, db), 0)) > 0)
+
+
+func _write_tag_attributes(instance, node: Dictionary, present: bool) -> void:
+	for raw_name in node.get("attributes", {}):
+		# The current original attributes corpus contains ONLY this builtin.
+		# Datapool.BuildInTags 0x40d9b0 / AddBuildInTag 0x40c610:
+		# adsorb_spec (吸附指定), can_add=false, can_visible=false.
+		# AddTag 0x37e6a0 keeps an existing non-additive runtime marker;
+		# RemoveTag 0x382e40 erases it (no base definition term exists).
+		if str(raw_name) not in ["吸附指定", "adsorb_spec"]:
+			push_error("Unported tag attribute: %s" % raw_name)
+			continue
+		if present:
+			if not instance.tags.has("adsorb_spec"):
+				instance.tags["adsorb_spec"] = int(node.attributes[raw_name])
+		else:
+			instance.tags.erase("adsorb_spec")
+
+
+func _copy_tag_delta_in_source_order(source, copied, db) -> void:
+	_initialize_tag_attributes(copied, db)
+	# [SRC: Copy 0x37f4e0 directly writes each delta entry, then invokes
+	# ValidateTagAttributes for THAT entry. Do not bulk assign before validating.]
+	for raw_name in source.tags:
+		copied.tags[raw_name] = source.tags[raw_name]
+		validate_tag_attributes(int(copied.uid), str(raw_name), db)
 
 
 ## Reconstruct the runtime delta from a tag row persisted in the config domain.
@@ -1607,9 +1654,8 @@ func copy_card_instance(source_uid: int, db = null, zone := "hand") -> int:
 	var source = get_card_instance(source_uid)
 	if source == null:
 		return 0
-	var copy = CardInstanceData.new(next_card_uid, source.card_id, source.tags.duplicate(true))
+	var copy = CardInstanceData.new(next_card_uid, source.card_id)
 	next_card_uid += 1
-	copy.count = int(source.count)
 	copy.zone = zone
 	card_instances[copy.uid] = copy
 	_record_card_op(CARD_OP_COPY, copy.uid, {"source_uid": source_uid})
@@ -1625,13 +1671,14 @@ func copy_card_instance(source_uid: int, db = null, zone := "hand") -> int:
 		if equipped_copy != null:
 			equipped_copy.count = 1
 		attach_equipment(copy.uid, equipped_copy_uid, db, false, false)
+	_copy_tag_delta_in_source_order(source, copy, db)
+	copy.count = int(source.count)
 	return copy.uid
 
 
 func _copy_card_for_stack(source, amount: int):
-	var copied = CardInstanceData.new(next_card_uid, source.card_id, source.tags.duplicate(true))
+	var copied = CardInstanceData.new(next_card_uid, source.card_id)
 	next_card_uid += 1
-	copied.count = amount
 	copied.life = source.life
 	copied.is_lost = source.is_lost
 	copied.rare_up = source.rare_up
@@ -1643,6 +1690,8 @@ func _copy_card_for_stack(source, amount: int):
 	copied.removed_equip_slots = source.removed_equip_slots.duplicate()
 	copied.zone = "hand"
 	card_instances[copied.uid] = copied
+	_copy_tag_delta_in_source_order(source, copied, _runtime_db())
+	copied.count = amount
 	return copied
 
 
@@ -1810,7 +1859,7 @@ func slot_cost_needed(slot: int, card_uid: int, db, rite_uid: int = 0) -> int:
 		"slot_entries": cards_in_slot_entries_for_rite(rite_uid),
 		"rite_id": int(rite.id) if rite != null else 0,
 	}
-	if not ConditionEval.evaluate(slot_def.get("condition", {}), ctx):
+	if not ConditionEval.can_put_card(slot_def.get("condition", {}), ctx):
 		return 0
 	return int(ctx.get("cost_count", 0)) if bool(ctx.get("is_cost", false)) else 0
 
@@ -2112,8 +2161,6 @@ func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Di
 	if card.is_empty():
 		return false
 	var condition: Dictionary = slot_def.get("condition", {})
-	if condition.is_empty():
-		return true
 	var rite_state := {}
 	for slot_key in instance.slot_cards:
 		var slotted_card = card_data_for(int(instance.slot_cards[slot_key]), db)
@@ -2122,7 +2169,7 @@ func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Di
 	var attr_slots: Array[String] = []
 	for key in rite.get("cards_slot", {}).keys():
 		attr_slots.append(str(key))
-	return ConditionEval.evaluate(condition, {
+	return ConditionEval.can_put_card(condition, {
 		"db": db,
 		"state": self,
 		"rng": rng,

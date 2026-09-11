@@ -611,3 +611,13 @@ DeepSeek 第十九至三十六批已在工作区，接手记录见 [DeepSeekHand
 第40批 A19数量边界：CardSlotController.CardStack 0x53b0a0 在cost_count=0时Copy后set_count(0)；Card.set_count 0x383e80直接写字段并通知，无最小1钳制。Card.count@0x20、CostCondition.PostProcess 0x3f6520的Min=0分支为独立信号。普查当前槽配置零个零成本入口，故为底层边界修复，不宣称当前内容运行可达。移除存档/导入/池对象的最小1转写，并允许0成本切片。
 
 第40批收尾见 [ZeroCountBoundaryCorrection](audit/ZeroCountBoundaryCorrection.md)：54测试/389断言通过；零数量不再在导入/读档中变成1，HasTag堆叠门按有效值判断。当前配置零成本入口0处，清单保留其余未完成项。
+
+第41批 A19 聚合条件：SlotHasTag.IsSatisfied 0x408cf0 + 闭包0x40bfb0对选中卡GetTag求和后比较；dump.cs:417790注册all/enemy/friend语法。OperationFilter.Filter 0x3a15c0的friend/enemy均走GetEnemyCardsWithIndex；其闭包0x3937b0实际保留Slot.is_enemy@0x29为false的卡（dump.cs:392754），不能按函数名反推。TryUpdateCard 0x598140临时清除目标槽，故聚合读取也必须使用排除目标的快照。此批不改FuncCompare的friends/enemys独立上下文规则；self/parent全链仍开放。
+
+第41批验证见 [SlotAggregationCorrection](audit/SlotAggregationCorrection.md)：118测试/528断言通过，包含生产替换路径、模拟和原存档导入桥，最终日志无引擎错误或泄漏。CanPutCard额外adsorb_spec门已定位但未接，为A19下一项。
+
+第42批 A19：CanPutCard 0x3918b0在条件通过后拒绝main.GetTag(adsorb_spec)>0且is_adsorb_spec为false的卡。HasTag.IsSatisfied 0x3fe5a0在main分支发现TagNode.attributes包含该键时，先调用SetAdsorbSpec 0x385520，再执行Compare。独立证据dump.cs TagNode.attributes@0x58、ConditionContext.is_adsorb_spec@0x21与stringliteral.json:10791。按执行顺序设置上下文标志，禁止预扫描未执行的条件来授权；CardStack仍按原is_cost独立门执行。ValidateTagAttributes 0x3831c0的附属属性写入链另有缺口，不能用本批代替。
+
+第42批验证见 [AdsorbSpecGateCorrection](audit/AdsorbSpecGateCorrection.md)：87测试/459断言通过；真实auto_save uid120哲瓦德的标记验证了通用拒绝/指定允许和生产拖卡路径。无引擎错误或泄漏；下一批补标签附属属性写入生命周期，A19尚未全部完成。
+
+第43批 A19属性生命周期：PlayerExtensions.AddCard 0x38b620遍历CardNode.tag的键（不按值过滤）并AddTag每个TagNode.attributes；ValidateTagAttributes 0x3831c0根据源tag.GetTag>0添加或移除attributes，Copy0x37f4e0在写入每个运行态增量后校验，最后赋count。Datapool.BuildInTags0x40d9b0/AddBuildInTag0x40c610将adsorb_spec注册为不可叠加、不可见内建tag；stringliteral0x25B3468=吸附指定，当前tag.json所有非空attributes均只含此键。普通标签基础AddTag/RemoveTag/ConvertToAddOrSub仍需另批全面修正，不把增量减法近似当作已完成。

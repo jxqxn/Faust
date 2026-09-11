@@ -655,19 +655,25 @@ static func _selector_condition_cards(selector: String, st, ctx: Dictionary) -> 
 			out.append({"id": int(host.card_id), "card_uid": host_uid})
 		return out
 	var rite_uid := int(ctx.get("rite_uid", 0))
-	if selector == "all":
-		if st.has_method("rite_slot_card_uids"):
-			for uid in st.rite_slot_card_uids(rite_uid):
-				var inst_a = st.get_card_instance(uid)
-				if inst_a != null:
-					out.append({"id": int(inst_a.card_id), "card_uid": uid})
-		return out
-	if selector == "friend" or selector == "enemy":
-		var want_enemy := selector == "enemy"
-		if st.has_method("cards_in_slot_entries_for_rite"):
-			for entry in st.cards_in_slot_entries_for_rite(rite_uid):
-				if bool(entry.get("is_enemy", false)) == want_enemy and int(entry.get("card_uid", 0)) > 0:
-					out.append(entry)
+	if selector in ["all", "friend", "enemy"]:
+		var entries: Array = []
+		if bool(ctx.get("use_slot_snapshot", false)):
+			entries = ctx.get("slot_entries", [])
+		else:
+			var rite = st.get_rite_instance(rite_uid)
+			var db = ctx.get("db")
+			if rite != null and db != null:
+				entries = st.slot_entries_for_rite(db.get_rite(int(rite.id)), rite_uid)
+		# [SRC: OperationFilter.Filter 0x3a15c0 routes BOTH side bits to
+		# GetEnemyCardsWithIndex; its closure 0x3937b0 retains is_enemy==false.
+		# Slot.is_enemy@0x29, dump.cs:392754. This is NOT FuncCompare's split.]
+		for entry in entries:
+			if selector != "all" and bool(entry.get("is_enemy", false)):
+				continue
+			var uid := int(entry.get("card_uid", 0))
+			var instance = st.get_card_instance(uid)
+			if instance != null:
+				out.append({"id": int(instance.card_id), "card_uid": uid})
 		return out
 	return out
 
@@ -711,16 +717,16 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 					f_rare = true
 					break
 			return f_rare if not negate else not f_rare
-		# rest is a tag name: check the slot card has that tag >= val.
+		# [SRC: SlotHasTag.IsSatisfied 0x408cf0 and closure 0x40bfb0:
+		# sum every selected Card.GetTag, then compare ONCE, including empty=0.]
 		var tag_query := _split_name_op(rest)
 		var tag_name := str(tag_query.name)
 		var need := int(val)
-		var ok := false
+		var total := 0
 		for tc in cards:
 			var effective_card: Dictionary = st.card_data_for(int(tc.get("card_uid", 0)), ctx.get("db"))
-			if apply_compare(int(effective_card.get("tag", {}).get(tag_name, 0)), need, tag_query.op):
-				ok = true
-				break
+			total += int(effective_card.get("tag", {}).get(tag_name, 0))
+		var ok := apply_compare(total, need, tag_query.op)
 		return ok if not negate else not ok
 	# plain "s1" -> presence (rite-agnostic, like the original SlotHasTag
 	# presence check); the aggregate selectors use their own resolution.
@@ -1038,11 +1044,30 @@ static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:
 	return not kk.is_empty() and not ("." in kk) and not (":" in kk)
 
 
+# [SRC: RiteExtensions.CanPutCard 0x3918b0: evaluate conditions first, then
+# main.GetTag(adsorb_spec)>0 requires ConditionContext.is_adsorb_spec@0x21.]
+static func can_put_card(condition: Dictionary, ctx: Dictionary) -> bool:
+	if not evaluate(condition, ctx):
+		return false
+	var card: Dictionary = ctx.get("acting_card", {})
+	var tags: Dictionary = card.get("tag", {})
+	return int(tags.get("adsorb_spec", tags.get("吸附指定", 0))) <= 0 or bool(ctx.get("is_adsorb_spec", false))
+
+
 static func eval_acting_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var neg := k.begins_with("!") or k.begins_with("~")
 	var parsed := _split_name_op(k.lstrip("!~"))
 	var tag_name := str(parsed.name)
 	var card: Dictionary = ctx.get("acting_card", {})
+	# [SRC: HasTag.IsSatisfied 0x3fe5a0, TagNode.attributes@0x58;
+	# SetAdsorbSpec 0x385520 sets true BEFORE the comparison, even on failure.
+	# Raw content attributes use the localized key; original load translates it.]
+	var db = ctx.get("db")
+	if not card.is_empty() and db != null:
+		var node: Dictionary = db.tags_by_code.get(db.tag_code_for(tag_name), {})
+		var attributes: Dictionary = node.get("attributes", {})
+		if attributes.has("adsorb_spec") or attributes.has("吸附指定"):
+			ctx["is_adsorb_spec"] = true
 	var tags: Dictionary = card.get("tag", {})
 	var ok := apply_compare(int(tags.get(tag_name, 0)), int(val), parsed.op)
 	return ok if not neg else not ok
