@@ -17,10 +17,17 @@
 
 ## 本批验证
 
-- `tests/test_source_tips.gd`：8测试、132断言通过，含两分辨率真实viewport输入路径。
+- `tests/test_source_tips.gd`：8测试、134断言通过，含两分辨率真实viewport输入路径。
 - 截图：`docs/ui_layout/sourcetips_screenshot.png`，1920×1080完整游戏启动，整理按钮hover。
 - 本轮没有启动原作对拍，不将克隆截图视为原作像素级一致的证明。
-- 全量GUT结果在收尾后补录；存在历史失败时如实列出，不以局部绿灯替代全量验收。
+- 全量GUT：60脚本、692测试，688通过、3失败、1 risky；6219/6222断言。
+  日志无 SCRIPT ERROR / ERROR / orphan / leak。全量运行载入的是本轮较早版本，
+  最后文字排版与输入位置修正由专项8测试134断言和两张截图补验。
+- 三项失败与交接记录一致：test_card_flash候选位置659/764；事件mask高度489/828；
+  test_integration淘书生成仪式数量0/1。本轮未重新构建旧基线，故不额外声称独立归因。
+  risky为test_rebuild_clears_previous_rows无断言。
+- content parity：3889文件、零违规。临时探针与裁图移到仓库外tips-handoff目录。
+  未推送。
 
 ## 保留的限制
 
