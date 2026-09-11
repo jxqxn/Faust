@@ -2025,10 +2025,14 @@ func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	assert_not_null(right_actions, "right action column should exist")
 	if right_actions == null:
 		return
-	assert_eq(_count_buttons(right_actions), 3, "right actions contain next-day, redraw, and back-to-prev controls")
+	# [SRC: GameScene MainUI/Next Round children — AdvanceDay (clock_bg cluster),
+	#       RedrawSudanButton, PrevRound (return_last_round) and Sort (hand_sort).
+	#       Sort is a Next Round control, not a desk site, so it belongs here.]
+	assert_eq(_count_buttons(right_actions), 4, "right actions contain next-day, redraw, back-to-prev and sort controls")
 	assert_not_null(_find_node_by_name(right_actions, "AdvanceDayButton"), "next-day action remains in the right column")
 	assert_not_null(_find_node_by_name(right_actions, "RedrawSudanButton"), "redraw action remains in the right column")
 	assert_not_null(_find_node_by_name(right_actions, "BackToPrevButton"), "back-to-prev action stays in the right column")
+	assert_not_null(_find_node_by_name(right_actions, "SortHandButton"), "the source hand-sort stamp stays in the right column")
 	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
 
 

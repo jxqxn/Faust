@@ -28,6 +28,16 @@ class HandRailDrop:
 
 	var owner_screen: Control
 
+	func _has_point(point: Vector2) -> bool:
+		# The full-width Godot rail must not intercept the source IThink target.
+		# [SRC: GameScene MainUI/IThink + Hand; TipsHolder on IThink.]
+		if owner_screen != null and owner_screen._desk_content != null:
+			var think: Control = owner_screen._desk_content._think_drop_zone
+			if is_instance_valid(think) and think.is_visible_in_tree():
+				if think.get_global_rect().has_point(get_global_transform() * point):
+					return false
+		return Rect2(Vector2.ZERO, size).has_point(point)
+
 	func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 		var accepted: bool = (
 			owner_screen != null
@@ -105,6 +115,7 @@ var _right_actions: Control
 var _advance_button: Button
 var _redraw_button: Button
 var _back_to_prev_button: Button
+var _sort_button: Button
 var _main_help_view = null
 var _change_name_view = null
 var _main_help_button: Button
@@ -112,6 +123,7 @@ var _card_info_view = null
 var _cached_events_view = null
 var _cached_event_mask: Button
 var _story_notify = null
+var _tips = null  # SourceTips panel (Tips.prefab + SlotTipsController placement)
 var _card_detail_card_id := 0
 var _card_detail_card_uid := 0
 var _event_overlay: Control
@@ -140,6 +152,56 @@ func _ready() -> void:
 	_build_ui()
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
+	refresh()
+	# TipsHolder components are authored onto source GameObjects, so they exist
+	# as soon as the screen is built. Attach once; the panel itself is reused.
+	_attach_source_tips()
+
+
+## Attach the source's TipsHolder inventory to the clone Controls that stand in
+## for the same GameObjects. Ids and NeedWidth are the scene's own values from
+## docs/ui_layout/SourceTips.md; a holder the scene does not author is not
+## invented here.
+##
+## [SRC: GameScene.unity TipsHolder components (30 holders / 16 ids, scanned);
+##       TipsHolder.c @ GetTipText 0x5c4400 resolves TipsId through
+##       Datapool.Translate, and OnPointerEnter 0x5c53a0 spawns Tips.prefab.]
+func _attach_source_tips() -> void:
+	if _tips == null or _db == null:
+		return
+	# MainUI/Next Round/PrevRound — return_last_round stamp (NeedWidth 1000).
+	if _back_to_prev_button != null:
+		_tips.attach(_db, _back_to_prev_button, "BACK_TO_LAST_ROUND_BEGIN_TIPS", "", 1000.0)
+	# MainUI/Next Round/Sort — hand_sort stamp (TipsHolder NeedWidth 1000).
+	if _sort_button != null:
+		_tips.attach(_db, _sort_button, "SORT_HAND_CARD_TIPS", "", 1000.0)
+	# MainUI/RoundNumber BG — the deadline strip itself.
+	if _deadline_strip != null:
+		_tips.attach(_db, _deadline_strip, "EXECUTION_DAY_TIPS")
+	# MainUI/BagBtnGroup/BagGroup/{0..3}.
+	if _bag_tabs != null:
+		for index in range(mini(4, _bag_tabs.buttons.size())):
+			_tips.attach(_db, _bag_tabs.buttons[index], "BAG_POS_%d_TIPS" % (index + 1))
+	# MainUI/IThink — the thought drop zone.
+	_tips.attach(_db, _find_node_by_name(self, "ThinkDropZone") as Control, "ITHINK_TIPS")
+
+
+## The sort-all action behind MainUI/Next Round/Sort.
+##
+## `GameController.HandCardSort` first collapses each bag page's history with
+## `HandCardAutoClassify`, then walks every bag index and re-runs
+## `HandCardArrange` for it. The clone carries one bag page, so the equivalent is
+## the existing `sort_current_hand_by_condition` with an always-true validator:
+## the comparator then falls through to bagpos → card id → uid, which is exactly
+## the no-match ordering, and every card gets a fresh 1..N bagpos.
+##
+## [SRC: GameController.c @ HandCardSort (RVA 0x5523e0): HandCardAutoClassify
+##       then per-page HandCardArrange; @ HandCardSortByCondition (RVA 0x5515a0).]
+func sort_hand_pressed() -> void:
+	if _state == null or _db == null:
+		return
+	_state.sort_current_hand_by_condition(_db, func(_card): return true)
+	_layout_hand_cards()
 	refresh()
 
 
@@ -238,7 +300,9 @@ func _build_ui() -> void:
 	add_child(quit_anchor)
 	_menu_button = Button.new()
 	_menu_button.name = "MenuButton"
-	_menu_button.tooltip_text = "菜单"
+	# No TipsHolder in the source's Quit block, so the clone does not invent one.
+	# Godot's own tooltip is not the source's tip surface; see
+	# docs/ui_layout/SourceTips.md for the scene-wide holder inventory.
 	_menu_button.flat = false
 	_menu_button.custom_minimum_size = Vector2(80, 82)
 	_menu_button.size = Vector2(80, 82)
@@ -269,7 +333,8 @@ func _build_ui() -> void:
 	add_child(help_anchor)
 	_main_help_button = Button.new()
 	_main_help_button.name = "MainHelpTrigger"
-	_main_help_button.tooltip_text = "帮助"
+	# The source's help trigger has no TipsHolder either; the MainHelp overlay it
+	# opens is its own documentation surface.
 	_main_help_button.flat = true
 	_main_help_button.custom_minimum_size = Vector2(88, 91)
 	_main_help_button.size = Vector2(88, 91)
@@ -354,6 +419,12 @@ func _build_ui() -> void:
 	_source_overlay_layer.z_index = OVERLAY_LAYER_Z + 1
 	add_child(_source_overlay_layer)
 
+	# [SRC: Resources/prefab/Tips.prefab + SlotTipsController.SetPositionInternal
+	#       0x5ac340. The source spawns this panel per hover from TipsHolder; the
+	#       clone keeps one instance above the desktop chrome but below modal
+	#       prompts, exactly like the source's tip canvas layer.]
+	_tips = preload("res://ui/tips_view.gd").new()
+	add_child(_tips)
 	# [SRC: GameScene MainUI/Hand BG, hand_bg, bottom-stretched 356.]
 	_hand_bg_sprite = _sprite_child("res://assets/original/ui/hand_bg.png", Vector2(3840, 356))
 	_hand_bg_sprite.name = "HandBG"
@@ -400,7 +471,6 @@ func _build_ui() -> void:
 
 	_advance_button = Button.new()
 	_advance_button.name = "AdvanceDayButton"
-	_advance_button.tooltip_text = "下一天"
 	# [SRC: GameScene Next Round — clock_bg 596x634 anchors (1,0) pivot (1,0);
 	#       Image next_day_0 305x306 at center+(62,-41); Sort hand_sort 93x93
 	#       at (1,300); PrevRound return_last_round 158x137 at
@@ -465,7 +535,6 @@ func _build_ui() -> void:
 		redraw_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		redraw_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_redraw_button.text = ""
-		_redraw_button.tooltip_text = "重抽苏丹卡"
 		_redraw_button.add_child(redraw_icon)
 	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
 	_right_actions.add_child(_redraw_button)
@@ -483,16 +552,42 @@ func _build_ui() -> void:
 		back_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		back_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_back_to_prev_button.text = ""
-		_back_to_prev_button.tooltip_text = "回到上一回合结束（消耗一次回退机会）"
 		_back_to_prev_button.add_child(back_icon)
 	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
 	_right_actions.add_child(_back_to_prev_button)
+
+	# [SRC: GameScene MainUI/Next Round/Sort — 93x93 at anchors (0,0) pivot (0,0)
+	#       pos (1,300); Image hand_sort 93x93; UnityEvent OnClick ->
+	#       GameController.HandCardSort 0x5523e0. TipsHolder NeedWidth 1000.]
+	_sort_button = Button.new()
+	_sort_button.name = "SortHandButton"
+	_sort_button.flat = true
+	var sort_style := StyleBoxEmpty.new()
+	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
+		_sort_button.add_theme_stylebox_override(state_name, sort_style)
+	if ResourceLoader.exists("res://assets/original/ui/hand_sort.png"):
+		var sort_icon := TextureRect.new()
+		sort_icon.name = "hand_sort"
+		sort_icon.texture = load("res://assets/original/ui/hand_sort.png") as Texture2D
+		sort_icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		sort_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sort_icon.stretch_mode = TextureRect.STRETCH_SCALE
+		sort_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_sort_button.add_child(sort_icon)
+	_sort_button.pressed.connect(sort_hand_pressed)
+	_right_actions.add_child(_sort_button)
+	# Match visual chrome order for Godot mouse picking (z_index alone does
+	# not change Control hit testing). Keep modal hosts above these targets.
+	for chrome in [_deadline_strip, _bag_tabs]:
+		move_child(chrome, get_child_count() - 1)
+	for overlay in [_overlay_layer, _source_overlay_layer]:
+		move_child(overlay, get_child_count() - 1)
 	# Unity's cached-event mask intercepts Next Round (GO47 OnClick ->
 	# NoticeCachedEvent). Godot mouse picking follows sibling order, not z.
 	move_child(_cached_event_mask, get_child_count() - 1)
 	# Source buttons are icon images, not the 516px text-button strip. That
 	# strip's 316px content margins forced both controls wider than their rect.
-	for icon_button in [_redraw_button, _back_to_prev_button]:
+	for icon_button in [_redraw_button, _back_to_prev_button, _sort_button]:
 		for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
 			icon_button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 		for child in icon_button.get_children():
@@ -516,7 +611,8 @@ func _build_cached_events() -> void:
 	_cached_event_mask = Button.new()
 	_cached_event_mask.name = "CachedEventMask"
 	_cached_event_mask.flat = true
-	_cached_event_mask.tooltip_text = "事件通知"
+	# The mask GameObject carries no TipsHolder; its discoverability comes from
+	# the tray it shakes, not from an invented clone-only tooltip.
 	var mask_style := StyleBoxEmpty.new()
 	for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 		_cached_event_mask.add_theme_stylebox_override(state_name, mask_style)
@@ -599,6 +695,10 @@ func _apply_layout() -> void:
 		_cached_event_mask.size = Vector2(596, 634)
 	if _story_notify != null:
 		_story_notify.apply_source_layout(view_size)
+	# Tips.prefab is authored on the same 3840x2160 canvas, and its placement
+	# math consumes screen-space fractions, so it only needs the canvas scale.
+	if _tips != null:
+		_tips.apply_source_layout(view_size)
 	# The painted board is the whole desktop behind every persistent control.
 	_set_rect(_desk_map, Rect2(Vector2.ZERO, view_size))
 	_set_rect(_desk_content, Rect2(Vector2.ZERO, view_size))
@@ -625,6 +725,11 @@ func _apply_layout() -> void:
 	if _back_to_prev_button != null:
 		# [SRC: Next Round/PrevRound 158x137 at center+(-206.1,-207.2)]
 		_set_rect(_back_to_prev_button, Rect2(Vector2(12.9, 455.7), Vector2(158, 137)))
+	if _sort_button != null:
+		# [SRC: Next Round/Sort anchors (0,0) pivot (0,0) pos (1,300) 93x93.
+		#       Top-left = (1, 634-300-93) = (1,241); the source anchors it to the
+		#       Bottom-Left corner, which is the same box.]
+		_set_rect(_sort_button, Rect2(Vector2(1, 241), Vector2(93, 93)))
 	if _next_day_label != null:
 		_next_day_label.scale = k
 		_next_day_label.size = Vector2(322.26, 174.36)

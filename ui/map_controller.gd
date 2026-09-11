@@ -278,7 +278,6 @@ func _build_ithink_target() -> void:
 	_think_drop_zone = ThinkDropZone.new()
 	_think_drop_zone.name = "ThinkDropZone"
 	_think_drop_zone.owner_map = self
-	_think_drop_zone.tooltip_text = "将手牌或苏丹卡拖到这里"
 	_think_drop_zone.mouse_default_cursor_shape = Control.CURSOR_CAN_DROP
 	# [SRC: GameScene MainUI/IThink/BG (388x704) and Folder (400x700),
 	# both bottom-left. Keep the existing live rite drop handler.]

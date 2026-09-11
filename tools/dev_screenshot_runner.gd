@@ -199,6 +199,24 @@ func _ready() -> void:
 			var db_q = main.get("db")
 			if screen != null and state_q != null and db_q != null:
 				state_q.global_state.notify_quest_completed(db_q.get_quest(3300001))
+		if args.has("--tips") and screen != null:
+			var sort_btn: Control = screen.get("_sort_button")
+			if args.has("--tips-think"):
+				sort_btn = screen._find_node_by_name(screen, "ThinkDropZone")
+			elif args.has("--tips-bag"):
+				sort_btn = screen._bag_tabs.buttons[0]
+			var tips: Control = screen.get("_tips")
+			var target := sort_btn.get_global_rect().get_center()
+			# Input injection uses viewport coordinates (already stretched).
+			var motion := InputEventMouseMotion.new()
+			motion.position = target
+			get_viewport().push_input(motion, true)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			print("tips INPUT visible=%s hovered=%s rect=%s" % [tips.visible, get_viewport().gui_get_hovered_control(), tips.right.get_global_rect()])
+			if not tips.visible:
+				push_error("Tips did not open through viewport mouse input")
+
 		await get_tree().process_frame
 		await get_tree().process_frame
 	await get_tree().create_timer(float(frames) / 60.0).timeout

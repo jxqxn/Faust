@@ -88,10 +88,34 @@ var use_test_starting_cards := false
 # [SRC: Datapool.custom_card_text@0x110; MergeCustomTextToDefaultLanguage
 # 0x417dc0. Runtime index of original operation values, not rewritten content.]
 var custom_card_translates: Dictionary = {}
+# The original's default-language text table, i.e. the dictionary
+# Datapool.Translate looks a key up in.
+#
+# `data/config/ui.json` is that table: a flat `KEY -> {zhCN, comment}` map whose
+# `zhCN` values are the game's default display language (simplified Chinese).
+# `data/i18n/<locale>/` holds the *translations* of that same key space -- zhTW
+# is traditional Chinese and en is English -- so consuming those instead would
+# silently switch the clone's language. Only the default table is loaded here.
+#
+# This is what every TipsHolder.TipsId and every TextTranslate `key:` field
+# resolves against; without it the tooltip layer has no text source at all.
+# [SRC: _unpack/data/config/ui.json (1669 lines, flat key->{zhCN,comment}) plus
+#       the _TEXT keys in the per-domain configs (e.g. sfx_config's clip
+#       captions); Datapool.c @ Translate (RVA 0x422740): dictionary lookup on
+#       the translator objects wired at Datapool+0x268 / +600, returning the
+#       input key unchanged when neither has it.]
+var translations: Dictionary = {}
+# The second dictionary Datapool.Translate falls back to. The clone keeps the
+# tooltip caption table (ui.json) separate from the general text table so a
+# missing caption cannot be masked by a same-named general key, and so
+# `has_translation` can answer for the tips surface specifically.
+# [SRC: Datapool.c @ Translate 0x422740 second TryGetValue against +600.]
+var ui_translations: Dictionary = {}
 
 
 func load_all(content_dir: String = "res://content", use_test_cards: bool = false) -> void:
 	use_test_starting_cards = use_test_cards
+	_load_translations(content_dir)
 	_load_tags(content_dir + "/tag.json")
 	_load_cards(content_dir + "/cards.json")
 	_load_dir(content_dir + "/rite", rites)
@@ -143,6 +167,56 @@ func translate_custom_card_text(key: String) -> String:
 	# The original default-language fallback; locale/mod overlays remain open.
 	# [SRC: Datapool.Translate0x422740 returns the key if not found.]
 	return str(custom_card_translates.get(key, key))
+
+
+## Datapool.Translate: main table first, ui overlay second, then the input key.
+## The clone never rewrites the tables -- both files are byte-identical copies
+## of the source's own i18n output for the display language.
+## [SRC: Datapool.c @ Translate (RVA 0x422740): TryGetValue on the translator at
+##       Datapool+0x268, then on the one at +600; falling through both returns
+##       the original string.]
+func translate(key: Variant) -> String:
+	var text := str(key)
+	if text.is_empty():
+		return text
+	if translations.has(text):
+		return str(translations[text])
+	if ui_translations.has(text):
+		return str(ui_translations[text])
+	return text
+
+
+## Keys that exist in the source's own text tables. The clone uses this to tell
+## "the source names a string the player sees" apart from "the type is still on
+## the numeric fallback", so a missing table entry cannot masquerade as text.
+func has_translation(key: Variant) -> bool:
+	var text := str(key)
+	return translations.has(text) or ui_translations.has(text)
+
+
+func _load_translations(content_dir: String) -> void:
+	translations.clear()
+	ui_translations.clear()
+	# `_load_single` would also pull the per-entry `comment` field into the map;
+	# only the caption value is a translation.
+	_load_captions(content_dir + "/ui.json", ui_translations)
+
+
+func _load_captions(path: String, dest: Dictionary) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not (parsed is Dictionary):
+		return
+	for key in parsed:
+		var entry: Variant = parsed[key]
+		if entry is String:
+			dest[str(key)] = entry
+		elif entry is Dictionary:
+			# ui.json entries are {zhCN, comment}; zhCN is the default language.
+			var caption := str(entry.get("zhCN", ""))
+			if not caption.is_empty():
+				dest[str(key)] = caption
 
 
 func _load_init(path: String) -> void:
