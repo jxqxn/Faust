@@ -81,6 +81,7 @@ func test_condition_supports_rite_batch_tag_rare_cost_and_coin_keys():
 	var card: Dictionary = db.get_card(2000005).duplicate(true)
 	card["id"] = 2000005
 	var ctx := {"db": db, "state": st, "rng": RNG.new(48), "acting_card": card, "acting_card_id": 2000005, "acting_card_only": true}
+	ctx["acting_card_uid"] = st.add_card_to_hand(2000005, db)
 	var first_tag := ""
 	for tag in card.get("tag", {}).keys():
 		if int(card.tag[tag]) > 0:

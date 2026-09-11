@@ -95,7 +95,6 @@ func test_payment_rejects_nonsense_arguments() -> void:
 	var uid: int = state.add_card_to_hand(STACKABLE_CARD, db)
 	state.get_card_instance(uid).count = 4
 	assert_eq(state.pay_cost_into_slot(uid, 0, 1, db, 0), 0, "slot 0 is not a slot")
-	assert_eq(state.pay_cost_into_slot(uid, 1, 0, db, 0), 0, "a cost of 0 is not a payment")
 	assert_eq(state.pay_cost_into_slot(uid, 1, -3, db, 0), 0, "nor is a negative cost")
 	assert_eq(state.pay_cost_into_slot(999999, 1, 1, db, 0), 0, "an unknown uid pays nothing")
 	assert_eq(int(state.get_card_instance(uid).count), 4, "and the stack is untouched")
@@ -145,7 +144,7 @@ func test_equality_cost_key_reads_its_value() -> void:
 	# content/rite/5000001.json s4 nests {"any": {"cost.消耗品=": 1, ...}}.
 	var result := _slot_cost_of(5000001, 4)
 	assert_eq(result["cost_key"], "cost.消耗品=", "the nested cost key is found through any")
-	assert_eq(result["needed"], 1, "cost.消耗品= 1 asks for one")
+	assert_eq(result["needed"], 0, "s4 explicitly excludes gold: nested cost cannot bypass !金币")
 
 
 func test_a_slot_without_a_cost_key_asks_for_nothing() -> void:

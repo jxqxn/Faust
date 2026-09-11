@@ -184,7 +184,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 			sudan_deck.append({
 				"uid": int(pool_card.get("uid", 0)),
 				"card_id": pool_id,
-				"count": maxi(int(pool_card.get("count", 1)), 1),
+				"count": int(pool_card.get("count", 1)),
 				"life": int(pool_card.get("life", 0)),
 				"tags": (pool_card.get("tag", {}) if pool_card.get("tag", {}) is Dictionary else {}).duplicate(true),
 				"pos": int(pool_card.get("bagpos", 0)),
@@ -471,7 +471,7 @@ static func _base_card_row(card: Dictionary, zone: String, rite_uid: int, slot_k
 		# rows are therefore already deltas and must not be rebased on load.
 		"tags": (card.get("tag", {}) if card.get("tag", {}) is Dictionary else {}).duplicate(true),
 		"tags_are_delta": true,
-		"count": maxi(int(card.get("count", 1)), 1),
+		"count": int(card.get("count", 1)),
 		"life": int(card.get("life", 0)),
 		"is_lost": false,
 		"zone": zone,
@@ -673,7 +673,7 @@ static func _original_sudan_pool_rows(original: Dictionary) -> Dictionary:
 			continue
 		rows[str(int(card.get("uid", 0)))] = {
 			"card_id": int(card.get("id", 0)),
-			"count": maxi(int(card.get("count", 1)), 1),
+			"count": int(card.get("count", 1)),
 			"life": int(card.get("life", 0)),
 			"tag": (card.get("tag", {}) if card.get("tag", {}) is Dictionary else {}).duplicate(true),
 		}

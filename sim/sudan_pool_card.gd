@@ -63,7 +63,9 @@ static func from_save_dict(data: Dictionary):
 		int(data.get("uid", 0)),
 		int(data.get("card_id", data.get("id", 0)))
 	)
-	entry.count = maxi(int(data.get("count", 1)), 1)
+	# Same original Card.count field as hand/rite cards; no loader clamp.
+	# [SRC: Card.set_count 0x383e80; Player.sudan_card_pool List<Card>.]
+	entry.count = int(data.get("count", 1))
 	entry.life = int(data.get("life", 0))
 	entry.pos = int(data.get("pos", 0))
 	var saved_tags: Variant = data.get("tags", data.get("tag", {}))

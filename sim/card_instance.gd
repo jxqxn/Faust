@@ -101,7 +101,9 @@ static func from_save_dict(data: Dictionary):
 		int(data.get("card_id", 0)),
 		data.get("tags", {}) if data.get("tags", {}) is Dictionary else {}
 	)
-	instance.count = maxi(int(data.get("count", 1)), 1)
+	# [SRC: Card.set_count 0x383e80 assigns raw int; CardStack 0x53b0a0
+	# can set a copied card to cost_count=0. Loading must not mint a unit.]
+	instance.count = int(data.get("count", 1))
 	instance.tag_delta_loaded = bool(data.get("tags_are_delta", false))
 	instance.life = int(data.get("life", 0))
 	instance.is_lost = bool(data.get("is_lost", false))

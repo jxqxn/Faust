@@ -234,17 +234,16 @@ func test_slot_card_delegates_stacking_to_its_owner_and_respects_lock() -> void:
 	var state := _state()
 	var rng := RNG.new(9321)
 	var view := preload("res://ui/rite_view.gd").new()
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000005)
 	add_child_autofree(view)
 	await wait_process_frames(2)
 	var target := int(state.add_card_to_hand(COIN_ID, db))
 	var source := int(state.add_card_to_hand(COIN_ID, db))
-	state.get_card_instance(target).count = 5
-	state.get_card_instance(source).count = 3
+	state.get_card_instance(target).count = 1
+	state.get_card_instance(source).count = 2
 	# Isolate a manual slot; the source-card hit must traverse the real slot node.
 	view._rite = view._rite.duplicate(true)
-	var slot_key: String = "s4"
-	view._rite["cards_slot"][slot_key]["condition"] = {}
+	var slot_key: String = "s2"
 	view._place_card_in_slot(slot_key, target, "hand", "")
 	view._after_placement_changed()
 	var widget: CardWidget = view._slot_buttons[slot_key].find_child("PlacedCard_*", true, false)
@@ -253,7 +252,7 @@ func test_slot_card_delegates_stacking_to_its_owner_and_respects_lock() -> void:
 	assert_false(widget._can_stack_dropped_card(payload), "slot cards never emit unconnected hand-stack signals")
 	assert_true(widget._can_drop_data(Vector2.ZERO, payload))
 	widget._drop_data(Vector2.ZERO, payload)
-	assert_eq(state.get_card_instance(target).count, 8, "dropping on the card face reaches the slot's stack handler")
+	assert_eq(state.get_card_instance(target).count, 3, "dropping on the card face reaches the slot's stack handler")
 	assert_false(source in state.hand)
 	widget = view._slot_buttons[slot_key].find_child("PlacedCard_*", true, false)
 	var next_source := int(state.add_card_to_hand(COIN_ID, db))
@@ -263,6 +262,6 @@ func test_slot_card_delegates_stacking_to_its_owner_and_respects_lock() -> void:
 	view._resolution_pending = true
 	assert_false(widget._can_drop_data(Vector2.ZERO, payload), "locked slot face rejects stacking")
 	widget._drop_data(Vector2.ZERO, payload)
-	assert_eq(state.get_card_instance(target).count, 8, "direct drop callback cannot bypass the lock")
+	assert_eq(state.get_card_instance(target).count, 3, "direct drop callback cannot bypass the lock")
 	assert_true(next_source in state.hand)
 	await wait_process_frames(2)

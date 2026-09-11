@@ -1060,7 +1060,9 @@ func can_drop_card_on_slot(slot_key: String, data: Variant) -> bool:
 		return false
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(card_uid, _db)
-	return _slot_accepts_card(slot_def, card)
+	if _cost_stack_context(slot_key, card_uid).get("is_cost", false):
+		return true
+	return _try_update_card(slot_key, card)
 
 
 func drop_card_on_slot(slot_key: String, data: Variant) -> void:
@@ -1075,27 +1077,13 @@ func drop_card_on_slot(slot_key: String, data: Variant) -> void:
 		return
 	var slot_def: Dictionary = _rite.get("cards_slot", {}).get(slot_key, {})
 	var card: Dictionary = _state.card_data_for(card_uid, _db)
-	# [SRC: CardDropManager.DropCard -> CardSlotController.CardStack: dropping a
-	#       stackable card onto an occupied slot holding the same card id merges
-	#       the counts into the placed card instead of routing to a free slot.]
-	if _placed.has(slot_key):
-		var placed_uid := int(_placed[slot_key])
-		if _state.has_method("stack_cards") and _state.stack_cards(placed_uid, card_uid):
-			set_log("%s 与槽内同类卡合并" % _card_display_name(card, int(card.get("id", 0))))
-			_selected_card_uid = 0
-			_after_placement_changed()
-			return
-	if not _slot_accepts_card(slot_def, card) or _placed.has(slot_key):
-		# Auto-route to the first satisfied slot instead of rejecting: the
-		# original highlights GetSatisfiedSlotIndex during the drag and drops
-		# land there, never requiring pixel-perfect slot aiming.
-		# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) L2034-2040;
-		#       GameController.c @ DragCard (0x54ef50) L4586; report 8 A5]
-		var routed := _first_satisfied_slot(card)
-		if routed == "":
-			set_log("这张牌不能放入 %s" % slot_key.to_upper())
-			return
-		slot_key = routed
+	if _try_cost_stack(slot_key, card_uid):
+		_selected_card_uid = 0
+		_after_placement_changed()
+		return
+	if not _try_update_card(slot_key, card):
+		set_log("这张牌不能放入 %s" % slot_key.to_upper())
+		return
 	_place_card_in_slot(slot_key, card_uid, str(data.get("source", "")), str(data.get("source_slot", "")), int(data.get("source_rite_uid", _rite_uid)))
 	set_log("%s 放入 %s" % [_card_display_name(card, int(card.get("id", 0))), slot_key.to_upper()])
 	_selected_card_uid = 0
@@ -1624,7 +1612,66 @@ func _prepare_table_from_placements() -> void:
 		_state.add_card_to_slot(card_uid, slot_num, _db, _rite_uid)
 
 
+# [SRC: CardSlotController.CardStack 0x53b0a0; current@0x148,
+# ConditionContext.is_first_drop@0x22. Evaluate combined count using the
+# existing slot card identity, then restore the speculative count immediately.]
+func _cost_stack_context(slot_key: String, incoming_uid: int) -> Dictionary:
+	var incoming = _state.get_card_instance(incoming_uid)
+	if incoming == null or not _state._instance_is_stackable(incoming):
+		return {}
+	var target_uid := int(_placed.get(slot_key, 0))
+	if target_uid == incoming_uid:
+		return {}
+	var target = _state.get_card_instance(target_uid)
+	var same: bool = target != null and target.card_id == incoming.card_id and _state._instance_is_stackable(target)
+	var original_count := int(target.count) if same else 0
+	if same:
+		target.count += incoming.count
+	var ctx := _slot_condition_context(_rite.get("cards_slot", {}).get(slot_key, {}),
+		_state.card_data_for(target_uid if same else incoming_uid, _db), not same)
+	if same:
+		target.count = original_count
+	ctx["merge_uid"] = target_uid if same else 0
+	return ctx
+
+
+func _try_cost_stack(slot_key: String, incoming_uid: int) -> bool:
+	var ctx := _cost_stack_context(slot_key, incoming_uid)
+	# Original CardStack intentionally ignores CanPutCard's bool: a matching
+	# but underfunded cost is a valid partial deposit (SetNeedCosts still ran).
+	if not bool(ctx.get("is_cost", false)):
+		return false
+	var needed := int(ctx.get("cost_count", 0))
+	var incoming = _state.get_card_instance(incoming_uid)
+	var merge_uid := int(ctx.get("merge_uid", 0))
+	if merge_uid > 0:
+		var target = _state.get_card_instance(merge_uid)
+		var remainder := int(target.count) + int(incoming.count) - needed
+		target.count = needed
+		if remainder < 1:
+			_state.remove_card_instance_from_play(incoming_uid)
+			for key in _placed.keys():
+				if int(_placed[key]) == incoming_uid:
+					_placed.erase(key)
+		else:
+			incoming.count = remainder
+		return true
+	if _placed.has(slot_key):
+		_return_slot_to_hand(slot_key)
+	var previous_slot := str(incoming.slot_key)
+	var previous_rite := int(incoming.rite_uid)
+	var paid_uid: int = _state.pay_cost_into_slot(incoming_uid, slot_key.substr(1).to_int(), needed, _db, _rite_uid)
+	if paid_uid <= 0:
+		return false
+	if paid_uid == incoming_uid and previous_rite == _rite_uid:
+		_placed.erase(previous_slot)
+	_placed[slot_key] = paid_uid
+	return true
+
+
 func _place_card_in_slot(slot_key: String, card_uid: int, source: String, source_slot: String, source_rite_uid: int = 0) -> void:
+	if _try_cost_stack(slot_key, card_uid):
+		return
 	if _placed.has(slot_key) and int(_placed[slot_key]) != card_uid:
 		_return_slot_to_hand(slot_key)
 	var origin_rite_uid := source_rite_uid if source_rite_uid > 0 else _rite_uid
@@ -1784,12 +1831,25 @@ func _slot_accepts_sudan(slot_def: Dictionary) -> bool:
 	return str(cond.get("type", "")) == "sudan"
 
 
+# [SRC: RitePanelShowController.TryUpdateCard 0x598140 temporarily nulls
+# only the destination entry, evaluates CanPutCard, then restores it.]
+func _try_update_card(slot_key: String, card: Dictionary) -> bool:
+	var previous = _placed.get(slot_key)
+	_placed.erase(slot_key)
+	var ctx := _slot_condition_context(_rite.get("cards_slot", {}).get(slot_key, {}), card, false)
+	if previous != null:
+		_placed[slot_key] = previous
+	return bool(ctx.get("accepted", false))
+
+
 func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
+	return bool(_slot_condition_context(slot_def, card, true).get("accepted", false))
+
+
+func _slot_condition_context(slot_def: Dictionary, card: Dictionary, first_drop: bool) -> Dictionary:
 	if slot_def.is_empty():
-		return false
+		return {"accepted": false}
 	var cond: Dictionary = slot_def.get("condition", {})
-	if cond.is_empty():
-		return true
 	# Slot conditions evaluate against the rite's currently placed cards too
 	# (e.g. `s1.xxx` references), not just the card being tried.
 	# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) lines
@@ -1803,11 +1863,15 @@ func _slot_accepts_card(slot_def: Dictionary, card: Dictionary) -> bool:
 		"rite_uid": _rite_uid,
 		"rite_id": _rite_id,
 		"acting_card": card,
+		"acting_card_uid": int(card.get("instance_uid", 0)),
+		"is_first_drop": first_drop,
 		"acting_card_id": int(card.get("id", 0)),
 		"acting_card_only": true,
 		"slot_entries": _slot_entries_from_placements(),
+		"use_slot_snapshot": true,
 	}
-	return ConditionEval.evaluate(cond, ctx)
+	ctx["accepted"] = ConditionEval.evaluate(cond, ctx)
+	return ctx
 
 
 func _slot_entries_from_placements() -> Array:

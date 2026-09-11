@@ -1702,7 +1702,7 @@ func _instance_is_stackable(instance) -> bool:
 	var runtime_db = _runtime_db()
 	if runtime_db != null and not runtime_db.get_card(int(instance.card_id)).is_empty():
 		tags = effective_card_tags(instance.uid, runtime_db)
-	return tags.has("可堆叠") or tags.has("stackable")
+	return int(tags.get("可堆叠", tags.get("stackable", 0))) > 0
 
 
 func insert_card_to_hand(card_or_uid: int, index: int, db = null) -> void:
@@ -1763,7 +1763,7 @@ func remove_card_from_hand(card_or_uid: int) -> bool:
 ##       datum literal 0x2593720 = "stackable";
 ##       CardExtensions.c @ Copy (0x37f4e0) keep-count flag.]
 func pay_cost_into_slot(card_uid: int, slot: int, needed: int, db, rite_uid: int = 0) -> int:
-	if slot <= 0 or needed < 1:
+	if slot <= 0 or needed < 0:
 		return 0
 	var source = get_card_instance(card_uid)
 	if source == null:
@@ -1790,77 +1790,29 @@ func pay_cost_into_slot(card_uid: int, slot: int, needed: int, db, rite_uid: int
 	return paid_uid
 
 
-## The cost amount a rite slot demands for a given candidate card, or 0 when the
-## slot is not a cost slot. This is the `needed` argument pay_cost_into_slot
-## needs; the slot's condition nests `cost.<tag><op>` under any/all/none, and the
-## comparison operator is part of the key (e.g. "cost.金币", "cost.金币=",
-## "cost.消耗品=", "cost.可堆叠=").
-##
-## Distribution in the corpus (all 1863 rite files): 653 rites carry `cost.` in a
-## slot condition, across 46 distinct keys. The most common are
-## cost.消耗品= (333), cost.金币 (323), cost.金币= (57).
-## [SRC: CostCondition.c @ IsSatisfied 0x3f6160 reads the operator off the inner
-##       Compare at +0x38 -> +0x14; content/rite/*.json cards_slot.sN.condition;
-##       engine_spec/conditions.json "cost\\.([^\\.<=>]+)(>=|<=|<>|!=|=|[<>])?"]
+## Evaluate the complete authored condition with a current-card context.
+## No extraction of a cost leaf from its any/all parent is permitted.
+## [SRC: RiteExtensions.CanPutCard 0x3918b0 invokes the slot condition list;
+## CardSlotController.CardStack 0x53b0a0 creates a first-drop context.]
 func slot_cost_needed(slot: int, card_uid: int, db, rite_uid: int = 0) -> int:
-	if slot <= 0 or db == null:
-		return 0
-	var instance = get_card_instance(card_uid)
-	if instance == null:
+	if slot <= 0 or db == null or get_card_instance(card_uid) == null:
 		return 0
 	var slot_def := slot_definition(slot, rite_uid)
 	if slot_def.is_empty():
 		return 0
-	var condition: Variant = slot_def.get("condition", {})
-	var key := _find_cost_key(condition)
-	if key.is_empty():
-		return 0
-	# Reuse the condition evaluator so the operator/min/max parsing stays in one
-	# place: it records need_cost_cards/cost_count on the context it is given.
+	var card := card_data_for(card_uid, db)
+	var rite = get_rite_instance(rite_uid)
 	var ctx := {
 		"state": self, "db": db, "acting_card_uid": card_uid,
+		"acting_card": card, "acting_card_id": int(card.get("id", 0)),
+		"acting_card_only": true, "is_first_drop": true,
 		"rite_uid": rite_uid, "attr_slots": [],
+		"slot_entries": cards_in_slot_entries_for_rite(rite_uid),
+		"rite_id": int(rite.id) if rite != null else 0,
 	}
-	if not ConditionEval.evaluate({key: _cost_key_value(condition, key)}, ctx):
+	if not ConditionEval.evaluate(slot_def.get("condition", {}), ctx):
 		return 0
-	var count := int(ctx.get("cost_count", 0))
-	if count > 0:
-		return count
-	# A bare `cost.<tag>` with no operator defaults to Compare's >= 1, and when
-	# the matched card is not stackable the payer hands over the whole card.
-	return 1
-
-
-## Depth-first search for the first `cost.*` key inside any/all/none wrappers.
-func _find_cost_key(condition: Variant) -> String:
-	if not (condition is Dictionary):
-		return ""
-	var stack: Array = [condition]
-	while not stack.is_empty():
-		var current: Variant = stack.pop_back()
-		if not (current is Dictionary):
-			continue
-		for raw_key in (current as Dictionary):
-			var key := str(raw_key)
-			if key.begins_with("cost."):
-				return key
-			if key in ["any", "all", "none"]:
-				stack.append((current as Dictionary)[raw_key])
-	return ""
-
-
-func _cost_key_value(condition: Variant, key: String) -> Variant:
-	var stack: Array = [condition]
-	while not stack.is_empty():
-		var current: Variant = stack.pop_back()
-		if not (current is Dictionary):
-			continue
-		if (current as Dictionary).has(key):
-			return (current as Dictionary)[key]
-		for wrapper in ["any", "all", "none"]:
-			if (current as Dictionary).has(wrapper):
-				stack.append((current as Dictionary)[wrapper])
-	return 1
+	return int(ctx.get("cost_count", 0)) if bool(ctx.get("is_cost", false)) else 0
 
 
 ## The rite definition's cards_slot entry for a 1-based slot number.
@@ -2886,15 +2838,7 @@ func source_total_cards() -> Array:
 ## [SRC: CostCondition.c @ IsSatisfied 0x3f6160 enumerates player+0x88;
 ##       PlayerExtensions.GetHandCards vs GetTotalCards are separate reads.]
 func cost_candidate_cards() -> Array:
-	var uids: Array = card_instances.keys()
-	uids.sort()
-	var out: Array = []
-	for raw_uid in uids:
-		var instance = card_instances[raw_uid]
-		if instance == null or instance.zone not in ["hand", "sudan", "slot"]:
-			continue
-		out.append(instance)
-	return out
+	return source_player_cards()
 
 
 ## Single-tag lookup on the effective GetTag row. Callers must not read

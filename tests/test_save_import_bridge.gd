@@ -238,3 +238,18 @@ func test_corpus_auto_save_imports_and_diffs_clean() -> void:
 		if not bool(row["pass"]):
 			failures.append(row["check"])
 	assert_eq(failures, [], "the corpus auto_save passes every same-instant check")
+
+
+func test_zero_count_original_fields_are_not_rewritten_as_one() -> void:
+	var original := _synthetic_original()
+	original.cards[3].count = 0
+	original.sudan_card_pool[0].count = 0
+	var local_db := _local_db()
+	var imported := OriginalSaveImporter.import_save(original, local_db)
+	var state = imported.state
+	assert_eq(state.get_card_instance(199).count, 0)
+	assert_eq(state.sudan_deck[0].count, 0)
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, local_db)
+	assert_eq(restored.get_card_instance(199).count, 0)
+	assert_eq(restored.sudan_deck[0].count, 0)

@@ -596,4 +596,18 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 
 ### 2026-09-11 接手验收修订
 
+本轮 A19 先修共享成本上下文：`CostCondition.IsSatisfied 0x3f6160` 按 `ConditionContext.is_adsorb@0x20` 分单卡/枚举，`is_first_drop@0x22` 决定取 Min；`PostProcess 0x3f6520` 按 Compare modifier 建立 Min/Max，不能丢比较符。独立证据 `dump.cs:383846` 上下文布局、`384167` ConditionModifier 枚举及 `Compare.c 0x3852a0/0x384eb0`。当前所有成本走枚举且忽略操作符的实现与源冲突，生产落槽接线必须在此边界修正后进行。
+
 DeepSeek 第十九至三十六批已在工作区，接手记录见 [DeepSeekHandoffReview](audit/DeepSeekHandoffReview.md)。A19 付款辅助函数未接游戏拖卡，原 CardStack 已占槽合堆分支及完整条件上下文仍缺，不能按第36批文档标题认定完成；A21 原 CardSlotController.CardStack/DropCard 已有配音调用点，需继续追 SFxManager 选择与播放链。详细更正见 [CostPaymentExecutionCorrection](audit/CostPaymentExecutionCorrection.md)。
+
+第38批 A19 生产接线：按 CardSlotController.CardStack 0x53b0a0 的 is_cost（而非 CanPutCard 布尔）门实现部分入金；已占槽同类卡用合并后的 current 身份、非首放上下文重新算 cost_count 后回退余量。CardDropManager.DropCard 0x4ef4f0 先尝试 CardStack 再 TryUpdateCard/DropCard。dump.cs current@0x148 与 ConditionContext.is_first_drop@0x22 为独立结构证据。
+
+第38批验收见 [SlotCostInteractionCorrection](audit/SlotCostInteractionCorrection.md)：正成本入槽已接生产拖卡，原配置5000005的部分放入/补齐/超额保留与1280/1920实际GUI输入通过。A19仍有零成本、TryUpdateCard完整替换链及表现演出缺口，不标全完成。
+
+第39批 A19：TryUpdateCard 0x598140 + dump.cs:324304 原型，CardSlotController.RecoveryCard 0x53c660 的 AddCard旧卡回手链。修复指定槽替换被自制自动路由截走，槽验证使用去掉目标槽的快照，拒绝时恢复引用。
+
+第39批验证：指定槽替换与拒绝不改投已接，56测试/278断言及1280/1920实际GUI输入通过，见 [SlotReplacementCorrection](audit/SlotReplacementCorrection.md)。零成本等剩余边界继续开放。
+
+第40批 A19数量边界：CardSlotController.CardStack 0x53b0a0 在cost_count=0时Copy后set_count(0)；Card.set_count 0x383e80直接写字段并通知，无最小1钳制。Card.count@0x20、CostCondition.PostProcess 0x3f6520的Min=0分支为独立信号。普查当前槽配置零个零成本入口，故为底层边界修复，不宣称当前内容运行可达。移除存档/导入/池对象的最小1转写，并允许0成本切片。
+
+第40批收尾见 [ZeroCountBoundaryCorrection](audit/ZeroCountBoundaryCorrection.md)：54测试/389断言通过；零数量不再在导入/读档中变成1，HasTag堆叠门按有效值判断。当前配置零成本入口0处，清单保留其余未完成项。

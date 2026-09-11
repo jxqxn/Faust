@@ -3,7 +3,7 @@
 > **2026-09-11 接手复核：本批只落地辅助函数，尚未接入游戏，不能标作 A19 已完成。**
 > `ui/rite_view.gd::_place_card_in_slot` 仍直接调用 `add_card_to_slot`；下文“三分支”只覆盖 `CardStack` 的部分路径。
 > 原方法 `current@0x148` 非空且同配置 ID、双方可堆叠时，先合并数量，再调用 `CanPutCard`，按 `is_cost/cost_count` 回滚或分配余量；本批未移植此分支。
-> `slot_cost_needed` 的 DFS 仅提取第一个 cost 键，不保留完整 any/all/none 条件求值语义，不可直接作为落槽裁判。
+> 第37批已移除 `slot_cost_needed` 的首键 DFS，改为完整条件求值，并纠正普通成本被错误枚举的问题，详 [CostContextCorrection.md](CostContextCorrection.md)；付款执行接线仍未完成。
 > 此外 `CardStack` 对不可堆叠卡返回 false；整张落槽属于另外的 `DropCard(0x53b720)` 路径，不能归入 CardStack 已验证分支。
 > 证据：直接重读 `CardSlotController.c @ CardStack 0x53b0a0 / DropCard 0x53b720`；`dump.cs:317918` 的 current/Slot/panel 字段与 `dump.cs:318014` 方法签名。
 > 方法尾部存在 `SFxManager.SFxPlayCharacterDub` 调用，故“卡牌配音触发时机全在未导出控制器里”也不成立；完整音频选择算法仍需另查。

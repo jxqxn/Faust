@@ -630,6 +630,11 @@ static func _selector_condition_cards(selector: String, st, ctx: Dictionary) -> 
 	if st == null:
 		return out
 	if selector.begins_with("s") and selector.substr(1).is_valid_int():
+		if bool(ctx.get("use_slot_snapshot", false)):
+			for entry in ctx.get("slot_entries", []):
+				if str(entry.get("slot", "")) == selector:
+					out.append({"id": int(entry.get("card_id", 0)), "card_uid": int(entry.get("card_uid", 0))})
+			return out
 		if st.has_method("cards_in_slot"):
 			return st.cards_in_slot(selector.substr(1).to_int(), int(ctx.get("rite_uid", 0)))
 		return out
@@ -720,6 +725,9 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 	# plain "s1" -> presence (rite-agnostic, like the original SlotHasTag
 	# presence check); the aggregate selectors use their own resolution.
 	if kk.begins_with("s") and kk.length() > 1 and kk.substr(1).is_valid_int():
+		if bool(ctx.get("use_slot_snapshot", false)):
+			var snapshot_present := not _selector_condition_cards(kk, st, ctx).is_empty()
+			return snapshot_present if not negate else not snapshot_present
 		var present: bool = st.slot_has_cards(kk.substr(1).to_int())
 		return present if not negate else not present
 	var selector_present := not _selector_condition_cards(kk, st, ctx).is_empty()
@@ -917,52 +925,74 @@ static func eval_rare(val: Variant, ctx: Dictionary) -> bool:
 	return int(card.get("rare", 0)) == int(val)
 
 
+# [SRC: CostCondition.IsSatisfied 0x3f6160; ConditionContext fields
+# main@0x10/is_adsorb@0x20/is_first_drop@0x22, dump.cs:383846.]
 static func eval_cost(k: String, val: Variant, ctx: Dictionary) -> bool:
-	# CostCondition is not "does the acting card carry this tag": it walks
-	# Player.cards@0x88 in order, keeps every card the inner Compare accepts,
-	# accumulates Card.count until the requirement is met and records that
-	# selection as need_cost_cards. The requirement's lower bound is the first
-	# element of a two-element value; a scalar is that same lower bound.
-	# [SRC: decompiled/CostCondition.c @ IsSatisfied (RVA 0x3f6160): outer
-	#       List_Enumerator over player+0x88, FUN_1800032d0 add to the list,
-	#       iVar10 += card.count@0x20, stop at the min; SetNeedCosts(count,
-	#       cards); return iVar8 <= iVar10. ConditionContext cost fields:
-	#       dump.cs is_cost@0x60 / cost_count@0x64 / need_cost_cards@0x68.]
 	var st = ctx.get("state")
 	var db = ctx.get("db")
-	if st == null or db == null or not st.has_method("cost_candidate_cards"):
+	if st == null or db == null:
 		return false
 	var parsed := cost_selector(k)
-	parsed["min"] = int(val[0]) if val is Array and not (val as Array).is_empty() else int(val)
-	parsed["max"] = int(val[1]) if val is Array and (val as Array).size() >= 2 else 2147483647
-	var cards: Array = st.cost_candidate_cards()
+	parsed.merge(cost_bounds(str(parsed.op), val), true)
+	if not bool(ctx.get("is_adsorb", false)):
+		var card: Dictionary = ctx.get("acting_card", {})
+		var uid := int(ctx.get("acting_card_uid", card.get("instance_uid", 0)))
+		var instance = st.get_card_instance(uid)
+		if instance == null or not _cost_card_matches(parsed, instance, db, st):
+			return false
+		var total := int(instance.count)
+		var enough := total >= int(parsed.min)
+		var needed := total
+		if enough:
+			needed = mini(total, int(parsed.max))
+			if bool(ctx.get("is_first_drop", false)):
+				needed = int(parsed.min)
+		_set_need_costs(ctx, needed, null)
+		return enough
 	var total := 0
 	var selected: Array = []
-	for card in cards:
-		if card == null:
+	var stop_at := int(parsed.max) if int(parsed.max) != 2147483647 else int(parsed.min)
+	for instance in st.source_player_cards():
+		if not _cost_card_matches(parsed, instance, db, st):
 			continue
-		if not _cost_card_matches(parsed, card, db, st):
-			continue
-		selected.append(card)
-		total += maxi(int(card.count), 1)
-		if total >= int(parsed["min"]):
+		selected.append(instance)
+		total += int(instance.count)
+		if total >= stop_at:
 			break
-	ctx["need_cost_cards"] = selected
-	ctx["cost_count"] = cost_count_for(parsed, total)
-	return total >= int(parsed["min"])
+	_set_need_costs(ctx, cost_count_for(parsed, total), selected)
+	return total >= int(parsed.min)
 
 
-## Split a `cost.<selector><op>` key into its selector, dropping the op suffix.
-## The op is part of the inner Compare; the gate only needs the lower bound.
-## [SRC: CostCondition.c @ .ctor (RVA 0x3f6880) -> Compare.Update(param_3)]
+# [SRC: ConditionContext.SetNeedCosts 0x385540 writes all three fields,
+# including when a matching candidate has insufficient count.]
+static func _set_need_costs(ctx: Dictionary, count: int, cards: Variant) -> void:
+	ctx["is_cost"] = true
+	ctx["cost_count"] = count
+	ctx["need_cost_cards"] = cards
+
+
 static func cost_selector(k: String) -> Dictionary:
 	var body := k.substr("cost.".length()) if k.begins_with("cost.") else k
 	for op in OPS:
-		var idx := body.find(op)
-		if idx > 0:
-			body = body.substr(0, idx)
-			break
-	return {"name": body}
+		if body.ends_with(op):
+			return {"name": body.left(-op.length()), "op": op}
+	# Unlike Compare.Update(null), the no-suffix constructor never calls Update:
+	# Compare.ctor 0x3852a0 initializes modifier to 0 (exact Min=Max).
+	return {"name": body, "op": "="}
+
+
+# [SRC: CostCondition.PostProcess 0x3f6520; Compare.Update 0x384eb0;
+# ConditionModifier EQUAL=2, LESS=4, GREATER=8, dump.cs:384167.]
+static func cost_bounds(op: String, value: Variant) -> Dictionary:
+	if value is Array and value.size() >= 2:
+		return {"min": int(value[0]), "max": int(value[1])}
+	var amount := int(value[0]) if value is Array and not value.is_empty() else int(value)
+	match op:
+		">": return {"min": amount + 1, "max": 2147483647}
+		">=": return {"min": amount, "max": 2147483647}
+		"<": return {"min": 0, "max": amount - 1}
+		"<=": return {"min": 0, "max": amount}
+	return {"min": amount, "max": amount}
 
 
 ## The count the payer hands over, i.e. ConditionContext.cost_count@0x64. This
@@ -994,8 +1024,8 @@ static func _cost_card_matches(parsed: Dictionary, instance, db, state) -> bool:
 	var name := str(parsed.get("name", ""))
 	if name.is_empty() or instance == null:
 		return false
-	if name.is_valid_int():
-		return int(instance.card_id) == name.to_int()
+	if name.is_valid_int() and name.to_int() >= 2000000:
+		return int(instance.card_id) == name.to_int() and int(state.effective_card_tags(int(instance.uid), db).get("遗世", 0)) <= 0
 	if not state.has_method("effective_card_tags"):
 		return false
 	return int(state.effective_card_tags(int(instance.uid), db).get(name, 0)) > 0
