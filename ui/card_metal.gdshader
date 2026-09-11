@@ -1,62 +1,108 @@
 shader_type canvas_item;
 render_mode unshaded;
 
-// Source maps and position offsets are preserved. The lighting lobe is a
-// Godot approximation: the exported CardShow shader has no original body.
-//
-// Colour-space note: a custom canvas_item shader receives TEXTURE and its
-// sampler uniforms already decoded from sRGB to linear, while the default 2D
-// pipeline works in sRGB. Every sample is re-encoded with to_display() so the
-// card keeps the authored albedo/normal/metallic values (measured: without it
-// the surface renders about 2x darker than the same TextureRect without a
-// custom shader).
-uniform sampler2D normal_map : filter_linear;
-uniform sampler2D metal_map : filter_linear;
-// [SRC: Standard shader _DETAIL_MULX2 with _DetailAlbedoMap at UV0
-//       (_UVSec: 0); enabled for copper/silver/gold, absent for stone.]
-uniform sampler2D detail_map : filter_linear;
+// [SRC: sharedassets0.assets CardShow/Default, fragment60/75, vertex14;
+// docs/ui_layout/shader_evidence. Gamma BRDF, not a fitted light lobe.]
+uniform sampler2D normal_map : filter_linear, repeat_disable;
+uniform sampler2D metal_map : filter_linear, repeat_disable;
+uniform sampler2D detail_map : filter_linear, repeat_disable;
+uniform sampler2D emission_map : filter_linear, repeat_disable;
 uniform bool has_detail = false;
+uniform vec3 emission_color = vec3(0.0);
 uniform float bump_scale = 0.3680556;
 uniform float gloss_scale = 0.75;
-uniform vec2 normal_offset = vec2(0.025, 0.3);
-// Unity's Standard shader lights the card in the scene, so the authored
-// albedo arrives at the screen brighter than the raw texture. The exported
-// CardShow shader has no body (DummyShaderTextExporter), so this ambient
-// response is calibrated against docs/ui_layout/original_runtime/desktop.jpg:
-// the same card frame patches measure ~1.5x brighter there than the raw
-// albedo, with a stronger blue lift.
-// Uniform is intentionally NOT source_color: it is a >1.0 lighting multiplier,
-// not an sRGB colour, and the sRGB hint would clamp it to 1.0.
-uniform vec3 material_light = vec3(2.2, 2.5, 4.0);
-// The original frame is lit from above and its metallic ornaments sit darker
-// than a flat albedo multiply: fitted over eight frame-only bands of one card
-// (docs/ui_layout/original_runtime/desktop.jpg), the top-to-bottom response
-// falls from 1.21x to 0.79x, the metallic term removes 30% of the diffuse at
-// metal.r=1, and the specular lobe contributes 0.3 of the reflected colour.
-// Fitting these three together cuts the per-band error from ~21% to ~15%
-// while keeping every whole-card average within 6% of the original.
-uniform float vertical_light_falloff = 0.2065;
-uniform float metallic_diffuse_loss = 0.3;
-uniform float specular_strength = 0.3;
+// Scene-authored inputs: GameScene Light4870/Transform4011 and MainUI
+// Canvas7581 (plane100), camera4416 (ortho5). Tangent space has forward +Z.
+// Light4870 is the ONLY light that can reach a card: its culling mask
+// 2147483895 (0x800000F7) has bit 5 set, and cards sit on Unity layer 5.
+// Light4869 is layer-30 only (mask 1<<30) and must not shade cards -- it is the
+// Sudan dice camera's light. Both are directional, white, intensity 1.
+// The z sign below is unresolved (see docs/audit/CardShaderEnvironmentCorrection.md):
+// the vector equals the source quaternion's forward, but the clone's tangent
+// space is not the source's, so no negation is applied without a same-frame check.
+uniform vec3 light_direction = vec3(-0.08418598, 0.25881905, 0.96225019);
+uniform vec3 light_color = vec3(1.0);
+uniform float camera_half_height = 5.0;
+uniform float canvas_plane_distance = 100.0;
+// Flat RenderSettings ambient, now source-backed rather than approximated:
+// GameScene.unity RenderSettings has m_AmbientMode:3 (Flat), so the only
+// contribution is m_AmbientSkyColor = (0.212, 0.227, 0.259) at
+// m_AmbientIntensity:1 -- no SH probe is baked (m_EnableBakedLightmaps:0 /
+// m_EnableRealtimeLightmaps:0). The equator/ground colours are unused in Flat
+// mode, so do not substitute them.
+uniform vec3 ambient_diffuse = vec3(0.212, 0.227, 0.259);
+// Exactly zero, and not merely unmeasured: m_SkyboxMaterial and
+// m_CustomReflection are both {fileID: 0}, so Unity has no cubemap to bind.
+uniform vec3 environment_specular = vec3(0.0);
+// Verification switch; never enabled by CardWidget.
+uniform bool sample_only = false;
+varying vec4 canvas_modulate;
+varying vec2 canvas_tangent;
 
-vec3 to_display(vec3 linear_value) {
-	return pow(max(linear_value, vec3(0.0)), vec3(0.5));
+float pow5(float value) {
+    float square = value * value;
+    return square * square * value;
+}
+
+void vertex() {
+    canvas_modulate = COLOR;
+    canvas_tangent = normalize(MODEL_MATRIX[0].xy);
 }
 
 void fragment() {
-	vec4 base = vec4(to_display(texture(TEXTURE, UV).rgb), texture(TEXTURE, UV).a) * COLOR;
-	if (has_detail) {
-		base.rgb *= to_display(texture(detail_map, UV).rgb) * 2.0;
-	}
-	vec3 normal = to_display(texture(normal_map, UV).rgb) * 2.0 - 1.0;
-	normal = normalize(vec3(normal.xy * bump_scale + normal_offset, max(normal.z, 0.2)));
-	vec4 metal = vec4(to_display(texture(metal_map, UV).rgb), texture(metal_map, UV).a);
-	vec3 half_vector = normalize(vec3(0.06, 0.32, 1.0));
-	float smoothness = clamp(metal.a * gloss_scale, 0.0, 1.0);
-	float specular = pow(max(dot(normal, half_vector), 0.0), mix(16.0, 160.0, smoothness));
-	vec3 reflection = mix(vec3(0.04), base.rgb, metal.r);
-	base.rgb = base.rgb * material_light;
-	float vertical_light = 1.0 + vertical_light_falloff * (0.5 - UV.y) * 2.0;
-	base.rgb = base.rgb * (1.0 - metallic_diffuse_loss * metal.r) * vertical_light + reflection * specular * specular_strength;
-	COLOR = base;
+    vec4 base = texture(TEXTURE, UV) * canvas_modulate;
+    if (sample_only) {
+        COLOR = base;
+    } else {
+        if (has_detail) {
+            base.rgb *= texture(detail_map, UV).rgb * 2.0;
+        }
+        vec4 metal = texture(metal_map, UV);
+        // AssetRipper PNGs already unpack A/G to R/G. Verified against
+        // original Texture2D114/100/116; do not decode DXT5nm a second time.
+        vec2 xy = (texture(normal_map, UV).rg * 2.0 - 1.0) * bump_scale;
+        float z = sqrt(1.0 - min(dot(xy, xy), 1.0));
+        vec3 n = normalize(vec3(xy, z));
+        // Canvas rotation: Unity y-up vs Godot y-down.
+        n.xy = mat2(vec2(canvas_tangent.x, -canvas_tangent.y),
+                    vec2(canvas_tangent.y, canvas_tangent.x)) * n.xy;
+        float aspect = SCREEN_PIXEL_SIZE.y / SCREEN_PIXEL_SIZE.x;
+        vec2 camera_xy = vec2((SCREEN_UV.x - 0.5) * aspect, 0.5 - SCREEN_UV.y)
+            * (2.0 * camera_half_height);
+        vec3 v = normalize(vec3(-camera_xy, canvas_plane_distance));
+        vec3 l = normalize(light_direction);
+        vec3 sum = l + v;
+        vec3 h = sum * inversesqrt(max(dot(sum, sum), 0.001));
+        float nv = abs(dot(n, v));
+        float nl = clamp(dot(n, l), 0.0, 1.0);
+        float nh = clamp(dot(n, h), 0.0, 1.0);
+        float lh = clamp(dot(l, h), 0.0, 1.0);
+        float smoothness = metal.a * gloss_scale;
+        float perceptual_roughness = 1.0 - smoothness;
+        float roughness = max(perceptual_roughness * perceptual_roughness, 0.002);
+        float one_minus_reflectivity = 0.779084 * (1.0 - metal.r);
+        vec3 specular_color = mix(vec3(0.220916), base.rgb, metal.r);
+        vec3 diffuse_color = base.rgb * one_minus_reflectivity;
+        float fd90_minus_one = 2.0 * lh * lh * perceptual_roughness - 0.5;
+        float diffuse_term = (1.0 + fd90_minus_one * pow5(1.0 - nl))
+            * (1.0 + fd90_minus_one * pow5(1.0 - nv)) * nl;
+        float visibility = 0.5 / (nl * (nv * (1.0 - roughness) + roughness)
+            + nv * (nl * (1.0 - roughness) + roughness) + 0.00001);
+        float a2 = roughness * roughness;
+        float denominator = nh * nh * (a2 - 1.0) + 1.0;
+        float distribution = a2 * 0.318309886 / (denominator * denominator + 0.0000001);
+        float specular_term = sqrt(max(visibility * distribution * 3.141592654, 0.0001)) * nl;
+        if (dot(specular_color, specular_color) == 0.0) {
+            specular_term = 0.0;
+        }
+        vec3 direct_fresnel = mix(specular_color, vec3(1.0), pow5(1.0 - lh));
+        float grazing = clamp(smoothness + 1.0 - one_minus_reflectivity, 0.0, 1.0);
+        vec3 indirect_fresnel = mix(specular_color, vec3(grazing), pow5(1.0 - nv));
+        float surface_reduction = 1.0 - 0.28 * roughness * perceptual_roughness;
+        vec3 rgb = diffuse_color * (light_color * diffuse_term + ambient_diffuse)
+            + direct_fresnel * (light_color * specular_term)
+            + environment_specular * surface_reduction * indirect_fresnel
+            + texture(emission_map, UV).rgb * emission_color;
+        COLOR = vec4(rgb, base.a);
+    }
 }

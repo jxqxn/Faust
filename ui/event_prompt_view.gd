@@ -1,21 +1,10 @@
 extends Control
 
-## Shared prompt surface. Choice interaction maps OptionController;
-## geometry remains approximate (see docs/CORE_FIDELITY.md).
-##
-## [SRC: docs/ui_layout/PromptNew.md truth table; PromptController.Show
-##   0x58a020 (ProcessPlaceholders -> set_Text -> ForceRebuildLayoutImmediate);
-##   PromptControllerBase.ShowInternal 0x589890 (Full = config `full` sprite,
-##   IconGroup 3 slots via PromptIconController.SetIcon);
-##   OptionNewItem.prefab (option row: Text fs40 centred, row bg
-##   option_item_bg, hover option_item_highlight, root Button + Toggle).]
-##
-## Older screenshot-derived body/row/portrait rectangles below remain
-## approximate; they do not establish full source layout fidelity.
-##
-## Body height follows the source watcher; outer layout still keeps the
-## screenshot-derived minimum and horizontal insets. Full root LayoutGroup
-## allocation, portrait groups and TMP line metrics remain unported.
+## Shared PromptNew / OptionNew surface. Authored layout groups allocate
+## min/preferred/flexible space; image slots retain source native sizes.
+## [SRC: PromptController.Show 0x58a020 / OptionController.Show 0x576b50;
+## PromptControllerBase.ShowInternal 0x589890; original prefabs.]
+## Godot/TMP glyph metrics and built-in UI sprite styling remain distinct.
 
 signal choice_clicked(choice_key: String, choice_value: Variant)
 signal confirm_clicked
@@ -24,31 +13,22 @@ const DESIGN_SIZE := Vector2(3840, 2160)
 const SOURCE_ART := "res://assets/original/ui/"
 const SourceText = preload("res://ui/source_text_style.gd")
 const SourceRichText = preload("res://ui/source_rich_text.gd")
+const SourceAxis = preload("res://ui/source_layout_axis.gd")
 const MAX_BODY_HEIGHT := 1300.0
 const MAX_OPTION_BODY_HEIGHT := 1100.0
 const OPTION_GAP := 20.0
 
-# OptionBG: authored width 2705; height = runtime layout -> 🟡 960
-# (screenshot measure: panel height/width ≈ 0.355 => 2705 * 0.355 ≈ 960).
-const OPTION_BG_SIZE := Vector2(2705, 960)
-# Full mask: stretch offsets left 38 / right -38 / bottom 80 / top -52
-# (anchors (0,0)-(1,1), pos (0,14), sizeDelta (-76,-132)).
-const FULL_RECT := Rect2(38, 52, 2629, 828)
-# Border: decorate 250x323, anchors (1,0), pos (-126,164), pivot (0.5,0.5).
-const BORDER_RECT := Rect2(2454, 634.5, 250, 323)
-# Confirm: rite_op_confirm 325x158, anchors (1,0), pos (-483,73).
-const CONFIRM_RECT := Rect2(2059.5, 808, 325, 158)
-# Body text: screenshot-derived insets (text starts ~280 in from the panel
-# left, ~150 down, spans ~1820 wide) — 🟡 until the runtime rect is
-# measurable; the authored Content row is only a one-line sample.
-const TEXT_RECT := Rect2(280, 150, 1820, 300)
-# Option rows: full-width rows under the ContentGroup (vertical layout
-# spacing 50); row height 100 and stride 150 are screenshot-derived 🟡.
-const OPTION_ROW_SIZE := Vector2(2200, 100)
-const OPTION_ROW_STRIDE := 120.0
-const OPTION_ROW_Y0 := 320.0
-# Portrait: screenshot-derived 🟡 (right side, bottom-anchored block).
-const PORTRAIT_RECT := Rect2(2147, 440, 400, 500)
+# Authored rects are seeds; _layout_content resolves preferred-size dimensions.
+const OPTION_BG_SIZE := Vector2(2705, 0)
+const FULL_RECT := Rect2(38, 52, 2629, 0)
+const BORDER_RECT := Rect2(2454, 0, 250, 323)
+const CONFIRM_RECT := Rect2(2059.5, 0, 325, 158)
+const TEXT_RECT := Rect2(0, 0, 2000, 0)
+# Image ILayoutElement: option_item_bg 1424x112, PPU100, Canvas reference100.
+const OPTION_ROW_SIZE := Vector2(2000, 112)
+const OPTION_ROW_STRIDE := 132.0
+const OPTION_ROW_Y0 := 0.0
+const PORTRAIT_RECT := Rect2(0, 0, 0, 0)
 
 var _canvas: Control
 var _panel: Control
@@ -89,6 +69,9 @@ func show_prompt(display: Dictionary, _on_choice: Callable) -> void:
 	var portrait: Texture2D = display.get("icon", null)
 	if portrait != null and _portrait != null:
 		_portrait.texture = portrait
+		_portrait.size = portrait.get_size()
+		_portrait.position = Vector2(-_portrait.size.x * 0.5, -_portrait.size.y)
+		_icon_slots[1].show()
 	if display.has("resolved_icons"):
 		_show_icons(display.resolved_icons)
 	call_deferred("_layout_content")
@@ -115,6 +98,7 @@ func clear_prompt() -> void:
 	if _portrait != null:
 		_portrait.texture = null
 	for slot in _icon_slots:
+		slot.hide()
 		for child in slot.get_children():
 			if child == _portrait:
 				continue
@@ -196,7 +180,7 @@ func _build_canvas() -> void:
 	# RichTextLabel uses normal_font_size (font_size is a Label-only key).
 	# The previous override passed a getter test but did not affect glyphs.
 	SourceText.apply(_body, "@PROMPT_TEXT")
-	_body.add_theme_color_override("default_color", Color("#eee2c4"))
+	_body.add_theme_color_override("default_color", Color(0.86274517, 0.8117648, 0.6039216, 1))
 	_body.mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel.add_child(_body)
 
@@ -222,6 +206,7 @@ func _build_canvas() -> void:
 		slot.name = "PromptIconSlot%d" % (i + 1)
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_panel.add_child(slot)
+		slot.hide()
 		_icon_slots.append(slot)
 	_icon_slots[1].add_child(_portrait)
 
@@ -234,6 +219,7 @@ func _show_icons(presentation: Dictionary) -> void:
 		var data: Variant = slots[i]
 		if not data is Dictionary:
 			continue
+		_icon_slots[i].show()
 		if data.has("texture"):
 			var portrait := _portrait if i == 1 else TextureRect.new()
 			if i != 1:
@@ -245,6 +231,9 @@ func _show_icons(presentation: Dictionary) -> void:
 				portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				_icon_slots[i].add_child(portrait)
 			portrait.texture = data.texture
+			if portrait.texture != null:
+				portrait.size = portrait.texture.get_size()
+				portrait.position = Vector2(-portrait.size.x * 0.5, -portrait.size.y)
 		for entry in data.get("cards", []):
 			var widget := CardWidget.new()
 			widget.name = "PromptCard%d" % int(entry.card.id)
@@ -263,55 +252,88 @@ func _process(_delta: float) -> void:
 		_layout_content()
 
 
-# [SRC: ScrollViewContentHightWatcher.LateUpdate 0x4342c0,
-# dump.cs:420520; PromptNew.prefab MaxHeight=1300.]
-# Only the body height watcher is mapped here. The surrounding horizontal
-# layout and row metrics still retain the documented approximation.
+# [SRC: PromptNew/OptionNew root Top(min100,flex3500), Bottom(min400,flex2000);
+# OptionBG reverse horizontal group L200/R100/spacing100; ContentGroup preferred
+# width2000. Options spacing20; option_item_bg Image preferred height112.
+# ScrollViewContentHightWatcher.LateUpdate 0x4342c0 caps body at1300/1100.]
 func _layout_content() -> void:
 	if _body == null or _options_box == null:
 		return
+	var icon_count := 0
+	for slot in _icon_slots:
+		if slot.visible:
+			icon_count += 1
+	# Pos children use width400; IconGroup spacing=-200. Empty group stays active.
+	var icon_width := float(icon_count * 400 - maxi(0, icon_count - 1) * 200)
+	var horizontal := SourceAxis.allocate(2705, [icon_width, 0], [icon_width, 2000],
+		[0, 0], 100, 200, 100, 0.5, true)
+	var content_x: float = horizontal.positions[1]
+	var content_width: float = horizontal.sizes[1]
+	_body.size.x = content_width
 	_last_content_height = _body.get_content_height()
-	# OptionNew.prefab:1780 is 1100; PromptNew.prefab:1790 is 1300.
-	# ConfirmNew has a different non-scroll layout, still pending migration.
-	var height_limit := MAX_OPTION_BODY_HEIGHT if _has_choices and not _direct_choices else MAX_BODY_HEIGHT
-	_body.size.y = minf(float(_last_content_height), height_limit)
+	var limit := MAX_OPTION_BODY_HEIGHT if _has_choices and not _direct_choices else MAX_BODY_HEIGHT
+	var body_height := float(_last_content_height) if _direct_choices else minf(float(_last_content_height), limit)
+	var count := _options_box.get_child_count() if _has_choices and not _direct_choices else 0
+	var option_gap_total := float(maxi(0, count - 1)) * OPTION_GAP
+	var option_height := count * OPTION_ROW_SIZE.y + option_gap_total
+	var top_padding := 200.0 if _has_choices and not _direct_choices else 150.0
+	var content_min := option_gap_total + 50.0 if _has_choices and not _direct_choices else 100.0
+	var content_pref := body_height + option_height + 50.0 if _has_choices and not _direct_choices else body_height + 100.0
+	var panel_min := top_padding + 200.0 + content_min
+	var panel_pref := top_padding + 200.0 + content_pref
 	if _direct_choices:
-		# [SRC: ConfirmNew.prefab ContentGroup + ContentSizeFitter; ConfirmController.Show
-		# 0x53fc30 calls ForceRebuildLayoutImmediate. Confirm has no ScrollView and its
-		# short confirmation panel shrinks around the translated content.]
-		_body.position.x = (OPTION_BG_SIZE.x - 2000.0) * 0.5
-		_body.size.x = 2000.0
-		for row in _options_box.get_children():
-			var accepted := str(row.get_meta("choice_key")) == "confirm_ok"
-			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 145.1)
-		return
-	var row_y := maxf(OPTION_ROW_Y0, _body.position.y + _body.size.y + 50.0)
-	var row_gap := 50.0 if _direct_choices else OPTION_GAP
-	for row in _options_box.get_children():
-		if _direct_choices:
-			continue
-		row.position.y = row_y
-		row_y += row.size.y + row_gap
-	var bottom := _body.position.y + _body.size.y
-	if _options_box.get_child_count() > 0 and not _direct_choices:
-		bottom = row_y - row_gap
-	_panel.size.y = maxf(OPTION_BG_SIZE.y, bottom + 200.0)
-	_panel.position.y = (DESIGN_SIZE.y - _panel.size.y) * 0.5
+		_panel.size.y = panel_pref
+		_panel.position.y = (DESIGN_SIZE.y - panel_pref) * 0.5
+	else:
+		var root_axis := SourceAxis.allocate(DESIGN_SIZE.y, [100, panel_min, 400],
+			[100, panel_pref, 400], [3500, 0, 2000])
+		_panel.size.y = root_axis.sizes[1]
+		_panel.position.y = root_axis.positions[1]
+	var inner_height := _panel.size.y - top_padding - 200.0
+	var content_axis: Dictionary
+	if _has_choices and not _direct_choices:
+		content_axis = SourceAxis.allocate(inner_height, [0, option_gap_total],
+			[body_height, option_height], [0, 0], 50, 0, 0, 0)
+		_body.position = Vector2(content_x, top_padding + content_axis.positions[0])
+		_body.size.y = content_axis.sizes[0]
+		var rows_min: Array = []
+		var rows_pref: Array = []
+		var rows_flex: Array = []
+		for i in count:
+			rows_min.append(0.0)
+			rows_pref.append(OPTION_ROW_SIZE.y)
+			rows_flex.append(0.0)
+		var rows := SourceAxis.allocate(content_axis.sizes[1], rows_min, rows_pref,
+			rows_flex, OPTION_GAP, 0, 0, 0)
+		for i in count:
+			var row := _options_box.get_child(i) as Control
+			row.position = Vector2(content_x, top_padding + content_axis.positions[1] + rows.positions[i])
+			row.size = Vector2(content_width, rows.sizes[i])
+	else:
+		# Two zero-height flexible spacers surround the body in Prompt/Confirm.
+		content_axis = SourceAxis.allocate(inner_height, [0, 0, 0], [0, body_height, 0],
+			[1, 0, 1], 50)
+		_body.position = Vector2(content_x, top_padding + content_axis.positions[1])
+		_body.size.y = content_axis.sizes[1]
 	_panel.get_node("PromptBG").size = _panel.size
 	var full := _panel.get_node("Full") as Control
 	full.size.y = _panel.size.y - 132.0
 	full.get_node("RuntimeBackground").size.y = full.size.y + 1560.0 * (100.0 / 74.963394)
 	_panel.get_node("Border").position.y = _panel.size.y - 325.5
-	# PromptNew IconGroup children are 400 wide with -200 spacing. The group
-	# origin still uses the documented host approximation pending root layout.
-	for i in _icon_slots.size():
-		_icon_slots[i].position = Vector2(PORTRAIT_RECT.get_center().x + (i - 1) * 200.0, _panel.size.y - 20.0)
+	var icon_index := 0
+	for slot in _icon_slots:
+		if not slot.visible:
+			continue
+		# IconGroup bottom padding=-100, zero-height Pos; Holder height100.
+		slot.position = Vector2(horizontal.positions[0] + 200.0 + icon_index * 200.0,
+			_panel.size.y - 150.0)
+		icon_index += 1
 	if _confirm_button != null:
 		_confirm_button.position.y = _panel.size.y - 152.0
 	if _direct_choices:
 		for row in _options_box.get_children():
 			var accepted := str(row.get_meta("choice_key")) == "confirm_ok"
-			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 145.1)
+			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 79.0)
 
 
 func _build_choices(choices: Dictionary) -> void:
@@ -363,8 +385,7 @@ func _build_choices(choices: Dictionary) -> void:
 		caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(caption)
 		caption.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		caption.offset_left = 24.0
-		caption.offset_right = -24.0
+		# OptionNewItem text stretches to the full root; no cloned24px inset.
 		if not _direct_choices:
 			SourceText.apply(caption, "@OPTION_ITEM_TEXT")
 		caption.add_theme_color_override("default_color", Color(0.8627451, 0.8117647, 0.6039216))
@@ -442,17 +463,17 @@ func _submit_prompt() -> void:
 		confirm_clicked.emit()
 
 
-func _row_style(file_name: String, texture_margin := 20.0) -> StyleBox:
+func _row_style(file_name: String, texture_margin := 0.0) -> StyleBox:
 	var path := SOURCE_ART + file_name
 	if ResourceLoader.exists(path):
 		var style := StyleBoxTexture.new()
 		style.texture = load(path) as Texture2D
 		style.texture_margin_left = texture_margin
 		style.texture_margin_right = texture_margin
-		style.texture_margin_top = 10
-		style.texture_margin_bottom = 10
-		style.content_margin_left = 24
-		style.content_margin_right = 24
+		style.texture_margin_top = 0
+		style.texture_margin_bottom = 0
+		style.content_margin_left = 0
+		style.content_margin_right = 0
 		return style
 	var flat := StyleBoxFlat.new()
 	flat.bg_color = Color(0.12, 0.10, 0.07, 0.86)
@@ -470,7 +491,6 @@ func _texture_rect(file_name: String, sprite_size: Vector2, _scale: float) -> Te
 	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	rect.stretch_mode = TextureRect.STRETCH_SCALE
 	rect.size = sprite_size
-	rect.custom_minimum_size = sprite_size
 	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return rect
 

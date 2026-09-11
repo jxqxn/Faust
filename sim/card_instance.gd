@@ -8,6 +8,15 @@ extends RefCounted
 
 var uid := 0
 var card_id := 0
+## Runtime tag DELTA only — not the whole tag row. The definition row
+## (CardNode.tag@0x58) always participates and is read from config at query
+## time; mutations land here only, exactly like the original, which never
+## writes the shared CardNode dictionary.
+## [SRC: dump.cs Card.tag@0x30 (runtime delta) vs CardNode.tag@0x58 (config);
+##       CardExtensions.c @ GetTag (RVA 0x3814a0) adds base + delta;
+##       CardExtensions.c @ AddTag (RVA 0x37e6a0) writes Card+0x30 only.]
+## Read tags through GameState.effective_card_tags / effective_card_tag_names
+## rather than this dictionary directly.
 var tags: Dictionary = {}
 var count := 1
 # Elapsed days toward the template's card_vanishing lifetime; counts up daily,
@@ -46,6 +55,11 @@ var equipped_slot := ""
 # [SRC: HasTagTips.c @ IsSatisfied (0x3fe3c0): card+0x50 -> tag tips list
 #       contains the translated tag]
 var tag_tips: Array[String] = []
+## True when this object was built from a payload whose `tags` are already the
+## runtime delta (v9+) or an original save. False marks a payload written by an
+## older clone, which stored the whole effective row in the config key domain;
+## SaveSystem rebases those on load.
+var tag_delta_loaded := true
 
 
 func _init(instance_uid: int = 0, definition_id: int = 0, initial_tags: Dictionary = {}) -> void:
@@ -58,7 +72,10 @@ func to_save_dict() -> Dictionary:
 	return {
 		"uid": uid,
 		"card_id": card_id,
+		# The original persists Card.tag@0x30, i.e. the delta; the definition
+		# row is config and is never written into a save.
 		"tags": tags.duplicate(true),
+		"tags_are_delta": true,
 		"count": count,
 		"life": life,
 		"is_lost": is_lost,
@@ -85,6 +102,7 @@ static func from_save_dict(data: Dictionary):
 		data.get("tags", {}) if data.get("tags", {}) is Dictionary else {}
 	)
 	instance.count = maxi(int(data.get("count", 1)), 1)
+	instance.tag_delta_loaded = bool(data.get("tags_are_delta", false))
 	instance.life = int(data.get("life", 0))
 	instance.is_lost = bool(data.get("is_lost", false))
 	instance.zone = str(data.get("zone", "hand"))

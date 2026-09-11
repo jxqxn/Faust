@@ -54,6 +54,11 @@ const SOURCE_ART := "res://assets/original/ui/"
 var _state = null
 var _items: Dictionary = {}  # event_id -> item root Control
 var _ordered_ids: Array = []  # list order = cached_event array order
+var _source_time := float(Time.get_ticks_usec()) / 1000000.0
+
+func _process(delta: float) -> void:
+	# Shared scaled host clock: item creation/retrigger must not restart phase.
+	_source_time += delta
 
 ## [SRC: GameController.c OnCachedListChanged 0x553b70 — snapshot the list,
 ## remove controllers whose id left it, instantiate new ones in list order,
@@ -181,17 +186,17 @@ static func _unity_rect(
 	return Rect2(unity_min.x, parent_size.y - unity_max.y, unity_max.x - unity_min.x, unity_max.y - unity_min.y)
 
 
-## A single CachedEvent item: the clickable wrapper + a decayed shake rooted
-## in Shaker.c (deterministic pseudo-noise stands in for Mathf.PerlinNoise;
-## the exact perlin curve is a registered visual approximation).
+## Source Shaker position path; CachedEvent rotationIntension is zero.
+## Native noise/decay evidence: docs/audit/ShakerSourceCorrection.md.
 class _CachedEventItem:
 	extends Control
+	const Math = preload("res://ui/source_shaker_math.gd")
 
 	signal item_clicked
 
 	var event_id := 0
 	var _shake_time := 0.0
-	var _shake_phase := 0.0
+	var _shake_velocity := 0.0
 	var _shake_seed := 0.0
 	var _time := 10.0
 	var _max_speed := 2.0
@@ -217,11 +222,11 @@ class _CachedEventItem:
 			item_clicked.emit()
 
 	func shake_trigger() -> void:
-		# [SRC: Shaker.c OnEnable — capture origin, randomize seed, arm time]
-		_origin = position
-		_shake_time = _time
-		_shake_seed = randf() * 2.0 - 1.0
-		_shake_phase = 0.0
+		# [SRC: Shaker.OnEnable 0x435690, dump.cs:420570 fields.]
+		_origin = global_position
+		_shake_time = _max_speed
+		_shake_seed = Math.f(Math.f(randf() * 10.0) - 5.0)
+		_shake_velocity = 0.0
 		set_process(true)
 
 	func shake_active() -> bool:
@@ -231,15 +236,14 @@ class _CachedEventItem:
 		if _shake_time <= 0.0:
 			set_process(false)
 			return
-		# [SRC: Shaker.c Update — time decays toward 0 (SmoothDamp maxSpeed),
-		# offset = perlin(seed, time*freq)*2-1 scaled by intensity * time-left
-		# added to origin.]
-		_shake_time = maxf(0.0, _shake_time - _max_speed * delta)
-		_shake_phase += delta * _freq
-		# Deterministic smooth pseudo-noise (2 sines) approximating perlin.
-		var n := Vector2(
-			sin(_shake_phase * 0.37 + _shake_seed * 6.2832),
-			sin(_shake_phase * 0.53 + _shake_seed * 12.5664)
-		)
-		var falloff := _shake_time / _time
-		position = _origin + Vector2(n.x * _amplitude.x, n.y * _amplitude.y) * falloff
+		advance_shake(delta, float(get_parent().get("_source_time")))
+
+	func advance_shake(delta: float, elapsed: float) -> void:
+		var step := Math.smooth_damp(_shake_time, _shake_velocity, delta, _time)
+		_shake_time = step.x
+		_shake_velocity = step.y
+		var world_offset := Math.position_offset(_shake_seed, elapsed, _freq, _shake_time, _amplitude)
+		# [SRC: GameScene Canvas7581 ScreenSpaceCamera -> Camera4416,
+		# orthographic size=5 (10 world units high). Unity Y is up.]
+		var units_to_viewport := get_viewport_rect().size.y / 10.0
+		global_position = _origin + Vector2(world_offset.x, -world_offset.y) * units_to_viewport

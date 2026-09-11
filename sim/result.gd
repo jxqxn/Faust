@@ -1,4 +1,4 @@
-﻿## Result DSL executor.
+## Result DSL executor.
 ## Dispatch table transcribed from dump.cs [Operation(...)] attributes (lines 312xxx-316xxx).
 ## Handles the result keys that matter for the core loop:
 ##   coin / 金币 (GenCoin: gold-card stack)     [spec sec 10.2]
@@ -19,22 +19,43 @@ const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
-	var deferred := {
+	var deferred: Dictionary = {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
 		"prompts": [], "loots": [], "delays": [], "sleeps": [], "ordered_effects": [],
+		"card_ops": [],
 	}
+	# The result panel is fed a CardOpContext stream in the original, so the
+	# operations this call actually performs are recorded here rather than
+	# re-derived from the result keys afterwards.
+	# [SRC: RiteResultPanelController.c @ AddCardOp 0x5a0e60; CardOpType 6304]
+	if state != null and state.has_method("begin_result_op_log"):
+		state.begin_result_op_log()
 	# Option branching: if the payload has an `option` key, convert it to a
 	# choose prompt and stash the case:opN subtrees as choices. The remaining
 	# keys are skipped in this LEGACY path. This is not source-equivalent for
 	# common siblings or numeric/default cases; events use OperationsSequence.
 	if result.has("option"):
 		_apply_option(result, deferred, context)
+		_collect_card_ops(state, deferred)
 		return deferred
 	for key in result:
 		var val = result[key]
 		_apply_key(key, val, state, db, deferred, context)
+	_collect_card_ops(state, deferred)
 	return deferred
+
+
+## Append the operations recorded during this call (and during deferred
+## application) to the payload the result panel consumes.
+static func _collect_card_ops(state, deferred: Dictionary) -> void:
+	if state == null or not state.has_method("drain_result_op_log"):
+		return
+	var ops: Array = state.drain_result_op_log()
+	if ops.is_empty():
+		return
+	for op in ops:
+		deferred["card_ops"].append(op)
 
 
 static func is_supported_key(key: String) -> bool:
@@ -97,6 +118,13 @@ static func is_supported_key(key: String) -> bool:
 
 static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary, context: Dictionary = {}) -> void:
 	var k := key.strip_edges()
+	# copy.s<n>: CopyCard runs CardExtensions.Copy once per count unit over every
+	# card the slot selector matches.
+	# [SRC: operations.json "copy\\.(.+)" -> CopyCard; CopyCard.c @ Do 0x4f51b0]
+	var copy_slot := k.substr("copy.".length()) if k.begins_with("copy.") else ""
+	if copy_slot.begins_with("s") and copy_slot.substr(1).is_valid_int():
+		_apply_copy_slot(k, val, state, db, context)
+		return
 	# Gold (GenCoin): coin / 金币 / g.coin. Grants a gold card object whose
 	# count is the op value (front of hand, fires card_born).
 	# [SRC: GenCoin.c Do 0x510b40]
@@ -156,13 +184,13 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 				state.insert_card_to_hand(new_uid, old_index, db)
 		return
 	# AddSudanCard appends every requested card to the existing (already
-	# shuffled) pool. The clone's pool host is the remaining-id deck.
+	# shuffled) pool, as a NEW Card object.
 	# [SRC: AddSudanCard.c @ Do; PlayerExtensions.c @ AddSudanCard 0x38c440]
 	if k == "sudan_card":
 		for raw_id in val if val is Array else [val]:
 			var sudan_id := int(raw_id)
 			if sudan_id > 0:
-				state.sudan_deck.append(sudan_id)
+				state.add_sudan_pool_card(sudan_id)
 		return
 	# ChooseOperations: shuffle the nested operations and execute N of them
 	# (default 1). This is a random settlement-text/branch pick, not a player
@@ -278,14 +306,28 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if _is_modify_rare_key(k):
 		_apply_modify_rare(k, val, state, db, context)
 		return
-	# rebirth.s<n>: reset the slotted card's life countdown to full. Active
-	# Sultan cards restore the difficulty lifetime; ordinary vanishing cards
-	# restart from life 0. (The original's second branch aligns an immortal
-	# tag's life to card_vanishing - round; that tag name is unrecoverable
-	# from metadata and no rebirth config targets it.)
-	# [SRC: RebirthSudanCard.c @ Do (0x519d60): OperationFilter over the
-	#       slotted cards; <Do>b__4_0 (0x51dec0): Card.set_life(0);
-	#       GameController.c @ UpdateSudanLife (0x55aeb0) refresh]
+	# rebirth.s<n>: reset the slotted card's life countdown. Two branches, keyed
+	# by the runtime tag "冻结" (freeze):
+	#   * no 冻结  -> Card.set_life(0)                     (a fresh draw)
+	#   * has 冻结 -> Card.set_life(card_vanishing − player.sudan_card_init_life)
+	#                 i.e. the SAME head start a new draw gets on this difficulty
+	#                 (GenSudanCard does card_vanishing − sudan_card_init_life).
+	# The freeze branch therefore resets a frozen Sultan card to the difficulty's
+	# head start -- 2 days on the hard profile (7 − 5), not to the full 7.
+	# [SRC: RebirthSudanCard.c @ Do (0x519d60): builds a sequence from the shared
+	#       cctor delegate + OperationFilter.Filter(rebirthOp+0x20) over the
+	#       context cards, then GameController.UpdateSudanLife (0x55aeb0);
+	#       RebirthSudanCard.<>c.c @ <Do>b__4_0 (0x51dec0): HasTag(card, "freeze")
+	#       false -> Card.set_life(card, 0); true -> reads card's CardNode
+	#       (+0x68) card_vanishing@0x60 and sets
+	#       Card.set_life(card, card_vanishing − player.sudan_card_init_life),
+	#       player+0x64 = Player.sudan_card_init_life (dump.cs).
+	#       The literal at DAT_1825ac9e8 resolves to "freeze" in
+	#       il2cpp_dump/stringliteral.json (0x25ac9e8), whose tag.json entry is
+	#       id 3019999 冻结 / code freeze -- the only tag that selects this branch.
+	#       All 8 configured rebirth writes target Sudan cards: rite 5000158 s2
+	#       (type:sudan), rite 5006558 s1 x2 (type:sudan), and rite 5000576 s1 x5
+	#       (is:2001019 神明的耐心).]
 	if k.begins_with("rebirth.s") and k.substr("rebirth.s".length()).is_valid_int():
 		var rebirth_slot := int(k.substr("rebirth.s".length()))
 		var rebirth_uid := int(context.get("rite_uid", state.active_rite_uid))
@@ -293,15 +335,17 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 			var rebirth_instance = state.get_card_instance(int(tc.get("card_uid", 0)))
 			if rebirth_instance == null:
 				continue
-			rebirth_instance.life = 0
+			var rebirth_lifetime: int = int(db.get_card(int(rebirth_instance.card_id)).get("card_vanishing", 7)) if db != null else 7
+			if _has_freeze_tag(rebirth_instance, state, db):
+				rebirth_instance.life = rebirth_lifetime - int(state.sudan_card_init_life)
+			else:
+				rebirth_instance.life = 0
 			for asc in state.active_sudan_cards:
 				if int(asc.card_uid) == int(rebirth_instance.uid):
-					# The countdown refreshes to the template deadline
-					# (UpdateSudanLife: card_vanishing − life), not the
-					# difficulty's init value.
+					# UpdateSudanLife refreshes the visible countdown to
+					# card_vanishing − life, so it can go negative under shelter.
 					# [SRC: GameController.c @ UpdateSudanLife 0x55aeb0 L6363-6372]
-					var rebirth_lifetime: int = int(db.get_card(int(asc.card_id)).get("card_vanishing", 7)) if db != null else 7
-					asc.days_left = rebirth_lifetime
+					asc.days_left = rebirth_lifetime - int(rebirth_instance.life)
 		return
 	if _is_change_card_copy_key(k):
 		_apply_change_card_copy(k, val, state, context)
@@ -329,7 +373,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	#       ChangeCardName.c @ Do (report 5 A5)]
 	if k.begins_with("table.change_card_name.") or k.begins_with("total.change_card_name.") \
 			or k.begins_with("table.change_card_text.") or k.begins_with("total.change_card_text."):
-		_apply_scoped_card_text(k, val, state, k.begins_with("total."))
+		_apply_scoped_card_text(k, val, state, db, k.begins_with("total."))
 		return
 	# Table/g equip ops: table.<selector>(+|-|~)equip / g.<selector>...
 	# [SRC: dump.cs:313833 "table\\.([^\\+\\-~]+)([\\+\\-~])equip" ->
@@ -881,7 +925,9 @@ static func _apply_bare_tag(k: String, val: Variant, state, db, context: Diction
 	for uid in _context_tag_targets(selector, state, db, context):
 		var instance = state.get_card_instance(uid)
 		if instance != null:
-			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+			_mutate_tag(
+				instance.tags, state, uid, tag_name, op, amount, can_add,
+				int(state.effective_card_tags(uid, db).get(tag_name, 0)), db)
 
 
 static func _generate_card(card_id: int, tag_modify: String, state, db) -> int:
@@ -901,21 +947,31 @@ static func _generate_card(card_id: int, tag_modify: String, state, db) -> int:
 			var tag_name := tag_modify.substr(0, op_idx)
 			var amount_text := tag_modify.substr(op_idx + 1)
 			var amount := int(amount_text) if amount_text.is_valid_int() else 1
-			TagSystem.apply(
+			_mutate_tag(
 				instance.tags,
+				state,
+				instance.uid,
 				tag_name,
 				TagSystem.op_from_char(tag_modify[op_idx]),
 				amount,
-				_tag_can_add(db, tag_name)
+				_tag_can_add(db, tag_name),
+				int(state.effective_card_tags(instance.uid, db).get(tag_name, 0)),
+				db
 			)
 	return instance.uid
 
 
 static func _apply_copy_slot(k: String, val: Variant, state, db, context: Dictionary) -> void:
-	# CopyCard generates fresh card copies per count unit. Whether the original
-	# clones runtime tags onto the copy is not yet source-confirmed; this clone
-	# creates a new instance from the card config, matching GenCard semantics.
-	# [SRC: decompiled/CopyCard.__c__DisplayClass4_0.c @ <Do>b__0 (RVA 0x507430)]
+	# CopyCard copies the matched Card OBJECT `count` times through
+	# CardExtensions.Copy: the copy is a new Card built from the definition id
+	# (PlayerExtensions.AddCard), then the source's runtime tag deltas are
+	# re-applied through AddTag, the source's count is written onto it, and its
+	# equipped cards are copied recursively.
+	# [SRC: CopyCard.__c__DisplayClass4_1.c @ <Do>b__1 (RVA 0x508090) calls
+	#       CardExtensions.Copy(card, false); GameController.__c.c owns the loop
+	#       over CopyCard's count; CardExtensions.c @ Copy (RVA 0x37f4e0):
+	#       AddCard(id) -> equips @+0x40 recursive Copy(...,true) -> tag @+0x30
+	#       AddTag loop -> count @+0x20 when the keep-count flag is false.]
 	var selector := k.substr("copy.".length())
 	var copies := maxi(int(val), 1)
 	for uid in _slot_target_uids(selector, state, context):
@@ -923,7 +979,7 @@ static func _apply_copy_slot(k: String, val: Variant, state, db, context: Dictio
 		if instance == null:
 			continue
 		for i in copies:
-			state.add_card_to_hand(instance.card_id, db)
+			state.copy_card_instance(instance.uid, db)
 
 
 static func _apply_delay_off(val: Variant, state, deferred: Dictionary) -> void:
@@ -953,45 +1009,26 @@ static func _apply_modify_rare(k: String, val: Variant, state, db, context: Dict
 		state.modify_card_rarity(uid, int(val), db)
 
 
-static func _apply_change_card_copy(k: String, val: Variant, state, context: Dictionary) -> void:
+static func _apply_change_card_copy(k: String, _val: Variant, state, context: Dictionary) -> void:
 	var parts := k.split(".", false)
 	if parts.size() != 3:
 		return
 	for uid in _slot_target_uids(str(parts[2]), state, context):
 		if str(parts[0]) == "change_card_name":
-			state.set_card_custom_name(uid, str(val))
+			state.set_card_custom_name(uid, ConfigDB.custom_card_text_key(k))
 		else:
-			state.set_card_custom_text(uid, str(val))
+			state.set_card_custom_text(uid, ConfigDB.custom_card_text_key(k))
 
 
 static func _queue_change_name(val: Variant, state, db, deferred: Dictionary, context: Dictionary) -> void:
+	# [SRC: ChangeName.Do0x4f30e0 -> ShowChangeName -> Show0x585890.
+	# The target is a configuration id (0=Player.name), not an owned UID.]
 	var card_id := int(val)
-	var target_uid := int(context.get("card_uid", 0))
-	if target_uid > 0:
-		var contextual = state.get_card_instance(target_uid)
-		if contextual == null or contextual.card_id != card_id:
-			target_uid = 0
-	var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
-	if target_uid <= 0 and rite_uid > 0:
-		for entry in state.cards_in_slot_entries_for_rite(rite_uid):
-			if int(entry.get("id", 0)) == card_id:
-				target_uid = int(entry.get("card_uid", 0))
-				break
-	if target_uid <= 0:
-		target_uid = state.card_uid_for(card_id, "hand")
-	if target_uid <= 0:
-		return
-	var card: Dictionary = state.card_data_for(target_uid, db)
 	var payload := {
-		"card_uid": target_uid,
-		"title": "为卡牌命名",
-		"text": "为%s起一个新名字。" % str(card.get("name", "这张卡牌")),
-		"initial_text": str(card.get("name", "")),
+		"card_id": card_id,
+		"initial_text": state.prompt_initial_name(card_id, db),
 	}
-	var rename_context := context.duplicate(true)
-	rename_context["card_uid"] = target_uid
-	rename_context["rite_uid"] = rite_uid
-	_record_effect(deferred, "rename_card", payload, rename_context)
+	_record_effect(deferred, "rename_card", payload, context.duplicate(true))
 
 
 static func _apply_equip(k: String, val: Variant, state, db, context: Dictionary) -> void:
@@ -1016,18 +1053,19 @@ static func _apply_equip(k: String, val: Variant, state, db, context: Dictionary
 		var equipped_snapshot: Array[int] = host.equipped_uids.duplicate()
 		for equipment_uid in equipped_snapshot:
 			var equipment = state.get_card_instance(int(equipment_uid))
-			if equipment == null or not _equipment_matches(equipment, val, db):
+			if equipment == null or not _equipment_matches(state, equipment, val, db):
 				continue
 			state.detach_equipment(host_uid, equipment.uid, op == "~")
 
 
-static func _equipment_matches(equipment, selector_value: Variant, db) -> bool:
+static func _equipment_matches(state, equipment, selector_value: Variant, db) -> bool:
 	var selectors: Array = selector_value if selector_value is Array else [selector_value]
+	var tags: Dictionary = state.effective_card_tags(int(equipment.uid), db)
 	for raw_selector in selectors:
 		var selector := str(raw_selector)
 		if selector.is_valid_int() and equipment.card_id == selector.to_int():
 			return true
-		if RuntimeOperationFilter.matches_card_data(equipment.card_id, equipment.tags, db, selector):
+		if RuntimeOperationFilter.matches_card_data(equipment.card_id, tags, db, selector):
 			return true
 	return false
 
@@ -1128,7 +1166,9 @@ static func _apply_slot_tag(k: String, val: Variant, state, db, context: Diction
 	for host_uid in _slot_target_uids(selector, state, context):
 		var instance = state.get_card_instance(host_uid)
 		if instance != null:
-			TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+			_mutate_tag(
+				instance.tags, state, host_uid, tag_name, op, amount, can_add,
+				int(state.effective_card_tags(host_uid, db).get(tag_name, 0)), db)
 
 
 static func _apply_table_clean(k: String, val: Variant, state, context: Dictionary = {}) -> void:
@@ -1178,9 +1218,12 @@ static func _apply_table_tag(k: String, val: Variant, state, db, context: Dictio
 			continue
 		if rite_uid > 0 and instance.rite_uid != rite_uid:
 			continue
-		if target_uid <= 0 and not selector.is_valid_int() and int(instance.tags.get(selector, 0)) == 0:
+		var effective: Dictionary = state.effective_card_tags(instance.uid, db)
+		if target_uid <= 0 and not selector.is_valid_int() and int(effective.get(selector, 0)) == 0:
 			continue
-		TagSystem.apply(instance.tags, tag_name, op, amount, can_add)
+		_mutate_tag(
+			instance.tags, state, instance.uid, tag_name, op, amount, can_add,
+			int(effective.get(tag_name, 0)), db)
 
 
 static func _apply_total_tag(k: String, val: Variant, state, db) -> void:
@@ -1194,7 +1237,9 @@ static func _apply_total_tag(k: String, val: Variant, state, db) -> void:
 		amount = 1
 	var tag_name := rest.substr(op_idx + 1)
 	for instance in RuntimeOperationFilter.select_total(state, db, rest.substr(0, op_idx)):
-		TagSystem.apply(instance.tags, tag_name, op, amount, _tag_can_add(db, tag_name))
+		_mutate_tag(
+			instance.tags, state, instance.uid, tag_name, op, amount, _tag_can_add(db, tag_name),
+			int(state.effective_card_tags(instance.uid, db).get(tag_name, 0)), db)
 
 
 static func _apply_sudan_pool_tag(k: String, val: Variant, state, db) -> void:
@@ -1208,16 +1253,19 @@ static func _apply_sudan_pool_tag(k: String, val: Variant, state, db) -> void:
 	var amount := int(val)
 	if amount == 0 and op != TagSystem.Op.SET:
 		amount = 1
-	var seen_card_ids: Dictionary = {}
-	for card_id in state.sudan_deck:
-		var pool_card_id := int(card_id)
-		if seen_card_ids.has(pool_card_id):
-			continue
-		seen_card_ids[pool_card_id] = true
-		var tags: Dictionary = state.sudan_pool_tags.get(pool_card_id, db.get_card(pool_card_id).get("tag", {}).duplicate(true)).duplicate(true)
-		if RuntimeOperationFilter.matches_card_data(pool_card_id, tags, db, selector):
-			TagSystem.apply(tags, tag_name, op, amount, _tag_can_add(db, tag_name))
-			state.sudan_pool_tags[pool_card_id] = tags
+	# Every matching pool OBJECT is visited, not one entry per card id: the
+	# original's OperationFilter walks player.sudan_card_pool, and that list
+	# really holds duplicate ids as separate Card objects.
+	# [SRC: SudanPoolModifyTag.c @ DoTemplate 0x51c2e0:
+	#       OperationFilter.Filter(player+0xB0) then AddTag/RemoveTag per hit;
+	#       all 18 configured sudan_pool keys use the "sudan" selector.]
+	for entry in state.sudan_deck:
+		var effective: Dictionary = state.sudan_pool_entry_tags(entry, db)
+		if RuntimeOperationFilter.matches_card_data(int(entry.card_id), effective, db, selector):
+			_mutate_tag(
+				entry.tags, state, 0, tag_name, op, amount, _tag_can_add(db, tag_name),
+				int(effective.get(tag_name, 0)), db)
+
 
 
 ## Look up a tag's can_add flag from config (default true if not found).
@@ -1229,6 +1277,64 @@ static func _tag_can_add(db, tag_name: String) -> bool:
 	if code != "" and db.get("tags_by_code") != null and db.tags_by_code.has(code):
 		return int(db.tags_by_code[code].get("can_add", 1)) != 0
 	return true
+
+
+## CardExtensions.HasTag(card, "freeze") for the rebirth branch. The tag is
+## resolved to its configured name rather than hard-coded, and the effective row
+## already folds in the definition row, the runtime delta and inheritable equips
+## -- which is what GetTag-style HasTag reads.
+static func _has_freeze_tag(instance, state, db) -> bool:
+	if instance == null or state == null:
+		return false
+	var freeze_name := "冻结"
+	if db != null and db.get("tag_code_to_name") != null:
+		freeze_name = str(db.tag_code_to_name.get("freeze", "冻结"))
+	var effective: Dictionary = state.effective_card_tags(int(instance.uid), db)
+	return int(effective.get(freeze_name, 0)) > 0
+
+
+## TagNode.can_visible (tag.json `can_visible`, field offset 0x41) gates whether
+## an AddTag/RemoveTag operation reaches the result list at all. Unknown tags
+## default to visible, matching the clone's existing permissive default.
+static func _tag_can_visible(db, tag_name: String) -> bool:
+	if db == null:
+		return true
+	var code: String = db.tag_name_to_code.get(tag_name, "") if db.get("tag_name_to_code") != null else ""
+	if code != "" and db.get("tags_by_code") != null and db.tags_by_code.has(code):
+		return int(db.tags_by_code[code].get("can_visible", 1)) != 0
+	return true
+
+
+## Single choke point for every runtime tag write (all 6 sources of the
+## ModifyTag family -- bare, slot, table, total, sudan_pool and GenCard's
+## operation-local TagModify).
+##
+## The write itself is unconditional; only the *recorded operation* is gated.
+## The original builds an ADD_TAG(6)/REMOVE_TAG(7) CardOp inside the operation's
+## PreDo phase (`OperationContext.AddCardOp_AddTag` / `_RemoveTag`), and the
+## result panel drops it again unless the TagNode is visible:
+##     if (type == 6 || type == 7) {
+##         if (tag == null) abort;
+##         if (tag.can_visible == 0) return;   // never queued
+##     }
+## Tags with can_visible=0 (影响力 / 污名 / 耐心 / 专属 ... 262 of 442) are
+## internal bookkeeping: the card really gains them, but they never appear as a
+## result row. Every +0x41 read in the corpus is a display consumer
+## (CardInfoNewController / HandCardsController / TotalModifyTag's PreDo /
+## DesktopModifyTag's PreDo / TagNode / the result panel), never a mutation
+## path -- so `can_visible` is a presentation flag, not a write gate.
+## [SRC: OperationContext.c @ AddCardOp_AddTag 0x39dfa0 (sets CardOp+0x10=6,
+##       +0x18=card, +0x20=tag, +0x28=amount) and AddCardOp_RemoveTag 0x39e870
+##       (type 7); DesktopModifyTag.__c__DisplayClass7_1.c @ <PreDo>b__2/b__3
+##       (0x521f60 / 0x521fb0) pass op+0x18 = TagNode; RiteResultPanelController.c
+##       @ AddCardOp 0x5a0e60 lines 0x3335-0x3343 (type 6/7 -> tag@0x20 null abort,
+##       tag+0x41 == 0 -> return before the list push at 0x3345);
+##       CardExtensions.c @ AddTag 0x37e6a0 / RemoveTag 0x382e40 never read tag+0x41.]
+static func _mutate_tag(tags: Dictionary, state, card_uid: int, tag_name: String, op: int, amount: int, can_add: bool, effective_value: int, db) -> bool:
+	var changed := TagSystem.apply(tags, tag_name, op, amount, can_add, effective_value)
+	if _tag_can_visible(db, tag_name) and state != null and state.has_method("record_tag_op"):
+		state.record_tag_op(card_uid, tag_name, op, amount, tags)
+	return changed
 
 
 static func _is_domain_equip_key(k: String) -> bool:
@@ -1258,7 +1364,9 @@ static func _apply_domain_equip(k: String, val: Variant, state, db) -> void:
 			var inst = state.get_card_instance(int(tc.get("card_uid", 0)))
 			if inst == null:
 				continue
-			if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), inst.tags, db, selector):
+			if not RuntimeOperationFilter.matches_card_data(
+				int(inst.card_id), state.effective_card_tags(int(inst.uid), db), db, selector
+			):
 				continue
 			hosts.append(int(inst.uid))
 	for host_uid in hosts:
@@ -1274,14 +1382,14 @@ static func _apply_domain_equip(k: String, val: Variant, state, db) -> void:
 		var equipped_snapshot: Array[int] = host.equipped_uids.duplicate()
 		for equipment_uid in equipped_snapshot:
 			var equipment = state.get_card_instance(int(equipment_uid))
-			if equipment == null or not _equipment_matches(equipment, val, db):
+			if equipment == null or not _equipment_matches(state, equipment, val, db):
 				continue
 			state.detach_equipment(host_uid, equipment.uid, op == "~")
 
 
-## table/total.change_card_name|text.<rite>_<seq>.<card_id> — apply the value
-## as the custom name/text of the matching card in the domain.
-static func _apply_scoped_card_text(k: String, val: Variant, state, whole_domain: bool) -> void:
+## table/total.change_card_name|text.<rite>_<seq>.<card_id> — store the source
+## translation key. Selection domain/multiple targets remain under audit.
+static func _apply_scoped_card_text(k: String, _val: Variant, state, db, whole_domain: bool) -> void:
 	var last_dot := k.rfind(".")
 	if last_dot < 0:
 		return
@@ -1290,18 +1398,21 @@ static func _apply_scoped_card_text(k: String, val: Variant, state, whole_domain
 		return
 	var want_id := card_id.to_int()
 	var is_name := k.find("change_card_name") >= 0
-	var new_value := str(val).strip_edges()
-	for uid in state.card_instances.keys():
-		var inst = state.get_card_instance(int(uid))
+	# [SRC: ChangeCardName.DoTemplate0x4f2130; OperationFilter.Filter(List)
+	# 0x3a13c0 visits every matching root. GetTotalCards0x38de90 excludes equips.]
+	var roots: Array = state.source_total_cards() if whole_domain else state.source_player_cards()
+	for inst in roots:
 		if inst == null or inst.card_id != want_id:
 			continue
-		if not whole_domain and inst.zone != "hand" and inst.zone != "slot" and inst.zone != "sudan":
+		# IsLost is the original runtime tag, not the clone's removed flag.
+		# [SRC: IsLost0x382870; literal0x25bf778=lost; tag.json3020270.]
+		var tags: Dictionary = state.effective_card_tags(inst.uid, db)
+		if int(tags.get("lost", tags.get("遗世", 0))) > 0:
 			continue
 		if is_name:
-			state.set_card_custom_name(int(uid), new_value)
+			state.set_card_custom_name(inst.uid, ConfigDB.custom_card_text_key(k))
 		else:
-			state.set_card_custom_text(int(uid), new_value)
-		return
+			state.set_card_custom_text(inst.uid, ConfigDB.custom_card_text_key(k))
 
 
 static func _strip_rich(s: String) -> String:

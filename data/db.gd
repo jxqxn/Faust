@@ -33,8 +33,61 @@ var over_ids := {}
 var tags_by_code := {}     # code -> tag dict
 var tags_by_id := {}       # id(int) -> tag dict
 var tag_name_to_code := {} # name -> code
+# Inverse of tag_name_to_code. The original keeps two tag key domains: config
+# files (CardNode.tag@0x58) are keyed by the localized name, while the runtime
+# Card.tag@0x30 dictionary and the save file are keyed by the stable code.
+# [SRC: dump.cs CardNode.tag@0x58 / Card.tag@0x30; Datapool.c @ TranslateTag
+#       (0x41bc20); save_samples/auto_save.json stores {"social":1,"charm":1}.]
+var tag_code_to_name := {} # code -> name
 var init_config := {}      # init/1.json contents
+# variable.json: the global preferences/config table (result text rates, ui
+# scale, supported resolutions, pop timing). Runtime values are read from here
+# instead of being re-typed at call sites.
+# [SRC: _unpack/data/config/variable.json; RiteResultPanelController.c @
+#       UpdateResultTextSpeed 0x5a74a0 reads the two result rates off Player,
+#       which Datapool seeds from this table.]
+var variable_config := {}
+# The wizard (女术士) dialogue node that hosts the draw-Sultan demonstration.
+# Datapool keeps it in a wizard dictionary (Datapool+0x40) keyed by the wizard
+# id, and MagicSudan.Do registers a directive that WizardController consumes.
+# [SRC: _unpack/data/config/wizard/wizard.json + wizard_sudan.json;
+#       MagicSudan.c @ .ctor 0x5153f0 -> Datapool.AddMagicSudan;
+#       WizardController.c @ LoadWizard 0x5cbdf0 reads Datapool+0x40.]
+var wizard_config := {}
+# sfx_config.json: the source's music/sfx loop tables. This is where clip names
+# and loop points come from -- the audit's earlier "the volume clip name is not
+# in any config" note was a search-scope error, not a data gap.
+# Top-level keys: main_game_loop / main_game_loop_difficulty / settle_loop /
+# settle_loop_difficulty / armageddon_music_loop. Every entry is
+# {clip, start, loop_start, loop_end} plus optional flags
+# (play_in_rite_create / play_instant).
+# [SRC: _unpack/data/config/sfx_config.json;
+#       LoopArmageddonController.c @ GetLoopData 0x4033f0 reads the table at
+#       Datapool+0x68 -> +0x60 -> +0xB0 -> +0x38 keyed by the controller's
+#       config id (+0x48); GetClip 0x403240 maps the entry's clip name to an
+#       AudioClip via Datapool.LoadModAudioClip then the built-in array.]
+var sfx_config := {}
+# sfx_npc_role_dub.json: character card id -> ordered list of voice clip names.
+# This is the table the audit recorded as missing ("~391 dub filenames -> call
+# sites live in unexported .cs"). The mapping is data, not code: 584 card ids,
+# 579 of them non-empty, 670 references over 123 unique clips.
+# [SRC: _unpack/data/config/sfx_npc_role_dub.json. Card 2000029 -> ["item_coin"]
+#       ties the key domain to CardNode.id.]
+var npc_role_dub := {}
+# sfx_settle_card_new.json: card id -> settlement cue name. The "0" key is the
+# default, so the table is a sparse override on top of a generic cue.
+# Values: settle_card_new_nomal / _great / _bad.
+# [SRC: _unpack/data/config/sfx_settle_card_new.json]
+var settle_card_new := {}
+# over_music_config.json: ending id -> {clip, start, loop_start, loop_end}, the
+# same entry shape as sfx_config's loop tables. Keyed by the over/ending id that
+# over.json also uses.
+# [SRC: _unpack/data/config/over_music_config.json]
+var over_music := {}
 var use_test_starting_cards := false
+# [SRC: Datapool.custom_card_text@0x110; MergeCustomTextToDefaultLanguage
+# 0x417dc0. Runtime index of original operation values, not rewritten content.]
+var custom_card_translates: Dictionary = {}
 
 
 func load_all(content_dir: String = "res://content", use_test_cards: bool = false) -> void:
@@ -48,7 +101,48 @@ func load_all(content_dir: String = "res://content", use_test_cards: bool = fals
 	_load_map(content_dir + "/quest.json", quests)
 	_load_map(content_dir + "/upgrade.json", upgrades)
 	_load_single(content_dir + "/credits.json", credits)
+	_load_single(content_dir + "/variable.json", variable_config)
+	_load_single(content_dir + "/sfx_config.json", sfx_config)
+	_load_single(content_dir + "/sfx_npc_role_dub.json", npc_role_dub)
+	_load_single(content_dir + "/sfx_settle_card_new.json", settle_card_new)
+	_load_single(content_dir + "/over_music_config.json", over_music)
+	_load_dir_by_string_id(content_dir + "/wizard", wizard_config)
 	_load_init(content_dir + "/init/1.json")
+	custom_card_translates.clear()
+	for source in [cards, rites, events, after_stories, loots, quests, upgrades, init_config]:
+		_index_custom_card_text(source)
+
+
+static func custom_card_text_key(operation: String) -> String:
+	var parts := operation.split(".")
+	var offset := 1 if parts[0] in ["table", "total"] else 0
+	if parts.size() == offset + 3 and parts[offset] in ["change_card_name", "change_card_text"]:
+		# [SRC: ChangeCardName .ctor0x4f2a30; stringliteral0x2595cb0 /
+		# 0x25794c0 / 0x259a4e0 / 0x257f458 = change_card_ / name / text / _.]
+		return parts[offset] + "_" + parts[offset + 1]
+	return ""
+
+
+func _index_custom_card_text(value: Variant) -> void:
+	if value is Dictionary:
+		for operation in value:
+			var key := custom_card_text_key(str(operation))
+			var item: Variant = value[operation]
+			if not key.is_empty() and item is String:
+				if custom_card_translates.has(key) and custom_card_translates[key] != item:
+					push_error("Conflicting source custom card text: " + key)
+				else:
+					custom_card_translates[key] = item
+			_index_custom_card_text(item)
+	elif value is Array:
+		for item in value:
+			_index_custom_card_text(item)
+
+
+func translate_custom_card_text(key: String) -> String:
+	# The original default-language fallback; locale/mod overlays remain open.
+	# [SRC: Datapool.Translate0x422740 returns the key if not found.]
+	return str(custom_card_translates.get(key, key))
 
 
 func _load_init(path: String) -> void:
@@ -84,6 +178,7 @@ func _load_tags(path: String) -> void:
 		var nm: String = td.get("name", "")
 		if nm != "":
 			tag_name_to_code[nm] = code
+			tag_code_to_name[code] = nm
 
 
 func _load_cards(path: String) -> void:
@@ -123,6 +218,27 @@ func _load_dir(dir_path: String, dest: Dictionary) -> void:
 			var parsed = JSON.parse_string(FileAccess.get_file_as_string(full))
 			if parsed is Dictionary:
 				var id := int(parsed.get("id", fname.get_basename().to_int()))
+				dest[id] = parsed
+		fname = dir.get_next()
+	dir.list_dir_end()
+
+
+## Directory loader for node files whose `id` is a STRING (the wizard nodes use
+## "WIZARD" / "WIZARD_SUDAN"). `_load_dir` would collapse both to key 0 and keep
+## only the last one.
+## [SRC: Datapool wizard dictionary keyed by WizardNode.id (Datapool+0x40);
+##       _unpack/data/config/wizard/*.json]
+func _load_dir_by_string_id(dir_path: String, dest: Dictionary) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var fname := dir.get_next()
+	while fname != "":
+		if not dir.current_is_dir() and fname.ends_with(".json"):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(dir_path + "/" + fname))
+			if parsed is Dictionary:
+				var id := str(parsed.get("id", fname.get_basename()))
 				dest[id] = parsed
 		fname = dir.get_next()
 	dir.list_dir_end()

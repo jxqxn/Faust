@@ -13,6 +13,7 @@
 extends Control
 
 signal closed
+signal load_requested(index: int)
 signal save_requested(index: int, archive_name: String)
 signal rename_requested(index: int, archive_name: String)
 signal delete_requested(index: int)
@@ -20,9 +21,12 @@ signal delete_requested(index: int)
 const DESIGN_SPACE := Vector2(3840, 2160)
 const SLOT_COUNT := 50
 const ITEM_SIZE := Vector2(2760, 240)
+const ITEM_RUNTIME_SIZE := Vector2(2471.2, 240)
 const LEFT_RECT := Rect2(200, 300, 875.2, 1560)
 const SCROLL_RECT := Rect2(1228.8, 200, 2511.2, 1760)
 const MAX_ARCHIVE_NAME_LENGTH := 20
+const SourceDialog = preload("res://ui/source_confirm_dialog.gd")
+const SourceText = preload("res://ui/source_text_style.gd")
 
 var _save_mode := true
 var _archives_by_index: Dictionary = {}
@@ -31,6 +35,23 @@ var _name_input: LineEdit
 var _name_confirm: Button
 var _pending_index := -1
 var _pending_action := ""
+var _confirmation: Control
+var _delete_confirmation: Control
+
+func _text(key: String) -> String:
+	return JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))[key].zhCN
+
+func refresh_archives(archives: Array) -> void:
+	setup(archives, _save_mode)
+	var content := get_node("Background/Scroll View/Content")
+	for item in content.get_children():
+		content.remove_child(item)
+		item.queue_free()
+	_delete_confirmation = null
+	for index in SLOT_COUNT:
+		var item := _make_archive_item(index, _archives_by_index.get(index))
+		item.position = Vector2(0, ITEM_SIZE.y * index)
+		content.add_child(item)
 
 
 func setup(archives: Array, save_mode: bool = true) -> void:
@@ -59,11 +80,11 @@ func apply_source_layout(view_size: Vector2) -> void:
 
 
 func _build_source_tree() -> void:
-	# bg_1 is not present in the extracted asset set.  Retain the original
-	# full-rect carrier and source geometry; do not invent replacement art.
-	var background := ColorRect.new()
+	# [SRC: UserArchive.prefab root Image -> Sprite/bg_1.asset]
+	var background := TextureRect.new()
 	background.name = "Background"
-	background.color = Color(0.045, 0.038, 0.03, 0.96)
+	background.texture = preload("res://assets/original/ui/bg_1.png")
+	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	background.position = Vector2.ZERO
 	background.size = DESIGN_SPACE
 	background.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -77,16 +98,28 @@ func _build_source_tree() -> void:
 	close.tooltip_text = "关闭"
 	close.pressed.connect(func(): closed.emit())
 	background.add_child(close)
-	var close_text := Label.new()
+	var close_bg := TextureRect.new()
+	close_bg.texture = preload("res://assets/original/ui/checkbox_bg.png")
+	close_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close_bg.size = close.size
+	close_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	close.add_child(close_bg)
+	var close_text := TextureRect.new()
 	close_text.name = "X"
-	close_text.text = "×"
-	close_text.position = Vector2(0, 0)
-	close_text.size = close.size
-	close_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	close_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	close_text.add_theme_font_size_override("font_size", 64)
+	close_text.texture = preload("res://assets/original/ui/close_2.png")
+	close_text.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	close_text.position = (close.size - Vector2(43, 37)) / 2
+	close_text.size = Vector2(43, 37)
 	close_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	close.add_child(close_text)
+	# [SRC: UserArchive.prefab Close Selectable, target=checkbox background.]
+	close.focus_mode = Control.FOCUS_NONE
+	for key in ["normal", "hover", "pressed", "disabled", "focus"]:
+		close.add_theme_stylebox_override(key, StyleBoxEmpty.new())
+	var close_tint := preload("res://ui/source_confirm_tint.gd").new()
+	close_tint.button = close
+	close_tint.graphic = close_bg
+	close.add_child(close_tint)
 
 	var left := Control.new()
 	left.name = "Left"
@@ -100,18 +133,20 @@ func _build_source_tree() -> void:
 	header.size = Vector2(LEFT_RECT.size.x, 104)
 	header.add_theme_constant_override("separation", 20)
 	left.add_child(header)
-	var icon := Label.new()
+	var icon := TextureRect.new()
 	icon.name = "Icon"
-	icon.text = "▣"
-	icon.custom_minimum_size = Vector2(80, 80)
-	icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	icon.add_theme_font_size_override("font_size", 58)
+	icon.texture = load("res://assets/original/ui/user_archive_%s.png" % ("save" if _save_mode else "load"))
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(132, 132)
 	header.add_child(icon)
 	var title := Label.new()
 	title.name = "Title"
-	title.text = "保存进度" if _save_mode else "读取存档"
+	var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	title.text = captions.USER_ARCHIVE_SAVE_TITLE.zhCN if _save_mode else captions.USER_ARCHIVE_LOAD_TITLE.zhCN
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 80)
+	preload("res://ui/source_text_style.gd").apply(title, "@TITLE_H1")
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
 	header.add_child(title)
 	var desc := Label.new()
@@ -119,8 +154,9 @@ func _build_source_tree() -> void:
 	desc.position = Vector2(0, 140)
 	desc.size = Vector2(LEFT_RECT.size.x, 300)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.text = "选择一个档位保存当前进度。" if _save_mode else "选择一个档位继续游戏。"
+	desc.text = captions.USER_ARCHIVE_SAVE_DESC.zhCN if _save_mode else captions.USER_ARCHIVE_LOAD_DESC.zhCN
 	desc.add_theme_font_size_override("font_size", 40)
+	preload("res://ui/source_text_style.gd").apply(desc, "@MAIN_BODY")
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
 	left.add_child(desc)
 
@@ -135,7 +171,11 @@ func _build_source_tree() -> void:
 	# to its children in Godot, so keep the source content rect explicit.
 	var content := Control.new()
 	content.name = "Content"
-	content.size = Vector2(ITEM_SIZE.x, ITEM_SIZE.y * SLOT_COUNT)
+	# The prefab is authored at 2760 wide, while LoopScrollRect lays each row
+	# into UserArchive/Scroll View/Viewport (2511.2 - 40 = 2471.2).  Runtime
+	# right anchors resolve against this viewport width.
+	content.size = Vector2(ITEM_RUNTIME_SIZE.x, ITEM_SIZE.y * SLOT_COUNT)
+	content.custom_minimum_size = Vector2(0, ITEM_SIZE.y * SLOT_COUNT)
 	scroll.add_child(content)
 	for index in SLOT_COUNT:
 		var item := _make_archive_item(index, _archives_by_index.get(index))
@@ -147,25 +187,27 @@ func _make_archive_item(index: int, archive: Variant) -> Control:
 	var item := Button.new()
 	item.name = "UserArchiveItem_%02d" % index
 	item.flat = true
-	item.custom_minimum_size = ITEM_SIZE
-	item.size = ITEM_SIZE
+	item.custom_minimum_size = ITEM_RUNTIME_SIZE
+	item.size = ITEM_RUNTIME_SIZE
+	item.set_meta("source_authored_size", ITEM_SIZE)
 	item.tooltip_text = ""
 	item.pressed.connect(_on_item_clicked.bind(index))
 
-	var footer := ColorRect.new()
-	footer.name = "footer"
-	footer.color = Color(FaustTheme.GOLD, 0.42)
-	footer.position = Vector2(0, ITEM_SIZE.y - 18)
-	footer.size = Vector2(ITEM_SIZE.x, 3)
-	footer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	item.add_child(footer)
+	for key in ["normal", "hover", "pressed", "disabled", "focus"]:
+		item.add_theme_stylebox_override(key, StyleBoxEmpty.new())
+	var highlight := SourceDialog.image(item, "Highlight", "hightlight", Rect2(Vector2.ZERO, ITEM_RUNTIME_SIZE))
+	highlight.hide()
+	item.mouse_entered.connect(highlight.show)
+	item.mouse_exited.connect(highlight.hide)
+	SourceDialog.image(item, "footer", "slash", Rect2(0, 210, ITEM_RUNTIME_SIZE.x, 30))
 	if not (archive is Dictionary):
 		var empty := Label.new()
 		empty.name = "EmptyContent"
-		empty.text = "空"
-		empty.position = Vector2(0, 80)
-		empty.size = Vector2(600, 80)
-		empty.add_theme_font_size_override("font_size", 60)
+		empty.text = _text("USER_ARCHIVE_SLOT_EMPTY")
+		empty.position = Vector2(0, 88)
+		empty.size = Vector2(ITEM_RUNTIME_SIZE.x, 80)
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		SourceText.apply(empty, "@TITLE_H2")
 		empty.add_theme_color_override("font_color", Color(0.65, 0.6, 0.5))
 		empty.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		item.add_child(empty)
@@ -173,88 +215,114 @@ func _make_archive_item(index: int, archive: Variant) -> Control:
 
 	var content := Control.new()
 	content.name = "Content"
+	content.size = ITEM_RUNTIME_SIZE
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	item.add_child(content)
+	var title_row := HBoxContainer.new()
+	title_row.name = "TitleRow"
+	title_row.position = Vector2(0, 20)
+	title_row.size = Vector2(2000, 80)
+	title_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_row.add_theme_constant_override("separation", 20)
+	content.add_child(title_row)
 	var number := Label.new()
 	number.name = "No"
 	number.text = "%03d" % (index + 1)
-	number.position = Vector2(0, 20)
-	number.size = Vector2(180, 80)
-	number.add_theme_font_size_override("font_size", 60)
+	SourceText.apply(number, "@TITLE_H2")
 	number.add_theme_color_override("font_color", FaustTheme.GOLD)
-	content.add_child(number)
+	title_row.add_child(number)
 	var title := Label.new()
 	title.name = "Title"
 	title.text = str((archive as Dictionary).get("name", "未命名存档"))
-	title.position = Vector2(200, 20)
-	title.size = Vector2(1500, 80)
-	title.add_theme_font_size_override("font_size", 60)
+	SourceText.apply(title, "@TITLE_H2")
 	title.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	content.add_child(title)
+	title_row.add_child(title)
+	var rename := SourceDialog.button(title_row, "ModifyName", "user_archive_modify_name", Rect2(0, 0, 100, 56), true)
+	rename.custom_minimum_size = Vector2(100, 56)
+	rename.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rename.pressed.connect(_open_rename.bind(index))
 	var desc := Label.new()
 	desc.name = "Desc"
 	desc.position = Vector2(100, 120)
-	desc.size = Vector2(1940, 90)
-	desc.add_theme_font_size_override("font_size", 40)
+	desc.size = Vector2(ITEM_RUNTIME_SIZE.x - 100, 90)
+	SourceText.apply(desc, "@MAIN_BODY")
 	desc.add_theme_color_override("font_color", FaustTheme.TEXT)
 	desc.text = _archive_description(archive as Dictionary)
 	content.add_child(desc)
-	if _save_mode:
-		var rename := Button.new()
-		rename.name = "ModifyName"
-		rename.text = "改名"
-		rename.position = Vector2(1980, 20)
-		rename.size = Vector2(180, 76)
-		rename.add_theme_font_size_override("font_size", 40)
-		rename.pressed.connect(_open_rename.bind(index))
-		content.add_child(rename)
-		var delete := Button.new()
-		delete.name = "Delete"
-		delete.text = "删除"
-		delete.position = Vector2(2180, 38)
-		delete.size = Vector2(168, 120)
-		delete.add_theme_font_size_override("font_size", 40)
-		delete.pressed.connect(_confirm_delete.bind(index))
-		content.add_child(delete)
-	else:
-		var load := Label.new()
-		load.name = "Load"
-		load.text = "读取"
-		load.position = Vector2(2160, 38)
-		load.size = Vector2(328, 120)
-		load.add_theme_font_size_override("font_size", 46)
-		load.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-		content.add_child(load)
+	var delete := SourceDialog.button(content, "Delete", "delete", Rect2(ITEM_RUNTIME_SIZE.x - 343, 35.82, 168, 158), true)
+	delete.pressed.connect(_confirm_delete.bind(index))
+	if not _save_mode:
+		var load := SourceDialog.button(content, "Load", "rite_op_confirm", Rect2(ITEM_RUNTIME_SIZE.x - 634, 34.82, 328, 160), true)
+		load.pressed.connect(_on_item_clicked.bind(index))
 	return item
 
 
 func _archive_description(archive: Dictionary) -> String:
-	return "存活天数：%d    剩余苏丹卡：%d    处刑日：第 %d 天\n保存时间：%s" % [
-		int(archive.get("live_days", archive.get("day", 1))),
-		int(archive.get("left_sudan", 0)),
-		int(archive.get("execution_day", -1)),
-		str(archive.get("save_time", "")),
-	]
+	return "    ".join([
+		_text("USER_ARCHIVE_LIVE_TIME").replace("{0}", str(int(archive.get("live_days", 1)))),
+		_text("USER_ARCHIVE_LEFT_SUDAN_CARD_COUNT").replace("{0}", str(int(archive.get("left_sudan", 0)))),
+		_text("USER_ARCHIVE_EXECUTION_DAY_LEFT").replace("{0}", str(int(archive.get("execution_day", -1)))),
+		_format_archive_time(str(archive.get("save_time", "")))])
+
+
+## UserArchiveItemController.UpdateShow renders the ISO save timestamp as a
+## short local timestamp (the source screenshot shows 2026/6/26 15:37:11,
+## while the JSON index retains the offset-bearing ISO value).
+## [SRC: UserArchiveItemController.c @ UpdateShow (RVA 0x5ca130),
+##       save_samples/user_archive.json]
+func _format_archive_time(value: String) -> String:
+	if value.is_empty():
+		return ""
+	var date_and_time := value.split("T", false, 1)
+	if date_and_time.size() != 2:
+		return value.replace("T", " ")
+	var date_parts := date_and_time[0].split("-", false)
+	var time_part := date_and_time[1].split("+", false)[0].split("-", false)[0]
+	if date_parts.size() != 3:
+		return value.replace("T", " ")
+	var time_parts := time_part.split(":", false)
+	if time_parts.size() < 2:
+		return value.replace("T", " ")
+	var year := int(date_parts[0])
+	var month := int(date_parts[1])
+	var day := int(date_parts[2])
+	var hour := int(time_parts[0])
+	var minute := int(time_parts[1])
+	var second := int(time_parts[2].split(".", false)[0]) if time_parts.size() > 2 else 0
+	return "%d/%d/%d %02d:%02d:%02d" % [year, month, day, hour, minute, second]
 
 
 func _on_item_clicked(index: int) -> void:
+	if _name_popup != null or is_instance_valid(_confirmation):
+		return
 	var archive = _archives_by_index.get(index)
 	if _save_mode:
 		if archive is Dictionary:
 			_confirm_overwrite(index)
 		else:
-			_open_name_input(index, "", "save")
+			_open_name_input(index, _text("USER_ARCHIVE_UNNAMED"), "save")
 		return
 	if archive is Dictionary:
-		# The game owns the actual restore transition. This signal is intentionally
-		# not emitted for empty slots, matching OnItemClicked's null no-op path.
-		closed.emit()
+		# [SRC: UserArchiveController.OnItemClicked 0x5c8630, save mode +0xA0;
+		# DisplayClass19_0.<OnItemClicked>b__0 loads only after confirmation.]
+		var confirmation := SourceDialog.new()
+		_confirmation = confirmation
+		confirmation.name = "LoadArchiveConfirm"
+		var captions: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+		confirmation.dialog_text = captions.USER_ARCHIVE_LOAD_PROMPT.zhCN
+		add_child(confirmation)
+		confirmation.confirmed.connect(func():
+			confirmation.queue_free()
+			load_requested.emit(index))
+		confirmation.canceled.connect(confirmation.queue_free)
+		confirmation.popup_centered()
 
 
 func _confirm_overwrite(index: int) -> void:
-	var confirmation := ConfirmationDialog.new()
+	var confirmation := SourceDialog.new()
+	_confirmation = confirmation
 	confirmation.name = "OverwriteArchiveConfirm"
-	confirmation.dialog_text = "确定覆盖这个存档吗？"
+	confirmation.dialog_text = _text("USER_ARCHIVE_ORVEWRITE_PROMPT")
 	add_child(confirmation)
 	confirmation.confirmed.connect(func():
 		confirmation.queue_free()
@@ -266,6 +334,8 @@ func _confirm_overwrite(index: int) -> void:
 
 
 func _open_rename(index: int) -> void:
+	if _name_popup != null or is_instance_valid(_confirmation):
+		return
 	var archive: Dictionary = _archives_by_index.get(index, {})
 	_open_name_input(index, str(archive.get("name", "")), "rename")
 
@@ -287,48 +357,46 @@ func _open_name_input(index: int, initial_name: String, action: String) -> void:
 	mask.size = DESIGN_SPACE
 	mask.mouse_filter = Control.MOUSE_FILTER_STOP
 	_name_popup.add_child(mask)
-	var prompt := PanelContainer.new()
-	prompt.name = "PromptBG"
-	prompt.position = Vector2((DESIGN_SPACE.x - 2534.4) * 0.5, (DESIGN_SPACE.y - 635.23) * 0.5)
-	prompt.size = Vector2(2534.4, 635.23)
-	prompt.add_theme_stylebox_override("panel", FaustTheme.card_style(FaustTheme.GOLD))
-	_name_popup.add_child(prompt)
-	var label := Label.new()
-	label.name = "Title"
-	label.text = "输入存档名称"
-	label.position = Vector2(260, 110)
-	label.size = Vector2(1200, 80)
-	label.add_theme_font_size_override("font_size", 64)
-	label.add_theme_color_override("font_color", FaustTheme.GOLD_BRIGHT)
-	prompt.add_child(label)
+	# UserArchive's embedded name prefab: no invented heading; input is below
+	# Content at (1252.2,217.62), and buttons anchor to the bottom edge.
+	var prompt := SourceDialog.panel(_name_popup, Rect2((DESIGN_SPACE - Vector2(2534.4, 635.23)) / 2, Vector2(2534.4, 635.23)))
+	SourceDialog.full_background(prompt, Rect2(37.24, 50.775, 2458.66, 500.04))
+	var portrait := TextureRect.new()
+	portrait.name = "Icon"
+	portrait.texture = preload("res://assets/original/cards/1_char_7.png")
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait.position = Vector2(2024.9, -458.77)
+	portrait.size = Vector2(471, 1028)
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	prompt.add_child(portrait)
 	_name_input = LineEdit.new()
 	_name_input.name = "InputField (TMP)"
-	_name_input.position = Vector2(260, 245)
+	_name_input.position = Vector2(839.2, 253.62)
 	_name_input.size = Vector2(826, 90)
 	_name_input.max_length = MAX_ARCHIVE_NAME_LENGTH
 	_name_input.text = initial_name
-	_name_input.placeholder_text = "请输入 1–20 个字符"
+	_name_input.placeholder_text = _text("USER_ARCHIVE_NAME_PLACEHOLDER")
 	_name_input.add_theme_font_size_override("font_size", 50)
+	_name_input.add_theme_font_override("font", preload("res://assets/fonts/xiquemuye.ttf"))
+	var input_style := StyleBoxTexture.new()
+	input_style.texture = preload("res://assets/original/ui/input_bg.png")
+	for key in ["normal", "focus", "read_only"]:
+		_name_input.add_theme_stylebox_override(key, input_style)
 	prompt.add_child(_name_input)
-	_name_confirm = Button.new()
-	_name_confirm.name = "Confirm"
-	_name_confirm.text = "确认"
-	_name_confirm.position = Vector2(1660, 430)
-	_name_confirm.size = Vector2(325, 158)
-	_name_confirm.add_theme_font_size_override("font_size", 54)
+	SourceDialog.image(prompt, "Border", "decorate", Rect2(2295.9, 310.98, 235.99, 324.51))
+	_name_confirm = SourceDialog.button(prompt, "Confirm", "rite_op_confirm", Rect2(1924.2, 477.23, 325, 158), true)
+	# UserArchiveNameInput Confirm ColorBlock differs from shared ConfirmNew.
+	_name_confirm.get_node("SourceColorTint").disabled_color = Color(0.39215687, 0.39215687, 0.39215687, 1)
+	_name_confirm.focus_mode = Control.FOCUS_ALL
 	_name_confirm.pressed.connect(_confirm_name_input)
-	prompt.add_child(_name_confirm)
-	var cancel := Button.new()
-	cancel.name = "Cancel"
-	cancel.text = "取消"
-	cancel.position = Vector2(1358, 430)
-	cancel.size = Vector2(168, 158)
-	cancel.add_theme_font_size_override("font_size", 46)
+	var cancel := SourceDialog.button(prompt, "Cancel", "rite_op_cancel", Rect2(1701.4, 477.23, 168, 158), true)
 	cancel.pressed.connect(_close_name_input)
-	prompt.add_child(cancel)
 	_name_input.text_changed.connect(func(_text: String): _refresh_name_confirm())
 	_refresh_name_confirm()
 	_name_input.grab_focus()
+	_name_input.select_all()
+	_name_input.text_submitted.connect(func(_text: String): _confirm_name_input())
 
 
 func _refresh_name_confirm() -> void:
@@ -340,24 +408,35 @@ func _confirm_name_input() -> void:
 	if _name_input == null or _name_confirm == null or _name_confirm.disabled:
 		return
 	var archive_name := _name_input.text
-	if _pending_action == "rename":
-		rename_requested.emit(_pending_index, archive_name)
-	else:
-		save_requested.emit(_pending_index, archive_name)
+	var index := _pending_index
+	var action := _pending_action
 	_close_name_input()
+	if action == "rename":
+		rename_requested.emit(index, archive_name)
+	else:
+		save_requested.emit(index, archive_name)
 
 
 func _confirm_delete(index: int) -> void:
-	var confirmation := ConfirmationDialog.new()
-	confirmation.name = "DeleteArchiveConfirm"
-	confirmation.dialog_text = "确定删除这个存档吗？此操作无法撤销。"
-	add_child(confirmation)
-	confirmation.confirmed.connect(func():
-		confirmation.queue_free()
-		delete_requested.emit(index)
-	)
-	confirmation.canceled.connect(confirmation.queue_free)
-	confirmation.popup_centered()
+	if _name_popup != null or is_instance_valid(_confirmation):
+		return
+	if is_instance_valid(_delete_confirmation):
+		_delete_confirmation.queue_free()
+	var target := get_node("Background/Scroll View/Content/UserArchiveItem_%02d/Content/Delete" % index)
+	var confirmation := Control.new()
+	confirmation.name = "DeleteConfirm"
+	confirmation.position = Vector2(34, 29)
+	confirmation.size = Vector2(100, 100)
+	confirmation.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	target.add_child(confirmation)
+	_delete_confirmation = confirmation
+	# [SRC: UserArchiveItem Delete/DeleteConfirm prefab + OnDelete 0x5c9760]
+	var accept := SourceDialog.button(confirmation, "Confirm", "rite_op_confirm", Rect2(46, 125, 164, 80), true)
+	var cancel := SourceDialog.button(confirmation, "Close", "rite_op_cancel", Rect2(-78, 126, 84, 79), true)
+	accept.pressed.connect(func():
+		accept.disabled = true
+		delete_requested.emit(index))
+	cancel.pressed.connect(confirmation.queue_free)
 
 
 func _close_name_input() -> void:

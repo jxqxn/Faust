@@ -96,7 +96,7 @@ func _run() -> void:
 			var art := face.get_node_or_null("CardArt") as TextureRect
 			if art != null:
 				_check(flash.get_index() > art.get_index(), "card %d Flash must render above the art" % card_id)
-		_check(face.get_node_or_null("Outline") == null, "card %d must not draw the inactive CardNew/Outline" % card_id)
+		_check(not face.get_node("Outline").visible, "card %d starts with selection outline hidden" % card_id)
 		var frame := face.get_node_or_null("RarityFrame") as TextureRect
 		_check(frame != null, "card %d has no rarity frame" % card_id)
 		var title := face.get_node_or_null("Title") as Label
@@ -104,7 +104,7 @@ func _run() -> void:
 		if title != null:
 			_check(title.position.is_equal_approx(Vector2(9.5, 15)), "card %d Title position %s" % [card_id, title.position])
 			_check(title.size.is_equal_approx(Vector2(175, 40)), "card %d Title size %s" % [card_id, title.size])
-			_check(title.get_theme_font_size("font_size") == 30, "card %d Title font size" % card_id)
+			_check(title.get_meta("source_text_style", "") == "@CARD_TITLE", "card %d Title uses runtime source style" % card_id)
 			_check(title.get_theme_color("font_color").is_equal_approx(Color.BLACK), "card %d Title color" % card_id)
 		var stackable := face.get_node_or_null("Stackable") as TextureRect
 		if card_id == COIN_CARD_ID:
@@ -133,21 +133,44 @@ func _run() -> void:
 					_check(dot.position.is_equal_approx(Vector2(-7.2, 23.1)), "DotText position %s" % dot.position)
 					_check(dot.size.is_equal_approx(Vector2(50, 30)), "DotText size %s" % dot.size)
 
-	# Split/merge through the production hand wiring.
+	# Exercise hit testing and drag routing, not direct signal handlers.
 	if coin_uid > 0:
-		screen.call("_on_hand_card_split_requested", coin_uid)
-		await _settle(4)
+		var coin_widget := _hand_widget(rail, coin_uid)
+		var badge_point := coin_widget.get_global_transform_with_canvas() * Vector2(95, 365)
+		await _pointer(badge_point)
+		await _button(badge_point, true)
+		await _button(badge_point, false)
+		await create_timer(0.7).timeout
 		var coin_uids: Array = []
 		var total := 0
 		for instance in state.card_instances.values():
 			if int(instance.card_id) == COIN_CARD_ID and str(instance.zone) == "hand":
 				coin_uids.append(int(instance.uid))
 				total += int(instance.count)
-		_check(coin_uids.size() == 2, "Shift+click split must create a second coin object")
+		_check(coin_uids.size() == 2, "count badge click must create a second coin object")
+		_check(state.get_card_instance(coin_uid).count == 7, "count badge splits exactly one")
 		_check(total == COIN_COUNT, "split must preserve the total count")
 		if coin_uids.size() == 2:
-			screen.call("_on_hand_card_stack_dropped", coin_uids[0], coin_uids[1])
-			await _settle(4)
+			rail = screen.find_child("CardRailItems", true, false) as Control
+			var from := _hand_widget(rail, coin_uids[1])
+			var to := _hand_widget(rail, coin_uids[0])
+			if from == null or to == null:
+				_check(false, "split widgets absent: %s; visible=%s" % [coin_uids, state.visible_rail_card_uids()])
+				_finish(main)
+				return
+			var start := from.get_global_transform_with_canvas() * (from.size * 0.5)
+			var finish := to.get_global_transform_with_canvas() * (to.size * 0.5)
+			await _pointer(start)
+			await _button(start, true)
+			for step in range(1, 16):
+				await _pointer(start.lerp(finish, float(step) / 15), true)
+			_check(root.gui_is_dragging(), "hand movement must start a real GUI drag")
+			# The source leaves the rail during drag; the remaining cards reflow.
+			finish = to.get_global_transform_with_canvas() * (to.size * 0.5)
+			await _pointer(finish, true)
+			_check(root.gui_get_hovered_control() == to, "drop must hit the surviving stack card: hit=%s target=%s point=%s" % [root.gui_get_hovered_control(), to, finish])
+			await _button(finish, false)
+			await create_timer(0.7).timeout
 			var merged_total := 0
 			var merged_objects := 0
 			for instance in state.card_instances.values():
@@ -159,7 +182,7 @@ func _run() -> void:
 
 	# Hold hint through the production game screen: a 0.2s press on a noble card
 	# must highlight the rites whose slots accept it (CardController.Update ->
-	# ShowSatisfiedRite), and releasing clears it.
+	# ShowSatisfiedRite). Its animation ends independently after one second.
 	var noble_widget: CardWidget = null
 	var current_rail: Control = screen.find_child("CardRailItems", true, false) as Control
 	if current_rail != null:
@@ -169,29 +192,41 @@ func _run() -> void:
 				break
 	var desk: Control = screen.find_child("SituationDesk", true, false) as Control
 	_check(desk != null, "SituationDesk missing")
+	_check(noble_widget != null, "Noble hand widget missing")
 	if noble_widget != null and desk != null:
+		var point := noble_widget.get_global_transform_with_canvas() * (noble_widget.size * 0.5)
+		var motion := InputEventMouseMotion.new()
+		motion.position = point
+		root.push_input(motion, true)
+		await _settle(2)
+		_check(root.gui_get_hovered_control() == noble_widget, "Actual mouse must hit the hand card")
 		var press := InputEventMouseButton.new()
 		press.button_index = MOUSE_BUTTON_LEFT
 		press.pressed = true
-		press.position = Vector2(10, 10)
-		noble_widget._gui_input(press)
+		press.position = point
+		root.push_input(press, true)
 		await create_timer(0.35).timeout
 		var highlighted := 0
 		for uid in desk.rite_cards:
 			if bool(desk.rite_cards[uid].get("satisfied_hint")):
 				highlighted += 1
 		_check(highlighted > 0, "holding a noble card must highlight the rites it satisfies")
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png("res://docs/ui_layout/card_hold_%d.png" % DisplayServer.window_get_size().x)
+		await create_timer(1.1).timeout
 		var release := InputEventMouseButton.new()
 		release.button_index = MOUSE_BUTTON_LEFT
 		release.pressed = false
-		release.position = Vector2(10, 10)
-		noble_widget._gui_input(release)
+		release.position = point
+		root.push_input(release, true)
+		await _settle(2)
+		_check(screen.get("_card_detail_card_uid") == 0, "hold release must not open card details")
 		await _settle(2)
 		var still_highlighted := 0
 		for uid in desk.rite_cards:
 			if bool(desk.rite_cards[uid].get("satisfied_hint")):
 				still_highlighted += 1
-		_check(still_highlighted == 0, "releasing the card clears the satisfied-rite hint")
+		_check(still_highlighted == 0, "satisfied-rite one-shot must finish automatically")
 
 	await RenderingServer.frame_post_draw
 	var size := DisplayServer.window_get_size()
@@ -214,3 +249,29 @@ func _finish(main, path: String = "") -> void:
 func _settle(frames: int) -> void:
 	for i in frames:
 		await process_frame
+
+
+func _hand_widget(rail: Control, uid: int) -> CardWidget:
+	for child in rail.get_children():
+		if child is CardWidget and child.card_uid == uid and not child.is_queued_for_deletion():
+			return child
+	return null
+
+
+func _pointer(point: Vector2, held: bool = false) -> void:
+	var event := InputEventMouseMotion.new()
+	event.position = point
+	event.relative = Vector2(20, -20)
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT if held else 0
+	root.push_input(event, true)
+	await process_frame
+
+
+func _button(point: Vector2, down: bool) -> void:
+	var event := InputEventMouseButton.new()
+	event.position = point
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.button_mask = MOUSE_BUTTON_MASK_LEFT if down else 0
+	event.pressed = down
+	root.push_input(event, true)
+	await process_frame

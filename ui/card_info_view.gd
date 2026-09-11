@@ -16,6 +16,16 @@ class_name CardInfoView
 ## live property subscriptions, tooltips and full TMP material/layout parity.
 
 signal closed
+signal equipment_dropped(target_uid: int, source_uid: int)
+var equipment_drop_allowed: Callable
+
+class EquipmentDropPanel extends Control:
+	var owner_view: Control
+	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
+		return owner_view.equipment_drop_allowed.is_valid() and owner_view.equipment_drop_allowed.call(owner_view._card_uid, data)
+	func _drop_data(at: Vector2, data: Variant) -> void:
+		if _can_drop_data(at, data):
+			owner_view.equipment_dropped.emit(owner_view._card_uid, int(data.get("card_uid", 0)))
 
 const DESIGN_SIZE := Vector2(3840, 2160)
 const PANEL_SIZE := Vector2(2510, 1077)
@@ -81,7 +91,9 @@ func _build_panel(card: Dictionary) -> void:
 	_source_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_source_canvas)
 
-	_panel = Control.new()
+	# [SRC: CardInfoNewController.OnDrop 0x534410 -> DropCard 0x533550.]
+	_panel = EquipmentDropPanel.new()
+	_panel.owner_view = self
 	_panel.name = "CardDetailPanel"
 	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	# [SRC: CardInfoNew/CardInfoNew — 2510x1077 centred on the MainUI canvas]
@@ -110,9 +122,11 @@ func _build_panel(card: Dictionary) -> void:
 	_build_content(card)
 	_build_rare(card)
 	_build_tag_area(card)
+	# [SRC: CardInfoNew.prefab panel children: Equips (224017892387517381)
+	# precedes MainIconMask (224709890794832471) and BottomDecorate.]
+	_build_equips(card)
 	_build_main_icon(card)
 	_build_decorate()
-	_build_equips(card)
 	_build_close()
 	_build_help_button()
 	_apply_layout()

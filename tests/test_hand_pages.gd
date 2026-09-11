@@ -98,21 +98,24 @@ func test_insertion_uses_page_order_not_global_index() -> void:
 	assert_eq(state.visible_rail_card_uids(1), [other])
 
 
-func test_metal_offset_changes_with_position_and_freezes_under_modal() -> void:
+func test_metal_material_has_no_invented_screen_normal_offset() -> void:
+	# CardShow compiled bindings do not consume NormalOffsetX/Y. The old test
+	# required a fabricated position-dependent normal. Motion must not mutate
+	# the authored material inputs, including while a modal pauses animation.
 	var widget := CardWidget.make({"id": 2000001, "type": "char", "rare": 4, "name": "Test"})
 	add_child_autofree(widget)
 	await wait_process_frames(2)
 	var surface := widget.get_node("CardVisualFace/Foreground").material as ShaderMaterial
 	assert_not_null(surface)
-	var before: Vector2 = surface.get_shader_parameter("normal_offset")
+	var before: Vector3 = surface.get_shader_parameter("emission_color")
 	widget.position += Vector2(300, 200)
 	await wait_process_frames(2)
-	var moved: Vector2 = surface.get_shader_parameter("normal_offset")
-	assert_ne(before, moved)
+	assert_eq(surface.get_shader_parameter("emission_color"), before)
 	widget.set_presentation_paused(true)
 	widget.position += Vector2(300, 200)
 	await wait_process_frames(2)
-	assert_eq(surface.get_shader_parameter("normal_offset"), moved)
+	assert_eq(surface.get_shader_parameter("emission_color"), before)
+
 
 
 func test_rite_title_is_independent_of_icon_bound_and_clicks_instance() -> void:

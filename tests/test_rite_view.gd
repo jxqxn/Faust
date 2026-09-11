@@ -89,6 +89,90 @@ func test_gold_dice_reresolve_reuses_cached_dice():
 	view._use_gold_dice_reactive()
 	assert_eq(rng.get_state(), after_first, "gold-dice retry reuses the first resolve's dice cache")
 
+
+func test_result_surface_replays_dice_prompt_and_gold_count_prompt():
+	var rng := RNG.new(771)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	view._rite = {
+		"id": 5000001,
+		"cards_slot": {"s1": {"condition": {"type": "char"}}},
+		"settlement": [{"condition": {"r1:体魄>=": [1, 5]}, "result": {"coin": 1}}],
+		"settlement_prior": [], "settlement_extre": [],
+	}
+	add_child(view)
+	await wait_process_frames(2)
+	var card_uid := int(state.hand[0])
+	view._place_card_in_slot("s1", card_uid, "hand", "")
+	view._resolve()
+	var dice_prompt := view.find_child("DicePromptNew", true, false) as Control
+	var count_prompt := view.find_child("DiceCountPromptNew", true, false) as Control
+	assert_not_null(dice_prompt, "resolved rite exposes DicePromptNew")
+	assert_false(dice_prompt.visible, "the eager resolver has finished rolling before the count decision")
+	assert_not_null(count_prompt, "resolved rite exposes DiceCountPromptNew")
+	view._show_dice_count_prompt("gold")
+	assert_true(count_prompt.visible, "gold dice action opens the source count prompt")
+	view._confirm_dice_count_prompt()
+	assert_true(count_prompt.visible, "re-resolve exposes the new count decision")
+	assert_eq(view._gold_selected, 0, "confirmation clears the tentative selection")
+
+func test_result_surface_replays_source_play_rate_button():
+	var rng := RNG.new(772)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	add_child(view)
+	await wait_process_frames(2)
+	var button := view.find_child("PlayRate", true, false) as Button
+	assert_not_null(button, "result surface exposes source PlayRate")
+	assert_eq(button.position, Vector2(3067, 1441), "PlayRate keeps authored local position")
+	assert_eq(button.size, Vector2(104, 104), "PlayRate keeps authored size")
+	assert_false(button.visible, "PlayRate is hidden before settlement")
+	# The source has two rates, both from variable.json, selected by the
+	# auto-play flag — there is no x1/x2 cycle.
+	# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed 0x5a74a0]
+	var rates: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/variable.json"))
+	var manual_rate := float(rates.get("result_text_play_rate", 1))
+	var auto_rate := float(rates.get("result_text_auto_play_rate", 15))
+	view._toggle_play_rate()
+	assert_eq(view._result_play_rate, auto_rate, "PlayRate switches to the auto-play rate")
+	assert_eq(button.get_node("Art").texture.resource_path, "res://assets/original/ui/play_speed_x2.png")
+	view._toggle_play_rate()
+	assert_eq(view._result_play_rate, manual_rate, "PlayRate switches back to the manual rate")
+	var auto_button := view.find_child("AutoPlay", true, false) as Button
+	assert_not_null(auto_button, "result surface exposes source AutoPlay")
+	assert_eq(auto_button.position, Vector2(2668, 1445), "AutoPlay keeps source parent-relative geometry")
+	assert_eq(auto_button.size, Vector2(240, 88), "AutoPlay keeps source size")
+	assert_false(auto_button.visible, "AutoPlay is hidden before settlement")
+	view._rite["auto_result"] = 0
+	view._toggle_result_auto_play()
+	assert_true(state.auto_result_rites.has(5000001), "AutoPlay reuses the source auto-result flag")
+	assert_eq(auto_button.get_node("Art").texture.resource_path, "res://assets/original/ui/auto_play_active.png")
+
+func test_result_text_uses_source_typewriter_and_next_skips_before_commit():
+	var rng := RNG.new(773)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	view._rite = {"id": 5000001, "round_number": 0,
+		"settlement": [{"condition": {}, "result": {}, "result_title": "标题", "result_text": "这是结算正文"}],
+		"settlement_prior": [], "settlement_extre": []}
+	add_child(view)
+	await wait_process_frames(2)
+	view._resolve()
+	var text := view._result_surface_text
+	assert_not_null(text, "result text exists")
+	assert_false(view._result_text_done, "source result text starts in typewriter state")
+	assert_eq(text.visible_characters, 0, "source result text starts with zero visible characters")
+	view._on_result_next()
+	assert_true(view._result_text_done, "first next press completes the source text")
+	assert_eq(text.visible_characters, -1, "first next press reveals all text")
+	assert_true(state.get_rite_instance(view._rite_uid) != null, "revealing text does not commit the rite")
+
 func test_resolved_rite_does_not_consume_sudan_without_clean_result():
 	var rng := RNG.new(88)
 	var state := GameState.new()
@@ -255,6 +339,7 @@ func test_drop_card_moves_between_hand_slot_and_back():
 	assert_true(state.has_card_in_hand(card_id), "card returns to hand when dragged back")
 	assert_eq(state.hand.size(), initial_hand_size)
 	assert_eq(state.cards_in_slot(1).size(), 0)
+	await wait_process_frames(2)
 
 func test_prepare_table_preserves_cards_outside_placed_slots():
 	var rng := RNG.new(99)
@@ -490,13 +575,14 @@ func test_started_rite_blocks_slot_click_drag_and_desktop_return_until_stopped()
 	assert_true(state.cards_in_slot(2, view._rite_uid).is_empty())
 	assert_false(screen.can_drop_card_to_hand(data))
 	assert_false(view.can_drop_card_on_slot("s2", data))
-	var widget = view._slot_buttons["s1"].get_node("PlacedCard_S1")
+	var widget = view._slot_buttons["s1"].get_node("Container/PlacedCard_S1")
 	assert_null(widget._get_drag_data(Vector2.ZERO), "running slot cannot initiate a drag")
 	view._stop_started_rite()
 	assert_true(view._can_edit_slot("s1"), "stop reopens the same slot without rebuilding state")
 	assert_true(screen.can_drop_card_to_hand(data))
 	view.return_card_to_hand(uid, "s1")
 	assert_true(state.has_card_in_hand(uid))
+	await wait_process_frames(2)
 
 
 func test_empty_slot_cycles_qualified_bags_and_keeps_empty_match_state():
@@ -504,19 +590,28 @@ func test_empty_slot_cycles_qualified_bags_and_keeps_empty_match_state():
 	var state := GameState.new()
 	var rng := RNG.new(511)
 	state.setup_new_run(local_db, 1, rng)
+	# The fixture's s3 is the open_adsorb slot. Creation-time adsorption walks
+	# the hand in source order and takes the FIRST match, so the unconstrained
+	# s3 takes the protagonist; the manual-slot cycling below is about s1/s2.
+	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0]
 	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, local_db, rng, 992003)
+	# The fixture's s3 is the open_adsorb slot and creation-time adsorption
+	# walks the hand in source order, taking the FIRST accepted card — here the
+	# protagonist. Page 2 is therefore empty and the qualified set is [0].
+	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0 (CanPutCard scan order)]
+	assert_eq(int(view._placed.get("s3", 0)), int(state.player_actor_uid),
+		"the open_adsorb slot takes the first hand card its condition accepts")
 	view._rite["cards_slot"]["s1"]["condition"] = {"type": "char"}
 	view._rite["cards_slot"]["s2"]["condition"] = {"type": "unmatched"}
 	for uid in state.hand:
 		state.get_card_instance(uid).bag = 0
-	state.get_card_instance(state.player_actor_uid).bag = 2
-	state.current_bag_index = 2
+	state.current_bag_index = 0
 	var slots_before := view._placed.duplicate(true)
 	view._on_slot_pressed("s1")
-	assert_eq(state.current_bag_index, 2, "first click retains current qualified page")
+	assert_eq(state.current_bag_index, 0, "first click keeps the only qualified page")
 	view._on_slot_pressed("s1")
-	assert_eq(state.current_bag_index, 0, "repeat cycles sorted qualified pages")
+	assert_eq(state.current_bag_index, 0, "repeat cycles the qualified set")
 	view._on_slot_pressed("s2")
 	assert_eq(state.current_bag_index, 0, "no matches does not change page")
 	assert_eq_deep(view._placed, slots_before)
@@ -658,6 +753,17 @@ func test_restore_last_rite_state_is_partial_and_reforms_stack_count():
 	add_child(view)
 	view.setup(state, local_db, rng, 992003)
 	await wait_process_frames(2)
+	# Creation-time adsorption filled the fixture's open_adsorb slot s3 with the
+	# first hand card. Withdraw it (the panel refuses to edit that slot, so go
+	# through the state) — this test is about OnLastState restore.
+	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0; RitePanelController.c
+	#       @ OnLastState 0x58fdf0]
+	var adsorbed_uid := int(view._placed.get("s3", 0))
+	assert_gt(adsorbed_uid, 0, "the fixture's open_adsorb slot took a card")
+	view._placed.erase("s3")
+	state.remove_card_from_slot(adsorbed_uid, 3, view._rite_uid)
+	state.add_card_to_hand(adsorbed_uid, local_db)
+	assert_true(state.has_card_in_hand(gold_uid), "the gold stack is available for the restore")
 	state.last_round_rite_data[992003] = {
 		"s1": {"id": 2000029, "count": 3},
 		"s2": {"id": 2000029, "count": 999},
@@ -750,3 +856,85 @@ func test_stop_started_rite_rolls_back_life_and_keeps_cards():
 	assert_false(instance.start, "stop clears the started flag")
 	assert_eq(instance.life, instance.start_life, "life rolls back to start_life")
 	assert_false(instance.new_born, "a stopped rite is no longer new-born")
+
+
+func test_result_text_uses_matched_prior_and_extra_content_without_dsl_debug_rows():
+	var state := GameState.new()
+	var rng := RNG.new(779)
+	state.setup_new_run(db, 0, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	add_child(view)
+	var res := RiteResolver.RiteResult.new()
+	res.prior_log = [{"result_title": "前置标题", "result_text": "前置正文", "result": {"coin": 5}}]
+	view._display_result(res)
+	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n前置标题\n前置正文", "prior settlement has its own source text")
+	assert_eq(view._result_ops_layer.get_child_count(), 0, "raw DSL keys are not operation card results")
+	assert_eq(view._result_cards_layer.get_child_count(), 0, "slot snapshots are not operation card playback")
+	res.prior_log.clear()
+	res.normal_entry = {"result_text": "普通正文"}
+	res.extre_log = [{"result_text": "额外正文"}]
+	view._display_result(res)
+	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n普通正文\n额外正文", "extra settlement text is displayed instead of a debug count")
+	view._display_result(RiteResolver.RiteResult.new())
+	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text), "empty settlement retains the original rite introduction")
+
+
+func test_rite_help_follows_template_title_and_does_not_duplicate():
+	var state := GameState.new()
+	var rng := RNG.new(780)
+	state.setup_new_run(db, 0, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	add_child(view)
+	await wait_process_frames(2)
+	view._show_rite_help()
+	var help: Control = view._source_canvas.get_node("RiteHelp")
+	assert_eq(help.position + help.size * 0.5, view._rite_panel.position + view._rite_panel.size * 0.5 - Vector2(0, 210), "Help retains the source CommonContent parent center")
+	assert_eq(help.get_node("Prompt").position, Vector2(-949, 233), "help artwork retains its own authored offset")
+	assert_almost_eq(help.get_node("Mask").color.a, 128.0 / 255.0, 0.0001, "source help dimming does not black out the underlying page")
+	view._show_rite_help()
+	assert_null(view._source_canvas.get_node_or_null("RiteHelp2"), "repeated help requests do not stack overlays")
+
+
+func test_dice_selection_can_cancel_without_spending_and_confirms_multiple_gold_once():
+	var rng := RNG.new(1771)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.gold_dice = 3
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, rng, 5000001)
+	view._rite = {"id": 5000001, "cards_slot": {"s1": {"condition": {"type": "char"}}},
+		"settlement": [{"condition": {"r1:体魄>=": [1, 5]}, "result": {"coin": 1}}],
+		"settlement_prior": [], "settlement_extre": []}
+	add_child(view)
+	await wait_process_frames(2)
+	view._place_card_in_slot("s1", int(state.hand[0]), "hand", "")
+	view._resolve()
+	view._rerolls_left = 2
+	assert_true(view._gold_dice_btn.is_visible_in_tree(), "source side control survives preparation hide")
+	assert_true(view._reroll_btn.is_visible_in_tree())
+	view._show_dice_count_prompt("gold")
+	view._show_dice_count_prompt("gold")
+	assert_eq(state.gold_dice, 3, "tentative gold leaves persistent resources intact")
+	assert_eq(view._gold_selected, 2)
+	view._show_dice_count_prompt("reroll")
+	assert_eq(view._dice_count_kind, "gold", "cannot start redraw during gold selection")
+	view._cancel_dice_selection()
+	assert_eq(state.gold_dice, 3)
+	assert_eq(view._gold_selected, 0)
+	view._show_dice_count_prompt("reroll")
+	assert_eq(view._rerolls_left, 2, "redraw reservation is reversible")
+	view._show_dice_count_prompt("gold")
+	assert_eq(view._gold_selected, 0, "cannot add gold during redraw confirmation")
+	view._cancel_dice_selection()
+	assert_eq(view._rerolls_left, 2)
+	var dice_state: Array = view._last_result.dice_rolls.duplicate()
+	view._show_dice_count_prompt("gold")
+	view._show_dice_count_prompt("gold")
+	view._confirm_dice_count_prompt()
+	assert_eq(state.gold_dice, 1, "confirmation spends exactly the reserved quantity")
+	assert_eq(view._last_result.dice_rolls, dice_state, "gold confirmation retains cached rolls; newly matched rewards may consume RNG")
+	assert_eq(view._gold_used_this_resolve, 2)
+	view._confirm_dice_count_prompt()
+	assert_eq(state.gold_dice, 1, "duplicate confirmation cannot spend twice")

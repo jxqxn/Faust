@@ -40,6 +40,34 @@ func test_end_open_replays_change_bg_to_end_and_source_location_atlas() -> void:
 		assert_eq(palace_art.texture.get_height(), 446)
 
 
+func test_change_bg_to_end_switches_the_eft_end_map_slot_on() -> void:
+	# The source's last statement in ChangeBGToEnd is EftEnd.SetActive(true);
+	# GameScene ships "Eft_End_Map" (fileID 2574) as an INACTIVE, childless
+	# Transform, so only the slot and its activation are portable.
+	# [SRC: MapController.c @ ChangeBGToEnd (RVA 0x567b70) tail;
+	#       GameScene.unity GameObject 2574 "Eft_End_Map" m_IsActive 0;
+	#       dump.cs MapController.EftEnd@0x78]
+	var rng := RNG.new(8811)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.end_open = false
+	var desk := _desk(state, rng, Vector2(3840, 2160)) as MapController
+	await wait_process_frames(2)
+	var eft := desk.get_node_or_null("Eft_End_Map") as Control
+	assert_not_null(eft, "the ported map carries the source Eft_End_Map slot")
+	if eft == null:
+		return
+	assert_false(eft.visible, "it starts inactive, matching the authored m_IsActive 0")
+	assert_false(bool(eft.get_meta("source_active_at_start")), "and records that authored state")
+	assert_eq(eft.get_child_count(), 0,
+		"the slot is a bare Transform in the source; no invented particle hierarchy")
+	assert_false(desk.is_end_background_active(), "the ordinary map is still the background")
+	state.end_open = true
+	desk.refresh_context()
+	assert_true(desk.is_end_background_active(), "end_open replays ChangeBGToEnd")
+	assert_true(eft.visible, "and the end effect slot is switched on")
+
+
 func test_authored_location_nodes_use_gamescene_coordinates_not_clone_ratios():
 	var desk := _desk(null, null, Vector2(3840, 2160))
 	await wait_process_frames(2)

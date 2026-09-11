@@ -302,7 +302,7 @@ func test_rite_have_zero_spans_every_rite_instance() -> void:
 func test_sudan_pool_have_counts_pool_entries() -> void:
 	var local_db := _db_with_batch_rites()
 	var state := GameState.new()
-	state.sudan_deck = [2010001, 2010001, 2010002]
+	state.reset_sudan_pool_to_ids([2010001, 2010001, 2010002])
 	var ctx := {"state": state, "db": local_db, "rite_state": {}, "attr_slots": []}
 	assert_true(ConditionEval.eval_key("sudan_pool_have.2010001", 2, ctx), "pool counts matched entries")
 	assert_false(ConditionEval.eval_key("sudan_pool_have.2010001", 3, ctx))
@@ -460,14 +460,17 @@ func test_redraw_writes_discarded_runtime_tags_back_to_pool() -> void:
 	var state := GameState.new()
 	state.sudan_redraw_count = 1
 	state.redraws_left = 1
-	state.sudan_deck = [2010002, 2010003]
+	state.reset_sudan_pool_to_ids([2010002, 2010003])
 	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(45))
 	var active_uid: int = int(state.active_sudan_cards[0].card_uid)
 	state.get_card_instance(active_uid).tags["重抽回写"] = 5
 	var discarded_id := int(state.active_sudan_cards[0].card_id)
 	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), local_db), 2010002)
-	assert_eq(int(state.sudan_pool_tags.get(discarded_id, {}).get("重抽回写", 0)), 5,
-		"the discarded card's runtime tags ride back into the pool")
+	var reinserted = state.sudan_pool_entry(active_uid)
+	assert_not_null(reinserted, "the discarded Card object itself returns to the pool")
+	assert_eq(int(reinserted.card_id), discarded_id)
+	assert_eq(int(reinserted.tags.get("重抽回写", 0)), 5,
+		"the discarded card's runtime tags ride back into the pool with the object")
 
 
 func test_redraw_spends_extra_counter_when_per_round_is_exhausted() -> void:
@@ -479,7 +482,7 @@ func test_redraw_spends_extra_counter_when_per_round_is_exhausted() -> void:
 	state.sudan_redraw_count = 1
 	state.redraws_left = 0
 	state.set_counter(7100008, 1)
-	state.sudan_deck = [2010002, 2010003]
+	state.reset_sudan_pool_to_ids([2010002, 2010003])
 	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(47))
 	assert_eq(RoundLoop.use_redraw(state, RNG.new(48), local_db), 2010002,
 		"the extra redraw counter funds a redraw")
@@ -586,10 +589,11 @@ func test_drop_auto_routes_to_first_satisfied_slot() -> void:
 	view.free()
 
 
-func test_rebirth_resets_slot_card_countdown() -> void:
-	# [SRC: RebirthSudanCard.c @ Do (0x519d60) + <Do>b__4_0 (0x51dec0):
-	#       Card.set_life(0); active Sultan deadlines restore to the
-	#       difficulty lifetime via UpdateSudanLife]
+func test_rebirth_without_freeze_restarts_life_at_zero() -> void:
+	# The no-冻结 branch is Card.set_life(card, 0): a fresh draw.
+	# [SRC: RebirthSudanCard.<>c.c @ <Do>b__4_0 (0x51dec0) HasTag(card,"freeze")
+	#       false -> Card.set_life(card, 0); GameController.c @ UpdateSudanLife
+	#       (0x55aeb0) refreshes the visible countdown to card_vanishing − life]
 	var local_db := _db_with_batch_rites()
 	local_db.rites[992001]["cards_slot"] = {"s1": {"condition": {}}}
 	var state := GameState.new()
@@ -604,8 +608,42 @@ func test_rebirth_resets_slot_card_countdown() -> void:
 	ResultExec.execute({"rebirth.s1": 1}, state, local_db, {"rite_uid": rite.uid})
 
 	assert_eq(inst.life, 0, "the slotted card's life restarts from zero")
-	assert_eq(sudan.days_left, int(state.difficulty_config.get("sudan_life_time", 7)),
-		"the active Sultan deadline restores to the difficulty lifetime")
+	assert_eq(sudan.days_left, int(local_db.get_card(2010001).get("card_vanishing", 7)),
+		"the visible countdown is card_vanishing − life, i.e. a full deadline")
+
+
+func test_rebirth_with_freeze_resets_to_the_difficulty_head_start() -> void:
+	# The 冻结 (freeze, tag.json id 3019999 / code freeze) branch is
+	# Card.set_life(card_vanishing − player.sudan_card_init_life) -- the SAME
+	# head start a new draw gets, NOT the full card_vanishing. All 8 configured
+	# rebirth writes target Sudan cards whose slots get 冻结 applied (rite
+	# 5006558 "复原的神迹" explicitly says the reset returns the card "就像是从
+	# 女术士的宝匣里刚刚抽出来的时候一样").
+	# [SRC: RebirthSudanCard.<>c.c @ <Do>b__4_0 (0x51dec0) freeze branch reads
+	#       CardNode.card_vanishing@0x60 and Player.sudan_card_init_life@0x64;
+	#       GameController.c @ GenSudanCard 0x54f6f0 uses the same expression]
+	var local_db := _db_with_batch_rites()
+	local_db.rites[992001]["cards_slot"] = {"s1": {"condition": {}}}
+	var state := GameState.new()
+	# Hard profile: 7 − 5 = a 2-day head start, which distinguishes the two
+	# branches (on the default profile sudan_card_init_life == card_vanishing,
+	# so both land on life 0 and the difference is invisible).
+	state.sudan_card_init_life = 5
+	var sudan = RoundLoop.ActiveSudan.new(2010001, 2, state.round_number, 0)
+	var inst = state.create_card_instance(2010001, local_db, "sudan")
+	inst.tags["冻结"] = 1
+	sudan.card_uid = inst.uid
+	state.active_sudan_cards.append(sudan)
+	var rite = state.create_rite_instance(992001)
+	state.add_card_to_slot(inst.uid, 1, local_db, rite.uid)
+	inst.life = 4
+
+	ResultExec.execute({"rebirth.s1": 1}, state, local_db, {"rite_uid": rite.uid})
+
+	var lifetime: int = int(local_db.get_card(2010001).get("card_vanishing", 7))
+	assert_eq(inst.life, lifetime - 5, "the frozen card returns to the difficulty head start")
+	assert_eq(sudan.days_left, 5, "and its visible countdown is sudan_card_init_life, not card_vanishing")
+	assert_ne(sudan.days_left, lifetime, "a frozen rebirth is not a full-deadline reset")
 
 
 func test_difficulty_action_switches_mid_run() -> void:

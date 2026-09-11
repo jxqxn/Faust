@@ -500,7 +500,7 @@ func test_game_screen_shared_hand_clock_stops_for_local_and_global_pauses():
 	)
 
 
-func test_main_menu_hides_continue_without_valid_player_save():
+func test_main_menu_disables_continue_without_valid_player_save():
 	SaveSystem.delete_save()
 	var file := FileAccess.open(SaveSystem.save_path(), FileAccess.WRITE)
 	file.store_string(JSON.stringify({"version": 1, "hand": [2000001]}, "\t"))
@@ -511,7 +511,9 @@ func test_main_menu_hides_continue_without_valid_player_save():
 	stage.add_child(menu)
 	await wait_process_frames(2)
 
-	assert_null(_find_node_by_name(menu, "ContinueGameButton"), "old or test save files should not show a continue button")
+	var cont := _find_node_by_name(menu, "ContinueGameButton") as Button
+	assert_not_null(cont)
+	assert_true(cont.disabled, "StartController.CheckCanContinueGame disables, rather than hides, invalid saves")
 
 
 func test_main_menu_shows_continue_for_valid_player_save():
@@ -529,36 +531,49 @@ func test_main_menu_shows_continue_for_valid_player_save():
 	assert_not_null(_find_node_by_name(menu, "ContinueGameButton"), "valid player saves should show a continue button")
 
 
-func test_main_menu_lists_named_archives_with_load_and_delete_actions():
+func test_main_menu_archive_load_uses_source_picker_and_confirmation():
 	SaveSystem.delete_all_user_archives()
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(19))
 	state.day = 5
 	assert_true(SaveSystem.save_user_archive(state, 0, "Book shop route"), "test setup should create a manual archive")
 	var stage := _stage()
-	var menu = MainMenu.new()
-	menu.setup(db)
-	stage.add_child(menu)
+	var game = Game.new()
+	stage.add_child(game)
 	await wait_process_frames(2)
+	var menu = game._current
 	var archive_toggle := _find_node_by_name(menu, "UserArchiveLoadGameButton")
 	assert_not_null(archive_toggle, "archives are reachable from the title menu")
 	archive_toggle.pressed.emit()
 	await wait_process_frames(2)
 
-	assert_not_null(_find_node_by_name(menu, "UserArchiveList"), "manual archives should be visible on the title menu")
-	assert_not_null(_find_node_by_name(menu, "LoadUserArchiveButton_0"), "an archive row should load its selected slot")
-	assert_not_null(_find_node_by_name(menu, "DeleteUserArchiveButton_0"), "an archive row should expose deletion")
+	var picker = game._user_archive_overlay
+	assert_not_null(picker, "load uses the same source archive panel as save")
+	picker._on_item_clicked(1)
+	assert_null(_find_node_by_name(picker, "LoadArchiveConfirm"), "empty load slot is a no-op")
+	picker._on_item_clicked(0)
+	var confirmation = _find_node_by_name(picker, "LoadArchiveConfirm")
+	assert_not_null(confirmation)
+	confirmation.canceled.emit()
+	await wait_process_frames(2)
+	assert_eq(game._current, menu, "cancelling keeps the title and archive selection")
+	picker._on_item_clicked(0)
+	confirmation = _find_node_by_name(picker, "LoadArchiveConfirm")
+	confirmation.confirmed.emit()
+	await wait_process_frames(2)
+	assert_eq(game.state.day, 5, "confirmation restores the selected archive")
+	assert_null(game._user_archive_overlay, "load dismisses the archive surface")
+	assert_not_null(game._game_screen, "load enters the game host")
 
 
-func test_main_menu_exposes_test_start_in_debug_builds():
+func test_main_menu_keeps_debug_entry_out_of_source_layout():
 	var stage := _stage()
 	var menu = MainMenu.new()
 	menu.setup(db)
 	stage.add_child(menu)
 	await wait_process_frames(2)
 
-	if OS.is_debug_build():
-		assert_not_null(_find_node_by_name(menu, "TestStartButton"), "debug builds should expose a simple test start entry")
+	assert_null(_find_node_by_name(menu, "TestStartButton"), "debug entries require explicit --dev-menu")
 
 
 func test_game_screen_uses_wide_viewport_width():
@@ -819,9 +834,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 		# PromptNew 1:1: the prompt replays the OptionBG parchment instead of
 		# the old compact dark box; it stays inside the 3840x2160 desk band.
 		assert_almost_eq(prompt_panel.size.x, 2705.0, 1.0, "event prompt replays OptionBG 2705 width")
-		assert_almost_eq(prompt_panel.size.y, 960.0, 1.0, "event prompt keeps the screenshot-derived OptionBG height")
 		assert_almost_eq(prompt_panel.position.x, (3840.0 - 2705.0) * 0.5, 1.0, "event prompt is centred on the source canvas")
-		assert_almost_eq(prompt_panel.position.y, (2160.0 - 960.0) * 0.5, 1.0, "event prompt stays inside the desk band")
 
 
 func test_game_screen_event_overlay_consumes_prompt_choice_and_followup():
@@ -886,6 +899,9 @@ func test_game_screen_rename_operation_blocks_for_input_and_updates_card() -> vo
 	if input == null or confirm == null:
 		return
 	input.text = "新名字"
+	# Original OnConfirm refuses while TMP_InputField is still editing.
+	# A real button click transfers selection before invoking the action.
+	confirm.grab_focus()
 	confirm.pressed.emit()
 	await wait_process_frames(2)
 
@@ -1075,7 +1091,7 @@ func test_game_menu_button_opens_real_overlay():
 	assert_not_null(_find_node_by_name(game, "Settings"), "source Settings entry must remain visible")
 	assert_not_null(_find_node_by_name(game, "EndGame"), "source EndGame entry must remain visible")
 	assert_not_null(_find_node_by_name(game, "SaveAndExit"), "source Main Menu entry must remain visible")
-	assert_not_null(_find_node_by_name(game, "Return"), "source Return entry must remain visible")
+	assert_not_null(_find_node_by_name(overlay, "Close"), "ESCPanelNew has a top-right Close button")
 	if overlay != null and rail != null:
 		assert_gt(overlay.z_index, rail.z_index, "the menu must cover persistent hand cards")
 		assert_eq(overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "the global menu layer must block clicks behind it")
@@ -1093,7 +1109,7 @@ func test_game_menu_button_opens_real_overlay():
 	)
 	var desk := _find_node_by_name(game, "SituationDesk")
 	assert_true(desk.is_scene_blocked(), "the game menu should block desk input")
-	var resume := _find_node_by_name(game, "Return") as Button
+	var resume := _find_node_by_name(overlay, "Close") as BaseButton
 	if resume != null:
 		resume.pressed.emit()
 		await wait_process_frames(1)
@@ -1126,13 +1142,15 @@ func test_game_menu_replays_source_esc_geometry_and_end_game_call_chain():
 	assert_not_null(end_game)
 	if esc == null or group == null or settings == null or end_game == null:
 		return
-	assert_eq(esc.size, Vector2(1920, 1080), "ESCPanel keeps its source canvas before its 2x transform")
-	assert_eq(esc.scale, Vector2(2, 2), "ESCPanel replays its source root scale")
-	assert_eq(group.position, Vector2(449.5, 312), "ButtonGroup remains centered in the source canvas")
-	assert_eq(group.size, Vector2(1021, 456), "inactive NewGame is excluded by the source content fitter")
-	assert_eq(settings.size, Vector2(405, 174), "source ESC buttons retain their authored dimensions")
-	assert_eq(settings.position, Vector2(308, 0), "Settings starts the active source layout sequence")
-	assert_eq(end_game.position, Vector2(308, 94), "source layout keeps the -80px vertical overlap")
+	assert_eq(esc.size, Vector2(3840, 2160), "ESCPanel fills the GameScene design canvas")
+	assert_eq(esc.scale, Vector2(1, 1), "ESCPanel uses the GameScene canvas scale")
+	assert_eq(group.size, Vector2(1665, 1036), "ESCPanelNew ButtonGroup uses the GameScene authored size")
+	assert_eq(settings.size, Vector2(668, 174), "source ESC buttons retain their authored dimensions")
+	assert_eq(settings.position.x, (1665.0 - 668.0) * 0.5, "Settings is centered in the source group")
+	assert_eq(end_game.position.y - settings.position.y, 597.0, "source button spacing and top-to-bottom order are preserved")
+	assert_eq(settings.position.y, 140.0, "top anchor y=-227 with half-height87 gives top140")
+	assert_eq(group.get_node("Close").position, Vector2(1564, 55), "Unity y=1 puts Close at top-right")
+	assert_null(group.get_node_or_null("Return"), "GamepadReturn is not an extra PC row")
 	assert_false(settings.disabled, "ESCGameController.OnSettings must reach its source SettingsController host")
 	settings.pressed.emit()
 	await wait_process_frames(1)
@@ -1207,7 +1225,7 @@ func test_player_path_keeps_surface_ownership_and_modal_budget_intact():
 		assert_gt(menu_overlay.z_index, rail.z_index, "global menu outranks persistent hand cards")
 		assert_eq(menu_overlay.mouse_filter, Control.MOUSE_FILTER_STOP, "global menu blocks clicks behind its shade")
 	assert_true(desk.is_scene_blocked(), "the global menu blocks all lower desk input")
-	var resume := _find_node_by_name(game, "Return") as Button
+	var resume := _find_node_by_name(menu_overlay, "Close") as BaseButton
 	assert_not_null(resume)
 	if resume == null:
 		return
@@ -1224,7 +1242,10 @@ func test_game_menu_opens_manual_archive_picker():
 	game._on_new_game_pressed()
 	await wait_process_frames(2)
 	_drain_intro_events(game)
-	game._show_user_archive_overlay()
+	game._show_game_menu()
+	var save_button := _find_node_by_name(game._menu_overlay, "SaveGame") as Button
+	assert_not_null(save_button)
+	save_button.pressed.emit()
 	await wait_process_frames(1)
 
 	var archive_panel := _find_node_by_name(game, "UserArchiveController") as Control
@@ -1246,7 +1267,8 @@ func test_game_menu_opens_manual_archive_picker():
 		assert_almost_eq(scroll.size.x, 2511.2, 0.01, "Scroll View preserves its source width independent of item width")
 		assert_almost_eq(scroll.size.y, 1760.0, 0.01, "Scroll View replays its source vertical insets")
 	if first_slot != null:
-		assert_eq(first_slot.custom_minimum_size, Vector2(2760, 240), "UserArchiveItem preserves the authored 2760x240 row")
+		assert_eq(first_slot.get_meta("source_authored_size"), Vector2(2760, 240), "UserArchiveItem records the authored 2760x240 prefab row")
+		assert_eq(first_slot.size, Vector2(2471.2, 240), "LoopScrollRect fits the authored row to the source Viewport width")
 	var empty_slot: Button
 	for index in SaveSystem.MAX_USER_ARCHIVE_COUNT:
 		var candidate := _find_node_by_name(game, "UserArchiveItem_%02d" % index) as Button
@@ -1264,11 +1286,20 @@ func test_game_menu_opens_manual_archive_picker():
 		assert_not_null(confirm, "name controller owns a separate confirm control")
 		if input != null and confirm != null:
 			assert_eq(input.max_length, 20, "source name input permits only 1–20 characters")
+			assert_eq(input.text, "未命名存档", "source defaults an empty slot to its translated name")
+			input.text = ""
+			input.text_changed.emit(input.text)
 			assert_true(confirm.disabled, "empty archive names cannot be confirmed")
 			input.text = "原作槽位"
 			input.text_changed.emit(input.text)
 			await wait_process_frames(1)
 			assert_false(confirm.disabled, "a non-empty <=20-character name enables confirmation")
+		var prompt := _find_node_by_name(game, "PromptBG") as Control
+		assert_not_null(prompt, "name input uses the source prompt background")
+		if prompt != null:
+			assert_not_null(_find_node_by_name(prompt, "Full"), "name input keeps the source full mask layer")
+			assert_not_null(_find_node_by_name(prompt, "Border"), "name input keeps the source corner decoration")
+			assert_not_null(_find_node_by_name(prompt, "Icon"), "name input keeps the source portrait")
 	var desk := _find_node_by_name(game, "SituationDesk")
 	assert_true(desk.is_scene_blocked(), "the archive picker should block desk input")
 	game._close_user_archive_overlay()
@@ -1342,16 +1373,24 @@ func test_card_widget_face_only_shows_name_and_art():
 	assert_not_null(face.get_node_or_null("Foreground"))
 	assert_null(face.get_node_or_null("CardAttrRow"))
 	# [SRC: CardNew/Flash 256x512 at pos(0,0) with CardFlash.mat inner outline;
-	#       CardNew/Outline is m_IsActive=0 and must not be drawn.]
+	#       CardNew/Outline starts inactive but OnSelect enables it.]
 	var flash := face.get_node_or_null("Flash") as TextureRect
 	assert_not_null(flash, "CardNew/Flash carries the card's gold inner outline")
 	if flash != null:
 		assert_eq(flash.position, Vector2(-31, -45))
 		assert_eq(flash.size, Vector2(256, 512))
 		assert_true(flash.material is ShaderMaterial)
+		assert_eq(flash.material.get_shader_parameter("outline_fade"), 0.0, "Flash must not add a permanent gold border")
 		assert_true(flash.texture.resource_path.ends_with("card_outline.png"))
 		assert_lt(face.get_node("CardArt").get_index(), flash.get_index(), "the outline sits above the portrait")
-	assert_null(face.get_node_or_null("Outline"), "the inactive CardNew/Outline is never instantiated")
+	var selected_outline: Control = face.get_node("Outline")
+	assert_false(selected_outline.visible)
+	widget.set_selected(true, false)
+	assert_true(selected_outline.visible)
+	assert_eq(selected_outline.position, Vector2(-31, -73.5))
+	assert_lt(selected_outline.get_index(), face.get_node("RarityFrame").get_index())
+	widget.set_selected(false, false)
+	assert_false(selected_outline.visible)
 	assert_true(face.get_node("RarityFrame").material is ShaderMaterial, "every rarity carries its authored card material")
 
 
@@ -1383,10 +1422,13 @@ func test_card_material_replays_authored_tier_values():
 			var metal_map := material.get_shader_parameter("metal_map") as Texture2D
 			assert_true(str(normal_map.resource_path).ends_with(expected_normal + ".png"))
 			assert_true(str(metal_map.resource_path).ends_with(expected_metal + ".png"))
-			assert_true(material.get_shader_parameter("material_light") is Vector3)
-			assert_almost_eq(float(material.get_shader_parameter("vertical_light_falloff")), 0.2065, 0.0001)
-			assert_almost_eq(float(material.get_shader_parameter("metallic_diffuse_loss")), 0.3, 0.0001)
-			assert_almost_eq(float(material.get_shader_parameter("specular_strength")), 0.3, 0.0001)
+			var emission_map := material.get_shader_parameter("emission_map") as Texture2D
+			assert_not_null(emission_map, "source emission map must be bound")
+			var emission: Vector3 = material.get_shader_parameter("emission_color")
+			if rare == 4:
+				assert_eq(emission, Vector3(0.04513899, 0.04513899, 0.02083))
+			if rare == 3:
+				assert_eq(emission, Vector3.ZERO)
 			await wait_process_frames(1)
 
 func test_card_face_uses_resource_variant_and_runtime_badges():
@@ -1456,9 +1498,9 @@ func test_card_widget_hides_source_while_dragging_and_restores_on_failed_drop():
 
 	widget._restore_source_after_failed_drag()
 	assert_true(widget.visible, "source card should reappear if drop fails")
-	assert_true(
+	assert_false(
 		widget.is_hand_motion_active(),
-		"a failed drop should tween back from the release point instead of snapping"
+		"SetChild immediately places a card returned to the hand"
 	)
 
 
@@ -1470,14 +1512,14 @@ func test_card_widget_hover_lifts_without_scale_or_perspective():
 	await wait_process_frames(2)
 
 	widget._set_hovered(true)
-	assert_true(widget.z_index >= CardWidget.HOVER_Z_INDEX, "hovered card should render above neighbouring cards")
+	assert_eq(widget.z_index, 0, "CardMoveUp changes height without inventing a topmost hover layer")
 	assert_almost_eq(
-		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.001,
-		"hover should use CardArea's highlighted lift"
+		(widget.get_global_transform() * (widget.size * 0.5)).y - 211.0, -CardWidget.SELECTED_LIFT, 0.001,
+		"hover should use CardMoveUp fixed-height projection"
 	)
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001, "hover must not add clone-era zoom")
 	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001, "hover must not tilt the card")
-	assert_true(widget.offset_transform_visual_only, "hover transform should not distort the card's mouse hit rectangle")
+	assert_eq(widget.size.y, 522.0, "hover enlarges actual mouse rectangle with the source root")
 	assert_not_null(_find_node_by_name(widget, "CardVisualFace"), "the card face should render as one flat surface")
 	assert_null(
 		_find_node_by_name(widget, "CardVisualSurface"),
@@ -1501,6 +1543,7 @@ func test_card_widget_drag_preview_tracks_cursor_without_own_motion():
 	var widget := CardWidget.make(card)
 	var selected_position := Vector2(1.5, -11.0)
 	widget.make_drag_preview(selected_position, 0.0, Vector2.ONE)
+	assert_almost_eq(widget.modulate.a, 0.6, 0.001, "CardNew dragAlpha is authored as 0.6")
 
 	assert_eq(widget.offset_transform_position, selected_position, "drag preview must start at the pickup pose")
 	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001, "the held card must not carry an angle")
@@ -1521,20 +1564,29 @@ func test_card_widget_selected_pose_uses_original_highlight_height_without_scale
 	stage.add_child(widget)
 	widget.set_selected(true)
 	assert_true(widget.is_selected())
+	# CardMoveUp +100 root height, SetChild bottom alignment, centre child.
+	assert_eq(widget.size, Vector2(194, 522), "the real raycast root grows by100")
 	assert_almost_eq(
-		widget.offset_transform_position.y, -CardWidget.SELECTED_LIFT, 0.001,
-		"highlighted cards should use CardArea's 0.2-card-height lift"
+		(widget.get_global_transform() * (widget.size * 0.5)).y - 211.0, -CardWidget.SELECTED_LIFT, 0.001,
+		"highlighted cards should use CardMoveUp 100-unit root growth projected to 50-unit centre lift"
 	)
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001, "selection alone must not add hover zoom")
 	assert_almost_eq(widget.offset_transform_rotation, 0.0, 0.000001)
 
+	widget.set_candidate_highlight(true)
+	assert_almost_eq((widget.get_global_transform() * (widget.size * 0.5)).y - 211.0, -55.0, 0.001)
+	widget.reset_candidate_scale()
 	widget.set_selected(false)
 	assert_false(widget.is_selected())
 	assert_almost_eq(widget.offset_transform_position.y, 0.0, 0.001, "deselected cards should return flat to the rail")
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.001)
 
+	widget.drag_source = "rite"
+	widget.set_selected(true)
+	assert_eq(widget.offset_transform_position, Vector2.ZERO, "CardMoveUp skips slot cards")
 
-func test_card_widget_deal_in_uses_visual_offset_and_settles():
+
+func test_card_widget_add_to_hand_assigns_slot_without_flight():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
 	var widget := CardWidget.make(card)
@@ -1546,15 +1598,15 @@ func test_card_widget_deal_in_uses_visual_offset_and_settles():
 	widget.play_deal_in(Vector2(320, 32), 0)
 
 	assert_eq(widget.position, stable_position, "deal animation must not move the stable hand slot")
-	assert_true(widget.offset_transform_position.x > 0.0, "card should start from the right-side deal origin")
-	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_IGNORE, "an incoming card must not intercept hand input")
+	assert_eq(widget.offset_transform_position, Vector2.ZERO, "AddCard -> SetChild has no right-deck travel")
+	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "source hand placement does not add an input delay")
 	await wait_seconds(0.42)
 	assert_almost_eq(widget.offset_transform_position.x, 0.0, 1.0, "dealt card should settle into its hand slot")
 	assert_almost_eq(widget.offset_transform_scale.x, 1.0, 0.02, "dealt card should finish at normal scale")
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled card should restore interaction")
 
 
-func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
+func test_card_widget_reflow_assigns_slot_without_clone_easing():
 	var card := {"id": 2000001, "name": "Test", "type": "char", "rare": 1, "tag": {}}
 	var stage := _stage()
 	var widget := CardWidget.make(card)
@@ -1566,7 +1618,7 @@ func test_card_widget_reflow_keeps_slot_stable_and_animates_visual_position():
 	widget.play_hand_reflow(Vector2(58, 0))
 
 	assert_eq(widget.position, stable_position, "reflow should leave the new hit-test slot stable")
-	assert_true(widget.offset_transform_position.x > 40.0, "remaining card should begin at its former visual position")
+	assert_eq(widget.offset_transform_position, Vector2.ZERO, "SetChild assigns the new position without interpolation")
 	await wait_seconds(0.34)
 	assert_almost_eq(widget.offset_transform_position.x, 0.0, 1.0, "remaining card should settle into the recentered hand")
 	assert_eq(widget.mouse_filter, Control.MOUSE_FILTER_STOP, "settled remaining card should restore interaction")
@@ -1650,7 +1702,7 @@ func test_game_screen_dragging_card_out_closes_gap_immediately():
 
 	assert_false(dragged.visible, "drag source should leave the stable hand layout")
 	assert_true(neighbour.position.x < old_neighbour_x, "remaining hand should close the empty slot while dragging")
-	assert_true(neighbour.offset_transform_position.x > 10.0, "gap closing should animate from the former visual slot")
+	assert_eq(neighbour.offset_transform_position.x, 0.0, "SetChild closes the gap without a second visual position")
 
 
 func test_game_screen_hand_drop_preview_opens_insertion_gap():
@@ -1690,7 +1742,7 @@ func test_game_screen_hand_drop_preview_opens_insertion_gap():
 	assert_eq(screen._hand_drop_preview_index, -1)
 
 
-func test_game_screen_remaining_cards_animate_from_old_slots_after_one_is_played():
+func test_game_screen_remaining_cards_take_new_slots_after_one_is_played():
 	var rng := RNG.new(10)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -1709,7 +1761,7 @@ func test_game_screen_remaining_cards_animate_from_old_slots_after_one_is_played
 	assert_not_null(remaining, "a neighbouring hand card should remain after one card is played")
 	if remaining == null:
 		return
-	assert_true(absf(remaining.offset_transform_position.x) > 10.0, "remaining card should still render near its former slot while reflow begins")
+	assert_eq(remaining.offset_transform_position.x, 0.0, "SetChild places remaining cards immediately")
 	await wait_seconds(0.34)
 	assert_almost_eq(remaining.offset_transform_position.x, 0.0, 1.0, "remaining card should settle into its new centred slot")
 
@@ -1758,10 +1810,10 @@ func test_game_screen_inserts_returned_slot_card_by_hand_drop_position():
 	var returned_widget := _find_card_widget_by_uid(screen, returned_id)
 	assert_not_null(returned_widget, "returned card should be rendered in its reserved hand slot")
 	if returned_widget != null:
-		assert_true(absf(returned_widget.offset_transform_position.x) > 10.0, "returned card should settle from the cursor instead of appearing under another card")
+		assert_eq(returned_widget.offset_transform_position.x, 0.0, "returned card is placed at the assigned insertion slot")
 		assert_almost_eq(
-			returned_widget.offset_transform_rotation, deg_to_rad(1.25), 0.000001,
-			"returned card should begin from the drag preview angle without snapping"
+			returned_widget.offset_transform_rotation, 0.0, 0.000001,
+			"hand placement must not preserve clone-era drag tilt"
 		)
 
 
@@ -1870,10 +1922,10 @@ func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
 	await wait_process_frames(2)
 
 	assert_eq(state.rail_order[0], sudan_uid, "newly drawn sudan cards should default to the first rail position")
-	var rail_widgets := _rail_card_widgets(screen)
+	var rail_widgets: Array = screen._ordered_hand_cards()
 	assert_true(rail_widgets.size() > 0, "rail should render at least one card")
 	if rail_widgets.size() > 0:
-		assert_eq(int((rail_widgets[0] as CardWidget).card_id), sudan_id, "rendered rail should show the sudan card first")
+		assert_eq(int((rail_widgets[0] as CardWidget).card_id), sudan_id, "bag-ordered rail starts with the sudan card; painter order may differ under overflow")
 
 
 func test_game_screen_can_open_card_detail_overlay():
@@ -1955,6 +2007,7 @@ func test_card_detail_help_covers_canvas_and_uses_source_text():
 	assert_eq(text.get_meta("source_text_style"), "@HELP_TEXT")
 	view.hide_help()
 	assert_null(view._help_overlay)
+	await wait_process_frames(2)
 
 
 func test_game_screen_right_actions_do_not_duplicate_rite_entry():
@@ -2199,14 +2252,14 @@ func test_change_name_replays_source_geometry():
 		assert_eq(canvas.size, Vector2(3840, 2160), "ChangeName retains the source design canvas")
 	if bar != null:
 		assert_almost_eq(bar.position.x, (3840.0 - 2534.4) * 0.5, 0.1, "PromptBG is centred with its source 2534.4 width")
-		assert_almost_eq(bar.position.y, (2160.0 - 220.0) * 0.5, 0.1, "PromptBG is centred vertically")
+		assert_almost_eq(bar.position.y, (2160.0 - bar.size.y) * 0.5, 0.1, "PromptBG is centred vertically")
 		assert_almost_eq(bar.size.x, 2534.4, 0.1, "PromptBG keeps the source 2534.4 width")
 	var input_host := _find_node_by_name(view, "InputFieldHost") as Control
 	if input_host != null:
 		assert_almost_eq(input_host.size.x, 826.0, 0.1, "InputField keeps the authored 826x90")
 		assert_almost_eq(input_host.size.y, 90.0, 0.1, "InputField keeps the authored 826x90")
 	if input != null:
-		assert_eq(input.max_length, 20, "IsValidName caps names at 20 chars (0x15)")
+		assert_eq(input.max_length, 0, "source input is unlimited; IsValidName rejects invalid UTF-16 length")
 	if confirm != null:
 		assert_almost_eq(confirm.size.x, 325.0, 0.1, "Confirm keeps the rite_op_confirm 325x158")
 		assert_almost_eq(confirm.size.y, 158.0, 0.1, "Confirm keeps the rite_op_confirm 325x158")
@@ -2421,14 +2474,14 @@ func test_event_prompt_long_body_scrolls_without_covering_choices():
 	var choices: Control = view.find_child("OptionGroup", true, false)
 	assert_eq(body.get_parsed_text().split("\n")[0], "长正文 3 > 2")
 	assert_eq(choices.get_child(0).get_node("OptionText").get_parsed_text(), "保留 3 > 2")
-	assert_eq(body.size.y, 1100.0, "OptionNew caps the preferred height at 1100")
+	assert_lte(body.size.y, 1100.0, "OptionNew preferred cap can shrink under parent constraints")
 	assert_gt(body.get_v_scroll_bar().max_value, body.size.y)
 	assert_gte(choices.get_child(0).position.y, body.position.y + body.size.y + 50.0)
 	assert_eq(body.mouse_filter, Control.MOUSE_FILTER_STOP, "the scrollable body must receive wheel input")
 	assert_eq(choices.get_child(1).position.y - choices.get_child(0).position.y - choices.get_child(0).size.y, 20.0)
 	view.show_prompt({"text": "普通提示长正文\n".repeat(70)}, Callable())
 	await wait_process_frames(4)
-	assert_eq(body.size.y, 1300.0, "PromptNew has a separate 1300 cap")
+	assert_lte(body.size.y, 1300.0, "PromptNew preferred cap can shrink under parent constraints")
 	view.show_prompt({"text": "短正文"}, Callable())
 	await wait_process_frames(4)
 	assert_lt(body.size.y, 1300.0, "reusing the prompt restores short content height")
@@ -2440,8 +2493,8 @@ func test_event_prompt_replays_prompt_new_geometry():
 	# [SRC: docs/ui_layout/PromptNew.md — OptionBG 2705 wide (prompt_bg +
 	# prompt_bg_mask_2 Full), Border decorate 250x323, Confirm rite_op_confirm
 	# 325x158 at (1,0)(-483,73); option rows = OptionNewItem (Text fs40
-	# centred on option_item_bg). OptionBG height 960 is the screenshot-
-	# derived constant (runtime layout-group height; registered 🟡).]
+	# centred on option_item_bg). Root Top/Bottom use min100/400 and
+	# flexible3500/2000; panel height follows preferred content.]
 	var rng := RNG.new(23)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -2457,9 +2510,9 @@ func test_event_prompt_replays_prompt_new_geometry():
 	if panel == null:
 		return
 	assert_almost_eq(panel.size.x, 2705.0, 1.0, "OptionBG keeps authored 2705 width")
-	assert_almost_eq(panel.size.y, 960.0, 1.0, "OptionBG keeps the screenshot-derived height")
+	assert_gt(panel.size.y, 400.0, "OptionBG derives height from source padding and content")
 	assert_almost_eq(panel.position.x, 567.5, 1.0, "OptionBG is centred horizontally")
-	assert_almost_eq(panel.position.y, 600.0, 1.0, "OptionBG is centred vertically")
+	assert_almost_eq(panel.position.y, 100.0 + maxf(0.0, 1660.0 - panel.size.y) * 3500.0 / 5500.0, 1.0, "root distributes spare height between authored flexible reserves")
 	var body := _find_node_by_name(screen, "EventPromptBody") as RichTextLabel
 	assert_not_null(body, "prompt keeps the body text")
 	if body != null:
@@ -2481,10 +2534,10 @@ func test_event_prompt_replays_prompt_new_geometry():
 	var first := _find_node_by_name(panel, "EventPromptChoiceButton") as Button
 	assert_not_null(first, "a choice row exists")
 	if first != null:
-		assert_almost_eq(first.size.x, 2200.0, 1.0, "option rows are full-width")
-		assert_almost_eq(first.size.y, 100.0, 1.0, "option rows keep the row height")
+		assert_almost_eq(first.size.x, 2000.0, 1.0, "empty IconGroup and reversed layout leave the source2000 content width")
+		assert_almost_eq(first.size.y, 112.0, 1.0, "Image preferred height comes from option_item_bg sprite")
 		assert_eq(first.get_meta("source_text_style"), "@OPTION_ITEM_TEXT", "option text follows the configured size class")
-		assert_almost_eq(first.position.y, 320.0, 1.0, "first row sits below the body text")
+		assert_almost_eq(first.position.y, body.position.y + body.size.y + 50.0, 1.0, "ContentGroup adds source50 gap")
 
 
 func test_event_prompt_continue_mode_shows_source_confirm():
@@ -2511,7 +2564,7 @@ func test_event_prompt_continue_mode_shows_source_confirm():
 		assert_almost_eq(cont.size.x, 325.0, 1.0, "Confirm keeps rite_op_confirm 325 width")
 		assert_almost_eq(cont.size.y, 158.0, 1.0, "Confirm keeps rite_op_confirm 158 height")
 		assert_almost_eq(cont.position.x, 2059.5, 1.0, "Confirm resolves anchors (1,0) pos (-483,73)")
-		assert_almost_eq(cont.position.y, 808.0, 1.0, "Confirm sits in the OptionBG bottom-right")
+		assert_almost_eq(cont.position.y, (cont.get_parent() as Control).size.y - 152.0, 1.0, "Confirm follows the OptionBG bottom anchor")
 	assert_eq(_count_nodes_by_name(screen, "EventPromptChoiceButton"), 0, "no choices => no option rows")
 
 
@@ -2528,7 +2581,7 @@ func test_main_menu_replays_source_group_rows():
 	assert_eq(_count_nodes_by_name(menu, "StoryButton"), 1, "千零一夜 row exists")
 	assert_eq(_count_nodes_by_name(menu, "ShopButton"), 1, "命运商店 row exists")
 	assert_eq(_count_nodes_by_name(menu, "CollectButton"), 1, "游戏画廊 row exists")
-	assert_eq(_count_nodes_by_name(menu, "RedDot"), 3, "three rows carry the new.asset red dot")
+	assert_eq(_count_nodes_by_name(menu, "RedDot"), 2, "only story and shop carry source reward dots")
 	assert_not_null(_find_node_by_name(menu, "Mod"), "bottom bar keeps the Mod icon")
 	assert_not_null(_find_node_by_name(menu, "Setting"), "bottom bar keeps the Setting icon")
 	assert_not_null(_find_node_by_name(menu, "Notice"), "bottom bar keeps the Notice icon")
@@ -2537,6 +2590,34 @@ func test_main_menu_replays_source_group_rows():
 	assert_not_null(version, "Version line exists")
 	if version != null:
 		assert_true(version.text.begins_with("VERSION"), "Version shows the build line")
+
+
+func test_title_buttons_center_art_and_preserve_source_footer_spacing():
+	var stage := _stage(Vector2(3840, 2160))
+	var menu = MainMenu.new()
+	stage.add_child(menu)
+	await wait_process_frames(3)
+	var styles: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://content/imagestyle.json"))
+	var logo: Control = _find_node_by_name(menu, "MenuLogo")
+	assert_almost_eq(logo.size.x, float(styles.START_UI_LOGO.width) * 1.1, 0.01)
+	for name in ["NewGameButton", "ContinueGameButton", "StoryButton", "ShopButton", "CollectButton"]:
+		var button: Button = _find_node_by_name(menu, name)
+		var art: Control = button.get_node("Image")
+		assert_almost_eq(art.position.x + art.size.x / 2, button.size.x / 2, 0.01, "art follows actual hit width")
+		var outline: Control = button.get_node("Outline")
+		assert_false(outline.visible, "unfocused buttons have no hover flourish")
+		button.mouse_entered.emit()
+		assert_eq(outline.visible, not button.disabled, "disabled continue cannot highlight")
+		button.mouse_exited.emit()
+	var story: Control = _find_node_by_name(menu, "StoryButton")
+	var shop: Control = _find_node_by_name(menu, "ShopButton")
+	var left_art: Control = story.get_node("Image")
+	var right_art: Control = shop.get_node("Image")
+	assert_lt(left_art.get_global_rect().end.x, right_art.get_global_rect().position.x, "expanded source cells keep stamps separated")
+	var version: Control = _find_node_by_name(menu, "Version")
+	var contacts: Control = _find_node_by_name(menu, "ContactsRow")
+	assert_eq(contacts.size.y, 60.0, "oversized icons cannot expand the source row")
+	assert_almost_eq(version.position.y - contacts.position.y - contacts.size.y, 30.0, 0.01, "version follows the source layout gap")
 
 
 func test_main_menu_settings_replays_direct_source_controller_route():
@@ -2581,12 +2662,24 @@ func test_rite_view_replays_source_canvas_geometry():
 	var slot_layer := _find_node_by_name(view, "RiteSlotOverlay") as Control
 	var slot_1 := _find_node_by_name(view, "OverlaySlot_S1") as Control
 	var title_panel := _find_node_by_name(view, "RiteOverlayPanel") as Control
+	var result_panel := _find_node_by_name(view, "RiteResultPanel") as Control
+	var result_text := _find_node_by_name(view, "Text (TMP)") as Control
+	var result_op := _find_node_by_name(view, "Op BG") as Control
+	var result_next := _find_node_by_name(view, "Next") as Control
+	var dice_prompt := _find_node_by_name(view, "DicePromptNew") as Control
+	var dice_count_prompt := _find_node_by_name(view, "DiceCountPromptNew") as Control
 	assert_not_null(shade, "rite overlay should include a full-screen modal shade")
 	assert_not_null(source_canvas, "rite overlay should retain the source RitePanelShow canvas")
 	assert_not_null(template_bg, "rite template background should be a source-backed layer")
 	assert_not_null(slot_layer, "rite overlay should include a full-screen slot layer")
 	assert_not_null(slot_1, "source template slot s1 should be instantiated")
 	assert_not_null(title_panel, "source RitePanelTitle surface should be instantiated")
+	assert_not_null(result_panel, "source RiteResultPanel surface should be instantiated")
+	assert_not_null(result_text, "result panel should retain its scroll text node")
+	assert_not_null(result_op, "result panel should retain its operation background")
+	assert_not_null(result_next, "result panel should retain its source next button")
+	assert_not_null(dice_prompt, "result panel should retain the source DicePromptNew child")
+	assert_not_null(dice_count_prompt, "result panel should retain the source DiceCountPromptNew child")
 	if shade != null:
 		assert_almost_eq(shade.size.x, 3840.0, 0.1, "rite interaction blocker covers the source viewport")
 		assert_almost_eq(shade.size.y, 2160.0, 0.1, "rite interaction blocker covers the source viewport")
@@ -2603,6 +2696,20 @@ func test_rite_view_replays_source_canvas_geometry():
 	if title_panel != null:
 		assert_eq(title_panel.position, Vector2(2199, 535), "template title_pos is replayed under Position")
 		assert_eq(title_panel.size, Vector2(1148, 1124), "RitePanelTitle keeps its original source size")
+	if result_panel != null:
+		assert_eq(result_panel.position, Vector2(200, 170), "RiteResultPanel keeps the source centered 3440x1820 frame")
+		assert_eq(result_panel.size, Vector2(3440, 1820), "RiteResultPanel keeps its authored size")
+		assert_false(result_panel.visible, "result surface stays hidden during preparation")
+	if result_op != null:
+		assert_eq(result_op.position, Vector2(1804, 1403), "result operation bar uses source design coordinates")
+		assert_eq(result_op.size, Vector2(1224, 188), "result operation bar keeps source dimensions")
+	if dice_prompt != null:
+		assert_eq(dice_prompt.position, Vector2(452.5, 297), "DicePromptNew keeps the source centered offset")
+		assert_eq(dice_prompt.size, Vector2(1032, 1032), "DicePromptNew keeps its source size")
+		assert_not_null(_find_node_by_name(dice_prompt, "BG"), "DicePromptNew has a source background")
+	if dice_count_prompt != null:
+		assert_eq(dice_count_prompt.position, Vector2(530.5, 427), "DiceCountPromptNew keeps the source centered offset")
+		assert_eq(dice_count_prompt.size, Vector2(876, 876), "DiceCountPromptNew keeps its source size")
 
 
 func test_card_info_replays_source_geometry():

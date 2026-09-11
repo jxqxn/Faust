@@ -1,0 +1,65 @@
+{
+	"cases": [
+		{
+			"fade": 0.0,
+			"max_channel_error": 0.0,
+			"size": 32
+		},
+		{
+			"fade": 0.25,
+			"max_channel_error": 0.00392157211899757,
+			"size": 32
+		},
+		{
+			"fade": 0.75,
+			"max_channel_error": 0.00392157584428787,
+			"size": 32
+		},
+		{
+			"fade": 1.0,
+			"max_channel_error": 0.00392157584428787,
+			"size": 32
+		},
+		{
+			"fade": 0.0,
+			"max_channel_error": 0.0,
+			"size": 64
+		},
+		{
+			"fade": 0.25,
+			"max_channel_error": 0.00392157211899757,
+			"size": 64
+		},
+		{
+			"fade": 0.75,
+			"max_channel_error": 0.00392158329486847,
+			"size": 64
+		},
+		{
+			"fade": 1.0,
+			"max_channel_error": 0.00392157584428787,
+			"size": 64
+		},
+		{
+			"fade": 0.0,
+			"max_channel_error": 0.0,
+			"size": 128
+		},
+		{
+			"fade": 0.25,
+			"max_channel_error": 0.00392157211899757,
+			"size": 128
+		},
+		{
+			"fade": 0.75,
+			"max_channel_error": 0.00392158329486847,
+			"size": 128
+		},
+		{
+			"fade": 1.0,
+			"max_channel_error": 0.00392158329486847,
+			"size": 128
+		}
+	],
+	"failures": []
+}

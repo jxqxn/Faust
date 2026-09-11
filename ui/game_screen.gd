@@ -38,18 +38,17 @@ class HandRailDrop:
 			owner_screen.call("_preview_hand_drop", data, at_position)
 		return accepted
 
-	func _drop_data(_at_position: Vector2, data: Variant) -> void:
+	func _drop_data(at_position: Vector2, data: Variant) -> void:
 		if owner_screen != null and owner_screen.has_method("drop_card_to_hand"):
-			owner_screen.drop_card_to_hand(data, get_local_mouse_position())
+			owner_screen.drop_card_to_hand(data, at_position)
 
-	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseMotion and owner_screen != null and owner_screen.has_method("_set_hand_pan_ratio"):
-			var ratio := clampf(event.position.x / maxf(size.x, 1.0), 0.0, 1.0)
-			owner_screen.call("_set_hand_pan_ratio", ratio)
 
 
 const MOCKUP_SIZE := Vector2(1280, 720)
 ## HandCardsController authoring on GameScene/MainUI/Hand.
+const SourceHandLayout = preload("res://ui/source_hand_layout.gd")
+var _hand_normalized_range := 0.0
+
 const HAND_SPACE := 10.0
 const HAND_MIN_VISIBLE_WIDTH := 20.0
 const HAND_MASK_HEIGHT := 470.0
@@ -94,7 +93,8 @@ var _bag_tabs: HandBagTabs
 var _card_rail_view: Control
 var _rail_padding: MarginContainer
 var _card_items: Control
-var _hand_pan_ratio := 0.5
+var _hand_sticky := false
+var _hand_sticky_start := Vector2.ZERO
 var _hand_idle_clock_seconds := 0.0
 var _hand_content_overflows := false
 var _hand_drop_preview_index := -1
@@ -151,6 +151,7 @@ func _process(delta: float) -> void:
 	):
 		return
 	_hand_idle_clock_seconds += delta
+	_advance_hand_edge_scroll()
 	if _deadline_track != null and _deadline_strip.visible:
 		if int(_deadline_track.get_meta("remaining", 7)) < 2:
 			_deadline_pulse_time = fmod(_deadline_pulse_time + delta, 1.0)
@@ -369,7 +370,7 @@ func _build_ui() -> void:
 	_card_rail_view.z_index = PERSISTENT_CONTROL_Z
 	(_card_rail_view as HandRailDrop).owner_screen = self
 	# Original Hand Mask is inactive in GameScene. The HandCardsController
-	# compresses cards itself, so it must not clip CardArea's raised visual.
+	# compresses cards itself, so it must not clip CardController's raised root.
 	_card_rail_view.clip_contents = false
 	_card_rail_view.mouse_filter = Control.MOUSE_FILTER_STOP
 	_card_rail_view.mouse_exited.connect(_clear_hand_drop_preview)
@@ -486,6 +487,9 @@ func _build_ui() -> void:
 		_back_to_prev_button.add_child(back_icon)
 	_back_to_prev_button.pressed.connect(func(): back_to_prev_pressed.emit())
 	_right_actions.add_child(_back_to_prev_button)
+	# Unity's cached-event mask intercepts Next Round (GO47 OnClick ->
+	# NoticeCachedEvent). Godot mouse picking follows sibling order, not z.
+	move_child(_cached_event_mask, get_child_count() - 1)
 	# Source buttons are icon images, not the 516px text-button strip. That
 	# strip's 316px content margins forced both controls wider than their rect.
 	for icon_button in [_redraw_button, _back_to_prev_button]:
@@ -604,8 +608,19 @@ func _apply_layout() -> void:
 	_right_actions.position = Vector2(view_size.x - 596 * k.x, view_size.y - 634 * k.y)
 	_right_actions.size = Vector2(596, 634)
 	if _redraw_button != null:
-		# SudanDice runtime placement not yet located (registered); park the
-		# redraw dice left of the watch column.
+		# This control is the redraw TRIGGER, not the dice model. The source's
+		# dice roll is a separate 3D sub-scene: Camera "SudanDiceCamera"
+		# (GameScene fileID 4416) with child GameObject "Dices" (fileID 349)
+		# carrying SudanDiceRollController (fileID 11767) at localPosition
+		# (1.05,-1.69,39), localScale 0.01; dice instances are parented to it.
+		# There is no authored 2D position for this button, so the parked rect
+		# stays a clone-only placement until the dice sub-scene is ported.
+		# [SRC: GameScene.unity SudanDiceRollController block: DiceBaseScale
+		#       (40,40,40) / CellSize (100,100) / HeightRange (-170,-230) /
+		#       TopTimeRange (0.5,0.6) / TotalTimeRange (0.8,0.9) /
+		#       RollRotationSpeedRange (400,1000) / MaxScaleRange (1.05,1.1) /
+		#       WaitingTime 0.2 / NormalizeTime 0.4 / FullSize (1100,900) /
+		#       Row 9 / Column 11; SudanDiceRollController.c @ Roll 0x503f30]
 		_set_rect(_redraw_button, Rect2(Vector2(-176, 466), Vector2(150, 150)))
 	if _back_to_prev_button != null:
 		# [SRC: Next Round/PrevRound 158x137 at center+(-206.1,-207.2)]
@@ -732,7 +747,10 @@ func _update_deadline_strip() -> void:
 		candidates.append_array(_state.rite_slot_card_uids(rite_uid))
 	for uid in candidates:
 		var instance = _state.get_card_instance(uid)
-		if instance != null and RuntimeOperationFilter.matches_card_data(instance.card_id, instance.tags, _db, "sudan") and instance.life > max_life:
+		# Selector "sudan" is CardNode.type == "sudan", not a tag key.
+		# [SRC: RuntimeOperationFilter.matches_card_data; OperationFilter.c IsMatch]
+		var definition: Dictionary = _db.get_card(instance.card_id) if (instance != null and _db != null) else {}
+		if instance != null and str(definition.get("type", "")) == "sudan" and instance.life > max_life:
 			max_life = instance.life
 			oldest = instance
 	if hidden or oldest == null:
@@ -996,24 +1014,12 @@ func refresh() -> void:
 	for child in _card_items.get_children():
 		child.queue_free()
 	_card_items.modulate = Color(1, 1, 1, 0)
-	_hand_pan_ratio = 0.5
+	_hand_sticky = false
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
 	_state.sync_rail_order()
-	# Stackable currencies render as one merged stack with a total badge
-	# (the original keeps separate card objects and merges only for display;
-	# corpus save: 神的乙太 x20 objects all pinned at bagpos 1).
-	var stack_totals := {}
-	var stack_first_uid := {}
-	for card_uid in _state.visible_rail_card_uids():
-		var stack_probe_uid := int(card_uid)
-		var stack_probe_card: Dictionary = _state.card_data_for(stack_probe_uid, _db)
-		if stack_probe_card.is_empty() or not stack_probe_card.get("tag", {}).has("可堆叠"):
-			continue
-		var stack_id := int(stack_probe_card.get("id", 0))
-		var stack_instance = _state.get_card_instance(stack_probe_uid)
-		stack_totals[stack_id] = int(stack_totals.get(stack_id, 0)) + (int(stack_instance.count) if stack_instance != null else 1)
-		if not stack_first_uid.has(stack_id):
-			stack_first_uid[stack_id] = stack_probe_uid
+	# [SRC: CardController.CardSplit 0x528390 / CardStack 0x5286b0;
+	# original runtime count badge: 8 -> two visible objects, 7 + 1.]
+	# Preserve each UID as a separate hit target until an explicit stack action.
 	var next_known_uids: Dictionary = {}
 	for card_uid in _state.visible_rail_card_uids():
 		var uid := int(card_uid)
@@ -1041,19 +1047,16 @@ func refresh() -> void:
 		var card: Dictionary = _state.card_data_for(uid, _db)
 		if card.is_empty():
 			continue
-		var stack_id := int(card.get("id", 0))
-		var is_stackable: bool = card.get("tag", {}).has("可堆叠")
-		if is_stackable and int(stack_first_uid.get(stack_id, uid)) != uid:
-			continue
-		if is_stackable:
-			card["count"] = int(stack_totals.get(stack_id, 1))
 		var widget := CardWidget.make(card, "hand")
 		widget.custom_minimum_size = widget.card_size()
 		widget.clicked.connect(_show_card_detail)
 		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
+		widget.stack_drop_allowed = _can_drop_stack
+		widget.equipment_drop_allowed = _can_drop_equipment
+		widget.equipment_dropped.connect(_on_equipment_dropped)
 		widget.split_requested.connect(_on_hand_card_split_requested)
+		widget.split_one_requested.connect(func(uid: int): _on_hand_card_split_requested(uid, 1))
 		widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
-		widget.hold_hint_cleared.connect(_clear_satisfied_rite_hint)
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
 		if has_drop_origin:
@@ -1095,10 +1098,7 @@ func _change_hand_bag(index: int) -> void:
 func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 	if _card_items == null or not is_instance_valid(_card_items):
 		return
-	var cards: Array[CardWidget] = []
-	for child in _card_items.get_children():
-		if child is CardWidget and not child.is_queued_for_deletion() and child.visible:
-			cards.append(child as CardWidget)
+	var cards := _ordered_hand_cards()
 	var count := cards.size()
 	if count == 0:
 		_hand_content_overflows = false
@@ -1112,8 +1112,6 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 	for index in count:
 		var card := cards[index]
 		var slot_index := index
-		if _hand_drop_preview_index >= 0 and slot_index >= _hand_drop_preview_index:
-			slot_index += 1
 		# [SRC: GameScene MainUI/Hand anchors(0,0)-(1,0) pos(-63.97,4)
 		#       sizeDelta(-1116.74,430) pivot(0.52,0): the cards sit on the
 		#       content rect's bottom edge. Measured against
@@ -1122,8 +1120,8 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 		#       matches bottom alignment (2156-422=1734 canvas units).]
 		card.set_hand_pose(
 			Vector2(
-				float(slot_positions[slot_index]),
-				maxf(0.0, _card_items.size.y - card.card_size().y)
+				float(slot_positions[slot_index]) + card.card_size().x * (card.hand_layout_scale() - 1.0) * 0.5,
+				maxf(0.0, _card_items.size.y - card.card_size().y) - card.card_size().y * (card.hand_layout_scale() - 1.0) * 0.5
 			),
 			0.0,
 			slot_index
@@ -1135,11 +1133,7 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 		)
 		if bool(card.get_meta("deal_pending", false)):
 			card.set_meta("deal_pending", false)
-			var deal_origin := Vector2(
-				available_width - card.position.x + 42.0,
-				28.0 + float(index % 2) * 4.0
-			)
-			card.play_deal_in(deal_origin, index)
+			card.play_deal_in(Vector2.ZERO, index)
 		elif card.has_meta("reflow_from"):
 			var old_position: Vector2 = card.get_meta("reflow_from")
 			var old_rotation := float(card.get_meta("reflow_rotation_from", INF))
@@ -1155,6 +1149,11 @@ func _layout_hand_cards(previous_positions: Dictionary = {}) -> void:
 			card.play_hand_reflow(old_position - card.position)
 	_card_items.modulate = Color.WHITE
 
+	for card_index in metrics.draw_order:
+		_card_items.move_child(cards[card_index], -1)
+	for child in cards:
+		child.set_hand_draw_order(child.get_index())
+
 
 func _hand_layout_metrics(cards: Array[CardWidget], preview_slots: int = 0) -> Dictionary:
 	var available_width := _card_items.size.x
@@ -1162,40 +1161,57 @@ func _hand_layout_metrics(cards: Array[CardWidget], preview_slots: int = 0) -> D
 		return {}
 	var widths: Array[float] = []
 	for card in cards:
-		widths.append(card.card_size().x)
-	for _index in preview_slots:
-		# A hand insertion preview has no instance yet; its source default is
-		# CardNew, which is also what HandCardsController receives on creation.
-		widths.append(CardWidget.CARD_SIZE.x)
-	var slot_count := widths.size()
-	var natural_width := 0.0
-	for width in widths:
-		natural_width += width
-	if slot_count > 1:
-		natural_width += HAND_SPACE * float(slot_count - 1)
-	var overflow := maxf(0.0, natural_width - available_width)
-	var slot_positions: Array = []
-	if overflow <= 0.0:
-		var next_x := (available_width - natural_width) * 0.5
-		for width in widths:
-			slot_positions.append(next_x)
-			next_x += width + HAND_SPACE
-	else:
-		# HandCardsController keeps every child at its prefab size and brings
-		# adjacent origins together until at least minVisibleWidth remains.
-		var stride := HAND_MIN_VISIBLE_WIDTH
-		if slot_count > 1:
-			stride = maxf(
-				HAND_MIN_VISIBLE_WIDTH,
-				(available_width - float(widths[slot_count - 1])) / float(slot_count - 1)
-			)
-		for index in slot_count:
-			slot_positions.append(stride * float(index))
+		# [SRC: HandCardsController.Update 0x563520 gathers sizeDelta.x *
+		# localScale.x; HandBagController.SetChild 0x55e360 places the scaled
+		# half-height above the bottom. Preserve that geometry for 1.1x candidates.]
+		widths.append(card.card_size().x * card.hand_layout_scale())
+	var previous_order: Array = []
+	for child in _card_items.get_children():
+		if child in cards:
+			previous_order.append(cards.find(child))
+	var result := SourceHandLayout.allocate(widths, available_width, _hand_normalized_range, previous_order,
+		_hand_drop_preview_index if preview_slots > 0 else -1, CardWidget.CARD_SIZE.x)
+	_hand_normalized_range = result.range
 	return {
 		"available_width": available_width,
-		"slot_positions": slot_positions,
-		"overflows": overflow > 0.0,
+		"slot_positions": result.positions,
+		"overflows": result.overflows,
+		"draw_order": result.draw_order,
+		"total": result.total,
 	}
+
+
+func _ordered_hand_cards() -> Array[CardWidget]:
+	var cards: Array[CardWidget] = []
+	if _card_items == null:
+		return cards
+	for child in _card_items.get_children():
+		if child is CardWidget and not child.is_queued_for_deletion() and child.visible:
+			cards.append(child)
+	# Source sorts Card.bagpos before layout; draw sibling order is independent.
+	if _state != null:
+		cards.sort_custom(func(a, b): return _state.rail_order.find(a.card_uid) < _state.rail_order.find(b.card_uid))
+	return cards
+
+
+func _advance_hand_edge_scroll() -> void:
+	if not _hand_content_overflows or _card_items == null or not _presentation_blockers.is_empty():
+		return
+	var hovered := get_viewport().gui_get_hovered_control()
+	if hovered == null or not (hovered == _card_items or _card_items.is_ancestor_of(hovered)):
+		return
+	var cards := _ordered_hand_cards()
+	var metrics := _hand_layout_metrics(cards, 1 if _hand_drop_preview_index >= 0 else 0)
+	if metrics.is_empty():
+		return
+	var next := SourceHandLayout.advance_range(_hand_normalized_range,
+		_card_items.get_local_mouse_position().x, _card_items.size.x, metrics.total)
+	if not is_equal_approx(next, _hand_normalized_range):
+		_hand_normalized_range = next
+		_layout_hand_cards()
+		# Unity EventSystem raycasts each frame; Godot otherwise retains the
+		# old hover target when cards scroll beneath a stationary pointer.
+		get_viewport().update_mouse_cursor_state()
 
 
 func _capture_hand_visual_positions() -> Dictionary:
@@ -1211,6 +1227,7 @@ func _capture_hand_visual_positions() -> Dictionary:
 
 func _on_hand_card_drag_visibility_changed(card_uid: int, hidden: bool) -> void:
 	if not hidden:
+		_hand_sticky = false
 		_hand_drop_preview_index = -1
 		# A successful hand drop has already rebuilt this UID and started its
 		# pose-preserving return.  The old source's DRAG_END notification must not
@@ -1231,7 +1248,10 @@ func _preview_hand_drop(data: Variant, rail_position: Vector2) -> void:
 	if not can_drop_card_to_hand(data):
 		return
 	var dragged_uid := int(data.get("card_uid", data.get("card_id", 0)))
-	var next_index := _hand_preview_index_at(rail_position, dragged_uid)
+	var preview := _resolve_hand_preview(rail_position, dragged_uid, data, _hand_sticky, _hand_sticky_start)
+	_hand_sticky = preview.sticky
+	_hand_sticky_start = preview.start
+	var next_index: int = preview.index
 	if next_index == _hand_drop_preview_index:
 		return
 	var previous_positions := _capture_hand_visual_positions()
@@ -1240,6 +1260,7 @@ func _preview_hand_drop(data: Variant, rail_position: Vector2) -> void:
 
 
 func _clear_hand_drop_preview() -> void:
+	_hand_sticky = false
 	if _hand_drop_preview_index < 0:
 		return
 	var previous_positions := _capture_hand_visual_positions()
@@ -1248,32 +1269,22 @@ func _clear_hand_drop_preview() -> void:
 
 
 func _hand_preview_index_at(rail_position: Vector2, dragged_card_uid: int) -> int:
-	var cards: Array[CardWidget] = []
-	for child in _card_items.get_children():
-		if child is CardWidget and child.visible and not child.is_queued_for_deletion():
-			if int((child as CardWidget).card_uid) != dragged_card_uid:
-				cards.append(child as CardWidget)
-	var metrics := _hand_layout_metrics(cards, 1)
-	if metrics.is_empty():
-		return cards.size()
+	return int(_resolve_hand_preview(rail_position, dragged_card_uid, {}, false, Vector2.ZERO).index)
+
+
+func _resolve_hand_preview(rail_position: Vector2, dragged_uid: int, data: Dictionary,
+	sticky: bool, sticky_start: Vector2) -> Dictionary:
+	var widths: Array = []
+	var compatible: Array = []
+	for card in _ordered_hand_cards():
+		if card.card_uid == dragged_uid:
+			continue
+		widths.append(card.card_size().x * card.hand_layout_scale())
+		compatible.append(card._can_stack_dropped_card(data) or card._can_equip_dropped_card(data))
 	var global_pos := _card_rail_view.get_global_transform() * rail_position
-	var local_x := (_card_items.get_global_transform().affine_inverse() * global_pos).x
-	var slot_positions: Array = metrics["slot_positions"]
-	for index in cards.size():
-		var center := float(slot_positions[index]) + cards[index].card_size().x * 0.5
-		if local_x < center:
-			return index
-	return cards.size()
-
-
-func _set_hand_pan_ratio(ratio: float) -> void:
-	if not _hand_content_overflows:
-		return
-	var next_ratio := clampf(ratio, 0.0, 1.0)
-	if is_equal_approx(next_ratio, _hand_pan_ratio):
-		return
-	_hand_pan_ratio = next_ratio
-	_layout_hand_cards()
+	var local_point := _card_items.get_global_transform().affine_inverse() * global_pos
+	return SourceHandLayout.preview(widths, _card_items.size.x, _hand_normalized_range,
+		local_point, compatible, sticky, sticky_start)
 
 
 func _active_sudan_for_card(card_or_uid: int) -> Variant:
@@ -1394,34 +1405,118 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 func _on_hand_card_stack_dropped(target_uid: int, source_uid: int) -> void:
 	if _state == null or not _state.has_method("stack_cards"):
 		return
+	if not _can_drop_stack(target_uid, {"type": "card", "card_uid": source_uid}):
+		return
+	var source_rite_uid: int = _state.get_card_instance(source_uid).rite_uid
 	if _state.stack_cards(target_uid, source_uid):
+		_refresh_departed_slot_card(source_rite_uid)
 		refresh()
+
+
+func _can_drop_stack(target_uid: int, data: Variant) -> bool:
+	# [SRC: CardController.CardStack 0x5286b0, dump.cs:317120;
+	# CardDropManager.DropCard 0x4ef4f0. No hand-only source gate.]
+	if _state == null or not (data is Dictionary) or _presentation_frozen:
+		return false
+	for blocker in _presentation_blockers:
+		if blocker != "rite":
+			return false
+	var target = _state.get_card_instance(target_uid)
+	var source = _state.get_card_instance(int(data.get("card_uid", 0)))
+	if target == null or source == null or target == source or target.zone != "hand":
+		return false
+	return _can_release_drag_source(source)
+
+
+func _can_release_drag_source(source) -> bool:
+	if source.zone == "hand":
+		return true
+	if source.zone != "slot" or not preload("res://ui/rite_slot_access.gd").can_edit(_state, _db, source.rite_uid, source.slot_key):
+		return false
+	for layer in [_overlay_layer, _source_overlay_layer]:
+		if layer == null:
+			continue
+		for child in layer.get_children():
+			if child.has_method("can_release_slot_card") and not child.can_release_slot_card(source.uid, source.rite_uid, source.slot_key):
+				return false
+	return true
+
+
+func _refresh_departed_slot_card(rite_uid: int) -> void:
+	if rite_uid <= 0:
+		return
+	for layer in [_overlay_layer, _source_overlay_layer]:
+		if layer == null:
+			continue
+		for child in layer.get_children():
+			if child.has_method("refresh_departed_slot_card"):
+				child.refresh_departed_slot_card(rite_uid)
+
+
+func _can_drop_equipment(host_uid: int, data: Variant) -> bool:
+	# [SRC: CardExtensions.CanEquip 0x37ec10; CardController.CardEquip
+	# 0x528020; CardInfoNewController.DropCard 0x533550.]
+	if _state == null or not (data is Dictionary) or data.get("type", "") != "card":
+		return false
+	if _presentation_frozen:
+		return false
+	for blocker in _presentation_blockers:
+		if blocker != "card_detail" and blocker != "rite":
+			return false
+	var source_uid := int(data.get("card_uid", 0))
+	var host = _state.get_card_instance(host_uid)
+	var equipment = _state.get_card_instance(source_uid)
+	return host != null and equipment != null and host_uid != source_uid and host.zone == "hand" and _can_release_drag_source(equipment) and _effective_tag_value(source_uid, "装备") > 0 and not _state._matching_equip_slot(host_uid, source_uid, _db).is_empty()
+
+
+## Tag lookup on the effective GetTag row (definition + delta + inheritable
+## equips). Reading CardInstance.tags directly would only see the runtime delta.
+## [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0)]
+func _effective_tag_value(uid: int, tag_name: String) -> int:
+	if _state == null:
+		return 0
+	return int(_state.effective_card_tags(uid, _db).get(tag_name, 0))
+
+
+func _on_equipment_dropped(host_uid: int, source_uid: int) -> void:
+	var data := {"type": "card", "card_uid": source_uid}
+	if not _can_drop_equipment(host_uid, data):
+		return
+	var source_rite_uid: int = _state.get_card_instance(source_uid).rite_uid
+	if _state.attach_equipment(host_uid, source_uid, _db, true, true) < 0:
+		return
+	_refresh_departed_slot_card(source_rite_uid)
+	refresh()
+	var host_card: Dictionary = _state.card_data_for(host_uid, _db)
+	# [SRC: CardController.CardEquip 0x528020 -> GameController.ShowCardInfo
+	# 0x556c60; CardInfoNewController.DropCard 0x533550 refreshes an open panel.]
+	if _card_info_view != null and is_instance_valid(_card_info_view) and _card_detail_card_uid == host_uid:
+		_card_info_view.show_card(host_card, host_uid)
+	else:
+		_show_card_detail(int(host_card.get("id", 0)), host_card)
 
 
 ## [SRC: CardController.OnPointerUp 0x52afe0 -> CardSplit(count/2). The host
 ##       binds the source's SplitCard prompt to Shift+click until the prompt
 ##       layer exists.]
-func _on_hand_card_split_requested(card_uid: int) -> void:
+func _on_hand_card_split_requested(card_uid: int, amount: int = -1) -> void:
 	if _state == null or not _state.has_method("split_card_stack"):
 		return
-	if _state.split_card_stack(card_uid) > 0:
+	if _state.split_card_stack(card_uid, amount) > 0:
 		refresh()
 
 
 ## [SRC: CardController.Update 0x52c890 — a 0.2s hold calls
-##       GameController.ShowSatisfiedRite 0x557a80, which highlights every rite
+##       GameController.ShowSatisfiedRite 0x5576b0, which highlights every rite
 ##       whose open slot accepts the card.]
 func _on_hand_card_hold_hint(card_uid: int) -> void:
 	if _state == null or _desk_content == null or not _desk_content.has_method("show_satisfied_rites"):
 		return
 	if not _state.has_method("satisfied_rite_uids_for_card"):
 		return
+	if not _presentation_blockers.is_empty() or _presentation_frozen:
+		return
 	_desk_content.show_satisfied_rites(_state.satisfied_rite_uids_for_card(card_uid, _db, _rng))
-
-
-func _clear_satisfied_rite_hint() -> void:
-	if _desk_content != null and _desk_content.has_method("show_satisfied_rites"):
-		_desk_content.show_satisfied_rites([])
 
 
 func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order
@@ -1447,7 +1542,7 @@ func _rail_insert_index_at(rail_position: Vector2, dragged_card_uid: int = 0) ->
 	var global_pos := _card_rail_view.get_global_transform() * rail_position
 	var local_x := (_card_items.get_global_transform().affine_inverse() * global_pos).x
 	var index := 0
-	for child in _card_items.get_children():
+	for child in _ordered_hand_cards():
 		if not (child is CardWidget):
 			continue
 		var widget := child as CardWidget
@@ -1538,6 +1633,8 @@ func set_presentation_frozen(frozen: bool) -> void:
 ## background controls instead: they remain visible under the selector shade,
 ## but cannot receive input or keep animating independently.
 func _set_underlying_presentation_paused(paused: bool) -> void:
+	if _cached_event_mask != null:
+		_cached_event_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE if paused else Control.MOUSE_FILTER_STOP
 	var rite_open := _presentation_blockers.has("rite")
 	var rite_only := rite_open and _presentation_blockers.size() == 1
 	# The rite is above desktop chrome, while its hand remains a live input
@@ -1579,13 +1676,18 @@ func _update_persistent_action_availability() -> void:
 	)
 	if _right_actions != null:
 		_right_actions.visible = actions_visible
+		# Disabled Buttons still absorb Godot mouse picking. During a rite,
+		# their rectangular bounds overlap the source result PlayRate button.
+		_right_actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		# Every background element recedes through the same pause shade. Applying
 		# another alpha only to this column makes it read as a broken floating UI.
 		_right_actions.self_modulate = Color.WHITE
 	if _advance_button != null:
 		_advance_button.disabled = not actions_available
+		_advance_button.mouse_filter = Control.MOUSE_FILTER_STOP if actions_available else Control.MOUSE_FILTER_IGNORE
 	if _redraw_button != null:
 		_redraw_button.disabled = not actions_available
+		_redraw_button.mouse_filter = Control.MOUSE_FILTER_STOP if actions_available else Control.MOUSE_FILTER_IGNORE
 
 
 func _refresh_event_overlay() -> void:
@@ -1752,7 +1854,11 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 				DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
 	elif kind == "rename_card":
 		var card_uid := int(trigger_ctx.get("card_uid", payload.get("card_uid", 0)))
-		if _rename_input == null or not _state.set_card_custom_name(card_uid, _rename_input.text):
+		# Old clone saves omitted card_id and retained a UID. Decode that once;
+		# new operations use the source id domain, including explicit0=player.
+		var legacy_card = _state.get_card_instance(card_uid)
+		var card_id := int(payload.get("card_id", legacy_card.card_id if legacy_card != null else 0))
+		if _rename_input == null or not _state.set_prompt_name(card_id, _rename_input.text):
 			# Keep the operation in front until the player submits a non-empty
 			# name; the original naming overlay is likewise a blocking promise.
 			_state.pending_operations.push_front(operation)
@@ -2037,6 +2143,8 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 		_card_info_view.name = "CardDetailOverlay"
 		_card_info_view.z_index = OVERLAY_LAYER_Z + 1
 		_card_info_view.setup(_state, _db)
+		_card_info_view.equipment_drop_allowed = _can_drop_equipment
+		_card_info_view.equipment_dropped.connect(_on_equipment_dropped)
 		if _source_overlay_layer != null:
 			_source_overlay_layer.add_child(_card_info_view)
 		else:
@@ -2093,8 +2201,23 @@ func focus_qualified_hand(validator: Callable) -> void:
 		if not (child is CardWidget) or child.is_queued_for_deletion():
 			continue
 		var matches: bool = validator.call(_state.card_data_for(child.card_uid, _db))
-		child.set_selected(matches)
+		# [SRC: HandCardSortByCondition 0x5515a0 resets/flags every card's
+		# Flash controller; select_first=1 from CardSlotController selects
+		# only the first match, not every matching card.]
+		child.set_candidate_highlight(matches)
+		child.set_selected(matches and not focused)
 		if matches and not focused:
 			child.focus_mode = Control.FOCUS_ALL
 			child.grab_focus()
 			focused = true
+	_layout_hand_cards()
+
+
+func clear_hand_candidate_highlights() -> void:
+	if _card_items == null:
+		return
+	for child in _card_items.get_children():
+		if child is CardWidget and not child.is_queued_for_deletion():
+			child.reset_candidate_scale()
+			child.set_selected(child.card_uid == _card_detail_card_uid, false)
+	_layout_hand_cards()

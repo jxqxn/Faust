@@ -55,7 +55,7 @@ func _synthetic_original() -> Dictionary:
 			},
 		],
 		"pins": [5010009, 5010009, 5010012], "sudan_pool_cards": [2010001, 2010002],
-		"sudan_pool": "", "sudan_card_pool": [], "sudan_pool_pos": [0, 0],
+		"sudan_pool": "", "sudan_card_pool": [_card(2, 2010001, 0, [], {"sudan_pool_index": 2})], "sudan_pool_pos": [0, 0],
 		"sudan_pool_init_count": 2, "sudan_card_show_times": {}, "sudan_remove_count": 0,
 		"counter": {"7100006": 2, "7000060": 5}, "global_counter_cacher": {},
 		"random_cache": {}, "only_cards": [2000001], "only_rites": [5001001],
@@ -115,6 +115,12 @@ func test_synthetic_import_maps_core_state() -> void:
 	assert_eq(sudan_instance.zone, "sudan", "drawn sudan cards live in the sudan zone")
 	assert_eq(state.active_sudan_cards.size(), 1)
 	assert_eq(state.active_sudan_cards[0].card_id, 2010006)
+	assert_eq(state.sudan_deck_ids(), [2010001],
+		"runtime sudan_card_pool objects import as the remaining pool, not the configured id list")
+	assert_eq(state.sudan_deck.size(), 1)
+	assert_eq(int(state.sudan_deck[0].uid), 2, "the source pool Card uid is preserved")
+	assert_eq(int(state.sudan_deck[0].tags.get("sudan_pool_index", 0)), 2,
+		"the source bookkeeping tag now rides on the object instead of being dropped")
 	# Rite: slot cards[i] -> s{i+1}; the started flag survives.
 	assert_eq(state.rite_instances.size(), 1, "no phantom legacy instances appear")
 	var rite = state.get_rite_instance(7)
@@ -167,6 +173,8 @@ func test_report_flags_approximations_and_value_drops() -> void:
 		approximated_texts.append(str(entry))
 	assert_true(approximated_texts.any(func(t): return t.contains("active_sudan")),
 		"the sudan deadline approximation is reported, never silent")
+	assert_false(approximated_texts.any(func(t): return t.contains("sudan_deck")),
+		"the pool is an ordered List<Card> on both sides, so no ordinal caveat remains")
 	var dropped_with_value: Array = []
 	for entry in report["dropped"]:
 		if bool(entry["has_value"]):
@@ -180,7 +188,8 @@ func test_report_flags_approximations_and_value_drops() -> void:
 	assert_false("end_open" in dropped_with_value, "terminal-map state is mapped, not dropped")
 	assert_false("is_armageddon" in dropped_with_value, "rite-loop state is mapped, not dropped")
 	assert_false("armageddon_rite_id" in dropped_with_value, "rite-loop id is mapped, not dropped")
-	assert_has(dropped_with_value, "name")
+	assert_false("name" in dropped_with_value, "Player.name is now persisted and compared")
+	assert_eq(imported["state"].player_display_name, "阿尔图")
 
 
 func test_min_round_import_gates_the_rollback() -> void:

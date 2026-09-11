@@ -73,7 +73,9 @@ func _run() -> void:
 		image.save_png(output)
 		await _click(prompt.get("_confirm_button"))
 		_check(state.pending_operations.is_empty(), "Visible prompt continue did not complete")
-		await _click(view._resolve_btn)
+		await _click(view._result_next_button)
+		if state.get_rite_instance(view._rite_uid) != null:
+			await _click(view._result_next_button)
 		_check(state.get_rite_instance(view._rite_uid) == null, "Confirm did not finish after prompt")
 	print("RITE_WAIT_INPUT: ", "PASS" if failures.is_empty() else "FAIL", " viewport=", root.size)
 	root.remove_child(screen)

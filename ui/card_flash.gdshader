@@ -1,30 +1,31 @@
 shader_type canvas_item;
 
-// CardNew/Flash inner outline.
-//
-// [SRC: Resources/materials/CardFlash.mat — valid keywords
-//  _ENABLEINNEROUTLINE_ON and _INNEROUTLINEOUTLINEONLYTOGGLE_ON,
-//  _InnerOutlineColor (0.88235295, 0.72840685, 0.33725485), _Color white,
-//  _InnerOutlineWidth 0.08. The exported .shader is a DummyShaderTextExporter
-//  stub (see docs/ui_layout/CardSurface.md), so the ring is reconstructed from
-//  the sprite's own silhouette alpha and its width is calibrated against
-//  docs/ui_layout/original_runtime/desktop.jpg.]
+// [SRC: sharedassets0.assets shader184 / GUI SSU, fragment blob118,
+// docs/ui_layout/shader_evidence/184_118.asm; parameter blob86.]
 
 uniform vec4 outline_color : source_color = vec4(0.88235295, 0.72840685, 0.33725485, 1.0);
-uniform float outline_pixels = 2.5;
-uniform vec2 sprite_size = vec2(256.0, 512.0);
+uniform float outline_width = 0.08;
+// CardFlash.mat _InnerOutlineFade=0; CardFlashController.Reset 0x52e2d0
+// also writes zero. A live Image component does not imply a visible flash.
+uniform float outline_fade = 0.0;
+varying vec4 canvas_tint;
+
+void vertex() {
+	canvas_tint = COLOR;
+}
 
 void fragment() {
 	vec4 source = texture(TEXTURE, UV);
-	vec2 step_uv = outline_pixels / sprite_size;
-	float inner = step(0.5, source.a);
-	float edge = 0.0;
-	for (int i = 0; i < 8; i++) {
-		float angle = float(i) * 0.7853981634;
-		vec2 direction = vec2(cos(angle), sin(angle));
-		float neighbor = texture(TEXTURE, UV + direction * step_uv).a;
-		edge = max(edge, 1.0 - step(0.5, neighbor));
-	}
-	float ring = inner * edge;
-	COLOR = vec4(outline_color.rgb, outline_color.a * ring);
+	vec2 d = outline_width * 100.0 * TEXTURE_PIXEL_SIZE;
+	float neighbor = min(texture(TEXTURE, UV + vec2(-d.x, 0.0)).a,
+		texture(TEXTURE, UV + vec2(d.x, 0.0)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + vec2(0.0, -d.y)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + vec2(0.0, d.y)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + d * vec2(0.705, 0.705)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + d * vec2(-0.705, 0.705)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + d * vec2(0.705, -0.705)).a);
+	neighbor = min(neighbor, texture(TEXTURE, UV + d * vec2(-0.705, -0.705)).a);
+	float fade = (1.0 - neighbor) * outline_fade;
+	// The original ignores outline_color.a and preserves soft source alpha.
+	COLOR = vec4(mix(source.rgb, outline_color.rgb, fade), fade * source.a) * canvas_tint;
 }

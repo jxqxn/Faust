@@ -154,25 +154,29 @@ func _source_head_cards(over_data: Dictionary, state, db) -> Array:
 		var definition: Dictionary = db.get_card(int(instance.card_id))
 		if str(definition.get("type", "")) != "char":
 			continue
-		if _effective_tag_value(instance, definition, db, "adherent") <= 0:
+		if _effective_tag_value(state, instance, db, "adherent") <= 0:
 			continue
-		if _effective_tag_value(instance, definition, db, "lost") > 0:
+		if _effective_tag_value(state, instance, db, "lost") > 0:
 			continue
 		result.append({
 			"id": int(instance.card_id),
-			"tag": instance.tags.duplicate(true),
+			"tag": state.effective_card_tags(int(instance.uid), db),
 		})
 	return result
 
 
-func _effective_tag_value(instance, definition: Dictionary, db, code: String) -> int:
-	var value := int(instance.tags.get(code, 0))
-	var source_tags = definition.get("tag", {})
-	if source_tags is Dictionary:
-		for raw_tag in source_tags:
-			if str(db.tag_code_for(raw_tag)) == code:
-				value += int(source_tags[raw_tag])
-	return value
+func _effective_tag_value(state, instance, db, code: String) -> int:
+	# Ask the shared GetTag implementation instead of re-adding the definition
+	# row here: it also covers inheritable equips, the non-positive mask and
+	# Card.count, and it keeps a single key domain.
+	# [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0)]
+	if state == null or not state.has_method("effective_card_tags"):
+		return int(instance.tags.get(code, 0))
+	var tags: Dictionary = state.effective_card_tags(int(instance.uid), db)
+	for raw_name in tags:
+		if str(db.tag_code_for(raw_name)) == code:
+			return int(tags[raw_name])
+	return 0
 
 
 func _build_npc_heads(cards: Array, db) -> void:

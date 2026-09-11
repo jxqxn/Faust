@@ -88,7 +88,7 @@ func test_full_new_run_setup():
 	assert_eq(hand_card_ids, [2000001, 2000006, 2000523, 2000005])
 	assert_true(5000001 in state.available_rites)
 	assert_true(state.available_rites.size() < db.rites.size(), "normal start should not expose every configured rite")
-	# Sudan deck built from pool and shuffled.
+	# Sudan pool built from init config as Card objects (one per entry).
 	assert_true(state.sudan_deck.size() > 20)
 	# Normal difficulty: 2 gold dice, 5-day... wait 7-day life, 1 redraw.
 	assert_eq(state.gold_dice, 2)
@@ -104,8 +104,25 @@ func test_new_run_uses_sudan_shuffle_flag():
 	state_a.setup_new_run(db, 1, rng_a)
 	state_b.setup_new_run(db, 1, rng_b)
 	var raw_pool: Array = db.get_sudan_pool()
-	assert_ne(state_a.sudan_deck, raw_pool, "setup_new_run shuffles the configured sudan pool")
-	assert_ne(state_a.sudan_deck, state_b.sudan_deck, "different seeds produce different sudan deck order")
+	# The source shuffles the pool in place inside GenSudanCard, not at setup,
+	# so a fresh run keeps config order and two seeds agree until the first draw.
+	# [SRC: GameController.c @ GenSudanCard 0x54f6f0 (Shuffle then RemoveLast).]
+	assert_eq(state_a.sudan_deck_ids(), _int_list(raw_pool), "setup keeps the configured pool order")
+	assert_eq(state_a.sudan_deck.size(), raw_pool.size(),
+		"one pool Card object per configured entry, duplicates included")
+	assert_eq(state_a.sudan_deck_ids(), state_b.sudan_deck_ids(),
+		"the shuffle happens at draw time, not at setup")
+	RoundLoop.draw_weekly_sudan(state_a, db, RNG.new(11))
+	RoundLoop.draw_weekly_sudan(state_b, db, RNG.new(12))
+	assert_ne(state_a.sudan_deck_ids(), state_b.sudan_deck_ids(),
+		"different seeds produce different draw orders")
+
+
+func _int_list(values: Array) -> Array:
+	var out: Array = []
+	for value in values:
+		out.append(int(value))
+	return out
 
 func test_easy_difficulty_uses_difficulty_redraw_count():
 	var rng := RNG.new(1)
@@ -245,38 +262,53 @@ func test_consume_sudan_removes_card():
 	assert_eq(state.active_sudan_cards.size(), 0)
 
 
-func test_sudan_pool_tag_operations_only_change_undrawn_ids_once():
+func test_sudan_pool_tag_operations_apply_per_pool_object():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(42))
-	state.sudan_deck = [2010001, 2010002, 2010001]
+	state.reset_sudan_pool_to_ids([2010001, 2010002, 2010001])
 	var next_uid := state.next_card_uid
+	# The original's OperationFilter walks player.sudan_card_pool, so the two
+	# 2010001 OBJECTS are separate targets even though they share a card id.
+	# [SRC: SudanPoolModifyTag.c @ DoTemplate 0x51c2e0]
 	ResultExec.execute({"sudan_pool.2010001+牌池测试": 2}, state, db)
 	ResultExec.execute({"sudan_pool.2010001-牌池测试": 1}, state, db)
 	ResultExec.execute({"sudan_pool.2010001=牌池测试": 3}, state, db)
 	assert_eq(state.next_card_uid, next_uid, "pool filtering must not create probe instances")
 	assert_eq(state.card_instances.size(), state.hand.size(), "pool filtering leaves runtime instances untouched")
-	assert_eq(int(state.sudan_pool_tags[2010001].get("牌池测试", 0)), 3, "plus, minus, and set apply once to a shared duplicate-ID override")
+	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 3, "both duplicate-id objects receive the op")
+	assert_eq(int(state.sudan_deck[2].tags.get("牌池测试", 0)), 3)
+	# The last entry is consumed first, and its own tag state travels with it.
 	RoundLoop.draw_weekly_sudan(state, db, RNG.new(43))
 	var drawn = state.get_card_instance(state.active_sudan_cards.back().card_uid)
 	assert_eq(drawn.card_id, 2010001)
-	assert_eq(int(drawn.tags.get("牌池测试", 0)), 3, "drawn instance receives the pool tag state")
+	assert_eq(int(drawn.tags.get("牌池测试", 0)), 3, "the drawn object carries its own pool state")
+	assert_eq(state.sudan_deck.size(), 2, "drawing removes exactly one pool object")
+	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 3, "the un-drawn object keeps its state")
 	ResultExec.execute({"sudan_pool.2010001+牌池测试": 3}, state, db)
 	assert_eq(int(drawn.tags.get("牌池测试", 0)), 3, "drawn instance is not retroactively changed")
+	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 6, "only the remaining pool object grows")
 
 
-func test_redraw_creates_a_new_sudan_instance_from_pool_tags():
+func test_redraw_reinserts_the_same_pool_object_with_its_tags():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, RNG.new(44))
-	state.sudan_deck = [2010002, 2010001]
+	state.reset_sudan_pool_to_ids([2010002, 2010001])
 	RoundLoop.draw_weekly_sudan(state, db, RNG.new(45))
 	var discarded_uid: int = int(state.active_sudan_cards.back().card_uid)
+	# Tag the pool entry that is still un-drawn, then redraw: the source
+	# re-inserts the discarded Card object, so its own tags re-enter the pool.
+	# [SRC: GameController.c @ RedrawSudanCard 0x5558b0 L3840-3842]
 	ResultExec.execute({"sudan_pool.2010002=重抽标签": 4}, state, db)
+	var discarded_card_id := int(state.get_card_instance(discarded_uid).card_id)
 	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), db), 2010002)
 	var replacement = state.get_card_instance(state.active_sudan_cards.back().card_uid)
 	assert_eq(int(replacement.tags.get("重抽标签", 0)), 4)
-	var discarded = state.get_card_instance(discarded_uid)
-	assert_true(discarded.is_lost, "discarded runtime Sultan remains lost")
-	assert_eq(int(discarded.tags.get("重抽标签", 0)), 0, "discarded instance is independent from the pool")
+	assert_null(state.get_card_instance(discarded_uid),
+		"the discarded object leaves play; it lives on as a pool entry, not as an instance")
+	var reinserted = state.sudan_pool_entry(discarded_uid)
+	assert_not_null(reinserted, "the discarded Card object itself goes back into the pool")
+	assert_eq(int(reinserted.card_id), discarded_card_id)
+	assert_eq(reinserted.tags, {}, "and it keeps its own runtime delta")
 
 
 func test_auto_generate_sudan_uses_original_operation_values_without_stalling_rounds():
@@ -308,7 +340,7 @@ func test_redraw_draws_sudan_redraw_count_cards():
 	discarded_instance.life = 2 # template 7 - 2 = 5 remaining
 	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1, int(discarded_instance.uid)))
 	state.sudan_redraw_count = 2
-	state.sudan_deck = [2010002, 2010003, 2010004, 2010005]
+	state.reset_sudan_pool_to_ids([2010002, 2010003, 2010004, 2010005])
 	var new_id := RoundLoop.use_redraw(state, rng, db)
 	assert_true(new_id >= 0, "redraw succeeds")
 	assert_eq(state.active_sudan_cards.size(), 2, "redraw draws 2 cards for count=2")
@@ -326,7 +358,7 @@ func test_redraw_rejects_when_deck_below_count():
 	state.active_sudan_cards.clear()
 	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 5, 1))
 	state.sudan_redraw_count = 3
-	state.sudan_deck = [2010002, 2010003]  # only 2 cards, need 3
+	state.reset_sudan_pool_to_ids([2010002, 2010003])  # only 2 cards, need 3
 	var initial_redraws := state.redraws_left
 	var new_id := RoundLoop.use_redraw(state, rng)
 	assert_eq(new_id, -1, "redraw fails when deck < count")

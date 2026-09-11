@@ -26,8 +26,15 @@ func test_add_coin_grants_front_gold_card_with_config_tags():
 	var gold = st.get_card_instance(uids[0])
 	assert_eq(gold.card_id, GameState.GOLD_CARD_ID)
 	assert_eq(gold.count, 5)
-	assert_eq(gold.tags.get("金币", 0), 1, "gold card carries the 金币 config tag")
-	assert_eq(gold.tags.get("可堆叠", 0), 1)
+	# instance.tags is the runtime DELTA (Card.tag@0x30); the config row lives on
+	# the definition, so read the effective GetTag row.
+	# [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0)]
+	var effective: Dictionary = st.effective_card_tags(uids[0], db)
+	# GetTag multiplies the finished sum by Card.count, so a 5-coin stack reports
+	# every definition tag at 5x its config value.
+	assert_eq(effective.get("金币", 0), 5, "gold card carries the 金币 config tag x count")
+	assert_eq(effective.get("可堆叠", 0), 5, "可堆叠 is carried the same way")
+	assert_true(gold.tags.is_empty(), "a fresh gold object starts with an empty delta")
 	assert_eq(st.hand[0], uids[0], "GenCoin pins the gold stack to the hand front")
 
 func test_coin_ops_accumulate_across_multiple_grants():

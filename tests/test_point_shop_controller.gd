@@ -94,8 +94,8 @@ func test_init_player_executes_active_upgrades_in_raw_operation_shape() -> void:
 	assert_eq(state.get_counter(7000730), 1)
 	assert_eq(state.get_global_counter(7200176), 1)
 	assert_eq(state.gold_total(), 0, "inactive upgrades are skipped")
-	assert_eq(state.sudan_deck.slice(-4), [2010001, 2010005, 2010009, 2010013],
-		"AddSudanCard appends after the base pool shuffle")
+	assert_eq(state.sudan_deck_ids().slice(-4), [2010001, 2010005, 2010009, 2010013],
+		"AddSudanCard appends new pool Card objects after the base pool")
 
 
 func test_shop_replays_source_canvas_and_prefab_key_geometry() -> void:

@@ -81,6 +81,27 @@ var _resolve_btn: Button
 var _stop_btn: Button
 var _close_btn: Button
 var _result_label: RichTextLabel
+var _result_surface: Control
+var _result_surface_text: RichTextLabel
+var _result_next_button: Button
+var _play_rate_button: Button
+var _result_auto_button: Button
+var _result_play_rate := 1.0
+var _result_auto_play := false
+var _result_text_progress := 0.0
+var _result_text_done := true
+var _result_ops_layer: Control
+var _result_hand_ops_layer: Control
+var _result_cards_layer: Control
+var _dice_prompt_surface: Control
+var _dice_count_prompt_surface: Control
+var _dice_roll_label: Label
+var _dice_count_label: Label
+var _dice_success_label: Label
+var _dice_count_title: Label
+var _dice_count_value: Label
+var _dice_count_kind := ""
+var _gold_selected: int = 0
 var _log_label: Label
 var _selected_card_uid: int = 0
 var _qualified_slot := ""
@@ -357,33 +378,437 @@ func _build_panel_content() -> void:
 	var auto_btn := _source_button("AutoResult", "auto_result_deactive", Rect2(934, 947, 240, 88), "自动结算", _toggle_auto_result)
 	auto_btn.set_meta("active", false)
 	_refresh_auto_result()
-	# Settlement-only controls stay available when a result actually exists.
-	var result_tools := HBoxContainer.new()
-	result_tools.name = "ResultTools"
-	_rite_panel.add_child(result_tools)
-	_set_rect(result_tools, Rect2(167, 815, 710, 90))
-	_gold_dice_label = Label.new()
-	result_tools.add_child(_gold_dice_label)
-	_gold_dice_btn = Button.new()
-	_gold_dice_btn.text = "投入金骰"
-	_gold_dice_btn.disabled = true
-	_gold_dice_btn.pressed.connect(_use_gold_dice_reactive)
-	result_tools.add_child(_gold_dice_btn)
-	_reroll_btn = Button.new()
-	_reroll_btn.text = "重掷"
-	_reroll_btn.disabled = true
-	_reroll_btn.pressed.connect(_use_reroll)
-	result_tools.add_child(_reroll_btn)
 	_result_label = _rich_text("", 32)
 	_result_label.name = "RiteResult"
-	preload("res://ui/source_text_style.gd").apply(_result_label, "@RITE_SETTLEMENT_TEXT")
+	preload("res://ui/source_text_style.gd").apply(_result_label, "@MAIN_BODY")
 	_result_label.fit_content = false
 	_rite_panel.add_child(_result_label)
 	_set_rect(_result_label, Rect2(167, 70, 710, 720))
-	result_tools.visible = false
 	_result_label.visible = false
+	_build_result_surface()
 	_update_stop_button()
 	_update_last_state_button()
+
+
+## Source-shaped RiteResultPanel. The original switches from the preparation
+## surface to a 3440x1820 settlement canvas with a dedicated result viewport
+## and operation bar; keep the existing resolver controls as the semantic
+## carrier while rendering this authored shell for the visible result state.
+## [SRC: GameScene.md MainUI/UI/RiteResultPanel; RiteResultPanelController.c
+##       @ Settlement (RVA 0x5a4800)]
+func _build_result_surface() -> void:
+	_result_surface = Control.new()
+	_result_surface.name = "RiteResultPanel"
+	# The result art is visual only; the blocking PromptNew sibling must still
+	# receive input while a settlement operation is waiting. Its child Next
+	# button remains an explicit interactive target.
+	_result_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_surface.visible = false
+	_source_canvas.add_child(_result_surface)
+	_set_rect(_result_surface, Rect2(200, 170, 3440, 1820))
+	var bg := _picture(_result_surface, "SettlementBackground", "settlement_bg", Rect2(0, 0, 3440, 1820))
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# DicesBG is rendered by GameScene Camera 4420 (ortho half-height 8.91)
+	# into DiceShow 1940x1800. Sprite native size is 1744x1608 at 100 PPU.
+	# [SRC: GameScene.unity DicesBG 129 / Transform 3901 / Camera 4420;
+	# Sprite/settlement_bg_dice.asset; runtime rite_result_power_20260910.jpg]
+	var tray_size := Vector2(1744, 1608) * (1800.0 / 1782.0)
+	_picture(_result_surface, "DicesBG", "settlement_bg_dice", Rect2(Vector2(912, 811) - tray_size * 0.5, tray_size))
+	var title_bg := _picture(_result_surface, "TitleBG", "rite_title_bg_0", Rect2(1786, 55, 296.42, 78))
+	var title := _source_label(_result_surface, "Title", Rect2(1786, 55, 296.42, 78), 60)
+	title.text = _state.rite_display_name(_rite_id, _db) if _state != null else str(_rite.get("name", ""))
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color("#111711"))
+	var result_scroll := ScrollContainer.new()
+	result_scroll.name = "Result"
+	result_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_set_rect(result_scroll, Rect2(1786.36665, 191.79745, 1132.6333, 1185.2699))
+	_result_surface.add_child(result_scroll)
+	_result_surface_text = _rich_text("", 36)
+	_result_surface_text.name = "Text (TMP)"
+	_result_surface_text.fit_content = true
+	_result_surface_text.custom_minimum_size = Vector2(1100, 1146)
+	preload("res://ui/source_text_style.gd").apply(_result_surface_text, "@MAIN_BODY")
+	# RiteResultPanel.prefab TextTranslate 114117307842306080, TMP paragraphSpacing=80.
+	_result_surface_text.add_theme_constant_override("paragraph_separation", 80)
+	_result_surface_text.add_theme_color_override("default_color", Color("#403525"))
+	result_scroll.add_child(_result_surface_text)
+	var op_bg := _picture(_result_surface, "Op BG", "settlement_op_bg", Rect2(1804, 1403, 1224, 188))
+	op_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_next_button = _source_button_on(_result_surface, "Next", "rite_op_confirm_1", Rect2(1989, 1419, 604, 140), "继续", _on_result_next)
+	# AutoPlay is a child of Op BG in the source prefab. Keep the exact
+	# parent-relative offset and route clicks through the same player flag as
+	# the preparation panel.
+	# [SRC: GameScene.md MainUI/UI/RiteResultPanel/Op BG/AutoPlay;
+	#       RiteResultPanelController.c OnAutoPlay 0x5a38d0]
+	_result_auto_button = _source_button_on(_result_surface, "AutoPlay", "auto_play_deactive", Rect2(2668, 1445, 240, 88), "自动播放", _toggle_result_auto_play)
+	_result_auto_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_result_auto_button.visible = false
+	# Source PlayRate is an independent ImageButton, hidden until the result
+	# surface is shown. Its authored rect is relative to RiteResultPanel.
+	# [SRC: GameScene.md MainUI/UI/RiteResultPanel/PlayRate;
+	#       RiteResultPanelController.c OnAutoPlay 0x5a38d0 /
+	#       UpdateResultTextSpeed 0x5a74a0; content/variable.json]
+	_play_rate_button = _source_button_on(_result_surface, "PlayRate", "play_speed_x1", Rect2(3067, 1441, 104, 104), "切换播放速度", _toggle_play_rate)
+	_play_rate_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	_play_rate_button.visible = false
+	_build_result_lists()
+	_build_dice_surfaces()
+
+
+## Operation card destinations; these are NOT settlement/DSL text lists.
+## [SRC: RiteResultPanelController.c AddCardToResults 0x5a0ff0;
+## dump.cs:325461-325462 / OpCardShow.IsHandCard 321455]
+func _build_result_lists() -> void:
+	_result_ops_layer = Control.new()
+	_result_ops_layer.name = "Op Results"
+	_result_ops_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_surface.add_child(_result_ops_layer)
+	_set_rect(_result_ops_layer, Rect2(1105, 169, 100, 100))
+
+	_result_hand_ops_layer = Control.new()
+	_result_hand_ops_layer.name = "Op Hand Results"
+	_result_hand_ops_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_surface.add_child(_result_hand_ops_layer)
+	_set_rect(_result_hand_ops_layer, Rect2(1316, 175, 100, 100))
+
+	_result_cards_layer = Control.new()
+	_result_cards_layer.name = "Op Cards"
+	_result_cards_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_result_surface.add_child(_result_cards_layer)
+	_set_rect(_result_cards_layer, Rect2(232, 510, 1440, 800))
+
+
+func _clear_result_lists() -> void:
+	for layer in [_result_ops_layer, _result_hand_ops_layer, _result_cards_layer]:
+		if layer == null:
+			continue
+		for child in layer.get_children():
+			layer.remove_child(child)
+			# free(), not queue_free(): the rows are rebuilt on the same frame
+			# and a deferred free would leave them orphaned at test teardown.
+			child.free()
+
+
+## Card-operation labels, keyed by the original CardOpType values.
+## [SRC: dump.cs:394326 CardOpType NEW0 COPY1 DELETE2 EQUIP3 UNEQUIP4
+##       UNEQUIP_RECOVERY5 ADD_TAG6 REMOVE_TAG7 UPRARE8 POP9 HAND_POP10
+##       THINK_POP11 REBIRTH_SUDAN_CARD12]
+const CARD_OP_LABELS := {
+	0: "新增",
+	1: "复制",
+	2: "移除",
+	3: "装备",
+	4: "卸下",
+	5: "卸下收回",
+	6: "加标签",
+	7: "减标签",
+	8: "升稀有",
+}
+
+## One short line per card operation. The original plays a full OpCardNewController
+## animation per queued CardOpContext (SetBG/SetEft/animation clip/pop); that
+## playback layer is still unported, so this renders the real recorded operation
+## stream as plain rows instead of leaving the authored destinations empty.
+## [SRC: RiteResultPanelController.c @ AddCardOp (0x5a0e60) queues
+##       CardOpContext into +0x1d8; OpCardNewController @ Init (0x572f40) is the
+##       unported playback. Layers keep their authored rects.]
+func _rebuild_result_lists(res) -> void:
+	_clear_result_lists()
+	# RiteResolver returns the deferred struct itself, so the recorded stream
+	# sits at the top level (`res.card_ops`), not under `res.deferred`.
+	var ops: Array = []
+	if res is Dictionary:
+		ops = (res as Dictionary).get("card_ops", [])
+	if ops.is_empty():
+		return
+	var row_height := 34.0
+	var index := 0
+	for op in ops:
+		if not (op is Dictionary):
+			continue
+		var op_type := int(op.get("op", -1))
+		var label := str(CARD_OP_LABELS.get(op_type, "操作"))
+		var card_name := _card_op_name(op)
+		var layer := _result_cards_layer if op_type in [0, 1, 2, 8] else _result_ops_layer
+		if layer == null:
+			continue
+		var row := Label.new()
+		row.name = "CardOp%d" % index
+		row.text = "%s %s" % [label, card_name]
+		row.add_theme_font_size_override("font_size", 32)
+		row.position = Vector2(0, index * row_height)
+		row.size = Vector2(layer.size.x, row_height)
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.set_meta("source_card_op", op_type)
+		row.set_meta("source_card_uid", int(op.get("card_uid", 0)))
+		layer.add_child(row)
+		index += 1
+
+
+## Best-effort card name for one recorded operation. The source rows carry a
+## Card reference (CardOpContext.card@0x18); the clone's log carries the uid, so
+## the name is resolved from the live instance, falling back to the config id.
+## [SRC: CardOpContext fields dump.cs:6305; CardExtensions.GetName 0x37ff50]
+func _card_op_name(op: Dictionary) -> String:
+	var uid := int(op.get("card_uid", 0))
+	if _state != null and uid > 0:
+		var card: Dictionary = _state.card_data_for(uid, _db)
+		if not card.is_empty():
+			var name := str(card.get("name", ""))
+			if not name.is_empty():
+				return name
+	return str(op.get("card_id", ""))
+
+
+func _toggle_play_rate() -> void:
+	# The source has exactly TWO rates, both from variable.json, and picks
+	# between them by the auto-play flag — there is no x1/x2 cycle.
+	# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed (0x5a74a0):
+	#       param_2 == 0 -> Player.result_text_play_rate@0x68, else
+	#       Player.result_text_auto_play_rate@0x6C, clamped to
+	#       [DAT_181c92b4c, DAT_181c9e4d0] = [0.5, 100.0] and written to
+	#       ScrollViewTextController+0x38.]
+	_result_auto_play = not _result_auto_play
+	_refresh_play_rate()
+	if _result_surface_text != null:
+		_result_surface_text.set_meta("source_play_rate", _result_play_rate)
+
+
+func _on_result_next() -> void:
+	if not _dice_count_kind.is_empty():
+		return
+	# [SRC: ScrollViewTextController.c @ ForceTypeDone (0x5a8da0);
+	#       RiteResultPanelController.c @ OnNext (0x5a43c0)]
+	if not _result_text_done:
+		_result_text_done = true
+		if _result_surface_text != null:
+			_result_surface_text.visible_characters = -1
+		return
+	_resolve()
+
+
+func _refresh_play_rate() -> void:
+	if _play_rate_button == null:
+		return
+	# Both rates come from variable.json through GameState; the panel only
+	# chooses between them, and the auto-play toggle is what selects.
+	# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed 0x5a74a0.]
+	if _state != null:
+		_result_play_rate = _state.source_result_text_rate(_result_auto_play)
+	var art := "x1" if _result_play_rate <= 1.0 else "x2"
+	_play_rate_button.get_node("Art").texture = load("res://assets/original/ui/play_speed_%s.png" % art)
+	_play_rate_button.set_meta("source_play_rate", _result_play_rate)
+
+
+func _toggle_result_auto_play() -> void:
+	# [SRC: RiteResultPanelController.OnAutoPlay 0x5a38d0, autoPlay@0x184:
+	#       PlayerExtensions.SetRiteAutoResult(rite.id, on) then
+	#       UpdateResultTextSpeed(on).]
+	_result_auto_play = not _result_auto_play
+	if _result_auto_play:
+		if not _state.auto_result_rites.has(_rite_id):
+			_state.auto_result_rites.append(_rite_id)
+	else:
+		_state.auto_result_rites.erase(_rite_id)
+	_refresh_play_rate()
+	_refresh_result_auto_button()
+	_refresh_auto_result()
+
+
+func _refresh_result_auto_button() -> void:
+	if _result_auto_button == null:
+		return
+	var active: bool = _state != null and _state.auto_result_rites.has(_rite_id)
+	_result_auto_button.get_node("Art").texture = load("res://assets/original/ui/auto_play_%s.png" % ("active" if active else "deactive"))
+
+
+## Source prefab children of RiteResultPanel.  These remain hidden until the
+## resolver actually produced a dice check; the dimensions and authored
+## offsets come from RiteResultPanel.prefab DicePromptNew/DiceCountPromptNew.
+## [SRC: RiteResultPanel.prefab RectTransform 224401109917237556,
+## 224728442554800362; RiteResultPanelController.c ShowDicePrompt 0x5a5910,
+## ShowDiceCountPrompt 0x5a5760]
+func _build_dice_surfaces() -> void:
+	_dice_prompt_surface = Control.new()
+	_dice_prompt_surface.name = "DicePromptNew"
+	_dice_prompt_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dice_prompt_surface.visible = false
+	_result_surface.add_child(_dice_prompt_surface)
+	_set_rect(_dice_prompt_surface, Rect2(452.5, 297, 1032, 1032))
+	_dice_prompt_surface.position.x = 452.5 # Preserve the source half-unit pivot.
+	_picture(_dice_prompt_surface, "BG", "dice_prompt_bg", Rect2(0, 0, 1032, 1032))
+	_picture(_dice_prompt_surface, "Normal", "dice_prompt_normal", Rect2(356, 84, 320, 864))
+	var fight_art := _picture(_dice_prompt_surface, "Fight", "dice_prompt_fight", Rect2(84, 84, 864, 864))
+	fight_art.visible = false
+	var ring := _picture(_dice_prompt_surface, "Ring", "dice_prompt_ring", Rect2(460, 460, 112, 112))
+	ring.visible = false
+	_dice_count_label = _source_label(_dice_prompt_surface, "Count", Rect2(416, 250, 200, 100), 46)
+	_dice_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_roll_label = _source_label(_dice_prompt_surface, "CurrentDices", Rect2(300, 355, 440, 100), 30)
+	_dice_roll_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_success_label = _source_label(_dice_prompt_surface, "Success", Rect2(300, 455, 440, 100), 30)
+	_dice_success_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+	_dice_count_prompt_surface = Control.new()
+	_dice_count_prompt_surface.name = "DiceCountPromptNew"
+	_dice_count_prompt_surface.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dice_count_prompt_surface.visible = false
+	_result_surface.add_child(_dice_count_prompt_surface)
+	_set_rect(_dice_count_prompt_surface, Rect2(530.5, 427, 876, 876))
+	_dice_count_prompt_surface.position.x = 530.5
+	_picture(_dice_count_prompt_surface, "BG", "bg_5", Rect2(0, 0, 876, 876))
+	# Authored side controls belong to DiceCountPromptNew, not the hidden
+	# preparation panel. [SRC: RiteResultPanel.prefab; dump.cs:324673]
+	_gold_dice_btn = _source_button_on(_dice_count_prompt_surface, "GoldDice", "gold_bg", Rect2(-162, 7, 372, 832), "金骰子", func(): _show_dice_count_prompt("gold"))
+	_picture(_gold_dice_btn, "Icon", "gold_active", Rect2(50, 281, 140, 124))
+	var gold_title := _source_label(_gold_dice_btn, "Title", Rect2(-70, 34, 372, 832), 60)
+	gold_title.text = "金骰子"
+	gold_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gold_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_picture(_gold_dice_btn, "CountBG", "checkbox_bg", Rect2(84, 487, 60, 60))
+	_gold_dice_label = _source_label(_gold_dice_btn, "Count", Rect2(14, 490, 200, 50), 36)
+	_gold_dice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reroll_btn = _source_button_on(_dice_count_prompt_surface, "Redraw", "redraw_bg", Rect2(681, -5, 360, 848), "重投", func(): _show_dice_count_prompt("reroll"))
+	_picture(_reroll_btn, "Icon", "redraw_active", Rect2(178, 293, 128, 132))
+	var redraw_title := _source_label(_reroll_btn, "Title", Rect2(61, 45, 360, 848), 60)
+	redraw_title.text = "重投"
+	redraw_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	redraw_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_picture(_reroll_btn, "CountBG", "checkbox_bg", Rect2(213, 510, 60, 60))
+	var redraw_count := _source_label(_reroll_btn, "Count", Rect2(143, 513, 200, 50), 36)
+	redraw_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_count_title = _source_label(_dice_count_prompt_surface, "Tips", Rect2(138, 553, 600, 72.1095), 40)
+	_dice_count_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dice_count_value = _source_label(_dice_count_prompt_surface, "Count", Rect2(338, 307, 200, 144), 120)
+	_dice_count_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for spec in [
+		["Gold Cancel", "cancel", Rect2(-269.5, 574, 124, 124)],
+		["Gold Confirm", "confirm", Rect2(-94, 576, 240, 120)],
+		["Redraw Cancel", "cancel", Rect2(747, 574, 124, 124)],
+		["Redraw Confirm", "confirm", Rect2(920, 576, 240, 120)],
+	]:
+		var callback := _cancel_dice_selection if str(spec[0]).ends_with("Cancel") else _confirm_dice_count_prompt
+		_source_button_on(_dice_count_prompt_surface, spec[0], spec[1], spec[2], "取消" if str(spec[0]).ends_with("Cancel") else "确认", callback).hide()
+
+
+func _refresh_dice_surface(res) -> void:
+	if _dice_prompt_surface == null:
+		return
+	var rolls: Array = res.dice_rolls if res != null else []
+	var has_dice := not rolls.is_empty()
+	_dice_prompt_surface.visible = false
+	_dice_count_prompt_surface.visible = has_dice
+	if has_dice:
+		_refresh_dice_selection()
+	if not has_dice:
+		return
+	# random_text_up carries the authored count-decision hint. Do not invent
+	# a target from whichever branch happened to succeed.
+	var hint: Dictionary = _rite.get("random_text_up", {}).get(_gold_type_for_reactive_spend(), {})
+	_dice_count_title.text = str(hint.get("low_target_tips", ""))
+	var fight: bool = res.dice_types_seen is Array and "f" in res.dice_types_seen
+	_dice_prompt_surface.get_node("Normal").visible = not fight
+	_dice_prompt_surface.get_node("Fight").visible = fight
+	_dice_count_label.text = "骰子 × %d" % rolls.size()
+	_dice_roll_label.text = "结果: " + "  ".join(rolls.map(func(v): return str(v)))
+	_dice_success_label.text = "成功数: %d" % _successes_for_result(res)
+
+
+func _successes_for_result(res) -> int:
+	if res == null:
+		return 0
+	var threshold := 5
+	var entry: Dictionary = res.normal_entry if res.normal_entry is Dictionary else {}
+	for key in entry.get("condition", {}):
+		var value = entry.get("condition", {}).get(key)
+		if str(key).begins_with("r") and value is Array and value.size() > 1:
+			threshold = int(value[1])
+			break
+	var successes := 0
+	for face in res.dice_rolls:
+		if int(face) >= threshold:
+			successes += 1
+	return successes
+
+
+# [SRC: RiteResultDiceCountPromptController.c OnGoldAdd 0x59d360,
+# OnGoldCancel 0x59d6f0 / OnRedraw 0x59dc40; GoldAddCount@0xD4,
+# RedrawUsed@0xDC, dump.cs:324690. Selection does not spend player resources.]
+func _show_dice_count_prompt(kind: String) -> void:
+	if _dice_count_prompt_surface == null or not _resolution_pending or _waiting_for_result_operations():
+		return
+	if kind == "gold":
+		if _dice_count_kind == "reroll" or _gold_selected >= _state.gold_dice:
+			return
+		_gold_selected += 1
+	elif kind == "reroll":
+		if _gold_selected > 0 or _dice_count_kind == "reroll" or _rerolls_left <= 0:
+			return
+	else:
+		return
+	_dice_count_kind = kind
+	_dice_count_prompt_surface.show()
+	_refresh_dice_selection()
+
+
+func _refresh_dice_selection() -> void:
+	if _dice_count_prompt_surface == null:
+		return
+	for node_name in ["Gold Cancel", "Gold Confirm"]:
+		_dice_count_prompt_surface.get_node(node_name).visible = _gold_selected > 0
+	for node_name in ["Redraw Cancel", "Redraw Confirm"]:
+		_dice_count_prompt_surface.get_node(node_name).visible = _dice_count_kind == "reroll"
+	_gold_dice_label.text = str(maxi(0, _state.gold_dice - _gold_selected))
+	_reroll_btn.get_node("Count").text = str(maxi(0, _rerolls_left - int(_dice_count_kind == "reroll")))
+	_dice_count_value.text = str(_successes_for_result(_last_result))
+	if _gold_selected > 0:
+		_dice_count_value.text += " + " + str(_gold_selected)
+	_update_gold_button()
+	_update_reroll_button()
+	if _result_next_button != null:
+		_result_next_button.disabled = not _dice_count_kind.is_empty()
+
+
+func _cancel_dice_selection() -> void:
+	_gold_selected = 0
+	_dice_count_kind = ""
+	_refresh_dice_selection()
+
+
+func _hide_dice_count_prompt() -> void:
+	if _dice_count_prompt_surface != null:
+		_dice_count_prompt_surface.hide()
+	_gold_selected = 0
+	_dice_count_kind = ""
+
+
+func _confirm_dice_count_prompt() -> void:
+	if _waiting_for_result_operations():
+		return
+	var kind := _dice_count_kind
+	var amount := _gold_selected
+	_cancel_dice_selection()
+	if kind == "gold" and amount > 0:
+		_use_gold_dice_reactive(amount)
+	elif kind == "reroll":
+		_use_reroll()
+
+
+func _source_button_on(parent: Control, node_name: String, asset: String, rect: Rect2, hint: String, callback: Callable) -> Button:
+	var button := Button.new()
+	button.name = node_name
+	button.tooltip_text = hint
+	button.add_theme_font_override("font", SOURCE_FONT)
+	for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+		button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+	parent.add_child(button)
+	_set_rect(button, rect)
+	var art := _picture(button, "Art", asset, Rect2(Vector2.ZERO, rect.size))
+	button.mouse_entered.connect(func(): art.modulate = Color(1.2, 1.2, 1.2))
+	button.mouse_exited.connect(func(): art.modulate = Color.WHITE)
+	button.pressed.connect(callback)
+	return button
 
 func _source_label(parent: Control, node_name: String, rect: Rect2, font_size: int) -> Label:
 	var label := Label.new()
@@ -441,6 +866,12 @@ func _toggle_auto_result() -> void:
 	elif int(_rite.get("auto_result", 0)) != 0:
 		_state.auto_result_rites.append(_rite_id)
 	_refresh_auto_result()
+	_refresh_result_auto_button()
+	_result_auto_play = _state != null and _state.auto_result_rites.has(_rite_id)
+	if _result_auto_play and not _result_text_done:
+		_result_text_done = true
+		if _result_surface_text != null:
+			_result_surface_text.visible_characters = -1
 
 func _refresh_auto_result() -> void:
 	var button := _rite_panel.get_node("AutoResult") as Button
@@ -449,28 +880,43 @@ func _refresh_auto_result() -> void:
 	button.get_node("Art").texture = load("res://assets/original/ui/auto_result_%s.png" % ("active" if active else "deactive"))
 
 func _show_rite_help() -> void:
+	if _source_canvas.get_node_or_null("RiteHelp") != null:
+		return
+	# [SRC: RitePanelTitle.prefab CommonContent/Help and its four prompts.]
 	var help := Control.new()
 	help.name = "RiteHelp"
-	help.size = SOURCE_CANVAS_SIZE
+	help.size = Vector2(4096, 2160)
+	help.position = _rite_panel.position + _rite_panel.size * 0.5 - help.size * 0.5 - Vector2(0, 210)
+	help.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_source_canvas.add_child(help)
 	var mask := ColorRect.new()
-	mask.color = Color(0, 0, 0, 0.82)
-	mask.size = SOURCE_CANVAS_SIZE
+	mask.name = "Mask"
+	mask.color = Color(0, 0, 0, 128.0 / 255.0)
+	mask.size = Vector2(10000, 10000)
+	mask.position = (help.size - mask.size) * 0.5
 	help.add_child(mask)
 	mask.gui_input.connect(func(event: InputEvent):
 		if event is InputEventMouseButton and event.pressed:
+			mask.accept_event()
+			help.get_parent().remove_child(help)
 			help.queue_free()
 	)
-	_picture(help, "Prompt", "rite_help", Rect2(0, 0, 3840, 2160))
+	_picture(help, "Prompt", "rite_help", Rect2(-949, 233, 4096, 2160))
 	var labels: Dictionary = _load_json("res://content/ui.json")
-	var rows := [["MAIN", Vector2(448, 1583), Vector2(1000, 200)], ["DESC", Vector2(1879, 1583), Vector2(600, 200)], ["TIME", Vector2(2187, 356), Vector2(600, 200)], ["TAG", Vector2(2543, 1334), Vector2(600, 200)]]
+	var rows := [["MAIN", Vector2(-1472, -713), Vector2(1000, 200)], ["DESC", Vector2(-41, -713), Vector2(600, 200)], ["TIME", Vector2(267, 514), Vector2(600, 200)], ["TAG", Vector2(623, -464), Vector2(600, 200)]]
 	for row in rows:
 		var value: String = str(labels.get("RITE_HELP_%s_PROMPT" % row[0], {}).get("zhCN", ""))
 		var label := _rich_text(preload("res://ui/main_help.gd")._to_bbcode(value), 50)
+		label.name = "%sPrompt" % row[0]
 		preload("res://ui/source_text_style.gd").apply(label, "@HELP_TEXT")
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		help.add_child(label)
-		_set_rect(label, Rect2(row[1] - row[2] * Vector2(0.5, 1), row[2]))
+		var pos: Vector2 = help.size * 0.5 + row[1] * Vector2(1, -1) - row[2] * Vector2(0.5, 1)
+		_set_rect(label, Rect2(pos, row[2]))
+		if row[0] == "TIME":
+			# RitePanelTitle.prefab TimePrompt TMP vertical alignment 1024 = Bottom.
+			label.fit_content = false
+			label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 
 
 func _build_slot_summary() -> void:
@@ -550,6 +996,20 @@ func _process(_delta: float) -> void:
 		_update_result_wait_controls()
 	if _close_after_commit and _resolution_pending and not waiting:
 		_commit_resolution()
+	if _result_surface_text != null and _result_surface_text.visible and not _result_text_done:
+		var total := _result_surface_text.get_total_character_count()
+		if total <= 0:
+			_result_text_done = true
+		else:
+			# One rate, from one place: just write it into the surface meta so
+			# the value stays inspectable.
+			# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed
+			#       0x5a74a0; dump.cs:387291 Player.result_text_play_rate@0x68 /
+			#       result_text_auto_play_rate@0x6C.]
+			_result_text_progress = minf(float(total), _result_text_progress + _delta * 20.0 * _result_play_rate)
+			_result_surface_text.visible_characters = int(_result_text_progress)
+			if _result_text_progress >= float(total):
+				_result_text_done = true
 
 
 func _update_result_wait_controls() -> void:
@@ -559,6 +1019,8 @@ func _update_result_wait_controls() -> void:
 	_update_reroll_button()
 	if _close_btn != null:
 		_close_btn.disabled = _last_result_waiting
+	if _result_next_button != null:
+		_result_next_button.visible = not _last_result_waiting
 
 
 func _on_slot_pressed(slot_key: String) -> void:
@@ -807,6 +1269,11 @@ func _do_resolve() -> void:
 	}
 	if _state != null and _state.has_method("with_player_actor_context"):
 		ctx = _state.with_player_actor_context(ctx, _db)
+	# Actor enrichment deep-copies dictionaries. Keep the settlement's live
+	# dice cache across GoldDiceException retries; redraw alone clears it.
+	# [SRC: FuncCompare.c IsSatisfied 0x3fc060, ConditionContext.dices@0x40;
+	# RiteResultPanelController.DisplayClass88_0 b__5 0x5b7fe0.]
+	ctx["dice_cache"] = _resolve_dice_cache
 	var gold_dice_bonus = _gold_used_this_resolve
 	if not _gold_dice_map.is_empty():
 		gold_dice_bonus = _gold_dice_map
@@ -873,6 +1340,13 @@ func _close_panel() -> void:
 		_gold_dice_map.clear()
 		_resolve_dice_cache.clear()
 		_pending_table_entries.clear()
+		_clear_result_lists()
+		if _result_surface != null:
+			_result_surface.visible = false
+		if _play_rate_button != null:
+			_play_rate_button.visible = false
+		if _result_auto_button != null:
+			_result_auto_button.visible = false
 		_refresh_gold_label()
 		_update_gold_button()
 		_update_resolve_button()
@@ -889,53 +1363,69 @@ func _close_panel() -> void:
 
 
 func _display_result(res) -> void:
-	var entry: Dictionary = res.normal_entry
-	var txt := ""
-	if entry.is_empty():
-		txt = "[color=#a89880]（没有匹配的结算分支）[/color]"
-	else:
-		# Display texts carry config placeholders ([sudan_life_time] etc.)
-		# substituted with live run values like the original formatter.
-		var t1: String = _state.substitute_text(str(entry.get("result_title", ""))) if _state != null and _state.has_method("substitute_text") else str(entry.get("result_title", ""))
-		var t2: String = _state.substitute_text(str(entry.get("result_text", ""))) if _state != null and _state.has_method("substitute_text") else str(entry.get("result_text", ""))
-		if t1 != "":
-			txt += "[color=#e0c486]" + t1 + "[/color]\n"
-		if t2 != "":
-			txt += t2 + "\n"
-		var cond: Dictionary = entry.get("condition", {})
-		for k in cond:
-			if str(k).begins_with("r1:"):
-				txt += "\n[color=#a89880]检定 %s[/color]" % k
-				break
-	txt += "\n[color=#c9a96a]当前金币: %d[/color]" % _state.coin_count
-	if not res.extre_log.is_empty():
-		txt += "\n[color=#a89880]（附加结算 %d 条已执行）[/color]" % res.extre_log.size()
-	if _gold_used_this_resolve > 0:
-		txt += "\n[color=#e0c486]（已投入金骰 +%d 成功）[/color]" % _gold_used_this_resolve
+	# [SRC: DisplayClass77_0 b__3 0x5b5b70 / DisplayClass79_0;
+	# AppendResultText 0x5a13e0; variable.json RESULT_TEXT_FORMAT={0}.]
+	var entries: Array = res.prior_log.duplicate()
+	if entries.is_empty():
+		if not res.normal_entry.is_empty():
+			entries.append(res.normal_entry)
+		entries.append_array(res.extre_log)
+	var sections: PackedStringArray = []
+	# Settlement first shows RiteNode.text before prior/normal branch text.
+	# [SRC: RiteResultPanelController.c Settlement 0x5a4800, rite.node@0x50
+	# text@0x20 -> ShowTextWithSeperator; DisplayClass56_0 b__0 0x5b3300.]
+	var introduction := str(_rite.get("text", ""))
+	if _state != null:
+		introduction = _state.substitute_text(introduction)
+	if not introduction.is_empty():
+		sections.append(introduction)
+	for entry in entries:
+		for key in ["result_title", "result_text"]:
+			var value := str(entry.get(key, ""))
+			if _state != null:
+				value = _state.substitute_text(value)
+			if not value.is_empty():
+				sections.append(value)
+	var txt := "\n".join(sections)
 	if _result_label:
 		_result_label.text = txt
+	if _result_surface_text:
+		_result_surface_text.text = preload("res://ui/source_rich_text.gd").to_bbcode(txt)
+		_result_surface_text.visible_characters = 0
+		_result_text_progress = 0.0
+		_result_text_done = false
+		_result_surface_text.set_meta("source_character_per_second", 20.0)
+	_rebuild_result_lists(res)
+	if _result_surface:
+		_result_surface.visible = true
+		_result_surface.move_to_front()
+	if _play_rate_button != null:
+		_play_rate_button.visible = true
+		_refresh_play_rate()
+	if _result_auto_button != null:
+		_result_auto_button.visible = true
+		_refresh_result_auto_button()
+	_refresh_dice_surface(res)
+	if _result_next_button:
+		_result_next_button.visible = false
 
 
 func _update_gold_button() -> void:
 	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null and _resolution_pending
 	if _gold_dice_btn == null:
 		return
-	_gold_dice_btn.disabled = not can_spend or _waiting_for_result_operations()
-	if can_spend:
-		_gold_dice_btn.text = "投入金骰"
-	else:
-		_gold_dice_btn.text = "金骰耗尽" if _state != null and _state.gold_dice <= 0 else "投入金骰"
+	_gold_dice_btn.disabled = not can_spend or _waiting_for_result_operations() or _dice_count_kind == "reroll" or _gold_selected >= _state.gold_dice
 
 
-func _use_gold_dice_reactive() -> void:
+func _use_gold_dice_reactive(amount: int = 1) -> void:
 	if _waiting_for_result_operations():
 		return
-	if not _resolution_pending or _state.gold_dice <= 0:
+	if not _resolution_pending or amount <= 0 or _state.gold_dice < amount:
 		return
 	GameAudio.cue("drop_card_gold.ogg")
-	_gold_used_this_resolve += 1
+	_gold_used_this_resolve += amount
 	var type_key := _gold_type_for_reactive_spend()
-	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + 1
+	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + amount
 	_do_resolve()
 
 
@@ -966,7 +1456,7 @@ func _reroll_count() -> int:
 func _update_reroll_button() -> void:
 	if _reroll_btn == null:
 		return
-	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0) or _waiting_for_result_operations()
+	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0) or _waiting_for_result_operations() or not _dice_count_kind.is_empty()
 
 
 ## OnStop: a started multi-day rite can be halted. Cards stay in their slots,
@@ -1092,12 +1582,29 @@ func _update_resolve_button() -> void:
 
 func _refresh_gold_label() -> void:
 	if _gold_dice_label and _state != null:
-		_gold_dice_label.text = "金骰: %d" % _state.gold_dice
+		_gold_dice_label.text = str(maxi(0, _state.gold_dice - _gold_selected))
 	if _rite_panel != null:
 		var has_result := _last_result != null
-		_rite_panel.get_node("ResultTools").visible = has_result
+		_rite_panel.visible = not has_result
+		_template_backdrop.visible = not has_result
+		if _template_foreground != null:
+			_template_foreground.visible = not has_result
+		_slot_layer.visible = not has_result
 		_rite_panel.get_node("RiteDescriptionScroll").visible = not has_result
 		_result_label.visible = has_result
+		if _result_surface != null:
+			_result_surface.visible = has_result
+		if _play_rate_button != null:
+			_play_rate_button.visible = has_result
+		if _result_auto_button != null:
+			_result_auto_button.visible = has_result
+			if has_result:
+				_refresh_result_auto_button()
+		if not has_result:
+			if _dice_prompt_surface != null:
+				_dice_prompt_surface.visible = false
+			if _dice_count_prompt_surface != null:
+				_dice_count_prompt_surface.visible = false
 
 
 func _prepare_table_from_placements() -> void:
@@ -1187,17 +1694,34 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 	var widget := CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
 	widget.drag_allowed = func(): return _can_edit_slot(slot_key)
 	widget.name = "PlacedCard_%s" % slot_key.to_upper()
-	widget.set_anchors_preset(Control.PRESET_FULL_RECT)
-	widget.offset_left = 0
-	widget.offset_top = 0
-	widget.offset_right = 0
-	widget.offset_bottom = 0
+	# [SRC: CardSlotController.SetCard 0x53c7d0; CardSlot.prefab Container]
+	# Preserve the card's own size and centre it in
+	# the 100x100 Container, whose authored offset is (1.6,-19.6).
+	var container := Control.new()
+	container.name = "Container"
+	container.position = Vector2(87.6, 217.6)
+	container.size = Vector2(100, 100)
+	container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(container)
+	widget.position = (container.size - widget.card_size()) * 0.5
 	widget.clicked.connect(func(_id: int, _card: Dictionary): _return_slot_to_hand(slot_key); _after_placement_changed())
-	btn.add_child(widget)
+	container.add_child(widget)
 
 
 func _can_edit_slot(slot_key: String) -> bool:
 	return not _resolution_pending and not _resolution_committed and preload("res://ui/rite_slot_access.gd").can_edit(_state, _db, _rite_uid, slot_key)
+
+
+func can_release_slot_card(card_uid: int, rite_uid: int, slot_key: String) -> bool:
+	return rite_uid != _rite_uid or (_can_edit_slot(slot_key) and int(_placed.get(slot_key, 0)) == card_uid)
+
+
+func refresh_departed_slot_card(rite_uid: int) -> void:
+	if rite_uid != _rite_uid:
+		return
+	# Stacking/equipping already unlinked the source. Do not return it to hand.
+	_load_placements_from_instance()
+	_after_placement_changed()
 
 
 func _rite_state_from_placements() -> Dictionary:
@@ -1210,7 +1734,8 @@ func _rite_state_from_placements() -> Dictionary:
 
 func _clear_slot_card(btn: Button) -> void:
 	for child in btn.get_children():
-		if child is CardWidget:
+		if child is CardWidget or child.name == "Container":
+			btn.remove_child(child)
 			child.queue_free()
 
 
@@ -1304,7 +1829,20 @@ func _slot_entries_from_placements() -> Array:
 
 
 func _apply_deferred_to_world(deferred: Dictionary) -> void:
+	# Deferred effects mutate cards after ResultExec returned, so they are a
+	# second source of CardOpContext rows for the same settlement.
+	# [SRC: RiteResultPanelController.c @ DoCachedOp (0x5a1a60) plays the cached
+	#       operations after the immediate ones.]
+	var recording: bool = _state != null and _state.has_method("begin_result_op_log")
+	if recording:
+		_state.begin_result_op_log()
 	DeferredEffects.apply(deferred, _state, _db, _rng)
+	if recording:
+		var ops: Array = _state.drain_result_op_log()
+		if not ops.is_empty():
+			var existing: Array = deferred.get("card_ops", [])
+			existing.append_array(ops)
+			deferred["card_ops"] = existing
 
 
 func _gold_type_for_reactive_spend() -> String:

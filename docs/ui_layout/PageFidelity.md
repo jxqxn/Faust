@@ -38,7 +38,7 @@
 
 ### 2026-09-09 连续验收批次
 
-- 按住提示（2026-09-09）：按 CardController.Update 0x52c890 的 0.2s 阈值接上 `ShowSatisfiedRite 0x557a80`——`GameState.satisfied_rite_uids_for_card` 复刻 `GetCardSatisfiedRite 0x532e10`（跳过已开始仪式、跳过 open_adsorb 与已占用槽），CardWidget 按住计时发出 hold_hint_requested/cleared，地图对命中的 RiteNew 卡做脉冲高亮（ShowEffect(1) 的 clip 无导出体，为近似）。新增 tests/test_card_hold_hint.gd（4/14）与 verify_card_surface.gd 端到端「按住阿尔图 → 高亮 ≥1 → 松开清空」。
+- 按住提示（2026-09-09 接手复核）：纠正原方法地址与严格 >0.2s 阈值；找到完整 card_satisfied.anim，删除整块标牌循环变色，改为原图轮廓0/.25/.75/1秒的0/1/1/0透明度曲线，自动结束、重复触发重播；松开不取消已播放效果。暂停/拖拽清待触发计时，阻断期间不提示。6项专项与真实GPU鼠标路径验证；标题动画路径冲突、特殊类型轮廓偏移及CanPutCard部分条件仍缺，详见METHOD_MAP。
 - 卡牌堆叠/拆分（2026-09-09）：按 CardController.CardSplit 0x528390 / CardStack 0x5286b0 落地 `split_card_stack`（count>n，副本继承 bag/bagpos 回手牌）与 `stack_cards`（同 id + 双可堆叠，目标累加、源卡移除）；CardWidget 支持拖到同 id 可堆叠手牌合并，仪式槽已占用且同 id 可堆叠时也合并（CardSlotController.CardStack）。新增 tests/test_card_stacking.gd（7/33）与 verify_card_surface.gd 端到端 8→4+4→8。🟡 拆分手势暂绑 Shift+左键（原作是 SplitCard 提示 A+B）；⬜ 0.2s 按住 ShowSatisfiedRite 提示未接。
 - 手牌卡面第四批（2026-09-09）：按"立绘透明像素"逐带拟合出底板光照分布（自上而下 1.21×→0.79×、金属件 30% 漫反射损失、高光 0.3），逐带误差 21%→15%，六张卡整卡均值仍 ≤6%；详情面板 `CardInfoNew/Equips` 装备缩略图复用同一 CardWidget 链，新增 verify_card_detail.gd 校验壳层并输出 card_detail_2560.png（原作参考帧无装备，只做结构验证）。
 - 手牌卡面第三批（2026-09-09）：补上寿命牌 `LifeBg/Image/DotText`——`<sprite=21>` 的真身是 `rite_settlement_icon` 图集索引 21 的 `dot_0.png`（50×30，不是 number_6），已复制图集并按锚点折算落位；对拍脚本临时给小圆 7 天寿命覆盖这条链。仍缺：材质高光/法线空间分布、详情面板装备缩略图未按 card_info_artu.jpg 单独对拍。
@@ -81,6 +81,16 @@ tools/verify_rite_wait.gd 使用合成提示和实际鼠标事件验证等待、
 
 ## 基线验证
 
+### 2026-09-09 标题页与同类菜单续修
+
+本批修正入口标题页（用户所称登录界面）、共享菜单按钮和加载存档路径；不把整张全页面清单标为完成。
+
+- `ImageTranslate.Start/UpdateImg` 0x1565d30/0x1565f70 会覆盖 Prefab 的 logo 尺寸。原样引入 `content/imagestyle.json`，使用 START_UI_LOGO 的 933.76×586.24，再按源布局计入 1.1 子缩放。
+- `StartPanel` 与 `ESCPanelNew` 共用 `source_menu_button.gd`：背景相对实际按钮宽度居中，装饰在底部，仅悬停/焦点时显示。StartPanel 横排按 childForceExpand 分配剩余空间，Contacts 保持源 60 行高；继续游戏在无有效存档时禁用而非消失。标题文案回读原作 ui.json，默认隐藏开发测试入口；Collect 删除无源背书红点，Story 跟随 Global.HasQuestReward。
+- 加载游戏接已有 UserArchive 50 槽页面。`UserArchiveController.OnItemClicked` 0x5c8630 + dump.cs IsSaveMode 0xA0：空槽无动作，有档槽先确认，确认才恢复。移除标题页旧内嵌档案列表。档案页接回已有 bg_1、源关闭图标、标题正文样式及原作说明，修复滚动范围。
+- 验证工具 `tools/verify_title_menu.gd`：1920×1080、1280×720 均 PASS，覆盖空继续状态、加载入口/空槽/滚动末尾/关闭、设置/剧情/商店/画廊/制作人员入口。共享按钮后的 `verify_esc_menu.gd` 1920 路径 PASS。截图 `title_checked_1920.png`、`title_checked_1280.png`、`title_archives_1920.png`。
+- 原作配置校验 3883 文件、0 违规。本批截图是克隆 GPU 走查，不是新一轮原作同状态像素差分。仍待：背景粒子/TMP 材质、手柄提示、版本行底边、公告/Mod 外部入口、档案条目与确认框的完整源视觉；不得宣称这些已验收。
+
 最新续批：483/483测试、3543断言，34脚本，2条既有警告，无引擎错误或泄漏。该全量覆盖字号联动、CardTag网格和自动字号范围修正；整面板ui_size最后补入后另跑UI专项，见card-info-final-ui.log。tools/verify_card_info_grid.gd在1280/1920用lg档验证1.1倍整面板和全部六枚徽记，截图card_info_normal_{1280,1920}.png。整页标题/正文样式、状态/装备差分与交互仍缺，不作全页验收。content parity仍3882文件、0违规。
 
 续批：仪式重新打开时的成熟门已接（life < round_number 不允许提前结算）；前置结算命中后跳过普通与仪式额外结算，来源见 METHOD_MAP。完整回归479/479、3516断言，无引擎错误或泄漏。
@@ -92,3 +102,21 @@ tools/verify_rite_wait.gd 使用合成提示和实际鼠标事件验证等待、
 本批完整回归：34 脚本、477/477 测试、3501 断言，无引擎错误、orphan 或泄漏诊断（保留2条既有测试警告）。最终提示层级修正后另跑事件专项9/9、64断言及上述两种 GPU 路径，stderr 均空。content parity：3882文件、0违规。原作尚未集成的17个配置域仍由 METHOD_MAP 跟踪，0违规不表示配置已全部接入。
 
 2026-09-08 本地 gut-test.log 的最终汇总为 33 脚本、471/471 测试、3454 断言。该回归不能证明字体正确、可见输入通过或全页面原作一致；此前仅有 headless 测试结果，不登记为本标准的视觉验收。
+
+2026-09-09 ESC 菜单与仪式投放续批：`ESCPanelNew` 改为挂在 `GameScene` 的 3840x2160 设计画布，按 `ButtonGroup` 1665x1036 与底部锚点位置重建；按钮使用 `button_bg_new`、`prompt_bg` 和 `checkbox_bg/close_2`，保存、设置、结算、返回主菜单、返回均接入现有宿主信号链。仪式槽内保留 `CardNew` 194x422，置于 `CardSlot` 272x496 的 Container 偏移，避免把手牌卡面拉伸到槽根。专项 `test_ui_layout.gd` 80/80、`test_rite_view.gd` 30/30，`tools/verify_rite_hand_input.gd` 实际拖放路径通过。仍待迁移：原作 `CardController.Update 0x52c890` 的 0.2 秒按住后 `ShowSatisfiedRite` 快捷投放提示与手柄 A+B 分支；手牌卡面材质的 Unity Standard 光照与 TMP 数字精灵仍有记录中的渲染差异。
+
+### 2026-09-10 仪式实机复核纠偏（尚未整页验收）
+
+本节替代早先的结算壳层完成声明。原作新证据：`original_runtime/rite_result_power_20260910.jpg`、`rite_household_result_20260910.jpg`、`rite_help_20260910.jpg`。本轮直接控制原作完成结果继续、打开治理家业、打开帮助；没有将不同世界状态的克隆截图称为完整存档回放。
+
+已修正：Result/Op BG/Next/PlayRate/AutoPlay 的父级锚点折算；结果出现时隐藏准备板与槽层；DicesBG 独立按源相机投影；AutoPlay 使用 auto_play 纹理；后台禁用的下一天按钮不再吸收结果点击。PlayRate=(3067,1441)，AutoPlay=(2668,1445)，之前记录的 y=275 等坐标无效。
+
+结果内容只展示原作仪式开场正文与命中的 prior/normal/extre 文本。删除 DSL 键名、金币余额、自制执行统计和投入卡伪结果；CardOpContext/OpCardShow 完整播放链仍未接。直接读 RiteResultPanel.prefab 确认结果正文 TextTranslate 实为 **@MAIN_BODY**、TMP paragraphSpacing=80，替换此前错误的 @RITE_SETTLEMENT_TEXT。结果标题的 TMP sprite/Title SDF/+10/10%缩进模板仍待移植。
+
+金骰与重投改为 DiceCountPromptNew 的源左右控件；暂选资源只影响面板计数，取消不扣资源，多枚金骰确认一次扣款、重复确认无效。修复玩家上下文深拷贝骰子缓存导致确认金骰时重新掷骰的问题。准备隐藏后两侧入口仍可点击。数量提示使用原配置 random_text_up.low_target_tips。此处仍是 eager resolver 的结果决策界面，不等于已移植原作逐项检定/串行Promise/掷骰动画。
+
+帮助跟随 CommonContent，遮罩 alpha=128/255，TimePrompt 使用源 Bottom 对齐。真实点击帮助打开/关闭、滚轮滚动通过。精确 SDF、段落排版、不同模板/长文案覆盖仍未全部验收。
+
+本轮验证：仪式 36/36、172断言；UI 81/81、1096断言。全量516项初跑515通过，唯一失败为两层半像素位置被旧函数取整；修复后重跑上述相关组通过。最终日志无 SCRIPT ERROR/ERROR/退出泄漏。1280/1920 GPU结果入口、金骰确认/取消、重投取消、播放开关、继续提交通过；准备真实拖放→开始→重新打开运行态→锁槽→停止通过。帮助/滚动两尺寸通过；事件等待1280通过。原配置无人治理分支截图 `rite_source_household_result_1280.png` 验证文案来源，仍能看出未完成的标题模板和渲染差异。content parity 3883/0。
+
+下一验收门：结果标题模板与精确正文行距；CardOpContext→OpCardShow卡片和属性增减播放；逐检定的骰子动画与金骰/重投阶段；AutoPlay自动推进与等待门；同存档、同字号、同状态的整页对拍。以上未完成前不将仪式四页标绿，也不提前升级后六组页面状态。

@@ -7,3 +7,6 @@
 *.png binary
 *.ogg binary
 *.ttf binary
+
+# Preserve original shader disassembly evidence, including authored spacing.
+docs/ui_layout/shader_evidence/*.asm -text whitespace=-blank-at-eol

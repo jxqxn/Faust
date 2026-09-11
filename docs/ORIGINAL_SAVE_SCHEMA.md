@@ -25,7 +25,7 @@ godot --headless --script tools/export_save_diff.gd -- \
 | --- | --- | --- | --- | --- |
 | configId | int | — | missing | 局内配置身份 |
 | configVersion | long | — | missing | 配置版本戳 |
-| name | string | — | missing | 玩家名（默认阿尔图） |
+| name | string | player_display_name | mapped | 玩家名原字符串；空值时显示路径回退配置名称；第十五批纳入导入对拍 |
 | difficulty | int | difficulty_index | semantic | 基数待验证（样本=1） |
 | round | int | round_number | semantic | 原作 round 即日；克隆另存 day（原作无） |
 | min_round | int | round_snapshots 内部 | semantic | 回退下界，原作显式持久化 |
@@ -52,9 +52,9 @@ godot --headless --script tools/export_save_diff.gd -- \
 | cards | List\<Card\> | card_instances | semantic | 见下「结构差异」 |
 | rites | List\<Rite\> | rite_instances | semantic | 槽位下标数组内嵌卡 |
 | pins | List\<int\> | — | missing | 桌面图钉 |
-| sudan_pool_cards | List\<int\> | sudan_deck(部分) | semantic | 池剩牌 id |
+| sudan_pool_cards | List\<int\> | 配置池证据 | semantic | 构造运行时牌池用的 id 表；抽牌后仍保留初始多重集 |
 | sudan_pool | string | — | missing | 池变体 |
-| sudan_card_pool | List\<Card\> | sudan_deck(部分) | semantic | 手边待选苏丹卡 |
+| sudan_card_pool | List\<Card\> | sudan_deck + sudan_pool_tags | semantic | 实际剩余苏丹牌池；GenSudanCard 从此列表抽牌 |
 | sudan_pool_pos | Vector2 | — | missing | 池 UI 坐标 |
 | sudan_pool_init_count | int | — | missing | |
 | sudan_card_show_times | Dict\<int,int\> | — | missing | 展示计数 |

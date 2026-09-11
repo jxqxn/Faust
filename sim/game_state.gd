@@ -6,6 +6,7 @@ class_name GameState
 extends RefCounted
 
 const CardInstanceData = preload("res://sim/card_instance.gd")
+const SudanPoolCardData = preload("res://sim/sudan_pool_card.gd")
 
 # Counter system for non-negative clamping on gated counters.
 # Counters. Local counters are per-run; global persist across runs (prestige etc).
@@ -27,6 +28,8 @@ var next_card_uid := 1
 # This is an innovation-layer interpretation of the verified CardInstance
 # boundary, not a claim about an additional field in the original runtime.
 var player_actor_uid := 0
+# [SRC: Player.name@0x20 dump.cs:391488; SetPlayerName0x585530.]
+var player_display_name := ""
 # Hand and bottom rail contain runtime CardInstance uids.  Config ids only
 # cross the public compatibility boundary, where they resolve to one instance.
 var hand: Array[int] = []
@@ -128,9 +131,13 @@ var sudan_redraw_count := 1
 
 # Sudan cards in play (drawn, not yet consumed): each {id, days_left, ...}.
 var active_sudan_cards: Array = []
-# Sudan deck (shuffled pool, consumed last-first per spec sec 10.6).
-var sudan_deck: Array[int] = []
-var sudan_pool_tags: Dictionary = {} # card_id -> runtime tags for un-drawn pool entries
+# The un-drawn Sultan pool, as the original keeps it: ordered Card OBJECTS, not
+# config ids. Duplicate ids are real (the corpus sample has 27 entries over 16
+# ids), each carrying its own uid/count/life/tag delta. Consumed last-first.
+# [SRC: dump.cs Player.sudan_card_pool @0xB0 List<Card>;
+#       GameController.c @ GenSudanCard 0x54f6f0 / RedrawSudanCard 0x5558b0]
+var sudan_deck: Array = []
+var sudan_pool_next_uid := 1
 var auto_gen_sudan_card := true
 # Runtime rite instances are the authoritative player-owned ritual state.
 # Config ids below remain compatibility views for code not migrated yet.
@@ -212,6 +219,9 @@ var timing_rounds: Dictionary = {}
 var event_init_profile_id := 1
 # Event trigger dispatcher: indexes enabled event definitions for this run.
 var event_runtime = null
+## Lazily loaded ConfigDB for snapshots taken on states that never ran
+## setup_new_run (tests, tools). Never written to.
+var _fallback_db = null
 # Daily full-state snapshots for the back-to-prev-round flow, kept in memory
 # for the latest two rounds only (the original Datapool keeps round-formatted
 # SavePlayer payloads; not persisted in the v5 player save — they rebuild
@@ -321,14 +331,130 @@ func _init() -> void:
 	register_nonneg(COUNTER_GOLD_DICE)
 
 
+## ---- Un-drawn Sultan pool (player.sudan_card_pool @0xB0, List<Card>) ----
+## The pool is an ordered list of Card objects, not config ids: duplicate ids
+## are real and each entry owns its uid/count/life/tag delta.
+## [SRC: dump.cs Player.sudan_card_pool @0xB0; GameController.c GenSudanCard
+##       0x54f6f0 (removes the chosen object and promotes that same object),
+##       RedrawSudanCard 0x5558b0 (re-inserts the discarded object).]
+
+## Build (or rebuild) the pool from init_config sudan_pool, in config order.
+func build_sudan_pool(db) -> void:
+	sudan_deck.clear()
+	sudan_pool_next_uid = 1
+	for raw_id in db.get_sudan_pool():
+		var entry = SudanPoolCardData.new(sudan_pool_next_uid, int(raw_id))
+		sudan_pool_next_uid += 1
+		sudan_deck.append(entry)
+
+
+func sudan_pool_size() -> int:
+	return sudan_deck.size()
+
+
+## Test/tool fixture hook: replace the pool with one object per given id.
+## Runtime code must use build_sudan_pool / draw_sudan_pool_card instead.
+func reset_sudan_pool_to_ids(ids: Array) -> void:
+	sudan_deck.clear()
+	sudan_pool_next_uid = 1
+	for raw_id in ids:
+		add_sudan_pool_card(int(raw_id))
+
+
+## Append a NEW pool Card object for one config id (AddSudanCard).
+## [SRC: PlayerExtensions.c @ AddSudanCard 0x38c440]
+func add_sudan_pool_card(card_id: int) -> void:
+	if card_id <= 0:
+		return
+	var entry = SudanPoolCardData.new(sudan_pool_next_uid, card_id)
+	sudan_pool_next_uid += 1
+	sudan_deck.append(entry)
+
+
+func sudan_deck_ids() -> Array:
+	var ids: Array = []
+	for entry in sudan_deck:
+		ids.append(int(entry.card_id))
+	return ids
+
+
+## GenSudanCard's consumption order: shuffle the pool in place when the init
+## profile asks for it, then take the last entry. It is the SAME object that
+## leaves the pool, so its runtime tags travel with it.
+## [SRC: GameController.c @ GenSudanCard 0x54f6f0: GetInitNode+0x48 gates
+##       ListExtensions.Shuffle, then ListExtensions.RemoveLast.]
+func draw_sudan_pool_card(rng, db = null):
+	if sudan_deck.is_empty():
+		return null
+	if db != null and bool(db.init_config.get("sudan_shuffle", true)) and rng != null:
+		var shuffled: Array = rng.shuffle(sudan_deck.duplicate())
+		sudan_deck.clear()
+		sudan_deck.append_array(shuffled)
+	return sudan_deck.pop_back()
+
+
+## Re-insert a discarded object at Random.Range(0, count), half-open.
+## [SRC: GameController.c @ RedrawSudanCard 0x5558b0 L3840-3842]
+func insert_sudan_pool_card(rng, entry) -> void:
+	if entry == null:
+		return
+	if sudan_deck.is_empty() or rng == null:
+		sudan_deck.append(entry)
+		return
+	sudan_deck.insert(rng.range_int_half_open(0, sudan_deck.size()), entry)
+
+
+func sudan_pool_entry(pool_uid: int):
+	for entry in sudan_deck:
+		if int(entry.uid) == pool_uid:
+			return entry
+	return null
+
+
+## Effective tag row of one pool entry: its config definition plus the entry's
+## own delta, in the config key domain.
+func sudan_pool_entry_tags(entry, db) -> Dictionary:
+	if entry == null:
+		return {}
+	var tags: Dictionary = {}
+	for raw_name in _base_tag_row(int(entry.card_id), db):
+		tags[str(raw_name)] = int(_base_tag_row(int(entry.card_id), db)[raw_name])
+	_add_tag_row(tags, entry.tags, db)
+	return tags
+
+
+## Compatibility view: card_id -> raw runtime delta. Later entries win, matching
+## the old id-keyed dictionary when the pool happens to hold one object per id.
+func sudan_pool_tags() -> Dictionary:
+	var out: Dictionary = {}
+	for entry in sudan_deck:
+		var normalized: Dictionary = {}
+		for raw_name in entry.tags:
+			normalized[str(raw_name)] = int(entry.tags[raw_name])
+		out[int(entry.card_id)] = normalized
+	return out
+
+
+func set_sudan_pool_tags_for_id(card_id: int, tags: Dictionary) -> void:
+	for entry in sudan_deck:
+		if int(entry.card_id) == card_id:
+			entry.tags = tags.duplicate(true)
+
+
 func create_card_instance(card_id: int, db, zone: String = "hand"):
 	if card_id <= 0:
 		return null
-	var definition: Dictionary = db.get_card(card_id) if db != null else {}
-	var instance = CardInstanceData.new(next_card_uid, card_id, definition.get("tag", {}) if not definition.is_empty() else {})
+	# A fresh Card starts with an EMPTY runtime delta (Card.tag@0x30); its whole
+	# row comes from the shared CardNode definition. Seeding the delta with the
+	# definition row would double every value once GetTag-style evaluation runs.
+	# [SRC: CardExtensions.c @ GetTag 0x3814a0 reads Card.data+0x58 plus Card+0x30;
+	#       GenCard.c / GenSudanCard construct the runtime Card without copying
+	#       the definition tag dictionary.]
+	var instance = CardInstanceData.new(next_card_uid, card_id)
 	next_card_uid += 1
 	instance.zone = zone
 	card_instances[instance.uid] = instance
+	_record_card_op(CARD_OP_NEW, instance.uid)
 	return instance
 
 
@@ -337,16 +463,14 @@ func record_card_generation(instance, db = null) -> void:
 		return
 	var card_id := int(instance.card_id)
 	gen_cards[card_id] = int(gen_cards.get(card_id, 0)) + 1
-	# CardExtensions.GetTags returns a HashSet. CardInstance.tags is the
-	# clone's flattened equivalent for a newly-created player card, so each
-	# key is counted once regardless of its numerical tag value.
+	# MarkCardGen walks GetTags(Card), which unions the definition tag keys
+	# (CardNode.tag@0x58) with the runtime delta keys (Card.tag@0x30) and each
+	# inheritable equip's keys. Iterating only the runtime delta would drop the
+	# definition's own tags.
 	# [SRC: CardExtensions.c @ GetTags (0x381940); PlayerExtensions.c
 	#       @ MarkCardGen (0x38e450)]
-	var effective_tags: Dictionary = {}
-	for raw_tag in instance.tags:
-		effective_tags[_generation_tag_code(raw_tag, db)] = true
-	for tag_code in effective_tags:
-		record_tag_generation(str(tag_code), db)
+	for tag_name in effective_card_tag_names(instance.uid, db):
+		record_tag_generation(str(tag_name), db)
 
 
 func record_tag_generation(raw_tag: Variant, db = null) -> void:
@@ -390,25 +514,32 @@ func card_data_for(uid: int, db) -> Dictionary:
 	if instance == null:
 		return {}
 	var card: Dictionary = db.get_card(instance.card_id).duplicate(true) if db != null else {}
-	# Some legacy/test callers grant by config id before a ConfigDB is threaded
-	# through. Materialize the definition tags lazily at the first real lookup;
-	# after that only this instance owns and mutates them.
-	if instance.tags.is_empty() and not card.is_empty() and card.get("tag", {}) is Dictionary:
-		instance.tags = card.get("tag", {}).duplicate(true)
 	card["id"] = instance.card_id
 	card["instance_uid"] = instance.uid
 	card["tag"] = effective_card_tags(instance.uid, db)
+	# Aliased key for consumers that read a materialized row (condition cost/acting
+	# tag checks use "tags"; DSL selectors use "tag"). Both must be the effective
+	# GetTag row, never the delta. [SRC: CardExtensions.c @ GetTag 0x3814a0]
+	card["tags"] = card["tag"]
 	card["count"] = instance.count
 	card["life"] = instance.life
 	card["is_lost"] = instance.is_lost
 	card["rare"] = clampi(int(card.get("rare", 1)) + instance.rare_up, 1, 4)
 	var player_name := str(player_card_names.get(instance.card_id, ""))
+	var translated_name: String = db.translate_custom_card_text(instance.custom_name) if db != null else instance.custom_name
 	if not player_name.is_empty():
 		card["name"] = player_name
-	elif not instance.custom_name.is_empty():
-		card["name"] = instance.custom_name
+	elif not instance.custom_name.is_empty() and translated_name != instance.custom_name:
+		# [SRC: CardExtensions.GetName0x37ff50 rejects unresolved keys.]
+		card["name"] = translated_name
+	elif db != null and not player_display_name.is_empty() and int(db.get_card(instance.card_id).get("tag", {}).get("主角", 0)) > 0:
+		# GetName(CardNode) reads the definition tag, not runtime additions.
+		# [SRC: CardExtensions.GetName0x3801b0; literal0x25828f8=player.]
+		card["name"] = player_display_name
 	if not instance.custom_text.is_empty():
-		card["text"] = instance.custom_text
+		# [SRC: CardInfoNewController.Show0x537000: unlike names, an
+		# unresolved custom description remains its key; no config fallback.]
+		card["text"] = db.translate_custom_card_text(instance.custom_text) if db != null else instance.custom_text
 	card["base_name"] = str(db.get_card(instance.card_id).get("name", "")) if db != null else ""
 	card["rare_up"] = instance.rare_up
 	card["equip_slots"] = card_equip_slots(instance.uid, db)
@@ -426,51 +557,212 @@ func card_data_for(uid: int, db) -> Dictionary:
 	return card
 
 
+## Effective runtime tag row for one card object, in the config (localized name)
+## key domain. Mirrors CardExtensions.GetTag: the definition value plus the
+## runtime delta plus every inheritable equip's per-unit value, with the
+## can_nagative_and_zero mask on a non-positive sum and a final × Card.count.
+## [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0): base read at
+##       Card.data+0x58, delta at Card+0x30, equip recursion gated on
+##       TagNode+0x42 can_inherit, mask on 0x43, × count@0x20 at the return.]
 func effective_card_tags(uid: int, db) -> Dictionary:
 	var instance = get_card_instance(uid)
 	if instance == null:
 		return {}
-	var effective: Dictionary = instance.tags.duplicate(true)
+	var effective: Dictionary = {}
+	var per_unit := _card_tag_terms(instance, db)
+	for tag_name in per_unit:
+		effective[tag_name] = _mask_tag_value(str(tag_name), int(per_unit[tag_name]), false, db) * int(instance.count)
+	return effective
+
+
+## Key union of the same three sources, without the value walk. Mirrors
+## CardExtensions.GetTags, which unions the definition keys, the runtime delta
+## keys and each inheritable equip's tag list.
+## [SRC: CardExtensions.c @ GetTags (RVA 0x381940) builds a HashSet from
+##       CardNode.tag@0x58, then Card.tag@0x30, then UnionWith(each equip's
+##       GetTags filtered to inheritable tags).]
+func effective_card_tag_names(uid: int, db) -> Array:
+	var instance = get_card_instance(uid)
+	if instance == null:
+		return []
+	var names: Dictionary = {}
+	for tag_name in _base_tag_row(int(instance.card_id), db):
+		names[str(tag_name)] = true
+	for raw_name in instance.tags:
+		names[_tag_key_name(raw_name, db)] = true
 	for equipped_uid in instance.equipped_uids:
 		var equipped = get_card_instance(int(equipped_uid))
 		if equipped == null or equipped.zone != "equipped":
 			continue
-		for tag_name in equipped.tags:
-			if not _equipment_tag_contributes(str(tag_name), db):
-				continue
-			effective[str(tag_name)] = int(effective.get(str(tag_name), 0)) + int(equipped.tags[tag_name])
-	return effective
+		if not _equipment_tag_inherits(db, int(equipped.card_id)):
+			continue
+		for raw_name in _base_tag_row(int(equipped.card_id), db):
+			names[_tag_key_name(raw_name, db)] = true
+		for raw_name in equipped.tags:
+			names[_tag_key_name(raw_name, db)] = true
+	return names.keys()
 
 
-func _equipment_tag_contributes(tag_name: String, db) -> bool:
+## One walk of the three GetTag sources, in the config key domain. The result
+## is per unit: the caller applies Card.count once at the end.
+func _card_tag_terms(instance, db) -> Dictionary:
+	var per_unit: Dictionary = {}
+	_add_tag_row(per_unit, _base_tag_row(int(instance.card_id), db), db)
+	_add_tag_row(per_unit, instance.tags, db)
+	for equipped_uid in instance.equipped_uids:
+		var equipped = get_card_instance(int(equipped_uid))
+		if equipped == null or equipped.zone != "equipped":
+			continue
+		if not _equipment_tag_inherits(db, int(equipped.card_id)):
+			continue
+		# The equip term is per unit: the recursion passes raw=true, which also
+		# skips the non-positive mask for the equip's own contribution.
+		# [SRC: CardExtensions.c @ GetTag equip loop lines 1603-1618.]
+		_add_tag_row(per_unit, _base_tag_row(int(equipped.card_id), db), db)
+		_add_tag_row(per_unit, equipped.tags, db)
+	return per_unit
+
+
+func _base_tag_row(card_id: int, db) -> Dictionary:
+	if db == null:
+		return {}
+	var definition: Dictionary = db.get_card(card_id)
+	var row: Variant = definition.get("tag", {})
+	return row if row is Dictionary else {}
+
+
+func _add_tag_row(into: Dictionary, row: Dictionary, db) -> void:
+	for raw_name in row:
+		var key := _tag_key_name(raw_name, db)
+		var value := int(row[raw_name])
+		if key.is_empty() or value == 0:
+			continue
+		into[key] = int(into.get(key, 0)) + value
+
+
+## The non-positive mask from GetTag's tail: a sum below 1 reports 0 unless the
+## tag node allows negative and zero values. raw=true is the equip recursion,
+## which skips the mask.
+## [SRC: CardExtensions.c @ GetTag lines 1619-1622 via TagNode+0x43.]
+func _mask_tag_value(tag_name: String, value: int, raw: bool, db) -> int:
+	if raw or value >= 1:
+		return value
+	if _tag_allows_negative_and_zero(tag_name, db):
+		return value
+	return 0
+
+
+func _tag_key_name(raw_name: Variant, db) -> String:
+	var key := str(raw_name)
+	if db == null or key.is_empty():
+		return key
+	if db.get("tag_code_to_name") != null and db.tag_code_to_name.has(key):
+		return str(db.tag_code_to_name[key])
+	return key
+
+
+## TagNode.can_inherit gate for the whole equip term (not per tag), reached
+## through the equip's own definition tag row.
+## [SRC: CardExtensions.c @ GetTag line 1604 reads TagNode+0x42 before the
+##       List<Card>_Enumerator loop at 1611-1616.]
+func _equipment_tag_inherits(db, equipped_card_id: int) -> bool:
 	if db == null:
 		return false
-	var code := str(db.tag_name_to_code.get(tag_name, ""))
-	if code.is_empty() or not db.tags_by_code.has(code):
+	for raw_name in _base_tag_row(equipped_card_id, db):
+		if _tag_can_inherit(str(raw_name), db):
+			return true
+	return false
+
+
+func _tag_can_inherit(tag_name: String, db) -> bool:
+	var node := _tag_node_for(tag_name, db)
+	if node.is_empty():
 		return false
-	# The equip recursion gate is TagNode+0x42 (can_inherit); +0x43
-	# (can_nagative_and_zero) only masks negative reported values in GetTag.
-	# [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0) line 1604 gate at +0x42,
-	#       negative mask at 1619-1622 via +0x43; dump.cs:386944-386950
-	#       (0x40 can_add / 0x42 can_inherit / 0x43 can_nagative_and_zero)]
-	return int(db.tags_by_code[code].get("can_inherit", 0)) != 0
+	return int(node.get("can_inherit", 0)) != 0
+
+
+func _tag_allows_negative_and_zero(tag_name: String, db) -> bool:
+	var node := _tag_node_for(tag_name, db)
+	if node.is_empty():
+		return false
+	return int(node.get("can_nagative_and_zero", 0)) != 0
+
+
+func _tag_node_for(tag_name: String, db) -> Dictionary:
+	if db == null or tag_name.is_empty():
+		return {}
+	var code := tag_name
+	if db.get("tag_name_to_code") != null and db.tag_name_to_code.has(tag_name):
+		code = str(db.tag_name_to_code[tag_name])
+	if db.get("tags_by_code") != null and db.tags_by_code.has(code):
+		return db.tags_by_code[code]
+	return {}
+
+
+## Reconstruct the runtime delta from a tag row persisted in the config domain.
+## Older clone saves stored the effective row while the original stores the
+## delta; the definition value is subtracted back out. Tags the definition does
+## not carry (runtime markers such as lost / adsorb_spec) are kept verbatim.
+## [SRC: Card.tag@0x30 is persisted, CardNode.tag@0x58 is not.]
+func rebase_tag_delta(stored: Dictionary, card_id: int, db) -> Dictionary:
+	var base := _base_tag_row(card_id, db)
+	var delta: Dictionary = {}
+	for raw_name in stored:
+		var value := int(stored[raw_name])
+		if value == 0:
+			continue
+		var key := str(raw_name)
+		var base_value := 0
+		var is_config_tag := false
+		if db != null and db.get("tag_name_to_code") != null and db.tag_name_to_code.has(key):
+			is_config_tag = true
+			base_value = int(base.get(key, 0))
+		elif db != null and db.get("tag_code_to_name") != null and db.tag_code_to_name.has(key):
+			# A save already in the code domain is a delta and needs no rebase.
+			delta[key] = value
+			continue
+		var rebased := value - base_value if is_config_tag else value
+		if rebased != 0:
+			delta[key] = rebased
+	return delta
 
 
 func set_card_custom_name(uid: int, value: String) -> bool:
 	var instance = get_card_instance(uid)
-	var clean_value := value.strip_edges().left(32)
-	if instance == null or clean_value.is_empty():
+	if instance == null:
 		return false
-	instance.custom_name = clean_value
+	instance.custom_name = value
 	return true
 
 
 func set_player_card_name(card_id: int, value: String) -> bool:
-	var clean_value := value.strip_edges()
-	if card_id <= 0 or clean_value.is_empty():
+	if card_id <= 0 or value.is_empty():
 		return false
-	player_card_names[card_id] = clean_value
+	player_card_names[card_id] = value
 	return true
+
+
+## [SRC: PromptChangeNameController SetPlayerName0x585530 /
+## SetSpecialCardName0x585600; validation belongs to the prompt.]
+func set_prompt_name(card_id: int, value: String) -> bool:
+	if card_id == 0:
+		player_display_name = value
+		return true
+	return set_player_card_name(card_id, value)
+
+
+func prompt_initial_name(card_id: int, db) -> String:
+	# [SRC: GetSpecialCardName0x584c60; GetPlayerName0x584a20 and
+	# <>c.GetPlayerName predicate0x59fc10 (HasTag(player)).]
+	if card_id != 0:
+		return str(player_card_names.get(card_id, db.get_card(card_id).get("name", "")))
+	if not player_display_name.is_empty():
+		return player_display_name
+	for uid in hand:
+		var instance = get_card_instance(uid)
+		if instance != null and int(effective_card_tags(uid, db).get("主角", 0)) > 0:
+			return str(db.get_card(instance.card_id).get("name", ""))
+	return str(db.get_card(2000001).get("name", ""))
 
 
 func set_rite_custom_name(rite_id: int, value: String) -> bool:
@@ -492,8 +784,81 @@ func set_card_custom_text(uid: int, value: String) -> bool:
 	var instance = get_card_instance(uid)
 	if instance == null:
 		return false
-	instance.custom_text = value.strip_edges()
+	instance.custom_text = value
 	return true
+
+
+## ---- Result operation log (CardOpContext stream) ----
+## The original's rules layer feeds the result panel a stream of CardOpContext
+## rows (one per card-affecting operation), which RiteResultPanelController
+## queues via AddCardOp and the OpCardNewController chain plays back. The clone
+## has no operation-object layer yet, so it records the same stream here: a
+## passive list that only fills between begin_result_op_log() and
+## drain_result_op_log().
+## [SRC: RiteResultPanelController.c @ AddCardOp (RVA 0x5a0e60) appends to the
+##       pending list at +0x1d8; CardOpContext type@0x10 / card@0x18 /
+##       tag@0x20 / value@0x28 / count@0x2c / pop@0x30 (dump.cs 6305);
+##       CardOpType NEW0 COPY1 DELETE2 EQUIP3 UNEQUIP4 UNEQUIP_RECOVERY5
+##       ADD_TAG6 REMOVE_TAG7 UPRARE8 POP9 HAND_POP10 THINK_POP11
+##       REBIRTH_SUDAN_CARD12 (dump.cs 6304).]
+const CARD_OP_NEW := 0
+const CARD_OP_COPY := 1
+const CARD_OP_DELETE := 2
+const CARD_OP_EQUIP := 3
+const CARD_OP_UNEQUIP := 4
+const CARD_OP_UNEQUIP_RECOVERY := 5
+const CARD_OP_ADD_TAG := 6
+const CARD_OP_REMOVE_TAG := 7
+const CARD_OP_UPRARE := 8
+
+var card_op_log: Array = []
+var _card_op_log_active := false
+
+
+func begin_result_op_log() -> void:
+	_card_op_log_active = true
+	card_op_log.clear()
+
+
+func drain_result_op_log() -> Array:
+	_card_op_log_active = false
+	var rows: Array = card_op_log.duplicate(true)
+	card_op_log.clear()
+	return rows
+
+
+func is_recording_result_ops() -> bool:
+	return _card_op_log_active
+
+
+func _record_card_op(op_type: int, uid: int, extra: Dictionary = {}) -> void:
+	if not _card_op_log_active:
+		return
+	var instance = get_card_instance(uid)
+	var row: Dictionary = {
+		"op": op_type,
+		"card_uid": uid,
+		"card_id": int(instance.card_id) if instance != null else 0,
+	}
+	row.merge(extra, true)
+	card_op_log.append(row)
+
+
+## Record an ADD_TAG(6) / REMOVE_TAG(7) row. `value_after` is the card's stored
+## (delta) value once the mutation landed; the panel combines it with the tag
+## definition, which is exactly how the original's TagNode row is rendered.
+## 影响力-class tags never reach here: Result._mutate_tag drops them at the
+## can_visible gate, mirroring RiteResultPanelController.AddCardOp.
+## [SRC: RiteResultPanelController.c @ AddCardOp 0x5a0e60 (type 6/7 gate);
+##       OperationContext.c @ AddCardOp_AddTag 0x39dfa0 / _RemoveTag 0x39e870
+##       (CardOp +0x10 type, +0x18 card, +0x20 tag, +0x28 amount, +0x2c count).]
+func record_tag_op(uid: int, tag_name: String, op: int, amount: int, tags: Dictionary) -> void:
+	var op_type := CARD_OP_REMOVE_TAG if op == TagSystem.Op.SUB else CARD_OP_ADD_TAG
+	_record_card_op(op_type, uid, {
+		"tag": tag_name,
+		"amount": amount,
+		"value_after": int(tags.get(tag_name, 0)),
+	})
 
 
 func modify_card_rarity(uid: int, delta: int, db) -> bool:
@@ -504,7 +869,10 @@ func modify_card_rarity(uid: int, delta: int, db) -> bool:
 	var before := clampi(base_rare + instance.rare_up, 1, 4)
 	var after := clampi(before + delta, 1, 4)
 	instance.rare_up += after - before
-	return after != before
+	if after != before:
+		_record_card_op(CARD_OP_UPRARE, uid, {"rare_before": before, "rare_after": after})
+		return true
+	return false
 
 
 func card_equip_slots(uid: int, db) -> Array[String]:
@@ -562,15 +930,17 @@ func attach_equipment(host_uid: int, equipment_uid: int, db, recover_replaced :=
 		return -1
 	if enforce_slot and (
 		host.zone != "hand"
-		or equipment.zone != "hand"
-		or int(equipment.tags.get("装备", 0)) < 1
+		or equipment.zone not in ["hand", "slot"]
+		or int(_card_tag_value(equipment_uid, "装备", db)) < 1
 	):
+		return -1
+	if enforce_slot and equipment.zone == "slot" and not preload("res://ui/rite_slot_access.gd").can_edit(self, db, equipment.rite_uid, equipment.slot_key):
 		return -1
 	var slot := _matching_equip_slot(host_uid, equipment_uid, db)
 	if enforce_slot and slot.is_empty():
 		return -1
-	# Interactive CanEquip accepts only a hand-card host and an equipment-tagged
-	# hand card whose category intersects a host slot. Operation-driven +equip
+	# CanEquip has no hand-only source gate: a movable slot card can equip too.
+	# Source equipment category must intersect a host slot. Operation-driven +equip
 	# deliberately calls this with enforce_slot=false (see ResultExec).
 	# [SRC: decompiled/CardExtensions.c @ CanEquip (RVA 0x37ec10);
 	#  decompiled/CardController.c @ CardEquip (RVA 0x528020).]
@@ -584,6 +954,12 @@ func attach_equipment(host_uid: int, equipment_uid: int, db, recover_replaced :=
 				occupying_uids.append(int(current.uid))
 		if occupying_uids.size() >= slot_capacity and not occupying_uids.is_empty():
 			replaced_uid = occupying_uids[0]
+			if enforce_slot:
+				# [SRC: CardController.CardEquip 0x528020 and
+				# CardInfoNewController.DropCard 0x533550 both call
+				# BackToHandOrBag(old, host.bag, 0, true), RVA 0x4eef90.]
+				get_card_instance(replaced_uid).bag = host.bag
+				get_card_instance(replaced_uid).bag_pos = 0
 			detach_equipment(host_uid, replaced_uid, true)
 	if equipment.zone == "hand":
 		hand.erase(equipment_uid)
@@ -599,6 +975,14 @@ func attach_equipment(host_uid: int, equipment_uid: int, db, recover_replaced :=
 	equipment.equipped_slot = slot
 	if equipment_uid not in host.equipped_uids:
 		host.equipped_uids.append(equipment_uid)
+	if enforce_slot and replaced_uid > 0 and host.bag == current_bag_index:
+		# AddCard with bagpos=0 appends, UpdateHandCardPos compacts the
+		# current page after removing the newly equipped card.
+		# [SRC: GameController.c 0x54ad40 / 0x559a70.]
+		var page := visible_rail_card_uids()
+		for index in page.size():
+			get_card_instance(page[index]).bag_pos = index + 1
+	_record_card_op(CARD_OP_EQUIP, equipment_uid, {"host_uid": host_uid, "slot": slot})
 	return replaced_uid
 
 
@@ -611,6 +995,9 @@ func detach_equipment(host_uid: int, equipment_uid: int, recover_to_hand := fals
 	equipment.equipped_to_uid = 0
 	equipment.equipped_slot = ""
 	equipment.zone = "removed"
+	_record_card_op(
+		CARD_OP_UNEQUIP_RECOVERY if recover_to_hand else CARD_OP_UNEQUIP,
+		equipment_uid, {"host_uid": host_uid})
 	if recover_to_hand:
 		add_card_to_hand(equipment_uid)
 	return true
@@ -621,7 +1008,7 @@ func _matching_equip_slot(host_uid: int, equipment_uid: int, db) -> String:
 	if equipment == null:
 		return ""
 	for slot in card_equip_slots(host_uid, db):
-		if int(equipment.tags.get(slot, 0)) > 0:
+		if int(_card_tag_value(equipment_uid, slot, db)) > 0:
 			return slot
 	return ""
 
@@ -751,6 +1138,8 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	armageddon_rite_id = 0
 	next_card_uid = 1
 	player_actor_uid = 0
+	player_display_name = ""
+	player_card_names.clear()
 	rail_order.clear()
 	current_bag_index = 0
 	difficulty_index = diff_index
@@ -784,9 +1173,9 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	for cid in db.get_default_cards():
 		add_card_to_hand(int(cid), db)
 	ensure_player_actor(db)
-	# Sudan deck from pool (shuffled last-first).
-	sudan_deck = SudanCards.build_deck(rng, db.get_sudan_pool(), bool(db.init_config.get("sudan_shuffle", true)))
-	sudan_pool_tags.clear()
+	# Sudan pool: one Card object per configured entry, shuffled in place on
+	# each draw (init_config sudan_shuffle) exactly like the source.
+	build_sudan_pool(db)
 	auto_gen_sudan_card = true
 	# Day/round. The first round begins after initial events are armed (see
 	# below); day counts start at 1.
@@ -1205,8 +1594,42 @@ func take_hand_card_count(card_id: int, amount: int) -> int:
 	return selected.uid
 
 
+## CardExtensions.Copy: a new runtime Card of the same definition, carrying the
+## source's runtime tag delta, its count, and a recursive copy of its equipped
+## cards. Presentation fields (custom name/text, rareup, life, bag) are not part
+## of the source copy; the extra lifecycle notifications belong to the caller.
+## [SRC: CardExtensions.c @ Copy (RVA 0x37f4e0):
+##       PlayerExtensions.AddCard(source.id) -> walk source.equips@+0x40 with
+##       Copy(equip, raw=true) and append -> walk source.tag@+0x30 through
+##       AddTag (0x37e6a0) -> Card.set_count(source.count@0x20) when the
+##       keep-count flag is false; the equip recursion passes the flag true.]
+func copy_card_instance(source_uid: int, db = null, zone := "hand") -> int:
+	var source = get_card_instance(source_uid)
+	if source == null:
+		return 0
+	var copy = CardInstanceData.new(next_card_uid, source.card_id, source.tags.duplicate(true))
+	next_card_uid += 1
+	copy.count = int(source.count)
+	copy.zone = zone
+	card_instances[copy.uid] = copy
+	_record_card_op(CARD_OP_COPY, copy.uid, {"source_uid": source_uid})
+	if zone == "hand":
+		add_card_to_hand(copy.uid, db)
+	# Equipped cards are copied recursively; the recursion passes keep-count=true
+	# so an equip copy keeps count 1 instead of inheriting the source's.
+	for equipped_uid in source.equipped_uids:
+		var equipped_copy_uid := copy_card_instance(int(equipped_uid), db, "removed")
+		if equipped_copy_uid <= 0:
+			continue
+		var equipped_copy = get_card_instance(equipped_copy_uid)
+		if equipped_copy != null:
+			equipped_copy.count = 1
+		attach_equipment(copy.uid, equipped_copy_uid, db, false, false)
+	return copy.uid
+
+
 func _copy_card_for_stack(source, amount: int):
-	var copied = CardInstanceData.new(next_card_uid, source.card_id, source.tags)
+	var copied = CardInstanceData.new(next_card_uid, source.card_id, source.tags.duplicate(true))
 	next_card_uid += 1
 	copied.count = amount
 	copied.life = source.life
@@ -1251,7 +1674,7 @@ func split_card_stack(uid: int, amount: int = -1) -> int:
 ## [SRC: CardController.CardStack 0x5286b0 — same card id, both cards carry the
 ##       可堆叠 tag; the target takes `count += other.count`, the other card is
 ##       removed from the player, and the target returns to its own bag/bagpos.
-##       CardDropManager.DropCard 0x53b??? calls it for hand targets and
+##       CardDropManager.DropCard 0x4ef4f0 calls it for hand targets and
 ##       CardSlotController.CardStack for occupied slots.]
 func stack_cards(target_uid: int, source_uid: int) -> bool:
 	if target_uid <= 0 or source_uid <= 0 or target_uid == source_uid:
@@ -1273,7 +1696,13 @@ func stack_cards(target_uid: int, source_uid: int) -> bool:
 func _instance_is_stackable(instance) -> bool:
 	if instance == null:
 		return false
-	return instance.tags.has("可堆叠") or instance.tags.has("stackable")
+	# HasTag reads the whole row; 可堆叠 may come from the definition even when
+	# the runtime delta is empty, or from an inheritable equip.
+	var tags: Dictionary = instance.tags
+	var runtime_db = _runtime_db()
+	if runtime_db != null and not runtime_db.get_card(int(instance.card_id)).is_empty():
+		tags = effective_card_tags(instance.uid, runtime_db)
+	return tags.has("可堆叠") or tags.has("stackable")
 
 
 func insert_card_to_hand(card_or_uid: int, index: int, db = null) -> void:
@@ -1302,6 +1731,152 @@ func remove_card_from_hand(card_or_uid: int) -> bool:
 		instance.zone = "removed"
 		return true
 	return false
+
+
+## Pay the cost condition's `need_cost_cards` amount out of a hand stack and put
+## the paid portion into a rite slot. Returns the uid now occupying the slot, or
+## 0 when the payment did not happen.
+##
+## This is the body the audit recorded as missing ("ClearNeedCosts 0x385470 has
+## no decompiled callers, so the clone never actually deducts"). That note was
+## looking at the wrong method: ClearNeedCosts is a ConditionContext field reset
+## with no callers anywhere, and CostCondition.PostProcess is a *config-load*
+## pass (Datapool.LoadRitePostProcess 0x4163c0 walks the rite nodes, translates
+## each card's tag names via TranslateTag, then calls PostProcess to resolve
+## Min/Max once). The real payment is CardSlotController.CardStack 0x53b0a0:
+##
+##   if (context.is_cost@0x60 == false) return 0;      // not a cost payment
+##   iVar8 = card.count@0x20 - context.cost_count@0x64;
+##   if (iVar8 < 1) {                                  // stack exactly/underpaid
+##       PlayerExtensions.RemoveCard(player, card.id@0x18);   // whole card leaves
+##   } else {                                          // stack larger than cost
+##       card.set_count(iVar8);                        // remainder stays behind
+##       lVar7 = CardExtensions.Copy(card, keep_count=true);
+##       lVar7.set_count(context.cost_count@0x64);     // the paid slice
+##   }
+##   RecoveryCard(); SetCard(lVar7);                   // paid slice goes to the slot
+##
+## The whole method is gated on CardExtensions.HasTag(card, "stackable") at the
+## top: a non-stackable card always takes the "whole card leaves" path.
+## [SRC: CardSlotController.c @ CardStack (RVA 0x53b0a0) lines 855-892;
+##       CostCondition.c @ IsSatisfied 0x3f6160 (sets +0x60/+0x64/+0x68);
+##       datum literal 0x2593720 = "stackable";
+##       CardExtensions.c @ Copy (0x37f4e0) keep-count flag.]
+func pay_cost_into_slot(card_uid: int, slot: int, needed: int, db, rite_uid: int = 0) -> int:
+	if slot <= 0 or needed < 1:
+		return 0
+	var source = get_card_instance(card_uid)
+	if source == null:
+		return 0
+	var stackable := _instance_is_stackable(source)
+	var remainder := int(source.count) - needed
+	if not stackable or remainder < 1:
+		# The whole card leaves the hand and the stack itself becomes the slot
+		# card. This is the non-stackable path AND the exact/over-paid stack path.
+		remove_card_from_hand(card_uid)
+		add_card_to_slot(card_uid, slot, db, rite_uid)
+		return card_uid
+	# Stack larger than the cost: the remainder stays in hand and a copy carrying
+	# exactly `needed` goes into the slot.
+	source.count = remainder
+	var paid_uid := copy_card_instance(card_uid, db, "slot")
+	if paid_uid <= 0:
+		source.count = remainder + needed
+		return 0
+	var paid = get_card_instance(paid_uid)
+	if paid != null:
+		paid.count = needed
+	add_card_to_slot(paid_uid, slot, db, rite_uid)
+	return paid_uid
+
+
+## The cost amount a rite slot demands for a given candidate card, or 0 when the
+## slot is not a cost slot. This is the `needed` argument pay_cost_into_slot
+## needs; the slot's condition nests `cost.<tag><op>` under any/all/none, and the
+## comparison operator is part of the key (e.g. "cost.金币", "cost.金币=",
+## "cost.消耗品=", "cost.可堆叠=").
+##
+## Distribution in the corpus (all 1863 rite files): 653 rites carry `cost.` in a
+## slot condition, across 46 distinct keys. The most common are
+## cost.消耗品= (333), cost.金币 (323), cost.金币= (57).
+## [SRC: CostCondition.c @ IsSatisfied 0x3f6160 reads the operator off the inner
+##       Compare at +0x38 -> +0x14; content/rite/*.json cards_slot.sN.condition;
+##       engine_spec/conditions.json "cost\\.([^\\.<=>]+)(>=|<=|<>|!=|=|[<>])?"]
+func slot_cost_needed(slot: int, card_uid: int, db, rite_uid: int = 0) -> int:
+	if slot <= 0 or db == null:
+		return 0
+	var instance = get_card_instance(card_uid)
+	if instance == null:
+		return 0
+	var slot_def := slot_definition(slot, rite_uid)
+	if slot_def.is_empty():
+		return 0
+	var condition: Variant = slot_def.get("condition", {})
+	var key := _find_cost_key(condition)
+	if key.is_empty():
+		return 0
+	# Reuse the condition evaluator so the operator/min/max parsing stays in one
+	# place: it records need_cost_cards/cost_count on the context it is given.
+	var ctx := {
+		"state": self, "db": db, "acting_card_uid": card_uid,
+		"rite_uid": rite_uid, "attr_slots": [],
+	}
+	if not ConditionEval.evaluate({key: _cost_key_value(condition, key)}, ctx):
+		return 0
+	var count := int(ctx.get("cost_count", 0))
+	if count > 0:
+		return count
+	# A bare `cost.<tag>` with no operator defaults to Compare's >= 1, and when
+	# the matched card is not stackable the payer hands over the whole card.
+	return 1
+
+
+## Depth-first search for the first `cost.*` key inside any/all/none wrappers.
+func _find_cost_key(condition: Variant) -> String:
+	if not (condition is Dictionary):
+		return ""
+	var stack: Array = [condition]
+	while not stack.is_empty():
+		var current: Variant = stack.pop_back()
+		if not (current is Dictionary):
+			continue
+		for raw_key in (current as Dictionary):
+			var key := str(raw_key)
+			if key.begins_with("cost."):
+				return key
+			if key in ["any", "all", "none"]:
+				stack.append((current as Dictionary)[raw_key])
+	return ""
+
+
+func _cost_key_value(condition: Variant, key: String) -> Variant:
+	var stack: Array = [condition]
+	while not stack.is_empty():
+		var current: Variant = stack.pop_back()
+		if not (current is Dictionary):
+			continue
+		if (current as Dictionary).has(key):
+			return (current as Dictionary)[key]
+		for wrapper in ["any", "all", "none"]:
+			if (current as Dictionary).has(wrapper):
+				stack.append((current as Dictionary)[wrapper])
+	return 1
+
+
+## The rite definition's cards_slot entry for a 1-based slot number.
+func slot_definition(slot: int, rite_uid: int = 0) -> Dictionary:
+	var rite = get_rite_instance(rite_uid)
+	if rite == null:
+		return {}
+	var runtime_db = _runtime_db()
+	if runtime_db == null:
+		return {}
+	var definition: Dictionary = runtime_db.get_rite(int(rite.id))
+	var slot_defs: Variant = definition.get("cards_slot", {})
+	if not (slot_defs is Dictionary):
+		return {}
+	var entry: Variant = (slot_defs as Dictionary).get("s%d" % slot, null)
+	return entry if entry is Dictionary else {}
 
 
 func insert_card_to_rail(card_or_uid: int, index: int) -> void:
@@ -1491,10 +2066,7 @@ func _adsorb_open_slots(instance, rite: Dictionary, db, rng) -> bool:
 				continue
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
-		var choice_index := 0
-		if candidates.size() > 1 and rng != null and rng.has_method("range_int_half_open"):
-			choice_index = int(rng.range_int_half_open(0, candidates.size()))
-		var chosen_uid := int(candidates[choice_index])
+		var chosen_uid := int(candidates[0])
 		if not _remove_adsorb_candidate(chosen_uid):
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
@@ -1511,6 +2083,66 @@ func _adsorbable_card_uids() -> Array[int]:
 		if uid > 0 and uid not in out:
 			out.append(uid)
 	return out
+
+
+## Daily AdsorbCards pass: once per round, every OPEN slot of every player rite
+## takes the first hand card that satisfies its condition, if that slot is
+## still empty. This is the round-end counterpart of the creation-time
+## adsorption in InitRite and runs for every rite, not just new ones.
+## [SRC: RiteExtensions.c @ AdsorbCards (RVA 0x38fca0): the outer loop walks
+##       player+0xB0 (sudan_card_pool) as the slot index source, reads
+##       rite+0x30 slot entries, keeps only entries whose RiteNode.Slot
+##       open_adsorb @+0x20 is true, then walks player+0x88 (Player.cards) in
+##       order and takes the FIRST card CanPutCard accepts, removing it from
+##       the player list and writing it into rite+0x30[index].
+##       Caller: GameController.__c__DisplayClass142_0.c @ <OnNextRound>b__6
+##       (0x570b00) prelude — for each r in player+0x90 (List<Rite>) call
+##       RiteExtensions.AdsorbCards(r, player).]
+func adsorb_open_slots_daily(db, rng) -> Array:
+	var absorbed: Array = []
+	var uids: Array = rite_instances.keys()
+	uids.sort()
+	for raw_uid in uids:
+		var instance = rite_instances.get(raw_uid, null)
+		if instance == null:
+			continue
+		absorbed.append_array(adsorb_open_slots(instance, db, rng))
+	return absorbed
+
+
+## One rite's open-slot adsorption. Returns the rows it actually filled.
+func adsorb_open_slots(instance, db, rng) -> Array:
+	var absorbed: Array = []
+	if instance == null or db == null:
+		return absorbed
+	var rite: Dictionary = db.get_rite(int(instance.id))
+	if rite.is_empty():
+		return absorbed
+	var slots: Dictionary = rite.get("cards_slot", {})
+	var slot_keys: Array[String] = []
+	for key in slots.keys():
+		slot_keys.append(str(key))
+	slot_keys.sort_custom(func(a: String, b: String) -> bool: return a.substr(1).to_int() < b.substr(1).to_int())
+	for slot_key in slot_keys:
+		var slot_def: Dictionary = slots.get(slot_key, {})
+		if int(slot_def.get("open_adsorb", 0)) != 1:
+			continue
+		# An occupied slot is skipped, not an abort: the source only looks at
+		# entries whose Card value is still null.
+		if int(instance.slot_cards.get(slot_key, 0)) > 0:
+			continue
+		for card_uid in _adsorbable_card_uids():
+			var uid := int(card_uid)
+			var card: Dictionary = card_data_for(uid, db)
+			if not _can_adsorb_card(slot_def, card, instance, rite, db, rng):
+				continue
+			var slot_number := slot_key.substr(1).to_int()
+			if not _remove_adsorb_candidate(uid):
+				continue
+			add_card_to_slot(uid, slot_number, db, instance.uid)
+			absorbed.append({"uid": uid, "slot": slot_number, "rite_uid": int(instance.uid)})
+			break
+	return absorbed
 
 
 func _remove_adsorb_candidate(card_uid: int) -> bool:
@@ -1555,10 +2187,10 @@ func _can_adsorb_card(slot_def: Dictionary, card: Dictionary, instance, rite: Di
 
 
 ## Rites whose open slots would accept this card.
-## [SRC: CardHandler.GetCardSatisfiedRite 0x532e10 — walk the player's rites,
+## [SRC: CardHandler.GetCardSatisfiedRite 0x52e770 — walk the player's rites,
 ##       skip started ones (Rite.start +0x22), and keep those where
 ##       RiteExtensions.GetSatisfiedSlotIndex 0x392ac0 finds a slot; the caller
-##       GameController.ShowSatisfiedRite 0x557a80 then plays
+##       GameController.ShowSatisfiedRite 0x5576b0 then plays
 ##       RiteController.ShowEffect(1) on each of them.]
 func satisfied_rite_uids_for_card(card_uid: int, db, rng = null) -> Array[int]:
 	var out: Array[int] = []
@@ -1846,6 +2478,7 @@ func remove_card_instance_from_play(uid: int) -> bool:
 				if int(active_sudan.card_uid) == uid:
 					active_sudan_cards.erase(active_sudan)
 	instance.zone = "removed"
+	_record_card_op(CARD_OP_DELETE, uid)
 	return true
 
 
@@ -2214,8 +2847,94 @@ func hand_has_card_id(card_id: int) -> bool:
 
 
 # ---- Table (derived slot queries) ----
-## Every table entry is a snapshot derived from CardInstance placement. Tags
-## are intentionally duplicated so consumers must use the mutation APIs below.
+## [SRC: ChangeCardName.DoTemplate0x4f2130 reads Player.cards@0x88.
+## The host separates active Sudan cards from hand; neither list grants
+## membership while the card is in a rite. Full interleaved source order
+## across those two lists remains a presentation-sequencing boundary.]
+func source_player_cards() -> Array:
+	var out: Array = []
+	for uid in hand:
+		var card = get_card_instance(uid)
+		if card != null and card.zone == "hand":
+			out.append(card)
+	for entry in active_sudan_cards:
+		var card = get_card_instance(int(entry.card_uid))
+		if card != null and card.zone == "sudan":
+			out.append(card)
+	return out
+
+
+## [SRC: PlayerExtensions.GetTotalCards0x38de90, dump.cs:388887;
+## Player.cards@0x88 then rites@0x90 -> Rite.cards@0x30, no equip recursion.]
+func source_total_cards() -> Array:
+	var out := source_player_cards()
+	for rite_uid in rite_instances:
+		var entries := cards_in_slot_entries_for_rite(int(rite_uid))
+		entries.sort_custom(func(a, b): return int(a.slot) < int(b.slot))
+		for entry in entries:
+			var card = get_card_instance(int(entry.card_uid))
+			if card != null:
+				out.append(card)
+	return out
+
+
+## Cost payment candidates: Player.cards@0x88 in list order. The clone keeps one
+## instance map instead of one list, so this is every player-owned card by uid
+## order (hand, active Sultan, rite slots) — the same OLDEST-FIRST order the
+## source's enumerator produces, since uid order is insertion order.
+## Equipped cards and removed cards are not Player.cards entries.
+## [SRC: CostCondition.c @ IsSatisfied 0x3f6160 enumerates player+0x88;
+##       PlayerExtensions.GetHandCards vs GetTotalCards are separate reads.]
+func cost_candidate_cards() -> Array:
+	var uids: Array = card_instances.keys()
+	uids.sort()
+	var out: Array = []
+	for raw_uid in uids:
+		var instance = card_instances[raw_uid]
+		if instance == null or instance.zone not in ["hand", "sudan", "slot"]:
+			continue
+		out.append(instance)
+	return out
+
+
+## Single-tag lookup on the effective GetTag row. Callers must not read
+## instance.tags directly: that dictionary is the runtime delta only.
+## [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0), HasTag (0x382250).]
+func _card_tag_value(uid: int, tag_name: String, db) -> int:
+	return int(effective_card_tags(uid, db).get(tag_name, 0))
+
+
+## Result-text playback rate for one auto-play state. The source has exactly two
+## rates, both seeded from variable.json onto Player, and the panel picks
+## between them by its autoPlay flag; the value is clamped before use.
+## [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed (0x5a74a0):
+##       autoPlay == 0 -> Player.result_text_play_rate@0x68, else
+##       Player.result_text_auto_play_rate@0x6C, clamped to
+##       [DAT_181c92b4c, DAT_181c9e4d0] = [0.5, 100.0] (read from
+##       GameAssembly.dll .rdata) and written to ScrollViewTextController+0x38.]
+func source_result_text_rate(auto_play: bool) -> float:
+	var db = _runtime_db()
+	var config: Dictionary = db.variable_config if db != null and db.get("variable_config") != null else {}
+	var key := "result_text_auto_play_rate" if auto_play else "result_text_play_rate"
+	var rate := float(config.get(key, 1.0))
+	return clampf(rate, 0.5, 100.0)
+
+
+## ConfigDB reachable from this state when a caller has none at hand. Snapshots
+## below need it to resolve the definition tag row. Hand-built states in tests
+## never call setup_new_run, so fall back to the shipped content once.
+func _runtime_db():
+	if event_runtime != null and event_runtime._db != null:
+		return event_runtime._db
+	if _fallback_db == null:
+		_fallback_db = ConfigDB.new()
+		_fallback_db.load_all()
+	return _fallback_db
+
+
+## Every table entry is a snapshot derived from CardInstance placement. The tag
+## row is the effective GetTag result (definition + delta + inheritable equips),
+## so consumers must mutate through the tag APIs below rather than the snapshot.
 func table_card_entries() -> Array:
 	var out: Array = []
 	var uids: Array = card_instances.keys()
@@ -2232,7 +2951,7 @@ func table_card_entries() -> Array:
 			"card_uid": instance.uid,
 			"slot": slot,
 			"rite_uid": instance.rite_uid,
-			"tags": instance.tags.duplicate(true),
+			"tags": effective_card_tags(instance.uid, _runtime_db()),
 			"count": instance.count,
 			"is_lost": instance.is_lost,
 		})
@@ -2254,7 +2973,7 @@ func surface_card_entries() -> Array:
 			"card_uid": instance.uid,
 			"slot": 0,
 			"rite_uid": 0,
-			"tags": instance.tags.duplicate(true),
+			"tags": effective_card_tags(instance.uid, _runtime_db()),
 			"count": instance.count,
 			"is_lost": instance.is_lost,
 		})
@@ -2387,6 +3106,7 @@ func _remove_slot_instance(uid: int) -> void:
 	instance.zone = "removed"
 	instance.rite_uid = 0
 	instance.slot_key = ""
+	_record_card_op(CARD_OP_DELETE, uid)
 
 
 func _unlink_slot_instance(card_instance) -> void:

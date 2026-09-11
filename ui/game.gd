@@ -79,8 +79,7 @@ func _show_menu() -> void:
 	menu.setup(db)
 	menu.new_game_pressed.connect(_on_new_game_pressed)
 	menu.continue_pressed.connect(_on_continue)
-	menu.user_archive_load_requested.connect(_on_user_archive_load)
-	menu.user_archive_delete_requested.connect(_on_user_archive_delete)
+	menu.archives_pressed.connect(_show_user_archive_overlay.bind(false))
 	# The title-screen Setting icon targets the scene-owned SettingsController
 	# directly, rather than going through StartController.  Keep the title menu
 	# mounted below it so SettingsController.OnClose returns to this exact panel.
@@ -112,6 +111,7 @@ func _on_continue() -> void:
 
 
 func _on_user_archive_load(index: int) -> void:
+	_close_user_archive_overlay()
 	var loaded = SaveSystem.load_user_archive(db, index)
 	if loaded == null:
 		_show_menu()
@@ -288,6 +288,7 @@ func _show_game_menu() -> void:
 	_menu_overlay.end_game_requested.connect(_on_end_game_from_esc)
 	_menu_overlay.main_menu_requested.connect(_on_main_menu_from_esc)
 	_menu_overlay.settings_requested.connect(_show_settings)
+	_menu_overlay.save_requested.connect(_show_user_archive_overlay)
 	# ESCPanel is a direct GameScene Prompt child, never a 1280x800 legacy
 	# surface. [SRC: GameScene.unity MainUI/Prompt/ESCPanel]
 	add_child(_menu_overlay)
@@ -404,7 +405,7 @@ func _on_main_menu_from_esc() -> void:
 	_show_menu()
 
 
-func _show_user_archive_overlay() -> void:
+func _show_user_archive_overlay(save_mode := true) -> void:
 	_close_game_menu()
 	_close_user_archive_overlay()
 	_set_world_scene_blocker("user_archive", true, false)
@@ -415,8 +416,9 @@ func _show_user_archive_overlay() -> void:
 	#       (RVA 0x5c9030) binds Datapool.user_archives to its datasource.]
 	var panel := UserArchivePanel.new()
 	panel.name = "UserArchiveOverlay"
-	panel.setup(SaveSystem.list_user_archives(db), true)
+	panel.setup(SaveSystem.list_user_archives(db), save_mode)
 	panel.closed.connect(_close_user_archive_overlay)
+	panel.load_requested.connect(_on_user_archive_load)
 	panel.save_requested.connect(_save_user_archive)
 	panel.rename_requested.connect(_rename_user_archive)
 	panel.delete_requested.connect(_delete_user_archive)
@@ -427,22 +429,25 @@ func _show_user_archive_overlay() -> void:
 func _save_user_archive(index: int, archive_name: String) -> void:
 	if state == null:
 		return
-	var ok := SaveSystem.save_user_archive(state, index, archive_name)
-	_close_user_archive_overlay()
+	var ok := SaveSystem.save_user_archive(state, index, archive_name, db)
+	if ok and _user_archive_overlay != null:
+		_user_archive_overlay.refresh_archives(SaveSystem.list_user_archives(db))
 	if _current and _current.has_method("set_log"):
 		_current.set_log("已保存为存档" if ok else "存档保存失败")
 
 
 func _rename_user_archive(index: int, archive_name: String) -> void:
 	var ok := SaveSystem.update_user_archive(index, archive_name)
-	_close_user_archive_overlay()
+	if ok and _user_archive_overlay != null:
+		_user_archive_overlay.refresh_archives(SaveSystem.list_user_archives(db))
 	if _current and _current.has_method("set_log"):
 		_current.set_log("存档名称已修改" if ok else "存档改名失败")
 
 
 func _delete_user_archive(index: int) -> void:
 	var ok := SaveSystem.delete_user_archive(index)
-	_close_user_archive_overlay()
+	if ok and _user_archive_overlay != null:
+		_user_archive_overlay.refresh_archives(SaveSystem.list_user_archives(db))
 	if _current and _current.has_method("set_log"):
 		_current.set_log("存档已删除" if ok else "存档删除失败")
 
@@ -572,6 +577,10 @@ func _clear_current() -> void:
 
 func _close_rite_overlay() -> void:
 	_set_world_scene_blocker("rite", false)
+	# [SRC: ResetHandCardScale 0x5561d0; original runtime 2026-09-10:
+	# cancel after slot filtering restores normal size and clears card selection.]
+	if _game_screen != null:
+		_game_screen.clear_hand_candidate_highlights()
 	if _rite_overlay == null:
 		return
 	_rite_overlay.queue_free()

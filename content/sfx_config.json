@@ -1,0 +1,346 @@
+{
+  "main_game_loop": {
+    "0": {
+      "clip": "main_game_level3",
+      "start": 40.008,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    },
+    "1": {
+      "clip": "main_game_level3",
+      "start": 40.008,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    },
+    "2": {
+      "clip": "main_game_level3",
+      "start": 0,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    },
+    "3": {
+      "clip": "main_game_level2",
+      "start": 78.097,
+      "loop_start": 78.097,
+      "loop_end": 161.828
+    },
+    "4": {
+      "clip": "main_game_level2",
+      "start": 78.097,
+      "loop_start": 78.097,
+      "loop_end": 161.828
+    },
+    "5": {
+      "clip": "main_game_level2",
+      "start": 0,
+      "loop_start": 78.097,
+      "loop_end": 161.828
+    },
+    "6": {
+      "clip": "main_game_level1",
+      "start": 28.165,
+      "loop_start": 28.165,
+      "loop_end": 156.164
+    },
+    "7": {
+      "clip": "main_game_level1",
+      "start": 0,
+      "loop_start": 28.165,
+      "loop_end": 156.164
+    },
+    "-1": {
+      "clip": "main_game_level3",
+      "start": 40.008,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    }
+  },
+  "main_game_loop_difficulty": {
+    "0": {
+      "clip": "main_game_level3",
+      "start": 40.008,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    },
+    "1": {
+      "clip": "main_game_level3",
+      "start": 0,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    },
+    "2": {
+      "clip": "main_game_level2",
+      "start": 78.097,
+      "loop_start": 78.097,
+      "loop_end": 161.828
+    },
+    "3": {
+      "clip": "main_game_level2",
+      "start": 0,
+      "loop_start": 78.097,
+      "loop_end": 161.828
+    },
+    "4": {
+      "clip": "main_game_level1",
+      "start": 28.165,
+      "loop_start": 28.165,
+      "loop_end": 156.164
+    },
+    "5": {
+      "clip": "main_game_level1",
+      "start": 0,
+      "loop_start": 28.165,
+      "loop_end": 156.164
+    },
+    "-1": {
+      "clip": "main_game_level3",
+      "start": 40.008,
+      "loop_start": 40.008,
+      "loop_end": 216.008
+    }
+  },
+  "settle_loop": {
+    "0": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    },
+    "1": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    },
+    "2": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    },
+    "3": {
+      "clip": "settlement_level2",
+      "start": 0,
+      "loop_start": 15.724,
+      "loop_end": 33.14
+    },
+    "4": {
+      "clip": "settlement_level2",
+      "start": 0,
+      "loop_start": 15.724,
+      "loop_end": 33.14
+    },
+    "5": {
+      "clip": "settlement_level2",
+      "start": 0,
+      "loop_start": 15.724,
+      "loop_end": 33.14
+    },
+    "6": {
+      "clip": "settlement_level1",
+      "start": 0,
+      "loop_start": 4.452,
+      "loop_end": 39.334
+    },
+    "7": {
+      "clip": "settlement_level1",
+      "start": 0,
+      "loop_start": 4.452,
+      "loop_end": 39.334
+    },
+    "-1": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    }
+  },
+  "settle_loop_difficulty": {
+    "0": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    },
+    "1": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    },
+    "2": {
+      "clip": "settlement_level2",
+      "start": 0,
+      "loop_start": 15.004,
+      "loop_end": 33.14
+    },
+    "3": {
+      "clip": "settlement_level2",
+      "start": 0,
+      "loop_start": 15.004,
+      "loop_end": 33.14
+    },
+    "4": {
+      "clip": "settlement_level1",
+      "start": 0,
+      "loop_start": 4.452,
+      "loop_end": 39.334
+    },
+    "5": {
+      "clip": "settlement_level1",
+      "start": 0,
+      "loop_start": 4.452,
+      "loop_end": 39.334
+    },
+    "-1": {
+      "clip": "settlement_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": 43.633
+    }
+  },
+  "armageddon_music_loop": {
+    "5003027": {
+      "clip": "secret_journey",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5006068": {
+      "clip": "dragon_slayer",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5006079": {
+      "clip": "final_battle_facing_sultan",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_instant": true
+    },
+    "5010001": {
+      "clip": "the_last_sultan_card",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010013": {
+      "clip": "final_battle_facing_sultan",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_instant": true
+    },
+    "5010022": {
+      "clip": "seeds_of_history",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010025": {
+      "clip": "main_game_level3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010034": {
+      "clip": "battle_1",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010045": {
+      "clip": "battle_2",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010046": {
+      "clip": "battle_3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010047": {
+      "clip": "battle_4",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010050": {
+      "clip": "battle_1",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010060": {
+      "clip": "battle_2",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010061": {
+      "clip": "battle_3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010062": {
+      "clip": "battle_4",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1
+    },
+    "5010069": {
+      "clip": "void_flight",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010070": {
+      "clip": "battle_1",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010071": {
+      "clip": "battle_1",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010075": {
+      "clip": "battle_2",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010080": {
+      "clip": "battle_3",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010087": {
+      "clip": "battle_4",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    },
+    "5010201": {
+      "clip": "void_flight",
+      "start": 0,
+      "loop_start": 0,
+      "loop_end": -1,
+      "play_in_rite_create": true
+    }
+  }
+}

@@ -7,6 +7,7 @@ class_name SaveSystem
 extends RefCounted
 
 const CardInstanceData = preload("res://sim/card_instance.gd")
+const SudanPoolCardData = preload("res://sim/sudan_pool_card.gd")
 
 const DEFAULT_SAVE_PATH := "user://save.json"
 const SAVE_VERSION := 8
@@ -132,13 +133,16 @@ static func serialize(state) -> Dictionary:
 		"hand": state.hand.duplicate(),
 		"rail_order": state.rail_order.duplicate(),
 		"current_bag_index": state.current_bag_index,
-		"sudan_deck": state.sudan_deck.duplicate(),
-		"sudan_pool_tags": state.sudan_pool_tags.duplicate(true),
+		# The pool is persisted as Card objects (uid/count/life/tag delta), like
+		# Player.sudan_card_pool; sudan_pool_tags stays as a derived read view.
+		"sudan_deck": state.sudan_deck.map(func(entry): return entry.to_save_dict()),
+		"sudan_pool_next_uid": state.sudan_pool_next_uid,
 		"auto_gen_sudan_card": state.auto_gen_sudan_card,
 		"active_sudan_cards": sudan_cards_data,
 		"card_instances": state.card_instances.values().map(func(instance): return instance.to_save_dict()),
 		"next_card_uid": state.next_card_uid,
 		"player_actor_uid": state.player_actor_uid,
+		"player_display_name": state.player_display_name,
 		"rite_instances": rite_instances_data,
 		"next_rite_uid": state.next_rite_uid,
 		"active_rite_uid": state.active_rite_uid,
@@ -174,6 +178,56 @@ static func serialize(state) -> Dictionary:
 		"local_counters": state.local_counters.duplicate(true),
 		"global_counters": state.global_counters.duplicate(true),
 	}
+
+
+## Older clone saves stored the whole effective tag row under `tags` instead of
+## the runtime delta the original persists. Convert those rows back to deltas
+## so the definition value is not counted twice once GetTag-style evaluation is
+## in place. Payloads written by v9+ carry `tags_are_delta`, and original-save
+## imports are already delta rows in the code domain.
+## [SRC: dump.cs Card.tag@0x30 is the persisted dictionary; CardNode.tag@0x58
+##       is config and is never serialized.]
+static func _rebase_legacy_tag_rows(state, db) -> void:
+	for instance in state.card_instances.values():
+		if instance.tag_delta_loaded:
+			continue
+		instance.tags = state.rebase_tag_delta(instance.tags, int(instance.card_id), db)
+		instance.tag_delta_loaded = true
+
+
+## Rebuild the un-drawn Sultan pool. New saves store Card objects
+## (uid/card_id/count/life/tags); older clone saves stored a bare id list plus a
+## separate id-keyed tag dictionary, which is upgraded here by minting one
+## object per id and attaching that id's saved delta.
+## [SRC: dump.cs Player.sudan_card_pool @0xB0 is a List<Card>.]
+static func _restore_sudan_pool(state, data: Dictionary) -> void:
+	var next_uid := 1
+	var raw_pool: Variant = data.get("sudan_deck", [])
+	var legacy_tags: Dictionary = data.get("sudan_pool_tags", {}) if data.get("sudan_pool_tags") is Dictionary else {}
+	for raw_entry in raw_pool:
+		if raw_entry is Dictionary:
+			var entry = SudanPoolCardData.from_save_dict(raw_entry)
+			if entry.card_id <= 0:
+				continue
+			if entry.uid <= 0:
+				entry.uid = next_uid
+			state.sudan_deck.append(entry)
+			next_uid = maxi(next_uid, int(entry.uid) + 1)
+			continue
+		# Legacy id-list row.
+		var card_id := int(raw_entry)
+		if card_id <= 0:
+			continue
+		var legacy = SudanPoolCardData.new(next_uid, card_id)
+		next_uid += 1
+		var saved: Variant = legacy_tags.get(card_id, legacy_tags.get(str(card_id), {}))
+		if saved is Dictionary:
+			var normalized: Dictionary = {}
+			for tag_name in saved:
+				normalized[str(tag_name)] = int(saved[tag_name])
+			legacy.tags = normalized
+		state.sudan_deck.append(legacy)
+	state.sudan_pool_next_uid = maxi(int(data.get("sudan_pool_next_uid", next_uid)), next_uid)
 
 
 ## Deserialize a dictionary back into a GameState (requires db for setup).
@@ -226,10 +280,12 @@ static func deserialize(data: Dictionary, state, db) -> void:
 			var card_instance = CardInstanceData.from_save_dict(card_data)
 			if card_instance.uid > 0 and card_instance.card_id > 0:
 				state.card_instances[card_instance.uid] = card_instance
+	_rebase_legacy_tag_rows(state, db)
 	state.next_card_uid = int(data.get("next_card_uid", 1))
 	for card_uid in state.card_instances:
 		state.next_card_uid = maxi(state.next_card_uid, int(card_uid) + 1)
 	state.player_actor_uid = int(data.get("player_actor_uid", 0))
+	state.player_display_name = str(data.get("player_display_name", ""))
 	if state.has_method("ensure_player_actor"):
 		state.ensure_player_actor(db)
 	if state.has_method("repair_equipment_links"):
@@ -237,16 +293,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	for cid in data.get("hand", []):
 		state.hand.append(int(cid))
 	state.sudan_deck.clear()
-	for cid in data.get("sudan_deck", []):
-		state.sudan_deck.append(int(cid))
-	state.sudan_pool_tags.clear()
-	var saved_pool_tags: Dictionary = data.get("sudan_pool_tags", {})
-	for card_id in saved_pool_tags:
-		if saved_pool_tags[card_id] is Dictionary:
-			var normalized_tags: Dictionary = {}
-			for tag_name in saved_pool_tags[card_id]:
-				normalized_tags[str(tag_name)] = int(saved_pool_tags[card_id][tag_name])
-			state.sudan_pool_tags[int(card_id)] = normalized_tags
+	_restore_sudan_pool(state, data)
 	state.auto_gen_sudan_card = bool(data.get("auto_gen_sudan_card", true))
 	state.active_sudan_cards.clear()
 	var ASC = preload("res://sim/round_loop.gd").ActiveSudan
@@ -567,23 +614,23 @@ static func delete_round_saves() -> void:
 
 ## Create or replace a named manual archive. Indexes are stable 0-based slots,
 ## matching the original archive controller's fixed archive array.
-static func save_user_archive(state, index: int, archive_name: String) -> bool:
+static func save_user_archive(state, index: int, archive_name: String, db = null) -> bool:
 	if index < 0 or index >= MAX_USER_ARCHIVE_COUNT:
 		return false
 	var data := serialize(state)
 	if not _write_save_data(user_archive_save_path(index), data):
 		return false
 	var archives := _read_user_archives()
-	var name := archive_name.strip_edges()
+	var name := archive_name
 	if name.is_empty():
 		name = "Day %d" % state.day
-	name = name.left(48)
+	var summary := archive_sudan_summary(state, db)
 	var entry := {
 		"index": index,
 		"name": name,
 		"live_days": state.day,
-		"left_sudan": state.active_sudan_cards.size(),
-		"execution_day": _next_execution_day(state),
+		"left_sudan": summary.left_sudan,
+		"execution_day": summary.execution_day,
 		"back_to_prev_round": state.back_to_prev_left,
 		"save_time": Time.get_datetime_string_from_system(),
 	}
@@ -804,10 +851,31 @@ static func _ensure_parent_directory(path: String) -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(directory))
 
 
-static func _next_execution_day(state) -> int:
-	var next_day := -1
-	for sudan in state.active_sudan_cards:
-		var candidate: int = state.day + int(sudan.days_left)
-		if next_day < 0 or candidate < next_day:
-			next_day = candidate
-	return next_day
+static func archive_sudan_summary(state, db = null) -> Dictionary:
+	# [SRC: Datapool.SaveUserArchive 0x41aa50 -> GetLeftSudanCardCount
+	# 0x38d570; dump.cs:388903 + UserArchive @0x1C/@0x20;
+	# stringliteral 0x2596500='sudan'. Count objects (not stacks), including
+	# rite slots, then add player.sudan_card_pool@+0xB0.  The clone's
+	# sudan_deck is that shrinking runtime pool. Deadline follows greatest
+	# Card.life.]
+	if db == null and state.event_runtime != null:
+		db = state.event_runtime._db
+	if db == null:
+		db = ConfigDB.new()
+		db.load_all()
+	var count: int = state.sudan_deck.size()
+	var oldest = null
+	for instance in state.card_instances.values():
+		if instance.is_lost or instance.zone not in ["hand", "slot", "sudan"]:
+			continue
+		var tags: Dictionary = state.effective_card_tags(instance.uid, db)
+		var definition: Dictionary = db.get_card(instance.card_id)
+		if str(definition.get("type", "")) != "sudan" and int(tags.get("sudan", 0)) <= 0:
+			continue
+		count += 1
+		if oldest == null or instance.life > oldest.life:
+			oldest = instance
+	var remaining := 0
+	if oldest != null:
+		remaining = maxi(0, int(db.get_card(oldest.card_id).get("card_vanishing", 0)) - oldest.life)
+	return {"left_sudan": count, "execution_day": remaining}

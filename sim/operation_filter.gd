@@ -12,15 +12,20 @@ static func select_total(state, db, selector: String) -> Array:
 		var instance = state.get_card_instance(int(uid))
 		if instance == null or instance.is_lost or instance.zone == "removed":
 			continue
-		if _matches(instance, db, selector):
+		if _matches(instance, state, db, selector):
 			out.append(instance)
 	return out
 
 
-static func _matches(instance, db, selector: String) -> bool:
+static func _matches(instance, state, db, selector: String) -> bool:
 	if instance == null:
 		return false
-	return matches_card_data(instance.card_id, instance.tags, db, selector)
+	var tags: Dictionary = instance.tags
+	if state != null and state.has_method("effective_card_tags"):
+		tags = state.effective_card_tags(int(instance.uid), db)
+	# Selector predicates run against the whole tag row (definition + delta),
+	# not the runtime delta alone. [SRC: CardExtensions.c @ GetTag 0x3814a0]
+	return matches_card_data(instance.card_id, tags, db, selector)
 
 
 ## This clone deliberately implements only the selector subset used by the

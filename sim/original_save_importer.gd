@@ -33,7 +33,6 @@ const EQUIP_SLOT_TAGS := ["weapon", "cloth", "accessory", "animal_handling"]
 const DROPPED_FIELDS := {
 	"configId": "局内配置身份",
 	"configVersion": "配置版本戳",
-	"name": "玩家名",
 	"saveTime": "存档时间戳",
 	"location_icon_show": "change_location_icon 持久化",
 	"change_desk_bg": "change_desk_bg 持久化",
@@ -48,7 +47,6 @@ const DROPPED_FIELDS := {
 	# notes 已承载（批次 O）：结构/分页/六个 type 语义 + 1/2/3 写点；
 	# 4/10001/10002 运行时写点待调用方反编译或标签门解出（见 METHOD_MAP）。
 	"delay_ops": "原作 DelayOp 到期语义未逆向（样本为空则零损失）",
-	"sudan_card_pool": "带 uid 的池对象：克隆牌堆为 id 多重集（见 approximated）",
 	"wizard_first_show": "引导首见布尔（克隆 begin_guide 为指令字典）",
 }
 
@@ -162,9 +160,40 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	converted.append("rites(槽位下标数组 -> 扁平 zone/rite_uid/slot_key)")
 
 	# ---- Sudan ----
-	var sudan_deck: Array[int] = []
-	for cid in original.get("sudan_pool_cards", []):
-		sudan_deck.append(int(cid))
+	# Player.sudan_card_pool@+0xB0 is the live, shrinking List<Card> consumed by
+	# GenSudanCard.  sudan_pool_cards@+0xA0 is the immutable configured id list
+	# used to construct that pool and still contains the active card's id in the
+	# source sample.  Import the runtime objects, falling back only for older or
+	# deliberately partial fixtures that omit them.
+	# [SRC: GameController.GenSudanCard 0x54f6f0 RemoveLast from player+0xB0;
+	# PlayerExtensions.GetLeftSudanCardCount 0x38d570 adds player+0xB0.Count;
+	# save_samples/save_slot_000.json: 28 configured ids, 27 pool objects + 1 active]
+	var sudan_deck: Array = []
+	var runtime_pool: Array = original.get("sudan_card_pool", [])
+	if not runtime_pool.is_empty():
+		for pool_card in runtime_pool:
+			if not (pool_card is Dictionary):
+				continue
+			var pool_id := int(pool_card.get("id", 0))
+			if pool_id <= 0:
+				continue
+			# One pool Card object per source object: duplicate ids in the pool
+			# are real (the corpus sample has 27 objects over 16 ids) and each
+			# carries its own uid/count/life/tag delta.
+			# [SRC: dump.cs Player.sudan_card_pool @0xB0 is a List<Card>.]
+			sudan_deck.append({
+				"uid": int(pool_card.get("uid", 0)),
+				"card_id": pool_id,
+				"count": maxi(int(pool_card.get("count", 1)), 1),
+				"life": int(pool_card.get("life", 0)),
+				"tags": (pool_card.get("tag", {}) if pool_card.get("tag", {}) is Dictionary else {}).duplicate(true),
+				"pos": int(pool_card.get("bagpos", 0)),
+			})
+		converted.append("sudan_card_pool(Card 对象逐个导入，保留 uid/count/life/tag 增量)")
+	else:
+		for cid in original.get("sudan_pool_cards", []):
+			sudan_deck.append(int(cid))
+		approximated.append("sudan_card_pool 缺失：回退使用 sudan_pool_cards 配置 id 表")
 	var active_sudan: Array = []
 	for uid in sudan_uids:
 		var row = by_uid.get(uid)
@@ -181,8 +210,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 			"days_left": lifetime - int(row["life"]),
 			"drawn_round": round_number,
 		})
-	approximated.append("active_sudan drawn_round：期限可由 card_vanishing−life 精确恢复，但出生回合在难度中途切换后无法反推")
-	approximated.append("sudan_deck 顺序：sudan_shuffle 开启时每次抽取先 Shuffle 再 RemoveLast，顺序无意义，仅多重集对拍")
+	approximated.append("active_sudan drawn_round：出生回合在存档里没有承载字段（难度中途切换后无法由 card_vanishing−life 反推），故记为导入当刻的 round；该字段目前只随存读档往返，未参与任何判定，如实报告而不静默")
 
 	# ---- Rail: sudan at the front like draw_weekly_sudan, then hand ----
 	var rail_order: Array[int] = []
@@ -192,6 +220,7 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 	# ---- Player-level display-name overrides ----
 	# These maps are authoritative overlays by definition id, not per-instance
 	# Card/Rite fields. CardExtensions.GetName checks the card map first.
+	converted.append("name")
 	var custom_rite_names := _nonempty_string_map(original.get("custom_rite_name", {}))
 	var player_card_names := _nonempty_string_map(original.get("player_card_name", {}))
 	if not custom_rite_names.is_empty():
@@ -246,12 +275,12 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"rail_order": rail_order,
 		"current_bag_index": int(original.get("BagIndex", 0)),
 		"sudan_deck": sudan_deck,
-		"sudan_pool_tags": {},
 		"auto_gen_sudan_card": not bool(original.get("disable_auto_gen_sudan_card", false)),
 		"active_sudan_cards": active_sudan,
 		"card_instances": card_rows,
 		"next_card_uid": int(original.get("card_uid_index", 1)),
 		"player_actor_uid": player_actor_uid,
+		"player_display_name": str(original.get("name", "")),
 		"rite_instances": rite_rows,
 		"next_rite_uid": int(original.get("rite_uid_index", 1)),
 		"active_rite_uid": 0,
@@ -339,9 +368,20 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("rite_auto_result", bool(original.get("rite_auto_result", false)), bool(state.rite_auto_result)))
 	rows.append(_row("auto_gen_sudan_card", not bool(original.get("disable_auto_gen_sudan_card", false)), bool(state.auto_gen_sudan_card)))
 	rows.append(_row("hand_membership", _original_hand_uids(original), _sorted_int_list(state.hand)))
+	rows.append(_row("table_operation_root_membership", _original_operation_root_uids(original, false),
+		_sorted_int_list(state.source_player_cards().map(func(card): return card.uid))))
+	rows.append(_row("total_operation_root_membership", _original_operation_root_uids(original, true),
+		_sorted_int_list(state.source_total_cards().map(func(card): return card.uid))))
 	rows.append(_row("active_sudan_ids", _original_active_sudan_ids(original), _sorted_int_list(state.active_sudan_cards.map(func(asc): return asc.card_id))))
-	rows.append(_row("sudan_deck_multiset", _sorted_int_list(original.get("sudan_pool_cards", [])), _sorted_int_list(state.sudan_deck)))
+	# The pool is an ordered List<Card> on both sides, so the diff is EXACT —
+	# no multiset adapter and no ordinal caveat: uid identity, count, life and
+	# the runtime tag delta are all compared per object.
+	rows.append(_row("sudan_deck_multiset", _original_sudan_deck_ids(original), _sorted_int_list(state.sudan_deck_ids())))
+	# Object-level pool comparison: uid identity plus per-object count/life/tag
+	# delta, so duplicate ids cannot hide behind an id multiset match.
+	rows.append(_row("sudan_pool_objects", _original_sudan_pool_rows(original), _clone_sudan_pool_rows(state)))
 	rows.append(_row("player_actor_uid", _original_protagonist_uid(original_cards), int(state.player_actor_uid)))
+	rows.append(_row("name", str(original.get("name", "")), state.player_display_name))
 	rows.append(_row("rites", _original_rites_summary(original), _clone_rites_summary(state)))
 	rows.append(_row("pins", _unique_int_list(original.get("pins", [])), state.rite_pins))
 	rows.append(_row("equipment_links", _original_equipment_links(original_cards), _clone_equipment_links(state)))
@@ -426,7 +466,11 @@ static func _base_card_row(card: Dictionary, zone: String, rite_uid: int, slot_k
 	return {
 		"uid": int(card.get("uid", 0)),
 		"card_id": int(card.get("id", 0)),
+		# The original persists Card.tag@0x30, a delta keyed by the stable tag
+		# code; the definition row (CardNode.tag@0x58) stays in config. These
+		# rows are therefore already deltas and must not be rebased on load.
 		"tags": (card.get("tag", {}) if card.get("tag", {}) is Dictionary else {}).duplicate(true),
+		"tags_are_delta": true,
 		"count": maxi(int(card.get("count", 1)), 1),
 		"life": int(card.get("life", 0)),
 		"is_lost": false,
@@ -607,6 +651,45 @@ static func _original_active_sudan_ids(original: Dictionary) -> Array:
 				ids.append(card_id)
 	ids.sort()
 	return ids
+
+
+static func _original_sudan_deck_ids(original: Dictionary) -> Array:
+	var ids: Array = []
+	var runtime_pool: Array = original.get("sudan_card_pool", [])
+	if not runtime_pool.is_empty():
+		for card in runtime_pool:
+			if card is Dictionary:
+				ids.append(int(card.get("id", 0)))
+		return _sorted_int_list(ids)
+	return _sorted_int_list(original.get("sudan_pool_cards", []))
+
+
+## Pool objects keyed by their Card uid, for an identity-aware comparison.
+## [SRC: dump.cs Player.sudan_card_pool @0xB0 List<Card>; Card.uid @0x18.]
+static func _original_sudan_pool_rows(original: Dictionary) -> Dictionary:
+	var rows: Dictionary = {}
+	for card in original.get("sudan_card_pool", []):
+		if not (card is Dictionary):
+			continue
+		rows[str(int(card.get("uid", 0)))] = {
+			"card_id": int(card.get("id", 0)),
+			"count": maxi(int(card.get("count", 1)), 1),
+			"life": int(card.get("life", 0)),
+			"tag": (card.get("tag", {}) if card.get("tag", {}) is Dictionary else {}).duplicate(true),
+		}
+	return rows
+
+
+static func _clone_sudan_pool_rows(state) -> Dictionary:
+	var rows: Dictionary = {}
+	for entry in state.sudan_deck:
+		rows[str(int(entry.uid))] = {
+			"card_id": int(entry.card_id),
+			"count": int(entry.count),
+			"life": int(entry.life),
+			"tag": entry.tags.duplicate(true),
+		}
+	return rows
 
 
 static func _original_protagonist_uid(cards: Array) -> int:
@@ -803,6 +886,22 @@ static func _unique_int_list(value) -> Array:
 		if int(raw_id) not in listed:
 			listed.append(int(raw_id))
 	return listed
+
+
+## Source GetTotalCards0x38de90 copies top-level Player.cards and appends
+## nonnull Rite.cards. Compare membership separately from animation order.
+static func _original_operation_root_uids(original: Dictionary, include_rites: bool) -> Array:
+	var out: Array = []
+	for card in original.get("cards", []):
+		if card is Dictionary:
+			out.append(int(card.get("uid", 0)))
+	if include_rites:
+		for rite in original.get("rites", []):
+			for card in rite.get("cards", []):
+				if card is Dictionary:
+					out.append(int(card.get("uid", 0)))
+	out.sort()
+	return out
 
 
 static func _sorted_int_list(value) -> Array:

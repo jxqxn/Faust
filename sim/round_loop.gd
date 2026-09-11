@@ -3,6 +3,8 @@
 class_name RoundLoop
 extends RefCounted
 
+const CardInstanceData = preload("res://sim/card_instance.gd")
+
 
 ## A sudan card in play with a countdown.
 class ActiveSudan:
@@ -25,6 +27,7 @@ static func advance_day(state, db, rng) -> Dictionary:
 	var result := {
 		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
 		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [], "due_delays": [],
+		"adsorbed": [],
 	}
 	# One day transition has a stable event boundary. Round-end effects observe
 	# the outgoing round before any rite life, expiry, or Sudan deadline changes.
@@ -34,6 +37,14 @@ static func advance_day(state, db, rng) -> Dictionary:
 	result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
 	_snapshot_round(state, "round_end")
 	state.day += 1
+	# Round-end adsorption: every OPEN slot of every player rite takes the first
+	# hand card its condition accepts, if the slot is still empty. This is the
+	# daily counterpart of InitRite's creation-time adsorption and it runs before
+	# rite settlement and card aging.
+	# [SRC: GameController.__c__DisplayClass142_0.c @ <OnNextRound>b__6
+	#       (0x570b00) prelude: for each rite in player+0x90 call
+	#       RiteExtensions.AdsorbCards (0x38fca0).]
+	result.adsorbed = state.adsorb_open_slots_daily(db, rng)
 	_update_rite_instances(state, db, rng, result)
 	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
 	result.expired_cards = _update_card_lives(state, db, rng)
@@ -111,7 +122,15 @@ static func _update_card_lives(state, db, rng) -> Array:
 		var vanish: Dictionary = card.get("vanish", {})
 		if not vanish.is_empty():
 			DeferredEffects.apply(ResultExec.execute(vanish, state, db), state, db, rng)
-		state.trigger_events("card_dead", {"card": int(inst.card_id), "card_uid": int(uid)})
+		# No card_dead timing is fired here. EventTriggerExtensions.OnCardDead
+		# exists (28 On* entry points) but has NO call site anywhere in the
+		# decompiled corpus and no `on.card_dead` in any of the 1863 event
+		# configs, so the original never dispatches it -- the death surface is
+		# the card's own `vanish` block above plus card_clean. Firing it here was
+		# a clone-only invention.
+		# [SRC: grep EventTriggerExtensions__OnCardDead over
+		#       engine_spec/decompiled/*.c -> definition only;
+		#       data/config/event/*.json `on` keys -> 21 timings, no card_dead]
 		if is_sudan:
 			# The execution: retire the rail widget and the active-sudan entry
 			# (over_reason comes from the vanish.over op above).
@@ -215,28 +234,23 @@ static func back_to_round_begin(state, db) -> bool:
 	return true
 
 
-## Draw one sudan card into the active set. The card is born with a head
-## start: life = template card_vanishing − Player.sudan_card_init_life;
-## the generic daily aging then counts up to the template deadline, so hard
-## mode shortens the window purely through the head start.
-## [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3656-3662:
-##       Card.set_life(data.card_vanishing − player.sudan_card_init_life);
-##       PlayerExtensions.c SetDifficulty (0x38f530) L2296 keeps
-##       sudan_card_init_life in sync with the current difficulty]
-static func draw_weekly_sudan(state, db, _rng) -> int:
-	var cid: int = SudanCards.draw(state.sudan_deck)
-	if cid < 0:
+## Draw one sudan card into the active set. The pool entry IS the card: the
+## original removes the Card object from player.sudan_card_pool (shuffling the
+## list first when init sudan_shuffle is on) and promotes that same object, so
+## its uid, count, life and runtime tag delta travel with it.
+## [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3610-3662:
+##       Shuffle(pool) -> RemoveLast -> Card.set_bag(BagIndex) ->
+##       Card.set_life(data.card_vanishing − player.sudan_card_init_life) ->
+##       PlayerExtensions.AddCard/MarkCardGen -> PutCardOnTable.]
+static func draw_weekly_sudan(state, db, rng) -> int:
+	var entry = state.draw_sudan_pool_card(rng, db)
+	if entry == null:
 		return -1
-	var instance = _create_sudan_instance(state, db, cid)
-	var card_uid := int(instance.uid) if instance != null else cid
+	var cid := int(entry.card_id)
+	var instance = _promote_sudan_pool_entry(state, db, entry)
+	var card_uid := int(entry.uid)
 	var lifetime: int = int(db.get_card(cid).get("card_vanishing", 7)) if db != null else 7
 	var init_life: int = int(state.sudan_card_init_life)
-	if instance != null:
-		instance.life = maxi(lifetime - init_life, 0)
-		# New sudan cards enter the bag page the player currently views
-		# (set_bag(player.BagIndex)).
-		# [SRC: GameController.c @ GenSudanCard 0x54f6f0 L3657]
-		instance.bag = state.current_bag_index
 	state.active_sudan_cards.append(
 		ActiveSudan.new(cid, mini(init_life, lifetime), state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
@@ -264,7 +278,7 @@ static func use_redraw(state, rng, db = null) -> int:
 	var draw_count := maxi(state.sudan_redraw_count, 1)
 	# Pre-loop gate: pool must hold at least draw_count cards.
 	# [SRC: GameController.c:3814 if pool.count < sudan_redraw_count → reject]
-	if state.sudan_deck.size() < draw_count:
+	if state.sudan_pool_size() < draw_count:
 		return -1
 	var old_card = state.active_sudan_cards.pop_back()
 	var discarded: int = old_card.card_id
@@ -272,7 +286,6 @@ static func use_redraw(state, rng, db = null) -> int:
 	var first_new := -1
 	var rail_index: int = state.rail_order.find(discarded_uid) if state.has_method("replace_card_in_rail") else -1
 	var old_instance = state.get_card_instance(discarded_uid) if state.has_method("get_card_instance") else null
-	var old_tags: Dictionary = old_instance.tags.duplicate(true) if old_instance != null else {}
 	# New cards carry the discarded card's elapsed life, so the visible
 	# deadline (card_vanishing − life) stays unchanged.
 	# [SRC: GameController.c @ RedrawSudanCard (0x5558b0) L3830-3832:
@@ -283,19 +296,18 @@ static func use_redraw(state, rng, db = null) -> int:
 		old_instance.is_lost = true
 	var generation_failed := false
 	for i in draw_count:
-		var new_id: int = SudanCards.draw(state.sudan_deck)
-		if new_id < 0:
+		var entry = state.draw_sudan_pool_card(rng, db)
+		if entry == null:
 			# Error path: partially drawn cards stay out, the discarded card is
 			# NOT reinserted and no redraw is consumed.
 			generation_failed = true
 			break
+		var new_id := int(entry.card_id)
 		if i == 0:
 			first_new = new_id
-		var instance = _create_sudan_instance(state, db, new_id)
-		var new_uid := int(instance.uid) if instance != null else new_id
+		_promote_sudan_pool_entry(state, db, entry, carried_life)
+		var new_uid := int(entry.uid)
 		var new_lifetime: int = int(db.get_card(new_id).get("card_vanishing", 7)) if db != null else 7
-		if instance != null:
-			instance.life = carried_life
 		state.active_sudan_cards.append(
 			ActiveSudan.new(new_id, new_lifetime - carried_life, state.round_number, new_uid))
 		if state.has_method("replace_card_in_rail"):
@@ -308,16 +320,15 @@ static func use_redraw(state, rng, db = null) -> int:
 				state.insert_card_to_rail(new_uid, state.rail_order.size())
 	if generation_failed:
 		return first_new
-	# Insert the discarded card back into the pool, carrying its runtime tag
-	# overrides so the next draw of this id keeps them (the original reinserts
-	# the Card object itself).
-	# [SRC: RedrawSudanCard L3840-3842: List.Insert(Random.Range(0,count), card)]
-	if not old_tags.is_empty():
-		state.sudan_pool_tags[discarded] = old_tags
-	if not state.sudan_deck.is_empty():
-		SudanCards.redraw(rng, state.sudan_deck, discarded)
-	else:
-		state.sudan_deck.append(discarded)
+	# The original re-inserts the discarded Card OBJECT, so its runtime delta
+	# stays with it. The clone keeps a live reference to the same instance.
+	# [SRC: GameController.c @ RedrawSudanCard L3840-3842:
+	#       pool.Insert(Random.Range(0, pool.count), card)]
+	if old_instance != null:
+		state.insert_sudan_pool_card(rng, old_instance)
+	# The discarded object leaves play but keeps existing for the pool.
+	if old_instance != null:
+		state.card_instances.erase(old_instance.uid)
 	if uses_per_round:
 		if state.has_method("use_sudan_per_round_redraw"):
 			state.use_sudan_per_round_redraw()
@@ -351,28 +362,39 @@ static func consume_sudan(state, card_or_uid: int) -> bool:
 	return false
 
 
-## Pool tags are copied only when an ID becomes a runtime Sultan instance.
-## The pool never owns speculative CardInstances, so its operations cannot
-## consume a UID or mutate already drawn cards.
-static func _create_sudan_instance(state, db, card_id: int):
-	if state == null or not state.has_method("create_card_instance"):
-		return null
-	var instance = state.create_card_instance(card_id, db, "sudan")
-	# GenSudanCard marks its drawn object explicitly after PlayerExtensions'
-	# Card-object AddCard overload. Pool tags are already on that Card, so copy
-	# them before recording the effective tag set.
-	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3656-3666]
-	if instance != null and state.sudan_pool_tags.has(card_id):
-		for tag_name in state.sudan_pool_tags[card_id]:
-			instance.tags[tag_name] = state.sudan_pool_tags[card_id][tag_name]
-	if instance != null and state.has_method("record_card_generation"):
+## Move one un-drawn pool object into play as the live CardInstance. The
+## original promotes the SAME Card object, so the clone promotes onto the same
+## uid and keeps count plus the runtime tag delta. Documented divergences: the
+## clone derives life from the head-start formula instead of reading the pool
+## object's field, and re-applies the bag-page entry rule. Both are inert with
+## the current content (every pool object enters at life 0, count 1, bag 0).
+## [SRC: GameController.c @ GenSudanCard (0x54f6f0) L3648-3672:
+##       Card.set_bag(player.BagIndex); Card.set_life(vanishing − init_life);
+##       PlayerExtensions.AddCard; MarkCardGen; PutCardOnTable.]
+static func _promote_sudan_pool_entry(state, db, entry, life_override: int = -1):
+	var card_id := int(entry.card_id)
+	# Reuse the original Card.uid; do not consume a fresh one from the counter.
+	var instance = CardInstanceData.new()
+	state.card_instances[int(entry.uid)] = instance
+	instance.uid = int(entry.uid)
+	instance.card_id = card_id
+	instance.zone = "sudan"
+	instance.count = maxi(int(entry.count), 1)
+	if life_override >= 0:
+		instance.life = life_override
+	else:
+		var lifetime: int = int(db.get_card(card_id).get("card_vanishing", 7)) if db != null else 7
+		instance.life = lifetime - int(state.sudan_card_init_life)
+	# Pool tags are the entry's own runtime delta and travel with it.
+	instance.tags = entry.tags.duplicate(true)
+	instance.bag = state.current_bag_index
+	if state.has_method("record_card_generation"):
 		state.record_card_generation(instance, db)
-	# GenSudanCard's newly drawn Card is put onto the table rail, so the same
+	# GenSudanCard's drawn Card goes onto the table rail, so the same
 	# PutCardOnTable is_only registration applies even though Sultan cards do
 	# not travel through the regular hand grant helper.
-	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) ->
-	# PutCardOnTable (0x5556c0)]
-	if instance != null and state.has_method("record_only_card"):
+	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) -> PutCardOnTable (0x5556c0)]
+	if state.has_method("record_only_card"):
 		state.record_only_card(card_id, db)
 	return instance
 

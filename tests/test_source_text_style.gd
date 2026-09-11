@@ -30,6 +30,55 @@ func test_auto_size_style_without_fixed_size_uses_its_maximum() -> void:
 	var label := Label.new()
 	Style.apply(label, "@CARD_INFO_TAG_TEXT", "md")
 	assert_eq(label.get_theme_font_size("font_size"), 30)
+	assert_eq(label.get_meta("source_text_size_range"), [26, 30],
+		"the configured sizeRange is exposed for the fit")
+	label.free()
+
+
+func test_auto_size_fit_shrinks_toward_the_configured_floor() -> void:
+	var font := load("res://assets/fonts/xiquemuye.ttf") as Font
+	assert_not_null(font)
+	# A box wide and tall enough for the ceiling keeps the ceiling.
+	var roomy := Vector2(2000, 2000)
+	assert_eq(Style.fit_point_size(font, "体魄 3", roomy, 26, 30), 30,
+		"a roomy box keeps the sizeRange maximum")
+	# A short box forces the search down but never below the floor.
+	var tight := Vector2(40, 20)
+	var fitted := Style.fit_point_size(font, "体魄 3", tight, 26, 30)
+	assert_true(fitted >= 26 and fitted <= 30, "the fit stays inside sizeRange")
+	assert_lt(fitted, 30, "a tight box shrinks below the maximum")
+	# An impossible box never goes under the floor either.
+	assert_eq(Style.fit_point_size(font, "很长的正文内容".repeat(20), Vector2(10, 10), 26, 30), 26,
+		"the floor is the lower clamp")
+
+
+func test_auto_size_fit_handles_degenerate_inputs() -> void:
+	var font := load("res://assets/fonts/xiquemuye.ttf") as Font
+	var no_font: Font = null
+	assert_eq(Style.fit_point_size(no_font, "文本", Vector2(100, 100), 10, 40), 40,
+		"no font falls back to the ceiling")
+	assert_eq(Style.fit_point_size(font, "", Vector2(100, 100), 10, 40), 40,
+		"no text falls back to the ceiling")
+	assert_eq(Style.fit_point_size(font, "文本", Vector2(0, 100), 10, 40), 40,
+		"a zero-width box falls back to the ceiling instead of guessing")
+	assert_eq(Style.fit_point_size(font, "文本", Vector2(100, 100), 40, 40), 40,
+		"a collapsed range returns its single value")
+	assert_eq(Style.fit_point_size(font, "文本", Vector2(100, 100), 0, 40), 40,
+		"a zero floor is lifted to 1 rather than looping forever")
+
+
+func test_fixed_size_style_falls_back_to_its_size_field() -> void:
+	# A css_size table that lacks the active class must not erase the text:
+	# the source falls back to TextStyleNode.size@0x24.
+	var label := Label.new()
+	Style.apply(label, "@CARD_TITLE", "md")
+	assert_eq(label.get_theme_font_size("font_size"), 38,
+		"the table's md entry wins when it exists")
+	# An explicitly unknown class on the SAME style must fall back to `size`
+	# instead of collapsing to 0.
+	Style.apply(label, "@CARD_TITLE", "not-a-real-class")
+	assert_eq(label.get_theme_font_size("font_size"), 45,
+		"an unknown class falls back to the configured size")
 	label.free()
 
 

@@ -17,9 +17,18 @@ var _by_timing := {}
 # Round-based timings follow the original TimingRoundBase lifecycle: armed on
 # enable (OnStart), gated by Player.timing_rounds in IsValid, re-armed by
 # NextRound when they fire, removed for non-replay events (OnEnd).
-# [SRC: TimingRoundBase.c @ OnStart (0x4660d0) / IsValid (0x465d30) /
-#       NextRound (0x465f20) / OnEnd (0x466000); dump.cs Player +0x128]
-const ROUND_TIMINGS := ["round_begin_ba", "round_begin_fr", "round_end"]
+# Only the two timings the original actually dispatches are listed:
+#   * round_begin_ba -- GameController.<>c__DisplayClass141_0.<Start>b__5
+#     (0x56f9c0), fired right after `player.round += 1` (player+0x2c).
+#   * round_end -- GameController.<>c__DisplayClass142_0.<OnNextRound>b__2
+#     (0x570720). It has no configured instances (0 of 1863 event files) but the
+#     call site is real, so the clone keeps the dispatch.
+# round_begin_fr is NOT dispatched: OnRoundBeginFr exists among the 28 On*
+# entry points but has no call site anywhere in the decompiled corpus and no
+# `on.round_begin_fr` in any event config.
+# [SRC: EventTriggerExtensions.c @ OnRoundBeginBa 0x4fa570 / OnRoundEnd 0x4fa730
+#       definitions; call sites as above; dump.cs Player +0x128]
+const ROUND_TIMINGS := ["round_begin_ba", "round_end"]
 # Retained as a compatibility/debug view for callers that need to inspect
 # event_off. The source of truth is GameState.event_status.
 var _disabled: Dictionary = {}
@@ -74,9 +83,9 @@ func enable_event(event_id: int) -> bool:
 ## Fire all events registered under `timing` whose trigger value matches the
 ## context and whose top-level condition holds. Returns the matched event ids
 ## (caller queues them via state.queue_event). ctx carries the binding payload:
-##   round_begin_ba / round_begin_fr / round_end -> {"round": int}
+##   round_begin_ba / round_end                  -> {"round": int}
 ##   rite_end / rite_start / open_rite           -> {"rite": int}
-##   card_clean / card_born / card_dead          -> {"card": int}
+##   card_clean / card_born                      -> {"card": int}
 ##   counter / global_counter                    -> {"counter_id": int}
 ##   game_end                                    -> {}
 func fire(timing: String, ctx: Dictionary) -> Array[int]:
@@ -196,8 +205,15 @@ static func _value_matches(timing: String, trigger_value, ctx: Dictionary) -> bo
 		if _is_any(trigger_value):
 			return true
 		return _int_or_list_includes(trigger_value, int(ctx.get("rite", 0)))
-	# Card-based timings: value is a card id, or 1 = match-any.
-	if timing in ["card_clean", "card_born", "card_dead", "open_card_info", "open_card_info_end"]:
+	# Card-based timings: value is a card id, or 1 = match-any. card_dead is
+	# deliberately absent -- the source defines OnCardDead but never calls it
+	# (no call site in engine_spec/decompiled, no `on.card_dead` in any event
+	# config), so the clone must not dispatch it either.
+	# [SRC: EventTriggerExtensions.c @ OnCardBorn 0x4f9020 / OnCardClean 0x4f9110
+	#       (both have real call sites: GenCard.c 298, GenCoin.c 125,
+	#       GenLoot.__c__DisplayClass16_0.c 16 / RiteResultPanelController
+	#       __c__DisplayClass56_4.c 16, DesktopCleanCard __c__DisplayClass4_1.c 28)]
+	if timing in ["card_clean", "card_born", "open_card_info", "open_card_info_end"]:
 		if _is_any(trigger_value):
 			return true
 		return _int_or_list_includes(trigger_value, int(ctx.get("card", 0)))

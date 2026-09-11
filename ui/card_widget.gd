@@ -2,13 +2,13 @@
 ##
 ## Presentation follows the original: a card is a flat UI surface — the card
 ## art with its rarity frame IS the card; hovering raises the highlighted
-## hand card (CardArea's highlight offset); dealing and reflow ride short
-## eased tweens; the drag preview tracks the cursor exactly, without
+## hand card through CardController's enlarged root; the hand layout assigns
+## positions directly; the drag preview tracks the cursor exactly, without
 ## rotation, scale, or perspective of its own. The clone-era Balatro motion
 ## layer (spring integrator, perspective + shadow shader passes, pointer
 ## velocity tilt) was removed per the 2026-08-15 presentation reset.
-## [SRC: CardArea.c highlighted card offset; DOTween deal/reflow tweens in
-##       CardController.c]
+## [SRC: CardController.c CardMoveUp 0x528390;
+##       HandBagController.c SetChild 0x55e360 (dump.cs:320498).]
 class_name CardWidget
 extends Control
 
@@ -16,8 +16,11 @@ signal clicked(card_id: int, card: Dictionary)
 signal drag_visibility_changed(card_uid: int, hidden: bool)
 ## Dropping a same-id stackable card onto this one merges the two stacks.
 signal stack_dropped(target_uid: int, source_uid: int)
+signal equipment_dropped(target_uid: int, source_uid: int)
+var equipment_drop_allowed: Callable
 ## Split half of a stackable stack (host binding for the source's SplitCard prompt).
 signal split_requested(card_uid: int)
+signal split_one_requested(card_uid: int)
 ## [SRC: CardController.Update 0x52c890 hold threshold -> ShowSatisfiedRite.]
 signal hold_hint_requested(card_uid: int)
 signal hold_hint_cleared()
@@ -27,13 +30,18 @@ signal hold_hint_cleared()
 ##       Resources/prefab/SudanCard.prefab 185x330 belongs to the pool only.]
 const CARD_SIZE := Vector2(194, 422)
 const SUDAN_CARD_SIZE := Vector2(185, 330)
-const SELECTED_LIFT := CARD_SIZE.y * 0.2
+## CardMoveUp adds 100 to root height. SetChild bottom-aligns that root;
+## the fixed-size, centre-anchored CardShow moves up by half the addition.
+## [SRC: CardController.c 0x528390; GameAssembly RVA0x1c9e4d0 = 100f;
+## CardShowChar/Item/Sudan.prefab centre anchors; dump.cs:317111.]
+const SELECTED_LIFT := 50.0
 const HOVER_Z_INDEX := 20
+## Godot layer adapter: above hand/details, below blocking prompts (400).
+## [SRC: CardController.OnBeginDrag 0x5294e0 reparents to GameController.drag
+## @0xe0 (dump.cs:319768); GameScene MainUI/Drag follows HandBagPanel.]
+const DRAG_Z_INDEX := 300
 ## [SRC: CardController ctor writes 0x3e4ccccd (0.2) into its hold threshold.]
 const HOLD_HINT_SECONDS := 0.2
-const DEAL_DURATION := 0.30
-const DEAL_STAGGER := 0.055
-const REFLOW_DURATION := 0.22
 
 var _card: Dictionary = {}
 var _card_size := CARD_SIZE
@@ -43,6 +51,7 @@ var drag_source := "hand"
 var drag_slot := ""
 var drag_rite_uid := 0
 var drag_allowed: Callable
+var stack_drop_allowed: Callable
 var _press_position := Vector2.ZERO
 var _drag_grab_offset := CARD_SIZE * 0.5
 var _drag_selected_position := Vector2.ZERO
@@ -51,6 +60,7 @@ var _drag_selected_scale := Vector2.ONE
 var _drag_selected_tilt := Vector2.ZERO
 var _hidden_for_drag := false
 var _hovered := false
+var _hover_lifted := false
 var _pressed := false
 var _press_elapsed := 0.0
 var _hold_hint_sent := false
@@ -65,26 +75,67 @@ var _pose_tween: Tween
 var _visual_face: Control
 var _presentation_paused := false
 var _metal_materials: Array[ShaderMaterial] = []
+var _flash_time := 0.0
+var _flash_rising := false
+var _flash_material: ShaderMaterial
+var _candidate_scale := 1.0
+var _hand_height_extra := 0.0
+var _applied_candidate_scale := 1.0
 
 
 func _process(delta: float) -> void:
+	if not _presentation_paused:
+		_advance_card_flash(delta)
 	# [SRC: CardController.Update 0x52c890 — a press held for 0x15c seconds
 	#       (ctor default 0x3e4ccccd = 0.2) fires ShowSatisfiedRite once per
 	#       press and then clears the press timer.]
 	if _pressed and not _hold_hint_sent and not _presentation_paused:
 		_press_elapsed += delta
-		if _press_elapsed >= HOLD_HINT_SECONDS:
+		if _press_elapsed > HOLD_HINT_SECONDS:
 			_hold_hint_sent = true
 			hold_hint_requested.emit(card_uid)
-	if _presentation_paused or _metal_materials.is_empty():
+
+
+
+## [SRC: CardFlashController.Reset 0x52e2d0; GameController.
+## HandCardSortByCondition 0x5515a0 resets every current hand card, then sets
+## flash only for validator matches (dump.cs:317254,320247).]
+func reset_card_flash(trigger := false) -> void:
+	_flash_time = 0.0
+	_flash_rising = trigger
+	if _flash_material != null:
+		_flash_material.set_shader_parameter("outline_fade", 0.0)
+
+
+func set_candidate_highlight(matches: bool) -> void:
+	# [SRC: HandCardSortByCondition 0x5515a0 sets matched transform scale to
+	# DAT_181c92b5c; corpus GameAssembly.dll RVA0x1c92b5c bytes cdcc8c3f = 1.1.
+	# Nonmatches use Vector3.one. Original runtime confirms persistent enlargement.]
+	_candidate_scale = 1.1 if matches else 1.0
+	reset_card_flash(matches)
+	_apply_rest_pose()
+
+
+func reset_candidate_scale() -> void:
+	# [SRC: GameController.ResetHandCardScale 0x5561d0 restores Vector3.one.]
+	_candidate_scale = 1.0
+	_apply_rest_pose()
+
+
+func hand_layout_scale() -> float:
+	return _candidate_scale
+
+
+func _advance_card_flash(delta: float) -> void:
+	if not _flash_rising and _flash_time <= 0.0:
 		return
-	# [SRC: CardRender.Update 0x53a8e0 -> GetScreenOffset 0x5508a0;
-	# GameScene ScreenXOffsetRange=(0,.05), ScreenYOffsetRange=(.2,.4).]
-	var center := get_global_transform_with_canvas() * (_card_size * 0.5 + offset_transform_position)
-	var viewport_size := get_viewport_rect().size
-	var offset := Vector2(center.x / viewport_size.x * 0.05, 0.4 - center.y / viewport_size.y * 0.2)
-	for surface in _metal_materials:
-		surface.set_shader_parameter("normal_offset", offset)
+	# [SRC: CardFlashController.Update 0x52e330; CardNew.prefab speed=3,
+	# Hermite keys (0,0,tangent2) -> (1,1,tangent0): fade = 2t-t^2.]
+	_flash_time = clampf(_flash_time + delta * 3.0 * (1.0 if _flash_rising else -1.0), 0.0, 1.0)
+	if _flash_material != null:
+		_flash_material.set_shader_parameter("outline_fade", _flash_time * (2.0 - _flash_time))
+	if _flash_rising and _flash_time >= 1.0:
+		_flash_rising = false
 
 
 func _apply_metal_surface(image: TextureRect) -> void:
@@ -108,28 +159,17 @@ func _apply_metal_surface(image: TextureRect) -> void:
 	if not detail_name.is_empty():
 		surface.set_shader_parameter("detail_map", load("res://assets/original/ui/%s.png" % detail_name))
 		surface.set_shader_parameter("has_detail", true)
-	# Scene-light response per tier, fitted against the original hand in
-	# docs/ui_layout/original_runtime/desktop.jpg (the exported CardShow shader
-	# has no body). Whole-card averages in the clone and the original then
-	# agree within a few percent: 梅姬 93/98/76 vs 96/100/66, 阿尔图 92/95/105
-	# vs 89/94/100, 快脚 112/95/86 vs 118/98/77, 金币 94/90/70 vs 98/92/62.
-	# The portrait itself renders identically (art centre 82/70/58 vs 81/68/55);
-	# only the frame's lighting distribution still differs. The detail albedo
-	# multiply is divided back out here so this light stays a scene constant
-	# while the detail texture keeps its authored spatial variation.
-	var light: Vector3 = [
-		Vector3(2.0, 2.31, 3.5),
-		Vector3(1.28, 1.44, 1.52),
-		Vector3(1.44, 1.52, 1.61),
-		Vector3(1.46, 1.77, 2.48),
-	][tier]
-	if not detail_name.is_empty():
-		light = light / (Vector3(CARD_DETAIL_MEANS[detail_name]) * 2.0)
-	surface.set_shader_parameter("material_light", light)
-	# Lighting shape fitted to the original hand (see ui/card_metal.gdshader).
-	surface.set_shader_parameter("vertical_light_falloff", 0.2065)
-	surface.set_shader_parameter("metallic_diffuse_loss", 0.3)
-	surface.set_shader_parameter("specular_strength", 0.3)
+	# [SRC: card/{kind}/{tier}.mat _EmissionMap/_EmissionColor.
+	# Character stone_f has its own emission colour; all other tiers share
+	# their authored colour across background and foreground.]
+	var emission_name: String = str(CARD_EMISSION_MAPS.get(kind, CARD_EMISSION_MAPS["item"])[tier])
+	surface.set_shader_parameter("emission_map", load("res://assets/original/ui/%s.png" % emission_name))
+	var emission: Vector3 = [Vector3(0.14150941, 0.14150941, 0.14150941),
+		Vector3(0.0, 0.04861112, 0.11458), Vector3.ZERO,
+		Vector3(0.04513899, 0.04513899, 0.02083)][tier]
+	if image.name == "Foreground" and tier == 0:
+		emission = Vector3(0.0, 0.02430556, 0.08333)
+	surface.set_shader_parameter("emission_color", emission)
 	image.material = surface
 	_metal_materials.append(surface)
 
@@ -140,8 +180,8 @@ func set_card(card: Dictionary) -> void:
 	card_id = int(card.get("id", card_id))
 	card_uid = int(card.get("instance_uid", card_uid))
 	custom_minimum_size = _card_size
-	size = _card_size
 	_rebuild()
+	_apply_rest_pose()
 
 
 static func size_for_card(card: Dictionary) -> Vector2:
@@ -160,26 +200,29 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE if _drag_preview else Control.MOUSE_FILTER_STOP
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	_base_z_index = z_index
-	# Godot 4.7's visual-only offset transform keeps layout and hit testing on
-	# the stable card rectangle while the lift/tween renders independently.
+	# Offset transforms remain only for independent drag previews. Hand roots
+	# use real size/scale so rendering and engine mouse hit testing agree.
 	offset_transform_enabled = true
 	offset_transform_visual_only = true
 	offset_transform_pivot_ratio = Vector2(0.5, 0.5)
 	mouse_entered.connect(func(): _set_hovered(true))
 	mouse_exited.connect(func(): _set_hovered(false))
 	_set_card_style()
+	_apply_rest_pose()
 
 
-## Applies the stable pose owned by the hand layout. The ordinary Control
-## transform owns hit testing; offset_transform carries the hover lift only.
+## Layout supplies the unraised root position; CardMoveUp grows the real root.
+## Fixed-size CardShow remains centered in that enlarged rectangle.
 func set_hand_pose(target_position: Vector2, target_rotation: float, order: int) -> void:
 	position = target_position
+	_hand_height_extra = 0.0
 	size = _card_size
 	pivot_offset = _card_size * 0.5
 	rotation = target_rotation
 	_base_z_index = order
 	if not _drag_preview:
-		z_index = order + HOVER_Z_INDEX if (_hovered or _selected) else order
+		z_index = order
+	_apply_rest_pose()
 
 
 ## The original hand has no idle sine wave; kept as a sink so the hand rail
@@ -199,6 +242,8 @@ func set_presentation_paused(paused: bool) -> void:
 		return
 	_presentation_paused = paused
 	if paused:
+		_pressed = false
+		_clear_hold_hint()
 		_kill_pose_tween()
 		_dealing = false
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -211,13 +256,12 @@ func is_presentation_paused() -> bool:
 	return _presentation_paused
 
 
-## Selection changes only the hand target height, matching CardArea's
-## highlighted offset.
+## Selection raises the fixed-size surface inside the original enlarged root.
 func set_selected(selected: bool, _with_impulse: bool = true) -> void:
 	if _drag_preview or _selected == selected:
 		return
 	_selected = selected
-	z_index = _base_z_index + HOVER_Z_INDEX if (_selected or _hovered) else _base_z_index
+	z_index = _base_z_index
 	_apply_rest_pose()
 	_set_card_style()
 
@@ -225,57 +269,36 @@ func set_selected(selected: bool, _with_impulse: bool = true) -> void:
 func is_selected() -> bool:
 	return _selected
 
+func set_hand_draw_order(order: int) -> void:
+	_base_z_index = order
+	if not _drag_preview:
+		z_index = order
 
-## Deals a card from the right-side deck area into its already-computed hand
-## slot, as a short eased tween (the original's DOTween deal).
-func play_deal_in(source_offset: Vector2, order: int) -> void:
+
+## Compatibility entry for callers that rebuild the hand. The source creates
+## the card offscreen; HandCardsController.Update -> SetChild assigns its slot.
+## There is no right-deck travel, stagger or alpha tween in this chain.
+## [SRC: GameController.AddCard 0x54ad40; CardController.Init 0x528f40;
+## HandBagController.SetChild 0x55e360, dump.cs:320498.]
+func play_deal_in(_source_offset: Vector2, _order: int) -> void:
 	if _drag_preview or _hidden_for_drag:
 		return
-	_dealing = true
-	_hovered = false
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	offset_transform_position = source_offset
-	offset_transform_rotation = 0.0
-	offset_transform_scale = Vector2.ONE
-	modulate = Color(1, 1, 1, 0)
-	_pose_tween = create_tween()
-	_pose_tween.set_trans(Tween.TRANS_SINE)
-	_pose_tween.set_ease(Tween.EASE_OUT)
-	_pose_tween.tween_interval(minf(float(order), 10.0) * DEAL_STAGGER)
-	_pose_tween.parallel().tween_property(self, "modulate:a", 1.0, 0.16)
-	_pose_tween.parallel().tween_property(self, "offset_transform_position", Vector2.ZERO, DEAL_DURATION)
-	_pose_tween.finished.connect(_finish_hand_motion)
+	_kill_pose_tween()
+	_finish_hand_motion()
 
 
-## Reflow tweens from the former rendered pose back to the rest rectangle.
+## SetChild writes anchoredPosition directly, including after a failed drop.
+## Keep the call signature while removing clone-authored SINE easing.
 func play_hand_reflow(
-	source_offset: Vector2,
-	source_rotation: float = INF,
-	source_scale: Vector2 = Vector2.ZERO,
-	source_tilt: Vector2 = Vector2(INF, INF)
+	_source_offset: Vector2,
+	_source_rotation: float = INF,
+	_source_scale: Vector2 = Vector2.ZERO,
+	_source_tilt: Vector2 = Vector2(INF, INF)
 ) -> void:
 	if _drag_preview or _hidden_for_drag:
 		return
-	if source_offset.length_squared() < 0.25 and source_rotation == INF:
-		return
-	_dealing = true
-	_hovered = false
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	offset_transform_position = source_offset
-	offset_transform_rotation = 0.0 if source_rotation == INF else source_rotation
-	offset_transform_scale = Vector2.ONE if source_scale == Vector2.ZERO else source_scale
-	modulate = Color.WHITE
-	_pose_tween = create_tween()
-	_pose_tween.set_trans(Tween.TRANS_SINE)
-	_pose_tween.set_ease(Tween.EASE_OUT)
-	_pose_tween.tween_property(self, "offset_transform_position", Vector2.ZERO, REFLOW_DURATION)
-	_pose_tween.parallel().tween_property(
-		self, "offset_transform_rotation", 0.0, REFLOW_DURATION
-	)
-	_pose_tween.parallel().tween_property(
-		self, "offset_transform_scale", Vector2.ONE, REFLOW_DURATION
-	)
-	_pose_tween.finished.connect(_finish_hand_motion)
+	_kill_pose_tween()
+	_finish_hand_motion()
 
 
 func _kill_pose_tween() -> void:
@@ -327,8 +350,10 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		return null
 	if _presentation_paused or card_id <= 0:
 		return null
-	_drag_grab_offset = at_position
-	_drag_selected_position = offset_transform_position
+	# OnBeginDrag normalizes scale while retaining the root/world center.
+	# Convert from enlarged/scaled root coordinates to the fixed preview face.
+	_drag_grab_offset = normalized_drag_grab_offset(at_position)
+	_drag_selected_position = Vector2.ZERO
 	_drag_selected_rotation = 0.0
 	_drag_selected_scale = Vector2.ONE
 	_drag_selected_tilt = Vector2.ZERO
@@ -343,14 +368,38 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 		payload
 	)
 	var preview_root := Control.new()
+	preview_root.name = "CardDragPreview"
+	preview_root.z_as_relative = false
+	preview_root.z_index = DRAG_Z_INDEX
 	preview_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview_root.custom_minimum_size = _card_size
 	# Preserve the pointer-to-card offset from the moment dragging begins.
-	preview.position = -at_position
+	preview.position = -_drag_grab_offset
 	preview_root.add_child(preview)
 	set_drag_preview(preview_root)
 	_hide_source_for_drag()
 	return payload
+
+
+## [SRC: CardController.OnBeginDrag 0x5294e0 normalizes parent/scale, then
+## CalculateRelativeRectTransformBounds -> Bounds.ClosestPoint;
+## dump.cs:546096/546099. Godot adapter measures active Control descendants.]
+func normalized_drag_grab_offset(at_position: Vector2) -> Vector2:
+	var normalized_point := (at_position - size * 0.5) * scale
+	var bounds := _drag_descendant_bounds(self, Transform2D.IDENTITY)
+	var relative_min := bounds.position - size * 0.5
+	var relative_max := bounds.end - size * 0.5
+	return normalized_point.clamp(relative_min, relative_max) + _card_size * 0.5
+
+
+func _drag_descendant_bounds(node: Control, relative: Transform2D) -> Rect2:
+	var bounds := Rect2(relative * Vector2.ZERO, Vector2.ZERO)
+	for corner in [Vector2(node.size.x, 0), node.size, Vector2(0, node.size.y)]:
+		bounds = bounds.expand(relative * corner)
+	for child in node.get_children():
+		if child is Control and child.visible:
+			bounds = bounds.merge(_drag_descendant_bounds(child, relative * child.get_transform()))
+	return bounds
 
 
 ## Kept separate from the engine drag callback so tests can verify the game
@@ -384,38 +433,75 @@ func _notification(what: int) -> void:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+	if _presentation_paused or (drag_allowed.is_valid() and not drag_allowed.call()):
+		return false
+	var target := _drop_delegate()
+	var hand_accepted: Variant = null
+	if drag_source == "hand" and target != null and target.has_method("_can_drop_data"):
+		# HandCardsController.Update runs its sticky/gap branch even when the
+		# card itself accepts equipment or stacking. Do not bypass that update.
+		hand_accepted = target._can_drop_data(_drop_target_point(target, at_position), data)
 	if _can_stack_dropped_card(data):
 		return true
-	var target := _drop_delegate()
+	if _can_equip_dropped_card(data):
+		return true
+	if hand_accepted != null:
+		return bool(hand_accepted)
 	if target == null or not target.has_method("_can_drop_data"):
 		return false
-	return target._can_drop_data(target.get_local_mouse_position() if target is Control else at_position, data)
+	return target._can_drop_data(_drop_target_point(target, at_position), data)
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if _presentation_paused or (drag_allowed.is_valid() and not drag_allowed.call()):
+		return
 	if _can_stack_dropped_card(data):
 		stack_dropped.emit(card_uid, int(data.get("card_uid", 0)))
 		return
+	if _can_equip_dropped_card(data):
+		equipment_dropped.emit(card_uid, int(data.get("card_uid", 0)))
+		return
 	var target := _drop_delegate()
 	if target != null and target.has_method("_drop_data"):
-		target._drop_data(target.get_local_mouse_position() if target is Control else at_position, data)
+		target._drop_data(_drop_target_point(target, at_position), data)
+
+
+func _drop_target_point(target: Node, at_position: Vector2) -> Vector2:
+	# Godot supplies event-local coordinates. Preserve that same input sample
+	# across parents and scaled card roots rather than polling a second cursor.
+	if target is Control:
+		return target.get_global_transform().affine_inverse() * (get_global_transform() * at_position)
+	return at_position
 
 
 ## [SRC: CardController.CardStack 0x5286b0 — dropping a stackable card of the
 ##       same card id onto another stackable card merges the counts instead of
 ##       reordering. CardDropManager.DropCard calls it for hand targets.]
 func _can_stack_dropped_card(data: Variant) -> bool:
+	# A slot's card must delegate to CardSlotController, including its locks.
+	# [SRC: CardDropManager.DropCard 0x4ef4f0 -> CardSlotController.CardStack.]
+	if drag_source != "hand":
+		return false
 	if not (data is Dictionary) or str(data.get("type", "")) != "card":
 		return false
 	var source_uid := int(data.get("card_uid", 0))
 	if source_uid <= 0 or source_uid == card_uid:
 		return false
-	if str(data.get("source", "")) != "hand":
+	if str(data.get("source", "")) not in ["hand", "slot"]:
+		return false
+	if stack_drop_allowed.is_valid() and not stack_drop_allowed.call(card_uid, data):
+		return false
+	if str(data.get("source", "")) == "slot" and not stack_drop_allowed.is_valid():
 		return false
 	var source_card: Dictionary = data.get("card", {})
 	if int(source_card.get("id", 0)) != card_id:
 		return false
 	return _card_is_stackable(source_card) and _card_is_stackable(_card)
+
+
+func _can_equip_dropped_card(data: Variant) -> bool:
+	# [SRC: CardDropManager.DropCard 0x4ef4f0: CardStack then CardEquip.]
+	return drag_source == "hand" and equipment_drop_allowed.is_valid() and equipment_drop_allowed.call(card_uid, data)
 
 
 static func _card_is_stackable(card: Dictionary) -> bool:
@@ -439,9 +525,20 @@ func _gui_input(event: InputEvent) -> void:
 			_pressed = true
 			_press_elapsed = 0.0
 			_hold_hint_sent = false
-		elif event.position.distance_to(_press_position) <= 8.0:
+		elif _pressed and event.position.distance_to(_press_position) <= 8.0:
 			_pressed = false
+			var held := _press_elapsed > HOLD_HINT_SECONDS
 			_clear_hold_hint()
+			# OnPointerUp excludes the click/split branch after the hold threshold.
+			# [SRC: CardController.OnPointerUp 0x52afe0, holdTime@0x15c.]
+			if held:
+				return
+			if drag_source == "hand" and _visual_face != null:
+				var badge := _visual_face.get_node_or_null("Stackable") as Control
+				if badge != null and badge.get_rect().has_point(event.position) and badge.get_rect().has_point(_press_position):
+					# Original pointer target Stackable calls CardSplit(1).
+					split_one_requested.emit(card_uid)
+					return
 			# [SRC: CardController.OnPointerUp 0x52afe0 — a stackable card with
 			#       count>1 splits count/2 when the SplitCard prompt (A+B) is
 			#       held. The host has no prompt layer yet, so the same action is
@@ -469,7 +566,9 @@ func _drop_delegate() -> Control:
 func _hide_source_for_drag() -> void:
 	_hidden_for_drag = true
 	_pressed = false
+	_clear_hold_hint()
 	_hovered = false
+	_hover_lifted = false
 	_kill_pose_tween()
 	_dealing = false
 	offset_transform_rotation = 0.0
@@ -484,7 +583,7 @@ func _restore_source_after_failed_drag() -> void:
 	_hidden_for_drag = false
 	visible = true
 	_set_card_style()
-	# Reinsert the stable slot first, then tween back from the release point.
+	# Reinsert the stable slot; the source layout places the returned card directly.
 	drag_visibility_changed.emit(card_uid, false)
 	var source_offset: Vector2 = _drag_payload_ref.get("drag_visual_position", _drag_selected_position)
 	_drag_payload_ref = {}
@@ -501,7 +600,9 @@ func make_drag_preview(
 ) -> void:
 	_drag_preview = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	modulate = Color.WHITE
+	# [SRC: CardNew.prefab dragAlpha=.6; CardController.OnBeginDrag
+	# 0x5294e0 copies dragAlpha@0x164 to CardRender.targetAlpha@0x74.]
+	modulate = Color(1, 1, 1, 0.6)
 	offset_transform_enabled = true
 	offset_transform_visual_only = true
 	offset_transform_pivot_ratio = Vector2(0.5, 0.5)
@@ -517,24 +618,38 @@ func _set_hovered(is_hovered: bool) -> void:
 	if _presentation_paused or _drag_preview or _dealing or _hidden_for_drag or _hovered == is_hovered:
 		return
 	_hovered = is_hovered
+	# OnPointerEnter tests CardFlashController.flash@0x38, not currentTime.
+	# A suppressed entry does not grow later until another entry/selection.
+	_hover_lifted = is_hovered and not _flash_rising
 	if not is_hovered:
 		# [SRC: CardController.OnPointerExit 0x52af50 -> CardResetMove clears the
 		#       hold state, so the satisfied-rite hint disappears with it.]
 		_pressed = false
 		_clear_hold_hint()
-	z_index = _base_z_index + HOVER_Z_INDEX if (_hovered or _selected) else _base_z_index
+	# Pointer enter/exit changes height, not sibling order. Hand layout owns order.
+	z_index = _base_z_index
 	_apply_rest_pose()
 	_set_card_style()
 
 
-## The rest pose is the CardArea highlight: hovered or selected cards sit
-## lifted; everything else lies flat on the rail.
+## CardMoveUp changes the actual raycast root; CardShow remains center-anchored.
+## [SRC: CardController.CardMoveUp 0x528390 / CardResetMove 0x528480;
+## HandBagController.SetChild 0x55e360; CardNew/CardShowChar prefab.]
 func _apply_rest_pose() -> void:
 	if _drag_preview or _dealing or _hidden_for_drag:
 		return
 	_kill_pose_tween()
-	var lift := _card_size.y * 0.2 if (_hovered or _selected) else 0.0
-	offset_transform_position = Vector2(0.0, -lift)
+	var base_position := position + Vector2(0, _hand_height_extra * (_applied_candidate_scale + 1.0) * 0.5)
+	_hand_height_extra = 100.0 if drag_source == "hand" and (_hover_lifted or _selected) else 0.0
+	_applied_candidate_scale = _candidate_scale
+	size = _card_size + Vector2(0, _hand_height_extra)
+	pivot_offset = size * 0.5
+	position = base_position - Vector2(0, _hand_height_extra * (_candidate_scale + 1.0) * 0.5)
+	if drag_source == "hand":
+		scale = Vector2.ONE * _candidate_scale
+	if _visual_face != null:
+		_visual_face.position = Vector2(0, _hand_height_extra * 0.5)
+	offset_transform_position = Vector2.ZERO
 	offset_transform_rotation = 0.0
 	offset_transform_scale = Vector2.ONE
 
@@ -546,8 +661,10 @@ func _idle_time_seconds() -> float:
 
 
 func _set_card_style() -> void:
-	# Rarity is rendered behind the painting, never over its center.
-	pass
+	if _visual_face != null:
+		var outline := _visual_face.get_node_or_null("Outline") as Control
+		if outline != null:
+			outline.visible = _selected and not _drag_preview
 
 
 static var _rarity_frames: Dictionary = {}
@@ -613,6 +730,11 @@ func _rebuild() -> void:
 	_visual_face.size = CARD_SIZE
 	_visual_face.scale = _card_size / CARD_SIZE
 	add_child(_visual_face)
+	# [SRC: CardController.OnSelect 0x52b710 / OnDeselect 0x529ef0;
+	# CardNew/Outline is initially inactive, then enabled by selection.
+	# Authored sprite card_outline_new, size256x525, anchoredPosition(0,22).]
+	var selection_outline := _face_texture("Outline", load("res://assets/original/ui/card_outline_new.png"), Rect2(-31, -73.5, 256, 525))
+	selection_outline.visible = _selected and not _drag_preview
 	var background := _face_texture("RarityFrame", _rarity_frame_texture(), Rect2(Vector2.ZERO, CARD_SIZE))
 	background.self_modulate = _surface_color()
 	_apply_metal_surface(background)
@@ -629,6 +751,10 @@ func _rebuild() -> void:
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", preload("res://assets/fonts/HYJieLongTaoHuaYuanW-2.ttf"))
 	title.add_theme_font_size_override("font_size", 30)
+	# TextTranslate overrides the prefab's serialized 30 at runtime.
+	# [SRC: CardShowItem/Title TextTranslate key @CARD_TITLE;
+	# textstyle.json css_size; TextTranslate.UpdateFontSize 0x1566920.]
+	preload("res://ui/source_text_style.gd").apply(title, "@CARD_SUDAN_TITLE" if str(_card.get("type", "")) == "sudan" else "@CARD_TITLE")
 	title.add_theme_color_override("font_color", Color.BLACK)
 	_fit_card_label(title)
 	_visual_face.add_child(title)
@@ -640,14 +766,19 @@ func _rebuild() -> void:
 	# [SRC: CardNew/Flash anchors(0.5,0.5) pos(0,0) size(256,512),
 	#       sprite=Sprite/card_outline.asset + Resources/materials/CardFlash.mat
 	#       (_ENABLEINNEROUTLINE_ON / _INNEROUTLINEOUTLINEONLYTOGGLE_ON,
-	#       _InnerOutlineColor 0.882/0.728/0.337). CardNew/Outline is
-	#       m_IsActive=0 in the prefab, so it is never drawn. Unity pos (0,0)
+	#       _InnerOutlineColor 0.882/0.728/0.337). Separate from the selected
+	#       Outline bitmap controlled by OnSelect/OnDeselect. Unity pos (0,0)
 	#       with a centre pivot folds into the Godot top-left (-31,-45).]
 	_face_texture("Flash", load("res://assets/original/ui/card_outline.png"), Rect2(Vector2(-31, -45), Vector2(256, 512)))
 	var flash := _visual_face.get_node("Flash") as TextureRect
 	var flash_material := ShaderMaterial.new()
 	flash_material.shader = preload("res://ui/card_flash.gdshader")
+	# [SRC: CardFlash.mat _InnerOutlineFade=0; CardNew/Flash controller
+	# currentTime=0, flash=0; CardFlashController.Reset 0x52e2d0.]
+	flash_material.set_shader_parameter("outline_fade", 0.0)
 	flash.material = flash_material
+	_flash_material = flash_material
+	reset_card_flash()
 	# [SRC: CardRender.UpdateShowInternal 0x53a4a0: count>1 AND stackable;
 	# content/tag.json stackable = 可堆叠. CardShowChar/Sudan use number_bg
 	# 80x80 at bottom anchor +50 -> top-left (57,332); CardShowItem uses
@@ -758,21 +889,16 @@ const ATTRIBUTE_TAG_RESOURCES := {
 }
 
 ## [SRC: materials/card/{kind}/{tier}.mat _DetailAlbedoMap (UV0, _UVSec: 0).
-## Stone has no detail map; the _DETAIL_MULX2 keyword is only on the other
-## tiers. The second value is the map's measured mean RGB, used to keep the
-## calibrated scene light independent of the detail texture's average.]
+## Stone has no detail map. No mean-RGB compensation exists in the original.]
 const CARD_DETAIL_MAPS := {
 	"char": ["", "card_d_1", "card_e_0", "card_d_1"],
 	"item": ["", "card_d_6", "card_d_2", "card_d_6"],
 	"sudan": ["", "card_d", "card_d_3", "card_d"],
 }
-const CARD_DETAIL_MEANS := {
-	"card_d": Vector3(0.52, 0.54, 0.32),
-	"card_d_1": Vector3(0.52, 0.54, 0.32),
-	"card_d_6": Vector3(0.52, 0.54, 0.32),
-	"card_e_0": Vector3(0.53, 0.63, 0.70),
-	"card_d_2": Vector3(0.72, 0.77, 0.80),
-	"card_d_3": Vector3(0.64, 0.71, 0.75),
+const CARD_EMISSION_MAPS := {
+	"char": ["card_e_6", "card_e_6", "card_d_0", "card_e_6"],
+	"item": ["card_e_3", "card_e_3", "card_e_1", "card_e_3"],
+	"sudan": ["card_e_5", "card_e_5", "card_e_2", "card_e_5"],
 }
 
 

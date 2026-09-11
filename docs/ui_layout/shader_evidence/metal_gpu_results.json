@@ -1,0 +1,21 @@
+{
+	"cases": [
+		{
+			"case": "all",
+			"max_channel_error": 0.00392159819602966
+		},
+		{
+			"case": "ambient",
+			"max_channel_error": 0.00392157025635242
+		},
+		{
+			"case": "emission",
+			"max_channel_error": 0.00392156839370728
+		},
+		{
+			"case": "direct",
+			"max_channel_error": 0.00392156839370728
+		}
+	],
+	"failures": []
+}

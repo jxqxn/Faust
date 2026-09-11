@@ -218,8 +218,12 @@ var DeskBGSpecial: TextureRect
 var _think_drop_zone: ThinkDropZone
 var _thinking := false
 static var _pin_atlas: OriginalAtlas = null
+static var _outline_atlas: OriginalAtlas = null
 static var _end_map_atlas: OriginalAtlas = null
 var _end_background_active := false
+## MapController.EftEnd@0x78: the end-state map effect slot. The source scene
+## ships it as an inactive, childless Transform; ChangeBGToEnd switches it on.
+var _eft_end_map: Control
 
 
 func setup(state, db = null, rng = null) -> void:
@@ -290,6 +294,28 @@ func _build_ithink_target() -> void:
 	_think_drop_zone.mouse_exited.connect(_set_think_drop_highlight.bind(false))
 	_think_drop_zone.z_index = 8
 	add_child(_think_drop_zone)
+	_build_eft_end_map()
+
+
+## The end-state map effect slot. The source's GameScene has GameObject
+## "Eft_End_Map" (fileID 2574, layer 6) as an EMPTY Transform at localPosition
+## (0,0,0) scale (200,200,200), referenced by MapController.EftEnd@0x78 and
+## switched on as the last statement of ChangeBGToEnd. Its particle children are
+## instantiated at runtime, and the exported package carries no portable
+## ParticleSystem data for this slot, so the clone carries the slot (name, parked
+## rect and inactive start) without inventing a particle hierarchy.
+## [SRC: GameScene.unity GameObject 2574 "Eft_End_Map" (m_IsActive 0, Transform
+##       4141); MapController.c @ ChangeBGToEnd (RVA 0x567b70) tail:
+##       GameObject.SetActive(param_1 + 0x78, true); dump.cs MapController
+##       bg@0x68 / bg_end@0x70 / EftEnd@0x78.]
+func _build_eft_end_map() -> void:
+	_eft_end_map = Control.new()
+	_eft_end_map.name = "Eft_End_Map"
+	_eft_end_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_eft_end_map.visible = false
+	_eft_end_map.set_meta("source_active_at_start", false)
+	_eft_end_map.set_meta("source_particle_children_unported", true)
+	add_child(_eft_end_map)
 
 
 func refresh_context() -> void:
@@ -303,12 +329,12 @@ func refresh_context() -> void:
 
 ## Direct counterpart of MapController.ChangeBGToEnd. The source replaces
 ## `bg` with `bg_end`, then replaces every location child Image by looking up
-## its current sprite name in Datapool.end_map_sprites. EftEnd is a separate,
-## deeply-authored particle hierarchy and remains explicitly unported.
+## its current sprite name in Datapool.end_map_sprites, and finally switches on
+## the end-state effect slot `EftEnd`.
 ## [SRC: MapController.c ChangeBGToEnd (RVA 0x567b70);
 ##       dump.cs MapController.bg/bg_end/EftEnd @0x68/0x70/0x78;
 ##       Resources/image/end_map.json; GameScene.unity bg_end guid
-##       80246786a586a354f936cf6047ef6b07.]
+##       80246786a586a354f936cf6047ef6b07 and Eft_End_Map fileID 2574.]
 func change_bg_to_end() -> void:
 	_end_background_active = true
 	if _end_map_atlas == null:
@@ -325,6 +351,9 @@ func change_bg_to_end() -> void:
 				var frame_name := str(art.get_meta("source_asset", ""))
 				if art is TextureRect and _end_map_atlas.has_frame(frame_name):
 					art.texture = _end_map_atlas.frame(frame_name)
+	# Last statement of the source method: switch the end effect slot on.
+	if _eft_end_map != null:
+		_eft_end_map.visible = true
 	queue_redraw()
 
 
@@ -639,6 +668,8 @@ static func _rite_pin_line_color(raw_color) -> Color:
 ## [SRC: GameController.c AddRite (0x54b320); RiteController.c Init (0x58ae00);
 ##       Resources/prefab/RiteNew.prefab bound RectTransform.]
 func refresh_rite_cards() -> void:
+	if _outline_atlas == null:
+		_outline_atlas = OriginalAtlas.load_atlas("res://assets/original/ui/rite_outlines.png")
 	for card in rite_cards.values():
 		if is_instance_valid(card):
 			card.queue_free()
@@ -672,6 +703,20 @@ func refresh_rite_cards() -> void:
 			icon.stretch_mode = TextureRect.STRETCH_SCALE
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			card.add_child(icon)
+		# Normal rites retain the prefab's generic rite outline. Native-size
+		# special-rite offsets are a separate, still-unported Init branch.
+		var outline_texture := _outline_atlas.frame("rite.png")
+		if outline_texture != null:
+			var outline := TextureRect.new()
+			outline.name = "IconOutline"
+			outline.texture = outline_texture
+			outline.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+			outline.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			outline.stretch_mode = TextureRect.STRETCH_SCALE
+			outline.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			outline.modulate = Color(1, 1, 1, 0)
+			card.add_child(outline)
+			card.move_child(outline, 1)
 		card.pressed.connect(_on_rite_card_pressed.bind(instance.uid))
 		card.z_index = 7
 		add_child(card)
@@ -792,6 +837,10 @@ func _layout_rite_card(card: Control, source_position: Vector2) -> void:
 		banner.scale = source_scale
 		# Root is (61.5,115) from bound top-left; TitleBG top=(0,-91.5).
 		banner.position = Vector2(61.5, 23.5) * source_scale
+	var outline := card.get_node_or_null("IconOutline") as Control
+	if outline != null:
+		outline.size = Vector2(152, 208) * _map_scale()
+		outline.position = Vector2(-14.5, -69.4) * _map_scale()
 
 
 func _layout_map_rect(view: Control, source_position: Vector2, rect_size: Vector2, anchored_position: Vector2, pivot: Vector2) -> void:
@@ -997,9 +1046,8 @@ static func _location_range(raw_location: String) -> Dictionary:
 	return {"name": name, "min": fixed_position, "max": fixed_position}
 
 
-## [SRC: GameController.ShowSatisfiedRite 0x557a80 — every rite returned by
-##       CardHandler.GetCardSatisfiedRite 0x532e10 gets RiteController.ShowEffect(1);
-##       an empty list clears the hint.]
+## [SRC: GameController.ShowSatisfiedRite 0x5576b0; an empty result does
+##       nothing. Each matched rite restarts its one-shot animation.]
 func show_satisfied_rites(rite_uids: Array) -> void:
 	var wanted: Dictionary = {}
 	for uid in rite_uids:
@@ -1008,7 +1056,8 @@ func show_satisfied_rites(rite_uids: Array) -> void:
 		var card := rite_cards[uid] as Control
 		if card == null or not card.has_method("set_satisfied_hint"):
 			continue
-		card.call("set_satisfied_hint", wanted.has(int(uid)))
+		if wanted.has(int(uid)):
+			card.call("set_satisfied_hint", true)
 
 
 func _draw() -> void:
@@ -1034,16 +1083,29 @@ class RiteCardButton:
 	var satisfied_hint := false
 	var _hint_tween: Tween
 
-	## [SRC: RiteRender.ShowEffect 0x59be70 — the pin restarts an Animation clip
-	##       (the exported clip has no body), so the host pulses modulate.]
+	## [SRC: RiteRender.ShowEffect 0x59cc70 -> card_satisfied.anim.]
 	func set_satisfied_hint(on: bool) -> void:
 		satisfied_hint = on
 		if _hint_tween != null and _hint_tween.is_valid():
 			_hint_tween.kill()
 		_hint_tween = null
 		modulate = Color.WHITE
-		if not on or not is_inside_tree():
+		var outline := get_node_or_null("IconOutline") as CanvasItem
+		if outline != null:
+			outline.modulate.a = 0.0
+		if not on or not is_inside_tree() or outline == null:
 			return
-		_hint_tween = create_tween().set_loops()
-		_hint_tween.tween_property(self, "modulate", Color(1.45, 1.35, 0.95, 1.0), 0.22)
-		_hint_tween.tween_property(self, "modulate", Color.WHITE, 0.22)
+		# [SRC: Resources/anims/rite/card_satisfied.anim: IconOutline alpha
+		#       0 -> 1 at .25s, hold to .75s, then 0 at 1s; AnimationEvent
+		#       calls PostEffect at 1s.]
+		_hint_tween = create_tween()
+		_hint_tween.tween_method(_set_hint_fade_in, 0.0, 1.0, 0.25)
+		_hint_tween.tween_interval(0.5)
+		_hint_tween.tween_method(_set_hint_fade_out, 0.0, 1.0, 0.25)
+		_hint_tween.tween_callback(func(): satisfied_hint = false)
+
+	func _set_hint_fade_in(t: float) -> void:
+		(get_node("IconOutline") as CanvasItem).modulate.a = smoothstep(0.0, 1.0, t)
+
+	func _set_hint_fade_out(t: float) -> void:
+		(get_node("IconOutline") as CanvasItem).modulate.a = 1.0 - smoothstep(0.0, 1.0, t)

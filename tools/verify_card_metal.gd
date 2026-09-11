@@ -19,7 +19,7 @@ func _run() -> void:
 	await RenderingServer.frame_post_draw
 	var before := viewport.get_texture().get_image()
 	for surface in card._metal_materials:
-		surface.set_shader_parameter("normal_offset", Vector2(0.05, 0.4))
+		surface.set_shader_parameter("light_direction", Vector3(0.5, 0.2, 0.84))
 	await process_frame
 	await RenderingServer.frame_post_draw
 	var after := viewport.get_texture().get_image()

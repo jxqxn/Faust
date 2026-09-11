@@ -1,16 +1,274 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## A19 付款执行体定案：`CardSlotController.CardStack`（第三十六批）
+
+"付款执行体仍缺（`ClearNeedCosts` 无反编译调用方）"**三个前提全错**：`ClearNeedCosts 0x385470` 只是 `ConditionContext` 字段重置（`+0x60`/`+0x64`/`+0x68`）且全语料零调用方——死方法本就不该有调用方；`CostCondition.PostProcess 0x3f6520` 是**配置加载期**一遍（`Datapool.LoadRitePostProcess 0x4163c0` → 逐卡 `TranslateTag` → 解析缓存 `Min`/`Max`），签名收 `List<ICondition>` 而非 context。真正执行体一直在产物里：**`CardSlotController.CardStack 0x53b0a0`**。规格：开头 `HasTag(card, "stackable")` 门（字面量 `0x2593720` = `stackable`，即 tag.json `可堆叠`）；`ConditionContext(rite+0x90,…, card, …, 1)` + `RiteExtensions.CanPutCard` 填 context；`is_cost@0x60 == 0` → 不是付款槽直接返回 0；`余量 = card.count@0x20 − ctx.cost_count@0x64`；**余量 < 1** → `PlayerExtensions.RemoveCard(player, card.id@0x18)` 整张离手，落槽的就是这张卡本身；**余量 ≥ 1** → `Card.set_count(余量)` 留在手牌 + `CardExtensions.Copy(card, keep_count=true)` 后 `set_count(ctx.cost_count)`，只把应付那份 `SetCard` 进槽。不可堆叠卡因开头那道门永远走整张路径。`cost_count` 即克隆的 `cost_count_for()`（源自 `IsSatisfied 0x3f6160` 尾段）。配置侧：**1863 个仪式里 653 个**槽条件带 `cost.`，**46 个不同键**（`cost.消耗品=` 333 / `cost.金币` 323 / `cost.金币=` 57 / `cost.可堆叠=` 27 / `cost.不满` 13 …），操作符是键的一部分，且可嵌在 `any`/`all`/`none` 内（如 `5000001` s4 = `{"type":"item","!金币":1,"any":{"cost.消耗品=":1,"is":2001303,"空屋":1}}`；`5000005` s2 = `{"type":"item","cost.金币":3}`）。克隆落地：`GameState.pay_cost_into_slot(card_uid, slot, needed, db, rite_uid)` 三分支执行体 + `slot_cost_needed()` / `slot_definition()`（DFS 穿透 any/all/none 找 `cost.*`，解析/比较/夹取复用 `ConditionEval.eval_cost`，不写第二份运算符解析）+ `_find_cost_key`/`_cost_key_value`；此前 `add_card_to_slot()` 一律整体移动，故 3 金币槽配 `count=10` 的卡会把 10 个全放进槽，现已按规格只付 3。`tests/test_cost_payment.gd` **13 测试**：三分支 count/zone/in_hand/slot_key、不可堆叠门、参数边界（slot 0/cost 0/负 cost/未知 uid）、切片继承运行时标签增量、切片记 `COPY` 行、真实配置查询（`5000005` s2 `cost.金币` 在 count 3 查得 3、count 1 查得 0；`5000001` s4 穿透 `any` 查到 `cost.消耗品=` 要 1；`5000001` s1 无 cost 键不发明）、独立重扫断言 **653** 防腐。**幽灵引用修正**：`cost_count_for` 文档里的 `PayCosts` 在 dump.cs 命中 **0** 次，是编造名，已改指 `CardSlotController.CardStack`。**仍未接**：`CanPutCard` 完整槽接受判定（type/is/tag + cost 合并复核）、付款入场缩放 `+0x180/+0x184`（0.01f）。详[付款执行体证据](audit/CostPaymentExecutionCorrection.md)。
+
+## A21 续：三张音频映射表也是配置（第三十五批）
+
+上批留的线索（"配音文件名→调用点很可能也有配置表"）**查实：三张表全在语料里**。①**`sfx_npc_role_dub.json`** = **卡片 id → 有序配音 clip 名数组**：584 条 / 579 非空 / 670 引用 / 去重 **123** clip，**123/123 语料零缺失**；键域由 `2000029 → ["item_coin"]`（金币卡唯一"台词"是金币音效）钉死为 `CardNode.id`，不是人物 id；数组顺序即变体取用顺序。审计的"~391 个配音无法逐条对拍"**既高估数量也误判载体**。②**`sfx_settle_card_new.json`** = 9 键，**`"0"` 是默认项**、8 个坏结果覆盖（`settle_card_new_bad`），三种值 `nomal`/`great`/`bad`（原作拼写 `nomal` 不改）；语义 = **具体优先、否则落 `"0"`**，不是未命中静音。③**`over_music_config.json`** = 150 项，表项形状与 `sfx_config.json` 循环表一致（`{clip,start,loop_start,loop_end}`）；149 个键是结局 id，**全部命中** `content/over.json` 的 159 个属性键（零缺失）；第 150 键是 **`-1` 兜底**（clip 同结局 1..7）。顺带澄清 `over.json` 是**顶层对象**（键=结局 id）、**节点无 `id` 字段**，`ui/game_over.gd` 亦按属性键查——曾误当数组解析，被测试打回。落地：三配置逐字节拷入（parity **3889/0**）+ `db.{npc_role_dub,settle_card_new,over_music}` + `GameAudio.{npc_dub_files,npc_dub_file,settle_card_cue,over_music_entry,over_music_clip}`（`_cue_file` 统一补 `.ogg`；索引**钳制**；`over_music_entry` 原先的 `over_id<=0` 门会挡掉 `-1`，已去）。资产：三表引用的 133 clip 中 **132 个从未进克隆**，全部 SHA-256 等值拷入（42 MB），音频目录 35→**167** ogg（167/167 相等），`CUE_CLIPS` 改为登记全部 167 项。`test_audio_cues.gd` 10→**18**：三表形状与键域、索引钳制、空/未知/`null` 三路径、**每个 clip 必须 `ResourceLoader.exists` 且必须在 `CUE_CLIPS`**、结局 id 双向覆盖（含 10 个无音乐结局 `0,15,40,204,273,274,289,290,291,999` 的确切集合与 `-1` 等价性）。**仍未接**：播放宿主（**表 ≠ 时机**，不编造触发点）、两张难度音乐表的消费方、`MusicFadeOutController` 淡出曲线；语料 207 ogg 中另 40 个（~21MB）未被任何已集成配置引用，未搬。详[映射表证据](audit/AudioMappingTablesCorrection.md)。
+
+## A21 音频 clip 名来源定案：`sfx_config.json`（第三十四批）
+
+A21 原留档"`LoopArmageddonController` 的 clip 名来自编辑器字段、语料无该字符串、无法推导"**是错的**——clip 名与循环点都在 `data/config/sfx_config.json`（顶层 5 张表：`main_game_loop` / `main_game_loop_difficulty` / `settle_loop` / `settle_loop_difficulty` / `armageddon_music_loop`），表项 = `{clip, start, loop_start, loop_end}` + 可选 `play_in_rite_create` / `play_instant`。查找链：`LoopArmageddonController.GetLoopData 0x4033f0` 与 `PlayArmageddon 0x403520` 都走 `Datapool+0x68→+0x60→+0xB0→+0x38`，以 `Animator.GetInteger` 得到的 controller `+0x48`（**配置 id**）为键；`PlayArmageddon` 的空名报错把 `+0x40`(clip 名) 与 `+0x48`(id) 一起 `String.Format` 进 LogError，两个偏移语义由此坐实；`GetClip 0x403240` 按名解析 AudioClip（先 `Datapool.LoadModAudioClip`，空则退内建数组）；`Update 0x404110` 用 `loop_start(+0x34)`/`lifeCount(+0x38)` 做 `time` 回卷。`armageddon_music_loop` 共 **22 个 rite id**（5003027…5010201）→ 10 个 clip（`secret_journey`/`dragon_slayer`/`final_battle_facing_sultan`/`the_last_sultan_card`/`seeds_of_history`/`battle_1..4`/`void_flight`），`loop_end:-1` = 放到尾。落地：`content/sfx_config.json` 逐字节拷入（parity **3886/0**）+ `db.sfx_config` 加载 + `GameAudio.ARMAGEDDON_TABLE_KEY`/`armageddon_rite_ids`/`armageddon_loop_for`/`armageddon_clip_for`（三种空查询路径对应原作"clip 名为空→LogError"）；`armageddon_music_loop` 的 10 个 clip 里 7 个从未进克隆，已 SHA-256 等值拷入并全部登记 `CUE_CLIPS`（13 名）。`test_audio_cues.gd` 4→10：表 22 项、两种表项形态、未知 rite/id 0/config null 三空、**每个 clip 必须 `ResourceLoader.exists` 且必须在 `CUE_CLIPS` 里**、`main_game_loop` 同查。**仍未接**：播放宿主（`is_armageddon`/`armageddon_rite_id` 全仓只有初始化 + 存档恢复两处写点，**无运行时赋值**，硬接即自制时机）、两张难度音乐表的消费方、`MusicFadeOutController` 淡出曲线。**新线索**：音乐族提示名来自配置表，故"~391 个配音文件名→调用点在未导出 .cs"这条留档很可能也有对应配置表。详[clip 来源证据](audit/AudioClipSourceCorrection.md)。
+
+## A11 卡牌场景环境输入定案（第三十三批）
+
+`CardShaderAudit.md` 把"SH 环境光 / 反射立方体 / RenderSettings 现场绑定值"挂在"待测"。本批**在导出场景数据里定案**，不需要抓帧——序列化值本身就决定了它们。①**环境光是 Flat 单色，不是 SH**：`GameScene.unity` RenderSettings `m_AmbientMode:3`(Flat) + `m_AmbientSkyColor {0.212,0.227,0.259}` @ `m_AmbientIntensity:1`；`m_AmbientEquatorColor`/`m_AmbientGroundColor` 在 Flat 下**不参与**；`LightmapSettings` 的 `m_EnableBakedLightmaps:0`/`Realtime:0`/`m_AO:0` 证明**无烘焙 GI** → shader 的 `ambient_diffuse = vec3(0.212,0.227,0.259)` 逐字正确。②**环境反射恰为零**：`m_SkyboxMaterial` 与 `m_CustomReflection` 均 `{fileID:0}`，Flat 不产 SH → 没有可绑立方图，`environment_specular = vec3(0.0)` 有源。③**只有一盏灯照卡**：场景仅两个 `!u!108`，都是 Directional/白/强度1；`&4869` mask `1073741824`(`1<<30`) 只含苏丹骰子层且有软阴影，`&4870` mask `2147483895`(`0x800000F7`) **bit5=1 → 含卡牌 layer5**、无阴影 → 克隆"单光源+白+强度1+无阴影"四条成立，且**禁止**用 4869 给卡牌造投影；`&4870` 宿主 Transform `&4011` 四元数 `(.13040192,.043246232,-.005693473,.9905012)`（欧拉 x:15 y:-5）与审计一致。④**颜色空间登记为未验证分歧**：源 `m_ActiveColorSpace:0`(Gamma)，克隆 `project.godot` 无任何 rendering/color_space 设置；**不断言亮度方向**（Unity Gamma ↔ Godot 线性/显示 sRGB 的对应未在本仓库验证）。⑤**仍未定案**：`light_direction` 的 z 符号——匀量 `(-0.08418598,0.25881905,0.96225019)` 正是源四元数的 forward，而 shader 把 `l` 当"指向光源"用；两种解释（全局取负 / 切线空间 z 朝向相反）都自洽，需**同帧卡面明暗对拍**才能判，故不改。落地 `tests/test_card_shader_scene_inputs.gd`（8测试/30断言）直读语料 `.unity` + `ProjectSettings.asset` 与 shader 匀量交叉断言。**渲染公式本身未碰**（TBN/粗糙度/能量分配、法线打包、手工亮度倍率、纵向渐变、detail 均值补偿仍开放）。详[环境输入证据](audit/CardShaderEnvironmentCorrection.md)。
+
+## A13 事件派发挂载点真值表（第三十二批）
+
+"A13 挂载点无源（缺 GameEventSender）+ b__2/b__8 未读"**两句都作废**。① `GameEventSender` 从不是事件系统——它是 **PostHog 埋点**（`Configs: Dictionary<GameEventSenderType, PostHogSenderConfig>` / `PostHogSender` / `OnApplicationQuit` 上报），方法名（`StartGame`/`NextDay`/`CardBorn`）像游戏事件是误判来源；真正的事件系统是 `EventTrigger.c`（`Add` 0x4fa9d0 / `Remove` 0x4fc3a0 / `On` 0x4fbc20 / `GetActiveEvents` 0x4fba90 / `DoSettlements` 0x4fb1c0）+ `EventTriggerExtensions.c`（**28 个 `On*`**）+ `EventNode.c`。② `b__N` 编号**每个闭包类各自从 0 起**，必须带前缀：`GameController.__c__DisplayClass142_0.<OnNextRound>b__2 0x570720 = OnRoundEnd`、`b__6 0x570b00 = UpdateSudanLife/HandCardAutoSort/AutoClassify/UpdateHandCards/UpdateHandCardPos×2/CardArrange`、`b__7 0x570e60 = TryGenSudanCard`、**`b__8 0x570f90` 是空体**、`b__10 0x570600 = DoGameOver + LogException`；`round_begin_ba` 挂在 `DisplayClass141_0.<Start>b__5 0x56f9c0`，**紧跟 `player+0x2c += 1` 之后**（与第二十一批一致）。③**派发真值表**（`decompiled/*.c` 全量调用点扫描，排除 `EventTriggerExtensions.c` 自身定义 × `data/config/event/*.json` 的 `on` 块，1863 文件）：配置侧 21 个时机=`round_begin_ba` 1381 / `rite_end` 357 / `card_clean` 68 / `counter` 16 / `game_end` 10 / `rite_start` 7 / `close_wizard` 5 / `card_born` 4 / `close_begin_guide` 3 / `rite_cancel`・`sudan_redraw_start` 2 / 其余 11 类各 1——**全部有源**。`card_dead`（`OnCardDead` 0x4f9200）与 `round_begin_fr`（0x4fa650）**有定义、无任何调用点、0 配置实例** → 克隆两处自发派发已删（`_update_card_lives` 的 `trigger_events("card_dead")` 与 `ROUND_TIMINGS` 里的 `round_begin_fr`）；原作的死亡面是卡自身 `vanish` 块 + `card_clean`。`OnCounterChanged` 0x4f9770 / `OnGlobalCounterChanged` 0x4f9a30 同样无调用点，但配置确实用 `counter`（16 例），克隆按配置键派发即正确。仍未接：`rite_begin`（有源 2 处调用、0 实例）、`rite_clean`、`EventTrigger.DoSettlements` 的结算块顺序、28 入口的 `controller+0x298` owner 未逐点对照。详见[派发真值表](audit/EventDispatchTruthTable.md)。
+
+## A20 `rebirth.s<n>` 两分支与 冻结 门（第三十一批）
+
+`RebirthSudanCard.Do 0x519d60` 只是"取 `<>c` 缓存委托 → `OperationFilter.Filter` 逐卡调用 → `GameController.UpdateSudanLife 0x55aeb0`"，**自己不动 life**；真正写点在 `<>c.<Do>b__4_0 0x51dec0`：`HasTag(card, "freeze")` 为假 → `Card.set_life(card, 0)`；为真 → 读 `CardNode.card_vanishing@0x60` 并 `Card.set_life(card, card_vanishing − player.sudan_card_init_life@0x64)`，即 **`GenSudanCard` 的同一头起步量，不是满额**。字面量此前记为"元数据无法反查"，实际 `il2cpp_dump/stringliteral.json` 的键 = **VA − `0x180000000`**：`DAT_1825ac9e8 → 0x25ac9e8 = "freeze"`（tag.json id 3019999 冻结 / code freeze / can_add 0）、`DAT_182596500 → "sudan"`。配置侧 8 处写点全落苏丹卡槽：5000158 s2（`type:sudan`）、5006558 s1×2（`type:sudan`，正文"就像是从女术士的宝匣里刚刚抽出来的时候一样"）、5000576 s1×5（`is:2001019`，`card_vanishing=15` → 冻结档 `life=10`、倒计时 5），`is_empty` 全 0。克隆旧实现无条件 `life=0` + `days_left=card_vanishing`，两处都错；**默认档 `sudan_life_time`=7 与 `2010001.card_vanishing`=7 退化同值**，所以旧测试一直"通过"——本批把 fixture 搬到困难档（头起步 5）才暴露。已改为 `_has_freeze_tag()`（经 `db.tag_code_to_name` 解析、读有效行）+ 按门分流 + `days_left = card_vanishing − life`；`test_dsl_batch1.gd` 拆成"无冻结/有冻结"两条并显式断言 `days_left != card_vanishing`。详[rebirth 分支证据](audit/RebirthBranchCorrection.md)。
+
+## A12 CardOpContext 操作流 补记（第三十批，ADD_TAG/REMOVE_TAG 入流 + `can_visible` 门）
+
+上一批留的"can_visible 门 + 两类记录缺失"本批收口。**`can_visible` 是显示旗标，不是写入门**：门在 `RiteResultPanelController.AddCardOp 0x5a0e60` 的 `List.Add`（0x3345）**之前**（0x3337：`*(char *)(*(long long *)(param_2 + 0x20) + 0x41) == 0 → return`），而 `CardExtensions.AddTag 0x37e6a0` / `RemoveTag 0x382e40` **从不读 `+0x41`**；全语料 `+0x41` 读点（`HandCardsController`/`HandBagController`/`CardInfoNewController`/`GalleryCardInfo`/`Datapanel`/`TagNode`/两个 ModifyTag 系列的 PreDo/结果面板/`PanelBase`/`MusicFadeOutController`）**全部是消费方**。所以 `can_visible=0` 的 262/442 个标签（影响力/污名/耐心/专属/各类存货与标记）**照常写入卡牌，只是不产生结果行**。
+
+克隆落地：`ResultExec._mutate_tag()` 收口**全部 6 个标签写入源**（裸键 / `s<n>` 槽 / `table.` `g.` / `total.` / `sudan_pool.` / `GenCard` 的 operation-local TagModify），写入无条件、只有**记录**过门；`TagSystem.apply` 改为返回"值是否真变了"；`GameState.record_tag_op(uid, tag_name, op, amount, tags)` 落 `op` 6/7 + `tag`/`amount`/`value_after`，并补上此前只有注释没有值的常量 `CARD_OP_ADD_TAG=6`/`CARD_OP_REMOVE_TAG=7`（`+`/`=`→6、`-`→7）。**记录时机对齐原作 PreDo**（`DesktopModifyTag.__c__DisplayClass7_1.c` `<PreDo>b__2` 0x521f60 / `b__3` 0x521fb0 → `OperationContext.AddCardOp_AddTag` 0x39dfa0 / `_RemoveTag` 0x39e870），**早于** `Do()` 的 `can_add` 门，故 `self+已拥有`（卡上已有、实际零改动）**仍报一行**；曾加过"没变就不记"的过滤，属自制偏差已删。测试 `test_card_op_stream.gd` 9→13（含"不可见标签写入了但不入流""can_add 挡住仍报一行且卡没变"），`test_tag_model.gd` 13/13。全量 GUT 53 脚本 / 617 测试 / 614 通过 / 4544 断言（4542 过；两条既有 UI 失败、1 条既有 Risky，零 SCRIPT ERROR/orphan/泄漏），content parity 3885/0。详[操作流证据](audit/CardOpStreamCorrection.md)。A12 仍剩：逐张卡动画播放（`OpCardNewController.Init 0x572f40`）、`+0x182` 缓存态与 `MoveOpCardsToResults`、`+0x183` 门、POP/HAND_POP/THINK_POP/REBIRTH_SUDAN_CARD 四类记录（其中 `pop.`/带点 `hand_pop.`/`think_pop.` 在**全量 config 里 0 次出现**，故不可达，非可验证缺口）。
+
+## A12 CardOpContext 操作流（第二十九批，操作流已落地、播放未接）
+
+`CardOpType`（dump.cs 6304）13 值 NEW0/COPY1/DELETE2/EQUIP3/UNEQUIP4/UNEQUIP_RECOVERY5/ADD_TAG6/REMOVE_TAG7/UPRARE8/POP9/HAND_POP10/THINK_POP11/REBIRTH_SUDAN_CARD12；`CardOpContext`（6305）`OpType@0x10/card@0x18/tag@0x20/value@0x28/count@0x2c/pop@0x30`；`RiteResultPanelController.AddCardOp0x5a0e60` 对 ADD/REMOVE_TAG 先查 `tag+0x41`（can_visible）不入队，否则追加到 `+0x1d8`；`OpCardNewController`（4476）是播放侧。克隆 `_rebuild_result_lists` 原为空实现、且**无任何操作记录源**。第二十九批：`GameState` 加被动结果操作日志隔舱（NEW/COPY/DELETE/EQUIP/UNEQUIP/UNEQUIP_RECOVERY/UPRARE 在卡牌变更点记录），`ResultExec.execute` 与 `rite_view._apply_deferred_to_world` 两处开启收集（延迟效果也算同一条流），结果面板按真实流填充原作三图层。注意返回形状：`res.card_ops` 在**顶层**（返回的是 deferred 结构本身），不是 `res.deferred.card_ops`。9测试/20断言；顺带修掉 `_clear_result_lists` 用 queue_free 导致的同帧重建 orphan。全量 53 脚本/612 测试/4520 断言（两条既有 UI 失败无关），详[操作流证据](audit/CardOpStreamCorrection.md)。缺口：逐张卡动画播放（OpCardNewController.Init）、can_visible 门、`+0x182` 缓存态与 MoveOpCardsToResults、ADD_TAG/REMOVE_TAG/POP/HAND_POP/THINK_POP/REBIRTH_SUDAN_CARD 六类记录。
+
+## A21/A22/A23 音频提示面、向导宿主、卡面可达性（第二十八批）
+
+A21：克隆 cue 面 25/25 全部存在（23 个 SFX 在语料 `AudioClip/`、25 个在克隆 `assets/original/audio/`）；音频提示名**不来自内容配置**（全量 config 里 `sfx/sound/audio/bgm` 字符串仅 1 处），靠编辑器引用 + `SFxManager` 运行时查表。加 `CUE_CLIPS` 注册表 + `test_audio_cues.gd`（4/43）。未接：`LoopArmageddonController`（clip 名来自编辑器字段、语料无该字符串、不可推导）、~391 个角色配音/环境 clip（文件名→调用点在未导出 .cs）。A22：credits/after_story 非空实现，`credits_page` 的两个 `pass` 是不可达基类默认（子类全重写，控制器只在 has 为真时调用）；`magic_sudan` 宿主配置一直在语料（`wizard/wizard.json` id `WIZARD`、`wizard_sudan.json` id `WIZARD_SUDAN`），已按零转译逐字节拷入 `content/wizard/`（parity 3885/0）并新增 `ConfigDB.wizard_config` + `_load_dir_by_string_id`（原 `_load_dir` 会把两个字符串 id 压成 0 互相覆盖）；`magic_sudan` 仍为审计 no-op 但已有宿主数据。A23：1292 张卡全带 `resource`，其中 110 张在原作数据里就无立绘文件，走 `card_type_*` 兜底；6 张稀有边框全在，故 `_style_for_card()` 的纸面分支**对配置卡不可达**，留作防御守卫并用 `test_card_face_reachability.gd`（5/18）钉住。全量 52 脚本/603 测试/4500 断言（两条既有 UI 失败无关），详[证据](audit/AudioWizardAndCardFaceCorrection.md)。
+
+## A16 结局地图特效槽 + A18 池序精确化（第二十七批）
+
+`GameScene.unity`：`Eft_End_Map`(fileID 2574, layer 6) 是 `m_IsActive:0` 的**空 Transform**（scale 200³），粒子子物体运行时实例化；`MapController.ChangeBGToEnd0x567b70` 三步（`bg`→`bg_end`、逐 location 子 Image 查 `Datapool.GetEndMapSprite`、`EftEnd@0x78.SetActive(true)`），字段布局 dump.cs 独立确认。克隆已实现前两步、缺第三步：第二十七批补 `Eft_End_Map` 槽位节点（初始隐藏/零子节点/带 `source_active_at_start` 元数据）并在 `change_bg_to_end()` 末尾激活，不发明粒子。A18：`drawn_round` 全仓只有写点无读取方，报告文案改为"存档无承载字段、记为导入当刻 round、仅随存读档往返"；`sudan_deck 顺序` 近似条目**已过期删除**（第二十批后按 uid 的 `sudan_pool_objects` 为精确逐对象比对），并加断言禁止复活。A15 补两条已确证事实：位置按**位置名** `GameController.GetLocation(controller, rite+0x50)` 取 `RiteController.position@0x40`，同地点多仪式 = `RitePosition.GetPosition(count)=(count*100,0,0)` 与 `AddRite` 的 `SetParentNormalize(..., count*100-100, 0, 0)`，**与 type 无关**；各表基准坐标在导出数据中无承载，仍未对拍。14测试/149断言 + 桥 6/86，全量 589/591（两条既有 UI 失败无关），详[证据](audit/EndMapEffectAndPoolOrderCorrection.md)。
+
+## A14/A15 骰子子场景与仪式类型分支（第二十六批，骰子实例已定位；A15 仍待核）
+
+`GameScene.unity`：`SudanDiceCamera`(4416) + 子 `Dices`(349) 挂 `SudanDiceRollController`(11767)，Transform localPos(1.05,-1.69,39)/scale 0.01，`SudanDicePrefab`→`Resources/prefab/SudanDice.prefab`；`Roll0x503f30` 把骰子实例 parent 到该节点。真值：DiceBaseScale 40³、CellSize 100²、HeightRange(-170,-230)、TopTimeRange(0.5,0.6)、TotalTimeRange(0.8,0.9)、RollRotationSpeedRange(400,1000)、MaxScaleRange(1.05,1.1)、WaitingTime 0.2、NormalizeTime 0.4、FullSize(1100,900)、Row 9/Column 11、RandomPos 运行时填。落点=GetRandomFinalPosition（Fisher-Yates 洗牌后按网格取点，区域=FullSize×0.5 且 y 取负），逐颗错峰=总时长/count；每帧 `SudanDiceController.GetPosition0x501b00` 走抛物线（Parabola.ctor 用水平位移与高度算 quad/lin）。克隆的 `RedrawSudanButton` 是触发 UI 非骰子，停放矩形无原作对应物故保留，迁移需独立 3D 视口批次。A15：位置分支开关 = `RiteNode.type@0x30 = RiteType{NORMAL=0,END=1,ENEMY=2,TREASURE=3}`（dump.cs 9597），配置分布 1394/41/44/16，`RiteRender.Init0x59a9e0` 按 1/2/其它分三支；各支对应位置表与 `RitePosition.GetPosition(count)` 分槽算法未核，故 A15 保持待核。详[骰子子场景证据](audit/SudanDiceSubsceneCorrection.md)。
+
+## A12 结算播速两档（第二十五批，速率边界已验）
+
+`RiteResultPanelController.UpdateResultTextSpeed0x5a74a0` 取一个**布尔**参数：为 0 读 `Player.result_text_play_rate@0x68`，否则读 `Player.result_text_auto_play_rate@0x6C`，夹在 `[DAT_181c92b4c, DAT_181c9e4d0]`（PE 节 RVA 读 `GameAssembly.dll` = 0.5 / 100.0）后写入 `ScrollViewTextController+0x38`。`OnAutoPlay0x5a38d0` 先写 autoPlay@0x184、再 `SetRiteAutoResult`、然后调它，并在等待中的 Promise（+0x178）上 Resolve。字段身份 dump.cs:387291-387293 独立确认。配置实测 variable.json 只有两行：1 与 15。克隆原把速率在 1.0/2.0 间自造循环、另在 `_build_dice_surfaces` 重复读配置、且 `_update` 里把档位与 `_result_play_rate` **乘两次**。第二十五批：`ConfigDB.variable_config` 正式加载、`GameState.source_result_text_rate(auto_play)` 取键并夹界、`RiteView._refresh_play_rate` 成为唯一写入点、删掉重复读取与双重相乘。5测试/13断言 + rite_view 36/175，详[播速证据](audit/ResultPlayRateCorrection.md)。缺口：OpCard 奖励演出链（A12 主体）仍未接、`ScrollViewTextController+0x38` 的消费方式未核、OnAutoPlay 的 Promise 分支未接、15× 无专属贴图。
+
+## A10 自动字号：sizeRange 上限 + 拟合收缩（第二十四批，字号边界已验）
+
+`TextTranslate.UpdateFontSize0x1566920`：字号先用 `css_size@0x40` 按用户档位（`Datapool+0x218`）查表、失败退 `size@0x24`；随后 `set_enableAutoSizing(enableAutoSize@0x21)`、`set_fontSizeMin/Max(sizeRange@0x28)`、`set_characterSpacing@0x30`/`wordSpacing@0x34`/`lineSpacing@0x38+每实例增量`/`paragraphSpacing@0x3C+增量`。`UpdateTextInternal0x1566ad0` 只在"非自动且 css_size 非空"时挂 OnFontSizeChanged，故自动字号不跟用户偏好。字段布局 dump.cs:393716 独立确认。配置实测 80 样式中 13 个 enableAutoSize 且**只有 sizeRange**。克隆原只取上限、显式档位不建绑定、缺档位返回 0、尺寸不更新：第二十四批补 `fit_point_size` 二分拟合（真实 Font 度量）、`_ready` 连 `resized` 重拟合、绑定总是建立、查表失败退 size。7测试/32断言，全量 583/585（两条既有 UI 失败无关），详[自动字号证据](audit/AutoSizeTextCorrection.md)。缺口：拟合是等价近似非 TMP 复刻、spacing 字段未映射、`TMPTextMaxPreferredSize` 首选尺寸截断未接。
+
+## A20 CopyCard 复制运行时增量/计数/装备（第二十三批，复制边界已验）
+
+`CopyCard.__c__DisplayClass4_1.c @ <Do>b__1 0x508090` 调 `CardExtensions.Copy(card,false)` 并做 `AddExtraResult_CardBorn`/`NoteCardBeReward`/用 `player.round@0x2C` 构造 TimingContext 触发 `EventTrigger.On`；`DisplayClass4_0 @ b__0 0x507430` 只是 Where 谓词。`CardExtensions.Copy 0x37f4e0`：`PlayerExtensions.AddCard(source.id)` 建新对象 → 遍历 `source.equips@+0x40` 递归 `Copy(equip,keep_count=true)` 追加（SFx/`sfx@+0x80` 非空则回调）→ 遍历 `source.tag@+0x30` 逐项写入新卡（**运行时增量被复制**）→ `keep_count==false` 时 `Card.set_count(source.count@0x20)`；`life/custom_name/custom_text/rareup/bag/bagpos` 均不在 Copy 内。克隆侧 `is_supported_key` 早已承认 `copy.s<n>`，但 `_apply_key` 没有分支（静默空操作），且实现为"从配置新建"。第二十三批补分派 + `copy_card_instance`（复制增量、count、装备递归）。6测试/24断言，全量 580/582（两条既有 UI 失败无关），详[Copy 证据](audit/CopyCardCorrection.md)。缺口：`rebirth.s<n>` 未按源复核、copy 的 `card_born` 时机链未接、非 `s<n>` 选择器未展开。
+
+## A19 cost.* 枚举式付款判定（第二十二批，判定与交付量边界已验）
+
+`CostCondition.IsSatisfied0x3f6160` 不是"被拖动卡牌的属性"：它以 `List_Enumerator` 顺序遍历 `player+0x88`（`Player.cards`），对每张卡跑内层 `Compare`（构造函数 `0x3f6880` 按 `>= 2000000` 分流卡牌 id / 标签，`Compare.Update` 携带 op）与附加条件列表，命中的卡计入局部列表并 `iVar10 += card.count@0x20`，到 min 停止；末尾 `SetNeedCosts(count,cards)`，返回 `min <= iVar10`。字段布局 dump.cs 独立确认：`is_cost@0x60/cost_count@0x64/need_cost_cards@0x68`。`PostProcess0x3f6520` 决定 `[min,max]`；交付量规则为 max==int.MaxValue→min、max<total→max、否则 total。配置实测 909 个 `cost.*` 键（标量 746/二元组 163、39 个选择器，金币 382 + 消耗品 370 占 83%，且金币自带消耗品标签）。克隆原只查 acting card 的标签值、不累加 count、忽略 max：第二十二批改为枚举 `cost_candidate_cards()`（hand/sudan/slot 按 uid 序，对应 Player.cards 插入序）并写回 `need_cost_cards`/`cost_count`。9测试/21断言，全量 574/576（两条既有 UI 失败无关），详[cost 证据](audit/CostConditionCorrection.md)。缺口：付款执行体（`ClearNeedCosts` 无调用方）未接、`IsSatisfied` 开头单卡分支未展开、标量 min/max 语义按"标量即下限"处理、`self_card_index@0x70` 未用。
+
+## A13 NextDay 闭包链顺序 + 每日吸附（第二十一批，链序与吸附边界已验）
+
+`GameController.OnNextRound0x554540` 的 Promise 闭包链（`GameController.__c__DisplayClass142_0.c`）按 RVA 与书写顺序：b__3 0x570790（终局门 → `player.round@0x2C += 1` 无条件）→ b__5 0x570850（UI/音乐/地图）→ b__6 0x570b00（终局门 → **遍历 `player+0x90` List<Rite> 逐个 AdsorbCards** → UpdateSudanLife → 手牌排序/整理/定位）→ b__7 0x570e60（TryGenSudanCard）→ b__9 0x571000（恢复周期/红点）。字段身份由 dump.cs Player(6274) 独立确认。`RiteExtensions.AdsorbCards0x38fca0` 以外层索引遍历 `rite+0x30` 槽、只处理 `Slot.open_adsorb@+0x20`、按 `player+0x88` 顺序取**第一个** CanPutCard 命中，调用点为 InitRite 与每日 b__6。克隆原只在创建时吸附、且随机取候选：第二十一批补 `adsorb_open_slots_daily`（advance_day 内、day+1 之后、结算之前）并改为取首个命中。rite_view 36测试/175断言全绿，全量 565/567（两条既有 UI 失败无关），详[链序证据](audit/NextDayChainCorrection.md)。缺口：事件派发挂载点无源未改、b__2/b__8 职责未读、每日吸附的 Note(type 4) 未接。
+
+## A17 苏丹池对象域：List<Card> 而非 id 多重集（第二十批，对象边界已验）
+
+`Player.sudan_card_pool@0xB0` 是 `List<Card>`（dump.cs + Player.c 构造器双信号）。`GenSudanCard0x54f6f0` 洗牌后 `RemoveLast` 取出的就是那个 Card 对象本身并直接 AddCard/MarkCardGen/PutCardOnTable；`RedrawSudanCard0x5558b0` 末尾把弃牌对象 `Insert(Random.Range(0,count))` 放回池；`SudanPoolModifyTag0x51c2e0` 与 `SudanPoolHaveCardCount0x409760` 都遍历 `player+0xB0` 逐个对象。存档证据决定性：`sudan_pool_cards` 28 项配置 vs `sudan_card_pool` 27 个对象、其中 11 个 id 重复，每对象自带 uid/count/life/tag。克隆原用 `Array[int] + sudan_pool_tags[card_id]` 把同 id 对象合并，标签操作只改一条。第二十批改为池对象数组，shuffle 移到抽取时，重抽回插对象本身，旧存档按 id 升级。22+13+6 测试全绿，语料新增 `sudan_pool_objects` 逐对象对拍，详[池对象证据](audit/SudanPoolObjectModelCorrection.md)。缺口：`param_3` 定点抽取分支未接、`sudan_pool_pos` 语义未定、池对象 life 字段未读。
+
+## A24 卡牌标签模型：配置基准 + 运行时增量（第十九批，有效行边界已验）
+
+CardExtensions.GetTag0x3814a0 = `Card.data+0x58`（配置行，中文名）+ `Card+0x30`（运行时增量，英文code）+ 可继承装备整行（TagNode+0x42门控，raw=true跳过掩码），非正和按TagNode+0x43掩码，最后×`Card+0x20`count；GetTags0x381940为三段键并集；AddTag0x37e6a0只写`Card+0x30`，配置字典从不被写。独立信号：dump.cs Card.tag@0x30 / CardNode.tag@0x58两字典、tag.json 442条name↔code双向唯一、auto_save uid29 `{"social":1,"charm":1}`对cards.json 2000001（社交1魅力2）。克隆原把英文code增量当整行、无基准、无×count、装备逐标签判门。第十九批拆分配置行与增量、桥接双键域、补×count与掩码、6处写入点改"写增量读有效行"、存档加tags_are_delta标记并rebase旧存档，并修掉create_card_instance把配置整行当增量的根因。12测试/38断言，含从存档JSON+配置独立重算185张卡GetTag行零不一致；全量46脚本/566测试/4298断言（两条既有UI失败与本批无关，已基线对照），详[标签模型证据](audit/TagModelCorrection.md)。key域全局统一、苏丹池对象域(A17)、copy.*标签携带仍开放。
+
+## A08 剧情名称/描述多目标与根对象域（第十八批，数字ID根成员边界已验）
+
+ChangeCardName.DoTemplate0x4f2130：table=Player.cards@0x88，total=PlayerExtensions.GetTotalCards0x38de90；后者复制Player.cards再追加每个Rite.cards非空对象，不进入装备。OperationFilter.Filter(List)0x3a13c0遍历全部并调用回调，不是FilterFirst0x3a1060；数字ID门还检查IsLost0x382870（GetTag(lost)>0，原tag.json=遗世）。本批纠正text/name入口的首项return、table含槽、total含装备/removed及遗世ID漏门；其他selector不借此登记完成。24测试/212断言及原作存档新增两行根成员对拍通过，详[多目标证据](audit/CustomTextScopeCorrection.md)。标签code/名称与原存档增量合成已由第十九批落地，见上条。
+
+## A08 剧情描述键（第十七批，默认描述键边界已验）
+
+ChangeCardName.PreDo闭包0x5089e0对type=text写同一注册key到Card.custom_text；CardInfoNewController.Show0x537000（443起）非空custom_text直接Translate后ProcessPlaceholders，与名称不同：未知键不回退配置正文。沿用Datapool.BuildCustomText/默认语言注册链，将名称/描述共用原作同类索引；不得套用名称的未知键回退规则。已接入原28个描述键，共40处/38个名称描述键，104测试/1270断言及双分辨率生产详情验证通过，详[第十七批证据](audit/CustomDescriptionTranslationCorrection.md)。多目标选择和占位符/语言覆盖仍开放。
+
+## A08 剧情改名键（第十六批，默认名称键边界已验）
+
+ChangeCardName构造0x4f2a30拼接change_card_ + name + _ + 配置片段，注册Common.AddCustomCardText；PreDo闭包0x5089e0写Card.custom_name为该键。Datapool.MergeCustomTextToDefaultLanguage0x417dc0将注册值并入默认翻译；Translate0x422740未命中返回键；CardExtensions.GetName0x37ff50仅在译文不等于键时采用，否则回退。原配置12处/10个唯一名称键、零冲突。已在ConfigDB建立原作同类运行时索引，保留原content不变，修正剧情名称原始存档字段及显示回退。103测试/1264断言通过，详[默认译文证据](audit/CustomNameTranslationCorrection.md)。当前语言/Mod、custom_text、多目标筛选及通知消费者仍开放。
+
+## A08 改名状态域（第十五批，读写边界已验）
+
+ChangeName.Do0x4f30e0直接传value；PromptChangeNameController.Show0x585890以0分玩家名，其余按配置id；SetPlayerName0x585530写Player.name@0x20，SetSpecialCardName0x585600写player_card_name@0x170。dump.cs:391488及原存档name独立交叉确认。CardExtensions.GetName0x37ff50/0x3801b0先查配置id表，再走custom_name/配置名与player名；字符串0x25828f8=player，tag.json映射主角。已修实例存在门、配置id丢失、错写custom_name，并将Player.name纳入存读档与原存档对拍。102测试/1252断言及双分辨率真实输入通过，详[状态域证据](audit/RenameStateDomainCorrection.md)。禁词、通知消费者及custom_name翻译链仍开放。
+
+## A08 改名校验与键盘确认（第十四批，输入边界已验）
+
+直接复核PromptChangeNameController IsValidName0x584de0、OnNameChanged0x585450、OnNameSubmit0x585490、OnConfirm0x585000及dump.cs:323419；Input的0x260为TMP_InputField.m_AllowInput（dump.cs:361469类）。输入不硬截断，长度按UTF-16单元；空串禁用且清提示，非法长度禁用并显示原ILLEGAL_NAME；Enter只移选择到Confirm，编辑状态下确认不执行。禁词加载/判定、玩家名/配置id名与当前实例写入路径差异另行追踪，不能由局部输入校验推定整链一致。86测试/1115断言及双分辨率真实Enter/点击通过，详[第十四批及状态域缺口](audit/RenameValidationCorrection.md)。
+
+## A08 改名输入表面（第十三批，输入表面边界已验）
+
+PromptChangeName.prefab Image114477046003934300为Simple(m_Type=0)，不是九宫格；TextArea224722951815217645折算Rect(10,7,806,77)。Text114279359913592680使用@TITLE_H3，Placeholder114094320201520353使用独立PROMPT_CHANGE_NAME_INPUT_PLACEHOLDER（xiquemuye及css_size）。TextTranslate.UpdateTextInternal 0x1566ad0按key/style选择原配置并写字体；PromptChangeNameController.OnEnable 0x585220 / dump.cs:323419确认输入由独立TMP_InputField承载。本批删除30像素九宫边框和40/20内距，分离占位文字。验证/截断、禁词、输入提交选中Confirm而非立即确认等另登记开放，不混作已复刻。4测试/28断言及1280/1920实际输入通过，详[输入表面与新发现](audit/RenameInputSurfaceCorrection.md)。
+
+## A06 原生噪声与衰减移植（2026-09-10，第十二批，数学与点击边界已验）
+
+UnityPlayer注册循环0xfd7bf0/0xfd7c01按同一索引读取函数表0x18d4ae0和名称表0x18db7a0；索引2144对应Mathf.PerlinNoise→0xf0490→0x5949c0。已直接调用无初始化映射的原作纯计算函数生成1029噪声样本与468衰减步骤；标准置换表、abs输入、五次插值、(noise+.69)/1.483已由机器码确认。MainUI Canvas7581为ScreenSpaceCamera、Camera4416正交size5，世界偏移需乘逻辑视口高/10并翻转Y。原机整帧验收仍未完成。
+
+已替换双sin/线性衰减并恢复世界投影；实际输入发现并修正NextDay遮罩兄弟顺序。84测试/1082断言、1497条原生计算样本及1280/1920点击验证通过。共享时钟起点和Unity随机数流仍未同步，详[第十二批证据](audit/ShakerNativeCorrection.md)。
+
+## A06 Shaker证据纠错（2026-09-10，第十一批）
+
+复核dump字段与.c实参发现前次审计把maxSpeed@0x64/time@0x68对反：实际currentFreq初始2、SmoothDamp限速参数10；seed=Random.value*10-5，时间先取余float32(2π)，各轴seed+1..6，世界坐标写入。已定位同版本UnityPlayer的Perlin注册字符串，算法本体仍待追踪。新增只读可复验提取工具与[完整纠错证据](audit/ShakerSourceCorrection.md)，不将当前双sin近似标为已修。
+
+## A09 行内删除确认按钮（2026-09-10，第十批）
+
+UserArchiveItem.prefab组件114012617856089587/114228214996573471分别是Confirm/Close按钮，ColorTint标准色、fade .1、Navigation None，TargetGraphic分别114321827775029018/114041320612064254。114703247130969877/114641204913154593是ActionBinder，不能错当按钮；Confirm UnityEvent调用UserArchiveItemController.OnDelete 0x5c9760，Close关闭DeleteConfirm并恢复两个手柄提示holder。本批修剩余按钮着色，手柄提示树继续留档。
+
+已修行内Confirm/Close并删除共用工厂RGB1.15分支；3/19及双分辨率实际悬停/取消/删除流程通过。输入框/滚动条及手柄提示未迁部分仍开放。详[第十批证据](audit/ArchiveButtonTintCorrection.md)。
+
+## A09 档案按钮状态色（2026-09-10，第九批）
+
+直读UserArchive/Item/NameInput prefab的Selectable：Close、ModifyName、Load、Delete、Cancel均标准ColorTint，highlight=.9607843、pressed=.78431374、fade=.1；名称Confirm的disabled为RGB .39215687/alpha1（不是克隆alpha.4），navigation=4。UserArchiveNameInputController.c的Show/文本更新只写interactable，不写透明度。按各自TargetGraphic修正；输入框/滚动条、显式导航图和行内删除确认另待核验。
+
+六类已核按钮状态色修复，archive_flow 3/19及双分辨率完整GPU流程通过，包括名称清空后的实际禁用颜色。行内删除确认、输入框/滚动条及显式导航仍待核实。详[按钮状态色证据](audit/ArchiveButtonTintCorrection.md)。
+
+## A05 交互替换装备的返回分页（2026-09-10，第八批）
+
+CardController.CardEquip 0x528020 与 CardInfoNewController.DropCard 0x533550 均对旧装备调用 BackToHandOrBag(old,host.bag,0,true)；后者0x4eef90（dump.cs:311018）明确写bagpos/bag。普通手牌分支 AddCard 0x54ad40 在bagpos=0时设为子节点数，随后 UpdateHandCardPos 0x559a70 编号1..N。克隆旧装备沿用原bag/位置，需将交互替换返回卡放到目标页末尾并更新当前页位置；非交互DSL回收不在此规则内。
+
+已修交互替换返回目标页及当前页编号；26测试/203断言、双分辨率真实GUI跨页换装通过。独立CardBagPanel及完整标签语义等仍待迁。详[返回分页证据](audit/EquipmentReturnPageCorrection.md)。
+
+## A05 槽位装备来源审计（2026-09-10，第七批）
+
+原作 CardExtensions.CanEquip 0x37ec10（dump.cs:388255）只对目标调用 IsHandCard，对来源检查装备标签/类别；CardController.CardEquip 0x528020（dump.cs:317123）与 CardDropManager.DropCard 0x4ef4f0 交叉确认同一拖动来源进入装备链。克隆 UI 和 attach_equipment(enforce_slot) 均额外要求 equipment.zone=hand。本批去除此来源域误限，保留原槽位可移动门和宿主结算锁，复用上批离槽后的面板同步。目标的 IsHandCard 标签语义、完整装备替换排序/返回分页及拖起离槽时序仍须另外审计，不能以本项覆盖。
+
+同链新增已核偏差：CardEquip尾部调用GameController.ShowCardInfo 0x556c60；后者仅在wizardController@0x128启用时退出（dump.cs:319777），并不会因ritePanel@0x118打开而跳过详情。克隆装备成功后此前只刷新已开的详情，漏了首次自动打开。现按同一目标刷新/首次打开区分，避免将程序刷新当作点击切换而关闭面板。
+
+本批115测试/1305断言通过，原作auto_save导入复验通过；双分辨率真实槽出装备、手牌装备自动开详情及详情内替换通过。详[槽位装备纠偏](audit/SlotEquipmentCorrection.md)。不代表IsHandCard标签、返回分页、配音或完整拖起生命周期已完成。
+
+## 槽卡拖回手牌合堆（2026-09-10，近似审计第六批）
+
+A05移除克隆额外的手牌来源限制；按实际实例检查槽位锁定，消费后重载原仪式面板槽位，防止来源重入手牌及重复回调重复计数。10/56合堆回归、5/24吸附、36/172仪式、6/82原作存档导入通过；1280/1920真实GUI拖动通过。原作拖起即离槽的生命周期及其他A05边界仍未完成。详[槽出合堆证据](audit/SlotHandStackCorrection.md)。
+
+## 拖入吸附与抓取边界（2026-09-10，近似审计第五批）
+
+A05按HandCardsController恢复原始顺序/半宽加半间距的插入判定、240×100 sticky及释放帧边界；修正虚拟占位卡、父子拖放坐标重复取样，补当前已迁移子树的Bounds抓取钳制。91测试/1145断言、双分辨率实际吸附/装备/抓取检查通过。原完整active提示子树、独立选择/手柄持牌及槽卡拖出合堆仍未完成。详[拖入吸附证据](audit/HandDragPreviewCorrection.md)。
+
+
+## 卡牌根与手牌堆叠纠偏（2026-09-10，近似审计第四批）
+
+A05已将视觉独立抬升换为原作真实扩高根，补候选命中缩放与flash进入门、归一化拖起坐标；均匀压缩改为HandCardsController原左/中/右钳制、兄弟排序与边缘Range滚动。100测试/1205断言及1280/1920根命中/双向滚动输入通过。🟡 原Bounds抓取钳制、独立选择/手柄持牌、sticky拖入判定仍未完成。详[卡牌根与手牌布局证据](audit/CardRootAndHandLayoutCorrection.md)。
+
+
+## 事件布局纠偏（2026-09-10，近似审计第三批）
+
+A07改为原Prefab反向排列和min/preferred/flexible分配：空图组仍参与、0–3立绘按native尺寸、行首选112/间距20、正文cap允许父布局压缩。A09纠正正文x352.5并恢复确认按钮ColorTint。88测试/1128断言及1280/1920实际输入通过；原机同帧与TMP/内建默认高亮图仍待验，不能登记全页完成。详[事件布局与确认按钮](audit/EventLayoutCorrection.md)。
+
+
+## 首选尺寸布局纠偏（2026-09-10，近似审计第二批）
+
+取自A08/A09，直接核对PromptChangeName/ConfirmNew prefab布局组、ConfirmController.Show 0x53fc30、TextTranslate.UpdateTextInternal 0x1566ad0及TextStyleNode/config。改名框由固定220改为正文首选高度+上下padding600；输入与错误提示归还Content父节点，关闭Godot文字父节点特有的裁剪，恢复取消原图与输入原色。无立绘共用确认框由max560与固定160正文改为正文高度+450、2000宽及原布局居中。详情/证据/测试见 [首选尺寸布局纠偏](audit/PreferredLayoutCorrection.md)。🟡 TMP字形度量、自动字号、placeholder独立字体、背景与多选项布局仍未全迁，不登记整页像素一致。
+
+
+## 近似参数全域审计（2026-09-10，首批共用卡牌布局）
+
+从下方 B/C/D 项展开 [逐项审计](audit/ApproximationAudit.md)，含24组人工条目及 ui/sim/core 逐文件自动候选；候选不等于缺陷，也不继承历史“全绿”。本批直读 CardController.CardMoveUp 0x528390 / CardResetMove 0x528480、GameController.AddCard 0x54ad40、HandCardsController.Update 0x563520、HandBagController.SetChild 0x55e360，并以 dump.cs:317111/317114/320498、CardShow prefab、原 DLL 常量交叉验证。
+
+修正：删除不存在的 CardArea.c 背书；普通入手/重排/失败拖回不再附加 .30/.055/.16/.22 秒自制飞入、错峰、淡入、SINE 缓动；删右侧42和上下28/4起点。悬停由卡高20%改为原根增高100的居中卡面投影50（候选缩放同比，槽卡不抬起）。🟡 根命中区域增高未迁；独立 OpCard 奖励演出与原机连续输入未验，不宣称整套卡牌完成。Shaker的线性减时、双sin与归一化振幅已证实和原作不符，待噪声/世界坐标一并恢复，禁止再调目测参数。
+
+
+## 卡牌原着色器算法落地（2026-09-10，环境捕获仍待完成）
+
+已接入GUI SSU Flash118连续alpha/纹理尺度/混色公式，CardShow60/75 Gamma金属计算、法线z重建和分层Emission，移除拟合亮度/纵向渐变/detail均值补偿/无效normal_offset。原材质、绑定、场景静态适配和明确缺口见 [CardShaderImplementation.md](ui_layout/CardShaderImplementation.md)。Flash的12例和金属4例通过“执行原作汇编生成参考→实际GPU渲染”的独立对比，受控最大通道误差1/255；不是整帧像素误差。GUT90/90、1171断言，1280/1920装备拖放/候选/详情GPU通过，最终日志干净。
+
+主清单「卡面外观/候选闪烁」仍🟡：真实SH/反射探针及HDR透明混合需要原作帧捕获。静态环境色、黑镜面环境输入及屏幕平面相机适配不能当作运行时现场值；当前没有实现探针采样链。未改content，未提交或推送。
+
+## 卡牌光照与轮廓算法审计（2026-09-10，待实现）
+
+主清单「卡面外观/候选闪烁」维持🟡，不能按时序/GUT通过登记像素完成。新证据见 [CardShaderAudit.md](ui_layout/CardShaderAudit.md)：离线从原作sharedassets0.assets提取并反汇编CardShow/Default及GUI SSU的9个目标程序，工具 `tools/audit_card_shaders.py`、绑定与hash `docs/ui_layout/shader_evidence/index.json`。
+
+已核实：Flash118内轮廓=8方向连续alpha取min、width×100/纹理尺寸、原图与金色随fade混色；现有2.5px/step(.5)/纯金色算法不一致。CardShow60实际有打包法线重建、世界空间光照、金属粗糙度/Fresnel、SH/反射、自发光；现有固定half-vector、稀有度亮度倍率、detail均值补偿及纵向渐变均不能当原作算法。原代码写NormalOffset的事实不代表GPU消费：本包CardShow编译绑定未发现NormalOffset；克隆直接添加offset缺乏背书。后续从这几项替换，不再截图拟合。当前仅审计/证据工具和文档，无运行时改动；实际draw-call变体/现场环境输入仍待捕获。
+
+## 卡面颜色采样与拖动遮挡纠偏（2026-09-10）
+
+同批「仪式候选卡闪烁」已接：`CardSlotController.c` 两处调用 `HandCardSortByCondition(..., select_first=1)`；`GameController.HandCardSortByCondition 0x5515a0` 逐卡Reset后按validator置flash，仅首个匹配项进入SetSelectionGameObject。`CardFlashController.Update 0x52e330 / Reset 0x52e2d0` 加 `dump.cs:317254–317279` 与 CardNew.prefab 的speed3、曲线(0,0,切线2)→(1,1,切线0)构成独立背书。克隆“所有候选永久选中”已替换为单次闪烁（fade=2t−t²，约1/3秒到峰值再1/3秒归零），仅选首个候选。匹配卡的1.1倍放大来自`.c`的DAT_181c92b5c，并直接读取语料GameAssembly.dll RVA0x1c92b5c=cdcc8c3f验证；非匹配恢复1倍。`ResetHandCardScale 0x5561d0`恢复正常大小，退出仪式时接清理选中/缩放。shader轮廓宽度仍是近似，不登记为瞬态像素完成。
+
+原作实机补证：进入治理家业→点击左人物槽，三个人物排到前面、放大，仅首张阿尔图保持选中顶部亮斑；等待后候选不再瞬态闪烁；点击取消回桌面，四卡恢复普通大小和非选中外观。此前直接把全部候选`set_selected(true)`的实现与此不符。克隆测试覆盖曲线四检查点、结束不循环、重触发重置、非匹配取消，以及多候选只选第一张、1.1倍放大及恢复。GPU工具捕获`card_reference_candidate_flash_{1280,1920}.png`并等待验证fade归零。
+
+候选放大同步修正手牌排布：`HandCardsController.Update 0x563520` 用sizeDelta.x×localScale.x累计宽度；`HandBagController.SetChild 0x55e360` 将scaled half-height放在底锚点上。克隆间距现在计入1.1倍宽度，并补偿中心缩放的半宽/半高，底边不再被窗口裁掉。原CardNew中心pivot(.5,.5)未改，Godot保留既有稳定命中框的实现方式；放大后额外10%可见边缘的精确命中范围仍未作原作边界对拍。
+
+投影审计发现：GameScene有两盏方向光，Light4869仅照layer30且soft shadow，Light4870包含卡牌layer5但shadow关闭；不能据“场景有阴影灯”直接给卡牌添加假投影。CardNew/控制器未找到独立shadow组件，后续需继续核实实际材质/Canvas产物，暂未新增自制阴影。
+
+本批最终验收：UI81/81（1102断言）+候选闪烁3/3（55断言），合计84项/1157断言；1280×720、1920×1080 GPU候选动态/选中金币/装备拖动遮挡/装备详情均通过。四组材质GPU色块误差0。最终日志无ERROR/SCRIPT ERROR/orphan/泄漏；`git diff --check`通过（既有CRLF提示）。截图仅本批1280/1920为最新，2560旧图不代表本批结果。未改动content、未提交或推送，保留其他会话改动。
+
+对应主清单「卡面外观」和「拖放」两项。已确认并修正：
+
+- **RGB 重复采样及错误 gamma：** `card_metal.gdshader` 原来把 `sqrt(texture.rgb)` 再乘 fragment `COLOR`（已含默认纹理），导致色值约为原图的1.5次方。旧注释声称所有采样均已线性解码，无本机验证支持。新增 `tools/verify_card_material.gd` 在同一透明 SubViewport 比较原生 TextureRect 和关闭光照的卡面 shader：四个含调色/半透明的色块原误差0.061–0.108；修复为 vertex 调制 × 单次采样后四项误差均0。normal/metal/detail 同时取消错误平方根，法线和金属数据不再被人为 gamma 扭曲。原作材料参数入口仍是 `CardRender`/`CardRenderItem` 加 `.mat` 的 MainTex/BumpMap/MetallicGlossMap，未改配置内容。
+- **拖动装备被人物盖住：** 原作 `CardController.OnBeginDrag 0x5294e0` 把卡 reparent 到 `GameController.drag@0xe0`（dump.cs:319768），`OnDrag 0x52a150` 用鼠标局部坐标减抓取偏移更新位置。独立信号 `GameScene.unity MainUI/Drag` 位于 HandBagPanel 后、Prompt 前。克隆原预览只有局部z20，低于手牌祖先z200，所以甲胄主体被阿尔图盖住、只露顶部；这不是“装备未接受”。共用 CardWidget 预览改为独立z300层（Godot层级适配数值），置于手牌/详情之上、阻断提示400之下，仍保留.6透明度和原抓取点。
+- **验收增加真实遮挡检查：** `verify_card_reference_states.gd` 在同一次真实GUI拖放中切换预览显隐，比较人物中心400像素，要求超过100像素能看见装备覆盖。此前只检查 `gui_is_dragging` 和装备UID，无法抓出该问题。工具新增 `-- --interactive`，可直接用电脑鼠标复验相同原配置fixture。
+
+本次 computer-use 已启动原作、进入继续存档并观察稳态；克隆使用真实电脑鼠标把家传铠甲拖到阿尔图，再点击详情，确认装备离手、甲胄位于详情人物后、体魄4/智慧3显示。原作当前存档是四张手牌，未含同件甲胄，因此本次实时操作属于原作外观观察+克隆功能走查；用户提供的三状态图仍是装备同状态参考，不能写成实时双方同存档逐帧对拍完成。
+
+**仍未验收为像素级：** 旧材质光照系数仍是近似，本批没有添加新的亮度拟合；历史“整卡均值误差6%”在颜色管线修复后不再作为验收依据。原作光照、边缘投影、Flash触发链和完整TMP效果仍未补全。后续 Flash 背书已追到 `GameController.FlashAndSortCard 0x54eff0`：遍历当前手牌，将传入UID集合成员标为flash、逐卡Reset后置flag，不能擅自把悬停或装备成功绑定成闪烁触发。
+
+## 卡缘常亮与重复透明度修复（2026-09-10）
+
+用户继续指出整圈边缘不符。直接复核发现两项共用渲染错误，而非只缺少上一批的选中顶部亮斑：
+
+- `CardFlash.mat _InnerOutlineFade=0`，`CardNew.prefab Flash.controller currentTime=0/flash=0/speed=3`；`CardFlashController.Reset 0x52e2d0` 写0，`Update 0x52e330` 按曲线写 `_InnerOutlineFade`（stringliteral 0x2581FA0）。克隆此前忽略 fade，始终画2.5单位宽的硬金圈。现恢复默认0，移除常驻伪描边；选中独立 Outline 不受影响。Flash被触发后的全调用链及瞬态外观仍未迁完，不能把初始不可见写成“永不闪烁”。
+- Godot canvas fragment 的 COLOR 已包含默认纹理采样。旧 `texture.a * COLOR.a` 再乘一次贴图alpha，原图软边因此平方变硬。`card_metal.gdshader` 改从 vertex 传入调制alpha，只乘原图alpha一次；原作 card材质 `_Mode=2/_SrcBlend=5/_DstBlend=10` 为标准透明混合。RGB拟合模型本批未改。
+
+GPU验证新增透明 SubViewport：alpha=.5纹理 × 拖动调制.6，读回须约.3（容差.015），旧链约.15。1280/1920三状态截图工具通过，UI81/81、1102断言通过，日志无 ERROR/SCRIPT ERROR/orphan/泄漏，diff检查通过。截图仍为 `card_reference_*`。材质光照、真实投影和完整瞬态闪烁仍待原作对拍，不能以本批修复宣称所有卡缘效果达到像素一致。
+
+## 用户三状态截图纠偏（2026-09-10，视觉仍未全量验收）
+
+用户参考：金币选中卡面、家传铠甲拖到阿尔图、装备后的详情。此前“prefab Outline 初始 inactive 所以永不绘制”和“卡名恒为 prefab fs30”的结论错误，本节覆盖这些历史结论。
+
+| 表现链 | 原作直接背书 | 本批修正 |
+| --- | --- | --- |
+| 选中亮边/顶部亮斑 | CardController.OnSelect 0x52b710 / OnDeselect 0x529ef0 切换 Outline@0x140；CardNew.prefab Outline sprite=card_outline_new、256×525、pos(0,22) | 使用已存在原图，位于卡面下方 Rect(-31,-73.5,256,525)，随选中切换；初始 inactive 不等于运行时永不显示。图中顶部亮斑是该原图的一部分，不凭静态截图新增粒子动画 |
+| 拖动透明 | OnBeginDrag 0x5294e0 将 dragAlpha@0x164 赋给 CardRender.targetAlpha@0x74；dump.cs CardController 字段、CardNew.prefab dragAlpha=0.6（覆写 ctor 0.5）；OnEndDrag 0x52a570 恢复1 | 预览 alpha=.6；Flash shader 同样尊重父级 alpha，避免拖动时亮边仍全不透明 |
+| 详情遮挡 | CardInfoNew.prefab panel.children: Equips 224017892387517381 → MainIconMask 224709890794832471 → BottomDecorate；用户图3独立确认 | 恢复装备在后、人物在前、装饰最前，取消旧创建顺序造成的装备遮住人物 |
+| 卡名运行时字号 | CardShowItem.prefab TextTranslate.key=@CARD_TITLE；textstyle.json 默认45、css_size md38等；TextTranslate.UpdateFontSize 0x1566920 | 接既有 SourceTextStyle，普通卡 @CARD_TITLE、苏丹卡 @CARD_SUDAN_TITLE，跟随设置变化，不再锁死30 |
+
+新增 `tools/verify_card_reference_states.gd` 以原配置金币7、阿尔图、梅姬、法拉杰、家传铠甲2000368重现三状态；阿尔图智慧3是用户图3可见的对拍 fixture，非默认开局或配置改动。2560请求在本机窗口模式实际捕获2560×1421（标题栏约束），图存 `docs/ui_layout/card_reference_{gold_selected,armor_drag,armor_detail}_2560.png`。另有1920输入走查；UI81/81、1101断言通过。
+
+**仍未通过像素级验收：** `card_metal.gdshader` 的光照仍是旧拟合模型，原作 `CardShow/Default` 导出文件为 DummyShaderTextExporter stub；没有依据把平均色接近等同于材质一致。本批未再用未经验证的亮度参数掩盖缺口。卡名的完整 TMP 材质效果、原作 dragAlpha 从1到.6的过渡曲线、逐帧材质高光也尚未完整重建。三处源链错误已修复不代表整个卡面还原完成。
+
+## 卡牌优先批次：真实输入路由（2026-09-10）
+
+本节更新下方 2026-09-09 拆分/堆叠批次的验收范围：直接调用 GameScreen 处理器只能验证数据，不能证明鼠标可用。原工具未发现同 ID 显示合并隐藏了拆分出的第二张卡。本批删除该显示合并，逐 UID 渲染、逐实例显示数量。
+
+原作背书：`CardController.c OnPointerUp 0x52afe0` 在持有时间超过 `holdTime@0x15c` 时跳过详情/拆分；命中 `Stackable` 时调用 `CardSplit(1)`。独立信号 `il2cpp_dump/stringliteral.json` 的 `0x25A13E8="Stackable"`，`dump.cs CardController` 的方法/字段；2026-09-10 原作 2560×1440 实机在继续存档点击金币数量牌，8→7+1，两张卡同时可见，既有详情保留（悬起后的徽记位置与静止位置不同）。`CardDropManager.c DropCard 0x4ef4f0` 对占用槽调用 `CardSlotController.CardStack`，手牌才调用 `CardController.CardStack 0x5286b0`。
+
+修复共用链：
+
+- 数量牌点击拆出 1 张；Shift+点击仍为原 SplitCard 提示层未迁移前的半分适配。
+- 长按松开不再误开详情；没有配对按下的松开不触发点击。
+- 仪式槽中的卡面将堆叠交给槽控制器，保留条件和锁定检查，避免发射无人监听的手牌堆叠信号。
+- 手牌重排动画保留稳定矩形命中，避免移动中的卡临时 IGNORE 导致堆叠被托盘当成插入；重播先取消旧 tween，防止旧完成回调覆盖新动画。此处为 Godot 输入承载修复，不宣称原 DOTween 逐帧一致。
+
+`tools/verify_card_surface.gd` 已改成 `root.push_input` 点击数量牌、拖动拆出卡并命中另一卡、长按阿尔图再松开；不再直接调用拆分/合并处理函数。1280×720 和 1920×1080 GPU 输入流程通过，检查可见独立 UID、7+1、合并回8、真实拖拽状态、目标命中及长按不打开详情。全量回归结果见本节后续验收记录。
+
+### 卡牌优先清单（不能按局部通过勾选全量完成）
+
+| 范围 | 当前边界 / 下一项 |
+| --- | --- |
+| 卡面外观、稀有度、数量、寿命 | 原资产几何已接；方向光、高光分布及各类卡面同状态对拍仍 🟡 |
+| 手牌点击、长按、拖放、拆分、堆叠 | 本批修复真实输入路由；原 SplitCard 提示层、跨页/边界完整对拍仍 🟡 |
+| 仪式投放、取回、占用槽堆叠、锁定 | 卡面委托及锁定回归已接；候选条件/数量过滤尚未全覆盖 🟡 |
+| 卡牌详情、改名、装备 | 本批补上手牌角色/详情接收装备、替换旧装备回手、详情即时刷新；主动卸装、提示及外部变更订阅仍 ⬜ |
+| 卡牌动画 | 悬起、回位、重排与长按提示已有；原作逐帧时序、拆分专用效果仍 🟡 |
+| 结算中的卡牌变化 | CardOpContext→OpCardShow→结果卡/入手牌播放链仍 ⬜，不能用 DSL 文本替代 |
+| 实例功能与存读档 | 继续以 UID、原作样本和规则方法为裁判；全部内容链未完成 |
+
+装备子批次背书：`CardDropManager.DropCard 0x4ef4f0` 明确按 CardStack→CardEquip 顺序尝试；`CardController.CardEquip 0x528020` 与 `CardInfoNewController.OnDrop 0x534410 / DropCard 0x533550` 共享 `CardExtensions.CanEquip 0x37ec10`，后者先找宿主第一种匹配槽，再以同类槽容量判断是否替换第一件装备。UI 接入既有 `GameState.attach_equipment(..., recover_replaced=true, enforce_slot=true)`，未另造装备内容或修改配置。手牌卡面与详情面板共用实时 UID 校验；仅详情本身可作为允许拖入装备的局部浮层，其余模态/已离开手牌的对象拒绝。
+
+新增 `tools/verify_card_equipment_input.gd`：原配置 2001193 / 2000246 / 2000252，真实鼠标拖到角色装备匕首→点击角色打开详情→拖长剑到详情替换→检查匕首回手、长剑归属、详情 UID 和数值重建。在1280×720、1920×1080通过，截图 `card_equipment_1280.png` / `card_equipment_1920.png`。这是克隆实际输入与源链对应验证，装备子批次尚无原作同状态逐帧对拍；不能宣称整页像素完成。独立卸装的 RemoveCard 0x536a00 已定位，但输入回调及不可卸装门尚未完全核实，本批不猜测点击即卸装。RequestSavePlayer、RequestUpdateRite 的完整通知链仍待对齐。
+
+验收记录：拆分/堆叠修复后全量518/518、3976断言；随后装备子批次专项：实例/门禁12/12、55断言，堆叠9/9、45断言。全量日志的3处临时 orphan 来自测试当帧查询被移出树且已 queue_free 的容器/帮助节点；对应测试补等2帧后，UI81/81、1096断言，仪式36/36、172断言，无 orphan/脚本错误/泄漏。最终相关组共138测试/1368断言，两个GPU输入工具均在1280/1920通过。`git diff --check`通过。未改动 `content/`，未提交或推送，保留其他会话改动。
+
 ## 按住提示：卡牌满足的仪式高亮（2026-09-09）
 
-`CardController.Update 0x52c890`：指针按住 ≥ **0.2s**（字段 0x15c，ctor 写入 `0x3e4ccccd`）时调用 `GameController.ShowSatisfiedRite 0x557a80`，随后清零计时（每次按住只触发一次）。`ShowSatisfiedRite` → `CardHandler.GetCardSatisfiedRite 0x532e10`：遍历玩家仪式，**跳过已开始的仪式**（`Rite.start +0x22`），对每个仪式调用 `RiteExtensions.GetSatisfiedSlotIndex 0x392ac0`，命中就收进列表；再对列表里每个仪式 `RiteController.ShowEffect(1)` → `RiteRender.ShowEffect 0x59be70`（重启动画 clip，导出体为空）。`CardController.OnPointerExit 0x52af50` 在 `IsShowCardInfo` 为假时 `CardResetMove` 收回。
+接手 DeepSeek 记录后复核：`CardController.Update 0x52c890` 比较是严格 **>0.2s**；`GameController.ShowSatisfiedRite` 正确 RVA 为 **0x5576b0**（dump.cs:320091），`CardHandler.GetCardSatisfiedRite` 为 **0x52e770**（dump.cs:317401），`RiteRender.ShowEffect` 为 **0x59cc70**（dump.cs:324645）。先前记录的 0x59be70 实为 OnUpdateBound，不是 ShowEffect。原作跳过 start 仪式、逐槽调用 GetSatisfiedSlotIndex 0x392ac0；ShowSatisfiedRite 对空列表不操作，不负责松开后取消动画。
 
-落地：`GameState.satisfied_rite_uids_for_card(uid, db, rng)`（跳过 `start`、跳过 `open_adsorb` 槽与已占用槽，槽条件复用 `_can_adsorb_card`，其上下文补上 `slot_entries`/`rite_uid`）；`CardWidget` 新增 `HOLD_HINT_SECONDS = 0.2` 按住计时 → `hold_hint_requested` / `hold_hint_cleared`（松开、移出、拖拽时清除）；`GameScreen` 转给 `MapController.show_satisfied_rites(uids)`，命中的 RiteNew 卡置 `satisfied_hint` 并做 modulate 脉冲（对应 `ShowEffect(1)`，clip 无导出体故为近似）。新增 `tests/test_card_hold_hint.gd`（4 测试 / 14 断言：槽条件命中与不命中、`start` 跳过、槽占满后不再提示、0.2s 阈值与每次按住只发一次、地图只高亮命中的卡），并在 `verify_card_surface.gd` 里经生产 GameScreen 按住阿尔图验证「高亮 ≥1 个仪式 → 松开清空」。
+原动画实际完整存在：`Resources/anims/rite/card_satisfied.anim`（stringliteral 0x25949A8）。IconOutline 白色 alpha 在 0/.25/.75/1 秒为 0/1/1/0、零切线，非循环，1秒 PostEffect。现删除整块标牌无限变色，重放该轮廓曲线；重复触发重置到起点，松开不提前取消。普通仪式使用 RiteNew.prefab 的 rite 精灵（rite_outlines 图集195x273）、152x208矩形、pos(0,-23.6)、pivot(.5,0)，放在标题之后图标之前。CardWidget 暂停及开始拖拽清除待触发计时，GameScreen 阻断时不触发背景提示。6项专项测试覆盖阈值、取消、自动结束、重播与曲线采样；GPU工具改为 root.push_input 真实鼠标命中，检查按住触发与自动结束。
 
-保留差异：`ShowEffect(1)` 的原动画 clip 未导出，脉冲为近似（🟡）；0x160/0x18c 的其它按住分支未接。
+保留差异：动画 TitleBG/Title/TitleOutline 路径与此份 RiteNew.prefab 的 TitleBG/TitleOutline 不同，标题轮廓是否实际绑定需原作运行时验证，未猜测启用；type1/2 专用图标尺寸与偏移仍未完整映射。GetSatisfiedSlotIndex 的 CanPutCard/adsorb_spec 与部分数量匹配上下文尚未完整迁移，因此不能把候选集合称为全条件一致。其他按住分支、拆分输入层和装备交互仍待补齐。
+
+接手验收：原记录最后的后台回归已结束，原基线504/504、3838断言。修正后完整GUT506/506、3850断言，零引擎错误/泄漏；最后锚点修正后专项6/6、26断言，1280x720 GPU日志无警告。1920x1080与1280x720真实鼠标按住均命中阿尔图并显示事件轮廓，截图 `card_hold_1920.png` / `card_hold_1280.png`。这些是克隆输入与曲线回放证据，不是原作同状态逐帧对拍。尚未完成的全卡面/全交互目标继续保留，不能按此前整卡颜色均值差小于6%宣称像素级完成。
 
 ## 卡牌堆叠/拆分交互（2026-09-09，源语义落地）
 
-`CardController.CardSplit 0x528390`：要求 `count > n`，源卡 `count -= n`，副本走 `CardExtensions.Copy`（bag/bagpos 一并继承）后由 `CardDropManager.BackToHandOrBag` 放回手牌；`OnPointerUp 0x52afe0` 在"可堆叠且 count>1 + SplitCard 提示（A+B）被按住"时调用 `CardSplit(count/2)`。`CardController.CardStack 0x5286b0`：同卡 id 且双方带 `可堆叠` 时 `目标.count += 源.count`，源卡 `PlayerExtensions.RemoveCard` 移除、目标回到自己的 bag/bagpos；`CardDropManager.DropCard` 对**手牌目标**调 CardStack、对**已占用的仪式槽**调 `CardSlotController.CardStack`。`CardController.Update` 另有 0.2s（0x3e4ccccd）按住阈值 → `GameController.ShowSatisfiedRite` 提示（宿主未接，见下）。
+`CardController.CardSplit 0x528580`：要求 `count > n`，源卡 `count -= n`，副本走 `CardExtensions.Copy`（bag/bagpos 一并继承）后由 `CardDropManager.BackToHandOrBag` 放回手牌；`OnPointerUp 0x52afe0` 在"可堆叠且 count>1 + SplitCard 提示（A+B）被按住"时调用 `CardSplit(count/2)`。`CardController.CardStack 0x5286b0`：同卡 id 且双方带 `可堆叠` 时 `目标.count += 源.count`，源卡 `PlayerExtensions.RemoveCard` 移除、目标回到自己的 bag/bagpos；`CardDropManager.DropCard` 对**手牌目标**调 CardStack、对**已占用的仪式槽**调 `CardSlotController.CardStack`。`CardController.Update` 另有 0.2s（0x3e4ccccd）按住阈值 → `GameController.ShowSatisfiedRite` 提示（宿主未接，见下）。
 
 落地：`GameState.split_card_stack(uid, amount=-1)`（默认 count/2）与 `GameState.stack_cards(target_uid, source_uid)`（同 id + 双可堆叠 + 移除源卡）；`CardWidget` 增加 `stack_dropped`（拖到同 id 可堆叠手牌上合并，`CardDropManager` 手牌分支）与 `split_requested`；`rite_view.drop_card_on_slot` 对已占用且同 id 可堆叠的槽改为合并（`CardSlotController.CardStack`）。新增 `tests/test_card_stacking.gd`（7 测试 / 33 断言）覆盖拆分计数与 bag/bagpos 继承、`count>n` 门槛、合并移除源卡、非同 id/非可堆叠拒绝、拖放门禁；`tools/verify_card_surface.gd` 追加端到端：经生产 GameScreen 的处理器拆分 8→4+4（对象数 2、总数不变）再合并回 1 个 8。
 
@@ -316,3 +574,26 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 - **远期**：固定种子 trace 对拍（同一操作脚本下原作 vs 克隆的事件/结算日志序列）。
 - **UI 布局对拍 ✅（2026-08-18 批次 P）**：`tools/export_ui_layout.gd` 解析语料 AssetRipper 场景/prefab YAML，产出 RectTransform 真值表（锚点/位置/尺寸/pivot/缩放 + CanvasScaler + LayoutGroup 参数 + sprite guid→语料路径）至 `docs/ui_layout/`；主画布设计空间 = **3840×2160**。表现层批次的验收 = 每个摆位数字能回指真值表行；视觉证据用 `tools/dev_screenshot_runner.tscn` 截图。
 
+## 仪式实机复核纠偏（2026-09-10，进行中）
+
+原作实机 `original_runtime/rite_result_power_20260910.jpg` 与 `.prefab` 双信号确认此前结果表面存在坐标换算错误；以下修正优先于旧批次中的几何完成声明。
+
+- `RiteResultPanel.prefab`：Result top-right anchor/pivot 折算为 `(1786.367,191.797)`；Op BG bottom-right 折算为 `(1804,1403)`；Next 相对 Op BG `(185,16)`，AutoPlay `(864,42)`；PlayRate `(3067,1441)`。标题 y=55。骰子两层 y=297/427。
+- `RitePanelTitle.prefab`：Help 依附 CommonContent 中心，偏移 `(0,210)`，4096×2160；Prompt 自身偏移 `(-949,-233)`；Mask alpha=128/255。帮助文字必须保留父级几何，不能当全屏固定坐标。
+- `RiteResultPanelController.c AddCardOp 0x5a0e60 / MoveOpCardsToResults 0x5a36f0 / AddCardToResults 0x5a0ff0` + dump.cs:325461–325462、321454–321455：Op Results/Op Hand Results 是按 OpCardShow.IsHandCard 分流的操作卡牌，不是 result/action DSL 键列表。删除无背书的 DSL 文字与槽卡快照伪结果，完整 CardOpContext 表现链仍缺失。
+- 结算文案入口：`DisplayClass77_0.<DoPriorSettlement>b__3 0x5b5b70`、`DisplayClass79_0`、`AppendResultText 0x5a13e0` + content/variable.json 的 RITE_SETTLEMENT_RESULT_*。先恢复 prior/normal/extre 真实文本，去掉自制金币余额、检定键与“已执行N条”；TMP sprite/标题模板和串行承诺链单独列为未完成。
+
+### 本批实现与验证补记
+
+- 金骰/重投：`RiteResultDiceCountPromptController.c Show 0x59de70 / OnGoldAdd 0x59d360 / OnGoldCancel 0x59d6f0 / OnGoldConfirm 0x59d8b0 / OnRedraw 0x59dc40 / OnRedrawCancel 0x59da10`；dump.cs:324673–324752 的 GoldAddCount@0xD4/RedrawUsed@0xDC 与确认按钮字段为第二信号。源 prefab 左右壳层与四个确认/取消入口已落地，暂选不写玩家资源，确认才重结算。bg_5/gold_bg/gold_active 为有界源资产导入。
+- `with_player_actor_context` 会 deep-copy ctx；UI 重算后必须重新绑定其持有的 live dice_cache，否则 FuncCompare.dices@0x40 缓存没有写回。修复于 RiteView._do_resolve；测试覆盖真实挂树的UI、选择2枚/取消/互斥/重复确认/原骰面保留。原依据 FuncCompare.IsSatisfied 0x3fc060 + DisplayClass88_0 b__5 0x5b7fe0。
+- 结果文案开场来源 `Settlement 0x5a4800` RiteNode.text@0x20→ShowTextWithSeperator，回调 DisplayClass56_0 b__0 0x5b3300。结果正文 prefab TextTranslate 114117307842306080 实为 @MAIN_BODY、TMP paragraphSpacing=80；纠正旧错误样式。速度从 variable.json result_text_play_rate/result_text_auto_play_rate读取（dump.cs:387291–387293 + UpdateResultTextSpeed0x5a74a0），完整自动推进仍缺。
+- Help TimePrompt 的 TMP verticalAlignment=1024（Bottom）已应用；原作实机 rite_help_20260910.jpg 与两尺寸宿主截图留档。DicesBG 原Sprite1744×1608，GameScene正交相机8.91、DiceShow1800高，投影尺寸按1800/1782计算；精确光照仍未回放。
+- 真实输入：1280/1920准备拖放→开始→重开运行→锁槽→停止；结果金骰/重投/播放开关/继续；帮助两尺寸打开与关闭；事件等待1280。删除verify脚本直接调用处理函数的成功兜底。
+- 回归：36/36仪式、172断言；81/81 UI、1096断言。516项全量初跑唯一失败为半像素位置取整，两层已保留源半单位坐标并通过相关组复跑。content parity3883/0。未改原作语料，未提交/推送。
+
+**保留缺口**：CardOpContext→OpCardNew→OpCardShow→结果列表链；逐骰/成功环动画、数字精灵、金骰逐检定阶段；标题TMP模板；AutoPlay串行自动推进；整页同存档逐帧对拍。详见 `docs/ui_layout/PageFidelity.md` 最新节。此前“PlayRate y=275”“结果可用通用确认框”等记录作废。
+
+### 2026-09-11 接手验收修订
+
+DeepSeek 第十九至三十六批已在工作区，接手记录见 [DeepSeekHandoffReview](audit/DeepSeekHandoffReview.md)。A19 付款辅助函数未接游戏拖卡，原 CardStack 已占槽合堆分支及完整条件上下文仍缺，不能按第36批文档标题认定完成；A21 原 CardSlotController.CardStack/DropCard 已有配音调用点，需继续追 SFxManager 选择与播放链。详细更正见 [CostPaymentExecutionCorrection](audit/CostPaymentExecutionCorrection.md)。

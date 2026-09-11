@@ -1,4 +1,4 @@
-﻿## Condition DSL evaluator.
+## Condition DSL evaluator.
 ## Dispatch table transcribed from dump.cs [Condition(...)] attributes (lines 416xxx).
 ## Handles the keys that appear in rite settlement conditions:
 ##   r1:/f: attribute/dice checks -> FuncCompare
@@ -786,7 +786,8 @@ static func _selector_value_tag(selector: String) -> String:
 static func _have_count(st, db, domain: Array, selector: String) -> int:
 	var total := 0
 	for inst in domain:
-		if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), inst.tags, db, selector):
+		var tags: Dictionary = st.effective_card_tags(inst.uid, db) if st != null and st.has_method("effective_card_tags") else inst.tags
+		if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), tags, db, selector):
 			continue
 		var value_tag := _selector_value_tag(selector)
 		if value_tag == "" or value_tag == "count":
@@ -796,7 +797,7 @@ static func _have_count(st, db, domain: Array, selector: String) -> int:
 			# then lifetime reads as the instance's remaining life (0).
 			total += 0
 		else:
-			total += int(inst.tags.get(value_tag, 0))
+			total += int(tags.get(value_tag, 0))
 	return total
 
 
@@ -874,15 +875,15 @@ static func eval_sudan_pool_have(k: String, _val: Variant, ctx: Dictionary) -> b
 	var kk := k.substr(1) if neg else k
 	var rest := kk.substr("sudan_pool_have.".length() if "sudan_pool_have." in kk else "sudan_pool_have".length())
 	var parsed := _split_name_op(rest)
-	# The pool stays config ids until drawn; runtime tag overrides live in
-	# sudan_pool_tags, so count matched pool entries by id with tag overrides.
-	# [SRC: SudanPoolHaveCardCount.c @ 0x409760 iterates player.sudan_card_pool]
+	# Count pool OBJECTS, not distinct ids: the original walks
+	# player.sudan_card_pool, which holds duplicate ids as separate Cards.
+	# [SRC: SudanPoolHaveCardCount.c @ IsSatisfied 0x409760 iterates player+0xB0]
 	var total := 0
 	if st != null:
-		for pool_id in st.sudan_deck:
-			var cid := int(pool_id)
-			var pool_tags: Dictionary = st.sudan_pool_tags.get(cid, {}) if st.get("sudan_pool_tags") is Dictionary else {}
-			if RuntimeOperationFilter.matches_card_data(cid, pool_tags, db, parsed.name):
+		for entry in st.sudan_deck:
+			if RuntimeOperationFilter.matches_card_data(
+				int(entry.card_id), st.sudan_pool_entry_tags(entry, db), db, parsed.name
+			):
 				total += 1
 	var ok := apply_compare(total, int(_val), parsed.op)
 	return ok if not neg else not ok
@@ -917,14 +918,87 @@ static func eval_rare(val: Variant, ctx: Dictionary) -> bool:
 
 
 static func eval_cost(k: String, val: Variant, ctx: Dictionary) -> bool:
-	# In slot prechecks, cost.* means the dragged card/resource must be able to
-	# satisfy that resource tag; exact consumption is handled by result/action.
-	var card: Dictionary = ctx.get("acting_card", {})
-	var tag_name := k.substr("cost.".length())
-	var tags: Dictionary = card.get("tag", {})
-	if val is Array:
-		return int(tags.get(tag_name, 0)) >= int(val[0])
-	return int(tags.get(tag_name, 0)) >= int(val)
+	# CostCondition is not "does the acting card carry this tag": it walks
+	# Player.cards@0x88 in order, keeps every card the inner Compare accepts,
+	# accumulates Card.count until the requirement is met and records that
+	# selection as need_cost_cards. The requirement's lower bound is the first
+	# element of a two-element value; a scalar is that same lower bound.
+	# [SRC: decompiled/CostCondition.c @ IsSatisfied (RVA 0x3f6160): outer
+	#       List_Enumerator over player+0x88, FUN_1800032d0 add to the list,
+	#       iVar10 += card.count@0x20, stop at the min; SetNeedCosts(count,
+	#       cards); return iVar8 <= iVar10. ConditionContext cost fields:
+	#       dump.cs is_cost@0x60 / cost_count@0x64 / need_cost_cards@0x68.]
+	var st = ctx.get("state")
+	var db = ctx.get("db")
+	if st == null or db == null or not st.has_method("cost_candidate_cards"):
+		return false
+	var parsed := cost_selector(k)
+	parsed["min"] = int(val[0]) if val is Array and not (val as Array).is_empty() else int(val)
+	parsed["max"] = int(val[1]) if val is Array and (val as Array).size() >= 2 else 2147483647
+	var cards: Array = st.cost_candidate_cards()
+	var total := 0
+	var selected: Array = []
+	for card in cards:
+		if card == null:
+			continue
+		if not _cost_card_matches(parsed, card, db, st):
+			continue
+		selected.append(card)
+		total += maxi(int(card.count), 1)
+		if total >= int(parsed["min"]):
+			break
+	ctx["need_cost_cards"] = selected
+	ctx["cost_count"] = cost_count_for(parsed, total)
+	return total >= int(parsed["min"])
+
+
+## Split a `cost.<selector><op>` key into its selector, dropping the op suffix.
+## The op is part of the inner Compare; the gate only needs the lower bound.
+## [SRC: CostCondition.c @ .ctor (RVA 0x3f6880) -> Compare.Update(param_3)]
+static func cost_selector(k: String) -> Dictionary:
+	var body := k.substr("cost.".length()) if k.begins_with("cost.") else k
+	for op in OPS:
+		var idx := body.find(op)
+		if idx > 0:
+			body = body.substr(0, idx)
+			break
+	return {"name": body}
+
+
+## The count the payer hands over, i.e. ConditionContext.cost_count@0x64. This
+## is the amount CardSlotController.CardStack 0x53b0a0 later splits off the
+## stack; it is NOT the running total the enumeration walked.
+##
+## Regression note: this used to be documented as "the count PayCosts would hand
+## over". No PayCosts method exists anywhere in the corpus -- the name was
+## invented. The real splitter is CardSlotController.CardStack.
+## [SRC: CostCondition.c @ IsSatisfied (0x3f6160) tail: with max == int.MaxValue
+##       iVar9 = min when total >= min; else iVar9 = max when total >= min and
+##       max < total; otherwise iVar9 = the running total. SetNeedCosts(+0x64).]
+static func cost_count_for(parsed: Dictionary, total: int) -> int:
+	var lo := int(parsed.get("min", 0))
+	var hi := int(parsed.get("max", 2147483647))
+	if total >= lo and hi < total:
+		return hi
+	if total >= lo and hi >= 2147483647:
+		return lo
+	return total
+
+
+## Does one candidate card satisfy the cost selector? Numeric selectors are card
+## definition ids; everything else is a tag name resolved through the card's
+## effective tag row.
+## [SRC: CostCondition.c @ .ctor (RVA 0x3f6880) decides id-vs-tag by parsing the
+##       selector as an int >= 2000000; the tag branch goes through GetTag.]
+static func _cost_card_matches(parsed: Dictionary, instance, db, state) -> bool:
+	var name := str(parsed.get("name", ""))
+	if name.is_empty() or instance == null:
+		return false
+	if name.is_valid_int():
+		return int(instance.card_id) == name.to_int()
+	if not state.has_method("effective_card_tags"):
+		return false
+	return int(state.effective_card_tags(int(instance.uid), db).get(name, 0)) > 0
 
 
 static func _can_eval_acting_tag(k: String, ctx: Dictionary) -> bool:

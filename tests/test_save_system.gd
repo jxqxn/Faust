@@ -27,7 +27,7 @@ func test_save_load_round_trip_preserves_state():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
-	state.sudan_pool_tags[2010001] = {"存档牌池标签": 2}
+	state.set_sudan_pool_tags_for_id(2010001, {"存档牌池标签": 2})
 	state.auto_gen_sudan_card = false
 	state.sudan_card_init_life = 4
 	state.sudan_redraw_times_per_round = 3
@@ -107,7 +107,8 @@ func test_save_load_round_trip_preserves_state():
 	assert_eq(int(state2.player_actor_data(db).get("id", 0)), 2000001, "restored actor remains the protagonist")
 	assert_eq(state2.hand.size(), state.hand.size(), "hand size preserved")
 	assert_eq(state2.sudan_deck.size(), state.sudan_deck.size(), "sudan_deck size preserved")
-	assert_eq(state2.sudan_pool_tags, state.sudan_pool_tags, "Sultan pool runtime tags preserved")
+	assert_eq(state2.sudan_deck_ids(), state.sudan_deck_ids(), "the pool round-trips object for object")
+	assert_eq(state2.sudan_pool_tags(), state.sudan_pool_tags(), "Sultan pool runtime tags preserved")
 	assert_eq(state2.auto_gen_sudan_card, state.auto_gen_sudan_card, "Sultan auto-generation flag preserved")
 	assert_eq(state2.sudan_card_init_life, 4, "Player-owned Sultan birth head start preserved")
 	assert_eq(state2.sudan_redraw_times_per_round, 3, "redraw allowance preserved")
@@ -260,12 +261,14 @@ func test_generation_counters_follow_new_card_and_tag_code_boundaries() -> void:
 	assert_eq(int(state.gen_tags.get("physique", 0)), 3,
 		"the Common.MarkTagGen-equivalent accepts localized config names")
 	var sultan_state := GameState.new()
-	sultan_state.sudan_pool_tags[2010001] = {"体魄": 9}
-	RoundLoop._create_sudan_instance(sultan_state, db, 2010001)
+	sultan_state.add_sudan_pool_card(2010001)
+	sultan_state.sudan_deck[0].tags = {"体魄": 9}
+	var promoted = RoundLoop._promote_sudan_pool_entry(sultan_state, db, sultan_state.sudan_deck[0])
 	assert_eq(int(sultan_state.gen_cards.get(2010001, 0)), 1,
 		"GenSudanCard's separate creation path records its card object")
 	assert_eq(int(sultan_state.gen_tags.get("physique", 0)), 1,
 		"Sultan pool tags are present before the generation record")
+	assert_eq(int(promoted.tags.get("体魄", 0)), 9, "the pool object's own delta travels with it")
 
 
 func test_continue_load_rejects_unmarked_legacy_save():
@@ -298,13 +301,44 @@ func test_v4_save_is_rejected_after_card_instance_schema_upgrade():
 func test_v5_save_without_sudan_pool_fields_uses_compatible_defaults():
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(53))
-	var old_v5 := SaveSystem.serialize(state)
-	old_v5.erase("sudan_pool_tags")
-	old_v5.erase("auto_gen_sudan_card")
+	var legacy_ids: Array = state.sudan_deck_ids()
+	var old_v5 := {
+		"version": 5,
+		"difficulty_index": state.difficulty_index,
+		"round_number": state.round_number,
+		"sudan_deck": legacy_ids,
+		"auto_gen_sudan_card": true,
+	}
 	var loaded := GameState.new()
 	SaveSystem.deserialize(old_v5, loaded, db)
-	assert_eq(loaded.sudan_pool_tags, {}, "old v5 saves default to no Sultan pool tag state")
+	# The read view is per card id, so an id-list round trip still yields one
+	# (empty) entry per id; what matters is that no tag state is invented.
+	var restored_tags: Dictionary = loaded.sudan_pool_tags()
+	assert_eq(restored_tags.size(), state.sudan_pool_tags().size(),
+		"old v5 saves default to no Sultan pool tag state")
+	for card_id in restored_tags:
+		assert_eq(restored_tags[card_id], {}, "no tag state is invented for id %d" % card_id)
+	assert_eq(loaded.sudan_deck_ids(), legacy_ids, "legacy id rows upgrade to one pool object each")
 	assert_true(loaded.auto_gen_sudan_card, "old v5 saves keep Sultan auto-generation enabled")
+
+
+func test_legacy_id_keyed_pool_tags_upgrade_to_pool_objects():
+	var state := GameState.new()
+	var legacy := {
+		"difficulty_index": 1,
+		"round_number": 1,
+		"sudan_deck": [2010001, 2010002, 2010001],
+		"sudan_pool_tags": {"2010001": {"牌池测试": 3}},
+		"auto_gen_sudan_card": true,
+	}
+	var loaded := GameState.new()
+	SaveSystem.deserialize(legacy, loaded, db)
+	assert_eq(loaded.sudan_deck.size(), 3, "every legacy id row becomes a pool object")
+	assert_eq(int(loaded.sudan_deck[0].tags.get("牌池测试", 0)), 3,
+		"the legacy per-id delta lands on the first matching object")
+	assert_eq(int(loaded.sudan_deck[2].tags.get("牌池测试", 0)), 3,
+		"and on every object sharing that id, matching the old id-keyed read view")
+	assert_eq(int(loaded.sudan_pool_next_uid), 4, "minted uids stay unique")
 
 
 func test_v5_save_without_world_fields_resumes_on_default_rooftop():

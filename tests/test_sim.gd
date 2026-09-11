@@ -63,7 +63,7 @@ func test_any_all_logic():
 func test_table_and_sudan_pool_have_positive_and_negative_conditions():
 	var st := GameState.new()
 	st.add_card_to_slot(2000005, 1, db)
-	st.sudan_deck = [2010001]
+	st.reset_sudan_pool_to_ids([2010001])
 	var ctx := _make_ctx(st, RNG.new(1))
 	assert_true(ConditionEval.eval_key("table_have.2000005", 1, ctx))
 	assert_false(ConditionEval.eval_key("!table_have.2000005", 1, ctx))
@@ -471,7 +471,7 @@ func test_methinks_consume_last_sudan_triggers_new_round():
 	# Ensure exactly one active sudan and a non-empty deck for the next draw.
 	state.active_sudan_cards.clear()
 	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 7, 1))
-	state.sudan_deck = [2010002, 2010003]
+	state.reset_sudan_pool_to_ids([2010002, 2010003])
 	var round_before := state.round_number
 	var result := MethinksEngine.process_card(2010001, "active_sudan", state, local_db, rng)
 	assert_true(result.get("accepted", false), "methinks accepts the sudan card")
