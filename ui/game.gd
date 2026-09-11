@@ -249,10 +249,6 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	_close_rite_overlay()
 	_current_rite_uid = instance.uid
 	_current_rite_id = instance.id
-	# Fire rite-start event triggers for the opening rite.
-	# [SRC: RitePanelController.__c__DisplayClass34_0.c:16 -> OnRiteStart]
-	if state != null:
-		state.trigger_events("rite_start", {"rite": instance.id})
 	var rv := RiteView.new()
 	rv.setup(state, db, rng, instance.id, instance.uid)
 	rv.closed.connect(_close_rite_overlay)
@@ -472,10 +468,7 @@ func _close_user_archive_overlay() -> void:
 
 
 func _after_rite_resolution() -> void:
-	# Fire rite-end event triggers for the just-resolved rite.
-	# [SRC: RiteResultPanelController.c:1289 -> OnRiteEnd]
-	if state != null and _current_rite_id != 0:
-		state.trigger_events("rite_end", {"rite": _current_rite_id})
+	# The shared settlement host dispatches rite_end exactly once.
 	# No same-day round start: consuming a Sultan card does not draw the next
 	# one until the next day boundary (TryGenSudanCard lives in OnNextRound).
 	if _game_screen != null:
@@ -483,8 +476,48 @@ func _after_rite_resolution() -> void:
 
 
 func _on_advance() -> void:
+	if not state.round_transition.is_empty() or not state.rite_settlements.is_empty() or not state.rite_confirmations.is_empty() or not state.think_session.is_empty() or not state.pending_operations.is_empty():
+		return
 	_audio.play("button-next-day.ogg")
-	var result := RoundLoop.advance_day(state, db, rng)
+	var result := RoundLoop.advance_day(state, db, rng, true)
+	if not state.round_transition.is_empty():
+		_drive_round_settlements()
+		return
+	_finish_round_display(result)
+
+
+func _process(_delta: float) -> void:
+	if state == null or _game_screen == null or not is_instance_valid(_game_screen):
+		return
+	RiteSettlement.pump(state, db, rng)
+	RiteSettlement.pump_confirmations(state)
+	if not state.round_transition.is_empty():
+		_drive_round_settlements()
+
+
+func _drive_round_settlements() -> void:
+	if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty() or _rite_overlay != null:
+		return
+	var transition: Dictionary = state.round_transition
+	transition = RoundLoop.resume_day(state, db, rng)
+	if state.round_transition.is_empty():
+		_finish_round_display(transition)
+		return
+	if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty():
+		return
+	var due: Array = transition.get("due_rites", [])
+	while not due.is_empty():
+		var uid := int(due[0])
+		if state.get_rite_instance(uid) == null:
+			due.pop_front()
+			continue
+		_on_open_rite_instance(uid)
+		if _rite_overlay != null:
+			_rite_overlay._resolve()
+		return
+
+
+func _finish_round_display(result: Dictionary) -> void:
 	var log_text := "第 %d 天。" % state.day
 	if result.game_over:
 		log_text += "\n☠ 一张苏丹卡到期未完成！游戏结束。"

@@ -53,16 +53,18 @@ func test_gold_dice_reresolve_does_not_apply_results_twice():
 	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
-	assert_eq(state.coin_count, 5, "first resolve applies reward once")
+	assert_eq(state.coin_count, 0, "selection does not execute finalResults")
 	assert_eq(state.gold_dice, 2, "first resolve does not spend gold dice")
 
 	view._use_gold_dice_reactive()
-	assert_eq(state.coin_count, 5, "gold-dice re-resolve restores baseline before applying reward")
+	assert_eq(state.coin_count, 0, "gold-dice retry only repeats selection")
 	assert_eq(state.gold_dice, 1, "one gold die spent")
 
 	view._use_gold_dice_reactive()
-	assert_eq(state.coin_count, 5, "second gold-dice re-resolve still applies reward once")
+	assert_eq(state.coin_count, 0, "second retry still has no world reward")
 	assert_eq(state.gold_dice, 0, "second gold die spent")
+	view._commit_resolution()
+	assert_eq(state.coin_count, 5, "finalResults execute once after accepting the decision")
 
 func test_gold_dice_reresolve_reuses_cached_dice():
 	var rng := RNG.new(77)
@@ -149,7 +151,8 @@ func test_result_surface_replays_source_play_rate_button():
 	assert_false(auto_button.visible, "AutoPlay is hidden before settlement")
 	view._rite["auto_result"] = 0
 	view._toggle_result_auto_play()
-	assert_true(state.auto_result_rites.has(5000001), "AutoPlay reuses the source auto-result flag")
+	assert_true(state.rite_auto_result, "AutoPlay writes Player+0x160, independent of per-rite automation")
+	assert_false(state.auto_result_rites.has(5000001))
 	assert_eq(auto_button.get_node("Art").texture.resource_path, "res://assets/original/ui/auto_play_active.png")
 
 func test_result_text_uses_source_typewriter_and_next_skips_before_commit():
@@ -283,9 +286,18 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	var rites_before := state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size()
 
 	view._resolve()
+	view._commit_resolution()
 
-	assert_true(state.is_event_enabled(5310008), "event_on should enable the runtime event")
-	assert_true(5310008 in state.event_queue, "start-trigger event should enter the runtime event queue")
+	assert_eq(str(state.event_prompts[0].get("id", "")), "think_pop.5310008_01", "nested event prompt runs before the following action")
+	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before, "finalOperations wait for the nested event")
+	var operation := state.consume_pending_operation()
+	OperationsSequence.resume(operation, state, db, rng)
+	view._advance_settlement_execution()
+	for i in range(8):
+		if state.pending_operations.is_empty() or str(state.event_prompts[0].get("id", "")) == "p1":
+			break
+		OperationsSequence.resume(state.consume_pending_operation(), state, db, rng)
+		view._advance_settlement_execution()
 	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "rite result creates a fresh runtime rite entry")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "p1", "prompt should enter the runtime prompt queue")
 
@@ -312,6 +324,7 @@ func test_rite_resolution_choose_executes_one_random_suboperation():
 
 	view._resolve()
 
+	view._commit_resolution()
 	assert_eq(state.event_prompts.size(), 1, "choose executes its single nested operation")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "pop.test", "the nested pop operation runs as-is")
 	assert_eq(str(state.event_prompts[0].get("text", "")), "hello")
@@ -445,7 +458,7 @@ func test_manual_rite_settlement_waits_for_confirmation_before_removing_instance
 	view._resolve()
 	assert_not_null(state.get_rite_instance(view._rite_uid), "first confirmation opens a retryable result preview")
 	assert_signal_not_emitted(view, "resolved", "preview must not announce a completed rite")
-	assert_eq(state.coin_count, 2, "preview exposes the computed result")
+	assert_eq(state.coin_count, 0, "selection keeps finalResults unexecuted")
 
 	view._resolve()
 	assert_null(state.get_rite_instance(view._rite_uid), "second confirmation commits and removes the rite instance")
@@ -498,9 +511,10 @@ func test_closing_pending_result_restores_uncommitted_world_effects():
 	view._result_label = _owned(RichTextLabel.new()) as RichTextLabel
 
 	view._resolve()
-	assert_eq(state.coin_count, 4, "preview applies its result into the rollback transaction")
+	assert_eq(state.coin_count, 0, "selection has no world transaction to roll back")
+	state.add_coin(3, db)
 	view._close_panel()
-	assert_eq(state.coin_count, 0, "closing the retryable preview restores the pre-result state")
+	assert_eq(state.coin_count, 3, "closing cannot overwrite unrelated live world changes")
 	assert_not_null(state.get_rite_instance(view._rite_uid), "cancelled preview leaves the rite open")
 
 
@@ -641,7 +655,7 @@ func test_reopened_running_rite_cannot_settle_before_source_life_boundary():
 	assert_false(view._resolve_btn.disabled)
 	view._resolve()
 	assert_true(view._resolution_pending)
-	assert_eq(state.coin_count, 6)
+	assert_eq(state.coin_count, 0)
 
 
 func test_result_prompt_blocks_commit_cancel_and_retry_until_response():
@@ -657,6 +671,7 @@ func test_result_prompt_blocks_commit_cancel_and_retry_until_response():
 	await wait_process_frames(2)
 	watch_signals(view)
 	view._resolve()
+	view._commit_resolution()
 	view._rerolls_left = 1
 	view._update_result_wait_controls()
 	var before := SaveSystem.serialize(state)
@@ -680,8 +695,7 @@ func test_result_prompt_blocks_commit_cancel_and_retry_until_response():
 	# Actual queue completion path, including close_prompt and continuations.
 	screen._consume_event_display()
 	await wait_process_frames(2)
-	assert_false(view._resolve_btn.disabled)
-	view._commit_resolution()
+	assert_true(view._resolution_committed, "serial completion finishes after the response")
 	assert_null(state.get_rite_instance(view._rite_uid))
 	assert_eq(state.coin_count, 6, "waiting must not replay the reward")
 	assert_signal_emitted(view, "resolved")
@@ -694,6 +708,7 @@ func test_zero_day_auto_result_waits_for_prompt_before_closing():
 	var rng := RNG.new(513)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 1, rng)
+	state.auto_result_rites.append(992002)
 	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, local_db, rng, 992002)
 	add_child(view)
@@ -712,6 +727,29 @@ func test_zero_day_auto_result_waits_for_prompt_before_closing():
 	assert_signal_emitted(view, "resolved")
 	assert_signal_emitted(view, "closed")
 	assert_null(state.get_rite_instance(view._rite_uid))
+
+
+func test_auto_result_capability_does_not_skip_player_decision():
+	var local_db := _db_with_manual_rites()
+	local_db.rites[992002]["auto_result"] = 1
+	var state := GameState.new()
+	var rng := RNG.new(513)
+	state.setup_new_run(local_db, 1, rng)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, local_db, rng, 992002)
+	add_child(view)
+	view._resolve()
+	assert_true(view._resolution_pending)
+	assert_false(view._resolution_committed, "config permits automation; player has not enabled it")
+	assert_eq(state.coin_count, 0, "selection must await the result decision")
+	view._toggle_result_auto_play()
+	assert_true(state.rite_auto_result, "playback belongs to the global flag at Player+0x160")
+	assert_false(state.auto_result_rites.has(992002), "playback does not hide future results")
+	view._toggle_auto_result()
+	assert_true(state.auto_result_rites.has(992002))
+	view._toggle_result_auto_play()
+	assert_false(state.rite_auto_result)
+	assert_true(state.auto_result_rites.has(992002), "per-rite automation survives playback changes")
 
 
 func test_confirm_records_manual_rite_slots_for_last_state_restore():
@@ -866,16 +904,21 @@ func test_result_text_uses_matched_prior_and_extra_content_without_dsl_debug_row
 	view.setup(state, db, rng, 5000001)
 	add_child(view)
 	var res := RiteResolver.RiteResult.new()
-	res.prior_log = [{"result_title": "前置标题", "result_text": "前置正文", "result": {"coin": 5}}]
+	res.settlements = [{"result_title": "前置标题", "result_text": "前置正文", "result": {"coin": 5}}]
 	view._display_result(res)
-	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n前置标题\n前置正文", "prior settlement has its own source text")
+	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text), "only introduction starts before the player advances")
+	view._advance_result_text()
+	assert_eq(view._result_paragraph_index, 1, "first click finishes typing without advancing")
+	view._advance_result_text()
+	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n\n前置标题", "second click appends next paragraph")
+	view._advance_result_text()
+	view._advance_result_text()
+	assert_true(view._result_surface_text.get_parsed_text().ends_with("\n\n前置正文"))
 	assert_eq(view._result_ops_layer.get_child_count(), 0, "raw DSL keys are not operation card results")
 	assert_eq(view._result_cards_layer.get_child_count(), 0, "slot snapshots are not operation card playback")
-	res.prior_log.clear()
-	res.normal_entry = {"result_text": "普通正文"}
-	res.extre_log = [{"result_text": "额外正文"}]
+	res.settlements = [{"result_text": "普通正文"}, {"result_text": "额外正文"}]
 	view._display_result(res)
-	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n普通正文\n额外正文", "extra settlement text is displayed instead of a debug count")
+	assert_eq(view._result_paragraphs, [str(view._rite.text), "普通正文", "额外正文"], "extra text is queued in source selection order")
 	view._display_result(RiteResolver.RiteResult.new())
 	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text), "empty settlement retains the original rite introduction")
 

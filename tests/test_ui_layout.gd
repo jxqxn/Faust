@@ -780,7 +780,7 @@ func test_game_screen_exposes_a_labelled_drag_only_thought_drop_zone():
 	assert_true(target._can_drop_data(Vector2.ZERO, drag_data), "the desk drop zone should accept valid card drops")
 
 
-func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
+func test_thought_drop_waits_for_lock_and_uses_shared_settlement_without_rite_overlay():
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.init_config["think_id"] = 999000
@@ -796,6 +796,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var rng := RNG.new(18)
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, rng)
+	state.pending_operations.clear()
 	state.available_rites.erase(5000001)
 	var rites_before := state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size()
 	var stage := _stage()
@@ -811,9 +812,14 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 		Vector2.ZERO,
 		{"type": "card", "card_id": 2000001, "card_uid": protagonist_uid, "source": "hand"}
 	)
+	assert_false(state.hand_has_card_id(2000001), "dropped card remains locked before settlement")
+	for _step in range(180):
+		if not state.pending_operations.is_empty():
+			break
+		await wait_seconds(0.02)
 
 	assert_true(5000001 in state.available_rites, "the legacy card-to-thought bridge should generate rites through scene processing")
-	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "the compatibility bridge creates a fresh runtime rite instead of a config-only flag")
+	assert_eq(state.available_rite_instances().filter(func(instance): return instance.id == 5000001).size(), rites_before + 1, "the shared action creates a fresh runtime rite")
 	assert_true(state.hand_has_card_id(2000001), "cards return to hand unless the result explicitly cleans them")
 	assert_eq(str(state.event_prompts[0].get("id", "")), "think.test")
 	assert_eq(
@@ -829,7 +835,7 @@ func test_thought_drop_uses_legacy_bridge_without_opening_rite_overlay():
 	var prompt_panel := _find_node_by_name(screen, "EventPromptPanel") as Control
 	assert_not_null(prompt_panel, "card-to-thought results should use the scene event prompt layer")
 	assert_null(_find_node_by_name(screen, "RiteOverlayPanel"), "card-to-thought processing should not open the rite overlay")
-	assert_false(desk.is_thinking(), "dropping a card should not create a desk thought presentation state")
+	assert_true(desk.is_thinking(), "accepted drops keep the animation active while result prompts are pending")
 	if prompt_panel != null:
 		# PromptNew 1:1: the prompt replays the OptionBG parchment instead of
 		# the old compact dark box; it stays inside the 3840x2160 desk band.

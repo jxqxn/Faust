@@ -197,8 +197,10 @@ func test_rebuild_clears_previous_rows() -> void:
 	view.setup(state, db, RNG.new(4404), 5000001)
 	var first: Dictionary = ResultExecScript.execute({"card": 2000001}, state, db, {})
 	view._rebuild_result_lists(first)
+	assert_gt(view._result_cards_layer.get_child_count(), 0, "first operation produces a result row")
 	var second: Dictionary = ResultExecScript.execute({}, state, db, {})
 	view._rebuild_result_lists(second)
+	assert_eq(view._result_cards_layer.get_child_count(), 0, "empty stream clears previous card rows")
 	for layer in [view._result_cards_layer, view._result_ops_layer]:
 		if layer == null:
 			continue

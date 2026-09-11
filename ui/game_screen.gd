@@ -1432,12 +1432,15 @@ func can_drop_card_to_hand(data: Variant) -> bool:
 # "思考" interaction; this method preserves the verified MethinksEngine chain
 # until a replacement mechanism has been prototyped and accepted.
 func can_drop_card_on_methinks(data: Variant) -> bool:
+	if not _state.think_session.is_empty() or not _state.pending_operations.is_empty():
+		return false
 	if not (data is Dictionary):
 		return false
 	if str(data.get("type", "")) != "card":
 		return false
 	var source := str(data.get("source", ""))
-	return source == "hand" or source == "active_sudan"
+	var uid := int(data.get("card_uid", 0))
+	return (source == "hand" and _state.has_card_in_hand(uid)) or (source == "active_sudan" and _state.is_active_sudan_card(uid))
 
 
 func drop_card_on_methinks(data: Variant) -> void:
@@ -1445,7 +1448,7 @@ func drop_card_on_methinks(data: Variant) -> void:
 		return
 	var card_uid := int(data.get("card_uid", data.get("card_id", 0)))
 	var source := str(data.get("source", ""))
-	var result: Dictionary = MethinksEngine.process_card(card_uid, source, _state, _db, _rng)
+	var result: Dictionary = MethinksEngine.process_card(card_uid, source, _state, _db, _rng, true)
 	set_log(str(result.get("message", "")))
 	refresh()
 	var deferred: Dictionary = result.get("deferred", {})
@@ -1981,6 +1984,7 @@ func _consume_event_display(choice_key: String = "", choice_value: Variant = "")
 			DeferredEffects.execute_choice(choice_key, choice_value, _state, _db, _rng, trigger_ctx)
 	OperationsSequence.resume(operation, _state, _db, _rng, choice_key)
 	_state.pending_operations.append_array(queued_tail)
+	RiteSettlement.pump(_state, _db, _rng)
 	# A silently-settled event chain may have requested game over.
 	if _request_pending_game_over():
 		return

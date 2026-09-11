@@ -84,7 +84,7 @@ func test_unlimited_quota_never_decrements() -> void:
 	var local_db := _local_db()
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(31))
-	RoundLoop.advance_day(state, local_db, RNG.new(32))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(32))
 	assert_true(RoundLoop.back_to_prev_round_end(state, local_db))
 	assert_eq(state.back_to_prev_left, 9999, "9999 marks unlimited and never spends")
 	assert_eq(state.global_state.round_rollback, GlobalState.ROLLBACK_TO_PREV_END,
@@ -97,7 +97,7 @@ func test_finite_quota_spends_before_the_restore() -> void:
 	state.setup_new_run(local_db, 1, RNG.new(33))
 	state.back_to_prev_left = 2
 	var round_before := state.round_number
-	RoundLoop.advance_day(state, local_db, RNG.new(34))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(34))
 	assert_true(RoundLoop.back_to_prev_round_end(state, local_db))
 	assert_eq(state.back_to_prev_left, 1,
 		"the spend lives on the global object, so the snapshot restore cannot refund it")
@@ -108,7 +108,7 @@ func test_begin_round_marks_the_rollback_kind() -> void:
 	var local_db := _local_db()
 	var state := GameState.new()
 	state.setup_new_run(local_db, 1, RNG.new(35))
-	RoundLoop.advance_day(state, local_db, RNG.new(36))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(36))
 	assert_eq(state.global_state.round_rollback, GlobalState.ROLLBACK_TO_BEGIN,
 		"a normal day transition marks BACK_TO_BEGIN")
 

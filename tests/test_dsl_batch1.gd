@@ -126,7 +126,7 @@ func test_settled_rite_is_recorded_and_satisfies_rite_end() -> void:
 	_place_in_slot(state, 2000005, 1, local_db, instance.uid)
 	state.start_rite_instance(instance.uid)
 
-	RoundLoop.advance_day(state, local_db, RNG.new(11))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(11))
 
 	assert_true(state.has_rite_ended(992002), "settlement records the rite as ended")
 	var ctx := {"db": local_db, "state": state}
@@ -373,11 +373,11 @@ func test_card_lifetime_dies_unsheltered_and_survives_in_slots() -> void:
 	state.remove_card_from_hand(slot_uid)
 	state.add_card_to_slot(slot_uid, 1, local_db, rite.uid)
 
-	RoundLoop.advance_day(state, local_db, RNG.new(31))
-	RoundLoop.advance_day(state, local_db, RNG.new(32))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(31))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(32))
 	assert_true(state.has_method("get_card_instance") and state.get_card_instance(hand_uid) != null,
 		"life 2 of 3 keeps the hand copy alive")
-	var day3 := RoundLoop.advance_day(state, local_db, RNG.new(33))
+	var day3 := preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(33))
 	assert_false(day3.expired_cards.is_empty(), "the unsheltered copy dies on its vanishing day")
 	var dead_entry: Dictionary = day3.expired_cards[0]
 	assert_eq(int(dead_entry.get("card_uid", 0)), hand_uid, "only the hand copy dies")
@@ -401,7 +401,7 @@ func test_sudan_shelter_requires_any_slot_not_started_rite() -> void:
 	state.add_card_to_slot(inst.uid, 1, local_db, rite.uid)
 	assert_false(rite.start, "precondition: the shelter rite is not started")
 
-	var day := RoundLoop.advance_day(state, local_db, RNG.new(34))
+	var day := preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(34))
 	assert_false(day.game_over, "an unstarted rite still shelters the embedded Sultan")
 	assert_false(day.expired.is_empty() == false and day.expired.size() > 0, "sanity")
 
@@ -502,7 +502,7 @@ func test_back_to_prev_round_restores_snapshot_and_spends_budget() -> void:
 	state.back_to_prev_left = 2
 	var coin_before := state.coin_count
 	var round_before := state.round_number
-	RoundLoop.advance_day(state, local_db, RNG.new(62))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(62))
 	state.add_coin(9)
 	assert_eq(state.round_number, round_before + 1)
 
@@ -520,7 +520,7 @@ func test_back_to_round_begin_restores_today_start() -> void:
 	var local_db := _db_with_batch_rites()
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(63))
-	RoundLoop.advance_day(state, local_db, RNG.new(64))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(64))
 	var round_now := state.round_number
 	var coin_at_begin := state.coin_count
 	state.add_coin(7)
@@ -529,10 +529,9 @@ func test_back_to_round_begin_restores_today_start() -> void:
 	assert_eq(state.coin_count, coin_at_begin, "effects after the boundary roll back")
 
 
-func test_think_settles_every_satisfied_branch() -> void:
-	# Think runs ALL satisfied settlement branches of the think rite, not the
-	# first match. [SRC: ThinkController.c @ ProcessPop (0x5c38b0) L488-529;
-	#       report 1 A7]
+func test_think_uses_shared_first_matching_normal_settlement() -> void:
+	# [SRC: ThinkController.OnCardLocked 0x5c2d10 -> shared Settlement;
+	# ProcessPop's SlotPop enumeration is not normal settlement selection.]
 	var local_db := _db_with_batch_rites()
 	local_db.init_config["think_id"] = 992003
 	local_db.rites[992003] = {
@@ -550,7 +549,7 @@ func test_think_settles_every_satisfied_branch() -> void:
 	var result: Dictionary = MethinksEngine.process_card(2000001, "hand", state, local_db, RNG.new(71))
 	assert_true(result.get("accepted", false))
 	assert_eq(state.coin_count, 2, "the first satisfied branch runs")
-	assert_eq(state.get_counter(7000002), 3, "the second satisfied branch also runs")
+	assert_eq(state.get_counter(7000002), 0, "OnCardLocked uses normal settlement first-match semantics")
 	assert_ne(state.coin_count, 52, "the unsatisfied sudan branch stays silent")
 
 
@@ -725,7 +724,7 @@ func test_sudan_execution_records_its_ending_id() -> void:
 	inst.life = 6 # template deadline 7 -> 1 day left
 	sudan.card_uid = inst.uid
 	state.active_sudan_cards.append(sudan)
-	var day := RoundLoop.advance_day(state, local_db, RNG.new(112))
+	var day := preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(112))
 	assert_true(day.game_over, "the deadline executes")
 	assert_eq(state.over_reason, 12, "the ending id comes from the card's vanish.over")
 

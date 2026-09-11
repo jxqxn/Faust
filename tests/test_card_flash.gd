@@ -69,7 +69,9 @@ func test_candidates_flash_but_only_first_candidate_is_selected() -> void:
 			flashing += int(child._flash_rising)
 			assert_eq(child._flash_rising, str(child._card.get("type")) == "char")
 			assert_eq(child._candidate_scale, 1.1 if str(child._card.get("type")) == "char" else 1.0)
-			var bottom: float = child.position.y + child.card_size().y * (1.0 + child.hand_layout_scale()) * 0.5
+			# CardMoveUp enlarges the raycast root by 100, preserving its bottom.
+			# [SRC: CardController.CardMoveUp 0x528390; CardResetMove 0x528480.]
+			var bottom: float = child.position.y + child.size.y * (1.0 + child.hand_layout_scale()) * 0.5
 			assert_almost_eq(bottom, maxf(screen._card_items.size.y, child.card_size().y), 0.01, "candidate layout keeps the scaled bottom on the rail")
 	assert_eq(selected, 1, "select_first must not select every matching card")
 	assert_gte(flashing, 2, "all matching candidates flash")

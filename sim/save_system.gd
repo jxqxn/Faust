@@ -168,6 +168,11 @@ static func serialize(state) -> Dictionary:
 		"gen_tags": state.gen_tags.duplicate(true),
 		"ended_rites": state.ended_rites.duplicate(true),
 		"pending_operations": state.pending_operations.duplicate(true),
+		"rite_settlements": state.rite_settlements.duplicate(true),
+		"rite_confirmations": state.rite_confirmations.duplicate(true),
+		"round_transition": state.round_transition.duplicate(true),
+		"think_session": state.think_session.duplicate(true),
+		"ithink_card_uid": state.ithink_card_uid,
 		"delayed_operations": state.delayed_operations.duplicate(true),
 		"event_status": state.event_status.duplicate(true),
 		"event_done": state.event_done.duplicate(true),
@@ -389,6 +394,11 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	if state.has_method("_sync_rite_instance_cards"):
 		state._sync_rite_instance_cards()
 	state.pending_operations.clear()
+	state.rite_settlements = data.get("rite_settlements", {}).duplicate(true)
+	state.rite_confirmations = data.get("rite_confirmations", {}).duplicate(true)
+	state.round_transition = data.get("round_transition", {}).duplicate(true)
+	state.think_session = data.get("think_session", {}).duplicate(true)
+	state.ithink_card_uid = int(data.get("ithink_card_uid", 0))
 	if data.get("pending_operations", null) is Array:
 		for operation in data.pending_operations:
 			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep", "rename_card"]:

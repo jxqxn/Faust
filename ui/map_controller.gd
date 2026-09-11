@@ -217,6 +217,7 @@ var DeskBGSpecial: TextureRect
 
 var _think_drop_zone: ThinkDropZone
 var _thinking := false
+var _think_presentation_running := false
 static var _pin_atlas: OriginalAtlas = null
 static var _outline_atlas: OriginalAtlas = null
 static var _end_map_atlas: OriginalAtlas = null
@@ -283,7 +284,7 @@ func _build_ithink_target() -> void:
 	# both bottom-left. Keep the existing live rite drop handler.]
 	_think_drop_zone.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	for asset in ["bg_0", "open_03"]:
-		var art := TextureRect.new()
+		var art := preload("res://ui/think_sprite_animation.gd").new() if asset == "open_03" else TextureRect.new()
 		art.name = asset
 		art.texture = load("res://assets/original/ui/%s.png" % asset)
 		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -318,6 +319,10 @@ func _build_eft_end_map() -> void:
 
 
 func refresh_context() -> void:
+	if _state != null and not _state.think_session.is_empty() and not _think_presentation_running:
+		_thinking = true
+		_play_think_animation()
+		_finish_think_presentation.call_deferred()
 	if _state != null and bool(_state.end_open):
 		change_bg_to_end()
 	refresh_rite_cards()
@@ -383,7 +388,7 @@ func is_scene_blocked() -> bool:
 
 
 func can_drop_card_on_think_button(data: Variant) -> bool:
-	if is_scene_blocked():
+	if is_scene_blocked() or _thinking:
 		return false
 	var screen := get_parent()
 	return screen != null and screen.has_method("can_drop_card_on_methinks") and bool(screen.can_drop_card_on_methinks(data))
@@ -392,10 +397,49 @@ func can_drop_card_on_think_button(data: Variant) -> bool:
 func drop_card_on_think_button(data: Variant) -> void:
 	if not can_drop_card_on_think_button(data):
 		return
+	_thinking = true
 	_play_think_animation()
 	var screen := get_parent()
 	if screen != null and screen.has_method("drop_card_on_methinks"):
 		screen.drop_card_on_methinks(data)
+	_finish_think_presentation.call_deferred()
+
+
+func _finish_think_presentation() -> void:
+	if _think_presentation_running:
+		return
+	_think_presentation_running = true
+	# SlotPop operations complete before ThinkOver; its authored animation
+	# event OnCardLocked enters the shared settlement, not the drop callback.
+	while is_inside_tree() and not _state.pending_operations.is_empty():
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	MethinksEngine.pump(_state, _db, _rng)
+	var front = _think_drop_zone.get_node("open_03")
+	if not _state.think_session.is_empty() and _state.think_session.stage == "wait_lock":
+		front.play("ThinkOver")
+		while is_inside_tree() and front.elapsed < float(front._clips["ThinkOver"].length):
+			await get_tree().process_frame
+		if not is_inside_tree():
+			return
+		MethinksEngine.pump(_state, _db, _rng, true)
+		# The lock callback can enqueue a prompt after the drop handler's
+		# refresh already ran. Publish that new surface before awaiting it.
+		get_parent().refresh()
+	while is_inside_tree() and not _state.think_session.is_empty():
+		var pending_before: int = _state.pending_operations.size()
+		MethinksEngine.pump(_state, _db, _rng)
+		if _state.pending_operations.size() != pending_before:
+			get_parent().refresh()
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	_thinking = false
+	_think_presentation_running = false
+	front.play("WaitingProcessDone")
+	get_parent().refresh()
+	front.play("Close")
 
 
 func _play_think_animation() -> void:
@@ -404,21 +448,18 @@ func _play_think_animation() -> void:
 	var front := _think_drop_zone.get_node_or_null("open_03") as Control
 	if front == null:
 		return
-	front.pivot_offset = front.size * 0.5
-	front.rotation = -0.045
-	front.scale = Vector2(0.96, 0.96)
-	var tween := create_tween()
-	tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(front, "rotation", 0.0, 0.18)
-	tween.parallel().tween_property(front, "scale", Vector2.ONE, 0.22)
-	tween.tween_property(front, "rotation", -0.018, 0.12)
-	tween.tween_property(front, "rotation", 0.0, 0.12)
+	front.play("Thinking")
 
 
 func _set_think_drop_highlight(highlighted: bool) -> void:
 	if _think_drop_zone == null:
 		return
-	_think_drop_zone.self_modulate = Color("#ffe7a6") if highlighted else Color.WHITE
+	var front := _think_drop_zone.get_node("open_03")
+	if front.clip_name == "Thinking":
+		return
+	# Hover opens the folder only while dragging, not for an ordinary hover.
+	# [SRC: ThinkController.OnPointerEnter 0x5c3330, GameController.dragCard +0xb0.]
+	front.play("Open" if highlighted else "Close")
 
 
 func set_thinking(enabled: bool) -> void:

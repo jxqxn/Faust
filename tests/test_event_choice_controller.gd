@@ -41,7 +41,8 @@ func test_prompt_mask_clips_runtime_background_without_drawing_black_mask() -> v
 	var mask := _node(screen, "Full") as NinePatchRect
 	assert_not_null(mask)
 	assert_eq(mask.clip_children, CanvasItem.CLIP_CHILDREN_ONLY)
-	assert_eq(mask.get_rect(), Rect2(38, 52, 2629, 828))
+	assert_eq(mask.position, Vector2(38, 52))
+	assert_eq(mask.size * mask.scale, Vector2(2629, mask.get_parent().size.y - 132), "Full compresses border geometry to the authored runtime rect")
 	var background := mask.get_node("RuntimeBackground") as TextureRect
 	assert_true(background.texture.resource_path.ends_with("prompt_full_item_bg.png"))
 	assert_true(background.size.x > mask.size.x)

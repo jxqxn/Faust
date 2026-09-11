@@ -62,16 +62,17 @@ func test_rite_creation_and_lifecycle_write_notes() -> void:
 	# Start it so the next day settles it -> type 3.
 	var instance = state.get_rite_instance(created_uid)
 	instance.start = true
-	var day := RoundLoop.advance_day(state, local_db, RNG.new(4))
-	assert_eq(day.settled_rites.size(), 1)
-	assert_true(_page_has_note(state.notes[0], 3, created_uid), "settlement journals type 3")
+	var day := preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(4))
+	var matching: Array = day.settled_rites.filter(func(row): return int(row.uid) == created_uid)
+	assert_eq(matching.size(), 1, "the fixture rite settles once alongside original auto-begin rites")
+	assert_true(_page_has_note(state.notes[1], 3, created_uid), "OnNextRound increments round before settlement journals type 3")
 	# A never-started rite expires at waiting_round -> type 2.
 	DeferredEffects.apply({"rite": 994001, "events": []}, state, local_db, RNG.new(5))
 	var second_uid := 0
 	for candidate in state.available_rite_instances():
 		if int(candidate.id) == 994001:
 			second_uid = int(candidate.uid)
-	var day2 := RoundLoop.advance_day(state, local_db, RNG.new(6))
+	var day2 := preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(6))
 	assert_eq(day2.expired_rites.size(), 1, "the unstarted rite expires")
 	var joined_pages: Array = []
 	for page in state.notes:

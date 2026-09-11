@@ -171,6 +171,14 @@ var ended_rites: Dictionary = {}
 # boundary for events, narration and choices; every entry retains the context
 # of the occurrence that created it.
 var pending_operations: Array[Dictionary] = []
+# Host continuation for the source result/action Promise queues. Original
+# content is retained unchanged; this records execution position, not content.
+var rite_settlements: Dictionary = {}
+var rite_confirmations: Dictionary = {}
+var round_transition: Dictionary = {}
+var think_session: Dictionary = {}
+# [SRC: Player.ithink_card +0x80; ThinkController.OnDrop 0x5c3050.]
+var ithink_card_uid := 0
 # Operations scheduled by the DSL `delay` wrapper.  The original record only
 # stores an id and a round; we retain the clone payload/context as well so a
 # save can resume the exact occurrence.
@@ -1249,6 +1257,11 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	started_rites.clear()
 	auto_result_rites.clear()
 	rite_auto_result = false
+	rite_settlements.clear()
+	rite_confirmations.clear()
+	round_transition.clear()
+	think_session.clear()
+	ithink_card_uid = 0
 	event_queue.clear()
 	event_contexts.clear()
 	event_prompts.clear()

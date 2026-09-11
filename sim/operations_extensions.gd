@@ -2,12 +2,12 @@
 ## [SRC: OperationsExtensions.Start 0x500a70 -> ListExtensions.DoSequence
 ## 0x38b120 -> Promise.Sequence; dump.cs:311993-312024.]
 ## Frames retain raw payloads and explicit key order across JSON save/load.
-## RiteResolver / RoundLoop settlement finalization has not migrated here yet.
+## RiteSettlement uses these sequences for manual, next-day and Think results.
 class_name OperationsSequence
 extends RefCounted
 
-static func start(payloads: Array, state, db, rng, context: Dictionary = {}) -> Dictionary:
-	var sequence := {"frames": [], "context": ResultExec._queue_context(context), "status": 0, "tag": ""}
+static func start(payloads: Array, state, db, rng, context: Dictionary = {}, initial_status: int = 0) -> Dictionary:
+	var sequence := {"frames": [], "context": ResultExec._queue_context(context), "status": initial_status, "tag": ""}
 	for i in range(payloads.size() - 1, -1, -1):
 		_push(sequence, payloads[i])
 	return _run(sequence, state, db, rng)
@@ -58,6 +58,8 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 		_attach(state.pending_operations.back(), [sequence])
 		return summary
 	var context: Dictionary = sequence.context.duplicate(true)
+	context["state"] = state
+	context["db"] = db
 	context["rng"] = rng
 	while not sequence.frames.is_empty():
 		# [SRC: OperationsExtensions.DoWrapper 0x500510 rejects further
@@ -122,7 +124,11 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 			state.queue_prompt(prompt)
 			summary.choose = prompt
 		else:
+			var previous_rite: int = state.active_rite_uid
+			state.active_rite_uid = int(context.get("rite_uid", previous_rite))
 			var deferred := ResultExec.execute({key: value}, state, db, context)
+			state.active_rite_uid = previous_rite
+			RiteSettlement.record(context, deferred, state)
 			# EventOn start_trigger is a nested sequence, not a synthetic event panel.
 			# [SRC: EventOn callback 0x51f1a0 -> EventTrigger.Add 0x4fa9d0.]
 			var effects: Array = deferred.get("ordered_effects", [])

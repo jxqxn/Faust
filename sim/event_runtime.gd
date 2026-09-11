@@ -17,18 +17,12 @@ var _by_timing := {}
 # Round-based timings follow the original TimingRoundBase lifecycle: armed on
 # enable (OnStart), gated by Player.timing_rounds in IsValid, re-armed by
 # NextRound when they fire, removed for non-replay events (OnEnd).
-# Only the two timings the original actually dispatches are listed:
-#   * round_begin_ba -- GameController.<>c__DisplayClass141_0.<Start>b__5
-#     (0x56f9c0), fired right after `player.round += 1` (player+0x2c).
-#   * round_end -- GameController.<>c__DisplayClass142_0.<OnNextRound>b__2
-#     (0x570720). It has no configured instances (0 of 1863 event files) but the
-#     call site is real, so the clone keeps the dispatch.
-# round_begin_fr is NOT dispatched: OnRoundBeginFr exists among the 28 On*
-# entry points but has no call site anywhere in the decompiled corpus and no
-# `on.round_begin_fr` in any event config.
-# [SRC: EventTriggerExtensions.c @ OnRoundBeginBa 0x4fa570 / OnRoundEnd 0x4fa730
-#       definitions; call sites as above; dump.cs Player +0x128]
-const ROUND_TIMINGS := ["round_begin_ba", "round_end"]
+# OnNextRound dispatches round_end, increments round, then round_begin_fr;
+# round_begin_ba follows rites and delayed operations. Indirect delegates
+# count as call sites even without a direct C function-name occurrence.
+# [SRC: GameController.OnNextRound 0x554540; script.json method metadata
+# 0x2592010 -> OnRoundBeginFr 0x4fa650, 0x2591fa0 -> OnRoundBeginBa 0x4fa570.]
+const ROUND_TIMINGS := ["round_begin_ba", "round_begin_fr", "round_end"]
 # Retained as a compatibility/debug view for callers that need to inspect
 # event_off. The source of truth is GameState.event_status.
 var _disabled: Dictionary = {}

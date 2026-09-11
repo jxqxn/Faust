@@ -317,8 +317,17 @@ func _layout_content() -> void:
 		_body.size.y = content_axis.sizes[1]
 	_panel.get_node("PromptBG").size = _panel.size
 	var full := _panel.get_node("Full") as Control
-	full.size.y = _panel.size.y - 132.0
-	full.get_node("RuntimeBackground").size.y = full.size.y + 1560.0 * (100.0 / 74.963394)
+	# Unity Image.GetAdjustedBorders proportionally compresses opposing
+	# borders when the rect is shorter than their sum. Godot NinePatchRect
+	# instead enforces a minimum; scale its source-border geometry explicitly.
+	var mask_height := maxf(0.0, _panel.size.y - 132.0)
+	full.size.y = maxf(mask_height, 255.0 + 234.0)
+	full.scale.y = mask_height / full.size.y
+	var interior := full.get_node("RuntimeBackground") as Control
+	var native_height := 1560.0 * (100.0 / 74.963394)
+	interior.size.y = mask_height + native_height
+	interior.scale.y = 1.0 / maxf(full.scale.y, 0.001)
+	interior.position.y = -native_height * 0.5 * interior.scale.y
 	_panel.get_node("Border").position.y = _panel.size.y - 325.5
 	var icon_index := 0
 	for slot in _icon_slots:

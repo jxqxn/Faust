@@ -200,7 +200,7 @@ func test_power_game_event_adsorbs_the_tagged_active_sultan_instance() -> void:
 
 	var started := RoundLoop.start_auto_begin_rites(state, db)
 	assert_true(started.any(func(entry): return int(entry.get("uid", 0)) == rite.uid), "the generated rite auto-starts")
-	RoundLoop.advance_day(state, db, RNG.new(91))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(91))
 	assert_null(state.get_rite_instance(rite.uid), "the one-round rite settles exactly once and is removed")
 	assert_eq(sultan_instance.zone, "slot", "the configured settlement reuses the same Sultan in its next rite")
 	assert_eq(int(sultan_instance.tags.get("上朝", 0)), 1, "the successor rite preserves the runtime state")

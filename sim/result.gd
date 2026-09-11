@@ -8,7 +8,7 @@
 ##   event_on <id>, event_off, rite <id>
 ##   back_to_prev_round_end, over, confirm
 ## Eager atomic/legacy executor. Events use OperationsSequence to await UI.
-## Rite settlement orchestration still uses this eager entry and is unfinished.
+## RiteSettlement supplies the pausable result/action orchestration.
 ## Some effects mutate state immediately; other effects are returned to apply.
 class_name ResultExec
 extends RefCounted
@@ -19,6 +19,7 @@ const GlobalExtensionsScript = preload("res://sim/global_extensions.gd")
 ## Execute a result dictionary against the game state.
 ## Returns a Dictionary of deferred actions: {choose:..., events:[...], rite:id, over:bool, ...}.
 static func execute(result: Dictionary, state, db, context: Dictionary = {}) -> Dictionary:
+	context["db"] = db
 	var deferred: Dictionary = {
 		"events": [], "choose": {}, "rite": 0, "over": false, "back_to_prev": false, "back_to_round_begin": false,
 		"logs": [], "clean_slots": [], "clean_card_ids": [], "clean_rite": false,
@@ -263,12 +264,12 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	if k.begins_with("clean."):
 		var slot := _clean_slot_from_key(k)
-		if slot > 0:
+		if slot > 0 and not _has_returned_rite_slots(state, context):
 			state.clear_slot(slot, int(state.active_rite_uid))
 			deferred.clean_slots.append(slot)
 			return
 		var card_id := _clean_card_id_from_key(k, db)
-		if card_id > 0:
+		if card_id > 0 and not _has_returned_rite_slots(state, context):
 			if state.has_method("remove_table_card_id"):
 				state.remove_table_card_id(card_id, int(state.active_rite_uid))
 			deferred.clean_card_ids.append(card_id)
@@ -1062,7 +1063,9 @@ static func _equipment_matches(state, equipment, selector_value: Variant, db) ->
 	var selectors: Array = selector_value if selector_value is Array else [selector_value]
 	var tags: Dictionary = state.effective_card_tags(int(equipment.uid), db)
 	for raw_selector in selectors:
-		var selector := str(raw_selector)
+		# JSON continuations restore integer configuration IDs as float Variants.
+		# Preserve ID matching instead of turning 992004 into the tag "992004.0".
+		var selector := str(int(raw_selector)) if raw_selector is int or raw_selector is float else str(raw_selector)
 		if selector.is_valid_int() and equipment.card_id == selector.to_int():
 			return true
 		if RuntimeOperationFilter.matches_card_data(equipment.card_id, tags, db, selector):
@@ -1083,8 +1086,34 @@ static func _apply_equip_slot(k: String, val: Variant, state, db, context: Dicti
 				state.remove_card_equip_slot(uid, str(slot), db)
 
 
+## Final actions still target Rite.cards after ReturnCards. These references
+## are scoped to the persisted settlement, not to other rites or all hand cards.
+## [SRC: RiteExtensions.ReturnCards 0x5016d0; OperationFilter.Filter 0x3a15c0.]
+static func _has_returned_rite_slots(state, context: Dictionary) -> bool:
+	var job: Dictionary = state.rite_settlements.get(str(context.get("settlement_job", "")), {})
+	return job.has("returned_slots")
+
+
 static func _slot_target_uids(selector: String, state, context: Dictionary) -> Array[int]:
 	var targets: Array[int] = []
+	if _has_returned_rite_slots(state, context) and selector not in ["self", "parent"]:
+		var job: Dictionary = state.rite_settlements[str(context.settlement_job)]
+		for entry in job.returned_slots:
+			var card = state.get_card_instance(int(entry.get("card_uid", 0)))
+			if card == null or card.is_lost or card.zone == "removed":
+				continue
+			var matches := selector == "all"
+			if selector.begins_with("s") and selector.substr(1).is_valid_int():
+				matches = int(entry.get("slot", 0)) == selector.substr(1).to_int()
+			elif selector.is_valid_int():
+				matches = card.card_id == selector.to_int()
+			elif selector in ["friend", "enemy"]:
+				var rite_data: Dictionary = context.db.get_rite(int(job.get("rite_id", 0)))
+				var slot_data: Dictionary = rite_data.get("cards_slot", {}).get("s%d" % int(entry.get("slot", 0)), {})
+				matches = not bool(slot_data.get("is_enemy", false))
+			if matches:
+				targets.append(card.uid)
+		return targets
 	if selector.begins_with("s") and selector.substr(1).is_valid_int():
 		var rite_uid := int(context.get("rite_uid", state.active_rite_uid))
 		for entry in state.cards_in_slot(selector.substr(1).to_int(), rite_uid):
@@ -1113,9 +1142,14 @@ static func _slot_target_uids(selector: String, state, context: Dictionary) -> A
 			return state.rite_slot_card_uids(rite_uid)
 		return targets
 	if selector == "friend" or selector == "enemy":
-		var want_enemy := selector == "enemy"
+		# Both OperationFilter side bits call GetEnemyCardsWithIndex; despite
+		# its name, closure 0x3937b0 retains Slot.is_enemy@0x29 == false.
+		# [SRC: OperationFilter.Filter 0x3a15c0; dump.cs:392754.]
+		var want_enemy := false
 		if state.has_method("cards_in_slot_entries_for_rite"):
-			for entry in state.cards_in_slot_entries_for_rite(rite_uid):
+			var instance = state.get_rite_instance(rite_uid)
+			var definition: Dictionary = context.db.get_rite(instance.id) if instance != null else {}
+			for entry in state.slot_entries_for_rite(definition, rite_uid):
 				if bool(entry.get("is_enemy", false)) == want_enemy:
 					var uid := int(entry.get("card_uid", 0))
 					if uid > 0:

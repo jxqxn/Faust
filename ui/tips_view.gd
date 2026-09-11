@@ -162,7 +162,8 @@ func source_id() -> String:
 
 func apply_source_layout(view_size: Vector2, screen_size: Vector2 = Vector2.ZERO) -> void:
 	_view_size = view_size
-	_screen_size = screen_size if screen_size != Vector2.ZERO else Vector2(get_window().size)
+	var window := get_window()
+	_screen_size = screen_size if screen_size != Vector2.ZERO else (Vector2(window.size) if window != null else view_size)
 	panel.scale = view_size / SourceTips.DESIGN
 	if visible:
 		move_to(_pointer)

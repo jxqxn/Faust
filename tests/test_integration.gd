@@ -8,6 +8,22 @@ func before_all():
 	db = ConfigDB.new()
 	db.load_all()
 
+func _finish_day(state, local_db, rng) -> Dictionary:
+	# Complete informational presentation through the same continuation path;
+	# never discard a choice or re-enter advance_day for an unfinished day.
+	var result := RoundLoop.advance_day(state, local_db, rng)
+	for _step in range(128):
+		if state.round_transition.is_empty():
+			return result
+		if not state.pending_operations.is_empty():
+			var pending: Dictionary = state.pending_operations[0]
+			assert_true(pending.get("choices", {}).is_empty(), "fixture must not silently choose a result")
+			if not pending.get("choices", {}).is_empty():
+				return result
+			OperationsSequence.resume(state.consume_pending_operation(), state, local_db, rng)
+		result = RoundLoop.resume_day(state, local_db, rng)
+	return result
+
 func test_waiting_with_active_sudan_still_advances_round_each_day():
 	# round advances unconditionally every day; only the Sultan draw is gated
 	# on having no active Sultan card.
@@ -18,7 +34,7 @@ func test_waiting_with_active_sudan_still_advances_round_each_day():
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	for i in range(5):
-		var result := RoundLoop.advance_day(state, db, rng)
+		var result := _finish_day(state, db, rng)
 		assert_true(result.new_round, "round advances every day")
 		assert_eq(result.drawn_sudan, -1, "active sudan card blocks only the draw")
 	assert_eq(state.round_number, 6, "round advanced once per day")
@@ -35,7 +51,7 @@ func test_consumed_sudan_waits_for_day_boundary_to_draw_next():
 	var first_cid := RoundLoop.draw_weekly_sudan(state, db, rng)
 	assert_true(RoundLoop.consume_sudan(state, first_cid))
 	assert_true(state.active_sudan_cards.is_empty(), "no active sudan after consuming")
-	var result := RoundLoop.advance_day(state, db, rng)
+	var result := _finish_day(state, db, rng)
 	assert_true(result.new_round)
 	assert_true(result.drawn_sudan >= 0, "next sudan drawn at the day boundary")
 	assert_eq(state.round_number, 2, "round incremented")
@@ -170,7 +186,7 @@ func test_next_day_orders_round_end_before_round_begin_auto_start_and_sudan_draw
 	assert_true(state.enable_event(991901, local_db))
 	assert_true(state.enable_event(991902, local_db))
 
-	var result := RoundLoop.advance_day(state, local_db, RNG.new(82))
+	var result := _finish_day(state, local_db, RNG.new(82))
 	var rite = state.get_rite_instance(rite_uid)
 	assert_true(991901 in result.round_end_events, "round_end observes outgoing round 1")
 	assert_true(991902 in result.round_begin_events, "round_begin observes incremented round 2")
@@ -272,7 +288,19 @@ func test_book_search_loot_generates_one_runtime_rite_and_survives_save_load():
 	state.setup_new_run(db, 0, RNG.new(91))
 	# All three 淘书 variants require the bookshop owner in an open-adsorb s1.
 	# [SRC: original config rite/5002036-5002038.json cards_slot.s1]
-	state.add_card_to_hand(2000199, db)
+	var owner_uid := state.add_card_to_hand(2000199, db)
+	# Source prerequisite: bookshop 5002006 prior removes the owner's lock
+	# before enabling event 5300175, which draws this loot. A fresh owner is
+	# intentionally restricted to the shop by TagNode 3020076.adsorb_spec.
+	var prerequisite: Dictionary = db.get_rite(5002006).settlement_prior[1].result
+	assert_true(prerequisite.has("s5-书店老板"))
+	var shop = state.create_rite_instance(5002006)
+	state.remove_card_from_hand(owner_uid)
+	state.add_card_to_slot(owner_uid, 5, db, shop.uid)
+	ResultExec.execute({"s5-书店老板": prerequisite.get("s5-书店老板", 0)}, state, db,
+		{"rite_uid": shop.uid, "slot_entries": [{"slot": "s5", "card_uid": owner_uid, "card_id": 2000199}]})
+	state.return_rite_cards(shop.uid, db)
+	state.remove_rite_instance(shop.uid)
 	var picked: Array = LootSystem.generate(RNG.new(92), db.get_loot(6000101))
 	assert_eq(picked.size(), 1, "book-search loot performs one weighted draw")
 	if picked.is_empty():

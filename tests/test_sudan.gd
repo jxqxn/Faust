@@ -198,7 +198,7 @@ func test_sheltered_sudan_ages_past_deadline_without_executing():
 	state.add_card_to_slot(sudan_uid, 1, shelter_db, rite.uid)
 	instance.life = 7 # already at the template deadline inside the slot
 	for i in 2:
-		var sheltered := RoundLoop.advance_day(state, shelter_db, RNG.new(62 + i))
+		var sheltered := preload("res://tests/support/rite_driver.gd").finish_day(self, state, shelter_db, RNG.new(62 + i))
 		assert_false(sheltered.game_over, "a slotted card never executes regardless of the deadline")
 	assert_true(instance.life > 7, "the sheltered card keeps aging")
 	assert_true(state.active_sudan_cards.back().days_left < 0, "the visible countdown goes negative")
@@ -207,7 +207,7 @@ func test_sheltered_sudan_ages_past_deadline_without_executing():
 	instance.zone = "sudan"
 	instance.rite_uid = 0
 	instance.slot_key = ""
-	var freed := RoundLoop.advance_day(state, shelter_db, RNG.new(65))
+	var freed := preload("res://tests/support/rite_driver.gd").finish_day(self, state, shelter_db, RNG.new(65))
 	assert_true(freed.game_over, "the past-deadline card executes the day it leaves the slot")
 	assert_eq(freed.expired.size(), 1)
 
@@ -235,7 +235,7 @@ func test_advance_day_decrements_deadline():
 	state.setup_new_run(db, 1, rng)
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	var before: int = state.active_sudan_cards.back().days_left
-	var r := RoundLoop.advance_day(state, db, rng)
+	var r := preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, rng)
 	assert_eq(state.active_sudan_cards.back().days_left, before - 1)
 	assert_false(r.game_over)
 
@@ -247,7 +247,7 @@ func test_expired_sudan_card_ends_game():
 	# Force the deadline to 1 (elapsed life 6 of the template 7) so the next
 	# day expires it.
 	state.get_card_instance(int(state.active_sudan_cards.back().card_uid)).life = 6
-	var r := RoundLoop.advance_day(state, db, rng)
+	var r := preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, rng)
 	assert_true(r.game_over, "expired sudan -> game over")
 	assert_eq(r.expired.size(), 1)
 	assert_eq(state.over_reason, int(db.get_card(int(r.expired[0])).get("vanish", {}).get("over", 0)),
@@ -316,13 +316,13 @@ func test_auto_generate_sudan_uses_original_operation_values_without_stalling_ro
 	state.setup_new_run(db, 1, RNG.new(47))
 	ResultExec.execute({"enable_auto_gen_sudan_card": false}, state, db)
 	assert_false(state.auto_gen_sudan_card, "false disables automatic Sultan generation")
-	var disabled_day := RoundLoop.advance_day(state, db, RNG.new(48))
+	var disabled_day := preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(48))
 	assert_true(disabled_day.new_round, "disabled generation still advances the round")
 	assert_eq(disabled_day.drawn_sudan, -1, "disabled generation skips only the Sultan draw")
 	assert_eq(state.round_number, 2, "round number still advances while Sultan generation is disabled")
 	ResultExec.execute({"enable_auto_gen_sudan_card": true}, state, db)
 	assert_true(state.auto_gen_sudan_card, "true enables automatic Sultan generation")
-	var enabled_day := RoundLoop.advance_day(state, db, RNG.new(51))
+	var enabled_day := preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(51))
 	assert_true(enabled_day.new_round)
 	assert_true(enabled_day.drawn_sudan >= 0, "enabled generation draws a Sultan card at the day boundary")
 

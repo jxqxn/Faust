@@ -35,7 +35,7 @@ func test_day_boundary_compacts_hand_positions() -> void:
 	for uid in state.hand:
 		var instance = state.get_card_instance(int(uid))
 		assert_eq(int(instance.bag_pos), 0, "freshly granted cards start unplaced")
-	RoundLoop.advance_day(state, local_db, RNG.new(3))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(3))
 	for index in state.hand.size():
 		var instance = state.get_card_instance(int(state.hand[index]))
 		assert_eq(int(instance.bag_pos), index + 1,
@@ -49,7 +49,7 @@ func test_compaction_skips_other_bag_pages() -> void:
 	var keeper = state.get_card_instance(int(state.hand[0]))
 	keeper.bag = 2
 	keeper.bag_pos = 7
-	RoundLoop.advance_day(state, local_db, RNG.new(5))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, local_db, RNG.new(5))
 	assert_eq(int(keeper.bag), 2, "cards on other pages keep their page")
 	assert_eq(int(keeper.bag_pos), 7, "and their positions (IsCurrentHandCard filters by page)")
 

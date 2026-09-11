@@ -1,5 +1,32 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+## 仪式整体重新验收（2026-09-11）
+
+用户明确功能、交互、时序也属于像素级复刻要求。旧布局/方法级完成不代表仪式系统完成。
+三入口分叉与结算队列的结构冲突已直接复核，整改从
+[根因自审与全链清单](audit/RiteSystemRootCause.md) 取项，不以局部截图验收整套系统。
+
+本次纠正了旧 A13 的“round_begin_fr 无调用”结论：原作通过方法元数据委托调用，
+OnNextRound 的顺序为卡更新 → round_end → round+1 → round_begin_fr → 仪式 → 延迟 →
+round_begin_ba；不能再按直接函数名搜索结果认定无调用。结算三入口已共用可暂停、可保存
+的结果/归还/行动执行链；到期失败路径同样接入。原作逐项 PreDo/骰子/卡牌演出、
+事件附加结算及 OnClose 时机仍为未完成，**仪式整体保持未验收**。
+
+## 仪式槽提示与 IThink 输入动画（2026-09-11，部分完成）
+
+CardSlotController.Init 0x53b940 / ShowTips 0x53cce0 + CardSlot.prefab：槽位使用
+普通 TipsHolder 的 literal text；Highlight 为 card_outline，256x512，槽内 (8,11)。
+本批接入鼠标悬停提示与高亮，取消 Godot 默认 tooltip。
+ThinkController.OnDrop 0x5c3050 / OnPointerEnter 0x5c3330 + IThink.controller 与
+Idle/Open/Close/Thinking.anim：接入原始精灵帧与时间、拖入判定、处理中输入锁。
+后续根因批次已删除同步 Methinks 特例：SlotPop → ThinkOver 锁卡边界 → 共享
+RiteSettlement（全部 result → 回手 → 全部 action → 移除），书牌随后由阅读仪式吸附。
+依据：ThinkController.OnCardLocked 0x5c2d10、RiteExtensions.ReturnCards 0x5016d0、
+PlayerExtensions.InitRite 0x38e140 与 5000002/5000113 原配置。
+ithink_card_uid、think_session 和结算 continuation 已持久化；原作存档字段映射待补。
+仍待：ThinkOver effect/Folder 曲线、解锁卡牌演出、逐项文字/骰子/PreDo、原作实机像素对拍。
+验收记录见 `docs/ui_layout/RiteThinkInteraction.md`。
+
 ## SourceTips 鼠标悬停提示修正（2026-09-11）
 
 原有“1:1”记录有误，本批已用 `.c` + `dump.cs:326121` + prefab + PE映射常量重新核实。
@@ -7,7 +34,7 @@
 分母3840、阈值0.8、左右面板切换、先夹取指针再投影与世界偏移；动态高度/边框切片、
 GetTipText→Translate未知key回传、Godot输入坐标与命中顺序已修正。8测试134断言通过，
 两分辨率viewport输入覆盖整理/回退/处决日/背包/俺寻思。原作实机像素级对拍未完成；
-其他holder、动态文本、手柄、卡槽提示仍开放。详 [真值表](ui_layout/SourceTips.md)
+其他holder、动态文本、手柄仍开放；卡槽鼠标提示已由本页后续批次接入。详 [真值表](ui_layout/SourceTips.md)
 及 [修正报告](audit/SourceTipsCorrection.md)。
 
 ## A19 付款执行体定案：`CardSlotController.CardStack`（第三十六批）
@@ -496,7 +523,7 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 | `StartScene.unity` Setting 按钮 `m_OnClick → SettingsController.OnShow`（124454–124470）+ `SettingsController`（dump.cs:325897–325909；ShowSettings 0x5ab420） | `ui/game.gd` 标题菜单 `settings_pressed → _show_settings → SettingsPanel` | 2026-08-24 批次 AN：标题页设置不再只是未接信号；保留主菜单于下层，关闭后回到同一标题页。回归测试覆盖点击→打开→关闭。 |
 | `CardInfoNew.prefab`（2510×1077 居中面板全真值表）+ `CardInfoNewController.c` Show 0x537000（Name=GetName、Title=CardNode.title@0x20、Content=Card.custom_text@0x58‖CardNode.text@0x28 + Utils.ProcessPlaceholders、RareText=CARD_RARE_{1..4}、TypeIcon=card_type_*、MainIcon=GetPic/GetSudanFullIcon）+ `CardNode`/`Card` 字段 + textstyle.json（CARD_INFO_NAME 40..60 / DESC 18..40 / TYPE 30 / RARE_TEXT 60 / TAG_TITLE 40）+ ui.json（CARD_RARE_1..4、CARD_INFO_STATE_TITLE/ATTRIBUTE_TITLE、CARD_INFO_HELP_*） | `ui/card_info_view.gd`（批次 AF 2026-08-22；GameScreen `_source_overlay_layer` 内源画布，_unity_rect 把 anchors/pos/sizeDelta/pivot 精确换算为 Godot Rect2） | 旧自制 690×340 暗盒已删除（自制详情面板也随之删除）；🟡 登记：TagNode 属性/标签分组旗标（can_visible/can_nagative_and_zero 组合）未精确验证，克隆沿用现有属性/标签数据视图；RareIcon 稀有图标列表（Common+0x48+0xe0 序）未定位；Equips 区内容（已装配列表 vs 可装列表）未知；帮助气泡文案为 zhTW 转简体。**2026-08-22 批次 AK 后澄清**：`CardAttribute.prefab` = 纯文本行（60×40、fs30、全幅 Outline、**无徽记图**）——批次 AJ 留档的"属性徽记图标"系误解（`Resources/image/tags.png` 图集属其他列表，tag_N 帧所在待定位）；`TagInfo/StateBar` = "状态" 标题（fs40 100×50）+ `CardStateTag.prefab`（43×43 可点图标按钮：root Image 43² + Icon 43² + Outline 全幅+10、LayoutElement 43²、Selectable）行 + Left 分隔线（rite_log_sperator），状态语义（哪些状态、点击行为）无控制器背书 ⬜ |
 | PromptNew 通用事件提示浮层（GameScene MainUI/Prompt；旧 1280 暗盒已迁） | **已落地（2026-08-23 批次 AL）**：`ui/event_prompt_view.gd` EventPromptView（3840×2160 源画布 + OptionBG 2705×960 prompt_bg 居中 + Full prompt_bg_mask_2 + Title/EventPromptBody fs40 + OptionNewItem 行 2200×100/步进 150/fs40/option_item_bg+highlight + Border decorate + Confirm rite_op_confirm 325×158@(2059.5,808)）+ GameScreen 迁移（`_event_overlay` = EventPromptView；choice/continue 信号回 `_consume_event_display`，队列语义原样）+ 测试 3 条（几何/选项行/继续模式）+ UI 组 66/66 | **🟡（运行时布局，单点替换）**：OptionBG 高度 960（用户截图归一化量测；`PromptController.Show 0x58a020` ForceRebuildLayoutImmediate 为真源）、文本/选项行/立绘截图推导矩形、标题条占位；渲染行为经 GUT 验证（66/66），截图走查留档（dev_screenshot_runner `--event-prompt` 旗标已加，实机 bootstrap 下浮层显隐待复验） | 中·高 → 已完成核心 |
-| `Tips.prefab` + `SlotTipsController.c` 0x5ac340 / 0x5aca50 / 0x5ac920 + `TipsHolder.c` 0x5c4400 / 0x5c53a0 + `dump.cs:326121` | `source_tips.gd` / `tips_view.gd`；普通鼠标hover、原作宽度/分带/夹取与文字回传，8测试134断言，两分辨率输入 | **🟡**：原作实机对拍/TMP；其他静态holder、动态委托、手柄/手机、卡槽第二提示未完成。详 `docs/ui_layout/SourceTips.md` | 中 |
+| `Tips.prefab` + `SlotTipsController.c` 0x5ac340 / 0x5aca50 / 0x5ac920 + `TipsHolder.c` 0x5c4400 / 0x5c53a0 + `dump.cs:326121` | `source_tips.gd` / `tips_view.gd`；普通鼠标hover、原作宽度/分带/夹取与文字回传，8测试134断言，两分辨率输入；卡槽 literal Tips 已接入 | **🟡**：原作实机对拍/TMP；其他静态holder、动态委托、手柄/手机未完成。详 `docs/ui_layout/SourceTips.md` | 中 |
 | `GameController.GenCard` 0x54f650 → `PlayerExtensions.AddCard` 0x38b620 + `GenCoin.c Do` 0x510b40（金币 = 手牌金币卡 2000029 **多对象** count 之和；每 op 新建对象、count=操作值可为负、bagpos=1 前置、OnCardBorn） | `sim/game_state.gd` coin_count 计算属性 + `_grant_gold`/`_remove_gold`、`sim/result.gd` coin 键、v5→v6 存档迁移 | 2026-08-17 修复；多对象扣除顺序未验证（cost 支付链未审计，现最大面额优先） |
 | `CostCondition.IsSatisfied` 0x3f6160（花费判定读卡对象 count，card+0x20；判定时按 player.cards 枚举序选定付款卡清单记入 `ConditionContext.need_cost_cards`） | `sim/condition.gd` 金币/coin 条件（经 coin_count 求和属性）、`game_state._remove_gold`（uid 升序=枚举序，末对象部分扣减等价于移除找零；付款执行体未反编译留档） | 读模型与支付顺序一致 |
 | `PlayerExtensions.GetCounter` 0x38ce70 特殊分支（7000105 金币/7000104 门客 = 从 cards+rites 派生求和；7100007 回退配额读 Global） | `game_state.gold_total()`（hand+slot 求和）、`game_state.get_counter` 7100007 分支读 `global_state` | 金币总额含仪式槽；配额读全局域 |

@@ -61,7 +61,7 @@ func _cleanup_files() -> void:
 func test_round_end_snapshot_survives_process_like_reload() -> void:
 	var state := _persistent_state(11)
 	assert_eq(state.round_number, 1)
-	RoundLoop.advance_day(state, db, RNG.new(12))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(12))
 	assert_true(FileAccess.file_exists(SaveSystem.round_end_save_path(1)),
 		"SaveRoundEnd writes round_1_end.json")
 	assert_true(FileAccess.file_exists(SaveSystem.round_begin_save_path(2)),
@@ -83,7 +83,7 @@ func test_round_end_snapshot_survives_process_like_reload() -> void:
 
 func test_round_begin_snapshot_survives_process_like_reload() -> void:
 	var state := _persistent_state(21)
-	RoundLoop.advance_day(state, db, RNG.new(22))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(22))
 	GlobalState.reset_default_cache()
 	var restored = SaveSystem.load_continue(db)
 	assert_not_null(restored)
@@ -99,7 +99,7 @@ func test_round_begin_snapshot_survives_process_like_reload() -> void:
 
 func test_corrupt_round_end_is_invalid_and_does_not_spend_quota() -> void:
 	var state := _persistent_state(31)
-	RoundLoop.advance_day(state, db, RNG.new(32))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(32))
 	state.round_snapshots["round_end"].clear()
 	var file := FileAccess.open(SaveSystem.round_end_save_path(1), FileAccess.WRITE)
 	file.store_string("{not valid json")
@@ -113,7 +113,7 @@ func test_corrupt_round_end_is_invalid_and_does_not_spend_quota() -> void:
 
 func test_loading_archive_deletes_round_files_from_old_timeline() -> void:
 	var state := _persistent_state(41)
-	RoundLoop.advance_day(state, db, RNG.new(42))
+	preload("res://tests/support/rite_driver.gd").finish_day(self, state, db, RNG.new(42))
 	assert_true(SaveSystem.save_user_archive(state, 0, "round cleanup"))
 	assert_true(FileAccess.file_exists(SaveSystem.round_end_save_path(1)))
 	assert_true(FileAccess.file_exists(SaveSystem.round_begin_save_path(2)))

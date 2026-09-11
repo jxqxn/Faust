@@ -47,6 +47,9 @@ const SOURCE_TEMPLATE_BG_RECT := Rect2(Vector2(-128, -204), Vector2(4096, 2148))
 const SOURCE_DEFAULT_TITLE_POS := Vector2(1564, -54)
 
 var _state
+var _awaiting_confirmation := false
+var _result_paragraphs: Array[String] = []
+var _result_paragraph_index := 0
 var _db
 var _rng
 var _rite_id: int = 5000001
@@ -56,7 +59,6 @@ var _placed: Dictionary = {}  # slot_key -> CardInstance uid
 var _managed_slots: Array[int] = []
 var _gold_used_this_resolve: int = 0
 var _gold_dice_map: Dictionary = {}
-var _resolve_baseline: Dictionary = {}
 var _resolve_dice_cache: Dictionary = {}
 var _last_result = null  # last RiteResult
 var _pending_table_entries: Array = []
@@ -104,6 +106,9 @@ var _dice_count_kind := ""
 var _gold_selected: int = 0
 var _log_label: Label
 var _selected_card_uid: int = 0
+var _slot_tips: Control
+var _settlement_context: Dictionary = {}
+var _settlement_phase := "selection"
 var _qualified_slot := ""
 var _qualified_bags: Array[int] = []
 var _qualified_bag_index := -1
@@ -174,6 +179,8 @@ func _build_ui() -> void:
 	# would fight its 3840x2160 source size on every resize.
 	_slot_layer.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	_source_canvas.add_child(_slot_layer)
+	_slot_tips = preload("res://ui/tips_view.gd").new()
+	add_child(_slot_tips)
 	_build_slot_placeholders()
 	var foreground_path := "res://assets/original/ui/rite_bg/%s.png" % _rite_template_data().get("fg", "")
 	if ResourceLoader.exists(foreground_path):
@@ -254,6 +261,14 @@ func _build_slot_placeholders() -> void:
 			var icon_size := icon.texture.get_size() * 1.7
 			_set_rect(icon, Rect2(SOURCE_SLOT_SIZE * 0.5 + Vector2(0, 25) - icon_size * 0.5, icon_size))
 
+		# [SRC: CardSlot.prefab Highlight + Selectable state relay:
+		# HighlightEnabled=1, other states=0; 256x512 centered at (0,-19).]
+		var highlight := _picture(btn, "SourceHighlight", "card_outline", Rect2(8, 11, 256, 512))
+		highlight.visible = false
+		btn.mouse_entered.connect(func(): highlight.visible = not btn.disabled and not btn.has_focus())
+		btn.mouse_exited.connect(func(): highlight.visible = false)
+		btn.button_down.connect(func(): highlight.visible = false)
+		btn.focus_entered.connect(func(): highlight.visible = false)
 		var box := VBoxContainer.new()
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -427,6 +442,8 @@ func _build_result_surface() -> void:
 	_result_surface_text = _rich_text("", 36)
 	_result_surface_text.name = "Text (TMP)"
 	_result_surface_text.fit_content = true
+	_result_surface_text.mouse_filter = Control.MOUSE_FILTER_STOP
+	_result_surface_text.gui_input.connect(_on_result_text_input)
 	_result_surface_text.custom_minimum_size = Vector2(1100, 1146)
 	preload("res://ui/source_text_style.gd").apply(_result_surface_text, "@MAIN_BODY")
 	# RiteResultPanel.prefab TextTranslate 114117307842306080, TMP paragraphSpacing=80.
@@ -576,6 +593,9 @@ func _toggle_play_rate() -> void:
 
 
 func _on_result_next() -> void:
+	if _resolution_committed:
+		_close_panel()
+		return
 	if not _dice_count_kind.is_empty():
 		return
 	# [SRC: ScrollViewTextController.c @ ForceTypeDone (0x5a8da0);
@@ -585,7 +605,47 @@ func _on_result_next() -> void:
 		if _result_surface_text != null:
 			_result_surface_text.visible_characters = -1
 		return
+	if _result_paragraph_index < _result_paragraphs.size():
+		_append_result_paragraph()
+		return
 	_resolve()
+
+
+func _on_result_text_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_advance_result_text()
+		_result_surface_text.accept_event()
+
+
+## The original waits after every newline-split paragraph. Clicking the
+## text finishes typing, then a separate click advances the waiting Promise.
+## [SRC: ShowTextWithSeperator 0x5a6810 -> WaitingResultTextDone;
+## ScrollViewTextController.ForceTypeDone 0x5a8da0; original runtime 2026-09-11.]
+func _advance_result_text() -> void:
+	if _waiting_for_result_operations() or not _dice_count_kind.is_empty():
+		return
+	if not _result_text_done:
+		_result_surface_text.visible_characters = -1
+		_result_text_done = true
+		return
+	if _result_paragraph_index < _result_paragraphs.size():
+		_append_result_paragraph()
+	elif _resolution_pending and _settlement_phase == "selection":
+		_commit_resolution()
+
+
+func _append_result_paragraph() -> void:
+	if _result_paragraph_index >= _result_paragraphs.size():
+		_result_text_done = true
+		return
+	var previous_count := _result_surface_text.get_total_character_count()
+	var text := _result_paragraphs[_result_paragraph_index]
+	_result_paragraph_index += 1
+	var separator := "\n\n" if not _result_surface_text.text.is_empty() else ""
+	_result_surface_text.text += separator + preload("res://ui/source_rich_text.gd").to_bbcode(text)
+	_result_text_progress = float(previous_count)
+	_result_surface_text.visible_characters = previous_count
+	_result_text_done = false
 
 
 func _refresh_play_rate() -> void:
@@ -603,14 +663,10 @@ func _refresh_play_rate() -> void:
 
 func _toggle_result_auto_play() -> void:
 	# [SRC: RiteResultPanelController.OnAutoPlay 0x5a38d0, autoPlay@0x184:
-	#       PlayerExtensions.SetRiteAutoResult(rite.id, on) then
-	#       UpdateResultTextSpeed(on).]
+	#       PlayerExtensions.SetRiteAutoResult 0x38f790 writes Player+0x160,
+	#       NOT the per-rite HashSet at +0x130; dump.cs:391586,391598.]
 	_result_auto_play = not _result_auto_play
-	if _result_auto_play:
-		if not _state.auto_result_rites.has(_rite_id):
-			_state.auto_result_rites.append(_rite_id)
-	else:
-		_state.auto_result_rites.erase(_rite_id)
+	_state.rite_auto_result = _result_auto_play
 	_refresh_play_rate()
 	_refresh_result_auto_button()
 	_refresh_auto_result()
@@ -619,7 +675,7 @@ func _toggle_result_auto_play() -> void:
 func _refresh_result_auto_button() -> void:
 	if _result_auto_button == null:
 		return
-	var active: bool = _state != null and _state.auto_result_rites.has(_rite_id)
+	var active: bool = _state != null and _state.rite_auto_result
 	_result_auto_button.get_node("Art").texture = load("res://assets/original/ui/auto_play_%s.png" % ("active" if active else "deactive"))
 
 
@@ -767,7 +823,7 @@ func _refresh_dice_selection() -> void:
 	_update_gold_button()
 	_update_reroll_button()
 	if _result_next_button != null:
-		_result_next_button.disabled = not _dice_count_kind.is_empty()
+		_update_result_wait_controls()
 
 
 func _cancel_dice_selection() -> void:
@@ -866,12 +922,6 @@ func _toggle_auto_result() -> void:
 	elif int(_rite.get("auto_result", 0)) != 0:
 		_state.auto_result_rites.append(_rite_id)
 	_refresh_auto_result()
-	_refresh_result_auto_button()
-	_result_auto_play = _state != null and _state.auto_result_rites.has(_rite_id)
-	if _result_auto_play and not _result_text_done:
-		_result_text_done = true
-		if _result_surface_text != null:
-			_result_surface_text.visible_characters = -1
 
 func _refresh_auto_result() -> void:
 	var button := _rite_panel.get_node("AutoResult") as Button
@@ -939,6 +989,8 @@ func _apply_layout() -> void:
 		if parent_control != null:
 			view_size = parent_control.size
 	_set_rect(_shade, Rect2(Vector2.ZERO, view_size))
+	if _slot_tips != null:
+		_slot_tips.apply_source_layout(view_size)
 	_source_canvas.position = Vector2.ZERO
 	_source_canvas.size = SOURCE_CANVAS_SIZE
 	_source_canvas.scale = Vector2(view_size.x / SOURCE_CANVAS_SIZE.x, view_size.y / SOURCE_CANVAS_SIZE.y)
@@ -983,14 +1035,18 @@ func refresh() -> void:
 	_update_result_wait_controls()
 
 
-# Result actions await their prompt promises before Settlement b__8 can
-# remove the rite (RVA 0x5b4850). The legacy resolver is still eager, but
-# its UI must not permit commit/retry/rollback across an unresolved prompt.
+# Result and start actions await their prompt promises before another panel
+# action can mutate the running rite.
 func _waiting_for_result_operations() -> bool:
-	return _resolution_pending and _state != null and not _state.pending_operations.is_empty()
+	return _awaiting_confirmation or (_resolution_pending and _state != null and not _state.pending_operations.is_empty())
 
 
 func _process(_delta: float) -> void:
+	if _awaiting_confirmation:
+		RiteSettlement.pump_confirmations(_state)
+		_complete_confirmation()
+	if _settlement_phase in ["results", "actions"] and _state != null and _state.pending_operations.is_empty():
+		_advance_settlement_execution()
 	var waiting := _waiting_for_result_operations()
 	if waiting != _last_result_waiting:
 		_update_result_wait_controls()
@@ -1010,6 +1066,8 @@ func _process(_delta: float) -> void:
 			_result_surface_text.visible_characters = int(_result_text_progress)
 			if _result_text_progress >= float(total):
 				_result_text_done = true
+	if _result_auto_play and _result_text_done and _resolution_pending and not waiting and _dice_count_kind.is_empty():
+		_advance_result_text()
 
 
 func _update_result_wait_controls() -> void:
@@ -1020,7 +1078,8 @@ func _update_result_wait_controls() -> void:
 	if _close_btn != null:
 		_close_btn.disabled = _last_result_waiting
 	if _result_next_button != null:
-		_result_next_button.visible = not _last_result_waiting
+		_result_next_button.visible = true
+		_result_next_button.disabled = _last_result_waiting or not _dice_count_kind.is_empty() or (_resolution_pending and _settlement_phase == "selection")
 
 
 func _on_slot_pressed(slot_key: String) -> void:
@@ -1117,7 +1176,6 @@ func _after_placement_changed() -> void:
 	_qualified_slot = ""
 	_qualified_bags.clear()
 	_qualified_bag_index = -1
-	_resolve_baseline.clear()
 	_last_result = null
 	_gold_used_this_resolve = 0
 	_gold_dice_map.clear()
@@ -1139,7 +1197,9 @@ func _refresh_slot_visuals() -> void:
 		var detail: Label = _slot_details[slot_key]
 		var slot_def: Dictionary = slots.get(slot_key, {})
 		var slot_text := str(slot_def.get("text", "空卡槽"))
-		btn.tooltip_text = slot_text
+		btn.tooltip_text = ""
+		if _slot_tips != null:
+			_slot_tips.attach(_db, btn, "", slot_text)
 		if _placed.has(slot_key):
 			var card_uid := int(_placed[slot_key])
 			var card: Dictionary = _state.card_data_for(card_uid, _db)
@@ -1175,6 +1235,8 @@ func _refresh_tag_values() -> void:
 
 
 func _resolve() -> void:
+	if _awaiting_confirmation or (_state != null and _state.rite_confirmations.has(str(_rite_uid))):
+		return
 	if _running_before_settlement():
 		return
 	if _resolution_pending:
@@ -1198,56 +1260,44 @@ func _resolve() -> void:
 			if not _state.start_rite_instance(_rite_uid):
 				return
 			_update_last_state_button()
-			if int(_rite.get("auto_result", 0)) == 1:
-				# auto_result rites settle without player interaction.
-				# [SRC: GameController.c @ Settlement (0x556ae0) lines 4520-4526
-				#       IsRiteAutoResult -> RiteResultPanelController stays
-				#       inactive (lines 640-644); multi-day ones resolve at the
-				#       day boundary, zero-day ones resolve right here.]
-				if int(_rite.get("round_number", 0)) > 0:
-					_log_label.text = "仪式已开始，将自动结算。"
-					_update_resolve_button()
-					_update_stop_button()
-					closed.emit()
-					return
-				_gold_used_this_resolve = 0
-				_gold_dice_map.clear()
-				_resolve_dice_cache.clear()
-				_prepare_table_from_placements()
-				_resolve_baseline = SaveSystem.serialize(_state)
-				_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
-				_do_resolve()
-				_close_after_commit = true
-				_commit_resolution()
-				return
-			if int(_rite.get("round_number", 0)) > 0:
-				_log_label.text = "仪式开始，将在 %d 天后结算。" % int(_rite.get("round_number", 0))
-				_update_resolve_button()
-				_update_stop_button()
-				closed.emit()
-				return
-	# Fresh resolve: reset gold-dice-used, place cards, snapshot the pre-result
-	# state, then resolve. Gold-dice re-resolves restore this baseline before
-	# applying results, matching the original Promise.Reject unwind path.
+			_awaiting_confirmation = true
+			RiteSettlement.confirm_start(_rite_uid, _state)
+			_complete_confirmation()
+			return
+	# Fresh selection retains live player state; gold retries reuse dice only.
 	# [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 	_gold_used_this_resolve = 0
 	_gold_dice_map.clear()
 	_resolve_dice_cache.clear()
 	_rerolls_left = _reroll_count()
 	_prepare_table_from_placements()
-	_resolve_baseline = SaveSystem.serialize(_state)
 	_pending_table_entries = _state.cards_in_slot_entries_for_rite(_rite_uid)
+	_result_auto_play = _state.rite_auto_result
 	_do_resolve()
+	# [SRC: GameController.Settlement 0x556ae0 reads Player.auto_result_rites
+	# via GameApplication -> Datapool.player(+0x70) -> Player(+0x130).]
+	if _state.auto_result_rites.has(_rite_id):
+		_close_after_commit = true
+		_commit_resolution()
+
+
+func _complete_confirmation() -> void:
+	if not _awaiting_confirmation or _state.rite_confirmations.has(str(_rite_uid)):
+		return
+	_awaiting_confirmation = false
+	if int(_rite.get("round_number", 0)) > 0:
+		_update_resolve_button()
+		_update_stop_button()
+		closed.emit()
+	else:
+		_resolve()
 
 
 func _do_resolve() -> void:
-	if not _resolve_baseline.is_empty():
-		SaveSystem.deserialize(_resolve_baseline, _state, _db)
-		# The baseline deserialize restored the dice counter; subtract this
-		# resolve's usage from the restored value.
-		_state.gold_dice = maxi(0, _state.gold_dice - _gold_used_this_resolve)
-	else:
-		_prepare_table_from_placements()
+	# Selection is read-only with respect to final results. Retry only changes
+	# dice decisions; it must not deserialize the entire player over live events.
+	if _settlement_phase != "selection":
+		return
 	var ctx := {
 		"db": _db, "state": _state, "rng": _rng,
 		"rite_state": _rite_state_from_placements(), "rite_uid": _rite_uid,
@@ -1266,10 +1316,10 @@ func _do_resolve() -> void:
 	if not _gold_dice_map.is_empty():
 		gold_dice_bonus = _gold_dice_map
 	_state.active_rite_uid = _rite_uid
-	var res = RiteResolver.resolve(_rite, ctx, gold_dice_bonus)
+	var res = RiteResolver.select_settlements(_rite, ctx, gold_dice_bonus)
 	_state.active_rite_uid = 0
 	_last_result = res
-	_apply_deferred_to_world(res.deferred)
+	_settlement_context = ctx
 	_resolution_pending = true
 	GameAudio.cue("dice_show.ogg")
 	_display_result(res)
@@ -1293,11 +1343,17 @@ func _commit_resolution() -> void:
 		return
 	if not _resolution_pending or _last_result == null:
 		return
-	var instance = _state.get_rite_instance(_rite_uid) if _state != null and _state.has_method("get_rite_instance") else null
-	if instance != null:
-		RoundLoop.finalize_rite_settlement(instance, _last_result.deferred, _state, _db, _pending_table_entries, _rng)
+	if _settlement_phase == "selection":
+		_settlement_phase = "results"
+		var job := RiteSettlement.begin(_rite_uid, _last_result, _settlement_context, _state, _db, _rng)
+		_last_result.deferred = job.deferred
+		_advance_settlement_execution()
+		return
+	if _settlement_phase != "done":
+		return
 	_resolution_pending = false
 	_resolution_committed = true
+	_update_result_wait_controls()
 	_pending_table_entries.clear()
 	if _gold_dice_btn != null:
 		_gold_dice_btn.disabled = true
@@ -1311,17 +1367,27 @@ func _commit_resolution() -> void:
 		closed.emit()
 
 
-## Closing while dice/result preview is open abandons the uncommitted result.
-## The baseline is taken after card placement, so the rite remains open with
-## the same placed cards, while coin/events/loot and spent gold dice roll back.
+func _advance_settlement_execution() -> void:
+	RiteSettlement.pump(_state, _db, _rng)
+	if not _state.pending_operations.is_empty():
+		_update_result_wait_controls()
+		_refresh_game_screen()
+		return
+	if not _state.rite_settlements.has(str(_rite_uid)):
+		_settlement_phase = "done"
+		_commit_resolution()
+		_refresh_game_screen()
+
+
+## Closing selection abandons the uncommitted selection only. It never
+## restores a player snapshot or refunds already spent gold dice.
 func _close_panel() -> void:
 	if _waiting_for_result_operations():
 		return
 	_qualified_slot = ""
 	_qualified_bags.clear()
 	_qualified_bag_index = -1
-	if _resolution_pending and not _resolve_baseline.is_empty() and _state != null:
-		SaveSystem.deserialize(_resolve_baseline, _state, _db)
+	if _resolution_pending and _settlement_phase == "selection" and _state != null:
 		_resolution_pending = false
 		_last_result = null
 		_gold_used_this_resolve = 0
@@ -1353,11 +1419,7 @@ func _close_panel() -> void:
 func _display_result(res) -> void:
 	# [SRC: DisplayClass77_0 b__3 0x5b5b70 / DisplayClass79_0;
 	# AppendResultText 0x5a13e0; variable.json RESULT_TEXT_FORMAT={0}.]
-	var entries: Array = res.prior_log.duplicate()
-	if entries.is_empty():
-		if not res.normal_entry.is_empty():
-			entries.append(res.normal_entry)
-		entries.append_array(res.extre_log)
+	var entries: Array = res.settlements
 	var sections: PackedStringArray = []
 	# Settlement first shows RiteNode.text before prior/normal branch text.
 	# [SRC: RiteResultPanelController.c Settlement 0x5a4800, rite.node@0x50
@@ -1378,10 +1440,13 @@ func _display_result(res) -> void:
 	if _result_label:
 		_result_label.text = txt
 	if _result_surface_text:
-		_result_surface_text.text = preload("res://ui/source_rich_text.gd").to_bbcode(txt)
-		_result_surface_text.visible_characters = 0
-		_result_text_progress = 0.0
-		_result_text_done = false
+		_result_surface_text.text = ""
+		_result_paragraphs.clear()
+		for section in sections:
+			for paragraph in section.split("\n", false):
+				_result_paragraphs.append(paragraph)
+		_result_paragraph_index = 0
+		_append_result_paragraph()
 		_result_surface_text.set_meta("source_character_per_second", 20.0)
 	_rebuild_result_lists(res)
 	if _result_surface:
@@ -1395,11 +1460,12 @@ func _display_result(res) -> void:
 		_refresh_result_auto_button()
 	_refresh_dice_surface(res)
 	if _result_next_button:
-		_result_next_button.visible = false
+		_result_next_button.visible = true
+		_result_next_button.disabled = true
 
 
 func _update_gold_button() -> void:
-	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null and _resolution_pending
+	var can_spend: bool = _state != null and _state.gold_dice > 0 and _last_result != null and _resolution_pending and _settlement_phase == "selection"
 	if _gold_dice_btn == null:
 		return
 	_gold_dice_btn.disabled = not can_spend or _waiting_for_result_operations() or _dice_count_kind == "reroll" or _gold_selected >= _state.gold_dice
@@ -1408,10 +1474,11 @@ func _update_gold_button() -> void:
 func _use_gold_dice_reactive(amount: int = 1) -> void:
 	if _waiting_for_result_operations():
 		return
-	if not _resolution_pending or amount <= 0 or _state.gold_dice < amount:
+	if _settlement_phase != "selection" or not _resolution_pending or amount <= 0 or _state.gold_dice < amount:
 		return
 	GameAudio.cue("drop_card_gold.ogg")
 	_gold_used_this_resolve += amount
+	_state.gold_dice -= amount
 	var type_key := _gold_type_for_reactive_spend()
 	_gold_dice_map[type_key] = int(_gold_dice_map.get(type_key, 0)) + amount
 	_do_resolve()
@@ -1424,7 +1491,7 @@ func _use_gold_dice_reactive(amount: int = 1) -> void:
 func _use_reroll() -> void:
 	if _waiting_for_result_operations():
 		return
-	if not _resolution_pending or _rerolls_left <= 0:
+	if _settlement_phase != "selection" or not _resolution_pending or _rerolls_left <= 0:
 		return
 	_rerolls_left -= 1
 	_resolve_dice_cache.clear()
@@ -1444,7 +1511,7 @@ func _reroll_count() -> int:
 func _update_reroll_button() -> void:
 	if _reroll_btn == null:
 		return
-	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0) or _waiting_for_result_operations() or not _dice_count_kind.is_empty()
+	_reroll_btn.disabled = not (_resolution_pending and _rerolls_left > 0 and _settlement_phase == "selection") or _waiting_for_result_operations() or not _dice_count_kind.is_empty()
 
 
 ## OnStop: a started multi-day rite can be halted. Cards stay in their slots,
@@ -1453,7 +1520,7 @@ func _update_reroll_button() -> void:
 func _stop_started_rite() -> void:
 	if _state == null or _rite_uid <= 0 or not _state.has_method("stop_rite_instance"):
 		return
-	if _resolution_pending or _resolution_committed or not _can_stop_this_round():
+	if _waiting_for_result_operations() or _resolution_pending or _resolution_committed or not _can_stop_this_round():
 		return
 	if _state.stop_rite_instance(_rite_uid):
 		_log_label.text = "仪式已停止，卡牌保留在槽位中。"

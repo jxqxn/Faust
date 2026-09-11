@@ -23,63 +23,93 @@ class ActiveSudan:
 ## New sudan cards are generated only when no sudan card is active, matching
 ## TryGenSudanCard's HasSudanCard gate rather than a fixed day modulo.
 ## [SRC: GameController.c @ TryGenSudanCard (0x559730)]
-static func advance_day(state, db, rng) -> Dictionary:
-	var result := {
-		"game_over": false, "expired": [], "new_round": false, "auto_rites": [], "drawn_sudan": -1,
-		"settled_rites": [], "expired_rites": [], "round_end_events": [], "round_begin_events": [], "due_delays": [],
-		"adsorbed": [],
-	}
-	# One day transition has a stable event boundary. Round-end effects observe
-	# the outgoing round before any rite life, expiry, or Sudan deadline changes.
-	# [SRC: GameController.c @ OnNextRound (RVA 0x554540) dispatches NextDay;
-	#       GameController @ UpdateSingleRite (RVA 0x55ab10) updates instances
-	#       in that transition; EventTriggerExtensions @ OnRoundEnd.]
-	result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
+static func advance_day(state, db, rng, interactive: bool = false) -> Dictionary:
+	if not state.round_transition.is_empty():
+		return state.round_transition
+	# SaveRoundEnd is before the Promise chain, including card updates.
+	# [SRC: GameController.OnNextRound 0x554540; script.json method metadata
+	# 0x2599300/0x25991a0/0x2592010/0x2599288/0x2599218/0x2591fa0.]
 	_snapshot_round(state, "round_end")
-	state.day += 1
-	# Round-end adsorption: every OPEN slot of every player rite takes the first
-	# hand card its condition accepts, if the slot is still empty. This is the
-	# daily counterpart of InitRite's creation-time adsorption and it runs before
-	# rite settlement and card aging.
-	# [SRC: GameController.__c__DisplayClass142_0.c @ <OnNextRound>b__6
-	#       (0x570b00) prelude: for each rite in player+0x90 call
-	#       RiteExtensions.AdsorbCards (0x38fca0).]
-	result.adsorbed = state.adsorb_open_slots_daily(db, rng)
-	_update_rite_instances(state, db, rng, result)
-	result.due_delays = DeferredEffects.execute_due_delays(state, db, rng)
-	result.expired_cards = _update_card_lives(state, db, rng)
-	# Sudan deadlines share the generic card-life system: cards age daily and
-	# die at the template's card_vanishing (vanish.over drives the ending)
-	# unless they sit in any rite slot. A sudan death is the execution.
-	# [SRC: GameController.__c__DisplayClass196_0.c @ <UpdateSingleCard>b__1
-	#       (0x572420): life+1, death at life >= data.card_vanishing(+0x60)
-	#       unless the any-slot shelter flag; GameController.c @ GenSudanCard
-	#       (0x54f6f0) L3656-3662 births sudan cards with the head start
-	#       card_vanishing - sudan_card_init_life]
-	for entry in result.expired_cards:
-		if bool(entry.get("sudan", false)):
-			result.expired.append(int(entry["id"]))
-			result.game_over = true
-	# round advances unconditionally every day; only the Sultan draw is gated
-	# on having no active Sultan card (inside _begin_round).
-	# [SRC: DisplayClass142_0.c @ <OnNextRound>b__3 (0x570790): player.round
-	#       (player+0x2c) += 1 unconditionally; TryGenSudanCard (0x559730)
-	#       checks HasSudanCard separately]
-	if not result.game_over:
-		_begin_round(state, db, rng, result)
-		# The global rollback kind marks a normal begin boundary (the
-		# back-to-prev restore marks BACK_TO_PREV_END).
-		# [SRC: GameController.c @ OnBeginRound (0x5537b0) L2314-2316:
-		#       Global.roundRollback = 1]
-		state.global_state.round_rollback = GlobalState.ROLLBACK_TO_BEGIN
-	# Hand compaction runs in the post-settlement b__6 chain, after the
-	# round-begin events: positions on the current bag page re-normalize to
-	# 1..N in hand order, so cards granted by today's events get slots too.
-	# [SRC: GameController.c @ UpdateHandCardPos (0x559a70) L1060-1097;
-	#       DisplayClass142_0.c @ <OnNextRound>b__6 (0x570b00) L318-320]
-	update_hand_card_pos(state)
-	_snapshot_round(state, "round_begin")
+	var result := {
+		"game_over": false, "expired": [], "expired_cards": [], "new_round": false,
+		"auto_rites": [], "drawn_sudan": -1, "settled_rites": [], "expired_rites": [],
+		"round_end_events": [], "round_begin_events": [], "due_delays": [],
+		"adsorbed": [], "interactive": interactive, "phase": "auto_start",
+	}
+	state.round_transition = result
+	_pump_day(state, db, rng, result)
 	return result
+
+
+## Persist the next stage BEFORE invoking an operation that may present UI.
+## The original Then chain is serial; source order is not the numeric order
+## of generated closure names. See docs/audit/RiteSystemRootCause.md.
+static func _pump_day(state, db, rng, result: Dictionary) -> void:
+	while state.pending_operations.is_empty() and state.rite_settlements.is_empty():
+		if state.over_pending:
+			result.game_over = true
+			state.round_transition = {}
+			return
+		match str(result.get("phase", "rites")):
+			"auto_start":
+				result.phase = "cards"
+				result.auto_rites = start_auto_begin_rites(state, db)
+			"cards":
+				_update_card_lives(state, db, rng, result)
+				if not result.get("unupdated_cards", []).is_empty() or not state.pending_operations.is_empty():
+					return
+				result.phase = "round_end"
+			"round_end":
+				result.phase = "increment"
+				result.round_end_events = state.trigger_events("round_end", {"round": state.round_number})
+			"increment":
+				result.phase = "rites"
+				state.day += 1
+				state.round_number += 1
+				result.new_round = true
+				state.trigger_events("round_begin_fr", {"round": state.round_number})
+			"rites":
+				var due: Array = result.get("due_rites", [])
+				while not due.is_empty() and state.get_rite_instance(int(due[0])) == null:
+					due.pop_front()
+				if not due.is_empty():
+					return
+				_update_rite_instances(state, db, rng, result, bool(result.interactive))
+				if not result.get("due_rites", []).is_empty() or not state.rite_settlements.is_empty() or not state.pending_operations.is_empty():
+					return
+				result.phase = "delays"
+			"delays":
+				if not result.has("remaining_delays"):
+					result.remaining_delays = state.take_due_delayed_operations()
+				if not result.remaining_delays.is_empty():
+					var delayed: Dictionary = result.remaining_delays.pop_front()
+					result.due_delays.append(delayed)
+					var payload: Dictionary = delayed.get("payload", {}).duplicate(true)
+					payload.erase("id")
+					payload.erase("round")
+					OperationsSequence.start([payload], state, db, rng, delayed.get("context", {}))
+				else:
+					result.phase = "round_begin"
+			"round_begin":
+				result.phase = "adsorb"
+				result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
+			"adsorb":
+				result.phase = "draw"
+				result.adsorbed = state.adsorb_open_slots_daily(db, rng)
+				update_hand_card_pos(state)
+			"draw":
+				result.phase = "complete"
+				if state.auto_gen_sudan_card and state.active_sudan_cards.is_empty():
+					result.drawn_sudan = draw_weekly_sudan(state, db, rng)
+			"complete":
+				_reset_redraw_for_round(state, db)
+				state.global_state.round_rollback = GlobalState.ROLLBACK_TO_BEGIN
+				state.round_transition = {}
+				_snapshot_round(state, "round_begin")
+				return
+			_:
+				push_error("Unknown saved day phase: %s" % result.phase)
+				return
 
 
 ## DoCardUpdate: every live card ages one day; a card whose life reaches its
@@ -96,32 +126,50 @@ static func advance_day(state, db, rng) -> Dictionary:
 ##       when life >= data.card_vanishing(+0x60) and flag == 0;
 ##       GameController.c @ UpdateSudanLife (0x55aeb0) L6363-6372 shows the
 ##       countdown as data.card_vanishing − card.life]
-static func _update_card_lives(state, db, rng) -> Array:
-	var dead: Array = []
+static func _update_card_lives(state, db, rng, progress: Dictionary = {}) -> Array:
+	var dead: Array = progress.get("expired_cards", [])
 	if state == null or db == null or not state.has_method("get_card_instance"):
 		return dead
-	var uid_snapshot: Array = state.card_instances.keys().duplicate()
-	for uid in uid_snapshot:
+	if not progress.has("unupdated_cards"):
+		# Snapshot player cards followed by rite cards, not the instance registry
+		# (which also holds removed cards and unowned/pool objects).
+		# [SRC: DoCardUpdate 0x54d4c0 player+0x88 then player+0x90;
+		# DisplayClass196_0 b__0 0x572220 updates equipment before host.]
+		progress.unupdated_cards = []
+		var hosts: Array = []
+		for card_uid in state.card_instances:
+			var host = state.get_card_instance(int(card_uid))
+			if host.zone in ["hand", "sudan"]:
+				hosts.append({"uid": host.uid, "shelter": false})
+		for rite_uid in state.rite_instances:
+			for entry in state.cards_in_slot_entries_for_rite(int(rite_uid)):
+				hosts.append({"uid": int(entry.card_uid), "shelter": true})
+		for entry in hosts:
+			var host = state.get_card_instance(int(entry.uid))
+			for equipment_uid in host.equipped_uids:
+				progress.unupdated_cards.append({"uid": int(equipment_uid), "shelter": entry.shelter})
+			progress.unupdated_cards.append(entry)
+	while not progress.unupdated_cards.is_empty():
+		var update = progress.unupdated_cards.pop_front()
+		var uid := int(update.uid) if update is Dictionary else int(update)
 		var inst = state.get_card_instance(int(uid))
 		if inst == null or inst.is_lost or inst.zone == "removed":
+			continue
+		if ResultExec._has_freeze_tag(inst, state, db):
 			continue
 		var is_sudan: bool = state.is_active_sudan_card(int(uid))
 		var card: Dictionary = db.get_card(int(inst.card_id))
 		var lifetime := int(card.get("card_vanishing", 0))
-		if lifetime < 1:
-			continue
 		inst.life += 1
 		if is_sudan:
 			for asc in state.active_sudan_cards:
 				if int(asc.card_uid) == int(uid):
 					asc.days_left = lifetime - inst.life
-		var sheltered: bool = inst.zone == "slot" and inst.rite_uid > 0
-		if sheltered or inst.life < lifetime:
+		var sheltered: bool = bool(update.shelter) if update is Dictionary else inst.zone == "slot" and inst.rite_uid > 0
+		if sheltered or lifetime < 1 or inst.life < lifetime:
 			continue
 		dead.append({"id": int(inst.card_id), "card_uid": int(uid), "sudan": is_sudan})
 		var vanish: Dictionary = card.get("vanish", {})
-		if not vanish.is_empty():
-			DeferredEffects.apply(ResultExec.execute(vanish, state, db), state, db, rng)
 		# No card_dead timing is fired here. EventTriggerExtensions.OnCardDead
 		# exists (28 On* entry points) but has NO call site anywhere in the
 		# decompiled corpus and no `on.card_dead` in any of the 1863 event
@@ -141,10 +189,14 @@ static func _update_card_lives(state, db, rng) -> Array:
 				if int(asc.card_uid) != int(uid):
 					still_active.append(asc)
 			state.active_sudan_cards = still_active
-		elif inst.zone == "hand" and state.has_method("remove_card_from_hand"):
-			state.remove_card_from_hand(int(uid))
-		inst.zone = "removed"
-		inst.is_lost = true
+		state.remove_card_instance_from_play(uid)
+		if is_sudan:
+			progress.get("expired", []).append(int(inst.card_id))
+		# RemoveCard precedes DoVanish; wait its operations before the next card.
+		# [SRC: DisplayClass196_0 b__1 0x572420; freeze literal 0x25ac9e8.]
+		OperationsSequence.start([vanish], state, db, rng, {"card_uid": uid, "self_card_uid": uid})
+		if not state.pending_operations.is_empty() or state.over_pending:
+			return dead
 	return dead
 
 
@@ -402,6 +454,14 @@ static func _promote_sudan_pool_entry(state, db, entry, life_override: int = -1)
 static func _begin_round(state, db, rng, result: Dictionary) -> void:
 	result.new_round = true
 	state.round_number += 1
+	_reset_redraw_for_round(state, db)
+	result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
+	result.auto_rites = start_auto_begin_rites(state, db)
+	if state.auto_gen_sudan_card and state.active_sudan_cards.is_empty():
+		result.drawn_sudan = draw_weekly_sudan(state, db, rng)
+
+
+static func _reset_redraw_for_round(state, db) -> void:
 	var recovery := int(state.sudan_redraw_times_recovery_round)
 	# The original guards against a zero-remainder divisor: recovery < 2 resets
 	# every day instead of dividing by zero.
@@ -411,19 +471,6 @@ static func _begin_round(state, db, rng, result: Dictionary) -> void:
 			state.reset_sudan_redraw_usage()
 		else:
 			state.redraws_left = _redraws_per_round(state, db)
-	# The original increments Player.round then runs OnRoundBeginBa before its
-	# follow-up round pipeline. Auto-start only changes Rite.start; it belongs
-	# after that event boundary and before the next Sudan draw.
-	# [SRC: GameController.__c__DisplayClass141_0.c @ <Start>b__5 (RVA 0x56f9c0),
-	#       lines 120-150; GameController.c @ DoStartAutoBeginRite (0x54ebc0)]
-	result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})
-	result.auto_rites = start_auto_begin_rites(state, db)
-	# Only the Sultan draw is gated on having no active Sultan card; the round
-	# itself always advances. The disabled-generation flag skips only the draw.
-	# [SRC: GameController.c @ TryGenSudanCard (0x559730) lines 3563-3566:
-	#       HasSudanCard gate + player+0x161 disable flag]
-	if state.auto_gen_sudan_card and state.active_sudan_cards.is_empty():
-		result.drawn_sudan = draw_weekly_sudan(state, db, rng)
 
 
 ## Open/start auto-begin rites. Do not resolve them: the original
@@ -459,11 +506,15 @@ static func start_auto_begin_rites(state, db) -> Array:
 ## rites settle at round_number. `auto_result` changes presentation, not this
 ## eligibility rule.
 ## [SRC: GameController.c @ UpdateSingleRite (RVA 0x55ab10), lines 5853-5882]
-static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
+static func _update_rite_instances(state, db, rng, result: Dictionary, interactive: bool = false) -> void:
 	if state == null or db == null or not state.has_method("available_rite_instances"):
 		return
-	var instances: Array = state.available_rite_instances().duplicate()
-	for instance in instances:
+	if not result.has("unupdated_rites"):
+		result["unupdated_rites"] = []
+		for instance in state.available_rite_instances():
+			result.unupdated_rites.append(instance.uid)
+	while not result.unupdated_rites.is_empty():
+		var instance = state.get_rite_instance(int(result.unupdated_rites.pop_front()))
 		if instance == null or not db.rites.has(instance.id):
 			continue
 		var rite: Dictionary = db.rites[instance.id]
@@ -471,40 +522,41 @@ static func _update_rite_instances(state, db, rng, result: Dictionary) -> void:
 		if not instance.start:
 			var waiting_round := int(rite.get("waiting_round", 0))
 			if waiting_round > 0 and instance.life >= waiting_round:
-				# RiteExtensions.Dead dispatches OnRiteClean before it runs the
-				# configured timeout operations and returns cards.
-				# [SRC: RiteExtensions.c @ Dead (RVA 0x501460), lines 44-60]
-				state.trigger_events("rite_clean", {"rite": instance.id})
-				_execute_waiting_round_end(rite, instance, state, db, rng)
-				state.return_rite_cards(instance.uid, db)
-				state.remove_rite_instance(instance.uid)
+				RiteSettlement.expire(instance.uid, state, db, rng)
 				result.expired_rites.append({"id": instance.id, "uid": instance.uid})
-				# Journal: the rite expired without starting.
-				# [SRC: GameController.c L5867 NoteRiteDead -> AddNote type 2]
-				if state.has_method("add_note"):
-					state.add_note(2, instance.id, instance.uid)
+				if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty():
+					return
 			continue
 		if instance.life < int(rite.get("round_number", 0)):
 			continue
-		# A started rite is resolved by the normal settlement pipeline. In this
-		# headless path no gold-dice retry is possible, which is the role of
-		# auto_result in the original UI.
-		# Order note: the original runs all settlement ops before the chain-tail
-		# RemoveRite, but the clone's Power-Game cross-rite chain depends on
-		# finalize-first (the successor rite adsorbs the Sultan during apply).
-		# Deferred to in-play feedback; report 8 A6/C5.
-		var table_entries: Array = state.cards_in_slot_entries_for_rite(instance.uid)
-		var res: Variant = _resolve_rite_instance(rite, instance, state, db, rng)
-		finalize_rite_settlement(instance, res.deferred, state, db, table_entries, rng)
-		DeferredEffects.apply(res.deferred, state, db, rng)
-		state.trigger_events("rite_end", {"rite": instance.id})
+		if interactive:
+			if not result.has("due_rites"):
+				result["due_rites"] = []
+			result.due_rites.append(instance.uid)
+			return
+		# Headless callers use the same pausable execution host; presentation
+		# decisions are supplied by RiteView only in interactive mode.
+		_resolve_rite_instance(rite, instance, state, db, rng)
 		result.settled_rites.append({"id": instance.id, "uid": instance.uid, "auto_result": int(rite.get("auto_result", 0)) == 1})
 		# Journal: the rite settled. The original notes from the result panel
 		# after settlement completes.
 		# [SRC: RiteResultPanelController.__c__DisplayClass56_0 ->
 		#       NoteRiteDone (0x38ec30) -> AddNote type 3]
-		if state.has_method("add_note"):
-			state.add_note(3, instance.id, instance.uid)
+		if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty():
+			return
+
+
+## Continue a headless transition after its pending UI decision was answered.
+## UI callers present due_rites themselves, then call the same update stage.
+static func resume_day(state, db, rng) -> Dictionary:
+	var result: Dictionary = state.round_transition
+	if result.is_empty():
+		return result
+	RiteSettlement.pump(state, db, rng)
+	if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty():
+		return result
+	_pump_day(state, db, rng, result)
+	return result
 
 
 static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
@@ -528,8 +580,10 @@ static func _resolve_rite_instance(rite: Dictionary, instance, state, db, rng):
 	if state.has_method("with_player_actor_context"):
 		ctx = state.with_player_actor_context(ctx, db)
 	state.active_rite_uid = instance.uid
-	var res = RiteResolver.resolve(rite, ctx, 0)
+	var res = RiteResolver.select_settlements(rite, ctx, 0)
 	state.active_rite_uid = 0
+	var job := RiteSettlement.begin(instance.uid, res, ctx, state, db, rng)
+	res.deferred = job.deferred
 	return res
 
 
@@ -555,6 +609,19 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 		var card_id := int(table_card.get("id", 0))
 		var card_uid := int(table_card.get("card_uid", 0))
 		var slot_num := int(table_card.get("slot", 0))
+		var current_card = state.get_card_instance(card_uid)
+		if current_card == null:
+			continue
+		if current_card.zone == "removed":
+			# clear_slot already retires the CardInstance; the separate active
+			# Sultan rail still needs to consume that same UID exactly once.
+			if state.is_active_sudan_card(card_uid) and (slot_num in clean_slots or card_id in clean_card_ids):
+				consume_sudan(state, card_uid)
+			continue
+		# An action may already have absorbed a returned card into a successor.
+		# Removing the old rite must not take it back from that live owner.
+		if current_card != null and current_card.zone == "slot" and current_card.rite_uid > 0 and current_card.rite_uid != instance.uid:
+			continue
 		var is_cleaned := clean_rite or slot_num in clean_slots or card_id in clean_card_ids
 		if is_cleaned:
 			if state.is_active_sudan_card(card_uid):
@@ -569,8 +636,6 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 				sudan_instance.slot_key = ""
 		elif not state.has_card_in_hand(int(table_card.get("card_uid", card_id))):
 			state.add_card_to_hand(int(table_card.get("card_uid", card_id)), db)
-	var post_rng = rng if rng != null else state.get("_event_rng")
-	_run_post_rites(table_entries, instance, state, db, post_rng)
 	state.remove_rite_instance(instance.uid)
 	# A completed final_pin becomes a persistent endpoint only after the live
 	# Rite is removed.  It is not a new runtime Rite and cannot open a panel.
@@ -582,90 +647,6 @@ static func finalize_rite_settlement(instance, deferred: Dictionary, state, db, 
 		state.add_rite_pin(instance.id)
 
 
-## Card-carried post-rite settlements run when the settled rite's result panel
-## shows: every card that joined the rite — plus each card equipped on those
-## cards — executes its config `post_rite` entries with itself as the acting
-## context, so consumables clean themselves and equipped retainers detach
-## from their hosts.
-## [SRC: RiteResultPanelController.c:1268 -> CardExtensions.DoPostRite per
-##       rite card; CardExtensions.c @ DoPostRite runs the card's post_rite
-##       settlements after its equip relationships are stripped; card config
-##       post_rite field dump.cs:389811 (RiteNode.Settlement[])]
-static func _run_post_rites(table_entries: Array, instance, state, db, rng) -> void:
-	if state == null or db == null or not state.has_method("get_card_instance"):
-		return
-	for table_card in table_entries:
-		var owner_uids: Array[int] = []
-		var host_uid := int(table_card.get("card_uid", 0))
-		if host_uid > 0:
-			owner_uids.append(host_uid)
-			var host = state.get_card_instance(host_uid)
-			if host != null:
-				for equipped_uid in host.equipped_uids:
-					owner_uids.append(int(equipped_uid))
-		for card_uid in owner_uids:
-			var inst = state.get_card_instance(card_uid)
-			if inst == null or inst.zone == "removed":
-				continue
-			var definition: Dictionary = db.get_card(int(inst.card_id)) if db.has_method("get_card") else {}
-			var post_rites: Array = definition.get("post_rite", [])
-			if post_rites.is_empty():
-				continue
-			var ctx := {
-				"db": db, "state": state, "rng": rng,
-				"rite_id": instance.id, "rite_uid": instance.uid,
-				"card_uid": card_uid, "card": int(inst.card_id),
-				"acting_card": state.card_data_for(card_uid, db) if state.has_method("card_data_for") else {},
-				"acting_card_id": int(inst.card_id),
-			}
-			if state.has_method("with_player_actor_context"):
-				ctx = state.with_player_actor_context(ctx, db)
-			state.active_rite_uid = instance.uid
-			for entry in post_rites:
-				if not (entry is Dictionary):
-					continue
-				if not ConditionEval.evaluate(entry.get("condition", {}), ctx):
-					continue
-				var deferred := ResultExec.execute(entry.get("result", {}), state, db, ctx)
-				_merge_deferred(deferred, ResultExec.execute(entry.get("action", {}), state, db, ctx))
-				DeferredEffects.apply(deferred, state, db, rng)
-				var pr_title := str(entry.get("result_title", ""))
-				var pr_text := str(entry.get("result_text", ""))
-				if (pr_title != "" or pr_text != "") and state.has_method("queue_prompt"):
-					state.queue_prompt({
-						"id": "post_rite.%d.%d" % [card_uid, state.day],
-						"title": pr_title,
-						"text": pr_text,
-					})
-			state.active_rite_uid = 0
-
-
-## waiting_round_end_action is a conditional sequence. It runs before cards
-## return and the rite is removed, matching RiteExtensions.Dead.
-static func _execute_waiting_round_end(rite: Dictionary, instance, state, db, rng) -> void:
-	var attr_slots: Array = []
-	var rite_state := {}
-	for slot_key in rite.get("cards_slot", {}):
-		var key := str(slot_key)
-		attr_slots.append(key)
-		var cards: Array = state.cards_in_slot(key.substr(1).to_int(), instance.uid)
-		if not cards.is_empty():
-			rite_state[key] = int(cards[0].get("id", 0))
-	var ctx := {"db": db, "state": state, "rng": rng, "rite_state": rite_state, "attr_slots": attr_slots, "rite_id": instance.id, "rite_uid": instance.uid}
-	if state.has_method("with_player_actor_context"):
-		ctx = state.with_player_actor_context(ctx, db)
-	state.active_rite_uid = instance.uid
-	for entry in rite.get("waiting_round_end_action", []):
-		if not (entry is Dictionary) or not ConditionEval.evaluate(entry.get("condition", {}), ctx):
-			continue
-		var deferred := ResultExec.execute(entry.get("result", {}), state, db)
-		_merge_deferred(deferred, ResultExec.execute(entry.get("action", {}), state, db))
-		DeferredEffects.apply(deferred, state, db, rng)
-		var title := str(entry.get("result_title", ""))
-		var text := str(entry.get("result_text", ""))
-		if (title != "" or text != "") and state.has_method("queue_prompt"):
-			state.queue_prompt({"id": "rite_timeout.%d.%d" % [instance.uid, state.day], "title": title, "text": text})
-	state.active_rite_uid = 0
 
 
 static func _merge_deferred(into: Dictionary, src: Dictionary) -> void:

@@ -99,7 +99,7 @@ func test_waiting_rite_executes_timeout_then_returns_cards_and_is_removed():
 	assert_true(state.has_card_in_hand(2000005), "timeout returns its placed card")
 	assert_eq(state.coin_count, 2, "waiting_round_end_action ran before removal")
 	assert_eq(result.expired_rites, [{"id": 991001, "uid": instance.uid}])
-	assert_eq(state.event_prompts.size(), 1, "timeout result text reaches the shared prompt queue")
+	assert_eq(state.event_prompts.size(), 0, "Dead executes result/action without fabricating a result_text prompt")
 
 
 func test_started_rite_settles_only_when_its_life_reaches_round_number():
@@ -334,7 +334,7 @@ func test_post_rite_consumable_cleans_itself_after_settlement():
 func test_post_rite_tag_tips_and_self_tag_op():
 	var local_db := _db_with_post_rite_cards()
 	local_db.rites[991098].settlement = [{
-		"condition": {"r1:战斗>=": 1}, "result": {}, "action": {},
+		"condition": {"r1:战斗>=": [1, 1]}, "result": {}, "action": {},
 	}]
 	var state := GameState.new()
 	var instance = state.create_rite_instance(991098)
@@ -409,4 +409,3 @@ func test_selector_family_conditions_and_ops():
 	ResultExec.execute({"self+印记": 1}, state, local_db, ctx)
 	var host = state.get_card_instance(host_uid)
 	assert_eq(int(host.tags.get("印记", 0)), 1, "self+<tag> applies to the acting card")
-

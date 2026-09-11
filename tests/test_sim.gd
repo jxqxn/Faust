@@ -451,9 +451,7 @@ func test_sub_counter_clamps_registered_nonneg_to_zero():
 	st.sub_counter(7000999, 10)
 	assert_eq(st.get_counter(7000999), -5, "ungated counter may go negative")
 
-func test_methinks_consume_last_sudan_triggers_new_round():
-	# Consuming the last active sudan via methinks must start a new round and
-	# draw a fresh sudan, instead of leaving the player stuck.
+func test_methinks_consumption_waits_for_next_day_to_draw_sudan():
 	var local_db := ConfigDB.new()
 	local_db.load_all()
 	local_db.init_config["think_id"] = 999001
@@ -472,6 +470,8 @@ func test_methinks_consume_last_sudan_triggers_new_round():
 	# Ensure exactly one active sudan and a non-empty deck for the next draw.
 	state.active_sudan_cards.clear()
 	state.active_sudan_cards.append(RoundLoop.ActiveSudan.new(2010001, 7, 1))
+	state.sync_rail_order()
+	state.pending_operations.clear()
 	state.reset_sudan_pool_to_ids([2010002, 2010003])
 	var round_before := state.round_number
 	var result := MethinksEngine.process_card(2010001, "active_sudan", state, local_db, rng)
@@ -483,6 +483,12 @@ func test_methinks_consume_last_sudan_triggers_new_round():
 	assert_false(result.has("new_round"), "no same-day new-round report")
 	assert_true(state.active_sudan_cards.is_empty(), "no replacement sudan until the day boundary")
 	var day := RoundLoop.advance_day(state, local_db, rng)
+	for _step in range(128):
+		if state.round_transition.is_empty():
+			break
+		if not state.pending_operations.is_empty():
+			OperationsSequence.resume(state.consume_pending_operation(), state, local_db, rng)
+		day = RoundLoop.resume_day(state, local_db, rng)
 	assert_true(day.new_round, "the next day boundary starts the next round")
 	assert_true(day.drawn_sudan >= 0, "and draws the next sudan")
 

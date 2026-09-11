@@ -53,7 +53,7 @@ func test_delay_survives_v5_save_and_executes_once_when_due() -> void:
 	assert_eq(restored.delayed_operations.size(), 1)
 	assert_eq(int(restored.delayed_operations[0].get("context", {}).get("card_uid", 0)), 77)
 	var starting_round := restored.round_number
-	var day_result := RoundLoop.advance_day(restored, local_db, RNG.new(702))
+	var day_result := preload("res://tests/support/rite_driver.gd").finish_day(self, restored, local_db, RNG.new(702))
 	assert_eq(restored.round_number, starting_round + 1, "round advances every day even with an active Sultan")
 	assert_eq(day_result.due_delays.size(), 1, "delay round=1 executes on the next day boundary")
 	assert_true(restored.is_event_enabled(990701))
