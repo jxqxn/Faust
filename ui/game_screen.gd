@@ -497,6 +497,21 @@ func _build_ui() -> void:
 		stamp.stretch_mode = TextureRect.STRETCH_SCALE
 		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_advance_button.add_child(stamp)
+	# Source Next Round swaps the stamp texture on pointer enter; this is the
+	# authored hover state, rather than a Godot tint approximation.
+	if ResourceLoader.exists("res://assets/original/ui/main/next_day_hover.png"):
+		var hover_stamp := TextureRect.new()
+		hover_stamp.name = "NextDayHoverStamp"
+		hover_stamp.texture = load("res://assets/original/ui/main/next_day_hover.png")
+		hover_stamp.size = Vector2(305, 306)
+		hover_stamp.position = Vector2(596 * 0.5 + 62 - 305 * 0.5, 634 * 0.5 + 41 - 306 * 0.5)
+		hover_stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hover_stamp.stretch_mode = TextureRect.STRETCH_SCALE
+		hover_stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hover_stamp.visible = false
+		_advance_button.add_child(hover_stamp)
+		_advance_button.mouse_entered.connect(func(): hover_stamp.visible = true)
+		_advance_button.mouse_exited.connect(func(): hover_stamp.visible = false)
 	else:
 		_advance_button.text = "下一天"
 		_advance_button.add_theme_font_size_override("font_size", 46)
@@ -1763,6 +1778,9 @@ func set_log(text: String) -> void:
 
 
 func play_next_day_transition() -> void:
+	# The source hides the actionable clock as soon as the click is accepted.
+	_advance_button.visible = false
+	_next_day_label.visible = false
 	# Source OnNextRound starts with a short full-screen night mask before the
 	# serial Promise chain updates cards, rites and the day counter.
 	var mask := ColorRect.new()
