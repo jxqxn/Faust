@@ -524,7 +524,8 @@ func _build_ui() -> void:
 	_next_day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_next_day_label.add_theme_font_size_override("font_size", 100)
 	_next_day_label.add_theme_color_override("font_color", Color("#f2e3b0"))
-	_next_day_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_next_day_label.mouse_filter = Control.MOUSE_FILTER_PASS
+	_next_day_label.gui_input.connect(_on_next_day_label_gui_input)
 	_next_day_label.z_index = PERSISTENT_CONTROL_Z
 	add_child(_next_day_label)
 
@@ -1665,7 +1666,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var mouse := event as InputEventMouseButton
 	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
 		return
-	if not _advance_button.get_global_rect().has_point(mouse.position):
+	if not _advance_button.get_global_rect().has_point(mouse.position) and (_next_day_label == null or not _next_day_label.get_global_rect().has_point(mouse.position)):
 		return
 	var frame := Engine.get_process_frames()
 	if _advance_mouse_fallback_frame == frame:
@@ -1683,6 +1684,20 @@ func _on_right_actions_gui_input(event: InputEvent) -> void:
 	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
 		return
 	if not _advance_button.get_global_rect().has_point(mouse.position + _right_actions.global_position):
+		return
+	var frame := Engine.get_process_frames()
+	if _advance_mouse_fallback_frame == frame:
+		return
+	_advance_mouse_fallback_frame = frame
+	advance_pressed.emit()
+	get_viewport().set_input_as_handled()
+
+
+func _on_next_day_label_gui_input(event: InputEvent) -> void:
+	if _advance_button == null or _advance_button.disabled or not event is InputEventMouseButton:
+		return
+	var mouse := event as InputEventMouseButton
+	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
 		return
 	var frame := Engine.get_process_frames()
 	if _advance_mouse_fallback_frame == frame:
@@ -2336,7 +2351,10 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 			add_child(_card_info_view)
 		if not _card_info_view.closed.is_connected(close_card_detail):
 			_card_info_view.closed.connect(close_card_detail)
-	set_world_scene_blocker("card_detail", true)
+	# CardInfoNew overlays the desk content while the persistent Next Round
+	# chrome remains visible in the source scene. Lock its action, but do not
+	# hide the clock art or its label behind the detail panel.
+	set_world_scene_blocker("card_detail", true, false, true)
 	_card_info_view.show_card(card, card_uid)
 	_apply_layout()
 	_apply_layout()

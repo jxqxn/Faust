@@ -1951,6 +1951,10 @@ func test_game_screen_can_open_card_detail_overlay():
 	assert_not_null(_find_node_by_name(screen, "CardDetailOverlay"), "clicking a card should open a main-screen card detail overlay")
 	assert_not_null(_find_node_by_name(screen, "CardDetailPanel"), "card detail should render as a floating panel, not a standalone screen")
 	assert_not_null(_find_node_by_name(screen, "CloseCardDetailButton"), "card detail overlay should be closable")
+	var next_day := _find_node_by_name(screen, "AdvanceDayButton") as Button
+	assert_true(next_day.visible, "CardInfoNew keeps the source Next Round clock visible")
+	assert_not_null(next_day.get_node_or_null("NextDayWatch"), "CardInfoNew must not remove the source clock icon")
+	assert_true(_find_node_by_name(screen, "NextDayLabel").visible, "Next Round label remains part of the desktop chrome")
 	var subtitle := _find_node_by_name(screen, "CardDetailSubtitle") as Label
 	assert_not_null(subtitle)
 	if subtitle != null:
