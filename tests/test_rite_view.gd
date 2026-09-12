@@ -30,6 +30,42 @@ func test_rite_view_keeps_protagonist_as_actor_while_other_cards_are_participant
 	view.queue_free()
 
 
+func test_power_game_real_source_config_opens_and_confirms_without_nil_chain() -> void:
+	var state := GameState.new()
+	state.setup_new_run(db, 0, RNG.new(9101))
+	var event := db.get_event(5300089)
+	assert_false(event.is_empty(), "source power-game event is loaded")
+	DeferredEffects.execute_event(event, state, db, RNG.new(9101))
+	var instance = state.find_rite_instance_by_id(5001001)
+	assert_not_null(instance, "source event creates the power-game rite")
+	if instance == null:
+		return
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, RNG.new(9101), 5001001, instance.uid)
+	add_child(view)
+	await wait_process_frames(3)
+	assert_eq(view._rite_uid, instance.uid, "panel binds the generated rite instance")
+	assert_eq(view._slot_buttons.size(), 7, "source power-game panel builds all seven slots")
+	view._resolve()
+	await wait_process_frames(3)
+	RiteSettlement.pump_confirmations(state)
+	assert_true(instance.start, "confirming the source rite starts the one-day instance")
+
+
+func test_result_dice_prompt_reads_repeated_source_conditions() -> void:
+	var view := _owned(RiteView.new()) as RiteView
+	var result := {
+		"normal_entry": {
+			"condition": [
+				{"r1:智慧>=": [1, 5]},
+				{"r1:智慧>=": [1, 4]},
+			]
+		},
+		"dice_rolls": [5, 4, 3],
+	}
+	assert_eq(view._successes_for_result(result), 1, "result prompt reads the first repeated r1 threshold")
+
+
 func _owned(node: Node) -> Node:
 	autofree(node)
 	return node

@@ -263,7 +263,13 @@ func _build_slot_placeholders() -> void:
 		backdrop.visible = not bool(slot_layout.get("is_hide_bg", false))
 		backdrop.set_meta("hide_empty_and_filled", bool(slot_layout.get("is_hide_bg", false)))
 		backdrop.set_meta("hide_when_filled", bool(slot_layout.get("is_set_card_hide_bg", false)))
-		var type_name := str(_rite.get("cards_slot", {}).get(slot_key, {}).get("condition", {}).get("type", ""))
+		# SourceJSON preserves repeated condition members as an ordered Array.
+		# Slot s4 in the source has repeated !is entries, so its condition is no
+		# longer a plain Dictionary even though the slot definition itself is.
+		# Read the authored `type` member through the lossless accessor instead of
+		# calling Dictionary.get on the condition value.
+		var slot_condition: Variant = _rite.get("cards_slot", {}).get(slot_key, {}).get("condition", {})
+		var type_name := str(SourceJSON.member(slot_condition, "type", ""))
 		if ResourceLoader.exists("res://assets/original/ui/card_type_%s.png" % type_name):
 			var icon := _picture(btn, "SlotType", "card_type_" + type_name, Rect2())
 			var icon_size := icon.texture.get_size() * 1.7
@@ -799,8 +805,12 @@ func _successes_for_result(res) -> int:
 		return 0
 	var threshold := 5
 	var entry: Dictionary = res.normal_entry if res.normal_entry is Dictionary else {}
-	for key in entry.get("condition", {}):
-		var value = entry.get("condition", {}).get(key)
+	# Lossless source conditions become an ordered Array when a member repeats.
+	# Use entries() here as well as in the resolver so the result prompt cannot
+	# crash while inspecting an authored repeated r1 condition.
+	for condition_entry in SourceJSON.entries(entry.get("condition", {})):
+		var key := str(condition_entry.keys()[0]) if condition_entry is Dictionary and not condition_entry.is_empty() else ""
+		var value = condition_entry[key] if not key.is_empty() else null
 		if str(key).begins_with("r") and value is Array and value.size() > 1:
 			threshold = int(value[1])
 			break

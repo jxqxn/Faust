@@ -1812,9 +1812,10 @@ func _update_persistent_action_availability() -> void:
 	)
 	if _right_actions != null:
 		_right_actions.visible = actions_visible
-		# Disabled Buttons still absorb Godot mouse picking. During a rite,
-		# their rectangular bounds overlap the source result PlayRate button.
-		_right_actions.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# The host must pass pointer events to its enabled child buttons. When
+		# actions are locked, ignore the whole host so its large clock rect cannot
+		# cover the source result surface beneath it.
+		_right_actions.mouse_filter = Control.MOUSE_FILTER_PASS if actions_available else Control.MOUSE_FILTER_IGNORE
 		# Every background element recedes through the same pause shade. Applying
 		# another alpha only to this column makes it read as a broken floating UI.
 		_right_actions.self_modulate = Color.WHITE

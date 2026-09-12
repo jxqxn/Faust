@@ -749,6 +749,7 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	assert_null(_find_node_by_name(game, "RiteSelector"), "MapController has no location selector shortcut")
 	assert_true(think_drop.visible, "the thought target remains visible under the rite overlay")
 	assert_true(right_actions.visible)
+	assert_eq(right_actions.mouse_filter, Control.MOUSE_FILTER_IGNORE, "locked action host does not cover the result surface")
 	assert_true(advance.disabled, "rite overlay blocks progression controls")
 	assert_true(redraw.disabled, "rite overlay blocks redraw controls")
 	assert_true(menu.disabled, "rite overlay blocks the global menu entry")
@@ -2108,6 +2109,7 @@ func test_game_screen_matches_mockup_spatial_layout():
 	assert_not_null(advance, "desktop layout needs a named AdvanceDayButton")
 	if deadline == null or menu == null or desk_map == null or sudan_box == null or card_rail == null or right_actions == null or advance == null:
 		return
+	assert_eq(right_actions.mouse_filter, Control.MOUSE_FILTER_PASS, "available action host must pass mouse input to child buttons")
 
 	# Authored 3840x2160 chrome scales with the stage (k = view/design).
 	var view := Rect2(Vector2.ZERO, screen._effective_view_size())
