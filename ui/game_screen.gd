@@ -542,7 +542,11 @@ func _build_ui() -> void:
 	# The source label is visual text inside the clock hit target.  It must not
 	# become a second input surface: as a sibling added after RightActions it
 	# otherwise intercepts the click before AdvanceDayButton receives it.
+	# The authored next_day_0 sprite already contains the visible label. The
+	# standalone fallback label would duplicate it and is kept only for the
+	# missing-asset case.
 	_next_day_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_next_day_label.visible = not ResourceLoader.exists("res://assets/original/ui/next_day_0.png")
 	_next_day_label.z_index = PERSISTENT_CONTROL_Z
 	add_child(_next_day_label)
 
