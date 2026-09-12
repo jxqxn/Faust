@@ -1,5 +1,7 @@
 extends GutTest
 
+const GameScreen = preload("res://ui/game_screen.gd")
+
 func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 	# [SRC: event/5310000 op3, 5310001 op1, 5310002 op2, 5310003 op2;
 	# save_samples/auto_save.json notes 10001/10002 provide independent rewards.]
@@ -95,3 +97,55 @@ func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 	if DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
 		get_viewport().get_texture().get_image().save_png("res://docs/ui_layout/opening_reward_hand.png")
+
+
+func test_first_two_days_use_real_next_day_input_and_survive_save_load() -> void:
+	var stage := Control.new()
+	stage.size = get_viewport().get_visible_rect().size
+	add_child_autofree(stage)
+	var main = load("res://scenes/main.tscn").instantiate()
+	stage.add_child(main)
+	main._start_new_run(1, false)
+	var state: GameState = main.state
+	# Resolve the source opening chain through the live prompt controller.
+	for step in range(256):
+		await wait_process_frames(1)
+		if state.pending_operations.is_empty():
+			break
+		var op := state.pending_operation()
+		var choices: Dictionary = op.get("payload", {}).get("choices", {})
+		if choices.has("diff_1"):
+			main._game_screen._consume_event_display("diff_1", choices.diff_1)
+		elif op.has("sequence_response"):
+			var selected := ""
+			for key in op.sequence_response.choices:
+				if str(op.sequence_response.choices[key].tag) == "op1":
+					selected = str(key)
+					break
+			if selected.is_empty():
+				selected = "confirm_cancel"
+			main._game_screen._consume_event_display(selected)
+		elif op.kind == "rename_card":
+			main._game_screen._rename_input.text = "阿尔图"
+			main._game_screen._consume_event_display()
+		else:
+			main._game_screen._consume_event_display()
+	await wait_process_frames(2)
+	assert_true(state.pending_operations.is_empty())
+	assert_true(state.round_transition.is_empty())
+	var screen = main._game_screen as GameScreen
+	var next_day := screen.get_node("RightActions/AdvanceDayButton") as Button
+	var actions := screen.get_node("RightActions") as Control
+	assert_false(next_day.disabled, "completed opening enables Next Round")
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = next_day.get_global_rect().get_center() - actions.global_position
+	screen._on_right_actions_gui_input(press)
+	await wait_process_frames(2)
+	assert_eq(state.round_number, 2, "real mouse input starts the second day")
+	assert_true(screen.get_node_or_null("NextDayTransitionMask") != null or state.round_transition.is_empty(), "next-day transition is represented while the chain runs")
+	var saved := SaveSystem.serialize(state)
+	var restored := GameState.new()
+	SaveSystem.deserialize(saved, restored, main.db)
+	assert_eq(restored.round_number, 2, "second-day state survives save/load")

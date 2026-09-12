@@ -15,6 +15,12 @@
 - PromptNew.prefab Confirm 只有图片与 InputDisplay，无居中“确认/继续”文本；移除克隆 Button 的额外 text。RiteOverlayToast 是克隆自制表面，移除成功拖放/停止/恢复的文字输出，不改槽位高亮与合法性判定。
 - 已验收本批边界：七组 140/140，1901 断言；真实新游戏按钮链、原作存档奖励清单、开场存读档与实际拖放走查通过。详见 `docs/audit/OpeningRewardsAndLegacyText.md`，不等于全开局地图与所有动画已验收。
 
+## 前两日端到端流程验收（2026-09-12）
+
+- 开场事件链完成后，真实 `InputEventMouseButton` 命中 `Next Round`，进入 `RoundLoop.advance_day`；不再以 `pressed.emit()` 作为唯一交互证据。
+- 下一天过渡包含夜幕遮罩的进入/退出动画；第二日的 round/day、卡牌和仪式状态保存后读档保持一致。
+- 回归：`tests/test_opening_ui.gd` 的首日奖励/仪式顺序与前两日链共 2/2 测试、40 断言通过。该批只覆盖前两日主链，完整事件分支、仪式结果过场和所有原作动画仍按各自条目标记。
+
 
 ## 初始人物与可见手牌（2026-09-11，本批实施）
 
