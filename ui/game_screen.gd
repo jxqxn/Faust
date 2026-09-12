@@ -524,8 +524,10 @@ func _build_ui() -> void:
 	_next_day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_next_day_label.add_theme_font_size_override("font_size", 100)
 	_next_day_label.add_theme_color_override("font_color", Color("#f2e3b0"))
-	_next_day_label.mouse_filter = Control.MOUSE_FILTER_PASS
-	_next_day_label.gui_input.connect(_on_next_day_label_gui_input)
+	# The source label is visual text inside the clock hit target.  It must not
+	# become a second input surface: as a sibling added after RightActions it
+	# otherwise intercepts the click before AdvanceDayButton receives it.
+	_next_day_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_next_day_label.z_index = PERSISTENT_CONTROL_Z
 	add_child(_next_day_label)
 
@@ -581,7 +583,8 @@ func _build_ui() -> void:
 		_sort_button.add_child(sort_icon)
 	_sort_button.pressed.connect(sort_hand_pressed)
 	_right_actions.add_child(_sort_button)
-	_right_actions.gui_input.connect(_on_right_actions_gui_input)
+	# Input is owned by the Button children, matching Unity's Button.OnClick.
+	# Do not catch the parent rect and synthesize a second press.
 	# Match visual chrome order for Godot mouse picking (z_index alone does
 	# not change Control hit testing). Keep modal hosts above these targets.
 	for chrome in [_deadline_strip, _bag_tabs]:

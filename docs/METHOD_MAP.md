@@ -15,11 +15,12 @@
 - PromptNew.prefab Confirm 只有图片与 InputDisplay，无居中“确认/继续”文本；移除克隆 Button 的额外 text。RiteOverlayToast 是克隆自制表面，移除成功拖放/停止/恢复的文字输出，不改槽位高亮与合法性判定。
 - 已验收本批边界：七组 140/140，1901 断言；真实新游戏按钮链、原作存档奖励清单、开场存读档与实际拖放走查通过。详见 `docs/audit/OpeningRewardsAndLegacyText.md`，不等于全开局地图与所有动画已验收。
 
-## 前两日端到端流程验收（2026-09-12）
+## 前两日流程验收纠正（2026-09-12，未闭合）
 
-- 开场事件链完成后，真实 `InputEventMouseButton` 命中 `Next Round`，进入 `RoundLoop.advance_day`；不再以 `pressed.emit()` 作为唯一交互证据。
-- 下一天过渡包含夜幕遮罩的进入/退出动画；第二日的 round/day、卡牌和仪式状态保存后读档保持一致。
-- 回归：`tests/test_opening_ui.gd` 的首日奖励/仪式顺序与前两日链共 2/2 测试、40 断言通过。该批只覆盖前两日主链，完整事件分支、仪式结果过场和所有原作动画仍按各自条目标记。
+- 撤回此前端到端通过结论：test_opening_ui 直接调用处理函数，未验证鼠标命中；只校验 round=2，不代表第二日结算完成，也未比对卡牌/仪式读档结果。
+- 本次临时视口探针记录 AdvanceDayButton 命中及 day=2，但仍停在 rites 阶段，且 headless 窗口比例与用户截图不同。不能登记实机问题解决。
+- NextDayLabel 改为 IGNORE，取消父容器转发连接，让点击交给 Button；仍需用户相同比例窗口的真实输入、阻塞边界和读档回放。原作依据入口：GameController.OnNextRound 0x554540、GameScene Next Round Button。
+- 现有夜幕 ColorRect 参数没有原作背书，继续标记为自制待替换。桌面 RedrawSudanButton 借用 DiceCountPromptNew/Redraw 的 redraw_active 图标及自定位置，同样待去除并恢复原作 Wizard 重抽入口。
 
 
 ## 初始人物与可见手牌（2026-09-11，本批实施）
