@@ -1759,6 +1759,22 @@ func set_log(text: String) -> void:
 		_log_label.text = text
 
 
+func play_next_day_transition() -> void:
+	# Source OnNextRound starts with a short full-screen night mask before the
+	# serial Promise chain updates cards, rites and the day counter.
+	var mask := ColorRect.new()
+	mask.name = "NextDayTransitionMask"
+	mask.color = Color(0.02, 0.015, 0.01, 0.0)
+	mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mask.z_index = BLOCKING_PROMPT_Z - 1
+	add_child(mask)
+	var tween := create_tween()
+	tween.tween_property(mask, "color:a", 0.72, 0.18)
+	tween.tween_property(mask, "color:a", 0.0, 0.28)
+	tween.tween_callback(mask.queue_free)
+
+
 func add_overlay(node: Control) -> void:
 	if _overlay_layer == null:
 		add_child(node)

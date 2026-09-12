@@ -475,9 +475,29 @@ func _after_rite_resolution() -> void:
 
 
 func _on_advance() -> void:
-	if not state.round_transition.is_empty() or not state.rite_settlements.is_empty() or not state.rite_confirmations.is_empty() or not state.think_session.is_empty() or not state.pending_operations.is_empty():
+	if state == null:
+		return
+	# A transition may be waiting only for the UI pump (for example after the
+	# opening narrator chain). Continue that source Promise chain instead of
+	# silently discarding the player's Next Round click.
+	if not state.round_transition.is_empty():
+		if not state.pending_operations.is_empty() and _game_screen != null:
+			_game_screen.refresh()
+		_drive_round_settlements()
+		return
+	if not state.rite_settlements.is_empty() or not state.rite_confirmations.is_empty() or not state.think_session.is_empty():
+		if _game_screen != null:
+			_game_screen.refresh()
+		return
+	if not state.pending_operations.is_empty():
+		# Pending operations are blocking source prompts. Refresh makes an
+		# operation that was left behind by a presentation rebuild visible again.
+		if _game_screen != null:
+			_game_screen.refresh()
 		return
 	_audio.play("button-next-day.ogg")
+	if _game_screen != null and _game_screen.has_method("play_next_day_transition"):
+		_game_screen.play_next_day_transition()
 	var result := RoundLoop.advance_day(state, db, rng, true)
 	if not state.round_transition.is_empty():
 		_drive_round_settlements()
