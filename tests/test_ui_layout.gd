@@ -2130,6 +2130,31 @@ func test_game_screen_matches_mockup_spatial_layout():
 	assert_almost_eq(advance.get_global_rect().size.y, 634.0 * k, 2.0, "watch keeps the original 634 height")
 
 
+func test_next_day_clock_routes_a_real_mouse_press_through_game_screen():
+	var state := GameState.new()
+	state.setup_new_run(db, 1, RNG.new(401))
+	var stage := _stage()
+	var screen := GameScreen.new()
+	screen.setup(state, db, RNG.new(402))
+	stage.add_child(screen)
+	await wait_process_frames(2)
+	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Button
+	var right_actions := _find_node_by_name(screen, "RightActions") as Control
+	assert_not_null(advance)
+	assert_not_null(right_actions)
+	if advance == null or right_actions == null:
+		return
+	var point := advance.get_global_rect().get_center()
+	var press := InputEventMouseButton.new()
+	press.button_index = MOUSE_BUTTON_LEFT
+	press.pressed = true
+	press.position = point - right_actions.global_position
+	var received := [0]
+	screen.advance_pressed.connect(func(): received[0] += 1)
+	screen._on_right_actions_gui_input(press)
+	assert_eq(received[0], 1, "a click inside the source clock rect emits exactly one advance action")
+
+
 func test_situation_desk_keeps_actions_separate_at_narrow_width():
 	var rng := RNG.new(41)
 	var state := GameState.new()

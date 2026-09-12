@@ -132,6 +132,7 @@ var _event_panel = null  # PromptNew OptionBG (plain Control after batch AL)
 var _rename_input: LineEdit
 var _sleep_waiting := false
 var _presentation_frozen := false
+var _advance_mouse_fallback_frame := -1
 var _presentation_blockers: Dictionary = {}
 var _persistent_action_locks: Dictionary = {}
 var _underlying_presentation_pauses: Dictionary = {}
@@ -510,7 +511,10 @@ func _build_ui() -> void:
 	# back to a rectangular default, making the paused primary action look
 	# malformed even though its layout rectangle has not changed.
 	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
-	_advance_button.pressed.connect(func(): advance_pressed.emit())
+	_advance_button.pressed.connect(func():
+		_advance_mouse_fallback_frame = Engine.get_process_frames()
+		advance_pressed.emit()
+	)
 	_right_actions.add_child(_advance_button)
 
 	_next_day_label = Label.new()
@@ -576,6 +580,7 @@ func _build_ui() -> void:
 		_sort_button.add_child(sort_icon)
 	_sort_button.pressed.connect(sort_hand_pressed)
 	_right_actions.add_child(_sort_button)
+	_right_actions.gui_input.connect(_on_right_actions_gui_input)
 	# Match visual chrome order for Godot mouse picking (z_index alone does
 	# not change Control hit testing). Keep modal hosts above these targets.
 	for chrome in [_deadline_strip, _bag_tabs]:
@@ -1643,6 +1648,48 @@ func _on_hand_card_quick_action(card_uid: int) -> void:
 				child.drop_card_on_slot(key, data)
 			return
 	_on_hand_card_hold_hint(card_uid)
+
+
+## The source Next Round control is a Button hosted by a large clock rect.  A
+## number of source-sized sibling controls overlap that rect, so Godot can
+## leave a real mouse click unhandled even though the Button itself is enabled.
+## Keep the action at the GameScreen input boundary as the source controller
+## does: one click in the authored clock rect emits the same action signal.
+func _unhandled_input(event: InputEvent) -> void:
+	if _advance_button == null or not is_instance_valid(_advance_button):
+		return
+	if _advance_button.disabled or _advance_button.mouse_filter == Control.MOUSE_FILTER_IGNORE:
+		return
+	if not event is InputEventMouseButton:
+		return
+	var mouse := event as InputEventMouseButton
+	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
+		return
+	if not _advance_button.get_global_rect().has_point(mouse.position):
+		return
+	var frame := Engine.get_process_frames()
+	if _advance_mouse_fallback_frame == frame:
+		return
+	_advance_mouse_fallback_frame = frame
+	advance_pressed.emit()
+
+
+func _on_right_actions_gui_input(event: InputEvent) -> void:
+	if _advance_button == null or _advance_button.disabled:
+		return
+	if not event is InputEventMouseButton:
+		return
+	var mouse := event as InputEventMouseButton
+	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
+		return
+	if not _advance_button.get_global_rect().has_point(mouse.position + _right_actions.global_position):
+		return
+	var frame := Engine.get_process_frames()
+	if _advance_mouse_fallback_frame == frame:
+		return
+	_advance_mouse_fallback_frame = frame
+	advance_pressed.emit()
+	get_viewport().set_input_as_handled()
 
 
 func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order
