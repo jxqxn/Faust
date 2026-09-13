@@ -1,0 +1,13 @@
+{
+  "source": "D:/Sultans Game/Sultan's Game_Data/resources.assets",
+  "shader_path_id": 2056,
+  "shader_name": "MG/Almighty_Blend",
+  "evidence": "UnityPy ShaderProgram decompressed DXBC subprogram m_Keywords, independently of m_KeywordIndices",
+  "subprograms": [
+    {"blob": 23, "keywords": ["DIRECTIONAL"], "mask_channel": "red"},
+    {"blob": 30, "keywords": ["DIRECTIONAL", "_MASK_R_ON"], "mask_channel": "alpha"}
+  ],
+  "material": "ND_mask01",
+  "material_enabled_keywords": ["_MASK_R_ON"],
+  "status": "Channel verified; particle geometry and visual transition not accepted."
+}

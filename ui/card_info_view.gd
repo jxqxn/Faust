@@ -260,7 +260,7 @@ func _build_content(card: Dictionary) -> void:
 	var text := str(card.get("text", card.get("tips", "")))
 	if _state != null and _state.has_method("substitute_text"):
 		text = str(_state.substitute_text(text))
-	_content_label.text = preload("res://ui/source_rich_text.gd").to_bbcode(text)
+	preload("res://ui/source_rich_text.gd").set_label_text(_content_label, text)
 	_place(_panel, rect, _content_label)
 
 

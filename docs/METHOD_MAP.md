@@ -1,5 +1,9 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+2026-09-13 提示布局二次复审（实施中）：只读提取 TMP_Text.CalculatePreferredValues 0x18c40f0、HorizontalOrVerticalLayoutGroup.SetChildrenAlongAxis 0x1bbc900/CalcAlongAxis 0x1bbc400。TMP paragraphSpacing@0x304 与 lineSpacing@0x2f0 乘基础字号×0.01（DLL常量VA0x181c92b40）；仅换行额外加入段间距。布局主轴空间不足时不执行对齐偏移。PromptIconController.SetIcon 0x58a210 → UIImageExtensions.LoadSprite 0x40c210/SetNativeSize 与原始 Sprite.m_Rect/PPU 为立绘裁切、原生尺寸依据。复审范围自夜幕pivot修复起，含性能缓存、重抽入口清理、结算按钮、富文本、滚动条和操作序列改动。
+
+2026-09-13 提示附加结果补查（🟡）：StartRite.Do 0x51bcf0 → OperationContext.AddExtraResult_RiteStart 0x39f810 → Prompt.Do 0x519340；NoPromptOperations.Do 0x5001f0 保存进入前文本，完成回调 0x506390 清理并恢复该文本，dump.cs:312546–312560 的 context/current 字段为独立信号。实现以可序列化操作帧保存恢复边界，不能将 no_prompt 当普通 all，否则内部生成仪式会泄漏提示。卡牌附加结果与完整上下文继承仍未闭合。
+
 ## 全清单收敛（2026-09-11，本批已验收）
 
 - DesktopModifyEquip.DoTemplate 0x50d820 / DesktopModifyRare.DoTemplate 0x50df50 / DesktopCleanCard.DoTemplate 0x4f8250：Player.cards@0x88；TotalModifyTag.DoTemplate 0x51d6c0：GetTotalCards。统一 table/g 目标域，total 排除嵌套装备；保留独立槽选择器语义。
@@ -20,7 +24,7 @@
 - 撤回此前端到端通过结论：test_opening_ui 直接调用处理函数，未验证鼠标命中；只校验 round=2，不代表第二日结算完成，也未比对卡牌/仪式读档结果。
 - 本次临时视口探针记录 AdvanceDayButton 命中及 day=2，但仍停在 rites 阶段，且 headless 窗口比例与用户截图不同。不能登记实机问题解决。
 - NextDayLabel 改为 IGNORE，取消父容器转发连接，让点击交给 Button；仍需用户相同比例窗口的真实输入、阻塞边界和读档回放。原作依据入口：GameController.OnNextRound 0x554540、GameScene Next Round Button。
-- 现有夜幕 ColorRect 参数没有原作背书，继续标记为自制待替换。桌面 RedrawSudanButton 借用 DiceCountPromptNew/Redraw 的 redraw_active 图标及自定位置，同样待去除并恢复原作 Wizard 重抽入口。
+- 旧夜幕 ColorRect 参数没有原作背书，已在 d2835911 删除；完整夜幕/白昼 Promise 过场仍缺失。桌面 RedrawSudanButton 借用 DiceCountPromptNew/Redraw 的 redraw_active 图标及自定位置，同样待去除并恢复原作 Wizard 重抽入口。
 
 
 ## 初始人物与可见手牌（2026-09-11，本批实施）
@@ -505,6 +509,8 @@ RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定Scro
 
 `PromptControllerBase.Awake 0x589430` / `UIImageExtensions.LoadSprite 0x40c210` + stringliteral 0x25ACDA8=`full/item_bg`：FullImage 父容器首位动态加载背景，LoadSprite 的 native-size 后才设置 stretch anchors。PromptNew Full 的 Mask m_ShowMaskGraphic=0，Sprite prompt_bg_mask_2 border=(284,234,248,255)，矩形按锚点换算为(38,52)/2629x828；旧克隆误把 mask 画成黑块且 y/高度符号反了。已导入源 item_bg.png（SHA256 7E4B1EBC32F2D695EECEEA3221EBFA5ADECA66077A4644D0C80F9DCD3B67C024），恢复仅裁切子项与底图。Prompt.Do 0x519340 的 icon@0x20 保留到显示层，当前标量图已接；数组/嵌套图及 full CG 仍缺。事件专项10/10、72断言；原配置事件5300102的鼠标选择/确认/后继提示/事件启用两种分辨率通过，截图与限制见 PageFidelity。
 
+**2026-09-13 白色竖杠纠错（🟡）**：已移除 Godot 内置滚动条绘制/命中，按 PromptNew 的独立轨道、SlidingArea、Handle 和状态颜色建立外部滚动条。两种尺寸真实滚轮与拖动7/7、79断言。原作5300098短提示已实机确认无滚动条；源事件附加仪式通知已通过磁盘保存读档和真实鼠标关闭。相对/百分比字号及Title字体转换已修正，原始markup保留用于字体偏好变更和仪式结算重建。全量763测试中762通过、1项GPU门禁另跑通过；最新事件专项12/12、100断言。长提示原作拖动、字体间距、Sprite裁切和多层立绘布局仍有差异，不宣称像素级完成。详见 [本轮证据及缺口](audit/prompt_scrollbar/README.md)。
+
 ## 仪式成熟门与前置分支（2026-09-08 续批）
 
 - `GameController.UpdateSingleRite 0x55ab10`：started 且 life < round_number 时不结算；独立字段 `dump.cs:392403` life@0x2c / `393174` round_number@0x44。RiteView 重开入口与确认按钮共用该门，0/1天拒绝、2天允许的专项通过；修复“重开正在运行的仪式便能提前领结果”。
@@ -760,3 +766,35 @@ DeepSeek 第十九至三十六批已在工作区，接手记录见 [DeepSeekHand
 
 ### 2026-09-11 原始配置授权与读取修复
 用户已明确授权改用 StreamingAssets/config 原文件并升级校验。OperationJsonConverter.ReadInternal<object> 0x70d1d0（dump.cs:394250）逐成员追加操作；ConditionJsonConverter.Read 0x386350 逐成员追加条件；TimingJsonConverter.Read 0x3a7bc0 保留重复时机。SourceJSON + OperationsSequence 现保留重复项，原始 5300066 顺序、重复条件、两次暂停续执行、延迟存档顺序均有回归。SHA256 与独立完整成员树对拍各 3889 文件、零差异。详 audit/RemainingCloneConvergence.md。本批不把已保留的未知 DSL 视为已实现。
+
+### 2026-09-12 下一天定位纠错（🟡，完整跨日验收仍未闭合）
+
+原作证据：GameScene.unity RectTransform 7732 的 Unity anchor/pivot (1,0) 是右下，转换为 Godot 左上坐标为 (W-596,H-634)。Text 根 7637 的中心为 (W-240.5,H-275)，scale 0.95；7690/7633/7659 为 512 方形。Image 11518 的 raycast padding (80,160,80,160) 对应 352×192 点击范围，继承 0.95 缩放。TMP 10918 disabled。HoverImageSwitch.c 0x42c640/0x42c680 与 dump.cs 420082 的 NormalImage/HoverImage 字段确认普通/悬停图互斥。
+
+直接检查资产：next_day_0.png 是罗盘内盘，main/next_day.png 才是文字。旧版删除 Label 的理由错误；把文字 hover 图塞进内盘的 305×306 矩形更是跨节点混用。当前恢复独立文字图组及点击目标，保留右下罗盘。
+
+教训与门禁：不能把 Unity 的 y 向上坐标当成 Godot 的 y 向下；不能靠资源名推断图像内容；RectTransform 真值表不足以证明组件启用状态；悬停必须检查 Normal/Hover 的控制器引用与共同父级。修改前记录屏幕基准，修改后必须检查真实输入命中与画面，未做完整窗口/过场/读档对拍不得声称像素级完成。本批次不将尚缺失的跨日过场登记为完成。
+
+本批次验证：tests/test_next_day_geometry.gd 在 Godot 4.7 实际 GL 渲染进程中通过 1 测试/17 断言，日志无 ERROR、泄漏、孤儿诊断。覆盖 1920×1080 与 1280×720 布局、SubViewport.push_input 的真实鼠标命中/悬停/单击一次、阻塞时 disabled/mouse_filter、过渡调用后文字隐藏。渲染截图 docs/ui_layout/next_day_position_corrected.png 已检查，日志 next_day_position_validation.log。测试监听 advance_pressed，仅证明控件路由，不证明完整跨日状态/动画/读档链；后者仍为未闭合。
+
+## 下一天后续提交复审（2026-09-12）
+
+详见 [NextDayFollowupAudit](audit/NextDayFollowupAudit.md)。删除残留矩形输入兜底；纠正两个伪真实输入测试；恢复过渡结束后的按钮显示。完整跨日验收仍未闭合。
+
+### 跨日动画接入依据（2026-09-12，实施中）
+
+**黑条根因已修（2026-09-12 后续）**：ParticleSystemRenderer pivot 误当 UI 原点相减，-0.05×60 本应 -3 却用了 +3，产生镜像遮罩 12 单位重叠与四层深色条带。改为 -3 后按源间距 54 恰好接合；实际 GPU 夜/昼 18 时刻连续性检查通过，详 [NightMaskPivotCorrection](audit/NightMaskPivotCorrection.md)。下文“遮罩硬接缝未修”是此前状态；发光/扫光、原作完整逐帧/音效对拍仍未完成。
+
+2026-09-12 验收增量：保存 `round_transition.rite_display` 恢复已提交结算的结果页关闭等待（RiteResultPanelController.OnClose 0x5a3ae0 / finalPromise@0xD8）。原作 auto_save 起点连续 1→2→3 天、真实视口输入、磁盘存档及整个 main 场景重建通过 2 测试/135 断言，每天两次最终确认且效果不重复。修正恢复后的提示命中层级与准备页显隐。整体仍 🟡：遮罩硬接缝、发光/扫光缺失、未提交骰子选择恢复及独立进程重启未验；自制重抽入口未替换。详 [当前状态矩阵及日志](audit/NextDayFollowupAudit.md)。
+
+独立进程补验已完成调度边界：`tools/verify_next_day_restart.ps1`，六个不同 PID 的实际 GL 进程、62 项检查通过；隔离磁盘保存与夜幕/白昼中断恢复，真实点击连续 1→2→3 天，无重复加天、无过渡锁残留。完整仪式内容的跨进程中断仍待验，不能与同进程的原作存档回放混称同一条全覆盖证据。运行文件提取的遮罩 PNG 与现资产 RGBA 完全一致，当前接缝不能归因于贴图导出；实际粒子顶点/UV 待核。
+
+OnNextRound b__0→b__1(NextDay_NightEnterPromise)→自动仪式/卡寿命→OnRoundEnd→增加回合→仪式/延迟→b__5(NextDay_DayEnterPromise)→OnRoundBeginBa→吸附/抽卡→SaveRoundBegin。NextDay_Night/Day.anim 均 4 秒，末尾 OnAnimationEvent 触发 OnNightEnter/OnDayEnter；Day 的时间由 NextDay_Round_Helper.Continue 根据第一圈剩余时间同步。三圈参数 TotalTime=9, BackTime=3, ContinueCheckTime=6, FullSpeed=1, LoopSpeed=.125, SpeedLerpTime=10。源 shader YAML 是 DummyShaderTextExporter，已从本机原作 resources/sharedassets3.assets 离线提取 DXBC，不能把白色占位 shader 当真。证据 docs/audit/next_day_shader。
+
+### 2026-09-12 桌面/仪式性能批次（🟡）
+
+承接 CardController/CardRender、RitePanelShowController.Show、TextTranslate 表面：已消除样式与模板重复解析、图集反复 GPU 读回，以及卡牌/仪式贴图随控件销毁而反复加载。原配置、纹理、ShaderMaterial 参数和动画未改。原作直接依据、阶段耗时、103 测试/1288 断言、真实分页/拖放、六进程跨日恢复记录见 [性能审计](audit/DesktopPerformanceAudit.md)。冷加载、全量重建及大手牌性能仍 🟡，不能宣称全场景流畅或原作等速。
+性能原作补查：`GameController.AddCard 0x54ad40 / UpdateHandCards 0x559d90 / ChangeCurrentBag 0x54cb60` + `dump.cs Card._gameObject@0x70` 证实既有卡牌控件可复用、非当前页换父级；宿主全量 queue_free 尚未消除，登记 🟡。用户确认优化策略不必机械照搬原作，依据实测借鉴其资源/控件生命周期；不得改变玩家可见的行为与表现以伪造收益。详性能审计末节。
+
+
+2026-09-13 复审：Sprite.border 的上下边界已修正；滚动条现在使用外部轨道/滑块层级，真实拖动与hover/pressed转换已有克隆回归。原作长提示同态过程仍未取得，保持 🟡，不以静态几何断言代替最终渲染验收。

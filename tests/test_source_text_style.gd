@@ -6,6 +6,11 @@ func test_source_markup_preserves_comparisons_and_nested_styles():
 	assert_eq(converter.to_bbcode("3 > 2; 1 < 2"), "3 > 2; 1 < 2")
 	assert_eq(converter.to_bbcode("<b><color=#FCE29A><size=86>角色</size></color></b>"), "[b][color=#FCE29A][font_size=86]角色[/font_size][/color][/b]")
 	assert_eq(converter.to_bbcode("<sprite=12><size=120%>文字</size>"), "<sprite=12><size=120%>文字</size>", "unsupported tokens remain paired for the renderer audit")
+	assert_eq(converter.to_bbcode("<size=+10>大</size><size=-10>小</size>", 50), "[font_size=60]大[/font_size][font_size=40]小[/font_size]")
+	assert_eq(converter.to_bbcode("<size=+10>大</size>"), "<size=+10>大</size>", "without a source base size do not invent an absolute size")
+	assert_eq(converter.to_bbcode('<font="unknown"><b>字</b></font>', 50), '<font="unknown">[b]字[/b]</font>', "unmapped fonts remain visible to the audit")
+	assert_eq(converter.to_bbcode('· <size=125%><align=left>事件</align></size>', 40), '· [font_size=50]事件[/font_size]', "source inline left alignment must not split the bullet into a separate paragraph")
+	assert_eq(converter.to_bbcode('<size=125%>事件</size>', 60), '[font_size=75]事件[/font_size]', "percentage size follows the active source font preference")
 
 const Style = preload("res://ui/source_text_style.gd")
 
@@ -93,10 +98,12 @@ func test_preference_updates_open_text_and_survives_restart() -> void:
 	var body := RichTextLabel.new()
 	var title := Label.new()
 	Style.apply(body, "@MAIN_BODY")
+	preload("res://ui/source_rich_text.gd").set_label_text(body, "<size=+10>relative</size>")
 	Style.apply(title, "@RITE_PANEL_TITLE")
 	var source: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
 	assert_true(settings.set_font_size("lg"))
 	assert_eq(body.get_theme_font_size("normal_font_size"), int(source["@MAIN_BODY"].css_size.lg))
+	assert_string_contains(body.text, "[font_size=%d]" % (int(source["@MAIN_BODY"].css_size.lg) + 10))
 	assert_eq(title.get_theme_font_size("font_size"), 60)
 	settings.font_size = "sm"
 	settings._loaded = false
@@ -105,6 +112,7 @@ func test_preference_updates_open_text_and_survives_restart() -> void:
 	assert_false(settings.set_font_size("invalid"))
 	assert_eq(settings.font_size, "lg")
 	Style.apply(body, "@RITE_SETTLEMENT_TEXT")
+	assert_string_contains(body.text, "[font_size=%d]" % (int(source["@RITE_SETTLEMENT_TEXT"].css_size.lg) + 10), "rebinding a style recalculates relative source markup")
 	assert_true(settings.set_font_size("xxl"))
 	assert_eq(body.get_theme_font_size("normal_font_size"), int(source["@RITE_SETTLEMENT_TEXT"].css_size.xxl))
 	body.free()

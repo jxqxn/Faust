@@ -80,14 +80,30 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 			var legacy: Dictionary = JSON.parse_string(frame.source_json)
 			operations = frame.keys.map(func(key): return {key: legacy[key]})
 		if int(frame.index) >= operations.size():
+			# NoPromptOperations.Do 0x5001f0 / completion0x506390 restores
+			# the entry text after nested work, even when it suspended for UI.
+			if frame.has("restore_pre_extra_result"):
+				sequence["pre_extra_result"] = str(frame.restore_pre_extra_result)
 			sequence.frames.pop_back()
 			continue
 		var entry: Dictionary = operations[int(frame.index)]
 		var key: String = entry.keys()[0]
 		frame.index = int(frame.index) + 1
 		var value = entry[key]
-		if (value is Dictionary or value is Array) and key in ["all", "no_show", "no_prompt"]:
+		# Prompt.Do 0x519340 reads and clears OperationContext.preExtraResult,
+		# then appends it with stringliteral0x25ACA58 (newline). Keep this text
+		# in the serializable sequence rather than a transient UI queue.
+		if key == "prompt" and value is Dictionary:
+			var extra: String = str(sequence.get("pre_extra_result", ""))
+			sequence["pre_extra_result"] = ""
+			if not extra.is_empty():
+				value = value.duplicate(true)
+				value["text"] = str(value.get("text", "")) + "\n" + extra
+		var no_prompt := key == "no_prompt" or key.begins_with("no_prompt:")
+		if (value is Dictionary or value is Array) and (key in ["all", "no_show"] or no_prompt):
 			_push(sequence, value)
+			if no_prompt:
+				sequence.frames.back()["restore_pre_extra_result"] = str(sequence.get("pre_extra_result", ""))
 			continue
 		if (value is Dictionary or value is Array) and (key in ["success", "failed"] or key.begins_with("case:")):
 			# Unmatched branches preserve the status; only an executed branch resets.
@@ -148,6 +164,9 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 				for effect in effects:
 					if effect.kind == "event":
 						DeferredEffects.execute_event(db.get_event(int(effect.payload.id)), state, db, rng, context)
+					elif effect.kind == "rite":
+						var born_uid: int = DeferredEffects._add_rite_and_note(int(effect.payload.id), state, db, rng)
+						_append_rite_start_result(sequence, born_uid, state, db)
 					else:
 						DeferredEffects._apply_ordered_effect(effect, state, db, rng)
 			DeferredEffects._merge(summary, deferred)
@@ -164,3 +183,20 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 			_attach(operation, [sequence])
 			return summary
 	return summary
+
+
+## [SRC: StartRite.Do 0x51bcf0 -> AddExtraResult_RiteStart 0x39f810;
+## dump.cs:392398 Rite.new_born@0x20. The source guards new_born, not is_show.
+## OperationContext.AddExtraResult 0x39fa10 joins using PROMPT_RESULT_SEPERATOR;
+## UI template0x258CDD0 = PROMPT_RITE_START_RESULT.]
+static func _append_rite_start_result(sequence: Dictionary, uid: int, state, db) -> void:
+	var rite = state.get_rite_instance(uid)
+	if rite == null or not rite.new_born:
+		return
+	var text: String = db.translate("PROMPT_RITE_START_RESULT")
+	text = text.replace("{0}", state.rite_display_name(rite.id, db))
+	# Current source template uses only {0}; do not invent a location label.
+	var previous: String = str(sequence.get("pre_extra_result", ""))
+	if not previous.is_empty():
+		previous += str(db.variable_config.get("PROMPT_RESULT_SEPERATOR", ""))
+	sequence["pre_extra_result"] = previous + text

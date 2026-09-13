@@ -38,8 +38,14 @@ static func begin(uid: int, selected, context: Dictionary, state, db, rng) -> Di
 	var key := str(uid)
 	if state.rite_settlements.has(key):
 		return state.rite_settlements[key]
+	var instance = state.get_rite_instance(uid)
+	var rite_id := int(context.get("rite_id", 0))
+	if rite_id <= 0 and instance != null:
+		rite_id = int(instance.id)
+	if instance == null:
+		return {}
 	var job := {
-		"uid": uid, "rite_id": int(context.get("rite_id", state.get_rite_instance(uid).id)), "phase": "results",
+		"uid": uid, "rite_id": rite_id, "phase": "results",
 		"entries_json": JSON.stringify(selected.settlements, "", false),
 		"entry_index": 0,
 		"entry_contexts": selected.entry_contexts.duplicate(true),
@@ -109,7 +115,8 @@ static func _run_phase(job: Dictionary, phase: String, state, db, rng) -> void:
 static func record(context: Dictionary, deferred: Dictionary, state) -> void:
 	var key := str(context.get("settlement_job", ""))
 	if state.rite_settlements.has(key):
-		RiteResolver._merge_deferred(state.rite_settlements[key].deferred, deferred)
+		var job: Dictionary = state.rite_settlements[key]
+		RiteResolver._merge_deferred(job.get("deferred", {}), deferred)
 
 static func pump(state, db, rng) -> void:
 	if not state.pending_operations.is_empty():

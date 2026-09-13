@@ -39,6 +39,9 @@ static func get_theme() -> Theme:
 ## a real Font/RID leak in headless Godot runs.
 static func clear_cache() -> void:
 	_theme = null
+	OriginalAtlas.clear_cache()
+	preload("res://ui/source_texture_cache.gd").clear_cache()
+	preload("res://ui/source_text_style.gd").clear_cache()
 
 
 static func _build() -> Theme:

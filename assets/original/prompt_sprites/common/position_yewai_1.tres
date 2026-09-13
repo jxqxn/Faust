@@ -1,0 +1,10 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/original/cards/position_yewai_1.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(6.0761204, 22.07607960, 1135.8477, 719.8478)
+filter_clip = true
+metadata/source_sprite = "Resources/image/common/position_yewai_1.asset"
+metadata/source_native_size = Vector2(1135.84770000, 719.84780000)

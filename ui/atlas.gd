@@ -7,14 +7,19 @@ class_name OriginalAtlas
 extends RefCounted
 
 const CACHE_CAPACITY := 256
+const ATLAS_CACHE_CAPACITY := 32
+static var _atlases: Dictionary = {}
 
 var _atlas_texture: Texture2D
+var _atlas_image: Image
 var _frames: Dictionary = {}
 var _cache: Dictionary = {}
 var _frame_scale := Vector2.ONE
 
 
 static func load_atlas(atlas_path: String) -> OriginalAtlas:
+	if _atlases.has(atlas_path):
+		return _atlases[atlas_path]
 	if not ResourceLoader.exists(atlas_path):
 		return null
 	var atlas := OriginalAtlas.new()
@@ -32,7 +37,15 @@ static func load_atlas(atlas_path: String) -> OriginalAtlas:
 		for frame in parsed.get("frames", []):
 			if frame is Dictionary:
 				atlas._frames[str(frame.get("filename", ""))] = frame
+	# Share immutable metadata and extracted frames across short-lived UI views.
+	if _atlases.size() >= ATLAS_CACHE_CAPACITY:
+		_atlases.erase(_atlases.keys()[0])
+	_atlases[atlas_path] = atlas
 	return atlas
+
+
+static func clear_cache() -> void:
+	_atlases.clear()
 
 
 ## Extract one frame by filename (e.g. "rite_0.png") as a standalone texture.
@@ -43,7 +56,10 @@ func frame(frame_name: String) -> Texture2D:
 	if meta.is_empty() or _atlas_texture == null:
 		return null
 	var rect: Dictionary = meta.get("frame", {})
-	var image := _atlas_texture.get_image()
+	# Reading a GPU texture back for every frame can stall the render thread.
+	if _atlas_image == null:
+		_atlas_image = _atlas_texture.get_image()
+	var image := _atlas_image
 	var src := Rect2i(
 		int(rect.get("x", 0)), int(rect.get("y", 0)),
 		int(rect.get("w", 0)), int(rect.get("h", 0))

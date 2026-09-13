@@ -24,9 +24,9 @@ static func allocate(
 		ratio = clampf((extent - min_total) / (pref_total - min_total), 0, 1)
 	var excess := maxf(0, extent - pref_total)
 	var cursor := before
-	if extent < min_total:
-		cursor += (extent - min_total) * alignment
-	elif flex_total == 0:
+	# SetChildrenAlongAxis 0x1bbc900 only applies alignment to positive
+	# surplus. Undersized main-axis groups keep their leading padding.
+	if flex_total == 0:
 		cursor += excess * alignment
 	var positions: Array[float] = []
 	var sizes: Array[float] = []

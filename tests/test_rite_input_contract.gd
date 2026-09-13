@@ -14,8 +14,11 @@ func make_view(id: int = 5000001):
 	var state := GameState.new()
 	var rng := GameRNG.new(123)
 	state.setup_new_run(db, 1, rng)
+	# The panel receives an existing runtime UID, as the desktop host does.
+	# Opening a config-only panel must not stand in for generating an instance.
+	var rite_uid := state.add_available_rite(id, db, rng)
 	var view := RiteView.new()
-	view.setup(state, db, rng, id)
+	view.setup(state, db, rng, id, rite_uid)
 	add_child_autofree(view)
 	return view
 

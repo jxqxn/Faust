@@ -1,0 +1,10 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/original/cards/introduction.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(0.0, 0.00000000, 1148.0, 744.0)
+filter_clip = true
+metadata/source_sprite = "Resources/image/common/introduction.asset"
+metadata/source_native_size = Vector2(1148.00000000, 744.00000000)

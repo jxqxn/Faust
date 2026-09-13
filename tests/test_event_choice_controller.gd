@@ -271,3 +271,80 @@ func test_main_scene_prompt_has_visible_global_bounds_after_deferred_layout() ->
 	await wait_process_frames(4)
 	assert_eq(overlay.size, main.size, "resize propagates to the prompt root")
 	assert_almost_eq(panel.get_global_rect().size.x, 1352.5, 0.1)
+
+func test_no_prompt_restores_entry_notice_after_suspended_nested_operations() -> void:
+	# NoPromptOperations.Do / completion0x506390 preserve the entry buffer,
+	# rather than suppressing explicit prompts or retaining inner notices.
+	var state := _state()
+	var rng := RNG.new(901)
+	OperationsSequence.start([
+		{"rite": 5000129},
+		{"no_prompt:scope": [{"rite": 5000129}, {"prompt": {"text": "inner"}}]},
+		{"prompt": {"text": "outer"}},
+		{"prompt": {"text": "tail"}},
+	], state, db, rng)
+	var inner: String = state.pending_operation().payload.text
+	assert_eq(inner.count("做好准备"), 2, "an explicit inner prompt sees both existing notices")
+	# JSON round-trip the suspended frames, including their restoration marker.
+	var operation: Dictionary = JSON.parse_string(JSON.stringify(state.pending_operations.pop_front()))
+	OperationsSequence.resume(operation, state, db, rng)
+	assert_eq(str(state.pending_operation().payload.text).count("做好准备"), 1, "scope completion restores exactly the original notice")
+	operation = state.pending_operations.pop_front()
+	OperationsSequence.resume(operation, state, db, rng)
+	assert_eq(state.pending_operation().payload.text, "tail", "Prompt consumes the restored result only once")
+	operation = state.pending_operations.pop_front()
+	OperationsSequence.resume(operation, state, db, rng)
+	assert_true(state.pending_operations.is_empty())
+
+
+func test_source_market_notice_survives_disk_reload_and_real_confirmation() -> void:
+	# Original runtime 5300098 prompt includes the newly born5000129 notice.
+	# Execute its actual action sequence; don't append the notice in the fixture.
+	var state := _state()
+	state.set_counter(7000060, 5) # source5300098.condition
+	DeferredEffects.execute_event(db.get_event(5300098), state, db, RNG.new(901))
+	assert_false(state.pending_operations.is_empty())
+	var expected_text: String = state.pending_operation().payload.text
+	assert_string_contains(expected_text, "做好准备", "StartRite result reaches the subsequent source prompt")
+	assert_string_contains(expected_text, "125%", "source template stays raw until the view renders it")
+	var rite_count := state.rite_instances.size()
+	var old_path := SaveSystem.save_path_override
+	SaveSystem.use_save_path("user://test-market-prompt-rebuild.json")
+	assert_true(SaveSystem.save(state))
+	var restored = SaveSystem.load(db)
+	assert_not_null(restored)
+	SaveSystem.save_path_override = old_path
+	DirAccess.remove_absolute("user://test-market-prompt-rebuild.json")
+	assert_eq(restored.pending_operation().payload.text, expected_text, "pending text survives a real JSON disk round-trip")
+	var stage := SubViewport.new()
+	stage.size = Vector2i(1920, 1080)
+	add_child_autofree(stage)
+	var screen := GameScreen.new()
+	screen.setup(restored, db, RNG.new(901))
+	stage.add_child(screen)
+	await wait_process_frames(5)
+	var body := _node(screen, "EventPromptBody") as RichTextLabel
+	assert_false(body.get_parsed_text().contains("<size="))
+	assert_false(body.get_parsed_text().contains("<align="))
+	assert_string_contains(body.get_parsed_text(), "做好准备")
+	var button := _node(screen, "EventPromptContinueButton") as Button
+	assert_not_null(button)
+	if button == null:
+		return
+	var point := button.get_global_transform_with_canvas() * (button.size * 0.5)
+	var motion := InputEventMouseMotion.new()
+	motion.position = point
+	stage.push_input(motion, true)
+	await wait_process_frames(1)
+	assert_eq(stage.gui_get_hovered_control(), button)
+	var click := InputEventMouseButton.new()
+	click.position = point
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	stage.push_input(click, true)
+	click.pressed = false
+	stage.push_input(click, true)
+	await wait_process_frames(3)
+	assert_true(restored.pending_operations.is_empty(), "physical confirmation resolves the loaded operation")
+	assert_null(_node(screen, "EventPromptOverlay"))
+	assert_eq(restored.rite_instances.size(), rite_count, "resume does not create the rite twice")

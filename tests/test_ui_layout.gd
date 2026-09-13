@@ -717,7 +717,6 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	var think_drop := _find_node_by_name(game, "ThinkDropZone") as Control
 	var right_actions := _find_node_by_name(game, "RightActions") as Control
 	var advance := _find_node_by_name(game, "AdvanceDayButton") as Button
-	var redraw := _find_node_by_name(game, "RedrawSudanButton") as Button
 	var menu := _find_node_by_name(game, "MenuButton") as Button
 	assert_not_null(screen)
 	assert_not_null(desk)
@@ -725,9 +724,8 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	assert_not_null(think_drop)
 	assert_not_null(right_actions)
 	assert_not_null(advance)
-	assert_not_null(redraw)
 	assert_not_null(menu)
-	if screen == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or redraw == null or menu == null:
+	if screen == null or desk == null or card_rail == null or think_drop == null or right_actions == null or advance == null or menu == null:
 		return
 	var rite_card: Button = null
 	for node in desk.get_children():
@@ -751,7 +749,6 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 	assert_true(right_actions.visible)
 	assert_eq(right_actions.mouse_filter, Control.MOUSE_FILTER_IGNORE, "locked action host does not cover the result surface")
 	assert_true(advance.disabled, "rite overlay blocks progression controls")
-	assert_true(redraw.disabled, "rite overlay blocks redraw controls")
 	assert_true(menu.disabled, "rite overlay blocks the global menu entry")
 	assert_eq(card_rail.mouse_filter, Control.MOUSE_FILTER_STOP, "rite must retain hand input for slot placement")
 
@@ -1954,7 +1951,7 @@ func test_game_screen_can_open_card_detail_overlay():
 	var next_day := _find_node_by_name(screen, "AdvanceDayButton") as Button
 	assert_true(next_day.visible, "CardInfoNew keeps the source Next Round clock visible")
 	assert_not_null(next_day.get_node_or_null("NextDayWatch"), "CardInfoNew must not remove the source clock icon")
-	assert_true(_find_node_by_name(screen, "NextDayLabel").visible, "Next Round label remains part of the desktop chrome")
+	assert_true(next_day.get_node("NextDayTextButton/Normal").is_visible_in_tree(), "image text remains visible over details")
 	var subtitle := _find_node_by_name(screen, "CardDetailSubtitle") as Label
 	assert_not_null(subtitle)
 	if subtitle != null:
@@ -2036,12 +2033,11 @@ func test_game_screen_right_actions_do_not_duplicate_rite_entry():
 	assert_not_null(right_actions, "right action column should exist")
 	if right_actions == null:
 		return
-	# [SRC: GameScene MainUI/Next Round children — AdvanceDay (clock_bg cluster),
-	#       RedrawSudanButton, PrevRound (return_last_round) and Sort (hand_sort).
-	#       Sort is a Next Round control, not a desk site, so it belongs here.]
-	assert_eq(_count_buttons(right_actions), 4, "right actions contain next-day, redraw, back-to-prev and sort controls")
+	# Source clock and text forward to the same action; PrevRound and Sort are
+	# the only other authored controls in this desktop action host.
+	assert_eq(_count_buttons(right_actions), 4, "clock, text hit target, back-to-prev and sort")
 	assert_not_null(_find_node_by_name(right_actions, "AdvanceDayButton"), "next-day action remains in the right column")
-	assert_not_null(_find_node_by_name(right_actions, "RedrawSudanButton"), "redraw action remains in the right column")
+	assert_null(_find_node_by_name(right_actions, "RedrawSudanButton"), "desktop has no clone-only redraw action")
 	assert_not_null(_find_node_by_name(right_actions, "BackToPrevButton"), "back-to-prev action stays in the right column")
 	assert_not_null(_find_node_by_name(right_actions, "SortHandButton"), "the source hand-sort stamp stays in the right column")
 	assert_null(_find_node_by_name(right_actions, "OpenRiteSelectorButton"), "rite selector should not be duplicated beside the desk sites")
@@ -2132,31 +2128,6 @@ func test_game_screen_matches_mockup_spatial_layout():
 	assert_almost_eq(right_actions.get_global_rect().end.y, view.end.y, 2.0, "watch cluster pins to the bottom edge")
 	assert_almost_eq(advance.get_global_rect().size.x, 596.0 * k, 2.0, "watch keeps the original 596 width")
 	assert_almost_eq(advance.get_global_rect().size.y, 634.0 * k, 2.0, "watch keeps the original 634 height")
-
-
-func test_next_day_clock_routes_a_real_mouse_press_through_game_screen():
-	var state := GameState.new()
-	state.setup_new_run(db, 1, RNG.new(401))
-	var stage := _stage()
-	var screen := GameScreen.new()
-	screen.setup(state, db, RNG.new(402))
-	stage.add_child(screen)
-	await wait_process_frames(2)
-	var advance := _find_node_by_name(screen, "AdvanceDayButton") as Button
-	var right_actions := _find_node_by_name(screen, "RightActions") as Control
-	assert_not_null(advance)
-	assert_not_null(right_actions)
-	if advance == null or right_actions == null:
-		return
-	var point := advance.get_global_rect().get_center()
-	var press := InputEventMouseButton.new()
-	press.button_index = MOUSE_BUTTON_LEFT
-	press.pressed = true
-	press.position = point - right_actions.global_position
-	var received := [0]
-	screen.advance_pressed.connect(func(): received[0] += 1)
-	screen._on_right_actions_gui_input(press)
-	assert_eq(received[0], 1, "a click inside the source clock rect emits exactly one advance action")
 
 
 func test_situation_desk_keeps_actions_separate_at_narrow_width():

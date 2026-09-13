@@ -303,8 +303,12 @@ func test_slot_equipment_drop_replaces_and_refreshes_origin_with_live_locks() ->
 	screen.setup(state, db, rng)
 	add_child_autofree(screen)
 	await wait_process_frames(2)
+	# Build the source runtime rite explicitly. add_available_rite performs
+	# open-slot adsorption and correctly rejects this isolated fixture because
+	# its hand contains only the cards under test.
+	var rite_instance := state.create_rite_instance(5000001)
 	var view := preload("res://ui/rite_view.gd").new()
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, rite_instance.uid)
 	screen.add_source_overlay(view)
 	await wait_process_frames(2)
 	view._place_card_in_slot("s4", new_uid, "hand", "")

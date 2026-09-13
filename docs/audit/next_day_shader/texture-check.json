@@ -1,0 +1,18 @@
+{
+  "file": "sharedassets3.assets",
+  "path_id": 258,
+  "size": [
+    128,
+    128
+  ],
+  "settings": {
+    "m_FilterMode": 1,
+    "m_Aniso": 1,
+    "m_MipBias": 0.0,
+    "m_WrapU": 1,
+    "m_WrapV": 1,
+    "m_WrapW": 1
+  },
+  "rgba_equal": true,
+  "vertical_flip_equal": false
+}

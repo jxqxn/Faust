@@ -192,6 +192,24 @@ func _ready() -> void:
 					"一个贵族拦住你，希望你能告诉他，他自己的品位和他死对头的品位。\n他只是一个青铜品级的公子哥，而他……"
 				)
 				screen.call("refresh")
+		if args.has("--market-prompt"):
+			# Replay the actual source event including its extra-result notice.
+			# This isolates day-five event presentation, not the preceding days.
+			main.get("state").set_counter(7000060, 5)
+			DeferredEffects.execute_event(main.get("db").get_event(5300098),
+				main.get("state"), main.get("db"), preload("res://core/rng.gd").new(901))
+			screen.call("refresh")
+		if args.has("--plain-prompt"):
+			# Dev-only: source PromptNew continue surface without choices. This
+			# catches accidental scrollbar/caret artifacts in one-line guidance.
+			var state_plain = main.get("state")
+			if screen != null and state_plain != null and state_plain.has_method("queue_prompt"):
+				state_plain.queue_prompt({
+					"id": "plain_prompt.shot",
+					"title": "提示",
+					"text": "好吧，如果遇到不知道怎么使用的牌，就拖到这里来，让俺寻思寻思。",
+				})
+				screen.call("refresh")
 		if args.has("--story-notify"):
 			# Screenshot-only replay of StoryNotifyController.Show with an exact
 			# QuestNode from the zero-translation source configuration.

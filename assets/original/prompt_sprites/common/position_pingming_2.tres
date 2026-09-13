@@ -1,0 +1,10 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/original/cards/position_pingming_2.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(238.07613, 22.02674400, 694.89716, 707.9589)
+filter_clip = true
+metadata/source_sprite = "Resources/image/common/position_pingming_2.asset"
+metadata/source_native_size = Vector2(694.89716000, 707.95890000)

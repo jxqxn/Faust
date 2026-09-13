@@ -33,6 +33,7 @@ const PORTRAIT_RECT := Rect2(0, 0, 0, 0)
 var _canvas: Control
 var _panel: Control
 var _body: RichTextLabel
+var _source_scrollbar: Control
 var _options_box: Control
 var _confirm_button: Button
 var _portrait: TextureRect
@@ -54,14 +55,14 @@ func show_prompt(display: Dictionary, _on_choice: Callable) -> void:
 	if text.strip_edges().is_empty():
 		text = str(display.get("title", ""))
 	if _body != null:
-		_body.text = SourceRichText.to_bbcode(text)
+		SourceRichText.set_label_text(_body, text)
 	var choices: Dictionary = display.get("choices", {})
 	_has_choices = not choices.is_empty()
 	# ConfirmController already presents final OK/Cancel actions, unlike
 	# OptionController's selection + separate confirmation.
 	_direct_choices = _has_choices and str(display.get("presentation", "")) == "confirm"
 	if _direct_choices and _body != null:
-		_body.text = "[center]" + SourceRichText.to_bbcode(text) + "[/center]"
+		SourceRichText.set_label_text(_body, "[center]" + text + "[/center]")
 	if not _direct_choices:
 		_build_confirm()
 	if _has_choices:
@@ -94,7 +95,7 @@ func clear_prompt() -> void:
 		_confirm_button.queue_free()
 		_confirm_button = null
 	if _body != null:
-		_body.text = ""
+		SourceRichText.set_label_text(_body, "")
 	if _portrait != null:
 		_portrait.texture = null
 	for slot in _icon_slots:
@@ -180,9 +181,25 @@ func _build_canvas() -> void:
 	# RichTextLabel uses normal_font_size (font_size is a Label-only key).
 	# The previous override passed a getter test but did not affect glyphs.
 	SourceText.apply(_body, "@PROMPT_TEXT")
+	_body.set_meta("source_tmp_spacing", Vector2(7, 69))
+	SourceText.apply_source_spacing(_body)
 	_body.add_theme_color_override("default_color", Color(0.86274517, 0.8117648, 0.6039216, 1))
+	# Prompt text is a TMP label in the source, never an editable/focusable
+	# control. Keep keyboard focus out of the body; its scroll input is handled
+	# by the source Content/ScrollRect equivalent below.
+	# The source Content lives inside a ScrollRect and must receive wheel input;
+	# focus is disabled separately so this does not create an editable caret.
 	_body.mouse_filter = Control.MOUSE_FILTER_STOP
+	_body.focus_mode = Control.FOCUS_NONE
+	_hide_internal_scrollbar(_body.get_v_scroll_bar())
 	_panel.add_child(_body)
+	_source_scrollbar = preload("res://ui/prompt_scrollbar.gd").new()
+	_source_scrollbar.name = "SourcePromptScrollbar"
+	_panel.add_child(_source_scrollbar)
+	_source_scrollbar.scroll_requested.connect(func(value: float):
+		_body.get_v_scroll_bar().value = value
+		_sync_source_scrollbar_visibility())
+	_body.get_v_scroll_bar().value_changed.connect(func(_value): _sync_source_scrollbar_visibility())
 
 	_options_box = Control.new()
 	_options_box.name = "OptionGroup"
@@ -211,6 +228,17 @@ func _build_canvas() -> void:
 	_icon_slots[1].add_child(_portrait)
 
 
+# The RichTextLabel's internal range retains wheel scrolling but must neither
+# reserve text width nor paint/hit-test a second scrollbar inside the viewport.
+func _hide_internal_scrollbar(scrollbar: VScrollBar) -> void:
+	scrollbar.self_modulate = Color.TRANSPARENT
+	scrollbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for state in ["scroll", "scroll_focus", "grabber", "grabber_highlight", "grabber_pressed"]:
+		scrollbar.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	var empty := ImageTexture.create_from_image(Image.create(1, 1, false, Image.FORMAT_RGBA8))
+	for icon_name in ["increment", "increment_highlight", "decrement", "decrement_highlight"]:
+		scrollbar.add_theme_icon_override(icon_name, empty)
+
 func _show_icons(presentation: Dictionary) -> void:
 	_full_image.texture = presentation.get("full")
 	_full_image.visible = _full_image.texture != null
@@ -232,7 +260,7 @@ func _show_icons(presentation: Dictionary) -> void:
 				_icon_slots[i].add_child(portrait)
 			portrait.texture = data.texture
 			if portrait.texture != null:
-				portrait.size = portrait.texture.get_size()
+				portrait.size = portrait.texture.get_meta("source_native_size", portrait.texture.get_size())
 				portrait.position = Vector2(-portrait.size.x * 0.5, -portrait.size.y)
 		for entry in data.get("cards", []):
 			var widget := CardWidget.new()
@@ -269,10 +297,14 @@ func _layout_content() -> void:
 		[0, 0], 100, 200, 100, 0.5, true)
 	var content_x: float = horizontal.positions[1]
 	var content_width: float = horizontal.sizes[1]
-	_body.size.x = content_width
+	# PromptNew/OptionNew Viewport.sizeDelta.x=-30; ConfirmNew has no viewport.
+	_body.size.x = content_width if _direct_choices else content_width - 30.0
+	# Godot includes paragraph separation after the final paragraph; TMP's
+	# preferred height only adds it when processing a newline.
 	_last_content_height = _body.get_content_height()
+	var measured_height := float(_last_content_height)
 	var limit := MAX_OPTION_BODY_HEIGHT if _has_choices and not _direct_choices else MAX_BODY_HEIGHT
-	var body_height := float(_last_content_height) if _direct_choices else minf(float(_last_content_height), limit)
+	var body_height := measured_height if _direct_choices else minf(measured_height, limit)
 	var count := _options_box.get_child_count() if _has_choices and not _direct_choices else 0
 	var option_gap_total := float(maxi(0, count - 1)) * OPTION_GAP
 	var option_height := count * OPTION_ROW_SIZE.y + option_gap_total
@@ -333,9 +365,12 @@ func _layout_content() -> void:
 	for slot in _icon_slots:
 		if not slot.visible:
 			continue
-		# IconGroup bottom padding=-100, zero-height Pos; Holder height100.
+		# Parent bottom padding200; IconGroup preferred height clamps to0.
+		# HLG cross-axis center with bottom padding-100 positions Pos at+50.
+		# Pos VLG main-axis overflow leaves Holder top0, height100 (does not
+		# bottom-align overflow). Normalize puts Image pivot at Holder bottom.
 		slot.position = Vector2(horizontal.positions[0] + 200.0 + icon_index * 200.0,
-			_panel.size.y - 150.0)
+			_panel.size.y - 200.0 + 50.0 + 100.0)
 		icon_index += 1
 	if _confirm_button != null:
 		_confirm_button.position.y = _panel.size.y - 152.0
@@ -343,6 +378,21 @@ func _layout_content() -> void:
 		for row in _options_box.get_children():
 			var accepted := str(row.get_meta("choice_key")) == "confirm_ok"
 			row.position = Vector2(2045.0 if accepted else 1817.0, _panel.size.y - 79.0)
+	_sync_source_scrollbar_visibility()
+
+
+## [SRC: PromptNew ScrollRect.m_VerticalScrollbarVisibility = 1]
+## Unity's AutoHide mode removes the scrollbar when Content does not overflow
+## the viewport. Reconcile visibility after the authored layout pass; enabling
+## RichTextLabel scrolling alone does not mean its scrollbar must be visible.
+func _sync_source_scrollbar_visibility() -> void:
+	if _body == null:
+		return
+	if _source_scrollbar == null:
+		return
+	_source_scrollbar.configure(_body.get_rect(), float(_body.get_content_height()), _body.get_v_scroll_bar().value)
+	if _direct_choices:
+		_source_scrollbar.hide()
 
 
 func _build_choices(choices: Dictionary) -> void:
@@ -398,7 +448,7 @@ func _build_choices(choices: Dictionary) -> void:
 		if not _direct_choices:
 			SourceText.apply(caption, "@OPTION_ITEM_TEXT")
 		caption.add_theme_color_override("default_color", Color(0.8627451, 0.8117647, 0.6039216))
-		caption.text = "[center]" + SourceRichText.to_bbcode(choice_text) + "[/center]"
+		SourceRichText.set_label_text(caption, "[center]" + choice_text + "[/center]")
 		if _direct_choices:
 			var accepted := str(key) == "confirm_ok"
 			row.size = Vector2(325 if accepted else 168, 158)

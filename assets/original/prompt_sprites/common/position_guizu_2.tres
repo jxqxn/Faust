@@ -1,0 +1,10 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/original/cards/position_guizu_2.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(7.026751, 18.02672000, 1073.9465, 703.89716)
+filter_clip = true
+metadata/source_sprite = "Resources/image/common/position_guizu_2.asset"
+metadata/source_native_size = Vector2(1073.94650000, 703.89716000)

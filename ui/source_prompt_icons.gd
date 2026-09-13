@@ -77,6 +77,11 @@ static func _card_resource(card: Dictionary) -> String:
 static func _texture(resource: String) -> Texture2D:
 	if resource.is_empty():
 		return null
+	# Native Sprite rect/PPU imported from the source .asset. The PNG is its
+	# backing texture, not necessarily the displayed Sprite's dimensions.
+	var sprite_path := "res://assets/original/prompt_sprites/%s.tres" % resource
+	if ResourceLoader.exists(sprite_path):
+		return load(sprite_path) as Texture2D
 	var paths := ["res://assets/original/%s.png" % resource]
 	# Existing extracted common artwork lives beside card portraits.
 	if resource.begins_with("common/"):

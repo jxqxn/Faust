@@ -72,6 +72,12 @@ func _ready() -> void:
 	_show_menu()
 
 
+func _exit_tree() -> void:
+	# Release shared presentation resources before the rendering server exits.
+	FaustTheme.clear_cache()
+	RiteView.clear_layout_cache()
+
+
 func _show_menu() -> void:
 	_clear_current()
 	_game_screen = null
@@ -170,7 +176,6 @@ func _show_game() -> void:
 	gs.open_rite.connect(_on_open_rite)
 	gs.open_rite_instance.connect(_on_open_rite_instance)
 	gs.advance_pressed.connect(_on_advance)
-	gs.redraw_pressed.connect(_on_redraw)
 	gs.back_to_prev_pressed.connect(_on_back_to_prev)
 	gs.menu_pressed.connect(_on_menu_pressed)
 	gs.game_over_requested.connect(_show_game_over)
@@ -181,6 +186,10 @@ func _show_game() -> void:
 	_current = gs
 	_game_screen = gs
 	gs.refresh()
+	if state.round_transition.has("animation"):
+		gs.present_day_transition(state.round_transition)
+	if state.round_transition.has("rite_display"):
+		_on_open_rite_instance(int(state.round_transition.rite_display.uid))
 
 
 ## Visual-capture hooks used by the managed UI review tool. Each enters a
@@ -241,15 +250,17 @@ func _on_open_rite(rite_id: int) -> void:
 
 func _on_open_rite_instance(rite_uid: int) -> void:
 	var instance = state.get_rite_instance(rite_uid) if state != null and state.has_method("get_rite_instance") else null
-	if instance == null:
+	var saved_display: Dictionary = state.round_transition.get("rite_display", {}) if state != null else {}
+	var restoring := int(saved_display.get("uid", 0)) == rite_uid
+	if instance == null and not restoring:
 		return
 	if _game_screen == null:
 		_show_game()
 	_close_rite_overlay()
-	_current_rite_uid = instance.uid
-	_current_rite_id = instance.id
+	_current_rite_uid = rite_uid
+	_current_rite_id = int(saved_display.rite_id) if restoring else instance.id
 	var rv := RiteView.new()
-	rv.setup(state, db, rng, instance.id, instance.uid)
+	rv.setup(state, db, rng, _current_rite_id, rite_uid)
 	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
 	rv.game_over_requested.connect(_show_game_over)
@@ -260,6 +271,8 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	else:
 		_legacy_layer().add_child(rv)
 	_rite_overlay = rv
+	if restoring:
+		rv.restore_round_result(saved_display)
 	# A direct MapController pin replaces the clone-era selector, but opening
 	# its rite remains the same modal input boundary: keep chrome visible while
 	# the persistent controls and rail are frozen beneath it.
@@ -498,7 +511,7 @@ func _on_advance() -> void:
 	_audio.play("button-next-day.ogg")
 	if _game_screen != null and _game_screen.has_method("play_next_day_transition"):
 		_game_screen.play_next_day_transition()
-	var result := RoundLoop.advance_day(state, db, rng, true)
+	var result := RoundLoop.advance_day(state, db, rng, true, true)
 	if not state.round_transition.is_empty():
 		_drive_round_settlements()
 		return
@@ -508,6 +521,15 @@ func _on_advance() -> void:
 func _process(_delta: float) -> void:
 	if state == null or _game_screen == null or not is_instance_valid(_game_screen):
 		return
+	var progress: Dictionary = state.round_transition
+	if progress.has("animation"):
+		var phase := str(progress.phase)
+		preload("res://ui/next_day_clock.gd").tick(progress.animation, _delta, phase)
+		if phase == "night_enter" and float(progress.animation.night_time) >= 4.0:
+			progress.phase = "auto_start"
+		elif phase == "day_enter" and float(progress.animation.day_time) >= 4.0:
+			progress.phase = "round_begin"
+		_game_screen.present_day_transition(progress)
 	RiteSettlement.pump(state, db, rng)
 	RiteSettlement.pump_confirmations(state)
 	if not state.round_transition.is_empty():
@@ -537,6 +559,8 @@ func _drive_round_settlements() -> void:
 
 
 func _finish_round_display(result: Dictionary) -> void:
+	if _game_screen != null:
+		_game_screen.present_day_transition({})
 	var log_text := "第 %d 天。" % state.day
 	if result.game_over:
 		log_text += "\n☠ 一张苏丹卡到期未完成！游戏结束。"
@@ -575,23 +599,6 @@ func _show_game_over() -> void:
 	# [SRC: GameScene MainUI/Over is a direct 3840x2160 canvas.]
 	add_child(go)
 	_current = go
-
-
-func _on_redraw() -> void:
-	_audio.play("button-confirm.ogg")
-	var new_id := RoundLoop.use_redraw(state, rng, db)
-	var log_text := ""
-	if new_id < 0:
-		log_text = "无法重抽（重抽次数耗尽或牌堆为空）。"
-	else:
-		var dec = SudanCards.decode(new_id)
-		log_text = "重抽苏丹卡: %s%s" % [dec.rank, dec.action]
-	# [SRC: WizardController.c:1285 -> OnSudanRedrawStart; report 6 A5]
-	if state != null and state.event_runtime != null:
-		state.trigger_events("sudan_redraw_start", {})
-	if _current and _current.has_method("set_log"):
-		_current.set_log(log_text)
-	_current.refresh()
 
 
 ## Back to the previous round's end: consumes one back-to-prev charge (9999

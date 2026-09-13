@@ -14,6 +14,7 @@
 ## GoldDiceException -> Promise.Reject -> re-resolve flow.
 ## [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]
 extends Control
+const TextureCache = preload("res://ui/source_texture_cache.gd")
 
 class RiteDropSurface:
 	extends ColorRect
@@ -140,9 +141,10 @@ func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 	if _state != null and _state.has_method("get_rite_instance"):
 		_rite_uid = rite_uid
 		var instance = _state.get_rite_instance(_rite_uid) if _rite_uid > 0 else _state.find_rite_instance_by_id(rite_id)
-		if instance == null:
+		var saved_display: Dictionary = _state.round_transition.get("rite_display", {})
+		if instance == null and int(saved_display.get("uid", 0)) != _rite_uid:
 			_rite_uid = int(_state.add_available_rite(rite_id, _db, _rng))
-		else:
+		elif instance != null:
 			_rite_uid = int(instance.uid)
 		_load_placements_from_instance()
 		_update_stop_button()
@@ -370,7 +372,7 @@ func _build_panel_content() -> void:
 	if not tips.is_empty():
 		var separator := TextureRect.new()
 		separator.name = "RiteTipsSeparator"
-		separator.texture = load("res://assets/original/ui/rite_log_sperator.png")
+		separator.texture = TextureCache.load_texture("res://assets/original/ui/rite_log_sperator.png")
 		separator.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		separator.stretch_mode = TextureRect.STRETCH_SCALE
 		separator.custom_minimum_size.y = 6
@@ -387,7 +389,7 @@ func _build_panel_content() -> void:
 		indent.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		row.add_child(indent)
 		var icon := TextureRect.new()
-		icon.texture = load("res://assets/original/ui/rite_tips.png")
+		icon.texture = TextureCache.load_texture("res://assets/original/ui/rite_tips.png")
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.size = Vector2(100, 100)
@@ -482,6 +484,10 @@ func _build_result_surface() -> void:
 	var op_bg := _picture(_result_surface, "Op BG", "settlement_op_bg", Rect2(1804, 1403, 1224, 188))
 	op_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_result_next_button = _source_button_on(_result_surface, "Next", "rite_op_confirm_1", Rect2(1989, 1419, 604, 140), "继续", _on_result_next)
+	# The source Op button is an ImageButton with a HoverImageSwitch. Its
+	# authored art must remain visible while the result text waits for the
+	# player's next click; no substitute text button is shown.
+	_result_next_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	# AutoPlay is a child of Op BG in the source prefab. Keep the exact
 	# parent-relative offset and route clicks through the same player flag as
 	# the preparation panel.
@@ -671,7 +677,8 @@ func _append_result_paragraph() -> void:
 	var text := _result_paragraphs[_result_paragraph_index]
 	_result_paragraph_index += 1
 	var separator := "\n\n" if not _result_surface_text.text.is_empty() else ""
-	_result_surface_text.text += separator + preload("res://ui/source_rich_text.gd").to_bbcode(text)
+	var source := str(_result_surface_text.get_meta("source_markup", ""))
+	preload("res://ui/source_rich_text.gd").set_label_text(_result_surface_text, source + separator + text)
 	_result_text_progress = float(previous_count)
 	_result_surface_text.visible_characters = previous_count
 	_result_text_done = false
@@ -686,7 +693,7 @@ func _refresh_play_rate() -> void:
 	if _state != null:
 		_result_play_rate = _state.source_result_text_rate(_result_auto_play)
 	var art := "x1" if _result_play_rate <= 1.0 else "x2"
-	_play_rate_button.get_node("Art").texture = load("res://assets/original/ui/play_speed_%s.png" % art)
+	_play_rate_button.get_node("Art").texture = TextureCache.load_texture("res://assets/original/ui/play_speed_%s.png" % art)
 	_play_rate_button.set_meta("source_play_rate", _result_play_rate)
 
 
@@ -705,7 +712,7 @@ func _refresh_result_auto_button() -> void:
 	if _result_auto_button == null:
 		return
 	var active: bool = _state != null and _state.rite_auto_result
-	_result_auto_button.get_node("Art").texture = load("res://assets/original/ui/auto_play_%s.png" % ("active" if active else "deactive"))
+	_result_auto_button.get_node("Art").texture = TextureCache.load_texture("res://assets/original/ui/auto_play_%s.png" % ("active" if active else "deactive"))
 
 
 ## Source prefab children of RiteResultPanel.  These remain hidden until the
@@ -920,13 +927,13 @@ func _rich_text(value: String, font_size: int) -> RichTextLabel:
 	text.add_theme_font_size_override("normal_font_size", font_size)
 	text.add_theme_font_override("normal_font", SOURCE_FONT)
 	text.add_theme_color_override("default_color", Color("#c1c2ac"))
-	text.text = preload("res://ui/source_rich_text.gd").to_bbcode(value)
+	preload("res://ui/source_rich_text.gd").set_label_text(text, value)
 	return text
 
 func _picture(parent: Control, node_name: String, asset: String, rect: Rect2) -> TextureRect:
 	var picture := TextureRect.new()
 	picture.name = node_name
-	picture.texture = load("res://assets/original/ui/%s.png" % asset)
+	picture.texture = TextureCache.load_texture("res://assets/original/ui/%s.png" % asset)
 	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(picture)
@@ -960,7 +967,7 @@ func _refresh_auto_result() -> void:
 	var button := _rite_panel.get_node("AutoResult") as Button
 	button.disabled = int(_rite.get("auto_result", 0)) == 0
 	var active: bool = _state != null and _state.auto_result_rites.has(_rite_id)
-	button.get_node("Art").texture = load("res://assets/original/ui/auto_result_%s.png" % ("active" if active else "deactive"))
+	button.get_node("Art").texture = TextureCache.load_texture("res://assets/original/ui/auto_result_%s.png" % ("active" if active else "deactive"))
 
 func _show_rite_help() -> void:
 	if _source_canvas.get_node_or_null("RiteHelp") != null:
@@ -1112,7 +1119,14 @@ func _update_result_wait_controls() -> void:
 		_close_btn.disabled = _last_result_waiting
 	if _result_next_button != null:
 		_result_next_button.visible = true
-		_result_next_button.disabled = _last_result_waiting or not _dice_count_kind.is_empty() or (_resolution_pending and _settlement_phase == "selection")
+		# The source Next operation is the promise continuation for result text.
+		# It stays actionable while the preview is in selection: the click first
+		# finishes the typewriter, then advances paragraphs, and finally commits
+		# the settlement. Disabling it during selection made overnight results
+		# appear frozen with no clickable next icon.
+		# [SRC: RiteResultPanelController.OnNext 0x5a43c0;
+		# ScrollViewTextController.ForceTypeDone 0x5a8da0]
+		_result_next_button.disabled = _last_result_waiting or not _dice_count_kind.is_empty()
 
 
 func _on_slot_pressed(slot_key: String) -> void:
@@ -1440,13 +1454,20 @@ func _commit_resolution() -> void:
 	if _settlement_phase == "selection":
 		_settlement_phase = "results"
 		var job := RiteSettlement.begin(_rite_uid, _last_result, _settlement_context, _state, _db, _rng)
-		_last_result.deferred = job.deferred
+		if job.is_empty():
+			# The source cannot settle a removed instance. Keep the panel open and
+			# avoid manufacturing a result or emitting a false completion.
+			_settlement_phase = "selection"
+			return
+		_last_result.deferred = job.get("deferred", {})
+		_remember_round_result()
 		_advance_settlement_execution()
 		return
 	if _settlement_phase != "done":
 		return
 	_resolution_pending = false
 	_resolution_committed = true
+	_remember_round_result()
 	_update_result_wait_controls()
 	_pending_table_entries.clear()
 	if _gold_dice_btn != null:
@@ -1460,6 +1481,48 @@ func _commit_resolution() -> void:
 		_close_after_commit = false
 		closed.emit()
 
+
+## Persist the outstanding result-close Promise independently of RemoveRite.
+## [SRC: RiteResultPanelController.OnClose 0x5a3ae0 hides the panel and resolves
+## its completion separately from Settlement's RemoveRite; dump.cs:325466
+## finalPromise@0xD8. Original runtime requires a final click for each rite.]
+## This is host resume state, not a new content format or a replay of effects.
+func _remember_round_result() -> void:
+	if _state.round_transition.is_empty() or _last_result == null:
+		return
+	var result := {}
+	for field in ["prior_log", "normal_entry", "extre_log", "deferred", "dice_rolls", "successes", "dice_types_seen", "settlements", "entry_contexts"]:
+		result[field] = _last_result.get(field)
+	_state.round_transition["rite_display"] = {
+		"uid": _rite_uid, "rite_id": _rite_id, "result": result,
+		"table": _pending_table_entries.duplicate(true),
+		"phase": _settlement_phase, "committed": _resolution_committed,
+		"text": _result_surface_text.text,
+		"source_text": str(_result_surface_text.get_meta("source_markup", "")),
+	}
+
+func restore_round_result(saved: Dictionary) -> void:
+	_last_result = RiteResolver.RiteResult.new()
+	for field in saved.result:
+		_last_result.set(field, saved.result[field])
+	_pending_table_entries = saved.table.duplicate(true)
+	_settlement_phase = str(saved.phase)
+	_resolution_committed = bool(saved.committed)
+	_resolution_pending = not _resolution_committed
+	_display_result(_last_result)
+	# This snapshot starts after all text decisions, before finalResults.
+	if saved.has("source_text"):
+		preload("res://ui/source_rich_text.gd").set_label_text(_result_surface_text, str(saved.source_text))
+	else:
+		# Older snapshots stored only rendered BBCode; don't keep metadata
+		# from _display_result that could replace that text on preference change.
+		_result_surface_text.remove_meta("source_markup")
+		_result_surface_text.text = str(saved.text)
+	_result_surface_text.visible_characters = -1
+	_result_text_done = true
+	_result_paragraph_index = _result_paragraphs.size()
+	_refresh_gold_label()
+	_update_result_wait_controls()
 
 func _advance_settlement_execution() -> void:
 	RiteSettlement.pump(_state, _db, _rng)
@@ -1478,6 +1541,8 @@ func _advance_settlement_execution() -> void:
 func _close_panel() -> void:
 	if _waiting_for_result_operations():
 		return
+	if _state != null and int(_state.round_transition.get("rite_display", {}).get("uid", 0)) == _rite_uid:
+		_state.round_transition.erase("rite_display")
 	_qualified_slot = ""
 	_qualified_bags.clear()
 	_qualified_bag_index = -1
@@ -1534,7 +1599,7 @@ func _display_result(res) -> void:
 	if _result_label:
 		_result_label.text = txt
 	if _result_surface_text:
-		_result_surface_text.text = ""
+		preload("res://ui/source_rich_text.gd").set_label_text(_result_surface_text, "")
 		_result_paragraphs.clear()
 		for section in sections:
 			for paragraph in section.split("\n", false):
@@ -2151,7 +2216,7 @@ func _panel(node_name: String) -> Panel:
 	var panel_texture: Texture2D = null
 	var panel_path := "res://assets/original/ui/common_operation_bg.png"
 	if ResourceLoader.exists(panel_path):
-		panel_texture = load(panel_path) as Texture2D
+		panel_texture = TextureCache.load_texture(panel_path) as Texture2D
 	if panel_texture != null:
 		var style := StyleBoxTexture.new()
 		style.texture = panel_texture
@@ -2185,7 +2250,7 @@ static func _rite_bg_texture_for(rite: Dictionary) -> Texture2D:
 	var path := "res://assets/original/ui/rite_bg/%s.png" % bg_name
 	var texture: Texture2D = null
 	if ResourceLoader.exists(path):
-		texture = load(path) as Texture2D
+		texture = TextureCache.load_texture(path) as Texture2D
 	_rite_bg_cache[cache_key] = texture
 	return texture
 
@@ -2194,10 +2259,25 @@ func _rite_bg_texture() -> Texture2D:
 	return _rite_bg_texture_for(_rite)
 
 
+static var _source_layout_cache: Dictionary = {}
+static func clear_layout_cache() -> void:
+	_source_layout_cache.clear()
+	_rite_bg_cache.clear()
+
+
 static func _load_json(path: String) -> Variant:
+	# Presentation-only source data. Callers only read these dictionaries;
+	# never cache mutable rite/card instances here.
+	# [SRC: RitePanelShowController.c @ Show 0x596450;
+	# dump.cs:387766-387768 Config owns rite_template / rite_template_mapping.]
+	if _source_layout_cache.has(path):
+		return _source_layout_cache[path]
 	if not FileAccess.file_exists(path):
 		return null
-	return SourceJSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed = SourceJSON.parse_string(FileAccess.get_file_as_string(path))
+	if parsed != null and (path.begins_with("res://content/rite_template/") or path in ["res://content/ui.json", "res://content/rite_template_mappings.json"]):
+		_source_layout_cache[path] = parsed
+	return parsed
 
 
 func _round_button(label: String) -> Button:
@@ -2226,7 +2306,7 @@ func _slot_style(border: Color = Color("#585345"), filled: bool = false) -> Styl
 	# [SRC: rite/template slot_bg nomal_slot_bg.png]
 	var slot_art := "res://assets/original/ui/rite_slot/nomal_slot_bg.png"
 	if ResourceLoader.exists(slot_art) and not filled:
-		var tex := load(slot_art) as Texture2D
+		var tex := TextureCache.load_texture(slot_art) as Texture2D
 		if tex != null:
 			var style := StyleBoxTexture.new()
 			style.texture = tex
@@ -2327,7 +2407,7 @@ func _template_canvas_size(template: Dictionary) -> Vector2:
 	var path := "res://assets/original/ui/rite_bg/%s.png" % bg_name
 	if not ResourceLoader.exists(path):
 		return Vector2.ZERO
-	var tex := load(path) as Texture2D
+	var tex := TextureCache.load_texture(path) as Texture2D
 	if tex == null:
 		return Vector2.ZERO
 	return tex.get_size()

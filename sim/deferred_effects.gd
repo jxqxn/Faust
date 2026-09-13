@@ -96,14 +96,15 @@ static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 ## Create the rite instance, then journal the creation (type 1) with the
 ## instance's id and uid like StartRite's chain.
 ## [SRC: StartRite.c L120-133 -> NoteRiteStart (0x38ec70) -> AddNote type 1]
-static func _add_rite_and_note(rite_id: int, state, db, rng) -> void:
+static func _add_rite_and_note(rite_id: int, state, db, rng) -> int:
 	if not state.has_method("add_available_rite"):
-		return
+		return 0
 	var new_rite_uid: int = state.add_available_rite(rite_id, db, rng)
 	if new_rite_uid > 0 and state.has_method("add_note"):
 		var new_rite = state.get_rite_instance(new_rite_uid)
 		if new_rite != null:
 			state.add_note(1, new_rite.id, new_rite.uid)
+	return new_rite_uid
 
 
 static func execute_choice(choice_key: String, choice_value: Variant, state, db, rng, context: Dictionary = {}) -> void:

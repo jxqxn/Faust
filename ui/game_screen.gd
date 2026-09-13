@@ -9,7 +9,6 @@ extends Control
 signal open_rite(rite_id: int)
 signal open_rite_instance(rite_uid: int)
 signal advance_pressed()
-signal redraw_pressed()
 signal back_to_prev_pressed()
 signal menu_pressed()
 signal game_over_requested()
@@ -22,6 +21,7 @@ const ChangeNameViewScript = preload("res://ui/change_name_view.gd")
 const CachedEventsViewScript = preload("res://ui/cached_events_view.gd")
 const EventPromptViewScript = preload("res://ui/event_prompt_view.gd")
 const StoryNotifyControllerScript = preload("res://ui/story_notify_controller.gd")
+const TextureCache = preload("res://ui/source_texture_cache.gd")
 
 class HandRailDrop:
 	extends Control
@@ -93,7 +93,7 @@ var _deadline_pulse_time := 0.0
 var _sudan_box: Control
 var _prestige_strip: Control
 var _prestige_slots: Array = []
-var _next_day_label: Label
+var _next_day_transition: Control
 var _desk_map: PanelContainer
 var _desk_content: Control
 var _overlay_layer: Control
@@ -113,7 +113,6 @@ var _pending_hand_drop_poses: Dictionary = {}
 var _known_rail_card_uids: Dictionary = {}
 var _right_actions: Control
 var _advance_button: Button
-var _redraw_button: Button
 var _back_to_prev_button: Button
 var _sort_button: Button
 var _main_help_view = null
@@ -132,7 +131,6 @@ var _event_panel = null  # PromptNew OptionBG (plain Control after batch AL)
 var _rename_input: LineEdit
 var _sleep_waiting := false
 var _presentation_frozen := false
-var _advance_mouse_fallback_frame := -1
 var _presentation_blockers: Dictionary = {}
 var _persistent_action_locks: Dictionary = {}
 var _underlying_presentation_pauses: Dictionary = {}
@@ -157,6 +155,7 @@ func _ready() -> void:
 	# TipsHolder components are authored onto source GameObjects, so they exist
 	# as soon as the screen is built. Attach once; the panel itself is reused.
 	_attach_source_tips()
+
 
 
 ## Attach the source's TipsHolder inventory to the clone Controls that stand in
@@ -497,27 +496,44 @@ func _build_ui() -> void:
 		stamp.stretch_mode = TextureRect.STRETCH_SCALE
 		stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_advance_button.add_child(stamp)
-	# Source Next Round swaps the stamp texture on pointer enter; this is the
-	# authored hover state, rather than a Godot tint approximation.
-	if ResourceLoader.exists("res://assets/original/ui/main/next_day_hover.png"):
-		var hover_stamp := TextureRect.new()
-		hover_stamp.name = "NextDayHoverStamp"
-		hover_stamp.texture = load("res://assets/original/ui/main/next_day_hover.png")
-		hover_stamp.size = Vector2(305, 306)
-		hover_stamp.position = Vector2(596 * 0.5 + 62 - 305 * 0.5, 634 * 0.5 + 41 - 306 * 0.5)
-		hover_stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		hover_stamp.stretch_mode = TextureRect.STRETCH_SCALE
-		hover_stamp.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hover_stamp.visible = false
-		_advance_button.add_child(hover_stamp)
-		_advance_button.mouse_entered.connect(func(): hover_stamp.visible = true)
-		_advance_button.mouse_exited.connect(func(): hover_stamp.visible = false)
-	else:
-		_advance_button.text = "下一天"
-		_advance_button.add_theme_font_size_override("font_size", 46)
-		_advance_button.add_theme_color_override("font_color", Color("#2b1d12"))
-		_advance_button.add_theme_color_override("font_hover_color", Color("#681f1b"))
-		_advance_button.add_theme_color_override("font_disabled_color", Color(0.26, 0.20, 0.15, 0.52))
+	# [SRC: GameScene.unity rect 7637/7690/7633/7659, Image 11518;
+	# HoverImageSwitch.c Awake 0x42c640 / OnPointerEnter 0x42c680;
+	# dump.cs HoverImageSwitch NormalImage@0x20 / HoverImage@0x28.]
+	# Text center is bottom-right + (-240.5, -275) in Godot coordinates.
+	# This is independent of Image/next_day_0, which is the compass dial.
+	var text_hit := Button.new()
+	text_hit.name = "NextDayTextButton"
+	text_hit.position = Vector2(355.5, 359) - Vector2(352, 192) * 0.95 * 0.5
+	text_hit.size = Vector2(352, 192) * 0.95
+	for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
+		text_hit.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
+	_advance_button.add_child(text_hit)
+	var normal_text := TextureRect.new()
+	normal_text.name = "Normal"
+	normal_text.texture = preload("res://assets/original/ui/main/next_day.png")
+	normal_text.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	normal_text.stretch_mode = TextureRect.STRETCH_SCALE
+	normal_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	normal_text.size = Vector2(512, 512) * 0.95
+	normal_text.position = (text_hit.size - normal_text.size) * 0.5
+	text_hit.add_child(normal_text)
+	var hover_text := normal_text.duplicate() as TextureRect
+	hover_text.name = "Hover"
+	hover_text.texture = preload("res://assets/original/ui/main/next_day_hover.png")
+	hover_text.visible = false
+	text_hit.add_child(hover_text)
+	text_hit.mouse_entered.connect(func():
+		normal_text.visible = false
+		hover_text.visible = true
+	)
+	text_hit.mouse_exited.connect(func():
+		normal_text.visible = true
+		hover_text.visible = false
+	)
+	text_hit.pressed.connect(func():
+		if not _advance_button.disabled:
+			advance_pressed.emit()
+	)
 	var watch_style := _round_button_style()
 	_advance_button.add_theme_stylebox_override("normal", watch_style if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	_advance_button.add_theme_stylebox_override("hover", _round_button_style(Color("#efc46e")) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
@@ -527,44 +543,12 @@ func _build_ui() -> void:
 	# malformed even though its layout rectangle has not changed.
 	_advance_button.add_theme_stylebox_override("disabled", _round_button_style(Color(0.82, 0.84, 0.88, 0.24)) if not ResourceLoader.exists("res://assets/original/ui/clock_bg.png") else StyleBoxEmpty.new())
 	_advance_button.pressed.connect(func():
-		_advance_mouse_fallback_frame = Engine.get_process_frames()
-		advance_pressed.emit()
+		# The plate remains drawn during the source transition, but is not
+		# an alternate action while GO45 (the next-day text) is hidden.
+		if text_hit.is_visible_in_tree() and not _advance_button.disabled:
+			advance_pressed.emit()
 	)
 	_right_actions.add_child(_advance_button)
-
-	_next_day_label = Label.new()
-	_next_day_label.name = "NextDayLabel"
-	_next_day_label.text = "下一天"
-	_next_day_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_next_day_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_next_day_label.add_theme_font_size_override("font_size", 100)
-	_next_day_label.add_theme_color_override("font_color", Color("#f2e3b0"))
-	# The source label is visual text inside the clock hit target.  It must not
-	# become a second input surface: as a sibling added after RightActions it
-	# otherwise intercepts the click before AdvanceDayButton receives it.
-	# The authored next_day_0 sprite already contains the visible label. The
-	# standalone fallback label would duplicate it and is kept only for the
-	# missing-asset case.
-	_next_day_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_next_day_label.visible = not ResourceLoader.exists("res://assets/original/ui/next_day_0.png")
-	_next_day_label.z_index = PERSISTENT_CONTROL_Z
-	add_child(_next_day_label)
-
-	_redraw_button = _icon_button("重抽")
-	_redraw_button.name = "RedrawSudanButton"
-	# Original redraw coin art when present.
-	if ResourceLoader.exists("res://assets/original/ui/redraw_active.png"):
-		var redraw_icon := TextureRect.new()
-		redraw_icon.texture = preload("res://assets/original/ui/redraw_active.png")
-		redraw_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		redraw_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		redraw_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		redraw_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		_redraw_button.text = ""
-		_redraw_button.add_child(redraw_icon)
-	_redraw_button.pressed.connect(func(): redraw_pressed.emit())
-	_right_actions.add_child(_redraw_button)
-
 	_back_to_prev_button = _icon_button("回退")
 	_back_to_prev_button.name = "BackToPrevButton"
 	# Original return-to-previous-round stamp.
@@ -615,7 +599,7 @@ func _build_ui() -> void:
 	move_child(_cached_event_mask, get_child_count() - 1)
 	# Source buttons are icon images, not the 516px text-button strip. That
 	# strip's 316px content margins forced both controls wider than their rect.
-	for icon_button in [_redraw_button, _back_to_prev_button, _sort_button]:
+	for icon_button in [_back_to_prev_button, _sort_button]:
 		for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
 			icon_button.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
 		for child in icon_button.get_children():
@@ -735,21 +719,6 @@ func _apply_layout() -> void:
 	_right_actions.scale = k
 	_right_actions.position = Vector2(view_size.x - 596 * k.x, view_size.y - 634 * k.y)
 	_right_actions.size = Vector2(596, 634)
-	if _redraw_button != null:
-		# This control is the redraw TRIGGER, not the dice model. The source's
-		# dice roll is a separate 3D sub-scene: Camera "SudanDiceCamera"
-		# (GameScene fileID 4416) with child GameObject "Dices" (fileID 349)
-		# carrying SudanDiceRollController (fileID 11767) at localPosition
-		# (1.05,-1.69,39), localScale 0.01; dice instances are parented to it.
-		# There is no authored 2D position for this button, so the parked rect
-		# stays a clone-only placement until the dice sub-scene is ported.
-		# [SRC: GameScene.unity SudanDiceRollController block: DiceBaseScale
-		#       (40,40,40) / CellSize (100,100) / HeightRange (-170,-230) /
-		#       TopTimeRange (0.5,0.6) / TotalTimeRange (0.8,0.9) /
-		#       RollRotationSpeedRange (400,1000) / MaxScaleRange (1.05,1.1) /
-		#       WaitingTime 0.2 / NormalizeTime 0.4 / FullSize (1100,900) /
-		#       Row 9 / Column 11; SudanDiceRollController.c @ Roll 0x503f30]
-		_set_rect(_redraw_button, Rect2(Vector2(-176, 466), Vector2(150, 150)))
 	if _back_to_prev_button != null:
 		# [SRC: Next Round/PrevRound 158x137 at center+(-206.1,-207.2)]
 		_set_rect(_back_to_prev_button, Rect2(Vector2(12.9, 455.7), Vector2(158, 137)))
@@ -758,13 +727,6 @@ func _apply_layout() -> void:
 		#       Top-left = (1, 634-300-93) = (1,241); the source anchors it to the
 		#       Bottom-Left corner, which is the same box.]
 		_set_rect(_sort_button, Rect2(Vector2(1, 241), Vector2(93, 93)))
-	if _next_day_label != null:
-		_next_day_label.scale = k
-		_next_day_label.size = Vector2(322.26, 174.36)
-		_next_day_label.position = Vector2(
-			view_size.x - (240.5 + 322.26 * 0.5) * k.x,
-			view_size.y - (275 + 174.36 * 0.5) * k.y
-		)
 	var legacy_k := view_size.y / LEGACY_OVERLAY_DESIGN.y
 	# Rite views/selector are still authored in the 1280x800 legacy space.
 	_overlay_layer.scale = Vector2(legacy_k, legacy_k)
@@ -1117,6 +1079,11 @@ func _emit_open_rite_instance(rite_uid: int) -> void:
 func refresh() -> void:
 	if _state == null or _card_items == null:
 		return
+	# Rebuild visibility from the persisted host transition, not a one-way hide.
+	# [SRC: GameController.<OnNextRound>b__9 0x571000 releases the operation
+	# mask / controller lock after SaveRoundBegin. Exact animation timing is
+	# still unported; this only restores the stable actionable state.]
+	_set_next_day_text_visible(_state.round_transition.is_empty())
 	# The clone rebuilds presentation from runtime state on refresh. This is the
 	# host equivalent of MapController.AddPin/RemovePin reacting to rite nodes;
 	# never derive pins from config-only availability.
@@ -1673,62 +1640,6 @@ func _on_hand_card_quick_action(card_uid: int) -> void:
 	_on_hand_card_hold_hint(card_uid)
 
 
-## The source Next Round control is a Button hosted by a large clock rect.  A
-## number of source-sized sibling controls overlap that rect, so Godot can
-## leave a real mouse click unhandled even though the Button itself is enabled.
-## Keep the action at the GameScreen input boundary as the source controller
-## does: one click in the authored clock rect emits the same action signal.
-func _unhandled_input(event: InputEvent) -> void:
-	if _advance_button == null or not is_instance_valid(_advance_button):
-		return
-	if _advance_button.disabled or _advance_button.mouse_filter == Control.MOUSE_FILTER_IGNORE:
-		return
-	if not event is InputEventMouseButton:
-		return
-	var mouse := event as InputEventMouseButton
-	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-		return
-	if not _advance_button.get_global_rect().has_point(mouse.position) and (_next_day_label == null or not _next_day_label.get_global_rect().has_point(mouse.position)):
-		return
-	var frame := Engine.get_process_frames()
-	if _advance_mouse_fallback_frame == frame:
-		return
-	_advance_mouse_fallback_frame = frame
-	advance_pressed.emit()
-
-
-func _on_right_actions_gui_input(event: InputEvent) -> void:
-	if _advance_button == null or _advance_button.disabled:
-		return
-	if not event is InputEventMouseButton:
-		return
-	var mouse := event as InputEventMouseButton
-	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-		return
-	if not _advance_button.get_global_rect().has_point(mouse.position + _right_actions.global_position):
-		return
-	var frame := Engine.get_process_frames()
-	if _advance_mouse_fallback_frame == frame:
-		return
-	_advance_mouse_fallback_frame = frame
-	advance_pressed.emit()
-	get_viewport().set_input_as_handled()
-
-
-func _on_next_day_label_gui_input(event: InputEvent) -> void:
-	if _advance_button == null or _advance_button.disabled or not event is InputEventMouseButton:
-		return
-	var mouse := event as InputEventMouseButton
-	if mouse.button_index != MOUSE_BUTTON_LEFT or not mouse.pressed:
-		return
-	var frame := Engine.get_process_frames()
-	if _advance_mouse_fallback_frame == frame:
-		return
-	_advance_mouse_fallback_frame = frame
-	advance_pressed.emit()
-	get_viewport().set_input_as_handled()
-
-
 func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A screen insertion index belongs to the visible bag, while rail_order
 	# retains all bags. Translate without permuting cards on other pages.
 	var remaining: Array[int] = []
@@ -1782,11 +1693,30 @@ func set_log(text: String) -> void:
 
 
 func play_next_day_transition() -> void:
-	# The source hides the actionable clock as soon as the click is accepted.
-	_advance_button.visible = false
-	_next_day_label.visible = false
+	# [SRC: GameScene Night/Day UnityEvents toggle GO45 (text), not Next Round.]
+	_set_next_day_text_visible(false)
 	# The authored night/day sequence is driven by the source animation
 	# controller; do not substitute an invented fade here.
+
+
+func present_day_transition(progress: Dictionary) -> void:
+	if _next_day_transition == null:
+		_next_day_transition = preload("res://ui/next_day_transition.gd").new()
+		_next_day_transition.name = "SourceNextDayTransition"
+		_next_day_transition.z_index = PERSISTENT_CONTROL_Z + 1
+		add_child(_next_day_transition)
+	_next_day_transition.present(progress, size)
+	var animated := progress.has("animation")
+	var entering := str(progress.get("phase", "")) in ["night_enter", "day_enter"]
+	if _presentation_blockers.has("day_animation") != entering:
+		set_world_scene_blocker("day_animation", entering, false, true)
+	_set_next_day_text_visible(not animated and progress.is_empty())
+
+
+func _set_next_day_text_visible(shown: bool) -> void:
+	# Preserve the authored watch plate behind the animated rings.
+	_advance_button.visible = true
+	_advance_button.get_node("NextDayTextButton").visible = shown
 
 
 func add_overlay(node: Control) -> void:
@@ -1865,13 +1795,20 @@ func _set_underlying_presentation_paused(paused: bool) -> void:
 	else:
 		move_child(_overlay_layer, -1)
 		move_child(_source_overlay_layer, -1)
+	# Restoring a rite can reorder these layers AFTER its nested prompt was
+	# rebuilt. Keep the blocking prompt last for input as well as drawing.
+	# [SRC: GameScene Prompt above UI/RiteResultPanel; PromptController.Show
+	# 0x58a020 awaits confirmation before the rite settlement continues.]
+	if is_instance_valid(_event_overlay):
+		move_child(_event_overlay, -1)
+	if is_instance_valid(_change_name_view):
+		_change_name_view.move_to_front()
 	# The rite is above desktop chrome, while its hand remains a live input
 	# surface. [SRC: RitePanelShowController.BindCardHandler/ChooseSlotCard]
 	_source_overlay_layer.z_index = PERSISTENT_CONTROL_Z + 1 if rite_open else OVERLAY_LAYER_Z + 1
 	_card_rail_view.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
 	_bag_tabs.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else 21
 	_right_actions.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
-	_next_day_label.z_index = PERSISTENT_CONTROL_Z + 2 if rite_open else PERSISTENT_CONTROL_Z
 	_begin_guide_bar.z_index = PERSISTENT_CONTROL_Z if rite_open else PERSISTENT_CONTROL_Z + 2
 	var hand_paused := paused and not rite_only
 	if _bag_tabs != null:
@@ -1914,9 +1851,12 @@ func _update_persistent_action_availability() -> void:
 	if _advance_button != null:
 		_advance_button.disabled = not actions_available
 		_advance_button.mouse_filter = Control.MOUSE_FILTER_STOP if actions_available else Control.MOUSE_FILTER_IGNORE
-	if _redraw_button != null:
-		_redraw_button.disabled = not actions_available
-		_redraw_button.mouse_filter = Control.MOUSE_FILTER_STOP if actions_available else Control.MOUSE_FILTER_IGNORE
+		var text_hit := _advance_button.get_node("NextDayTextButton") as Button
+		text_hit.disabled = not actions_available
+		text_hit.mouse_filter = _advance_button.mouse_filter
+		if not actions_available:
+			text_hit.get_node("Normal").visible = true
+			text_hit.get_node("Hover").visible = false
 
 
 func _refresh_event_overlay() -> void:

@@ -37,7 +37,7 @@ static func begin_opening(state, db, rng) -> Dictionary:
 
 
 ## Advance one visible day; TryGenSudanCard 0x559730 draws only if absent.
-static func advance_day(state, db, rng, interactive: bool = false) -> Dictionary:
+static func advance_day(state, db, rng, interactive: bool = false, animate: bool = false) -> Dictionary:
 	if not state.round_transition.is_empty():
 		return state.round_transition
 	# SaveRoundEnd is before the Promise chain, including card updates.
@@ -51,6 +51,9 @@ static func advance_day(state, db, rng, interactive: bool = false) -> Dictionary
 		"adsorbed": [], "interactive": interactive, "phase": "auto_start",
 	}
 	state.round_transition = result
+	if animate:
+		result.animation = preload("res://ui/next_day_clock.gd").create()
+		result.phase = "night_enter"
 	_pump_day(state, db, rng, result)
 	return result
 
@@ -65,6 +68,9 @@ static func _pump_day(state, db, rng, result: Dictionary) -> void:
 			state.round_transition = {}
 			return
 		match str(result.get("phase", "rites")):
+			"night_enter", "day_enter":
+				# Only the source animation event releases these Promise gates.
+				return
 			"opening_events":
 				result.phase = "opening_draw"
 				state.trigger_events("round_begin_ba", {"round": state.round_number, "rng": rng})
@@ -114,7 +120,11 @@ static func _pump_day(state, db, rng, result: Dictionary) -> void:
 					payload.erase("round")
 					OperationsSequence.start([payload], state, db, rng, delayed.get("context", {}))
 				else:
-					result.phase = "round_begin"
+					if result.has("animation"):
+						preload("res://ui/next_day_clock.gd").continue_to_day(result.animation)
+						result.phase = "day_enter"
+					else:
+						result.phase = "round_begin"
 			"round_begin":
 				result.phase = "adsorb"
 				result.round_begin_events = state.trigger_events("round_begin_ba", {"round": state.round_number})

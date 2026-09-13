@@ -11,6 +11,7 @@
 ##       HandBagController.c SetChild 0x55e360 (dump.cs:320498).]
 class_name CardWidget
 extends Control
+const TextureCache = preload("res://ui/source_texture_cache.gd")
 
 signal clicked(card_id: int, card: Dictionary)
 signal quick_action_requested(card_uid: int)
@@ -155,19 +156,19 @@ func _apply_metal_surface(image: TextureRect) -> void:
 	var metal_name := "card_mt_0" if kind == "char" else ("card_mt" if kind == "sudan" else "card_mt_1")
 	var surface := ShaderMaterial.new()
 	surface.shader = preload("res://ui/card_metal.gdshader")
-	surface.set_shader_parameter("normal_map", load("res://assets/original/ui/%s.png" % normal_name))
-	surface.set_shader_parameter("metal_map", load("res://assets/original/ui/%s.png" % metal_name))
+	surface.set_shader_parameter("normal_map", TextureCache.load_texture("res://assets/original/ui/%s.png" % normal_name))
+	surface.set_shader_parameter("metal_map", TextureCache.load_texture("res://assets/original/ui/%s.png" % metal_name))
 	surface.set_shader_parameter("bump_scale", [0.9027777, 0.3819444, 0.2847222, 0.3680556][tier])
 	surface.set_shader_parameter("gloss_scale", [0.3020833, 0.7847222, 0.8090278, 0.75][tier])
 	var detail_name: String = str(CARD_DETAIL_MAPS.get(kind, ["", "", "", ""])[tier])
 	if not detail_name.is_empty():
-		surface.set_shader_parameter("detail_map", load("res://assets/original/ui/%s.png" % detail_name))
+		surface.set_shader_parameter("detail_map", TextureCache.load_texture("res://assets/original/ui/%s.png" % detail_name))
 		surface.set_shader_parameter("has_detail", true)
 	# [SRC: card/{kind}/{tier}.mat _EmissionMap/_EmissionColor.
 	# Character stone_f has its own emission colour; all other tiers share
 	# their authored colour across background and foreground.]
 	var emission_name: String = str(CARD_EMISSION_MAPS.get(kind, CARD_EMISSION_MAPS["item"])[tier])
-	surface.set_shader_parameter("emission_map", load("res://assets/original/ui/%s.png" % emission_name))
+	surface.set_shader_parameter("emission_map", TextureCache.load_texture("res://assets/original/ui/%s.png" % emission_name))
 	var emission: Vector3 = [Vector3(0.14150941, 0.14150941, 0.14150941),
 		Vector3(0.0, 0.04861112, 0.11458), Vector3.ZERO,
 		Vector3(0.04513899, 0.04513899, 0.02083)][tier]
@@ -713,7 +714,7 @@ func _rarity_frame_texture() -> Texture2D:
 		surface = "card_2" if silver else "card_3"
 	elif kind == "sudan":
 		surface = "card" if silver else "card_1"
-	return load("res://assets/original/ui/%s.png" % surface) as Texture2D
+	return TextureCache.load_texture("res://assets/original/ui/%s.png" % surface) as Texture2D
 
 
 func _surface_color(foreground: bool = false) -> Color:
@@ -757,7 +758,7 @@ func _rebuild() -> void:
 	# [SRC: CardController.OnSelect 0x52b710 / OnDeselect 0x529ef0;
 	# CardNew/Outline is initially inactive, then enabled by selection.
 	# Authored sprite card_outline_new, size256x525, anchoredPosition(0,22).]
-	var selection_outline := _face_texture("Outline", load("res://assets/original/ui/card_outline_new.png"), Rect2(-31, -73.5, 256, 525))
+	var selection_outline := _face_texture("Outline", TextureCache.load_texture("res://assets/original/ui/card_outline_new.png"), Rect2(-31, -73.5, 256, 525))
 	selection_outline.visible = _selected and not _drag_preview
 	var background := _face_texture("RarityFrame", _rarity_frame_texture(), Rect2(Vector2.ZERO, CARD_SIZE))
 	background.self_modulate = _surface_color()
@@ -784,7 +785,7 @@ func _rebuild() -> void:
 	_visual_face.add_child(title)
 	if str(_card.get("type", "")) == "char":
 		var tier: String = ["stone", "copper", "silver", "gold"][clampi(int(_card.get("rare", 1)) - 1, 0, 3)]
-		var foreground := _face_texture("Foreground", load("res://assets/original/ui/%s_f.png" % tier), Rect2(Vector2.ZERO, CARD_SIZE))
+		var foreground := _face_texture("Foreground", TextureCache.load_texture("res://assets/original/ui/%s_f.png" % tier), Rect2(Vector2.ZERO, CARD_SIZE))
 		foreground.self_modulate = _surface_color(true)
 		_apply_metal_surface(foreground)
 	# [SRC: CardNew/Flash anchors(0.5,0.5) pos(0,0) size(256,512),
@@ -793,7 +794,7 @@ func _rebuild() -> void:
 	#       _InnerOutlineColor 0.882/0.728/0.337). Separate from the selected
 	#       Outline bitmap controlled by OnSelect/OnDeselect. Unity pos (0,0)
 	#       with a centre pivot folds into the Godot top-left (-31,-45).]
-	_face_texture("Flash", load("res://assets/original/ui/card_outline.png"), Rect2(Vector2(-31, -45), Vector2(256, 512)))
+	_face_texture("Flash", TextureCache.load_texture("res://assets/original/ui/card_outline.png"), Rect2(Vector2(-31, -45), Vector2(256, 512)))
 	var flash := _visual_face.get_node("Flash") as TextureRect
 	var flash_material := ShaderMaterial.new()
 	flash_material.shader = preload("res://ui/card_flash.gdshader")
@@ -813,15 +814,15 @@ func _rebuild() -> void:
 		var item_badge := str(_card.get("type", "item")) == "item"
 		var badge_texture := "checkbox_bg" if item_badge else "number_bg"
 		var badge_rect := Rect2(59.5, 332, 75, 78) if item_badge else Rect2(57, 332, 80, 80)
-		var badge := _face_texture("Stackable", load("res://assets/original/ui/%s.png" % badge_texture), badge_rect)
+		var badge := _face_texture("Stackable", TextureCache.load_texture("res://assets/original/ui/%s.png" % badge_texture), badge_rect)
 		badge.add_child(_source_number("Count", str(count), 58.0, Rect2(Vector2.ZERO, badge_rect.size)))
 	# [SRC: CardRender.Init / UpdateShowInternal; lifetime = config minus
 	# Card.life. CardShow*/LifeBg sits above the card, not in its footer.]
 	var lifetime := int(_card.get("card_vanishing", 0))
 	if lifetime > 0 or _card.has("remaining_life"):
-		var life_bg := _face_texture("LifeBg", load("res://assets/original/ui/bg_green.png"), Rect2(57.5, -45, 98, 45))
+		var life_bg := _face_texture("LifeBg", TextureCache.load_texture("res://assets/original/ui/bg_green.png"), Rect2(57.5, -45, 98, 45))
 		var clock := TextureRect.new()
-		clock.texture = load("res://assets/original/ui/rite_round.png")
+		clock.texture = TextureCache.load_texture("res://assets/original/ui/rite_round.png")
 		clock.position = Vector2(-19, 1.5)
 		clock.size = Vector2(38, 42)
 		clock.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -873,7 +874,7 @@ func _card_art_texture() -> Texture2D:
 		resource = resource[clampi(int(tags.get("pic", 0)), 0, resource.size() - 1)] if not resource.is_empty() else ""
 	var art_path := "res://assets/original/%s.png" % str(resource)
 	if ResourceLoader.exists(art_path):
-		return load(art_path) as Texture2D
+		return TextureCache.load_texture(art_path) as Texture2D
 	return null
 
 
@@ -885,7 +886,7 @@ func _card_type_icon() -> Texture2D:
 		type = "item"
 	var path := "res://assets/original/ui/card_type_%s.png" % type
 	if ResourceLoader.exists(path):
-		return load(path) as Texture2D
+		return TextureCache.load_texture(path) as Texture2D
 	return null
 
 

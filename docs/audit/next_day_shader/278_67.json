@@ -1,0 +1,172 @@
+{
+  "variant": {
+    "m_BlobIndex": 67,
+    "m_KeywordIndices": [
+      14
+    ],
+    "m_ShaderRequirements": 227,
+    "m_GpuProgramType": 17
+  },
+  "parameters": {
+    "m_VectorParams": [],
+    "m_MatrixParams": [],
+    "m_TextureParams": [
+      {
+        "m_NameIndex": 9,
+        "m_Index": 0,
+        "m_SamplerIndex": 1,
+        "m_MultiSampled": false,
+        "m_Dim": 2
+      },
+      {
+        "m_NameIndex": 10,
+        "m_Index": 1,
+        "m_SamplerIndex": 0,
+        "m_MultiSampled": false,
+        "m_Dim": 2
+      },
+      {
+        "m_NameIndex": 11,
+        "m_Index": 2,
+        "m_SamplerIndex": 2,
+        "m_MultiSampled": false,
+        "m_Dim": 2
+      },
+      {
+        "m_NameIndex": 12,
+        "m_Index": 3,
+        "m_SamplerIndex": 3,
+        "m_MultiSampled": false,
+        "m_Dim": 2
+      },
+      {
+        "m_NameIndex": 13,
+        "m_Index": 4,
+        "m_SamplerIndex": 4,
+        "m_MultiSampled": false,
+        "m_Dim": 2
+      }
+    ],
+    "m_BufferParams": [],
+    "m_ConstantBuffers": [
+      {
+        "m_NameIndex": 1,
+        "m_MatrixParams": [],
+        "m_VectorParams": [
+          {
+            "m_NameIndex": 4,
+            "m_Index": 0,
+            "m_ArraySize": 0,
+            "m_Type": 0,
+            "m_Dim": 4
+          }
+        ],
+        "m_StructParams": [],
+        "m_Size": 144,
+        "m_IsPartialCB": true
+      }
+    ],
+    "m_ConstantBufferBindings": [
+      {
+        "m_NameIndex": 8,
+        "m_Index": 0,
+        "m_ArraySize": 1
+      },
+      {
+        "m_NameIndex": 1,
+        "m_Index": 1,
+        "m_ArraySize": 1
+      }
+    ],
+    "m_UAVParams": [],
+    "m_Samplers": []
+  },
+  "names": [
+    [
+      "$Globals",
+      8
+    ],
+    [
+      "UnityPerCamera",
+      1
+    ],
+    [
+      "UnityPerDraw",
+      2
+    ],
+    [
+      "UnityPerFrame",
+      3
+    ],
+    [
+      "_Diss_Noise",
+      12
+    ],
+    [
+      "_Main_Tex",
+      10
+    ],
+    [
+      "_Mask",
+      13
+    ],
+    [
+      "_Tex_2",
+      11
+    ],
+    [
+      "_Time",
+      4
+    ],
+    [
+      "_Turb_Noise",
+      9
+    ],
+    [
+      "_Vertex_offset",
+      0
+    ],
+    [
+      "unity_MatrixVP",
+      7
+    ],
+    [
+      "unity_ObjectToWorld",
+      5
+    ],
+    [
+      "unity_WorldToObject",
+      6
+    ]
+  ],
+  "blend": {
+    "srcBlend": {
+      "val": 1.0,
+      "name": "<noninit>"
+    },
+    "destBlend": {
+      "val": 1.0,
+      "name": "<noninit>"
+    },
+    "srcBlendAlpha": {
+      "val": 1.0,
+      "name": "<noninit>"
+    },
+    "destBlendAlpha": {
+      "val": 1.0,
+      "name": "<noninit>"
+    },
+    "blendOp": {
+      "val": 0.0,
+      "name": "<noninit>"
+    },
+    "blendOpAlpha": {
+      "val": 0.0,
+      "name": "<noninit>"
+    },
+    "colMask": {
+      "val": 15.0,
+      "name": "<noninit>"
+    }
+  }
+}

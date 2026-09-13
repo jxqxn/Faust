@@ -56,5 +56,6 @@ func _finish() -> void:
 	await process_frame
 	await process_frame
 	FaustTheme.clear_cache()
+	preload("res://ui/rite_view.gd").clear_layout_cache()
 	await process_frame
 	quit(_exit_code)

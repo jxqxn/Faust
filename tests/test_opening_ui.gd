@@ -99,9 +99,12 @@ func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 		get_viewport().get_texture().get_image().save_png("res://docs/ui_layout/opening_reward_hand.png")
 
 
-func test_first_two_days_use_real_next_day_input_and_survive_save_load() -> void:
-	var stage := Control.new()
-	stage.size = get_viewport().get_visible_rect().size
+func test_opening_then_viewport_click_starts_persistable_round_transition() -> void:
+	# Opening choices below use controller calls; only the next-day click is
+	# injected through the viewport. This is not full two-day acceptance.
+	var stage := SubViewport.new()
+	stage.size = Vector2i(1920, 1080)
+	stage.handle_input_locally = true
 	add_child_autofree(stage)
 	var main = load("res://scenes/main.tscn").instantiate()
 	stage.add_child(main)
@@ -135,17 +138,28 @@ func test_first_two_days_use_real_next_day_input_and_survive_save_load() -> void
 	assert_true(state.round_transition.is_empty())
 	var screen = main._game_screen as GameScreen
 	var next_day := screen.get_node("RightActions/AdvanceDayButton") as Button
-	var actions := screen.get_node("RightActions") as Control
+	var target := next_day.get_node("NextDayTextButton") as Button
 	assert_false(next_day.disabled, "completed opening enables Next Round")
 	var press := InputEventMouseButton.new()
 	press.button_index = MOUSE_BUTTON_LEFT
 	press.pressed = true
-	press.position = next_day.get_global_rect().get_center() - actions.global_position
-	screen._on_right_actions_gui_input(press)
+	press.position = target.get_global_rect().get_center()
+	var motion := InputEventMouseMotion.new()
+	motion.position = press.position
+	stage.push_input(motion, true)
+	await wait_process_frames(1)
+	assert_eq(stage.gui_get_hovered_control(), target)
+	stage.push_input(press, true)
+	var release := press.duplicate() as InputEventMouseButton
+	release.pressed = false
+	stage.push_input(release, true)
 	await wait_process_frames(2)
-	assert_eq(state.round_number, 2, "real mouse input starts the second day")
-	assert_true(screen.get_node_or_null("NextDayTransitionMask") != null or state.round_transition.is_empty(), "next-day transition is represented while the chain runs")
+	assert_eq(state.round_number, 1, "night entry waits before advancing round")
+	assert_eq(str(state.round_transition.phase), "night_enter")
+	await wait_seconds(4.2)
+	assert_eq(state.round_number, 2, "viewport click advances counter; settlement can still be pending")
 	var saved := SaveSystem.serialize(state)
 	var restored := GameState.new()
 	SaveSystem.deserialize(saved, restored, main.db)
-	assert_eq(restored.round_number, 2, "second-day state survives save/load")
+	assert_eq(restored.round_number, 2, "round counter survives serialization")
+	assert_eq(restored.round_transition, state.round_transition, "pending phase survives serialization; not a scene reload test")

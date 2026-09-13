@@ -1,5 +1,10 @@
 extends Node
 
+static var _styles_cache: Dictionary = {}
+
+static func clear_cache() -> void:
+	_styles_cache.clear()
+
 const Preferences = preload("res://ui/game_application_settings.gd")
 var _control: Control
 var _style: Dictionary
@@ -49,7 +54,10 @@ static func _fits_at(font: Font, text: String, box: Vector2, point_size: int) ->
 	return float(lines) * line_height <= box.y
 
 static func apply(control: Control, key: String, size_class: String = "") -> void:
-	var styles: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
+	# Immutable source configuration; preferences are still read for each binding.
+	if _styles_cache.is_empty():
+		_styles_cache = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/textstyle.json"))
+	var styles := _styles_cache
 	if not styles.has(key):
 		push_error("Unknown source text style: " + key)
 		return
@@ -86,7 +94,10 @@ static func apply(control: Control, key: String, size_class: String = "") -> voi
 	else:
 		control.add_theme_font_override("font", font)
 		control.add_theme_font_size_override("font_size", point_size)
+	if control is RichTextLabel and control.has_meta("source_markup"):
+		load("res://ui/source_rich_text.gd").set_label_text(control, str(control.get_meta("source_markup")))
 	binding._apply_auto_size(font)
+	apply_source_spacing(control)
 	# TMP material and the spacing fields still need renderer-specific evidence;
 	# this method only claims font identity, configured point size, and the
 	# auto-size fit.
@@ -146,7 +157,21 @@ func _update_size(code: String) -> void:
 			_control.add_theme_font_size_override(key, point_size)
 	else:
 		_control.add_theme_font_size_override("font_size", point_size)
+	if _control is RichTextLabel and _control.has_meta("source_markup"):
+		load("res://ui/source_rich_text.gd").set_label_text(_control, str(_control.get_meta("source_markup")))
 	_apply_auto_size()
+	apply_source_spacing(_control)
+
+
+static func apply_source_spacing(control: Control) -> void:
+	if not control is RichTextLabel or not control.has_meta("source_tmp_spacing"):
+		return
+	# TMP_Text.CalculatePreferredValues 0x18c40f0: spacing units multiply
+	# base font size * .01 (constant VA0x181c92b40). Not raw screen pixels.
+	var spacing: Vector2 = control.get_meta("source_tmp_spacing")
+	var em := control.get_theme_font_size("normal_font_size") * 0.01
+	control.add_theme_constant_override("line_separation", roundi(spacing.x * em))
+	control.add_theme_constant_override("paragraph_separation", roundi(spacing.y * em))
 
 
 static func _point_size(style: Dictionary, code: String) -> int:

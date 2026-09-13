@@ -1,0 +1,10 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/original/cards/position_shangye_2.png" id="1"]
+
+[resource]
+atlas = ExtResource("1")
+region = Rect2(196.07613, 15.07612400, 706.89716, 715.87256)
+filter_clip = true
+metadata/source_sprite = "Resources/image/common/position_shangye_2.asset"
+metadata/source_native_size = Vector2(706.89716000, 715.87256000)

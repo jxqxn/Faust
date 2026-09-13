@@ -10,6 +10,15 @@ func before_all():
 	db.load_all()
 
 
+func _test_rite_uid(state: GameState, local_db: ConfigDB, rng: RNG, rite_id: int, absorb_open_slots := false) -> int:
+	var instance = state.find_rite_instance_by_id(rite_id)
+	if instance == null:
+		instance = state.create_rite_instance(rite_id)
+		if absorb_open_slots:
+			state._adsorb_open_slots(instance, local_db.get_rite(rite_id), local_db, rng)
+	return int(instance.uid)
+
+
 func test_rite_view_keeps_protagonist_as_actor_while_other_cards_are_participants() -> void:
 	var state := GameState.new()
 	state.setup_new_run(db, 0, RNG.new(700))
@@ -76,7 +85,7 @@ func test_gold_dice_reresolve_does_not_apply_results_twice():
 	state.setup_new_run(db, 0, rng)
 	state.gold_dice = 2
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {
 		"settlement": [
 			{"condition": {}, "result": {"coin": 5}, "result_title": "", "result_text": ""}
@@ -196,7 +205,7 @@ func test_result_text_uses_source_typewriter_and_next_skips_before_commit():
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {"id": 5000001, "round_number": 0,
 		"settlement": [{"condition": {}, "result": {}, "result_title": "标题", "result_text": "这是结算正文"}],
 		"settlement_prior": [], "settlement_extre": []}
@@ -205,6 +214,8 @@ func test_result_text_uses_source_typewriter_and_next_skips_before_commit():
 	view._resolve()
 	var text := view._result_surface_text
 	assert_not_null(text, "result text exists")
+	assert_true(view._result_next_button.is_visible_in_tree(), "overnight settlement exposes the source next icon")
+	assert_false(view._result_next_button.disabled, "source next icon remains clickable during result selection")
 	assert_false(view._result_text_done, "source result text starts in typewriter state")
 	assert_eq(text.visible_characters, 0, "source result text starts with zero visible characters")
 	view._on_result_next()
@@ -218,7 +229,7 @@ func test_resolved_rite_does_not_consume_sudan_without_clean_result():
 	state.setup_new_run(db, 1, rng)
 	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000003)
+	view.setup(state, db, rng, 5000003, _test_rite_uid(state, db, rng, 5000003))
 	view._rite = {
 		"settlement": [
 			{"condition": {"s1.type": "sudan"}, "result": {}, "result_title": "", "result_text": ""}
@@ -240,7 +251,7 @@ func test_resolved_rite_consumes_sudan_when_cleaning_placed_slot():
 	state.setup_new_run(db, 1, rng)
 	var sudan_id := RoundLoop.draw_weekly_sudan(state, db, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000003)
+	view.setup(state, db, rng, 5000003, _test_rite_uid(state, db, rng, 5000003))
 	view._rite = {
 		"settlement": [
 			{"condition": {"s1.type": "sudan"}, "result": {"clean.s1": 1}, "result_title": "", "result_text": ""}
@@ -307,7 +318,7 @@ func test_rite_resolution_deferred_rite_event_and_prompt_reach_state():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {
 		"settlement": [
 			{"condition": {}, "result": {"event_on": 5310008}, "action": {"rite": 5000001, "prompt": {"id": "p1"}}}
@@ -345,7 +356,7 @@ func test_rite_resolution_choose_executes_one_random_suboperation():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {
 		"settlement": [
 			{"condition": {}, "result": {"choose": {"pop.test": "hello"}}}
@@ -437,7 +448,7 @@ func test_rite_over_result_emits_game_over_requested():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000003)
+	view.setup(state, db, rng, 5000003, _test_rite_uid(state, db, rng, 5000003))
 	view._rite = {
 		"settlement": [
 			{"condition": {}, "result": {"over": 1}, "result_title": "", "result_text": ""}
@@ -462,7 +473,7 @@ func test_rite_without_over_does_not_emit_game_over():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000003)
+	view.setup(state, db, rng, 5000003, _test_rite_uid(state, db, rng, 5000003))
 	view._rite = {
 		"settlement": [
 			{"condition": {}, "result": {"coin": 1}, "result_title": "", "result_text": ""}
@@ -484,7 +495,7 @@ func test_manual_rite_settlement_waits_for_confirmation_before_removing_instance
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {
 		"id": 5000001,
 		"settlement": [{"condition": {}, "result": {"coin": 2}, "action": {}}],
@@ -540,7 +551,7 @@ func test_closing_pending_result_restores_uncommitted_world_effects():
 	var state := GameState.new()
 	state.setup_new_run(db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, db, rng, 5000001)
+	view.setup(state, db, rng, 5000001, _test_rite_uid(state, db, rng, 5000001))
 	view._rite = {
 		"id": 5000001,
 		"settlement": [{"condition": {}, "result": {"coin": 4}, "action": {}}],
@@ -608,7 +619,7 @@ func test_started_rite_blocks_slot_click_drag_and_desktop_return_until_stopped()
 	var state := GameState.new()
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, local_db, rng, 992003)
+	view.setup(state, local_db, rng, 992003, _test_rite_uid(state, local_db, rng, 992003, true))
 	add_child(view)
 	await wait_process_frames(2)
 	var uid: int = state.player_actor_uid
@@ -649,7 +660,7 @@ func test_empty_slot_cycles_qualified_bags_and_keeps_empty_match_state():
 	# s3 takes the protagonist; the manual-slot cycling below is about s1/s2.
 	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0]
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, local_db, rng, 992003)
+	view.setup(state, local_db, rng, 992003, _test_rite_uid(state, local_db, rng, 992003, true))
 	# The fixture's s3 is the open_adsorb slot and creation-time adsorption
 	# walks the hand in source order, taking the FIRST accepted card — here the
 	# protagonist. Page 2 is therefore empty and the qualified set is [0].
@@ -677,7 +688,7 @@ func test_reopened_running_rite_cannot_settle_before_source_life_boundary():
 	var state := GameState.new()
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, local_db, rng, 992001)
+	view.setup(state, local_db, rng, 992001, _test_rite_uid(state, local_db, rng, 992001))
 	add_child(view)
 	await wait_process_frames(2)
 	state.start_rite_instance(view._rite_uid)
@@ -706,7 +717,7 @@ func test_result_prompt_blocks_commit_cancel_and_retry_until_response():
 	state.setup_new_run(local_db, 1, rng)
 	state.gold_dice = 2
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, local_db, rng, 992002)
+	view.setup(state, local_db, rng, 992002, _test_rite_uid(state, local_db, rng, 992002))
 	add_child(view)
 	await wait_process_frames(2)
 	watch_signals(view)
@@ -750,7 +761,7 @@ func test_zero_day_auto_result_waits_for_prompt_before_closing():
 	state.setup_new_run(local_db, 1, rng)
 	state.auto_result_rites.append(992002)
 	var view := _owned(RiteView.new()) as RiteView
-	view.setup(state, local_db, rng, 992002)
+	view.setup(state, local_db, rng, 992002, _test_rite_uid(state, local_db, rng, 992002))
 	add_child(view)
 	await wait_process_frames(2)
 	watch_signals(view)
@@ -806,7 +817,7 @@ func test_confirm_records_manual_rite_slots_for_last_state_restore():
 	var actor_uid := state.player_actor_uid
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992003)
+	view.setup(state, local_db, rng, 992003, _test_rite_uid(state, local_db, rng, 992003, true))
 	await wait_process_frames(2)
 	view._place_card_in_slot("s1", gold_uid, "hand", "")
 	view._place_card_in_slot("s3", actor_uid, "hand", "")
@@ -829,7 +840,7 @@ func test_restore_last_rite_state_is_partial_and_reforms_stack_count():
 	var gold_uid := state.gold_card_uids()[0]
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992003)
+	view.setup(state, local_db, rng, 992003, _test_rite_uid(state, local_db, rng, 992003, true))
 	await wait_process_frames(2)
 	# Creation-time adsorption filled the fixture's open_adsorb slot s3 with the
 	# first hand card. Withdraw it (the panel refuses to edit that slot, so go
@@ -864,7 +875,7 @@ func test_confirm_on_multi_day_rite_only_starts_it():
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992001)
+	view.setup(state, local_db, rng, 992001, _test_rite_uid(state, local_db, rng, 992001))
 	# Lambdas capture locals by value in GDScript; count through an array.
 	var closed_count := [0]
 	view.closed.connect(func(): closed_count[0] += 1)
@@ -888,7 +899,7 @@ func test_zero_day_rite_confirms_then_settles_in_one_press():
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992002)
+	view.setup(state, local_db, rng, 992002, _test_rite_uid(state, local_db, rng, 992002))
 	view._resolve()
 	view._commit_resolution()
 	assert_eq(state.coin_count, 6, "zero-day rite settles immediately after starting")
@@ -902,7 +913,7 @@ func test_stop_visibility_and_handler_share_original_start_round_gate():
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992001)
+	view.setup(state, local_db, rng, 992001, _test_rite_uid(state, local_db, rng, 992001))
 	view._resolve()
 	var instance = state.get_rite_instance(view._rite_uid)
 	assert_true(view._stop_btn.visible)
@@ -924,7 +935,7 @@ func test_stop_started_rite_rolls_back_life_and_keeps_cards():
 	state.setup_new_run(local_db, 1, rng)
 	var view := _owned(RiteView.new()) as RiteView
 	add_child(view)
-	view.setup(state, local_db, rng, 992001)
+	view.setup(state, local_db, rng, 992001, _test_rite_uid(state, local_db, rng, 992001))
 	view._resolve()
 	var instance = state.get_rite_instance(view._rite_uid)
 	assert_true(instance.start, "precondition: rite is started")
