@@ -94,6 +94,8 @@ func test_original_save_continuous_days_and_pending_settlement_disk_rebuild() ->
 					await _capture(viewport, "day-%d-restored-prompt" % expected_round)
 					rebuilt_prompt = true
 					continue
+				if main._game_screen._event_overlay == null:
+					continue
 				var confirm = main._game_screen._event_overlay._confirm_button
 				if confirm != null and confirm.is_visible_in_tree() and not confirm.disabled:
 					await _click(viewport, confirm)

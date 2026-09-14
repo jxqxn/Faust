@@ -24,7 +24,7 @@ extends RefCounted
 ##  WeightedNChooseM (line 1124) both apply a Where condition filter before
 ##  weighting; type-99 (line 849) gates each item on its condition]
 ## Returns Array of chosen ids (may contain duplicates).
-static func generate(rng: GameRNG, node: Dictionary, owned_ids: Array = [], condition_ok: Callable = Callable()) -> Array:
+static func generate(rng: GameRNG, node: Dictionary, owned_ids: Array = [], condition_ok: Callable = Callable(), retain_items: bool = false) -> Array:
 	var loot_type := int(node.get("type", 2))
 	var repeat := int(node.get("repeat", 1))
 	var items: Array = node.get("item", [])
@@ -34,22 +34,22 @@ static func generate(rng: GameRNG, node: Dictionary, owned_ids: Array = [], cond
 	match loot_type:
 		3:
 			for _i in repeat:
-				var picked: Variant = _simple_weight(rng, _exclude(filtered, owned_ids))
+				var picked: Variant = _simple_weight(rng, _exclude(filtered, owned_ids), retain_items)
 				if picked != null:
 					out.append(picked)
 				# Empty filtered set => returns nothing for that iteration.
 		4:
 			# M = the node's repeat/count field (node+0x20 in .c), NOT sum(num).
 			# [SRC: GenLoot.c @ Generate (0x511990) type-4: passes node+0x20 as M]
-			out = _weighted_n_choose_m(rng, filtered, repeat)
+			out = _weighted_n_choose_m(rng, filtered, repeat, retain_items)
 		99:
 			for _i in repeat:
 				for it in filtered:
-					out.append(int(it.get("id", 0)))
+					out.append(it if retain_items else int(it.get("id", 0)))
 		_:
 			# default (incl type 2): SimpleWeightLoot per repeat.
 			for _i in repeat:
-				var picked: Variant = _simple_weight(rng, filtered)
+				var picked: Variant = _simple_weight(rng, filtered, retain_items)
 				if picked != null:
 					out.append(picked)
 	return out
@@ -67,7 +67,7 @@ static func _filter_conditions(items: Array, condition_ok: Callable) -> Array:
 
 
 ## SimpleWeightLoot: int-weighted single pick.
-static func _simple_weight(rng: GameRNG, items: Array) -> Variant:
+static func _simple_weight(rng: GameRNG, items: Array, retain_items: bool = false) -> Variant:
 	if items.is_empty():
 		return null
 	var weights := PackedInt32Array()
@@ -76,14 +76,14 @@ static func _simple_weight(rng: GameRNG, items: Array) -> Variant:
 	var idx := rng.weighted_pick_int(weights)
 	if idx < 0:
 		return null
-	return int(items[idx].get("id", 0))
+	return items[idx] if retain_items else int(items[idx].get("id", 0))
 
 
 ## WeightedNChooseM: float precision, without replacement.
 ## M = the count to draw (the node's repeat/count, NOT sum of item nums).
 ## [SRC: GenLoot.c @ Generate type-4 passes node+0x20 as M; offset-consistent
 ##  with the repeat/count loop bound in every other type branch]
-static func _weighted_n_choose_m(rng: GameRNG, items: Array, m: int) -> Array:
+static func _weighted_n_choose_m(rng: GameRNG, items: Array, m: int, retain_items: bool = false) -> Array:
 	if items.is_empty():
 		return []
 	var pool: Array = items.duplicate(true)
@@ -104,7 +104,7 @@ static func _weighted_n_choose_m(rng: GameRNG, items: Array, m: int) -> Array:
 				break
 		if chosen_idx < 0:
 			chosen_idx = pool.size() - 1
-		out.append(int(pool[chosen_idx].get("id", 0)))
+		out.append(pool[chosen_idx] if retain_items else int(pool[chosen_idx].get("id", 0)))
 		# Without replacement: remove and subtract weight from total.
 		pool.remove_at(chosen_idx)
 	return out

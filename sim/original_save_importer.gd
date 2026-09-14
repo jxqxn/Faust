@@ -358,7 +358,7 @@ static func diff_against_original(original: Dictionary, state) -> Array:
 	rows.append(_row("prestige_unshow", bool(original.get("prestige_unshow", false)), bool(state.prestige_unshow)))
 	rows.append(_row("deadline_unshow", bool(original.get("deadline_unshow", false)), bool(state.deadline_unshow)))
 	rows.append(_row("helpbtn_unshow", bool(original.get("helpbtn_unshow", false)), bool(state.helpbtn_unshow)))
-	rows.append(_row("card_object_count", original_cards.size(), state.card_instances.size()))
+	rows.append(_row("card_object_count", original_cards.size(), _live_clone_cards(state).size()))
 	rows.append(_row("per_id_counts", _per_id_counts(original_cards), _clone_per_id_counts(state)))
 	rows.append(_row("gold_total_7000105", _original_gold_total(original), state.gold_total()))
 	rows.append(_row("counter", _norm_int_dict(original.get("counter", {})), _norm_int_dict(state.local_counters)))
@@ -618,9 +618,15 @@ static func _per_id_counts(cards: Array) -> Dictionary:
 
 static func _clone_per_id_counts(state) -> Dictionary:
 	var counts := {}
-	for instance in state.card_instances.values():
+	for instance in _live_clone_cards(state):
 		counts[instance.card_id] = int(counts.get(instance.card_id, 0)) + int(instance.count)
 	return counts
+
+
+## Original JSON enumerates reachable card objects. Clone tombstones remain
+## addressable for pending cleanup contexts but are no longer in play.
+static func _live_clone_cards(state) -> Array:
+	return state.card_instances.values().filter(func(card): return card.zone != "removed")
 
 
 static func _original_gold_total(original: Dictionary) -> int:

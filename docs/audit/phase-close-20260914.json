@@ -1,0 +1,286 @@
+{
+  "schema_version": 2,
+  "date": "2026-09-14",
+  "baseline_commit": "b5ca1f9ea1acab1bf99ce22ac3f145bcf618b1e0",
+  "verdict": "DUAL_REPLAY_EXECUTED_EQUIVALENCE_FAILED",
+  "historical_static_audit": {
+    "schema_version": 1,
+    "date": "2026-09-14",
+    "baseline_commit": "b5ca1f9ea1acab1bf99ce22ac3f145bcf618b1e0",
+    "verdict": "SETTLEMENT_EQUIVALENCE_NOT_VERIFIED",
+    "content": {
+      "files": 3889,
+      "byte_violations": 0,
+      "token_tree_differences": 0
+    },
+    "dsl": {
+      "scope": "potentially_reachable_static_configs",
+      "unsupported_condition": 0,
+      "unsupported_result": 0,
+      "unsupported_action": 0
+    },
+    "samples": [
+      {
+        "file": "auto_save.json",
+        "sha256": "8c176a54c561f158c24517e9be8f67da984df7e90b2e08218ca8d8f2a692b530",
+        "round": 1.0,
+        "import_checks": 54,
+        "json_roundtrip_checks": 54,
+        "failures": 0,
+        "nondefault_dropped_fields": [
+          "configId",
+          "configVersion",
+          "saveTime",
+          "sudan_pool_pos",
+          "sudan_pool_init_count",
+          "sudan_card_show_times",
+          "wizard_first_show"
+        ],
+        "approximated": [
+          "active_sudan drawn_round：出生回合在存档里没有承载字段（难度中途切换后无法由 card_vanishing−life 反推），故记为导入当刻的 round；该字段目前只随存读档往返，未参与任何判定，如实报告而不静默"
+        ]
+      },
+      {
+        "file": "save_slot_000.json",
+        "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+        "round": 1.0,
+        "import_checks": 54,
+        "json_roundtrip_checks": 54,
+        "failures": 0,
+        "nondefault_dropped_fields": [
+          "configId",
+          "saveTime",
+          "sudan_pool_pos",
+          "sudan_pool_init_count",
+          "sudan_card_show_times",
+          "wizard_first_show"
+        ],
+        "approximated": [
+          "active_sudan drawn_round：出生回合在存档里没有承载字段（难度中途切换后无法由 card_vanishing−life 反推），故记为导入当刻的 round；该字段目前只随存读档往返，未参与任何判定，如实报告而不静默"
+        ]
+      }
+    ],
+    "headless_regression": {
+      "scripts": 72,
+      "tests": 765,
+      "passing": 764,
+      "pending": 1,
+      "assertions": 7436,
+      "seconds": 994.828,
+      "observed_log_diagnostics": 0,
+      "exit_code": null,
+      "exit_stderr_verified": false,
+      "status": "ASSERTIONS_PASS_GPU_SKIP_COVERED_EXIT_GATE_INCOMPLETE"
+    },
+    "gpu_mask": {
+      "tests": 1,
+      "passing": 1,
+      "assertions": 18,
+      "exit_code": 0
+    },
+    "research": {
+      "source": "original_StreamingAssets_JSONC",
+      "files": 1561,
+      "fingerprint": "9f4fed5aef4683ae829b3a392aad64d0de3d0df0ce4ba67a786c1e7d3d39af47",
+      "checks": "PASS",
+      "powershell5": "PASS",
+      "jsonc_boundary_probes": "PASS"
+    },
+    "log_directory": "C:/Users/User/Documents/Faust-phase-close-20260914",
+    "blockers": [
+      "No paired original/clone post-action traces",
+      "No synchronized original/clone random input stream",
+      "Nonempty original random_cache/delay_ops import not covered",
+      "Full original UI/audio/transition/restart chain not revalidated"
+    ],
+    "evidence_files": [
+      {
+        "file": "design-check-final.log",
+        "bytes": 392,
+        "sha256": "f375bceb03f376fda21044afa5861f9c2d02248522ec4acd36ed84cefa4c74f5"
+      },
+      {
+        "file": "dsl_audit.json",
+        "bytes": 17898841,
+        "sha256": "b09e4e97f9e34ac981ee1b5aab55959453a6955dd74bb883ad265cd5b7150b3e"
+      },
+      {
+        "file": "full-console.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file": "full.log",
+        "bytes": 1849005,
+        "sha256": "ac7ef4c1da9ff95b9c32b939a7796b4684af618905b3db97655db05da7da7c2b"
+      },
+      {
+        "file": "gpu-mask-console.log",
+        "bytes": 2790,
+        "sha256": "3b8af3962a625413e479fc45615f8717f3bef407b01a3a940d38b4a11baea0cf"
+      },
+      {
+        "file": "gpu-mask-stderr.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "file": "gpu-mask.log",
+        "bytes": 2518,
+        "sha256": "514e49b763dd214fa1046d21042ec86e55572f6dc52162370b5eea9265613962"
+      },
+      {
+        "file": "parity.log",
+        "bytes": 504,
+        "sha256": "a5ec97335a16c0beb657764c4ddb714fe18b9b2709b1612024c3606ae4225712"
+      },
+      {
+        "file": "research-boundaries.log",
+        "bytes": 124,
+        "sha256": "2b986d317626d9e5515b11d482f1ce340136147a644a8e9257cdd5ffb14dcc47"
+      },
+      {
+        "file": "research-powershell5.log",
+        "bytes": 130,
+        "sha256": "a0bb22ec1afb85de5c810d786f92b68880d384e4ee4d255ee163f141c045da94"
+      },
+      {
+        "file": "save-audit.json",
+        "bytes": 325276,
+        "sha256": "cc7d149ea0371dd79c376537337c7b2aa68ee8695a33a0ef190e1ec08c9ead4d"
+      },
+      {
+        "file": "save-audit.log",
+        "bytes": 151,
+        "sha256": "178a80fb584c9bdbb5940260368906c10b4be176c86e07dd64943425303d05a3"
+      }
+    ],
+    "superseded_note": "Initial audit before original runtime capture and runtime fixes; use top-level verdict and final_full_regression for current state."
+  },
+  "final_full_regression": {
+    "status": "PASS_WITH_TWO_EXPLICIT_PENDING",
+    "scripts": 74,
+    "tests": 774,
+    "passing": 772,
+    "pending": 2,
+    "assertions": 7444,
+    "seconds": 703.114,
+    "exit_code": 0,
+    "engine_errors": 0,
+    "leak_or_orphan_diagnostics": 0,
+    "pending_cases": [
+      "test_household_original_runtime_oracle: external oracle omitted in general suite; dedicated execution FAIL",
+      "test_night_and_day_masks_join_without_a_hard_overlap_band: headless; dedicated GPU execution PASS 1/1,18 assertions"
+    ],
+    "log": "full-final.log",
+    "console": "full-final-console.log"
+  },
+  "dual_replay": {
+    "evidence_root": "C:\\Users\\User\\Documents\\Faust-dual-replay-20260914",
+    "tests": 1,
+    "passed_assertions": 174,
+    "total_assertions": 188,
+    "exit_code": 1,
+    "elapsed_seconds": 28.818,
+    "projection_passed": 47,
+    "projection_total": 54,
+    "failed_fields": [
+      "next_rite_uid",
+      "timing_rounds",
+      "hand_membership",
+      "table_operation_root_membership",
+      "rites",
+      "bag_positions",
+      "gen_tags"
+    ],
+    "bag_positions_failure": "KNOWN_COMPARATOR_TOMBSTONE_FALSE_POSITIVE",
+    "rng_synchronized": false,
+    "original_ui_audio_animation_equivalence": false
+  },
+  "innovation": {
+    "substantive_archived_sources": 29,
+    "generated_sidecars": 6,
+    "archived_headings": 483,
+    "local_extracted_conversations": 18,
+    "all_platform_coverage_proven": false,
+    "checks": {
+      "windows_powershell_5": "PASS",
+      "powershell_7": "PASS",
+      "archive_hashes_and_navigation": "PASS",
+      "research_claims": 92,
+      "research_sources": 92
+    }
+  },
+  "evidence_receipts": [
+    {
+      "file": "original-before.json",
+      "bytes": 44942,
+      "sha256": "258a3a8831a9b1c8727cc47a7504b0124047b61b77b40a81e86d8ba1aca7d2e6"
+    },
+    {
+      "file": "original-pretransition.json",
+      "bytes": 44942,
+      "sha256": "3a5fb9a1c18fb5a324c38533f50185b005c6ee288bfddb69d90c4e5594aa349c"
+    },
+    {
+      "file": "original-after.json",
+      "bytes": 45350,
+      "sha256": "246e304be93aed9f60b3db814d5641ed52fedb898f4eddfcd3870807f0d8aafc"
+    },
+    {
+      "file": "original-reloaded.json",
+      "bytes": 45350,
+      "sha256": "dad0715ce63d6cb6a9afa480b5ac4864a047a891fe54f188befbf05425525505"
+    },
+    {
+      "file": "original-actions.json",
+      "bytes": 1524,
+      "sha256": "441fd75ec9a9907e5a8dabee4073d16d9eae16e651e5d23ae5b9b80ad7d4f272"
+    },
+    {
+      "file": "original-restoration-receipt.json",
+      "bytes": 1127,
+      "sha256": "8cf9ad7a1c1ea2dc8d27dc7a4d3e507bd52a8e6460d46caea7c26d464c0e9796"
+    },
+    {
+      "file": "clone-replay.json",
+      "bytes": 440806,
+      "sha256": "e1a5cb41055d2f964f329d57c5e849c0425398e9211de39961269d9c38e98e65"
+    },
+    {
+      "file": "dual-final.log",
+      "bytes": 13471,
+      "sha256": "c775d77940c75d888787eca45f11ee2f426f96a183c49a40b9a137a6a4ff2aaa"
+    },
+    {
+      "file": "independent-card-comparison.json",
+      "bytes": 23960,
+      "sha256": "d2b527af01e87dbb2b6100c9d79f3434f769c7091dcb757facde09c42d832c54"
+    },
+    {
+      "file": "full-final.log",
+      "bytes": 1846743,
+      "sha256": "8c5a91469b261356e7ae9a3c905748747b59215a15ce5bb8e8e0f52f3b835e88"
+    },
+    {
+      "file": "full-final-console.log",
+      "bytes": 1936906,
+      "sha256": "d40feb36f889b8315eeea1cb841ed4dd8ef0acbdba62cbb77b79f222c985d3e3"
+    },
+    {
+      "file": "full-final-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    }
+  ],
+  "independent_card_comparison": {
+    "objects_each": 215,
+    "carried_value_differences": 0,
+    "uncarried_field_checks": 162,
+    "equivalent_tag_encodings": 1,
+    "original_reload_changed_fields": [
+      "saveTime"
+    ],
+    "status": "FAIL_PROJECTION_DIFFERENCES"
+  }
+}

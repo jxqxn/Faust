@@ -1159,6 +1159,7 @@ func card_perspective_role(card_or_uid: int, db) -> String:
 
 
 func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
+	configure_source_counters(db)
 	hand.clear()
 	card_instances.clear()
 	only_cards.clear()
@@ -1391,6 +1392,14 @@ func apply_difficulty(index: int, db) -> void:
 # ---- Counter access ----
 func register_nonneg(id: int) -> void:
 	_nonneg_ids[id] = true
+
+
+func configure_source_counters(db) -> void:
+	# [SRC: GameApplication.__c.c b__43_6 0x45c620 ->
+	# VariableNode.special_counters@0xC0 (dump.cs:387317);
+	# PlayerExtensions.SetCounter 0x38f2d0. Derived configuration, not save data.]
+	for counter_id in db.variable_config.get("special_counters", []):
+		register_nonneg(int(counter_id))
 
 
 func is_nonneg_gated(id: int) -> bool:
@@ -2079,14 +2088,22 @@ func add_available_rite(id: int, db = null, rng = null) -> int:
 	if rite.is_empty():
 		remove_rite_instance(instance.uid)
 		return 0
+	# [SRC: PlayerExtensions.InitRite 0x38e140, RiteNode.once_new@0x50;
+	# dump.cs:393182. Only the first generation is new when once_new == 1.]
+	var once_new := int(rite.get("once_new", 0))
+	instance.new_born = not only_rites.has(id) if once_new == 1 else once_new == 0
 	if not _adsorb_open_slots(instance, rite, db, rng):
 		remove_rite_instance(instance.uid)
+		# Failed adsorption rolls back the allocation in the original.
+		next_rite_uid -= 1
 		return 0
 	# InitRite adds the id only after open-slot adsorption succeeded and the
 	# runtime rite has joined player.rites. This records every rite id; unlike
 	# cards, RiteNode has no is_only config gate for this HashSet.
 	# [SRC: PlayerExtensions.c @ InitRite (0x38e140) lines 769-812]
 	only_rites[id] = true
+	if once_new == 1 and not once_new_rites_is_show.has(id):
+		once_new_rites_is_show[id] = false
 	return instance.uid
 
 
@@ -2422,7 +2439,7 @@ func return_rite_cards(rite_uid: int, _db) -> void:
 ## [SRC: PlayerExtensions.c @ RemoveRite (RVA 0x38f040)]
 ## Remove rite instances by config id (CleanRite). rite_id <= 1 removes every
 ## instance except `except_uid` (the settling rite); otherwise only instances
-## of that config id are removed. Cards placed in removed rites go with them.
+## of that config id are removed. Their cards return to Player.cards.
 ## [SRC: CleanRite.c @ Do (RVA 0x4f3ae0): player.rites(+0x90) RemoveAll with
 ##       the settling-rite exclusion; single value 1 = all others]
 func remove_rite_instances_by_id(rite_id: int, except_uid: int = 0) -> int:
@@ -2432,6 +2449,10 @@ func remove_rite_instances_by_id(rite_id: int, except_uid: int = 0) -> int:
 		if int(instance.uid) == except_uid:
 			continue
 		if rite_id <= 1 or int(instance.id) == rite_id:
+			# [SRC: CleanRite.DisplayClass3_1 b__2 0x506ed0 and 3_3 b__5
+			# 0x507290 call ReturnCards before destroying the presentation.
+			# Original event 5300030 refreshes the shop without killing its NPCs.]
+			return_rite_cards(int(instance.uid), _runtime_db())
 			remove_rite_instance(int(instance.uid))
 			removed += 1
 	return removed

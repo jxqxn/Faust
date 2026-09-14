@@ -1,4 +1,4 @@
-param()
+﻿param()
 
 $ErrorActionPreference = "Stop"
 
@@ -76,23 +76,12 @@ foreach ($line in $sourceLines) {
 }
 
 $requiredEntrypoints = @(
+    (Join-Path $repoRoot "docs\design\next-stage-handoff.md"),
+    (Join-Path $repoRoot "docs\design\mechanics-and-narrative.md"),
+    (Join-Path $repoRoot "docs\design\art-and-production.md"),
+    (Join-Path $repoRoot "docs\design\evidence-and-decisions.md"),
     (Join-Path $repoRoot "AGENTS.md"),
-    $indexPath,
-    (Join-Path $repoRoot "docs\design\fire-emblem-narrative-transformation.md"),
-    (Join-Path $repoRoot "docs\design\hearthstone-battlegrounds-transformation.md"),
-    (Join-Path $repoRoot "docs\design\mahjong-autobattler-common-origin.md"),
-    (Join-Path $repoRoot "docs\design\p5r-mda-experience-baseline.md"),
-    (Join-Path $repoRoot "docs\design\sultans-game-cognitive-load-and-automation.md"),
-    (Join-Path $repoRoot "docs\design\sultans-game-narrative-transformation.md"),
-    (Join-Path $repoRoot "docs\design\three-houses-campus-architecture-and-engage-contrast.md"),
-    (Join-Path $repoRoot "docs\design\three-houses-p5-sultan-schedule-comparison.md"),
-    (Join-Path $repoRoot "docs\design\three-houses-sultan-campus-loop-comparison.md"),
-    (Join-Path $repoRoot "docs\design\unicorn-overlord-autobattle-narrative-reference.md")
-    (Join-Path $repoRoot "docs\design\loop-hero-loop-structure-reference.md")
-    (Join-Path $repoRoot "docs\design\cultist-simulator-core-experience-atoms.md")
-    (Join-Path $repoRoot "docs\research\narrative-card-game-research.md")
-    (Join-Path $repoRoot "docs\design\grand-knights-history-board-pawn-reference.md")
-    (Join-Path $repoRoot "docs\design\this-is-the-police-event-slot-reference.md")
+    $indexPath
 )
 
 foreach ($path in $requiredEntrypoints) {

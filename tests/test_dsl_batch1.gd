@@ -253,6 +253,7 @@ func test_rite_condition_is_instance_existence() -> void:
 func test_rite_timing_sentinel_one_matches_any_rite() -> void:
 	# [SRC: report 6 A2 — rite timing value 1 = match any (10 config events)]
 	var local_db := _db_with_batch_rites()
+	local_db.events.clear() # Isolate the synthetic dispatcher from default source events.
 	local_db.events[992011] = {"id": 992011, "on": {"rite_end": 1}, "condition": {}}
 	var state := GameState.new()
 	state.round_number = 0
@@ -415,6 +416,7 @@ func test_counter_and_card_born_and_game_end_timings_fire() -> void:
 	#       GameEnd.c @ IsValid (0x45efe0) ending filter]
 	var local_db := ConfigDB.new()
 	local_db.load_all()
+	local_db.events.clear() # Synthetic timing unit fixture.
 	local_db.events[992021] = {"id": 992021, "on": {"counter": 7000001}, "condition": {}}
 	local_db.events[992022] = {"id": 992022, "on": {"global_counter": 8000001}, "condition": {}}
 	local_db.events[992023] = {"id": 992023, "on": {"card_born": 2000005}, "condition": {},

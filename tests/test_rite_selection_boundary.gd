@@ -36,6 +36,7 @@ func test_source_side_selectors_keep_same_non_enemy_branch_before_and_after_retu
 func test_think_slot_pop_starts_with_original_failed_status() -> void:
 	var local_db := ConfigDB.new()
 	local_db.load_all()
+	local_db.events.clear() # Exercise only this synthetic think continuation.
 	local_db.rites[5000002] = {"id": 5000002, "cards_slot": {"s1": {"pops": [
 		{"condition": {}, "action": {"failed": {"coin": 2}}}]}}, "settlement": []}
 	var state := GameState.new()
@@ -233,6 +234,7 @@ func test_all_conditions_observe_state_before_final_results() -> void:
 func test_think_uses_prior_and_shared_normal_exclusion() -> void:
 	var local_db := ConfigDB.new()
 	local_db.load_all()
+	local_db.events.clear() # Exercise only this synthetic think continuation.
 	local_db.rites[5000002] = {
 		"id": 5000002,
 		"settlement_prior": [{"condition": {}, "result": {"coin": 2}, "action": {}}],
@@ -316,6 +318,7 @@ func test_clean_after_prompt_is_scoped_to_the_correct_runtime_rite() -> void:
 func test_think_waits_for_pops_and_animation_lock_then_shared_results() -> void:
 	var local_db := ConfigDB.new()
 	local_db.load_all()
+	local_db.events.clear() # Exercise only this synthetic think continuation.
 	local_db.rites[5000002] = {"id": 5000002,
 		"cards_slot": {"s1": {"pops": [{"condition": {}, "action": {"prompt": {"id": "pop"}}}]}},
 		"settlement": [{"condition": {}, "result": {"coin": 2}, "action": {"prompt": {"id": "result"}}}]}

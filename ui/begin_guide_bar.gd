@@ -184,7 +184,12 @@ func _on_dismiss() -> void:
 	# [SRC: BeginGuideController.OnCloseBtnClick (0x525fa0) ->
 	# BeginGuideItemController.CloseInternal -> OnCloseBeginGuide]
 	if _state != null:
+		var guide_type := str(_state.begin_guide.get("type", ""))
 		_state.begin_guide = {}
 		_state.guide_cues.clear()
+		# [SRC: BeginGuideController.OnClose 0x526040 dispatches the closed
+		# type before resolving; event 5310137 listens specifically to TIME_OUT.]
+		if not guide_type.is_empty():
+			_state.trigger_events("close_begin_guide", {"guide_type": guide_type})
 	_refresh()
 	dismiss_requested.emit()

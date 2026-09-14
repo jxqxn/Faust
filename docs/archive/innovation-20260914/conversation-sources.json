@@ -1,0 +1,149 @@
+{
+  "coverage": "18 local extracts from 58 Codex and 8 ZCode task metadata records; external web chat originals incomplete",
+  "tasks": [
+    {
+      "id": "019f180b-5b03-72b1-aa5a-d4e974cf6454",
+      "title": "本项目是一个git工程",
+      "store": "codex",
+      "messages": 23,
+      "local_extract_sha256": "036ecb77f6a9789bf378e4e8400e1aaac399c22728d9c1f4cde6dbc239affc8f",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019f185f-4b9e-7790-8b10-70fa150805f9",
+      "title": "我想修改一下治理家业仪式页面，帮我生成网页吧",
+      "store": "codex",
+      "messages": 1248,
+      "local_extract_sha256": "d18c155f9d54a933df736201f453ad6b932c34b84a019f46585b0b8e3af824e7",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019f59c1-9416-7940-a2c7-bfb698842b61",
+      "title": "运行时卡牌实例与事件链推进计划",
+      "store": "codex",
+      "messages": 307,
+      "local_extract_sha256": "47780f2457233d3256553e98c3453cbc8cb16c9c42715591a2ceb0e1fb49aa02",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019f6a21-b5ae-7972-adf1-11b7050cbc97",
+      "title": "之前我曾经在另一个会话中总结了苏丹的游戏是如何在密教模拟器的基础上进行创新的。你能识别到这个文档吗？",
+      "store": "codex",
+      "messages": 172,
+      "local_extract_sha256": "9fb98118c02004f7a7e6e04e2819feaeb4b7ae56bcba02dbc154f0f3b8fe9cf0",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019f6b36-00b7-7660-b4f8-6309088cf2e1",
+      "title": "实现日历关系模式契约模型",
+      "store": "codex",
+      "messages": 55,
+      "local_extract_sha256": "0d03435a746d772714ad1421c0747e5e281a1d799d40e3598d7623995ae47c7d",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019f6db2-2460-7e30-9edc-6f4373958daa",
+      "title": "现在的卡牌表现形式的动效效果很差。你能将小丑牌的卡牌动效在项目中的卡牌交互上复刻吗？可以使用联网搜集到的一切资料和开源项目。",
+      "store": "codex",
+      "messages": 316,
+      "local_extract_sha256": "a622a17d3245894be4bd5d3a3aea05b6bc69fd254192ad534b2607fb3d6f1ca9",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019fb5cc-db30-73b0-ab47-4a9bcacb057d",
+      "title": "研究大骑士物语UI交互",
+      "store": "codex",
+      "messages": 103,
+      "local_extract_sha256": "8098acdaf2c4a7b2d702a967c2c75f91fb35566191d1fb83056141a3d93e82f2",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019fb62c-198c-73f3-aff1-166448673cb1",
+      "title": "自审一下当前项目在参考大骑士物语后的改动吧，我觉得很多交互逻辑不合适，ui按钮的功能和用户体验不佳。比如左上角点击进入场景要右上角退出。先进行规格审查吧。",
+      "store": "codex",
+      "messages": 183,
+      "local_extract_sha256": "b808862c0891fec70ae6f1e2edcfe0afb5895183a1fb048b16208b6184f10e9d",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "019fe689-2c31-7483-b20c-11300c65f9c5",
+      "title": "我在研究过ai辅助游戏生成的内容后，我发现不应该让ai当助手，而是应该让ai当主创。我应该充当的是一个教练的角色。对于当前项目，你作为主创怎么看？",
+      "store": "codex",
+      "messages": 338,
+      "local_extract_sha256": "9ca3ea9b9e57b5459cc0ae6da478804f46ae9eb37423546104c487076a8b143a",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "01a0137e-aa14-7f11-b8d3-26a0cf1b7b8a",
+      "title": "你能继续我在zcode的**苏丹的游戏创新独立游戏开发项目这个会话的工作吗？**",
+      "store": "codex",
+      "messages": 841,
+      "local_extract_sha256": "0f8801995efbfb18f6c4bd7d0460e48185e6348da6db4c4b28c0a67948a54fe7",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_1bc4dda2-2dd0-401a-a3a9-521a9bfc78c1",
+      "title": "这个项目之前都是用codex开发的，你能正确识别吗》会有冲突吗？",
+      "store": "zcode",
+      "messages": 19,
+      "local_extract_sha256": "9330f80793295a293e5fa8b2cc810a3a16b78c6606c55af7630a6a907b83d954",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_997f0496-6004-473b-a960-f6c5d700aa53",
+      "title": "项目总结与自检",
+      "store": "zcode",
+      "messages": 429,
+      "local_extract_sha256": "903cfa71a177114bc42c7bd72994bc061d0e825b731848a7d1190819c8ce4b4f",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_c3103d40-b21e-4045-8522-a00bf014c1ce",
+      "title": "当前项目总结",
+      "store": "zcode",
+      "messages": 30,
+      "local_extract_sha256": "8ab7e6d77d793a644a61439112c98620ba363440ade26208d9916ea06b28e17e",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_d10c556d-0416-415a-b639-87c6869b199b",
+      "title": "项目总结与推进策划建议",
+      "store": "zcode",
+      "messages": 17,
+      "local_extract_sha256": "390d26c99b30ba9808124ed69c443486115eec46bcb1ff7cb39ffcdb5bdd3d5a",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_7964cf31-0dba-4b03-86ce-86fea56402e0",
+      "title": "项目总结与推进建议",
+      "store": "zcode",
+      "messages": 382,
+      "local_extract_sha256": "eff38222b46c0c3ab7ad1ceceba3821f2130531ce410a583add9a2d9cd2e2421",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_e7528032-af67-457f-9504-f68dd2fbcf5e",
+      "title": "苏丹的游戏创新独立游戏开发项目",
+      "store": "zcode",
+      "messages": 1359,
+      "local_extract_sha256": "61c6e60ac8856e1e9aa130174cf8e7ac8a9e00bce3333686fa8b80332e87c7ec",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_1790d81c-e2ee-48cd-9e4d-54a12c8fab70",
+      "title": "复刻苏丹的游戏完整实现",
+      "store": "zcode",
+      "messages": 4,
+      "local_extract_sha256": "7a26caa7983006e39f4452e4f9fd6d6a0ec2d964dd4f165b881a68fc614f7f06",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    },
+    {
+      "id": "sess_subagent_agent_c8e83349-bddf-4281-8ca5-ca73b34ceb4d",
+      "title": "在 C:\\Users\\User\\Documents\\GitHub\\Faust（Godot 4.7 项目）里做一次\"...",
+      "store": "zcode",
+      "messages": 3,
+      "local_extract_sha256": "fb184c090db6f5cfa31d453b16ab027884720ee848fe0a9ea54f1bb37b6d45c4",
+      "use": "Role-separated local evidence; not all messages are innovation, user-role tool injections excluded from decisions."
+    }
+  ]
+}

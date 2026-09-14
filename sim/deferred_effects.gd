@@ -93,16 +93,16 @@ static func _apply_ordered_effect(effect: Dictionary, state, db, rng) -> void:
 			_apply_loot_ref(payload.get("value", 0), state, db, rng)
 
 
-## Create the rite instance, then journal the creation (type 1) with the
-## instance's id and uid like StartRite's chain.
-## [SRC: StartRite.c L120-133 -> NoteRiteStart (0x38ec70) -> AddNote type 1]
+## Journal only a new_born rite, not every recurrence of its configuration.
+## [SRC: StartRite.c Do 0x51bcf0 L126-133 gates NoteRiteStart on
+## Rite.new_born@0x20 (dump.cs:392398).]
 static func _add_rite_and_note(rite_id: int, state, db, rng) -> int:
 	if not state.has_method("add_available_rite"):
 		return 0
 	var new_rite_uid: int = state.add_available_rite(rite_id, db, rng)
 	if new_rite_uid > 0 and state.has_method("add_note"):
 		var new_rite = state.get_rite_instance(new_rite_uid)
-		if new_rite != null:
+		if new_rite != null and new_rite.new_born:
 			state.add_note(1, new_rite.id, new_rite.uid)
 	return new_rite_uid
 
@@ -249,16 +249,29 @@ static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 		if cond.is_empty():
 			return true
 		return ConditionEval.evaluate(cond, ctx))
-	var generated: Array = LootSystem.generate(rng, loot, owned, condition_ok)
-	for id in generated:
-		_apply_loot_item(int(id), state, db, rng)
+	# Keep the selected ORIGINAL item: id alone discards its count and type.
+	# [SRC: GenLoot.RealGenCard 0x512260; LootNode.Item.num@0x24,
+	# dump.cs:385930; raw loot 6000051 grants one stack of four 2001051.]
+	var generated: Array = LootSystem.generate(rng, loot, owned, condition_ok, true)
+	for item in generated:
+		_apply_loot_item(int(item.get("id", 0)), state, db, rng, item)
 
 
-static func _apply_loot_item(id: int, state, db, rng) -> void:
+static func _apply_loot_item(id: int, state, db, rng, item: Dictionary = {}) -> void:
 	if id <= 0:
 		return
 	if db != null and not db.get_card(id).is_empty():
-		state.add_card_to_hand(id, db)
+		var count := int(item.get("num", 1))
+		var definition: Dictionary = db.get_card(id)
+		var stack_tag: String = db.tag_code_to_name.get("stackable", "stackable")
+		var stackable := int(definition.get("tag", {}).get(stack_tag, 0)) > 0
+		for index in (1 if stackable and count > 0 else count):
+			var uid: int = state.add_card_to_hand(id, db)
+			var card_instance = state.get_card_instance(uid)
+			if card_instance != null:
+				if stackable:
+					card_instance.count = count
+				card_instance.bag_pos = 1
 		if state.has_method("queue_prompt"):
 			var card: Dictionary = db.get_card(id)
 			state.queue_prompt({"id": "card.%d" % id, "text": "获得卡牌：%s" % str(card.get("name", id))})

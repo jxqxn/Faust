@@ -545,6 +545,11 @@ func _drive_round_settlements() -> void:
 		_finish_round_display(transition)
 		return
 	if not state.pending_operations.is_empty() or not state.rite_settlements.is_empty():
+		# RoundBegin can create a blocking prompt without opening a rite view.
+		# Publish it before waiting, otherwise its Promise has no clickable UI.
+		# [SRC: Prompt.c Do 0x519340 -> GameController.ShowPrompt;
+		# event/5300097 round_begin_ba -> success.prompt 5300097_prompt_01.]
+		_game_screen.refresh()
 		return
 	var due: Array = transition.get("due_rites", [])
 	while not due.is_empty():

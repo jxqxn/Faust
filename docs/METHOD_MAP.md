@@ -1,5 +1,34 @@
 # 原作—克隆方法映射表（METHOD_MAP）
 
+2026-09-14 原作存档事件重建：`GameController.Start 0x557e10` 调用 `GetEventStatus`，该返回值是字典是否命中，out bool 才是状态（dump.cs:388759）。未命中时检查 `EventNode.auto_start_init@0x20` 再 Add；不能把存档中缺少 override 当禁用。本批恢复默认事件注册但不伪造 event_status 项，比较次日 timing_rounds/书店更新链。
+
+2026-09-14 `CommonFunction.NonNegativeCounter@0x80` 配置绑定：`GameApplication.DoInit` 闭包 `b__43_6 0x45c620` 查询 `VariableNode.special_counters@0xC0`（dump.cs:387317），`PlayerExtensions.SetCounter 0x38f2d0` 根据该谓词钳零。旧克隆只注册金骰与回退，未注册六声望/额外重抽；本批从原 variable_config 建立运行期注册，新局与读档同路。
+
+2026-09-14 同批次 `HasTag.IsSatisfied 0x3fe5a0`：无 main 卡时累加 `ConditionContext.friends@0x30` 再比较一次（dump.cs:383857）；`ConditionContext.ctor 0x385d90` 来自当前仪式 `GetFriendCards 0x392470`，闭包 `0x393840` 排除 is_enemy。旧 `eval_state_tag` 对全手牌/桌面逐卡任一满足即通过，导致“谗言<3”被无谗言的别卡误满足。修复范围：具 rite_uid/slot_entries 的结算上下文；保留无仪式旧调用兼容边界，待后续普查。
+
+2026-09-14 双端对拍修复登记：`SlotExists.IsSatisfied 0x408b70` 读取 `ConditionContext.cards@0x28`（dump.cs:383855），不扫描其他仪式。第4→5天原作真实空槽家业命中 `74eeef56-b9a2-4f96-8dbd-e08a59de5f52`，克隆却被其他仪式同编号槽污染；`ConditionEval.eval_slot` 裸槽存在性须传当前 rite_uid，与已有带点条件的作用域一致。状态：当前仪式作用域已修复并回归；双端整链仍未通过。
+
+## 2026-09-14 阶段收尾复核（整体 🟡，不得解读为结算等价）
+
+见[阶段审计与状态矩阵](audit/PhaseClose20260914.md)。原配置3889文件字节/成员树零差异，两份原第1天样本各54项同刻导入及JSON往返零差异。**本次已采集原作第4→5天家业/上朝结果关闭与读档裁判，克隆真实输入重放47/54投影一致，7项失败（含墓碑位置比较器误报）；不是已等价。** 原作15文件已恢复且哈希核验。下一项继续现有失败裁判中的仪式生成/吸附、timing与标签历史计数、提示上下文链；随机轨迹同步和表现全过程仍未闭合。原创成果见[下一阶段入口](design/next-stage-handoff.md)。
+
+
+## 2026-09-14 对拍后续共享链修复（整体仍🟡）
+
+| 原方法/独立信号 | 克隆落点与本批状态 |
+|---|---|
+| Timings.SetIdentify0x3a9520；dump395269/原始on成员 | event_runtime：以全部有序成员序号生成timing标识，保留重复操作 |
+| InitRite0x38e140；new_born@0x20/dump392398、once_new@0x50/dump393182；StartRite.Do0x51bcf0 | game_state/deferred_effects：首见登记、失败吸附UID回退、只记新建笔记 |
+| GenLoot.RealGenCard0x512260；Item.num@0x24/dump385930；loot6000051 | core/loot保留项元数据，堆叠N数量不再N个实例；其他生成族未全面认证 |
+| CleanRite闭包0x506ed0/0x507290→ReturnCards | deferred_effects先返卡再移除；完整OnRiteClean异步链仍⬜ |
+| BeginGuideController.OnClose0x526040→OnCloseBeginGuide0x4f94d0；CloseBeginGuide.IsValid0x45eb80/context@0x38 | begin_guide_bar分发对应关闭timing；引导布局仍🟡 |
+| Prompt.Do0x519340→ShowPrompt；dump315672/320094；event5300097.success.prompt | game._drive_round_settlements在恢复生成pending时刷新界面；真实第1→2→3天与磁盘重建专项2/2 |
+| 原作cards/rites嵌套及真实存档 | original_save_importer对象数排除removed墓碑；bag_positions误报尚未修 |
+
+**已核入口、尚未实施：** CardExtensions.AddTag0x37e6a0→CommonFunction.MarkTagGen@0x48（dump383591/383603）→GameApplication.DoInit闭包0x45c500→PlayerExtensions.MarkTagGen0x38e6e0。对拍gen_tags.ennui为4→3；下一批检查ResultExec._mutate_tag的ADD/SET及转换门，不以改快照值替代共享语义。
+
+**继续失败裁判：** event5300012/loot6000019的妓院生成缺失、上朝/淘书吸附顺序、531080900时序计数、多出三个结果提示。完整差分、源指针和证据目录见阶段审计。当前卡UID41中ennui3+倦怠1与原作ennui4有效合计相同，不把编码差异误报成当前标签数量少1。
+
 2026-09-13 提示布局二次复审（实施中）：只读提取 TMP_Text.CalculatePreferredValues 0x18c40f0、HorizontalOrVerticalLayoutGroup.SetChildrenAlongAxis 0x1bbc900/CalcAlongAxis 0x1bbc400。TMP paragraphSpacing@0x304 与 lineSpacing@0x2f0 乘基础字号×0.01（DLL常量VA0x181c92b40）；仅换行额外加入段间距。布局主轴空间不足时不执行对齐偏移。PromptIconController.SetIcon 0x58a210 → UIImageExtensions.LoadSprite 0x40c210/SetNativeSize 与原始 Sprite.m_Rect/PPU 为立绘裁切、原生尺寸依据。复审范围自夜幕pivot修复起，含性能缓存、重抽入口清理、结算按钮、富文本、滚动条和操作序列改动。
 
 2026-09-13 提示附加结果补查（🟡）：StartRite.Do 0x51bcf0 → OperationContext.AddExtraResult_RiteStart 0x39f810 → Prompt.Do 0x519340；NoPromptOperations.Do 0x5001f0 保存进入前文本，完成回调 0x506390 清理并恢复该文本，dump.cs:312546–312560 的 context/current 字段为独立信号。实现以可序列化操作帧保存恢复边界，不能将 no_prompt 当普通 all，否则内部生成仪式会泄漏提示。卡牌附加结果与完整上下文继承仍未闭合。

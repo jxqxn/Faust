@@ -1,6 +1,10 @@
 # Faust 游戏设计数据研究：公开证据、建模方法与结论
 
-> 状态：第一版完整研究报告
+> 2026-09-14 本地数据维护：静态快照切换到原始 StreamingAssets JSONC，以保留重复成员的读取器计算；本节列出的聚合数值未变化，原始文件指纹已更新。既有公开来源没有在本次联网重查。阶段续接见[讨论汇总](../design/next-stage-handoff.md)和[机制审计](../audit/PhaseClose20260914.md)。
+
+> 2026-09-14 纠错：CS-RULE-003 撤回必要条件口吻；CS-RULE-005 撤回“只借鉴”排他推论；LH-GENRE-001 撤回稳定共识；美术北极星降级。原始版本在本地 Git，旧分散论述见归档。
+>
+> 状态：详细证据报告（主张与来源 ID 保留）
 >
 > 整理日期：2026-08-13
 >
@@ -10,7 +14,7 @@
 
 ## 新会话智能体快速入口
 
-产品方向先服从 [`autobattler-campus-direction.md`](../design/autobattler-campus-direction.md)：它是唯一最高产品方向。本文提出的模型、实验顺序和候选架构都是可调整的研究建议，不是必须依次通过的设计关卡。
+产品方向先服从 [`next-stage-handoff.md`](../design/next-stage-handoff.md)：它记录当前产品决定，服从用户后续明确指令。本文提出的模型、实验顺序和候选架构都是可调整的研究建议，不是必须依次通过的设计关卡。
 
 新会话不得把本文整体当作同一强度的“事实集合”。请按以下顺序使用：
 
@@ -215,15 +219,15 @@
 | FAUST-DES-001 | 同一具名人物应跨手牌、仪式、校园、自动行动和后果持续存在 | 用户确认的项目判断 | C | 相关设计文档与 AGENTS.md | 项目方向，不是外部研究结论 |
 | FAUST-HYP-001 | 保留“谁承担后果”的人工决定时，自动化可能降低负担而不损害责任感 | 待验证假说 | U | SG-UX-002、NARR-SYN-001 | 尚无 Faust 玩家实验 |
 | FAUST-DATA-001 | Faust 已测得合理手牌上限、候选数量或自动化层级 | 未知 | U | 当前没有这类结果 | 后续智能体不得声称已有答案 |
-| FAUST-ART-HYP-001 | “水正在把这个文明印刷出来的秩序重新溶解”可以作为 Faust 的视觉北极星 | 待验证假说 | U | `docs/design/art-direction-exploration.md`；用户提供的讨论包 | 水城、维多利亚媒介和水隐喻均未获项目确认，不覆盖“上海参照的魔力之都”最高方向 |
-| FAUST-ART-HYP-002 | 水上硬边印刷秩序、水下洇染错版、魔法跨语法的规则可能统一场景、角色、UI、卡牌和 VFX | 待验证假说 | U | `docs/design/art-direction-exploration.md` | 必须用同题引擎内对照验证可读性、噪声、玩法融合和产能 |
-| FAUST-ART-METHOD-001 | 候选美术方向应使用相同资产题目，记录真实工时并做缩略图、灰度、群像、运动、复用和非作者复刻测试 | 研究解释 | C | `docs/design/art-direction-exploration.md`；`docs/research/data/art-direction-methodology.json`；讨论包方法整理 | 是实验方案，不是已完成实验或已证实的唯一选型方法 |
+| FAUST-ART-HYP-001 | “水正在把这个文明印刷出来的秩序重新溶解”是旧探索中的视觉假说，未采纳为北极星 | 待验证假说 | U | `docs/design/art-and-production.md`；用户提供的讨论包 | 水城、维多利亚媒介和水隐喻均未获项目确认，不覆盖“上海参照的魔力之都”最高方向 |
+| FAUST-ART-HYP-002 | 水上硬边印刷秩序、水下洇染错版、魔法跨语法的规则可能统一场景、角色、UI、卡牌和 VFX | 待验证假说 | U | `docs/design/art-and-production.md` | 必须用同题引擎内对照验证可读性、噪声、玩法融合和产能 |
+| FAUST-ART-METHOD-001 | 候选美术方向应使用相同资产题目，记录真实工时并做缩略图、灰度、群像、运动、复用和非作者复刻测试 | 研究解释 | C | `docs/design/art-and-production.md`；`docs/design/art-and-production.md`；讨论包方法整理 | 是实验方案，不是已完成实验或已证实的唯一选型方法 |
 | FAUST-ART-DATA-001 | Faust 已完成候选美术同题对照并取得产能、可读性或辨识度结果 | 未知 | U | 当前没有这类结果 | 不得把候选名称、评分权重或来源案例改写成项目结论 |
 | CS-RULE-001 | 《密教模拟器》把世界对象（人物、地点、书籍、行动）统一制成卡牌，玩家通过组合与试验理解世界；卡牌是"有意义但可被处置"的对象 | 外部事实 | A | CS-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
 | CS-RULE-002 | Kennedy 的叙事设计术语经历三次演化：Choice/Complicity/Consequence（2012）→ Quality-Based Narrative（约 2015）→ Resource Narrative（2021），每次都有他本人原文定义 | 外部事实 | A | CS-OFFICIAL-001、CS-OFFICIAL-002 | 一手博客原文；术语语义随版本演化，引用需注明阶段 |
-| CS-RULE-003 | Resource Narrative（资源叙事）的定义与三条件：玩家通过策略性操控一组有限资源推进显式叙事；资源须**稀缺、可再生产、可替代**；事件从资源状态组合中自然涌现，不需要 AI 导演 | 外部事实 | A | CS-OFFICIAL-001 | Kennedy 本人定义；"最有效"是设计判断，不是效果实验 |
+| CS-RULE-003 | Resource Narrative（资源叙事）的定义与三条件：玩家通过策略性操控一组有限资源推进显式叙事；作者认为资源**稀缺、可再生产、可互换时最有效**；事件从资源状态组合中自然涌现，不需要 AI 导演 | 外部事实 | A | CS-OFFICIAL-001 | Kennedy 本人定义；"最有效"是设计判断，不是效果实验 |
 | CS-RULE-004 | Kennedy 亲自划分 resource narrative 的 YES/NO 名单：YES 包括密教、Sunless Sea、Fallen London、Darkest Dungeon、FTL、XCOM、King of Dragon Pass、Stellaris 等；NO 包括 CRPG（龙腾世纪、老滚、辐射、质量效应、巫师）、Firewatch、Gone Home、分支叙事等 | 外部事实 | A | CS-OFFICIAL-001 | 设计师个人分类，非学术定义；边界案例有争议 |
-| CS-RULE-005 | 《苏丹的游戏》主创亲述玩法血统是《This Is the Police》（资源卡填入事件槽）+《文明》的"下一回合"节奏；从《密教模拟器》只借鉴地图叙事逻辑——"苏丹=密教之子"是部分错误的简化 | 外部事实 | A | CS-OFFICIAL-004、CS-OFFICIAL-005 | 开发者自述；只描述设计来源，不是效果证据 |
+| CS-RULE-005 | 《苏丹的游戏》主创亲述玩法血统是《This Is the Police》（资源卡填入事件槽）+《文明》的"下一回合"节奏；还提及借鉴《密教模拟器》的很多地图叙事逻辑；这不排除其他影响 | 外部事实 | A | CS-OFFICIAL-004、CS-OFFICIAL-005 | 开发者自述；只描述设计来源，不是效果证据 |
 | CS-RULE-006 | 《苏丹的游戏》与《密教模拟器》推出官方捆绑包，两家工作室认可两者设计理念相似 | 外部事实 | A | CS-PRESS-001 | 二手媒体转述；捆绑包存在是事实，不证明具体相似程度 |
 | CS-EXPL-001 | 密教/苏丹共享"组合式叙事引擎"的五个体验原子：桌面卡牌统一语言、投入组合产生意义、有限揭示下的发现、持续累积的状态、由系统组合生成的叙事；删除任一原子即不再继承该引擎 | 研究解释 | C | CS-RULE-001、CS-OFFICIAL-001—003 | 本文的分析框架，不是开发者声明 |
 | CS-EXPL-002 | 《苏丹的游戏》把密教的"开放炼金台"改造为"权力调度台"：目标来源从玩家自主寻找改为外部权力提出任务、时间结构从实时多线程改为离散日期、组合对象从知识概念改为具体人物、结果承载从资源进程改为人际后果 | 研究解释 | C | CS-RULE-005、CS-EXPL-001 | 分析解释，非开发者原话 |
@@ -233,7 +237,7 @@
 | GK-RULE-003 | 角色成长：重复使用特定技能或武器解锁新技能；装备武器/防具/装饰提升属性并改变外观；死亡单位移出战斗、得一半 EXP、战后 1 HP 回归；全灭则游戏结束 | 外部事实 | A | GK-OFFICIAL-001 | Wikipedia 级资料；无经验曲线数值 |
 | GK-RULE-004 | 在线多人（已关服）：玩家代表三国之一进行领土扩张战，胜者投票决定下一攻击目标，个人角色可交由 AI 托管；服务器 2013-10-31 关闭 | 外部事实 | A | GK-OFFICIAL-001 | 关服日期已确认；在线时代的行为数据不可复得 |
 | GK-RULE-005 | 导演 Tomohiko Deguchi 将《大骑士物语》概念延续到 2014/2016 的《Grand Kingdom》：棋盘式地图 + 有限步数、17 种雇佣兵职业（三主类型 Fire Emblem 式克制）、侧视三层平面战斗、手动瞄准（远程类 Worms、近战类清版）、队友伤害（误射/扔错治疗）、派系在线 meta 战 | 外部事实 | B | GK-OFFICIAL-002 | 媒体评测转述；未逐项核对游戏内数值 |
-| GK-EXPL-001 | 大骑士物语验证"物理棋子走过插画桌游地图"的结构：队伍以单个棋子形态在大棋盘上移动，步数有限，位置即事件——这是 Faust 横版场景"图板棋子结构"的表现参考 | 研究解释 | C | GK-RULE-001、GK-OFFICIAL-001 | 项目视觉参考的既有判断（thought-world-visual-references.md），非机制结论 |
+| GK-EXPL-001 | 大骑士物语验证"物理棋子走过插画桌游地图"的结构：队伍以单个棋子形态在大棋盘上移动，步数有限，位置即事件——这是 Faust 横版场景"图板棋子结构"的表现参考 | 研究解释 | C | GK-RULE-001、GK-OFFICIAL-001 | 历史视觉参考判断（原文已归档，现见设计整合的美术与创作生产），非当前架构或机制结论 |
 | TIP-RULE-001 | 《这就是警察》（2016，Weappy Studio）是时间管理游戏：玩家扮演 Freeburg 警察局长 Jack Boyd，在 180 天倒计时内退休并攒够 50 万美元；每天处理 911 呼叫，派遣适当数量与技能水平的警员处理犯罪（走私/凶杀/绑架等） | 外部事实 | B | TIP-GUIDE-001、TIP-GUIDE-002 | 媒体评测转述；游戏内数值为体验描述 |
 | TIP-RULE-002 | 资源与状态：主要资源为警员和金钱；警员有"专业度"（Professionalism，平均值 150）与技能点（发命令需消耗技能点）；两班制轮换、每两天换班；警员会请假、醉酒等 | 外部事实 | B | TIP-GUIDE-002 | 媒体评测转述；平均值 150 为游戏内提示 |
 | TIP-RULE-003 | 人员管理：无故开除会引发法律纠纷；有正当理由（缺勤/醉酒/年龄/连续 3 次响应失败）才可开除，用于淘汰弱警员 | 外部事实 | B | TIP-GUIDE-002 | 媒体评测转述 |
@@ -256,7 +260,7 @@
 | LH-DEV-001 | 极简核心为“四个 Boss、一个营地、一个无限循环的英雄”；限制元素数量并打磨每个，平衡靠加法制衡而非删减 | 外部事实 | A | LH-OFFICIAL-001、LH-OFFICIAL-003 | 开发者方法论自述，非效果实验 |
 | LH-EXPL-001 | 循环结构是“首次成型后继续运转”的一个候选原型：自动循环持续接受地块输入并转化为战斗、资源与风险 | 研究解释 | C | LH-RULE-001—LH-RULE-004、MJ-HYP-001 | 结构类比；Loop Hero 是单主角，不含具名关系或阵容转换 |
 | LH-GAP-001 | 循环结构为何成立的逐局玩家行为（撤退时机、地块放置决策、死亡率）已有公开量化 | 未知 | U | 无 | 无公开玩家遥测，不得填入推测数值 |
-| LH-GENRE-001 | 主流游戏媒体在评测与预览中将《循环勇者》归类为 deck-building roguelite（地块构筑肉鸽）或“自己玩自己的 RPG”，未将其归入 autobattler / 自走棋品类 | 外部事实 | A | LH-PRESS-001、LH-PRESS-002 | 媒体描述级归类，非开发者正式品类声明；品类边界本身无严格学术定义，但“非自走棋”是稳定共识 |
+| LH-GENRE-001 | 主流游戏媒体在评测与预览中将《循环勇者》归类为 deck-building roguelite（地块构筑肉鸽）或“自己玩自己的 RPG”，未将其归入 autobattler / 自走棋品类 | 外部事实 | A | LH-PRESS-001、LH-PRESS-002 | 媒体描述级归类，非开发者正式品类声明；品类边界本身无严格学术定义，本样本不能证明整个媒体或玩家群体的分类共识 |
 
 ### 2.6 本地统计的复现协议
 
@@ -270,10 +274,10 @@
 
 当前预期：
 
-- 输入：`Faust-local-source/_unpack/data/config/rite` 与 `after_story`；
+- 输入：`Faust-local-source/_unpack/unity_export/ExportedProject/Assets/StreamingAssets/config/rite` 与 `after_story`；
 - 输入文件数：1561；
 - 聚合指纹算法：相对路径和逐文件 SHA-256 排序后再次取 SHA-256；
-- 当前指纹：`d3ca63b5c5d530a4b134b5c1ca45c2027bbbebe3accabaa10894b7ecc6f811fb`；
+- 当前指纹：`9f4fed5aef4683ae829b3a392aad64d0de3d0df0ce4ba67a786c1e7d3d39af47`；
 - JSON 解析：1561 成功、0 失败；
 - 输出包含汇总、槽位直方图、极值样例和解释护栏。
 
@@ -304,7 +308,7 @@
 
 ### 3.2 本地当前语料的静态盘点
 
-为避免把公开工具的旧版数字当成当前配置规模，本报告对只读逆向语料做了独立文件计数和 JSON 字段统计。2026-08-13 的本地快照包含：
+为避免把公开工具的旧版数字当成当前配置规模，本报告对只读逆向语料做了独立文件计数和 JSONC 字段统计。2026-09-14 从原始配置重新生成的本地快照包含：
 
 | 静态对象 | 数量 | 解释 |
 |---|---:|---|
@@ -317,7 +321,7 @@
 | `cards_slot` 中的槽位定义总数 | 5393 | 1494 个仪式含至少一个槽位，单仪式最多 17 个 |
 | 三类 settlement 数组中的分支项 | 8994 | 1491 个仪式含结算分支，单仪式最多 334 项 |
 
-计数方法是逐个解析当前 JSON，再对顶层字段和数组长度汇总。它比文件名猜测可靠，但仍属于**配置事实**。特别是同名仪式变体、生成条件、开放条件、事件动作和运行队列会决定玩家实际遇到的子集。
+计数方法是使用 `read_design_research_metrics.py` 保留 JSONC 对象的全部有序成员，再对目标字段和数组长度汇总；重复的数组字段逐项计数，重复标量歧义直接失败，不生成运行时转译配置。它仍属于**配置事实**。特别是同名仪式变体、生成条件、开放条件、事件动作和运行队列会决定玩家实际遇到的子集。
 
 `after_story` 中一项 `extra` 是一个条件—文本条目，不应直接被叫作“一个结局”；同一主体下可能有大量互斥或重叠条件。结局树需要先解析条件，再结合运行状态和优先级判断可达性。
 
@@ -936,7 +940,7 @@ Riot 的 Game Analysis Team 还公开了内部方法组合：
 
 这仍然只是设计解释。若配置条件过多，它可能把逐回合微操负担转化成更难理解的规则编程负担。
 完整机制对照、反例和后续抽取任务见
-[`unicorn-overlord-autobattle-narrative-reference.md`](../design/unicorn-overlord-autobattle-narrative-reference.md)。
+[`mechanics-and-narrative.md`](../design/mechanics-and-narrative.md)。
 
 ### 6B.3 相邻方向已有成功作品
 
@@ -1432,7 +1436,7 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 
 | 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
 |---|---|---|---|---|
-| LOCAL-SNAPSHOT-001 | [`faust-design-research-snapshot.json`](data/faust-design-research-snapshot.json) | 本地语料快照，2026-08-13；指纹见 2.6 | 1561 个 JSON 的可复现静态汇总 | 不证明运行生成、开放或玩家可见性 |
+| LOCAL-SNAPSHOT-001 | [`faust-design-research-snapshot.json`](data/faust-design-research-snapshot.json) | 本地原始 JSONC 快照，2026-09-14；指纹见 2.6 | 1561 个 JSONC 文件的可复现静态汇总 | 不证明运行生成、开放或玩家可见性 |
 | SG-TOOL-001 | [事件/仪式查看器](https://github.com/AC-HUB-AC/Sultan_s_Game_Event_Viewer) | 内置 2022.3.58、2025-04-01 前快照 | 1153 个旧版事件；槽位、条件、结算查看 | 社区工具；旧版静态配置 |
 | SG-TOOL-002 | [结局查看器](https://github.com/AC-HUB-AC/Sultan_s_Game_Ending_Viewer) | 与事件查看器相同旧版范围 | `after_story` 条件和文本分支查看 | 条件条目不等于互斥玩家结局 |
 | SG-OFFICIAL-001 | [官方聚合数据总结](https://store.steampowered.com/news/app/3117820/view/543363919951963515) | 2025-07-29 | 启用数据收集玩家的部分事件选择聚合图 | 无结构化原始数据和逐玩家路径；自选择 |
@@ -1528,7 +1532,7 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | CS-OFFICIAL-002 | [Failbetter: Choice, Complicity and Consequence](https://www.failbettergames.com/news/choice-complicity-and-consequence) | 2012-09-20；Kennedy 团队官方博客 | 叙事设计三支柱原文定义；"Consequence 最贵"的判断 | 设计师自述；术语后续被 QBN/resource narrative 取代 |
 | CS-OFFICIAL-003 | [Game Developer: 密教模拟器创作者采访](https://www.gamedeveloper.com/design/why-the-i-cultist-simulator-i-devs-built-their-lovecraftian-game-on-a-house-of-cards) | 密教发售前后 | 卡牌作为"有意义但可被处置"对象的设计意图；组合与试验理解世界 | 开发者自述，非玩家行为数据 |
 | CS-OFFICIAL-004 | [网易：苏丹的游戏主创访谈](https://www.163.com/dy/article/K0BCUM2O0526JULF.html) | 2025 前后；主创远古之风 | 玩法血统（This Is the Police + 文明下一回合）、人 vs 世界观的内容取向 | 主创自述，非实验；媒体转载 |
-| CS-OFFICIAL-005 | [知乎/腾讯：赛博昏君专访](https://zhuanlan.zhihu.com/p/7588271698) | 2025 前后；主创远古之风 | 明确 This Is the Police 血统、从密教只借鉴地图叙事 | 主创自述，非实验；平台转载 |
+| CS-OFFICIAL-005 | [知乎/腾讯：赛博昏君专访](https://zhuanlan.zhihu.com/p/7588271698) | 2025 前后；主创远古之风 | 提及 This Is the Police 参照和密教地图叙事影响，非排他起源 | 主创自述，非实验；平台转载 |
 | CS-PRESS-001 | [苏丹与密教官方捆绑包报道](https://cngame-fnscore.com/news-20260429-1038-9352) | 2026-04-29；核对 2026-08-14 | 两家工作室推出官方捆绑包，认可设计理念相似 | 二手媒体转述；不证明具体相似程度 |
 | CS-GUIDE-001 | [知乎：隐秘而深邃-浅析密教模拟器的玩法叙事](https://zhuanlan.zhihu.com/p/595041832) | 知乎长期；核对 2026-08-14 | 中文社区对密教"卡牌=万物符号"的玩法叙事分析 | 社区分析，非官方文档 |
 

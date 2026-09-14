@@ -236,6 +236,7 @@ static func _restore_sudan_pool(state, data: Dictionary) -> void:
 
 ## Deserialize a dictionary back into a GameState (requires db for setup).
 static func deserialize(data: Dictionary, state, db) -> void:
+	state.configure_source_counters(db)
 	state.difficulty_index = int(data.get("difficulty_index", 1))
 	state.difficulty_config = db.get_difficulty(state.difficulty_index)
 	state.round_number = int(data.get("round_number", 1))

@@ -14,6 +14,7 @@ extends RefCounted
 # timing string -> { event_id(int): Array[trigger_value(int|Array)] }. This contains
 # only events currently enabled on the player, not every definition in db.
 var _by_timing := {}
+var _timing_ids := {}
 # Round-based timings follow the original TimingRoundBase lifecycle: armed on
 # enable (OnStart), gated by Player.timing_rounds in IsValid, re-armed by
 # NextRound when they fire, removed for non-replay events (OnEnd).
@@ -38,13 +39,22 @@ func build(db, state) -> void:
 	_db = db
 	_state = weakref(state) if state != null else null
 	_by_timing.clear()
+	_timing_ids.clear()
 	_disabled.clear()
 	if db == null:
 		return
 	if state == null:
 		return
-	for eid in state.event_status:
-		if bool(state.event_status[eid]):
+	# The save stores explicit overrides. Absent entries use auto_start_init.
+	# [SRC: GameController.c Start 0x557e10 GetEventStatus/Add chain;
+	# PlayerExtensions.GetEventStatus 0x38d1c0; dump.cs:388759 out bool.]
+	for eid in db.events:
+		var enabled := bool(state.event_status.get(eid, false))
+		if not state.event_status.has(eid):
+			for profile in db.events[eid].get("auto_start_init", []):
+				if int(profile) == state.event_init_profile_id:
+					enabled = true
+		if enabled:
 			enable_event(int(eid))
 
 
@@ -66,16 +76,23 @@ func enable_event(event_id: int) -> bool:
 	# repeated rite_end/card_clean properties are separate trigger candidates.
 	for bucket in _by_timing.values():
 		bucket.erase(event_id)
+	for bucket in _timing_ids.values():
+		bucket.erase(event_id)
+	var ordinal := 0
 	for entry in SourceJSON.entries(on):
 		var timing: String = entry.keys()[0]
 		if not _by_timing.has(timing):
 			_by_timing[timing] = {}
+			_timing_ids[timing] = {}
 		if not _by_timing[timing].has(event_id):
 			_by_timing[timing][event_id] = []
+			_timing_ids[timing][event_id] = []
 		_by_timing[timing][event_id].append(entry[timing])
+		var key := _timing_key(timing, event_id, ordinal)
+		_timing_ids[timing][event_id].append(key)
+		ordinal += 1
 		if state != null and timing in ROUND_TIMINGS:
 			# OnStart: arm the next fire round (idempotent, keeps saved arms).
-			var key := _timing_key(timing, event_id)
 			if not state.timing_rounds.has(key):
 				state.timing_rounds[key] = next_round(entry[timing], int(state.round_number), {})
 	return true
@@ -98,9 +115,10 @@ func fire(timing: String, ctx: Dictionary) -> Array[int]:
 		if _disabled.has(eid):
 			continue
 		var matched := false
-		for trigger_value in bucket[eid]:
+		for index in bucket[eid].size():
+			var trigger_value = bucket[eid][index]
 			if timing in ROUND_TIMINGS:
-				matched = _round_timing_fires(timing, int(eid), trigger_value, ctx)
+				matched = _round_timing_fires(int(_timing_ids[timing][eid][index]), trigger_value, ctx)
 			else:
 				matched = _value_matches(timing, trigger_value, ctx)
 			if matched:
@@ -130,27 +148,21 @@ func disable_event(event_id: int) -> void:
 				state.timing_rounds.erase(key)
 
 
-## Dictionary key for a round-timing arm. The original keys player+0x128 by an
-## int on the TimingRoundBase instance; every corpus timing entry is exactly
-## event_id*100 (ordinal 00) and no config carries two round timings on one
-## event, so the ordinal stays 0. If a multi-bucket event ever appears, the
-## ordinal allocation needs original-side verification first.
-## [SRC: TimingRoundBase.c IsValid 0x465d30 / OnStart 0x4660d0 use the int at
-##       +0x20 as the dictionary key; save_samples timing_rounds keys are all
-##       eventId*100 (e.g. 5300067 -> 530006700)]
-static func _timing_key(_timing: String, event_id: int) -> int:
-	return event_id * 100
+## The ordinal counts ALL authored timings, including non-round timings.
+## [SRC: Timings.SetIdentify 0x3a9520; dump.cs:395269; raw event 5310453
+## has rite_end then round_begin_ba, and the original save uses 531045301.]
+static func _timing_key(_timing: String, event_id: int, ordinal: int = 0) -> int:
+	return event_id * 100 + ordinal
 
 
 ## IsValid for round-based timings: fire when the current round reaches the
 ## armed next-fire round, then re-arm immediately (the original re-arms inside
 ## IsValid, even if the event's own condition later fails).
 ## [SRC: TimingRoundBase.c @ IsValid (0x465d30) lines 47-72]
-func _round_timing_fires(timing: String, event_id: int, trigger_value, ctx: Dictionary) -> bool:
+func _round_timing_fires(key: int, trigger_value, ctx: Dictionary) -> bool:
 	var state = _state.get_ref() if _state is WeakRef else _state
 	if state == null:
 		return false
-	var key := _timing_key(timing, event_id)
 	if not state.timing_rounds.has(key):
 		return false
 	var next_fire: int = int(state.timing_rounds[key])
@@ -188,6 +200,11 @@ static func next_round(trigger_value, base_round: int, ctx: Dictionary) -> int:
 ## Whether the event's `on` value matches the firing context for this timing.
 ## Round-based timings are handled by _round_timing_fires before this runs.
 static func _value_matches(timing: String, trigger_value, ctx: Dictionary) -> bool:
+	# [SRC: CloseBeginGuide.IsValid 0x45eb80 compares TimingContext+0x38
+	# against the authored string or string set, not an unconditional match.]
+	if timing == "close_begin_guide":
+		var guide_type := str(ctx.get("guide_type", ""))
+		return guide_type in trigger_value if trigger_value is Array else guide_type == str(trigger_value)
 	# GameEnd timings filter by ending id: the value set must contain the
 	# ending reached; single -1 = any ending.
 	# [SRC: GameEnd.c @ IsValid (0x45efe0): player+0x7c ending id vs the

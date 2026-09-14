@@ -1,14 +1,15 @@
 param(
     [string]$CorpusRoot = '',
     [string]$OutputPath = '',
-    [switch]$Check
+    [switch]$Check,
+    [string]$Python = "$env:USERPROFILE\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
 )
 
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($CorpusRoot)) {
-    $CorpusRoot = Join-Path (Split-Path -Parent $repoRoot) 'Faust-local-source\_unpack\data\config'
+    $CorpusRoot = Join-Path (Split-Path -Parent $repoRoot) 'Faust-local-source\_unpack\unity_export\ExportedProject\Assets\StreamingAssets\config'
 }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     $OutputPath = Join-Path $repoRoot 'docs\research\data\faust-design-research-snapshot.json'
@@ -24,20 +25,6 @@ foreach ($requiredPath in @($riteRoot, $afterStoryRoot)) {
 
 function Get-JsonFiles([string]$Root) {
     return @(Get-ChildItem -LiteralPath $Root -Filter '*.json' -File | Sort-Object Name)
-}
-
-function Get-ObjectPropertyCount($Value) {
-    if ($null -eq $Value) {
-        return 0
-    }
-    return @($Value.PSObject.Properties).Count
-}
-
-function Get-ArrayCount($Value) {
-    if ($null -eq $Value) {
-        return 0
-    }
-    return @($Value).Count
 }
 
 function Get-CorpusFingerprint([System.IO.FileInfo[]]$Files, [string]$Root) {
@@ -60,16 +47,18 @@ function Get-CorpusFingerprint([System.IO.FileInfo[]]$Files, [string]$Root) {
     }
 }
 
+$metricsJson = & $Python (Join-Path $PSScriptRoot 'read_design_research_metrics.py') $CorpusRoot
+if ($LASTEXITCODE -ne 0) { throw 'Original JSONC research metrics failed.' }
+$metrics = $metricsJson | ConvertFrom-Json
 $parseErrors = [System.Collections.Generic.List[object]]::new()
 $riteRows = [System.Collections.Generic.List[object]]::new()
 $riteFiles = Get-JsonFiles $riteRoot
 foreach ($file in $riteFiles) {
     try {
-        $definition = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-        $slotCount = Get-ObjectPropertyCount $definition.cards_slot
-        $branchCount = (Get-ArrayCount $definition.settlement_prior) +
-            (Get-ArrayCount $definition.settlement) +
-            (Get-ArrayCount $definition.settlement_extre)
+        $definition = $metrics.PSObject.Properties["rite/$($file.Name)"].Value
+        if ($null -eq $definition) { throw "Missing metrics: $($file.Name)" }
+        $slotCount = $definition.slot_count
+        $branchCount = $definition.branch_count
         $riteRows.Add([pscustomobject][ordered]@{
             file = $file.Name
             id = $definition.id
@@ -94,13 +83,14 @@ $afterStoryRows = [System.Collections.Generic.List[object]]::new()
 $afterStoryFiles = Get-JsonFiles $afterStoryRoot
 foreach ($file in $afterStoryFiles) {
     try {
-        $definition = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        $definition = $metrics.PSObject.Properties["after_story/$($file.Name)"].Value
+        if ($null -eq $definition) { throw "Missing metrics: $($file.Name)" }
         $afterStoryRows.Add([pscustomobject][ordered]@{
             file = $file.Name
             id = $definition.id
             name = $definition.name
-            prior_entry_count = Get-ArrayCount $definition.prior
-            extra_entry_count = Get-ArrayCount $definition.extra
+            prior_entry_count = $definition.prior_count
+            extra_entry_count = $definition.extra_count
         })
     }
     catch {
@@ -119,11 +109,11 @@ $riteRows | Group-Object slot_count | Sort-Object { [int]$_.Name } | ForEach-Obj
 }
 
 $snapshot = [ordered]@{
-    schema_version = 1
-    snapshot_date = '2026-08-13'
+    schema_version = 2
+    snapshot_date = '2026-09-14'
     generator = 'tools/export_design_research_snapshot.ps1'
     corpus = [ordered]@{
-        logical_root = 'Faust-local-source/_unpack/data/config'
+        logical_root = 'Faust-local-source/_unpack/unity_export/ExportedProject/Assets/StreamingAssets/config'
         included_directories = @('rite', 'after_story')
         fingerprint_algorithm = 'sha256(relative_path + tab + file_sha256, newline joined, sorted by file name within each directory)'
         fingerprint = Get-CorpusFingerprint $allInputFiles $CorpusRoot
@@ -141,13 +131,13 @@ $snapshot = [ordered]@{
         round_positive_count = @($riteRows | Where-Object round_number -ge 1).Count
         auto_begin_count = @($riteRows | Where-Object auto_begin -eq 1).Count
         auto_result_count = @($riteRows | Where-Object auto_result -eq 1).Count
-        total_card_slot_definitions = ($riteRows.slot_count | Measure-Object -Sum).Sum
+        total_card_slot_definitions = [int]($riteRows.slot_count | Measure-Object -Sum).Sum
         definitions_with_card_slots = @($riteRows | Where-Object slot_count -gt 0).Count
-        maximum_slots_in_one_definition = ($riteRows.slot_count | Measure-Object -Maximum).Maximum
+        maximum_slots_in_one_definition = [int]($riteRows.slot_count | Measure-Object -Maximum).Maximum
         slot_count_histogram = $slotHistogram
-        total_settlement_branch_entries = ($riteRows.settlement_branch_count | Measure-Object -Sum).Sum
+        total_settlement_branch_entries = [int]($riteRows.settlement_branch_count | Measure-Object -Sum).Sum
         definitions_with_settlement_branches = @($riteRows | Where-Object settlement_branch_count -gt 0).Count
-        maximum_settlement_branches_in_one_definition = ($riteRows.settlement_branch_count | Measure-Object -Maximum).Maximum
+        maximum_settlement_branches_in_one_definition = [int]($riteRows.settlement_branch_count | Measure-Object -Maximum).Maximum
         maximum_slot_definitions = @($riteRows | Sort-Object -Property @(
                 @{ Expression = 'slot_count'; Descending = $true },
                 @{ Expression = 'file'; Descending = $false }
@@ -160,8 +150,8 @@ $snapshot = [ordered]@{
     after_story = [ordered]@{
         definition_file_count = $afterStoryFiles.Count
         parsed_definition_count = $afterStoryRows.Count
-        total_prior_entries = ($afterStoryRows.prior_entry_count | Measure-Object -Sum).Sum
-        total_extra_entries = ($afterStoryRows.extra_entry_count | Measure-Object -Sum).Sum
+        total_prior_entries = [int]($afterStoryRows.prior_entry_count | Measure-Object -Sum).Sum
+        total_extra_entries = [int]($afterStoryRows.extra_entry_count | Measure-Object -Sum).Sum
         definitions_with_prior_entries = @($afterStoryRows | Where-Object prior_entry_count -gt 0).Count
         definitions_with_extra_entries = @($afterStoryRows | Where-Object extra_entry_count -gt 0).Count
     }
@@ -172,13 +162,17 @@ $snapshot = [ordered]@{
     )
 }
 
+if ($parseErrors.Count -gt 0) { throw 'Research metrics contain parse errors.' }
 $json = $snapshot | ConvertTo-Json -Depth 10
 if ($Check) {
     if (-not (Test-Path -LiteralPath $OutputPath -PathType Leaf)) {
         throw "Snapshot does not exist: $OutputPath"
     }
     $existing = Get-Content -LiteralPath $OutputPath -Raw -Encoding UTF8
-    if ($existing.TrimEnd() -ne $json.TrimEnd()) {
+    # PowerShell 5 and 7 format indentation differently; compare JSON values.
+    $normalizedExisting = $existing | ConvertFrom-Json | ConvertTo-Json -Depth 10 -Compress
+    $normalizedCurrent = $json | ConvertFrom-Json | ConvertTo-Json -Depth 10 -Compress
+    if ($normalizedExisting -ne $normalizedCurrent) {
         throw "Snapshot is stale. Run tools/export_design_research_snapshot.ps1 and review the diff."
     }
     Write-Output "Design research snapshot is current: $OutputPath"

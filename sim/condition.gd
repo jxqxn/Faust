@@ -731,13 +731,14 @@ static func eval_slot(k: String, val: Variant, ctx: Dictionary) -> bool:
 			total += int(effective_card.get("tag", {}).get(tag_name, 0))
 		var ok := apply_compare(total, need, tag_query.op)
 		return ok if not negate else not ok
-	# plain "s1" -> presence (rite-agnostic, like the original SlotHasTag
-	# presence check); the aggregate selectors use their own resolution.
+	# SlotExists reads this ConditionContext.cards, not all player rites.
+	# [SRC: SlotExists.c IsSatisfied 0x408b70; dump.cs:383855 cards@0x28;
+	# content/rite/5000001.json no-manager branch + original round4->5 trace.]
 	if kk.begins_with("s") and kk.length() > 1 and kk.substr(1).is_valid_int():
 		if bool(ctx.get("use_slot_snapshot", false)):
 			var snapshot_present := not _selector_condition_cards(kk, st, ctx).is_empty()
 			return snapshot_present if not negate else not snapshot_present
-		var present: bool = st.slot_has_cards(kk.substr(1).to_int())
+		var present: bool = st.slot_has_cards(kk.substr(1).to_int(), int(ctx.get("rite_uid", 0)))
 		return present if not negate else not present
 	var selector_present := not _selector_condition_cards(kk, st, ctx).is_empty()
 	return selector_present if not negate else not selector_present
@@ -1091,6 +1092,22 @@ static func eval_state_tag(k: String, val: Variant, ctx: Dictionary) -> bool:
 	var db = ctx.get("db")
 	var need := int(val)
 	var ok := false
+	# HasTag without a main card sums the current context's friends ONCE.
+	# [SRC: HasTag.c IsSatisfied 0x3fe5a0; ConditionContext.c ctor 0x385d90;
+	# RiteExtensions.__c.c GetFriendCards b__2_0 0x393840; dump.cs:383857.]
+	if st != null and (int(ctx.get("rite_uid", 0)) > 0 or ctx.has("slot_entries")):
+		var entries: Array = ctx.get("slot_entries", [])
+		if not ctx.has("slot_entries"):
+			var rite = st.get_rite_instance(int(ctx.get("rite_uid", 0)))
+			if rite != null:
+				entries = st.slot_entries_for_rite(db.get_rite(rite.id), rite.uid)
+		var total := 0
+		for entry in entries:
+			if not bool(entry.get("is_enemy", false)):
+				var card: Dictionary = st.card_data_for(int(entry.get("card_uid", 0)), db)
+				total += int(card.get("tag", {}).get(tag_name, 0))
+		ok = apply_compare(total, need, parsed.op)
+		return not ok if neg else ok
 	if st != null:
 		for card_uid in st.hand:
 			var card: Dictionary = st.card_data_for(int(card_uid), db)

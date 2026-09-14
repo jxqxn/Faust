@@ -1,15 +1,15 @@
 ﻿{
-    "schema_version":  1,
-    "snapshot_date":  "2026-08-13",
+    "schema_version":  2,
+    "snapshot_date":  "2026-09-14",
     "generator":  "tools/export_design_research_snapshot.ps1",
     "corpus":  {
-                   "logical_root":  "Faust-local-source/_unpack/data/config",
+                   "logical_root":  "Faust-local-source/_unpack/unity_export/ExportedProject/Assets/StreamingAssets/config",
                    "included_directories":  [
                                                 "rite",
                                                 "after_story"
                                             ],
                    "fingerprint_algorithm":  "sha256(relative_path + tab + file_sha256, newline joined, sorted by file name within each directory)",
-                   "fingerprint":  "d3ca63b5c5d530a4b134b5c1ca45c2027bbbebe3accabaa10894b7ecc6f811fb",
+                   "fingerprint":  "9f4fed5aef4683ae829b3a392aad64d0de3d0df0ce4ba67a786c1e7d3d39af47",
                    "input_file_count":  1561
                },
     "parsing":  {

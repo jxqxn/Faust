@@ -252,7 +252,7 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		return
 	# CleanRite removes OTHER rite instances from the table by config id;
 	# value 1 removes every rite except the currently settling one. Cards in
-	# removed rites go with them; the settling rite is always skipped.
+	# removed rites return to the player; the settling rite is always skipped.
 	# [SRC: CleanRite.c @ Do (RVA 0x4f3ae0): player.rites RemoveAll with the
 	#       settling-rite exclusion (report 4 A1 — was inverted to card-clean)]
 	if k == "clean.rite":

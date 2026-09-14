@@ -163,7 +163,8 @@ func test_auto_result_rite_with_slotted_card_grants_reward():
 	RoundLoop.draw_weekly_sudan(state, db, rng)
 	RoundLoop.start_auto_begin_rites(state, db)
 	# Manually place a card with high 智慧+社交 into slot 1.
-	state.add_card_to_slot(2000005, 1, db)  # 异国商人 (贵族)
+	var household = state.find_rite_instance_by_id(5000001)
+	state.add_card_to_slot(2000005, 1, db, household.uid)  # Bind the actual rite, not a global legacy slot.
 	var coin_before := state.coin_count
 	RoundLoop.advance_day(state, db, rng)
 	# With a 贵族 slotted, the r1:智慧+社交 branches become reachable.
