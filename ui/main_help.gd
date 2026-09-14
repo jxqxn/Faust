@@ -2,7 +2,7 @@ extends Control
 class_name MainHelpView
 ## Source-backed desktop help overlay (GameScene MainUI/MainHelp).
 ## Geometry is a direct replay of the authored RectTransforms from the
-## GameScene truth table docs/ui_layout/GameScene.md (MainUI/MainHelp rows),
+## GameScene truth table docs/replica/layout.md#e100 (MainUI/MainHelp rows),
 ## placed on the 3840x2160 MainUI design space with _unity_rect.
 ## [SRC: GameScene.unity MainUI/MainHelp + Sprite/main.asset +
 ## data/i18n/zhTW/ui.json MAIN_HELP_* (converted to simplified)]

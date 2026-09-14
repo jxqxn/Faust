@@ -1360,9 +1360,18 @@ static func _tag_can_visible(db, tag_name: String) -> bool:
 ##       tag+0x41 == 0 -> return before the list push at 0x3345);
 ##       CardExtensions.c @ AddTag 0x37e6a0 / RemoveTag 0x382e40 never read tag+0x41.]
 static func _mutate_tag(tags: Dictionary, state, card_uid: int, tag_name: String, op: int, amount: int, can_add: bool, effective_value: int, db) -> bool:
+	# [SRC: ModifyTag.<Do>b__0 0x524a70 calls AddTag only for a nonzero
+	# converted add; CardExtensions.AddTag0x37e6a0 invokes MarkTagGen once,
+	# independent of amount. CommonFunction.MarkTagGen@0x48, dump.cs:383603;
+	# GameApplication.<DoInit>b__43_4 0x45c500 forwards to the player.]
+	var registers_add := op == TagSystem.Op.ADD and amount != 0 and (can_add or effective_value < 1)
+	if op == TagSystem.Op.SET:
+		registers_add = amount > effective_value if can_add else (amount > 0 and effective_value < 1)
 	var changed := TagSystem.apply(tags, tag_name, op, amount, can_add, effective_value)
 	if state != null and state.get_card_instance(card_uid) != null:
 		state.validate_tag_attributes(card_uid, tag_name, db)
+	if registers_add and state != null:
+		state.record_tag_generation(tag_name, db)
 	if _tag_can_visible(db, tag_name) and state != null and state.has_method("record_tag_op"):
 		state.record_tag_op(card_uid, tag_name, op, amount, tags)
 	return changed

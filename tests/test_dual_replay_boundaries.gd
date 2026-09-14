@@ -2,9 +2,55 @@ extends GutTest
 
 var db: ConfigDB
 
+class LastCandidateRNG extends GameRNG:
+	var calls := 0
+	func range_int_half_open(from_n: int, to_n: int) -> int:
+		calls += 1
+		return to_n - 1 if to_n > from_n else from_n
+
+func test_adsorption_samples_multiple_candidates_but_not_singletons() -> void:
+	var state := GameState.new()
+	var rng := LastCandidateRNG.new()
+	var first := state.add_card_to_hand(2000001, db)
+	var second := state.add_card_to_hand(2000001, db)
+	var rite = state.create_rite_instance(5000001)
+	var definition := {"cards_slot": {"s1": {"open_adsorb": 1, "condition": {"is": 2000001}}}}
+	assert_true(state._adsorb_open_slots(rite, definition, db, rng))
+	assert_eq(rite.slot_cards.s1, second, "source random candidate can be the last, not always the first")
+	assert_eq(rng.calls, 1)
+	assert_eq(state._choose_adsorb_candidate([first], rng), first)
+	assert_eq(rng.calls, 1, "a singleton consumes no random draw")
+
 func before_all() -> void:
 	db = ConfigDB.new()
 	db.load_all()
+
+func test_have_id_tag_counts_source_loot_candidates() -> void:
+	var state := GameState.new()
+	state.add_card_to_hand(2000081, db)
+	var ctx := {"state": state, "db": db}
+	assert_true(ConditionEval.evaluate(db.get_loot(6000019).item[1].condition, ctx))
+	assert_false(ConditionEval.evaluate(db.get_loot(6000019).item[0].condition, ctx))
+	assert_false(ConditionEval.evaluate({"table_have.2000081.妓女>=": 2}, ctx))
+	var other := state.add_card_to_hand(2000082, db)
+	state.get_card_instance(other).tags["魅力"] = -10
+	assert_true(ConditionEval.evaluate({"table_have.魅力<=": -2}, ctx), "sum keeps negative contributions; it is not a positive-tag filter")
+
+func test_tag_generation_counts_add_calls_not_units_or_removals() -> void:
+	var state := GameState.new()
+	var uid := state.add_card_to_hand(2000001, db)
+	var tags: Dictionary = state.get_card_instance(uid).tags
+	state.gen_tags.clear()
+	ResultExec._mutate_tag(tags, state, uid, "倦怠", TagSystem.Op.ADD, 4, true, 0, db)
+	assert_eq(state.gen_tags.get("ennui", 0), 1)
+	ResultExec._mutate_tag(tags, state, uid, "倦怠", TagSystem.Op.SUB, 2, true, 4, db)
+	assert_eq(state.gen_tags.get("ennui", 0), 1)
+	ResultExec._mutate_tag(tags, state, uid, "倦怠", TagSystem.Op.SET, 3, true, 2, db)
+	assert_eq(state.gen_tags.get("ennui", 0), 2)
+	ResultExec._mutate_tag(tags, state, uid, "倦怠", TagSystem.Op.SET, 3, true, 3, db)
+	ResultExec._mutate_tag(tags, state, uid, "已拥有", TagSystem.Op.ADD, 1, false, 1, db)
+	assert_eq(state.gen_tags.get("ennui", 0), 2)
+	assert_false(state.gen_tags.has("own"))
 
 func test_empty_household_does_not_see_another_rites_slots() -> void:
 	var state := GameState.new()
@@ -68,6 +114,7 @@ func test_original_comparison_excludes_removed_card_tombstones() -> void:
 	assert_true(state.card_instances.has(uid), "pending operations can still identify the removed card")
 	assert_true(OriginalSaveImporter._clone_per_id_counts(state).is_empty())
 	assert_true(OriginalSaveImporter._live_clone_cards(state).is_empty())
+	assert_true(OriginalSaveImporter._clone_bag_positions(state).is_empty())
 
 func test_loot_keeps_stack_quantity_and_nonstack_object_count() -> void:
 	var state := GameState.new()

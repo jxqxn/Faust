@@ -2130,7 +2130,7 @@ func _adsorb_open_slots(instance, rite: Dictionary, db, rng) -> bool:
 				continue
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
-		var chosen_uid := int(candidates[0])
+		var chosen_uid := _choose_adsorb_candidate(candidates, rng)
 		if not _remove_adsorb_candidate(chosen_uid):
 			_reback_absorbed_cards(absorbed, instance.uid)
 			return false
@@ -2147,15 +2147,24 @@ func _adsorbable_card_uids() -> Array[int]:
 	return out
 
 
+## [SRC: RiteExtensions.AdsorbCards0x38fca0, .c:1425-1438;
+## dump.cs:389090. Ordinary candidates use Random.Range only when Count>1.]
+func _choose_adsorb_candidate(candidates: Array[int], rng) -> int:
+	if candidates.size() == 1:
+		return candidates[0]
+	var index: int = rng.range_int_half_open(0, candidates.size()) if rng != null else randi_range(0, candidates.size() - 1)
+	return candidates[index]
+
+
 ## Daily AdsorbCards pass: once per round, every OPEN slot of every player rite
-## takes the first hand card that satisfies its condition, if that slot is
+## samples an eligible player card, if that slot is
 ## still empty. This is the round-end counterpart of the creation-time
 ## adsorption in InitRite and runs for every rite, not just new ones.
 ## [SRC: RiteExtensions.c @ AdsorbCards (RVA 0x38fca0): the outer loop walks
-##       player+0xB0 (sudan_card_pool) as the slot index source, reads
+##       RiteNode+0xB0 (slot definitions) as the slot index source, reads
 ##       rite+0x30 slot entries, keeps only entries whose RiteNode.Slot
 ##       open_adsorb @+0x20 is true, then walks player+0x88 (Player.cards) in
-##       order and takes the FIRST card CanPutCard accepts, removing it from
+##       order, collects accepted candidates and selects randomly, removing it from
 ##       the player list and writing it into rite+0x30[index].
 ##       Caller: GameController.__c__DisplayClass142_0.c @ <OnNextRound>b__6
 ##       (0x570b00) prelude — for each r in player+0x90 (List<Rite>) call
@@ -2193,17 +2202,21 @@ func adsorb_open_slots(instance, db, rng) -> Array:
 		# entries whose Card value is still null.
 		if int(instance.slot_cards.get(slot_key, 0)) > 0:
 			continue
+		var candidates: Array[int] = []
 		for card_uid in _adsorbable_card_uids():
 			var uid := int(card_uid)
 			var card: Dictionary = card_data_for(uid, db)
 			if not _can_adsorb_card(slot_def, card, instance, rite, db, rng):
 				continue
-			var slot_number := slot_key.substr(1).to_int()
-			if not _remove_adsorb_candidate(uid):
-				continue
-			add_card_to_slot(uid, slot_number, db, instance.uid)
-			absorbed.append({"uid": uid, "slot": slot_number, "rite_uid": int(instance.uid)})
-			break
+			candidates.append(uid)
+		if candidates.is_empty():
+			continue
+		var uid := _choose_adsorb_candidate(candidates, rng)
+		if not _remove_adsorb_candidate(uid):
+			continue
+		var slot_number := slot_key.substr(1).to_int()
+		add_card_to_slot(uid, slot_number, db, instance.uid)
+		absorbed.append({"uid": uid, "slot": slot_number, "rite_uid": int(instance.uid)})
 	return absorbed
 
 

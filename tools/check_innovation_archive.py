@@ -4,14 +4,17 @@ import hashlib
 import json
 import re
 import zipfile
+import io
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = ROOT / 'docs/archive/innovation-20260914'
 manifest = json.loads((BASE / 'manifest.json').read_text(encoding='utf-8'))
 archive = BASE / manifest['archive']
-assert hashlib.sha256(archive.read_bytes()).hexdigest() == manifest['sha256']
+archive_bytes = archive.read_bytes() if archive.exists() else subprocess.check_output(['git', 'show', manifest['archive_git_ref']], cwd=ROOT)
+assert hashlib.sha256(archive_bytes).hexdigest() == manifest['sha256']
 seen = set()
-with zipfile.ZipFile(archive) as z:
+with zipfile.ZipFile(io.BytesIO(archive_bytes)) as z:
     for row in manifest['files']:
         name = row['archive_entry']
         assert name not in seen, name

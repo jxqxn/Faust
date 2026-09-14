@@ -805,11 +805,18 @@ static func _selector_value_tag(selector: String) -> String:
 
 static func _have_count(st, db, domain: Array, selector: String) -> int:
 	var total := 0
+	# [SRC: BaseHaveCardCount.ctor0x3f58a0 separates id/filter from the
+	# last tag; GetCountFunc0x3f55a0 sums that tag. dump.cs:416723;
+	# loot6000019 uses table_have.2000081.妓女 with value 1.]
+	var value_tag := _selector_value_tag(selector)
+	var filter_selector := selector if value_tag.is_empty() else ""
+	var last_dot := selector.rfind(".")
+	if last_dot > 0:
+		filter_selector = selector.substr(0, last_dot)
 	for inst in domain:
 		var tags: Dictionary = st.effective_card_tags(inst.uid, db) if st != null and st.has_method("effective_card_tags") else inst.tags
-		if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), tags, db, selector):
+		if not RuntimeOperationFilter.matches_card_data(int(inst.card_id), tags, db, filter_selector):
 			continue
-		var value_tag := _selector_value_tag(selector)
 		if value_tag == "" or value_tag == "count":
 			total += maxi(int(inst.count), 1)
 		elif value_tag == "lifetime":

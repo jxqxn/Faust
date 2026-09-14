@@ -78,7 +78,7 @@ func update_mask_canvas_group() -> void:
 
 func _build_over_title(title_text: String) -> void:
 	# Unity bottom-left authored coordinates folded into the 3840x2160 design
-	# canvas. See docs/ui_layout/Over.md, `Over/Step2/Over Title` rows.
+	# canvas. See docs/replica/layout.md#e106, `Over/Step2/Over Title` rows.
 	var over_title := Control.new()
 	over_title.name = "Over Title"
 	over_title.position = Vector2(100, 1960)

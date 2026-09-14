@@ -160,7 +160,7 @@ func _ready() -> void:
 
 ## Attach the source's TipsHolder inventory to the clone Controls that stand in
 ## for the same GameObjects. Ids and NeedWidth are the scene's own values from
-## docs/ui_layout/SourceTips.md; a holder the scene does not author is not
+## docs/replica/presentation.md#e124; a holder the scene does not author is not
 ## invented here.
 ##
 ## [SRC: GameScene.unity TipsHolder components (30 holders / 16 ids, scanned);
@@ -236,7 +236,7 @@ func _build_ui() -> void:
 	# same top-left coordinate system so resizing it does not fight anchors.
 	_background.set_anchors_preset(Control.PRESET_TOP_LEFT)
 
-	# [SRC: docs/ui_layout/GameScene.md — RoundNumber BG top-right anchors (1,1)
+	# [SRC: docs/replica/layout.md#e100 — RoundNumber BG top-right anchors (1,1)
 	#       pivot (1,1) pos (-80,0) height 204, countdown_bg_new strip;
 	#       children Left Space/RoundNumberTitle (translated) fs60/NumberSprite/
 	#       RoundNumber "N/7" fs60/Right Space (horizontal layout)]
@@ -302,7 +302,7 @@ func _build_ui() -> void:
 	_menu_button.name = "MenuButton"
 	# No TipsHolder in the source's Quit block, so the clone does not invent one.
 	# Godot's own tooltip is not the source's tip surface; see
-	# docs/ui_layout/SourceTips.md for the scene-wide holder inventory.
+	# docs/replica/presentation.md#e124 for the scene-wide holder inventory.
 	_menu_button.flat = false
 	_menu_button.custom_minimum_size = Vector2(80, 82)
 	_menu_button.size = Vector2(80, 82)
@@ -2306,7 +2306,7 @@ func _show_card_detail(card_id: int, card: Dictionary) -> void:
 	if _state != null and _state.has_method("trigger_events"):
 		_state.trigger_events("open_card_info", {"card": card_id, "card_uid": card_uid})
 	# CardInfoNew source panel (2510x1077 on the 3840x2160 canvas) as built by
-	# ui/card_info_view.gd; geometry from docs/ui_layout/CardInfoNew.md.
+	# ui/card_info_view.gd; geometry from docs/replica/layout.md#e077.
 	# [SRC: CardInfoNew.prefab + CardInfoNewController.c Show 0x537000]
 	if _card_info_view == null or not is_instance_valid(_card_info_view):
 		_card_info_view = CardInfoViewScript.new()

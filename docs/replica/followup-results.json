@@ -1,0 +1,42 @@
+{
+  "date": "2026-09-14",
+  "verdict": "not_equivalent",
+  "full_suite": {
+    "tests": 777,
+    "passed": 775,
+    "pending": 2,
+    "assertions": 7462,
+    "exit_code": 0,
+    "log": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-final-console.log"
+  },
+  "native_replay": {
+    "assertions_passed": 167,
+    "assertions_total": 185,
+    "exit_code": 1,
+    "after_pass": 45,
+    "after_total": 54,
+    "failed_fields": [
+      "per_id_counts",
+      "timing_rounds",
+      "hand_membership",
+      "table_operation_root_membership",
+      "rites",
+      "only_rites",
+      "once_new_rites_is_show",
+      "gen_cards",
+      "gen_tags"
+    ],
+    "artifact": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/clone-replay.json"
+  },
+  "boundary_suite": {
+    "tests": 11,
+    "assertions": 40,
+    "passed": 11
+  },
+  "rite_ui_suite": {
+    "tests": 39,
+    "passed": 39,
+    "assertions": 197
+  },
+  "scope": "局部机制修正及全部可访问工作区资料整合；完整跨日等价仍未通过"
+}

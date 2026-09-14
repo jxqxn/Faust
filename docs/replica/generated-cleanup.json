@@ -1,0 +1,1998 @@
+[
+  {
+    "path": "docs/audit/approximation_candidates.csv.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_candidates.discovery.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_candidates.line.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_candidates.method.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_candidates.status.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_candidates.text.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_scan_coverage.candidates.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_scan_coverage.csv.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/approximation_scan_coverage.lines.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/performance_rite_hand.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/performance_rite_running_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/source_pointer_candidates.csv.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/source_pointer_candidates.line.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/source_pointer_candidates.reference.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/source_pointer_candidates.status.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.AutoBegin.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.AutoResult.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.csv.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.Location.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.Name.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.OriginalConfigPath.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.RoundNumber.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.SlotConditions.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_rite_events.WaitingRound.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.AutoStart.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.csv.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.OriginalConfigPath.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.SettlementCount.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.StartTrigger.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.TextOrName.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/reference/original_story_events.TriggerKeys.translation",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/afterstory_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/afterstory_zoom_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_00_save_list_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_00_save_list_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_01_name_input_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_01_name_input_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_02_overwrite_confirm_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_02_overwrite_confirm_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_03_delete_inline_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_03_delete_inline_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_04_load_confirm_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/archive_04_load_confirm_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/cachedevents_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/cached_shake_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/cached_shake_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/cardinfo_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_detail_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_equipment_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_equipment_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_gold_crop.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_hand_corrected.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_hold_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_hold_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_grid_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_grid_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_help_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_help_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_help_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_normal_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_normal_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_info_normal_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_detail_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_detail_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_detail_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_drag_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_drag_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_armor_drag_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_candidate_flash_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_candidate_flash_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_gold_selected_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_gold_selected_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_reference_gold_selected_2560.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_surface_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_surface_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_surface_compare.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_text_translation_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/card_text_translation_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/changename_placeholder_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/changename_placeholder_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/changename_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/changename_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/changename_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/confirm_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/confirm_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/core_choice_selected.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/credits_contributor_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/credits_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/credits_thanks_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1280_day1.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1280_day2.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1280_day3.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1280_day6.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1280_day7.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1920_day1.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1920_day2.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1920_day3.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1920_day6.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_header_1920_day7.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_map_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_map_1600.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_map_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_pages_metal_rites.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_pages_metal_rites_720.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/desktop_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/display_settings_connected.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/end_map_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/esc_checked_1664.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/esc_checked_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/eventprompt_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_0_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_0_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_1_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_1_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_2_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_2_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_3_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_icons_3_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_long_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/event_long_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/gallerycardinfo_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/gallerycg_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/galleryover_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/guide_close_after_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/guide_close_after_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/guide_close_before_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/guide_close_before_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/hand_edge_left_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/hand_edge_left_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/hand_edge_right_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/hand_edge_right_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/mainhelp_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/map_compare_detail.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/map_compare_full.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/menu_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/next_day_position_corrected.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/opening_reward_hand.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/opening_wife_confirm.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/pointshop_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_confirm_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_confirm_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_icon_groups_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_icon_groups_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_long_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_long_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_source_5300102_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/prompt_source_5300102_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rename_state_preferred_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rename_state_preferred_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_compare_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_description_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_description_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_description_scrolled_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_description_scrolled_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_drag_slots.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_drop_no_toast.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_font_checked.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_hand_input.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_help_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_help_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_hover_material.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_page_corrected.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_autoplay_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_autoplay_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_playrate_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_result_surface_playrate_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_running_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_running_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_slot_hover.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_source_household_result_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_wait_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_wait_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_wait_debug.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/scroll_thumb_zoom.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_display_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_display_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_font_popup_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_font_popup_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_keys_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_keys_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_other_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/settings_other_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_cost_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_cost_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_hand_equip_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_hand_equip_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_hand_stack_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/slot_hand_stack_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/sourcetips_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/sourcetips_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/source_option_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/source_option_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/storynotify_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/story_typewriter_screenshot.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/think_idle.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/title_archives_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/title_archives_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/title_checked_1280.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/title_checked_1920.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-2-enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-2-ready.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-2-restored-prompt.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-2-restored-result.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-3-enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-3-ready.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-3-restored-prompt.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/clone-day-3-restored-result.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-day-enter.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-day-moving.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-night-click.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-night-moving.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-night-settlement.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-wizard-dropper.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/original-wizard-menu.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/prompt_scrollbar/clone_market_prompt.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/prompt_scrollbar/original_market_prompt.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/mask_isolation/before-both.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/mask_isolation/before-game-day-enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/mask_isolation/both.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/mask_isolation/child_only.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/mask_isolation/parent_only.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/process_restart/round-1-night_enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/process_restart/round-2-day_enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/process_restart/round-2-night_enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/process_restart/round-3-.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/audit/next_day_runtime/process_restart/round-3-day_enter.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/card_info_artu.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/card_info_help.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/confirm_overwrite.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/desktop.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/main_menu.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/main_menu.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/rite_help_20260910.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/rite_household.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/rite_household_font_reference.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/rite_household_result_20260910.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/rite_result_power_20260910.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_display.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_display.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_keys.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_keys.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_other.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/original_runtime/settings_other.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000001.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000002.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000003.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000004.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000005.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000006.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000007.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000008.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000009.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000011.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000012.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000013.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000014.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000015.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000016.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000017.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000018.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000019.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000020.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000021.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000022.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000023.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000024.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000025.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000027.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000028.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000029.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000030.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000031.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000032.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000033.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000034.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000035.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000036.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000037.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000038.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000039.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000040.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000041.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000042.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000043.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000044.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000045.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000046.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000047.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000048.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000049.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000050.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000051.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000052.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000053.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000054.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000055.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000056.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000057.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000058.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000059.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000061.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000062.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000063.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000064.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000065.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000066.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000068.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000069.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000100.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000101.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000102.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000103.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000104.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000105.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000106.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000107.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000108.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000109.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000110.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000111.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000112.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000113.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000114.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000115.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000116.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000117.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000118.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000119.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000121.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000122.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000123.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000124.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000125.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000126.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000127.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000128.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000129.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000130.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000131.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000132.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000133.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000134.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000135.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000136.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000137.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000138.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000139.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000140.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000141.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000142.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000143.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000144.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000145.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000146.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000147.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000148.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000149.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000150.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000151.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000152.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000153.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000154.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000155.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000156.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000157.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000158.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000159.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000160.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000161.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000162.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000163.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000164.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000165.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000166.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000167.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000168.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000169.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000170.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000171.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000172.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000173.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000174.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000175.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000176.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000177.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000178.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000179.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000180.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000181.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000182.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000183.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000184.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000185.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000186.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000187.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000188.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000189.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000190.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000191.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000192.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000193.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000194.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000195.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000196.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000197.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000198.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000199.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000200.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000201.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000202.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000203.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000204.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000205.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000206.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000207.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000208.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000209.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000210.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000211.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000212.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000213.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000214.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000215.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000216.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000217.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000218.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000219.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000220.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000221.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000222.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000223.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000224.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000230.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000231.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000233.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000234.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000235.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000500.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000501.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000502.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000503.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000504.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000505.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000506.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000507.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000508.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000509.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000510.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000511.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000512.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000513.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000514.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000515.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000516.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000517.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000518.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000519.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000520.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000521.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000522.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000523.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000524.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000525.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000527.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000528.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000529.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000530.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000531.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000532.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000533.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000534.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000537.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000538.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000539.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000540.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000541.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000542.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000543.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000544.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000545.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000546.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000547.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000548.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000549.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000550.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000551.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000552.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000553.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000554.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/8000555.png.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-1.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-2.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-3.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-4.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-5.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-6.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  },
+  {
+    "path": "docs/ui_layout/rite_templates/overview-7.jpg.import",
+    "reason": "Godot-generated documentation import cache, excluded by docs/.gdignore"
+  }
+]

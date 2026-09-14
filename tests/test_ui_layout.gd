@@ -2162,7 +2162,7 @@ func test_situation_desk_keeps_actions_separate_at_narrow_width():
 
 
 func test_main_help_replays_source_geometry_and_trigger():
-	# [SRC: docs/ui_layout/GameScene.md MainUI/MainHelp + MainHelpTrigger rows]
+	# [SRC: docs/replica/layout.md#e100 MainUI/MainHelp + MainHelpTrigger rows]
 	var rng := RNG.new(5)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -2235,7 +2235,7 @@ func test_main_help_replays_source_geometry_and_trigger():
 
 
 func test_change_name_replays_source_geometry():
-	# [SRC: docs/ui_layout/PromptChangeName.md — authored RectTransforms]
+	# [SRC: docs/replica/layout.md#e111 — authored RectTransforms]
 	var rng := RNG.new(11)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -2359,7 +2359,7 @@ func test_card_detail_groups_configured_tags_and_compares_initial_values():
 
 
 func test_prestige_slots_replay_source_pivot_geometry():
-	# [SRC: docs/ui_layout/GameScene.md MainUI/Prestige rows — slots use the
+	# [SRC: docs/replica/layout.md#e100 MainUI/Prestige rows — slots use the
 	# authored anchor/pivot mix ((0,1)/(0,0) + pivot (0.52,0.94)); the rects
 	# below fold that pivot into a top-left origin.]
 	var state := GameState.new()
@@ -2386,7 +2386,7 @@ func test_prestige_slots_replay_source_pivot_geometry():
 
 
 func test_cached_events_tray_replays_source_geometry():
-	# [SRC: docs/ui_layout/GameScene.md MainUI/CachedEvents row — container
+	# [SRC: docs/replica/layout.md#e100 MainUI/CachedEvents row — container
 	# anchors (1,0)-(1,0) pos (0,680) pivot (1,0) 3840x128, layout(align=5
 	# spacing=50 pad=[0,100,0,0] cc=0/0 fe=0/0 rev=1); item rects below are
 	# the layout contract's right-to-left flow (index 0 rightmost: right edge
@@ -2502,7 +2502,7 @@ func test_event_prompt_long_body_scrolls_without_covering_choices():
 
 
 func test_event_prompt_replays_prompt_new_geometry():
-	# [SRC: docs/ui_layout/PromptNew.md — OptionBG 2705 wide (prompt_bg +
+	# [SRC: docs/replica/layout.md#e112 — OptionBG 2705 wide (prompt_bg +
 	# prompt_bg_mask_2 Full), Border decorate 250x323, Confirm rite_op_confirm
 	# 325x158 at (1,0)(-483,73); option rows = OptionNewItem (Text fs40
 	# centred on option_item_bg). Root Top/Bottom use min100/400 and
@@ -2725,7 +2725,7 @@ func test_rite_view_replays_source_canvas_geometry():
 
 
 func test_card_info_replays_source_geometry():
-	# [SRC: docs/ui_layout/CardInfoNew.md — every authored RectTransform value
+	# [SRC: docs/replica/layout.md#e077 — every authored RectTransform value
 	# below comes straight from the prefab truth table.]
 	var rng := RNG.new(3)
 	var state := GameState.new()

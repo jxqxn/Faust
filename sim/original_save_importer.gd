@@ -8,7 +8,7 @@ extends RefCounted
 ## against the original. What the clone cannot represent is reported as
 ## dropped/approximated — never silently swallowed.
 ##
-## Key conversions (dual-signal, see docs/ORIGINAL_SAVE_SCHEMA.md):
+## Key conversions (dual-signal, see docs/replica/state.md#e066):
 ##   difficulty is 1-based in the original (sample difficulty=1 with counter
 ##   7100006=3, sudan_redraw_times_per_round=3 and global backToPrevRound=9999
 ##   all point at 梅姬/easy = clone index 0).
@@ -767,6 +767,9 @@ static func _clone_bag_positions(state) -> Dictionary:
 	var positions := {}
 	for uid in state.card_instances:
 		var instance = state.card_instances[uid]
+		# The original save enumerates live Card objects, not clone tombstones.
+		if instance.zone == "removed":
+			continue
 		positions[int(uid)] = [int(instance.bag), int(instance.bag_pos)]
 	return positions
 

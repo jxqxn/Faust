@@ -187,7 +187,7 @@ static func _unity_rect(
 
 
 ## Source Shaker position path; CachedEvent rotationIntension is zero.
-## Native noise/decay evidence: docs/audit/ShakerSourceCorrection.md.
+## Native noise/decay evidence: docs/replica/presentation.md#e042.
 class _CachedEventItem:
 	extends Control
 	const Math = preload("res://ui/source_shaker_math.gd")

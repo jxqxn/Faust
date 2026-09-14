@@ -1,7 +1,7 @@
 ## Main menu: title page (new game / continue / archives / quit), re-emitted
 ## 1:1 in the original's 3840x2160 MainUI canvas space.
 ##
-## [SRC: docs/ui_layout/StartScene.md — MainUI canvas ref 3840x2160 Expand;
+## [SRC: docs/replica/layout.md#e126 — MainUI canvas ref 3840x2160 Expand;
 ##       StartPanel full-rect bg_new_0; MainGroup 2200x1800 center
 ##       VerticalLayoutGroup spacing=30 UpperCenter;
 ##       logo 730x458 scale 1.1; NewGame/LoadGame/UserArchiveLoadGame/QuitGame

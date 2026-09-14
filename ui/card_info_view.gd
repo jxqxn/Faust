@@ -2,7 +2,7 @@ extends Control
 class_name CardInfoView
 ## Source-backed card info panel (Cards 详情浮层).
 ## Geometry is a direct replay of the original prefab truth table
-## docs/ui_layout/CardInfoNew.md (Resources/prefab/CardInfoNew.prefab):
+## docs/replica/layout.md#e077 (Resources/prefab/CardInfoNew.prefab):
 ## the panel is 2510x1077 centred on the 3840x2160 MainUI canvas and every
 ## child here is placed with the authored anchors/anchoredPosition/sizeDelta/
 ## pivot numbers from that table (converted by _unity_rect, see below).

@@ -5,7 +5,7 @@ extends GutTest
 ## (save_samples/auto_save.json) is the judge; the synthetic fixture covers
 ## shapes the round-1 sample happens not to carry (started rite, gold cards,
 ## non-default min_round).
-## [SRC: docs/ORIGINAL_SAVE_SCHEMA.md; sim/original_save_importer.gd SRC notes]
+## [SRC: docs/replica/state.md#e066; sim/original_save_importer.gd SRC notes]
 
 const RNG = preload("res://core/rng.gd")
 const CORPUS_AUTO_SAVE := "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/save_samples/auto_save.json"

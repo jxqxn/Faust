@@ -5,7 +5,7 @@ extends SceneTree
 ## file, the full RectTransform truth table (anchors / anchoredPosition /
 ## sizeDelta / pivot / scale / rotation), canvas scaler settings, sprite
 ## references resolved to corpus paths, and geometry-relevant prefab-instance
-## modifications. Output: docs/ui_layout/<name>.json + .md.
+## modifications. Output: docs/ui_layout/<name>.json + integrated layout-data.json.
 ##
 ## Usage:
 ##   godot --headless --script tools/export_ui_layout.gd -- \
@@ -655,6 +655,26 @@ func _write_md(path: String, doc: Dictionary) -> void:
 		for inst in doc["prefab_instances"]:
 			var src := str(inst["source"]).replace(CORPUS_ASSETS + "/", "")
 			lines.append("- **%s** parent=%s mods=%s" % [src, inst["parent"], _fmt_mods(inst["geometry_mods"])])
+	var relative_path := ProjectSettings.localize_path(path).trim_prefix("res://")
+	if relative_path.begins_with("docs/ui_layout/"):
+		# Keep one integrated reading surface; do not recreate retired fragments.
+		var integrated_path := "res://docs/replica/layout-data.json"
+		var records: Array = JSON.parse_string(FileAccess.get_file_as_string(integrated_path))
+		var updated := false
+		for record in records:
+			if str(record.old_path) == relative_path:
+				# Preserve the integrated source and manual annotations; regeneration
+				# must not silently replace historical evidence with a new snapshot.
+				record.generated_text = "\n".join(lines) + "\n"
+				updated = true
+		if not updated:
+			records.append({"id": "layout-" + relative_path.get_file().get_basename(), "title": doc.file,
+				"old_path": relative_path, "data": relative_path.replace(".md", ".json"), "text": "\n".join(lines) + "\n"})
+		var integrated_file := FileAccess.open(integrated_path, FileAccess.WRITE)
+		integrated_file.store_string(JSON.stringify(records, "  ", false) + "\n")
+		integrated_file.close()
+		print("Updated integrated layout; run tools/build_documentation_views.py to refresh the browser.")
+		return
 	_ensure_dir(path.get_base_dir())
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:

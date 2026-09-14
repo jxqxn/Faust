@@ -13,7 +13,7 @@
 - [证据、决定与纠错账](evidence-and-decisions.md)：原话、冲突、未决事项和覆盖边界。
 - [详细研究总报告](../research/faust-game-design-data-research.md)：92 条主张、92 条来源及数据模型。
 
-复刻查[阶段审计](../audit/PhaseClose20260914.md)和 [METHOD_MAP](../METHOD_MAP.md)，设计解释不充当原作裁判。原始材料见[归档清单](../archive/innovation-20260914/manifest.json)。
+复刻查[阶段审计](../replica/verification.md)和 [METHOD_MAP](../METHOD_MAP.md)，设计解释不充当原作裁判。原始材料见[归档清单](../archive/innovation-20260914/manifest.json)。
 
 ## 已确认的产品边界
 

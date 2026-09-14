@@ -1,7 +1,7 @@
 extends Control
 class_name ChangeNameView
 ## Source-backed rename prompt (卡牌改名提示浮层).
-## Geometry is a direct replay of docs/ui_layout/PromptChangeName.md
+## Geometry is a direct replay of docs/replica/layout.md#e111
 ## (Resources/prefab/PromptChangeName.prefab) in the 3840x2160 design space.
 ## [SRC: PromptChangeNameController.c — IsValidName 0x584de0 (1..20 chars),
 ## OnNameSubmit/OnConfirm/DoClose; ui.json PROMPT_CHANGE_NAME_TITLE/

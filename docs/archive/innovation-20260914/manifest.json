@@ -835,5 +835,7 @@
     ".reasonix/": "Application metadata and attachment, not disposable design documents",
     ".zcode/plans/": "Historical short tool plan, not product authority"
   },
-  "conversation_index": "conversation-sources.json"
+  "conversation_index": "conversation-sources.json",
+  "archive_git_ref": "843f0100:docs/archive/innovation-20260914/sources.zip",
+  "archive_location": "git_history_only; integrated originals removed from worktree by user instruction"
 }

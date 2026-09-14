@@ -1,0 +1,1565 @@
+{
+  "scope": "Local task evidence roots, including role-separated conversation extracts and original save restoration; no corpus copied into repository",
+  "files": [
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/boundaries-2.log",
+      "bytes": 1363,
+      "sha256": "3820542fe55ee6a6c5084c7b5f4ed5a9f5e4144f9effabef36196611063dfc32",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/boundaries-3.log",
+      "bytes": 1664,
+      "sha256": "87aa9be75484621fc170f5d8fc752fca001921774f2320be6e33fbe831146ebf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/boundaries-4.log",
+      "bytes": 1836,
+      "sha256": "b0c22cef3049383c429856a026afee93181615337902a7d86e8c8c0dbf4ceee1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/boundaries.log",
+      "bytes": 2580,
+      "sha256": "2172d2e0db374d062aa5699a40e36e4cc272b55ecd613ea6924e102e6455d5a1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/bridge-debug.log",
+      "bytes": 11628,
+      "sha256": "a67bddf2b5e1c2ed22e962e36ec5a97d3a80fb2315bdad29b81bf2f4dc8a3550",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-final-oracle-after.png",
+      "bytes": 3663224,
+      "sha256": "c333e8b24f0375d348c6c9d5bb8fdbd3b045b40daa5d3ae5f077ba72c2d4f580",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-final-oracle-before.png",
+      "bytes": 3661996,
+      "sha256": "f15be485566e28b7214e2a29fb601f18086f7be8f44542bfc486d45bea85e737",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-final-oracle-household-before-close.png",
+      "bytes": 3529658,
+      "sha256": "efb81d2325bfc7ae11325977c24f736f3d56117527fc2587424ffea66172d329",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-final-oracle-reloaded.png",
+      "bytes": 3663224,
+      "sha256": "fac9f2ffd70c1e76d9e7e5324ad1cbad08a5e508f0cbd72fc906629d8fd79bae",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-gpu-8.log",
+      "bytes": 14434,
+      "sha256": "c003130068cf6f71bbc54894e01e61701438974442c800a9689809b503d4c35b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-gpu-9.log",
+      "bytes": 14207,
+      "sha256": "339ac1d7b8b2423dcecd12a4bc58fc2388377910c4580af4bc26a7ac411633dd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-2.log",
+      "bytes": 17338,
+      "sha256": "f2e4f1b5459975d4093faaf209e816fd8dab0ffd2dc4de68f1b4c114f1176ccb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-3.log",
+      "bytes": 14856,
+      "sha256": "3b3b98e618e0028040ed6ccea4c450b0a97efc872d1e53edd52ba4212ed5ca49",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-4.log",
+      "bytes": 14088,
+      "sha256": "f58f505ce750659b5bfa76759729ca3b2524541415ace5d5b8d90e4c8bc5d235",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-5.log",
+      "bytes": 14620,
+      "sha256": "bdc7b44fc0153163cde37885e07371a2d711d26e842d7b9fd52405b0355e1dde",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-6.log",
+      "bytes": 14404,
+      "sha256": "bca8d4327294be806d10942c03e18122bf2be70171d06db38ae80e975ea8f643",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless-7.log",
+      "bytes": 13962,
+      "sha256": "cdda759722a7a8ea4d2a0348849b4620c99a72aeb8e642799f5edf3c1c665129",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-headless.log",
+      "bytes": 5595,
+      "sha256": "a70cc8bd9e66236e5957697db28eee7e1c167f9525cb505bf884f973d62aa5cd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-oracle-after.png",
+      "bytes": 3663626,
+      "sha256": "95ab39d3abe950af60dd8ee3a04f548b02d0eeaaeae1b376dc74db97325cf252",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-oracle-before.png",
+      "bytes": 3661996,
+      "sha256": "f15be485566e28b7214e2a29fb601f18086f7be8f44542bfc486d45bea85e737",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-oracle-household-before-close.png",
+      "bytes": 3529758,
+      "sha256": "dfdf73963d99b8b7e5958a23596744d7cbf19e79cbc179bd52a20985b33fc168",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-oracle-reloaded.png",
+      "bytes": 3663224,
+      "sha256": "fac9f2ffd70c1e76d9e7e5324ad1cbad08a5e508f0cbd72fc906629d8fd79bae",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-replay-before-fix.json",
+      "bytes": 452340,
+      "sha256": "e02f8affb2a9c5f87eb6ff1a927da1790aa1b84509477e09cc87b4d9a79e993a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-replay-gpu9.json",
+      "bytes": 440818,
+      "sha256": "4f6389483314ac67756f21030c1453c559603a8e3ed0811530e6658072a1b1d0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-replay-slot-fix.json",
+      "bytes": 441355,
+      "sha256": "03b7bb4738ff727bbd3fc93dd0730100ab9bda094a1a3ba89c606c640d9acbba",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-replay-tag-fix.json",
+      "bytes": 328501,
+      "sha256": "1083c7bb1d30f89cf74a2f4df6bd148b394bf30b46aa1cdaa0b0588e3b51373c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/clone-replay.json",
+      "bytes": 440806,
+      "sha256": "e1a5cb41055d2f964f329d57c5e849c0425398e9211de39961269d9c38e98e65",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/consolidate_innovation.py",
+      "bytes": 4803,
+      "sha256": "c17b57cc5e88d88e73c22633017d5f40a3469827eec606217f543856bba014a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extraction-index.json",
+      "bytes": 5072,
+      "sha256": "46fef2ac0c30621e53e25b03dfc76fed94dc33df068e2bf88b02593012f73ee3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f180b-5b03-72b1-aa5a-d4e974cf6454-design-user.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f180b-5b03-72b1-aa5a-d4e974cf6454.json",
+      "bytes": 7195,
+      "sha256": "036ecb77f6a9789bf378e4e8400e1aaac399c22728d9c1f4cde6dbc239affc8f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f185f-4b9e-7790-8b10-70fa150805f9-design-user.json",
+      "bytes": 32489,
+      "sha256": "f889e4ae06766fb0d30cea03206902ef6aa1058ac132c935cc9114c363bd79e8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f185f-4b9e-7790-8b10-70fa150805f9.json",
+      "bytes": 523908,
+      "sha256": "d18c155f9d54a933df736201f453ad6b932c34b84a019f46585b0b8e3af824e7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f59c1-9416-7940-a2c7-bfb698842b61-design-user.json",
+      "bytes": 8918,
+      "sha256": "058db445c0924adafaa0464bb237dbcea52809e6d8273699f40d8195eb98598d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f59c1-9416-7940-a2c7-bfb698842b61.json",
+      "bytes": 178926,
+      "sha256": "47780f2457233d3256553e98c3453cbc8cb16c9c42715591a2ceb0e1fb49aa02",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6a21-b5ae-7972-adf1-11b7050cbc97-design-user.json",
+      "bytes": 4485,
+      "sha256": "b216b413e4a03c3f1d403e53ecd1fffbf896c163ad9f2c952e7568c5b24e1209",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6a21-b5ae-7972-adf1-11b7050cbc97.json",
+      "bytes": 166828,
+      "sha256": "9fb98118c02004f7a7e6e04e2819feaeb4b7ae56bcba02dbc154f0f3b8fe9cf0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6b36-00b7-7660-b4f8-6309088cf2e1-design-user.json",
+      "bytes": 3557,
+      "sha256": "965f2b3360bc8ef1117d06cb5c89f8f4bd74e65dc665f3aa38d54850f9f291f2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6b36-00b7-7660-b4f8-6309088cf2e1.json",
+      "bytes": 26864,
+      "sha256": "0d03435a746d772714ad1421c0747e5e281a1d799d40e3598d7623995ae47c7d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6db2-2460-7e30-9edc-6f4373958daa-design-user.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019f6db2-2460-7e30-9edc-6f4373958daa.json",
+      "bytes": 202465,
+      "sha256": "a622a17d3245894be4bd5d3a3aea05b6bc69fd254192ad534b2607fb3d6f1ca9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fb5cc-db30-73b0-ab47-4a9bcacb057d-design-user.json",
+      "bytes": 15275,
+      "sha256": "399530f23232373ad94c6170b7ab44c8827c63924b7089e1c6a3c426f821ba1c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fb5cc-db30-73b0-ab47-4a9bcacb057d.json",
+      "bytes": 65352,
+      "sha256": "8098acdaf2c4a7b2d702a967c2c75f91fb35566191d1fb83056141a3d93e82f2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fb62c-198c-73f3-aff1-166448673cb1-design-user.json",
+      "bytes": 21516,
+      "sha256": "ae5b642b26566daf587c41949afea9e57f3bf1e01a263327158b958adcc321f9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fb62c-198c-73f3-aff1-166448673cb1.json",
+      "bytes": 142490,
+      "sha256": "b808862c0891fec70ae6f1e2edcfe0afb5895183a1fb048b16208b6184f10e9d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fe689-2c31-7483-b20c-11300c65f9c5-design-user.json",
+      "bytes": 68855,
+      "sha256": "fef174269d5f6f26748184baf71c5baf5f2971737254e62be08881b3e11e28c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/019fe689-2c31-7483-b20c-11300c65f9c5.json",
+      "bytes": 393584,
+      "sha256": "9ca3ea9b9e57b5459cc0ae6da478804f46ae9eb37423546104c487076a8b143a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/01a0137e-aa14-7f11-b8d3-26a0cf1b7b8a-design-user.json",
+      "bytes": 488553,
+      "sha256": "4497a2964c42744fe2be0766a2dd5cb8b7da77a5ed5a5745e37696dbeee89114",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/01a0137e-aa14-7f11-b8d3-26a0cf1b7b8a.json",
+      "bytes": 767797,
+      "sha256": "0f8801995efbfb18f6c4bd7d0460e48185e6348da6db4c4b28c0a67948a54fe7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_1790d81c-e2ee-48cd-9e4d-54a12c8fab70-design-user.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_1790d81c-e2ee-48cd-9e4d-54a12c8fab70.json",
+      "bytes": 1250,
+      "sha256": "7a26caa7983006e39f4452e4f9fd6d6a0ec2d964dd4f165b881a68fc614f7f06",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_1bc4dda2-2dd0-401a-a3a9-521a9bfc78c1-design-user.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_1bc4dda2-2dd0-401a-a3a9-521a9bfc78c1.json",
+      "bytes": 11831,
+      "sha256": "9330f80793295a293e5fa8b2cc810a3a16b78c6606c55af7630a6a907b83d954",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_7964cf31-0dba-4b03-86ce-86fea56402e0-design-user.json",
+      "bytes": 2744,
+      "sha256": "5af2727df13b1db8a3af9f86f0deff0e7d4c39bb07c17decc49d50f2f4a99015",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_7964cf31-0dba-4b03-86ce-86fea56402e0.json",
+      "bytes": 479381,
+      "sha256": "eff38222b46c0c3ab7ad1ceceba3821f2130531ce410a583add9a2d9cd2e2421",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_997f0496-6004-473b-a960-f6c5d700aa53-design-user.json",
+      "bytes": 7397,
+      "sha256": "1a4f7e0f0722b17d74c41e8e57bfb347c8b8625e65618e3ce1e907ca61cedbdc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_997f0496-6004-473b-a960-f6c5d700aa53.json",
+      "bytes": 252422,
+      "sha256": "903cfa71a177114bc42c7bd72994bc061d0e825b731848a7d1190819c8ce4b4f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_c3103d40-b21e-4045-8522-a00bf014c1ce-design-user.json",
+      "bytes": 258,
+      "sha256": "94bdeb15b3379000fd5ee26aa28eb9795dbc5189cbe7c01955b22581fee4b280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_c3103d40-b21e-4045-8522-a00bf014c1ce.json",
+      "bytes": 36645,
+      "sha256": "8ab7e6d77d793a644a61439112c98620ba363440ade26208d9916ea06b28e17e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_d10c556d-0416-415a-b639-87c6869b199b-design-user.json",
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_d10c556d-0416-415a-b639-87c6869b199b.json",
+      "bytes": 14641,
+      "sha256": "390d26c99b30ba9808124ed69c443486115eec46bcb1ff7cb39ffcdb5bdd3d5a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_e7528032-af67-457f-9504-f68dd2fbcf5e-design-user.json",
+      "bytes": 155742,
+      "sha256": "0b6613662a18b3324416feb0a4e324cd8e762b72662166680958c9224178c475",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_e7528032-af67-457f-9504-f68dd2fbcf5e.json",
+      "bytes": 871250,
+      "sha256": "61c6e60ac8856e1e9aa130174cf8e7ac8a9e00bce3333686fa8b80332e87c7ec",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_subagent_agent_c8e83349-bddf-4281-8ca5-ca73b34ceb4d-design-user.json",
+      "bytes": 1852,
+      "sha256": "fbea84b35abb7a9097a3cd2b2863c7fcff88a37302f55b94349177893f9c03ff",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-extracts/sess_subagent_agent_c8e83349-bddf-4281-8ca5-ca73b34ceb4d.json",
+      "bytes": 10771,
+      "sha256": "fb184c090db6f5cfa31d453b16ab027884720ee848fe0a9ea54f1bb37b6d45c4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-inventory.json",
+      "bytes": 565534,
+      "sha256": "07b965b24e57aa94003eae073cf56b812faf9e0563c97d5f945fc0b013349aa9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/conversation-title-extension.json",
+      "bytes": 8655,
+      "sha256": "c24fd4656a87d14345f8ecd48208352d2c2b625a00406b88cf9530555302ad81",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "会话来源提取与整合过程",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/dual-final-console.log",
+      "bytes": 15639,
+      "sha256": "b820e0550d657cb77c0dff65915c556b6c7796dde14a906f6405bd11f7a7c0a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/dual-final-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/dual-final.log",
+      "bytes": 13471,
+      "sha256": "c775d77940c75d888787eca45f11ee2f426f96a183c49a40b9a137a6a4ff2aaa",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/followup-boundaries-console.log",
+      "bytes": 2700,
+      "sha256": "57f7320032355417e79154d407baa0a6dc34436876e60720413f71d73f555985",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/followup-boundaries.log",
+      "bytes": 2261,
+      "sha256": "3268f6ece8a7fdf7519facadfb55a6741b0c5926931e1f3f56cf9d9a9813e403",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-after-fixes-console.log",
+      "bytes": 1937875,
+      "sha256": "0437f9354b9f47634894c00adb35f69bffc49b7af64845e3d589240c1ce9f5b7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-after-fixes-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-after-fixes.log",
+      "bytes": 1847722,
+      "sha256": "74b48c93661465e8e63a0c1a24f9761895b2de925bdcaa733f63f779a4f3fc17",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-final-console.log",
+      "bytes": 1936906,
+      "sha256": "d40feb36f889b8315eeea1cb841ed4dd8ef0acbdba62cbb77b79f222c985d3e3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-final-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/full-final.log",
+      "bytes": 1846743,
+      "sha256": "8c5a91469b261356e7ae9a3c905748747b59215a15ce5bb8e8e0f52f3b835e88",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/independent-card-comparison.json",
+      "bytes": 23960,
+      "sha256": "d2b527af01e87dbb2b6100c9d79f3434f769c7091dcb757facde09c42d832c54",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-actions.json",
+      "bytes": 1524,
+      "sha256": "441fd75ec9a9907e5a8dabee4073d16d9eae16e651e5d23ae5b9b80ad7d4f272",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-after.json",
+      "bytes": 45350,
+      "sha256": "246e304be93aed9f60b3db814d5641ed52fedb898f4eddfcd3870807f0d8aafc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-before.json",
+      "bytes": 44942,
+      "sha256": "258a3a8831a9b1c8727cc47a7504b0124047b61b77b40a81e86d8ba1aca7d2e6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/00-round4-ready.png",
+      "bytes": 443497,
+      "sha256": "a3d41b556a5a6001817b3b09933e1906d12c971825cfe017204b779b70cf2330",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/01-household-empty-slots.png",
+      "bytes": 546503,
+      "sha256": "7e2f51fac401f271c511766f2f39504ba702d0d993e0433677b83e655e9dd637",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/02-preparation-closed.png",
+      "bytes": 546531,
+      "sha256": "5394590700fa02c03acdd357206fea05894e81ca4ffcb7d69573358f4a4c5db2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/03-before-next-day.png",
+      "bytes": 521802,
+      "sha256": "82af569df930dd17c0100418312cf5f9d599e82029b2f7f83c03005f739c1cec",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/04-next-day-enter.png",
+      "bytes": 520352,
+      "sha256": "afd5c0070a3168ee68ae277310e53088562be5ffe96d6196e4755261954f9683",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/05-first-result.png",
+      "bytes": 548455,
+      "sha256": "bb329b34080b6ce821979157b1d22f0979b02dd2d6bf12e71f0f9113984dc340",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/06-after-palace-confirm.png",
+      "bytes": 501766,
+      "sha256": "5d06e049bf7e1939709079bafa169693d1d133bb45718a412e41d4aabc6bcb38",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/07-household-result-before-close.png",
+      "bytes": 502689,
+      "sha256": "e96f9f280bbac58f9ae74e0a15c93bbeb1a7fa154a0779f1bc62509f0282bd77",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/08-household-close.png",
+      "bytes": 373637,
+      "sha256": "c9fd19444a51c6fa81bb7c2dea51631c9869fd712e520fbe44a3f9d7a9f1d774",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/09-next-day-ready.png",
+      "bytes": 521068,
+      "sha256": "9f2ef0224f12deaa254c84b5c0c32935d94b059f2c51c77b387da58b7e940b69",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/10-warning-dismissed.png",
+      "bytes": 530623,
+      "sha256": "7bd432b27735d9920ab58b07de11667a1491f2ea7a8b59198de166ceb580c168",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/11-tutorials-dismissed.png",
+      "bytes": 521169,
+      "sha256": "af2e2b4a9abb75db7a5a4b6ff3f9ebf4844aea96a9e5f159895216e9ec458845",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/12-round5-ready.png",
+      "bytes": 521220,
+      "sha256": "263715d05021f09eb9b56dc9617eb888af2b7932c57bee83d518a2b43e1677a8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-captures/13-original-reloaded.png",
+      "bytes": 521227,
+      "sha256": "1a43a1097da5ad78de2b1898a3c81d6b796bbd7d55e15c32c1f1df178d351215",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-pretransition.json",
+      "bytes": 44942,
+      "sha256": "3a5fb9a1c18fb5a324c38533f50185b005c6ee288bfddb69d90c4e5594aa349c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-reloaded.json",
+      "bytes": 45350,
+      "sha256": "dad0715ce63d6cb6a9afa480b5ac4864a047a891fe54f188befbf05425525505",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-restoration-receipt.json",
+      "bytes": 1127,
+      "sha256": "8cf9ad7a1c1ea2dc8d27dc7a4d3e507bd52a8e6460d46caea7c26d464c0e9796",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/USERARCHIVE/000.json",
+      "bytes": 44065,
+      "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/auto_save.json",
+      "bytes": 45350,
+      "sha256": "dad0715ce63d6cb6a9afa480b5ac4864a047a891fe54f188befbf05425525505",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/failed_messages.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/global.json",
+      "bytes": 1778,
+      "sha256": "827d9815c0cb2e71539ea2b9f195c2d726b8678d0d4f80cda2d75ad4d0ad4a53",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/global.json.bak.json",
+      "bytes": 1778,
+      "sha256": "827d9815c0cb2e71539ea2b9f195c2d726b8678d0d4f80cda2d75ad4d0ad4a53",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_0_end.json",
+      "bytes": 36291,
+      "sha256": "467d30a498879d29004bd7ce9e57775f607dfa7d53e386f0e3d524f3ab295a0e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_1.json",
+      "bytes": 44050,
+      "sha256": "41922fdeab08dffba22fc3de6fcfcec256448348c876b0dec3e9119b3456050e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_1_end.json",
+      "bytes": 44244,
+      "sha256": "a01900daee3a5afd0f44039ee874ee16ba0bcb33bf3be6769037cf25ab0ed256",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_2.json",
+      "bytes": 44801,
+      "sha256": "ff2421443d36a8c092152f66aa9756bae13895e03aabcca92eccab2e0e7cb280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_2_end.json",
+      "bytes": 44801,
+      "sha256": "58013216c7d4dc14b93fefa63839148b0db33fb155038de7b412e51594ecb47c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_3.json",
+      "bytes": 44956,
+      "sha256": "c654c28bfc53998424c8329a851832df8388d9f2b3e4f9b8463e1e0e877f6e2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_3_end.json",
+      "bytes": 44956,
+      "sha256": "0189c9c30e9babe8b75e48394a1fab44ecce33aef83f796473faa3120fac9f4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_4.json",
+      "bytes": 44942,
+      "sha256": "59558661d7cfd89523e6db54c37552df4a190bd439b8a359aa288cd68ae57b9f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_4_end.json",
+      "bytes": 44942,
+      "sha256": "3a5fb9a1c18fb5a324c38533f50185b005c6ee288bfddb69d90c4e5594aa349c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/round_5.json",
+      "bytes": 45350,
+      "sha256": "1ced37b19b877d43942b3fc1423bd1390b453917ef3af9d665433046fea13eed",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-after/full/user_archive.json",
+      "bytes": 426,
+      "sha256": "7aa59a07aa9f729a033ace8a4418edb066d0015b4f1857ef3631a261d769ff85",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/USERARCHIVE/000.json",
+      "bytes": 44065,
+      "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/auto_save.json",
+      "bytes": 44942,
+      "sha256": "a5b18089e30239afeaad6dd3226929b572e41145fe7065e697763d5a5372b98d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/failed_messages.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/global.json",
+      "bytes": 1762,
+      "sha256": "f31d6be8be97eba24cc1abc4f464e7bb3b3845eb8d95d45b3c643af5eb18fdd0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/global.json.bak.json",
+      "bytes": 1762,
+      "sha256": "f31d6be8be97eba24cc1abc4f464e7bb3b3845eb8d95d45b3c643af5eb18fdd0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_0_end.json",
+      "bytes": 36291,
+      "sha256": "467d30a498879d29004bd7ce9e57775f607dfa7d53e386f0e3d524f3ab295a0e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_1.json",
+      "bytes": 44050,
+      "sha256": "41922fdeab08dffba22fc3de6fcfcec256448348c876b0dec3e9119b3456050e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_1_end.json",
+      "bytes": 44244,
+      "sha256": "a01900daee3a5afd0f44039ee874ee16ba0bcb33bf3be6769037cf25ab0ed256",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_2.json",
+      "bytes": 44801,
+      "sha256": "ff2421443d36a8c092152f66aa9756bae13895e03aabcca92eccab2e0e7cb280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_2_end.json",
+      "bytes": 44801,
+      "sha256": "58013216c7d4dc14b93fefa63839148b0db33fb155038de7b412e51594ecb47c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_3.json",
+      "bytes": 44956,
+      "sha256": "c654c28bfc53998424c8329a851832df8388d9f2b3e4f9b8463e1e0e877f6e2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_3_end.json",
+      "bytes": 44956,
+      "sha256": "0189c9c30e9babe8b75e48394a1fab44ecce33aef83f796473faa3120fac9f4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_4.json",
+      "bytes": 44942,
+      "sha256": "59558661d7cfd89523e6db54c37552df4a190bd439b8a359aa288cd68ae57b9f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/round_4_end.json",
+      "bytes": 44942,
+      "sha256": "ce96c93097b74f67fc959f37baf7a2e17a764e5e395ed7da09246f9a7c718671",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-backup/user_archive.json",
+      "bytes": 426,
+      "sha256": "7aa59a07aa9f729a033ace8a4418edb066d0015b4f1857ef3631a261d769ff85",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/original-save-manifest.json",
+      "bytes": 2192,
+      "sha256": "a87e811d66e19ae6225e3765021c5e72538738650e873a0468ab76f4c4cbf49c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/probe.gd",
+      "bytes": 694,
+      "sha256": "79fb12d6870d3abc404203af7f107a3a9b589c3574088516e2039a0f3212ec9d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix-console.log",
+      "bytes": 17189,
+      "sha256": "75e7359f19c7249b2f44625609d09d1913028fe0945d5e3c2779a02c582cdd04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix.log",
+      "bytes": 15762,
+      "sha256": "01529abeff3de0bf16372df4d7227c20dc7b7afa1d700de978a497fc1268ba04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix2-console.log",
+      "bytes": 17495,
+      "sha256": "cb69a869efcc3348f4cb7b02bf00a193c5ae7d6ae729dc7c350e3a7efe9c2701",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix2-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/resume-fix2.log",
+      "bytes": 16032,
+      "sha256": "1ea7262e9e4beafe8e3548404bbf5c17a142b0b82415bc9838fb1d275e1f65af",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_dsl_batch1-fixed-console.log",
+      "bytes": 16287,
+      "sha256": "549b4fb2f576f1c436050025486b7544ae32cd711a10c52036a6eb18e92bfe8e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_dsl_batch1-fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_dsl_batch1-fixed.log",
+      "bytes": 14410,
+      "sha256": "096cddd0085b04f5f751884ae554ceef15dfa8cba26cdbbce83681fe88664796",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_integration-fixed-console.log",
+      "bytes": 6631,
+      "sha256": "05b2442b1d5d8ec4b9eb474f9ed738a33fab8af0f8d673915a4c603cda56304e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_integration-fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_integration-fixed.log",
+      "bytes": 5788,
+      "sha256": "f2759e93f0dd42abfb48df6380bae93cbb31f36d717b2159877848256c97d37c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_rite_selection_boundary-fixed-console.log",
+      "bytes": 9309,
+      "sha256": "34746e66534cd75fcae3207a5977f1192105bf177b416a2f8727a67d2927b61c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_rite_selection_boundary-fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_rite_selection_boundary-fixed.log",
+      "bytes": 8227,
+      "sha256": "b0cb04e30538a9702eaad351d98631a760aa9445fb9f996f87b78ba237d36164",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_save_import_bridge-fixed-console.log",
+      "bytes": 11522,
+      "sha256": "74c975fe4f7505431d26f3ec092d0db086564290e90a3bb9897bc0afe182049f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_save_import_bridge-fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/test_save_import_bridge-fixed.log",
+      "bytes": 10355,
+      "sha256": "93035de0e607b0f41ba15ef142395de74ed2294e44585a352aba4a993c12ed06",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-20260914/zcode-inventory.json",
+      "bytes": 5879,
+      "sha256": "d9b429cb0c86d28b581d13b1f48d6692b91f431431b993a45204de8483e654c8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/audit-outline.json",
+      "bytes": 38812,
+      "sha256": "ff50956c63bb2376811b19dcefb7723973b3ce9a0a3b30c01b43e2e6a48ee107",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/boundaries-console.log",
+      "bytes": 3126,
+      "sha256": "68cb6e3f5f8c4a7a6e33a0961db0e741179fe92569b6bedec614e2f794beee31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/boundaries.log",
+      "bytes": 2626,
+      "sha256": "99b1e1ca06b2a835c37d995e99c4ca86931834e0e049882820022fdb3451e652",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/clone-replay-before-adsorb-fix.json",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 441430,
+      "sha256": "487a7f8df414caf0921de28e5f83b9682a1c2f5e4cb8cc4860bbf3f6621d2d1c"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/clone-replay.json",
+      "bytes": 441343,
+      "sha256": "f091908ae57f97c0eee8916dcc033226b82a2026e9cf067908bc40e1a2968b56",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/document-inventory.json",
+      "bytes": 138447,
+      "sha256": "55798558858a8ecf9dd2c60bcc6e553c01320f86de71d827006fba418b3d881b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-console.log",
+      "bytes": 1938466,
+      "sha256": "9061c04d26ddc205796f56980af91adbc3ce9a71ef3df8acf8b85b27c54580df",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-exit.txt",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-final-console.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 1938066,
+      "sha256": "75f9975f0a1084bb57a34c48c073ebe89f6676e7fefa0c01bf410a033b37311a"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-final-exit.txt",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-final.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 1847720,
+      "sha256": "5d32ee2a4a20ebb1d0534a71d7d109e9cf0a6f60652c62f3c56948f833229f75"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full.log",
+      "bytes": 1848096,
+      "sha256": "c4d2446af37843635459e4957dea499fe53ee32f58435626700006bc4b28ee97",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/integrate_workspace.py",
+      "bytes": 15335,
+      "sha256": "334faea315a582982ce3a68201e12430fe26c18864f4f9c29e7071f04bb45a01",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/legacy-claim-review.json",
+      "bytes": 102351,
+      "sha256": "2899b3f597aeac6b06d7a611b063348c33944faded8aac4286a5755d716ca839",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/original-after.json",
+      "bytes": 45350,
+      "sha256": "246e304be93aed9f60b3db814d5641ed52fedb898f4eddfcd3870807f0d8aafc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/original-before.json",
+      "bytes": 44942,
+      "sha256": "258a3a8831a9b1c8727cc47a7504b0124047b61b77b40a81e86d8ba1aca7d2e6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/original-reloaded.json",
+      "bytes": 45350,
+      "sha256": "dad0715ce63d6cb6a9afa480b5ac4864a047a891fe54f188befbf05425525505",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原始裁判/恢复凭证",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay1-console.log",
+      "bytes": 15323,
+      "sha256": "35cfa27c80140ffe2681b3012fd12858535a0d075c8f03d71154593ed5591ae5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay1-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay1.log",
+      "bytes": 13210,
+      "sha256": "4295111657f4bc0756fb96dcf17dd7342ad6a2dcdb8e3ca5c65acdccade95e86",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay2-console.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 15926,
+      "sha256": "9a460b5763b474634dfd3e84564431e307f74efe6e89815aa531bbe7e5ab7ee6"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay2-exit.txt",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/replay2.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 13741,
+      "sha256": "fb3598a1527bbe8cf23091fafb0e8d277f3608af8f99cb1cd335f63521da466c"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/rite-view-final-console.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 22489,
+      "sha256": "742f297bdbe6594ac2d6c2976034ed9514ce8fb9464a09a90f4c670bf606cccc"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/rite-view-final-exit.txt",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/rite-view-final.log",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本轮验证及整合过程记录",
+      "boundary": "按最新验收解释；脚本与旧日志不构成当前执行指令",
+      "bytes": 20360,
+      "sha256": "6fec59bcb6153fdd184f4592d6eeac3fef477392d5ded9051a38e3ad0f3d9eeb"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/ui_layout-outline.json",
+      "bytes": 7818,
+      "sha256": "7f236e552739aa3cb6c4ba983450f4d267faac894db278d180b8fd0175cd8603",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/design-check-final.log",
+      "bytes": 392,
+      "sha256": "f375bceb03f376fda21044afa5861f9c2d02248522ec4acd36ed84cefa4c74f5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/design-check.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/design-index.txt",
+      "bytes": 41928,
+      "sha256": "581849029a5dfe2b76babd1314481af4c93cf72726898e5ba9e101636f885b02",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/dsl-console.log",
+      "bytes": 147,
+      "sha256": "e61bfaf51ba2f77d66908e67ff9e71571afd635e9c53810d9a89e261981c859f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/dsl_audit.json",
+      "bytes": 17898841,
+      "sha256": "b09e4e97f9e34ac981ee1b5aab55959453a6955dd74bb883ad265cd5b7150b3e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/dsl_audit.md",
+      "bytes": 299,
+      "sha256": "84377ab8727626306201ccee352af1980db17f00d2998f261e02e324198593a8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/full-console.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/full.log",
+      "bytes": 1849005,
+      "sha256": "ac7ef4c1da9ff95b9c32b939a7796b4684af618905b3db97655db05da7da7c2b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/gpu-mask-console.log",
+      "bytes": 2790,
+      "sha256": "3b8af3962a625413e479fc45615f8717f3bef407b01a3a940d38b4a11baea0cf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/gpu-mask-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/gpu-mask.log",
+      "bytes": 2518,
+      "sha256": "514e49b763dd214fa1046d21042ec86e55572f6dc52162370b5eea9265613962",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/parity.log",
+      "bytes": 504,
+      "sha256": "a5ec97335a16c0beb657764c4ddb714fe18b9b2709b1612024c3606ae4225712",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/research-boundaries.log",
+      "bytes": 124,
+      "sha256": "2b986d317626d9e5515b11d482f1ce340136147a644a8e9257cdd5ffb14dcc47",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/research-powershell5.log",
+      "bytes": 130,
+      "sha256": "a0bb22ec1afb85de5c810d786f92b68880d384e4ee4d255ee163f141c045da94",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/research-snapshot.json",
+      "bytes": 4763,
+      "sha256": "65bd8ae3e980497eb6a601847d0addae47d0253d9e56e3883700ee84c014df73",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/save-audit.json",
+      "bytes": 325276,
+      "sha256": "cc7d149ea0371dd79c376537337c7b2aa68ee8695a33a0ef190e1ec08c9ead4d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/Faust-phase-close-20260914/save-audit.log",
+      "bytes": 151,
+      "sha256": "178a80fb584c9bdbb5940260368906c10b4be176c86e07dd64943425303d05a3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；以当前验收正文解释"
+    }
+  ]
+}

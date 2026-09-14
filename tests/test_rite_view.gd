@@ -655,18 +655,14 @@ func test_empty_slot_cycles_qualified_bags_and_keeps_empty_match_state():
 	var state := GameState.new()
 	var rng := RNG.new(511)
 	state.setup_new_run(local_db, 1, rng)
-	# The fixture's s3 is the open_adsorb slot. Creation-time adsorption walks
-	# the hand in source order and takes the FIRST match, so the unconstrained
-	# s3 takes the protagonist; the manual-slot cycling below is about s1/s2.
-	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0]
+	# This test covers manual page cycling; adsorption chooses randomly from
+	# eligible candidates (RiteExtensions.AdsorbCards0x38fca0, c1425-1438).
+	var candidates: Array[int] = state._adsorbable_card_uids()
 	var view := _owned(RiteView.new()) as RiteView
 	view.setup(state, local_db, rng, 992003, _test_rite_uid(state, local_db, rng, 992003, true))
-	# The fixture's s3 is the open_adsorb slot and creation-time adsorption
-	# walks the hand in source order, taking the FIRST accepted card — here the
-	# protagonist. Page 2 is therefore empty and the qualified set is [0].
-	# [SRC: RiteExtensions.c @ AdsorbCards 0x38fca0 (CanPutCard scan order)]
-	assert_eq(int(view._placed.get("s3", 0)), int(state.player_actor_uid),
-		"the open_adsorb slot takes the first hand card its condition accepts")
+	var absorbed_uid := int(view._placed.get("s3", 0))
+	assert_true(absorbed_uid in candidates, "open slot receives an eligible preexisting card")
+	assert_false(state.has_card_in_hand(absorbed_uid), "the selected card leaves the player table")
 	view._rite["cards_slot"]["s1"]["condition"] = {"type": "char"}
 	view._rite["cards_slot"]["s2"]["condition"] = {"type": "unmatched"}
 	for uid in state.hand:

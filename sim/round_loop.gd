@@ -60,7 +60,7 @@ static func advance_day(state, db, rng, interactive: bool = false, animate: bool
 
 ## Persist the next stage BEFORE invoking an operation that may present UI.
 ## The original Then chain is serial; source order is not the numeric order
-## of generated closure names. See docs/audit/RiteSystemRootCause.md.
+## of generated closure names. See docs/replica/loop.md#e040.
 static func _pump_day(state, db, rng, result: Dictionary) -> void:
 	while state.pending_operations.is_empty() and state.rite_settlements.is_empty():
 		if state.over_pending:
