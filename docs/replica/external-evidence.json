@@ -2682,6 +2682,110 @@
       "sha256": "49df8a8b8f0cdae25b990d798aaa533dc8dea30a650381a3297d685a8f747ae6"
     },
     {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-1280.png",
+      "bytes": 1092251,
+      "sha256": "21eae7eec8f69f7fa56d3aaaa3224fe7639c01aaab5f2a16b691a34ec2727473",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-1920.png",
+      "bytes": 2194670,
+      "sha256": "8667a770cc066f6c1c3dbaceabecc4e1a506b76fda2100f85e391da4293d35b3",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-gpu-1.log",
+      "bytes": 2661,
+      "sha256": "1c6c8d6545b8d5009356f53f57f0e42dd7a3739674b716b0e60eac5bf0663d87",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "失败诊断记录，不作为通过证据",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-gpu-2.log",
+      "bytes": 1635,
+      "sha256": "c025a0d2e5feed47c97aa70c5aa79913d7b9c3fe3b1327368cf7e4dd1d359e2d",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "失败诊断记录，不作为通过证据",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-gpu-3.log",
+      "bytes": 42625,
+      "sha256": "8842d376b70675d458d9c715f19ca27b1d576811243fc772ffe8f3ebae4a0164",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "失败诊断记录，不作为通过证据",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-animation-gpu-final.log",
+      "bytes": 45525,
+      "sha256": "8d1e51e7a04d074b0d3db8fa67978efb1670a9e5e626ed85f54dd3fbdee4bb79",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-import.log",
+      "bytes": 2752,
+      "sha256": "4887367f8ab697b6b1bf6e32deb0cd8562824b9792a9e9dd2c35c690d22244bb",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-oracle-oracle-after.png",
+      "bytes": 3562830,
+      "sha256": "97027726f16df00ac2483d9694df3a0526563f9dee46f0ff86b399e0519775b5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-oracle-oracle-before.png",
+      "bytes": 3560853,
+      "sha256": "1d9367f2864066424aecd68e4a2a2acc5c875518e8f5a2209cb3a07e70457b90",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-oracle-oracle-household-before-close.png",
+      "bytes": 3379727,
+      "sha256": "d80849927791baf029a4d0cb19006a8e506eaa74d7161a2e0c23ded8932d4df0",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-oracle-oracle-reloaded.png",
+      "bytes": 3562269,
+      "sha256": "9df3c41054cfafe5ebb8a5022b7a4a6547c12f02ea48b6169393f9de39147908",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-oracle-report.json",
+      "bytes": 442134,
+      "sha256": "c6c362632f1459f281d0c4d2e74b9d45c703bfc896df92ee7faccd69701b0824",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/broker-original-replay.log",
+      "bytes": 14133,
+      "sha256": "68fc2310eb3b55244a749ab9627320ee85f85995a0a7993736cd6e8af2095045",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "销毁卸装BROKER增量验证与既存原作带复跑",
+      "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
+    },
+    {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/copy-audit-fix.log",
       "integrated_into": "docs/replica/verification.md",
       "role": "通过的专项运行日志",
@@ -2720,6 +2824,110 @@
       "boundary": "仅对应该次脚本、输入及断言；通过不等于全游戏表现等价",
       "bytes": 16455,
       "sha256": "91a79171a3b87ee9c02a72ba2bf69baae83dd4ccd9ff93d92c16a388db220293"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-1280.png",
+      "bytes": 1091412,
+      "sha256": "26c773a7dfef8ca91ea9bd92e1da0b675c044b11603ddb27ee4f707503ca2c00",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-1920.png",
+      "bytes": 2189434,
+      "sha256": "01ad25a60a2ff9a9ce6ea1bd7b959b6e3c4e71167295984e906ba201a7f05a8e",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-final-1280.png",
+      "bytes": 1091412,
+      "sha256": "26c773a7dfef8ca91ea9bd92e1da0b675c044b11603ddb27ee4f707503ca2c00",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-final-1920.png",
+      "bytes": 2189434,
+      "sha256": "01ad25a60a2ff9a9ce6ea1bd7b959b6e3c4e71167295984e906ba201a7f05a8e",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-final-gpu.log",
+      "bytes": 36899,
+      "sha256": "c4c88728b864009974b9fc8b9a19b204c1b6297338cb84ed7903b5617dd2dbe7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备动画专项回归日志",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-gpu-2.log",
+      "bytes": 35959,
+      "sha256": "4b8c8aa696aff283956a55f369d82b741fb672071857bd098422aa53e7af955c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "含断言类型警告的回归日志",
+      "boundary": "Float/Int断言警告后已修正，最终以equip-animation-final-gpu.log为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-gpu.log",
+      "bytes": 32454,
+      "sha256": "372436f2f6db4296de4d6c676db00440c113f60fc1a58ca543c8ce4ab5072c35",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "失败诊断日志",
+      "boundary": "测试误用不存在的API产生SCRIPT ERROR，已纠正；不是通过证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-oracle-oracle-after.png",
+      "bytes": 3562830,
+      "sha256": "97027726f16df00ac2483d9694df3a0526563f9dee46f0ff86b399e0519775b5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-oracle-oracle-before.png",
+      "bytes": 3560853,
+      "sha256": "1d9367f2864066424aecd68e4a2a2acc5c875518e8f5a2209cb3a07e70457b90",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-oracle-oracle-household-before-close.png",
+      "bytes": 3379727,
+      "sha256": "d80849927791baf029a4d0cb19006a8e506eaa74d7161a2e0c23ded8932d4df0",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-oracle-oracle-reloaded.png",
+      "bytes": 3562269,
+      "sha256": "9df3c41054cfafe5ebb8a5022b7a4a6547c12f02ea48b6169393f9de39147908",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "装备动画复刻运行截图",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-oracle-report.json",
+      "bytes": 442134,
+      "sha256": "c172cc59bce605cef9779fcda077bdb81b663faaec1388c052e78ba943701172",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原作带回放状态差分",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/equip-animation-original-replay.log",
+      "bytes": 14133,
+      "sha256": "944880ca232d8ea2b8e426be28991101833c31553fd83b4418ba7fdea8a8f1a1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备动画专项回归日志",
+      "boundary": "仅该次输入与曲线覆盖；未新增原作装备过程实测，不能外推完整表现等价"
     },
     {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/focus-regression-2.log",
@@ -2930,6 +3138,142 @@
       "sha256": "11bad6d976276cc95c5148a5fec39a499796b30936fe1f473b1947cd4ed8a131"
     },
     {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_1.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_10.asm",
+      "bytes": 2092,
+      "sha256": "30af965b4577972420a6c0940cfc4483ee30a4708d362887c6ec963bc0101a44",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_2.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_3.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_4.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_7.asm",
+      "bytes": 1820,
+      "sha256": "c89b33d0692001a41e2360bbd8622a2deddab689548737ae1d50c02c95d5acf2",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_8.asm",
+      "bytes": 1901,
+      "sha256": "fa8c068babeb4aa5472c795cb206283a3f71d91f0b602cf64fcc1350df423c1c",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/181_9.asm",
+      "bytes": 1996,
+      "sha256": "b8002d479cde12691b848cbb9f2c1f4f1b6906014077c686dcd7c1f902aa9509",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_1.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_10.asm",
+      "bytes": 1799,
+      "sha256": "921598cefb836cef772fd01d6c15ede9d26426946ac76829655bf626181cb883",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_2.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_3.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_4.asm",
+      "bytes": 2430,
+      "sha256": "62abeb0722d45314436934fed9f29eff177f42aa7f604d14cca2f282af301ea5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_7.asm",
+      "bytes": 1542,
+      "sha256": "dc09678fbb92dc9518b829062e5334013302790fbcfdf17876b0a2ac198e240d",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_8.asm",
+      "bytes": 1623,
+      "sha256": "158ad8b07d442dfc16585bd2c69c0be44877ceadad74b29943ff923b491873ea",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/182_9.asm",
+      "bytes": 1718,
+      "sha256": "67c94a3ae108ac7d663aa3579eb7b37c587b355a90a9209982cd8ce35bd4b60a",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opcard-shader-20260915/index.json",
+      "bytes": 112909,
+      "sha256": "e4de53d9ec271e44e5975cc346071a0382cfd1b173585afaaed55fba37d96bbc",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作编译Shader汇编及绑定",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/opening-isolated-regression.log",
       "integrated_into": "docs/replica/verification.md",
       "role": "通过的专项运行日志",
@@ -3130,6 +3474,78 @@
       "sha256": "4ce364aced17fc24b07f9d373d26da514636ea9624467bb242181bbd632e0a01"
     },
     {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-1280.png",
+      "bytes": 1093580,
+      "sha256": "d755f2a02fa1f5845ea17a3ddbda733024cd827c263493b2a6aca5d517a25571",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-1920.png",
+      "bytes": 2198574,
+      "sha256": "7e9731033d073671f1932f82dadbc9e4b72aa06303dd7f3e17de68716c0fb156",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-gpu.log",
+      "bytes": 40697,
+      "sha256": "edbd818f7ecd8293668581e640bc4029835c0251171cf7e2ba2b7e93256f37c6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "回收卸装回归日志",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-oracle-oracle-after.png",
+      "bytes": 3562830,
+      "sha256": "97027726f16df00ac2483d9694df3a0526563f9dee46f0ff86b399e0519775b5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-oracle-oracle-before.png",
+      "bytes": 3560853,
+      "sha256": "1d9367f2864066424aecd68e4a2a2acc5c875518e8f5a2209cb3a07e70457b90",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-oracle-oracle-household-before-close.png",
+      "bytes": 3379727,
+      "sha256": "d80849927791baf029a4d0cb19006a8e506eaa74d7161a2e0c23ded8932d4df0",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-oracle-oracle-reloaded.png",
+      "bytes": 3562269,
+      "sha256": "9df3c41054cfafe5ebb8a5022b7a4a6547c12f02ea48b6169393f9de39147908",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "回收卸装复刻截图",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-oracle-report.json",
+      "bytes": 442134,
+      "sha256": "4370280e8960026f12271c1c6c7c90a90e0acca175dc2bf3ee8e14b69a9432ff",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原作带回放状态差分",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/recovery-animation-original-replay.log",
+      "bytes": 14133,
+      "sha256": "3f29af43419d3fbfd2595023e6bf4f726a1cd6e8a7191a04d3bf863f2c64bc4d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "回收卸装回归日志",
+      "boundary": "本批源材质/编译程序与回收动画证据；未采集原作回收独立进程同帧过程，不外推全表现等价"
+    },
+    {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rite-provenance-fix-2.log",
       "integrated_into": "docs/replica/verification.md",
       "role": "通过的专项运行日志",
@@ -3248,6 +3664,102 @@
       "boundary": "按配套运行记录使用；截图只证明该帧，不能替代原作过程对拍",
       "bytes": 281480,
       "sha256": "b2aed11b88542a7bbdf38994901089b390d68f580b1481716724cbc538283b9e"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-1280.png",
+      "bytes": 1096171,
+      "sha256": "60f7f0d11f0c81a87ad3b2136c772f9983f4ffb55886de9cb44b404e9b782ff7",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-1920.png",
+      "bytes": 2208054,
+      "sha256": "a65ffe8d3976cf22a8c8fc006a122610af8233dda22cff6ba148130f1c482fcf",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-final-1280.png",
+      "bytes": 1096171,
+      "sha256": "60f7f0d11f0c81a87ad3b2136c772f9983f4ffb55886de9cb44b404e9b782ff7",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-final-1920.png",
+      "bytes": 2208054,
+      "sha256": "a65ffe8d3976cf22a8c8fc006a122610af8233dda22cff6ba148130f1c482fcf",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-final-gpu.log",
+      "bytes": 31693,
+      "sha256": "8c8c17923aa9634a845098685fb2892c07540d3184f4c6e9bcdfedf91ebd1114",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "标签动画专项回归日志",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-gpu.log",
+      "bytes": 30547,
+      "sha256": "824610393adc8fe7d28e6d7885f15ba45b2caaf3657c5d8c2066792476eb5e70",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "标签动画专项回归日志",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-oracle-oracle-after.png",
+      "bytes": 3562830,
+      "sha256": "97027726f16df00ac2483d9694df3a0526563f9dee46f0ff86b399e0519775b5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-oracle-oracle-before.png",
+      "bytes": 3560853,
+      "sha256": "1d9367f2864066424aecd68e4a2a2acc5c875518e8f5a2209cb3a07e70457b90",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-oracle-oracle-household-before-close.png",
+      "bytes": 3379727,
+      "sha256": "d80849927791baf029a4d0cb19006a8e506eaa74d7161a2e0c23ded8932d4df0",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-oracle-oracle-reloaded.png",
+      "bytes": 3562269,
+      "sha256": "9df3c41054cfafe5ebb8a5022b7a4a6547c12f02ea48b6169393f9de39147908",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "标签动画复刻运行截图",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-oracle-report.json",
+      "bytes": 442134,
+      "sha256": "c95a73622401426e7bec93ae3b09884a45ae978a4a28dc612762b5acd47adaca",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "原作带回放状态差分",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/tag-animation-original-replay.log",
+      "bytes": 14133,
+      "sha256": "6344653eee2daec73e240d9b4e96f9c27eebcd41d62407c84bc726d92fcbd215",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "标签动画专项回归日志",
+      "boundary": "标签动画批次；独立原作输入来自既存捕获，未采集新的原作标签操作过程；截图/专项不能证明全表现等价"
     },
     {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/text-fit-fix.log",
@@ -3432,6 +3944,48 @@
       "sha256": "30ed67ade8efe743b905c7912c3630b9f64827b50739578db47745a1b2ef6431",
       "integrated_into": "docs/replica/presentation.md",
       "role": "原始加密禁词资源，运行时解密；未导出转译词表"
+    },
+    {
+      "path": "assets/original/anims/opcard/add_tag.anim",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Resources/anims/opcard/add_tag.anim",
+      "sha256": "84c23dadde52961fa7c47f12af118873badd6245ba2223e08c0064ff694237ff",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作标签增减动画原始曲线与Done事件"
+    },
+    {
+      "path": "assets/original/anims/opcard/remove_tag.anim",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Resources/anims/opcard/remove_tag.anim",
+      "sha256": "474679cd3b01be20a5490179ac87a374cf5799eba640a82a550124389eba772f",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作标签增减动画原始曲线与Done事件"
+    },
+    {
+      "path": "assets/original/anims/opcard/equip.anim",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Resources/anims/opcard/equip.anim",
+      "sha256": "75b033bf31fb1f790f3121e39ae575fb2696a62648dbb199f3ab2134a5e9d420",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原始装备位移/四元数动画及Done事件"
+    },
+    {
+      "path": "assets/original/anims/opcard/unequip_recovery.anim",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Resources/anims/opcard/unequip_recovery.anim",
+      "sha256": "b4d96c969ddfdbe7f1a1837b55b8a5b25b72bc84301e9237e17c6e67771b7198",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原始卸装回收动画及Done事件"
+    },
+    {
+      "path": "assets/original/anims/opcard/unequip.anim",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Resources/anims/opcard/unequip.anim",
+      "sha256": "25bab10a58b905a8a7d2e14f3aac6066cfa2ccaf5af92877a890422492b84059",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原始销毁卸装曲线/破碎采样纹理"
+    },
+    {
+      "path": "assets/original/ui/broker.png",
+      "source": "C:/Users/User/Documents/GitHub/Faust-local-source/_unpack/unity_export/ExportedProject/Assets/Texture2D/broker.png",
+      "sha256": "6a0d8dd25a7e0af622e55812e31150de432814bf8063150fbabee71f2bbcf129",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原始销毁卸装曲线/破碎采样纹理"
     }
   ]
 }

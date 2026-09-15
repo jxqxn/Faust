@@ -565,6 +565,12 @@ func _rebuild_result_lists(res) -> void:
 			continue
 		var op_type := int(op.get("op", -1))
 		var uid := int(op.get("card_uid", 0))
+		# Clone equipment logs retain the equipment UID; original CardOpContext
+		# .card is the host and .value is equipId. Adapt at the presentation edge
+		# without rewriting old saved operation identities.
+		# [SRC: CardOpContext.Equip 0x398ea0; Init0x572f40 cases3/4/5.]
+		if op_type in [3, 4, 5] and int(op.get("host_uid", 0)) > 0:
+			uid = int(op.host_uid)
 		var card_data: Dictionary = _state.card_data_for(uid, _db) if _state != null else {}
 		if card_data.is_empty():
 			card_data = _db.get_card(int(op.get("card_id", 0))).duplicate(true)
@@ -598,6 +604,18 @@ func _rebuild_result_lists(res) -> void:
 		if op_type in [0, 1]:
 			var animation := preload("res://ui/source_new_card_animation.gd").new()
 			animation.name = "NewGet"
+			cell.add_child(animation)
+			animation.setup(op, _db)
+			waiter = animation
+		elif op_type in [6, 7]:
+			var animation := preload("res://ui/source_tag_animation.gd").new()
+			animation.name = "TagAnimation"
+			cell.add_child(animation)
+			animation.setup(op, _db)
+			waiter = animation
+		elif preload("res://ui/source_equip_animation.gd").supports(op, _db):
+			var animation := preload("res://ui/source_equip_animation.gd").new()
+			animation.name = "EquipAnimation"
 			cell.add_child(animation)
 			animation.setup(op, _db)
 			waiter = animation

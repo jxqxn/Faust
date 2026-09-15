@@ -9,17 +9,17 @@
     "Tests/tools/third-party addons/caches are excluded from gameplay semantic scope; runtime debug helpers remain included."
   ],
   "counts": {
-    "runtime_files": 106,
-    "runtime_lines": 32067,
-    "resource_files": 6090,
-    "candidate_lines": 325,
+    "runtime_files": 110,
+    "runtime_lines": 32321,
+    "resource_files": 6096,
+    "candidate_lines": 327,
     "by_runtime_root": {
       "core": 6,
       "data": 4,
       "platform": 2,
       "scenes": 1,
       "sim": 23,
-      "ui": 69,
+      "ui": 73,
       "project.godot": 1
     }
   },
@@ -7250,8 +7250,8 @@
     },
     {
       "path": "ui/rite_view.gd",
-      "sha256": "c6d5cf6a3c64170845276c740ccf5d9e80efadeef4de750ab5989e454714ddbb",
-      "lines": 2481,
+      "sha256": "b0a85f9c4fe4e32af3b97f6ed4df2f9f43308afd54aa4519989bde673cafd93e",
+      "lines": 2499,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
         {
@@ -7359,327 +7359,331 @@
           "text": "## OpCardShowController.Init 0x575190 delegates to the original CardRender.]"
         },
         {
-          "line": 608,
+          "line": 571,
+          "text": "# [SRC: CardOpContext.Equip 0x398ea0; Init0x572f40 cases3/4/5.]"
+        },
+        {
+          "line": 626,
           "text": "# Grid controls the OpCard root (300x200); Pop retains top-left anchor."
         },
         {
-          "line": 613,
+          "line": 631,
           "text": "# [SRC: DoCachedOp 0x5a1a60 -> closure98_0 0x5b8bf0 ->"
         },
         {
-          "line": 647,
+          "line": 665,
           "text": "# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed (0x5a74a0):"
         },
         {
-          "line": 648,
+          "line": 666,
           "text": "#       param_2 == 0 -> Player.result_text_play_rate@0x68, else"
         },
         {
-          "line": 649,
+          "line": 667,
           "text": "#       Player.result_text_auto_play_rate@0x6C, clamped to"
         },
         {
-          "line": 651,
+          "line": 669,
           "text": "#       ScrollViewTextController+0x38.]"
         },
         {
-          "line": 664,
+          "line": 682,
           "text": "# [SRC: ScrollViewTextController.c @ ForceTypeDone (0x5a8da0);"
         },
         {
-          "line": 665,
+          "line": 683,
           "text": "#       RiteResultPanelController.c @ OnNext (0x5a43c0)]"
         },
         {
-          "line": 685,
+          "line": 703,
           "text": "## [SRC: ShowTextWithSeperator 0x5a6810 -> WaitingResultTextDone;"
         },
         {
-          "line": 686,
+          "line": 704,
           "text": "## ScrollViewTextController.ForceTypeDone 0x5a8da0; original runtime 2026-09-11.]"
         },
         {
-          "line": 707,
+          "line": 725,
           "text": "# [SRC: Settlement b__0 0x5b3300 / DoPriorSettlement b__9 0x5b6190:"
         },
         {
-          "line": 722,
+          "line": 740,
           "text": "# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed 0x5a74a0.]"
         },
         {
-          "line": 731,
+          "line": 749,
           "text": "# [SRC: RiteResultPanelController.OnAutoPlay 0x5a38d0, autoPlay@0x184:"
         },
         {
-          "line": 732,
+          "line": 750,
           "text": "#       PlayerExtensions.SetRiteAutoResult 0x38f790 writes Player+0x160,"
         },
         {
-          "line": 733,
+          "line": 751,
           "text": "#       NOT the per-rite HashSet at +0x130; dump.cs:391586,391598.]"
         },
         {
-          "line": 751,
+          "line": 769,
           "text": "## [SRC: RiteResultPanel.prefab RectTransform 224401109917237556,"
         },
         {
-          "line": 752,
+          "line": 770,
           "text": "## 224728442554800362; RiteResultPanelController.c ShowDicePrompt 0x5a5910,"
         },
         {
-          "line": 753,
+          "line": 771,
           "text": "## ShowDiceCountPrompt 0x5a5760]"
         },
         {
-          "line": 778,
+          "line": 796,
           "text": "# preparation panel. [SRC: RiteResultPanel.prefab; dump.cs:324673]"
         },
         {
-          "line": 852,
+          "line": 870,
           "text": "# [SRC: RiteResultDiceCountPromptController.c OnGoldAdd 0x59d360,"
         },
         {
-          "line": 853,
+          "line": 871,
           "text": "# OnGoldCancel 0x59d6f0 / OnRedraw 0x59dc40; GoldAddCount@0xD4,"
         },
         {
-          "line": 854,
+          "line": 872,
           "text": "# RedrawUsed@0xDC, dump.cs:324690. Selection does not spend player resources.]"
         },
         {
-          "line": 980,
+          "line": 998,
           "text": "# [SRC: RitePanelShowController.SetAutoResult 0x595c30; Player +0x130]"
         },
         {
-          "line": 996,
+          "line": 1014,
           "text": "# [SRC: RitePanelTitle.prefab CommonContent/Help and its four prompts.]"
         },
         {
-          "line": 1137,
+          "line": 1155,
           "text": "# [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed"
         },
         {
-          "line": 1138,
+          "line": 1156,
           "text": "#       0x5a74a0; dump.cs:387291 Player.result_text_play_rate@0x68 /"
         },
         {
-          "line": 1139,
+          "line": 1157,
           "text": "#       result_text_auto_play_rate@0x6C.]"
         },
         {
-          "line": 1162,
+          "line": 1180,
           "text": "# [SRC: RiteResultPanelController.OnNext 0x5a43c0;"
         },
         {
-          "line": 1163,
+          "line": 1181,
           "text": "# ScrollViewTextController.ForceTypeDone 0x5a8da0]"
         },
         {
-          "line": 1227,
+          "line": 1245,
           "text": "## [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0)]"
         },
         {
-          "line": 1241,
+          "line": 1259,
           "text": "# [SRC: CardDropManager.DropCard 0x4ef4f0: two ordered passes over Slots;"
         },
         {
-          "line": 1275,
+          "line": 1293,
           "text": "# [SRC: RitePanelShowController.ShowSatisfiedSlot 0x596070;"
         },
         {
-          "line": 1276,
+          "line": 1294,
           "text": "# CardSlotController.ShowEffect 0x53cb50; CardSlot.prefab OutlineNew.]"
         },
         {
-          "line": 1397,
+          "line": 1415,
           "text": "# [SRC: RitePanelController.c OnConfirm chain, lines 1203-1239;"
         },
         {
-          "line": 1398,
+          "line": 1416,
           "text": "#       GameController.c @ UpdateSingleRite (0x55ab10)]"
         },
         {
-          "line": 1401,
+          "line": 1419,
           "text": "# [SRC: RitePanelController.c OnConfirm 0x58f1c0 L1282-1288]"
         },
         {
-          "line": 1411,
+          "line": 1429,
           "text": "# [SRC: RiteResultDiceCountPromptController.c @ OnGoldConfirm (0x59d8b0)]"
         },
         {
-          "line": 1420,
+          "line": 1438,
           "text": "# [SRC: GameController.Settlement 0x556ae0 reads Player.auto_result_rites"
         },
         {
-          "line": 1421,
+          "line": 1439,
           "text": "# via GameApplication -> Datapool.player(+0x70) -> Player(+0x130).]"
         },
         {
-          "line": 1455,
+          "line": 1473,
           "text": "# [SRC: FuncCompare.c IsSatisfied 0x3fc060, ConditionContext.dices@0x40;"
         },
         {
-          "line": 1456,
+          "line": 1474,
           "text": "# RiteResultPanelController.DisplayClass88_0 b__5 0x5b7fe0.]"
         },
         {
-          "line": 1480,
+          "line": 1498,
           "text": "## [SRC: RiteResultPanelController.c @ Settlement (RVA 0x5a4800),"
         },
         {
-          "line": 1482,
+          "line": 1500,
           "text": "##       (RVA 0x5b4850), RiteResultDiceCountPromptController.c @ OnGoldConfirm"
         },
         {
-          "line": 1483,
+          "line": 1501,
           "text": "##       (RVA 0x59d8b0)]"
         },
         {
-          "line": 1522,
+          "line": 1540,
           "text": "## [SRC: RiteResultPanelController.OnClose 0x5a3ae0 hides the panel and resolves"
         },
         {
-          "line": 1524,
+          "line": 1542,
           "text": "## finalPromise@0xD8. Original runtime requires a final click for each rite.]"
         },
         {
-          "line": 1607,
+          "line": 1625,
           "text": "# [SRC: RiteResultPanelController.<>c__DisplayClass62_0.<OnClose>b__0"
         },
         {
-          "line": 1608,
+          "line": 1626,
           "text": "#       (RVA 0x5b51c0); MapController.Start (RVA 0x56a890).]"
         },
         {
-          "line": 1615,
+          "line": 1633,
           "text": "# [SRC: DisplayClass77_0 b__3 0x5b5b70 / DisplayClass79_0;"
         },
         {
-          "line": 1616,
+          "line": 1634,
           "text": "# AppendResultText 0x5a13e0; variable.json RESULT_TEXT_FORMAT={0}.]"
         },
         {
-          "line": 1620,
+          "line": 1638,
           "text": "# [SRC: RiteResultPanelController.c Settlement 0x5a4800, rite.node@0x50"
         },
         {
-          "line": 1621,
+          "line": 1639,
           "text": "# text@0x20 -> ShowTextWithSeperator; DisplayClass56_0 b__0 0x5b3300.]"
         },
         {
-          "line": 1633,
+          "line": 1651,
           "text": "# [SRC: DoNormalSettlement b__3 0x5b6460, field@0x198;"
         },
         {
-          "line": 1688,
+          "line": 1706,
           "text": "## previous result first). [SRC: OnRedrawConfirm (0x59db60) rejects the"
         },
         {
-          "line": 1702,
+          "line": 1720,
           "text": "## [SRC: RiteExtensions.c @ GetRerollCount (0x392990) reads rite.cards]"
         },
         {
-          "line": 1718,
+          "line": 1736,
           "text": "## [SRC: RitePanelController.c @ OnStop (RVA 0x5906e0), lines 1442-1462]"
         },
         {
-          "line": 1737,
+          "line": 1755,
           "text": "# [SRC: RitePanelTitleController.Show 0x5992a0: Stop@0x70 is active"
         },
         {
-          "line": 1762,
+          "line": 1780,
           "text": "## [SRC: RitePanelController.c @ OnLastState (0x58fdf0); dump.cs"
         },
         {
-          "line": 1763,
+          "line": 1781,
           "text": "##       Player.LastCardData{id,count} @0x10/@0x14]"
         },
         {
-          "line": 1806,
+          "line": 1824,
           "text": "## [SRC: GameController.UpdateSingleRite 0x55ab10: Rite.life@0x2c"
         },
         {
-          "line": 1807,
+          "line": 1825,
           "text": "## < RiteNode.round_number@0x44 skips Settlement; dump.cs:392403/393174.]"
         },
         {
-          "line": 1876,
+          "line": 1894,
           "text": "# [SRC: CardSlotController.CardStack 0x53b0a0; current@0x148,"
         },
         {
-          "line": 1877,
+          "line": 1895,
           "text": "# ConditionContext.is_first_drop@0x22. Evaluate combined count using the"
         },
         {
-          "line": 2008,
+          "line": 2026,
           "text": "# [SRC: CardSlotController.SetCard 0x53c7d0; CardSlot.prefab Container]"
         },
         {
-          "line": 2010,
+          "line": 2028,
           "text": "# the 100x100 Container, whose authored offset is (1.6,-19.6)."
         },
         {
-          "line": 2019,
+          "line": 2037,
           "text": "# [SRC: CardController.OnPointerUp 0x52afe0: ordinary short click toggles"
         },
         {
-          "line": 2036,
+          "line": 2054,
           "text": "# [SRC: CardController.OnBeginDrag 0x5294e0 -> ICardSlot.RemoveCard;"
         },
         {
-          "line": 2037,
+          "line": 2055,
           "text": "# CardSlotController.RemoveCard 0x53c7b0 -> SetCard(null).]"
         },
         {
-          "line": 2055,
+          "line": 2073,
           "text": "# [SRC: OnEndDrag 0x52a570 AddCard -> BackToHandOrBag, never old slot.]"
         },
         {
-          "line": 2124,
+          "line": 2142,
           "text": "# CardSlotController.OnPointerClick 0x53c050 ->"
         },
         {
-          "line": 2125,
+          "line": 2143,
           "text": "# GameController.HandCardSortByCondition 0x5515a0 L8175-8240/8430-8470."
         },
         {
-          "line": 2126,
+          "line": 2144,
           "text": "# dump.cs GameController qualified_bags_has_cards/index +0x310/+0x318."
         },
         {
-          "line": 2160,
+          "line": 2178,
           "text": "# [SRC: RitePanelShowController.TryUpdateCard 0x598140 temporarily nulls"
         },
         {
-          "line": 2181,
+          "line": 2199,
           "text": "# [SRC: RiteExtensions.c @ GetSatisfiedSlotIndex (0x392ac0) lines"
         },
         {
-          "line": 2224,
+          "line": 2242,
           "text": "# [SRC: RiteResultPanelController.c @ DoCachedOp (0x5a1a60) plays the cached"
         },
         {
-          "line": 2255,
+          "line": 2273,
           "text": "# [SRC: RitePanelShow.prefab RitePanelTitle/CommonContent]"
         },
         {
-          "line": 2311,
+          "line": 2329,
           "text": "# [SRC: RitePanelShowController.c @ Show 0x596450;"
         },
         {
-          "line": 2346,
+          "line": 2364,
           "text": "# [SRC: rite/template slot_bg nomal_slot_bg.png]"
         },
         {
-          "line": 2395,
+          "line": 2413,
           "text": "# [SRC: RitePanelShowController.c 0x596450, set_localPosition 0x598000,"
         },
         {
-          "line": 2396,
+          "line": 2414,
           "text": "#       set_localScale 0x598020, set_localRotation 0x5980e0;"
         },
         {
-          "line": 2474,
+          "line": 2492,
           "text": "## [SRC: RitePanelShowController.Show 0x596450 L380-438;"
         }
       ],
@@ -7713,168 +7717,168 @@
           "text": "ops = res.get(\"card_ops\", res.get(\"deferred\", {}).get(\"card_ops\", []))"
         },
         {
-          "line": 637,
+          "line": 655,
           "reasons": [
             "state_clamp"
           ],
           "text": "var columns := mini(count, 3)"
         },
         {
-          "line": 782,
+          "line": 800,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "gold_title.text = \"金骰子\""
         },
         {
-          "line": 791,
+          "line": 809,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "redraw_title.text = \"重投\""
         },
         {
-          "line": 879,
+          "line": 897,
           "reasons": [
             "state_clamp"
           ],
           "text": "_gold_dice_label.text = str(maxi(0, _state.gold_dice - _gold_selected))"
         },
         {
-          "line": 880,
+          "line": 898,
           "reasons": [
             "state_clamp"
           ],
           "text": "_reroll_btn.get_node(\"Count\").text = str(maxi(0, _rerolls_left - int(_dice_count_kind == \"reroll\")))"
         },
         {
-          "line": 1037,
+          "line": 1055,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "text.text = \"可以通过下方卡牌与左侧卡槽安排这项事务。\""
         },
         {
-          "line": 1057,
+          "line": 1075,
           "reasons": [
             "independent_axis_scaling"
           ],
           "text": "_source_canvas.scale = Vector2(view_size.x / SOURCE_CANVAS_SIZE.x, view_size.y / SOURCE_CANVAS_SIZE.y)"
         },
         {
-          "line": 1343,
+          "line": 1361,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "btn.tooltip_text = \"\""
         },
         {
-          "line": 1349,
+          "line": 1367,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "title.text = \"\""
         },
         {
-          "line": 1350,
+          "line": 1368,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "detail.text = \"\""
         },
         {
-          "line": 1354,
+          "line": 1372,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "title.text = \"\""
         },
         {
-          "line": 1355,
+          "line": 1373,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "detail.text = \"\""
         },
         {
-          "line": 1820,
+          "line": 1838,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "_resolve_btn.tooltip_text = \"确认结果\""
         },
         {
-          "line": 1825,
+          "line": 1843,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "_resolve_btn.tooltip_text = \"开始仪式（%d 天）\" % days if days > 0 else \"开始仪式\""
         },
         {
-          "line": 1827,
+          "line": 1845,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "_resolve_btn.tooltip_text = \"结算仪式\""
         },
         {
-          "line": 1829,
+          "line": 1847,
           "reasons": [
             "literal_ui_text"
           ],
           "text": "_resolve_btn.tooltip_text = \"结算仪式\""
         },
         {
-          "line": 1834,
+          "line": 1852,
           "reasons": [
             "state_clamp"
           ],
           "text": "_gold_dice_label.text = str(maxi(0, _state.gold_dice - _gold_selected))"
         },
         {
-          "line": 2141,
+          "line": 2159,
           "reasons": [
             "state_clamp"
           ],
           "text": "_qualified_bag_index = maxi(0, _qualified_bags.find(_state.current_bag_index))"
         },
         {
-          "line": 2233,
+          "line": 2251,
           "reasons": [
             "prompt_or_presentation_queue"
           ],
           "text": "var existing: Array = deferred.get(\"card_ops\", [])"
         },
         {
-          "line": 2235,
+          "line": 2253,
           "reasons": [
             "prompt_or_presentation_queue"
           ],
           "text": "deferred[\"card_ops\"] = existing"
         },
         {
-          "line": 2244,
+          "line": 2262,
           "reasons": [
             "synthetic_or_debug"
           ],
           "text": "# Compatibility sink for the host; the source rite has no debug toast surface."
         },
         {
-          "line": 2429,
+          "line": 2447,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "func _template_pos(value: Variant, fallback := Vector2.ZERO) -> Vector2:"
         },
         {
-          "line": 2431,
+          "line": 2449,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "return Vector2(float(value.get(\"x\", fallback.x)), float(value.get(\"y\", fallback.y)))"
         },
         {
-          "line": 2432,
+          "line": 2450,
           "reasons": [
             "approximation_or_fallback"
           ],
@@ -7991,9 +7995,49 @@
       ]
     },
     {
+      "path": "ui/source_equip_animation.gd",
+      "sha256": "595f24c603850744f9b2298487c385ae318eb043cda88d5468c970c6ec0c02fe",
+      "lines": 93,
+      "screening": "static_scan_only_not_semantic_clearance",
+      "source_annotations": [
+        {
+          "line": 4,
+          "text": "## [SRC: OpCardNewController.Init 0x572f40 case3, equip.anim;"
+        },
+        {
+          "line": 32,
+          "text": "# Source Equip's center in a 300x200 grid cell; CardWidget remains the"
+        },
+        {
+          "line": 46,
+          "text": "# [SRC: OpCardNewController.Init0x572f40 case4 ordinary branch:"
+        },
+        {
+          "line": 77,
+          "text": "# [SRC: Init0x572f40 case5; set_Type0x576790; OpCard.mat;"
+        }
+      ],
+      "candidates": [
+        {
+          "line": 3,
+          "reasons": [
+            "approximation_or_fallback"
+          ],
+          "text": "## Destructive unequip uses BROKER; its RiftGenerator layer is still unported."
+        },
+        {
+          "line": 86,
+          "reasons": [
+            "approximation_or_fallback"
+          ],
+          "text": "assert(is_zero_approx(q.x) and is_zero_approx(q.y), \"Non-planar source rotation needs projection\")"
+        }
+      ]
+    },
+    {
       "path": "ui/source_float_clip.gd",
-      "sha256": "6e621c35bd91264209b6ba7f0798ba494385cf420162ee60403f3edd49161110",
-      "lines": 61,
+      "sha256": "6db86c9ff1d0025d3673a7b47f4d5704afd9433c31003731fa6539390c8e9bdd",
+      "lines": 92,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [],
       "candidates": []
@@ -8089,6 +8133,32 @@
         {
           "line": 3,
           "text": "# Utils.NumberToSprites 0x3ac420; GameScene Count references number_6."
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "path": "ui/source_opcard_broker.gd",
+      "sha256": "c06acf56ddc2bf6de31f5b55f98c10507a98cfd00beb838f17e91946acee696d",
+      "lines": 33,
+      "screening": "static_scan_only_not_semantic_clearance",
+      "source_annotations": [
+        {
+          "line": 2,
+          "text": "## [SRC: OpCardShowRender.AddOpCard0x575590; GameScene Canvas7582/"
+        }
+      ],
+      "candidates": []
+    },
+    {
+      "path": "ui/source_opcard_broker.gdshader",
+      "sha256": "11fb03811ac1cc02eae1a97780cc7c2e061c9328ec7329c98ad5eeefa24608e7",
+      "lines": 29,
+      "screening": "static_scan_only_not_semantic_clearance",
+      "source_annotations": [
+        {
+          "line": 4,
+          "text": "// [SRC: original sharedassets0.assets OpCardShow/Broker path_id181,"
         }
       ],
       "candidates": []
@@ -8242,6 +8312,39 @@
           "text": "index = maxi(0, ceili(count * position_value) - 1)"
         }
       ]
+    },
+    {
+      "path": "ui/source_tag_animation.gd",
+      "sha256": "ef26ab8fcd775f5656aa5e902081daaa860cdf0deb33d77a449a53fd426b4867",
+      "lines": 50,
+      "screening": "static_scan_only_not_semantic_clearance",
+      "source_annotations": [
+        {
+          "line": 3,
+          "text": "## [SRC: OpCardNewController.Init 0x572f40 cases 6/7, dump.cs:321362;"
+        },
+        {
+          "line": 4,
+          "text": "## OpCardTagController.set_TagNode 0x5768b0 -> TagNodeExtensions.GetSprite"
+        },
+        {
+          "line": 5,
+          "text": "## 0x3932f0; OpCard.prefab TagBg/Tag/TagModify, tagText is null.]"
+        },
+        {
+          "line": 14,
+          "text": "# Cell 300x200: center pivot .5, TagBg 200x100 at (0,0)."
+        },
+        {
+          "line": 38,
+          "text": "# Tag child anchoredPosition(68,1), size200x50, pivot.5 => (4,10)."
+        },
+        {
+          "line": 44,
+          "text": "# Original format strings 0x25bde80 / 0x25c17d0: +{0} / -{0}."
+        }
+      ],
+      "candidates": []
     },
     {
       "path": "ui/source_text_style.gd",
@@ -8652,9 +8755,39 @@
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
+      "path": "assets/original/anims/opcard/add_tag.anim",
+      "bytes": 2778,
+      "sha256": "84c23dadde52961fa7c47f12af118873badd6245ba2223e08c0064ff694237ff",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
+      "path": "assets/original/anims/opcard/equip.anim",
+      "bytes": 17350,
+      "sha256": "75b033bf31fb1f790f3121e39ae575fb2696a62648dbb199f3ab2134a5e9d420",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
       "path": "assets/original/anims/opcard/new.anim",
       "bytes": 3162,
       "sha256": "fb2a33efd788071aeb4d24955e8141c87739d28d20838fd62b6f71b59d77dbd2",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
+      "path": "assets/original/anims/opcard/remove_tag.anim",
+      "bytes": 2781,
+      "sha256": "474679cd3b01be20a5490179ac87a374cf5799eba640a82a550124389eba772f",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
+      "path": "assets/original/anims/opcard/unequip.anim",
+      "bytes": 24680,
+      "sha256": "25bab10a58b905a8a7d2e14f3aac6066cfa2ccaf5af92877a890422492b84059",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
+      "path": "assets/original/anims/opcard/unequip_recovery.anim",
+      "bytes": 20201,
+      "sha256": "b4d96c969ddfdbe7f1a1837b55b8a5b25b72bc84301e9237e17c6e67771b7198",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -18405,6 +18538,12 @@
       "path": "assets/original/ui/box_top.png",
       "bytes": 131815,
       "sha256": "f0c41d4c50676a7e79266f2af6398534c7ffc098720f1284b34ccaa74b6b9319",
+      "scope": "byte_inventory_not_visual_or_runtime_verification"
+    },
+    {
+      "path": "assets/original/ui/broker.png",
+      "bytes": 7850,
+      "sha256": "6a0d8dd25a7e0af622e55812e31150de432814bf8063150fbabee71f2bbcf129",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {

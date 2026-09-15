@@ -101,6 +101,463 @@ func test_new_card_curve_done_pop_order_and_full_save_resume() -> void:
 	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
 		await _check_new_card_curve_and_save(dimensions)
 
+func test_tag_operation_curve_sequence_and_save_resume() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var uid := state.add_card_to_hand(2000001, db)
+		state.round_transition = {"phase": "rites"}
+		var result := RiteResolver.RiteResult.new()
+		result.deferred = {"card_ops": [
+			{"op": 6, "card_uid": uid, "card_id": 2000001, "tag": "physique", "amount": 2, "value_after": 20},
+			{"op": 9, "card_uid": uid, "card_id": 2000001, "pop": "标签变化后的发言"},
+			{"op": 7, "card_uid": uid, "card_id": 2000001, "tag": "physique", "amount": 3, "value_after": 17}]}
+		var view := RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		await wait_process_frames(2)
+		view._result_surface.show()
+		view._last_result = result
+		view._settlement_phase = "done"
+		view._resolution_committed = true
+		view._rebuild_result_lists(result)
+		view._remember_round_result()
+		var cell: Control = view._result_cards_layer.get_child(0)
+		var animation = cell.get_node("TagAnimation")
+		var speech = cell.get_node("Pop")
+		animation.set_process(false)
+		await wait_process_frames(1)
+		assert_eq(animation.amount_label.text, "+2", "source displays operation amount, never final tag value")
+		assert_not_null(animation.tag_icon.texture)
+		assert_eq(animation.position, Vector2(50, 50))
+		assert_eq(animation.tag_icon.position, Vector2(64, 14))
+		assert_eq(animation.amount_label.position, Vector2(4, 10))
+		assert_eq(animation.amount_label.get_theme_font_size("font_size"), 36)
+		assert_eq(animation.amount_label.get_theme_color("font_color"), Color(1, 235.0 / 255.0, 4.0 / 255.0, 1))
+		assert_eq(animation.clip.events.size(), 1, "tag clip contains Done only, no invented sound event")
+		animation.step(0.25)
+		assert_almost_eq(animation.banner.position.y, 67.5, 0.001)
+		assert_false(animation.completed)
+		assert_false(speech.visible)
+		assert_false(view._result_cards_layer.get_child(1).visible)
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_not_emitted(view, "closed", "real click cannot close while tag Done is pending")
+		var saved: Dictionary = JSON.parse_string(JSON.stringify(SaveSystem.serialize(state)))
+		view.queue_free()
+		await wait_process_frames(2)
+		state = GameState.new()
+		SaveSystem.deserialize(saved, state, db)
+		view = RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		view.restore_round_result(state.round_transition.rite_display)
+		cell = view._result_cards_layer.get_child(0)
+		animation = cell.get_node("TagAnimation")
+		animation.set_process(false)
+		speech = cell.get_node("Pop")
+		await wait_process_frames(2)
+		assert_almost_eq(animation.banner.position.y, 67.5, 0.001, "resume interpolated source curve from saved quarter second")
+		assert_false(speech.visible)
+		animation.step(0.08333334)
+		await wait_process_frames(2)
+		assert_true(animation.completed)
+		assert_true(speech.visible, "Done resolves before the animation endpoint")
+		animation.step(0.16666666)
+		assert_almost_eq(animation.banner.position.y, 135.0, 0.001)
+		for pressed in [true, false]:
+			var key := InputEventKey.new()
+			key.keycode = KEY_SPACE
+			key.pressed = pressed
+			viewport.push_input(key, true)
+			await wait_process_frames(2)
+		var removal = view._result_cards_layer.get_child(1).get_node("TagAnimation")
+		assert_true(removal.started, "real release reaches the remove-tag operation")
+		assert_eq(removal.amount_label.text, "-3")
+		assert_eq(removal.amount_label.get_theme_color("font_color"), Color.RED)
+		removal.step(0.5)
+		assert_false(view._result_presentation_busy())
+		if DisplayServer.get_name() != "headless" and not OS.get_environment("FAUST_TAG_CAPTURE").is_empty():
+			await RenderingServer.frame_post_draw
+			viewport.get_texture().get_image().save_png(OS.get_environment("FAUST_TAG_CAPTURE") + str(dimensions.x) + ".png")
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_emitted(view, "closed", "real confirm closes after the final tag Done")
+
+func test_equipment_host_identity_source_curve_and_save_resume() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var host := state.add_card_to_hand(2001193, db)
+		var item := state.add_card_to_hand(2000246, db)
+		state.begin_result_op_log()
+		state.attach_equipment(host, item, db, true, true)
+		var op: Dictionary = state.card_op_log[-1]
+		assert_eq(op.op, 3)
+		assert_true(preload("res://ui/source_equip_animation.gd").supports(op, db))
+		assert_true(preload("res://ui/source_equip_animation.gd").supports({"op": 4, "card_id": 2000246}, db), "ordinary unequip now has its own clip and BROKER surface")
+		assert_false(preload("res://ui/source_equip_animation.gd").supports({"op": 3, "card_id": 2000001}, db), "non-equipment branch is not silently treated as ordinary equipment")
+		state.round_transition = {"phase": "rites"}
+		var result := RiteResolver.RiteResult.new()
+		result.deferred = {"card_ops": [op,
+			{"op": 9, "card_uid": host, "card_id": 2001193, "pop": "装备后的发言"}]}
+		var view := RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		await wait_process_frames(2)
+		view._result_surface.show()
+		view._last_result = result
+		view._settlement_phase = "done"
+		view._resolution_committed = true
+		view._rebuild_result_lists(result)
+		view._remember_round_result()
+		assert_eq(view._result_cards_layer.get_child_count(), 1, "host speech reuses host equipment cell")
+		var cell: Control = view._result_cards_layer.get_child(0)
+		assert_eq(int(cell.get_meta("source_card_uid")), host)
+		assert_eq(cell.get_node("CardShow").card_id, 2001193)
+		var animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(1)
+		assert_eq(animation.equipment.card_id, 2000246)
+		assert_eq(animation.source_position, Vector2(170, 83))
+		assert_eq(animation.equipment.rotation, 0.0)
+		assert_eq(animation.clip.rotation_curves.size(), 1)
+		assert_eq(animation.clip.rotation_curves[0].keys.size(), 31)
+		assert_eq(animation.clip.events.size(), 1, "source equip has Done only; no invented equip sound")
+		animation.step(0.25)
+		assert_almost_eq(animation.source_position.x, 128.5, 0.001)
+		assert_almost_eq(animation.source_position.y, 60.0, 0.001)
+		assert_almost_eq(animation.equipment.rotation, -2 * atan2(-0.07332523, 0.9973081), 0.00001, "original quarter-second quaternion key, not Euler easing")
+		assert_false(animation.completed)
+		assert_false(cell.get_node("Pop").visible)
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_not_emitted(view, "closed")
+		var saved: Dictionary = JSON.parse_string(JSON.stringify(SaveSystem.serialize(state)))
+		view.queue_free()
+		await wait_process_frames(2)
+		state = GameState.new()
+		SaveSystem.deserialize(saved, state, db)
+		view = RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		view.restore_round_result(state.round_transition.rite_display)
+		cell = view._result_cards_layer.get_child(0)
+		animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(2)
+		assert_eq(state.get_card_instance(item).equipped_to_uid, host)
+		assert_almost_eq(animation.source_position.x, 128.5, 0.001)
+		animation.step(0.08333334)
+		await wait_process_frames(2)
+		assert_true(animation.completed)
+		assert_true(cell.get_node("Pop").visible)
+		animation.step(0.16666666)
+		assert_almost_eq(animation.source_position.x, 87.0, 0.001)
+		assert_almost_eq(animation.source_position.y, 37.0, 0.001)
+		assert_almost_eq(animation.equipment.rotation, -2 * atan2(-0.14625569, 0.98924685), 0.00001)
+		if DisplayServer.get_name() != "headless" and not OS.get_environment("FAUST_EQUIP_CAPTURE").is_empty():
+			await RenderingServer.frame_post_draw
+			viewport.get_texture().get_image().save_png(OS.get_environment("FAUST_EQUIP_CAPTURE") + str(dimensions.x) + ".png")
+		for pressed in [true, false]:
+			var key := InputEventKey.new()
+			key.keycode = KEY_SPACE
+			key.pressed = pressed
+			viewport.push_input(key, true)
+			await wait_process_frames(2)
+		assert_false(view._result_presentation_busy())
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_emitted(view, "closed")
+
+func test_unequip_operation_card_is_host_for_both_recovery_modes() -> void:
+	for recover in [false, true]:
+		var state := GameState.new()
+		var host := state.add_card_to_hand(2001193, db)
+		var item := state.add_card_to_hand(2000246, db)
+		state.attach_equipment(host, item, db, true, true)
+		state.begin_result_op_log()
+		assert_true(state.detach_equipment(host, item, recover))
+		var result := RiteResolver.RiteResult.new()
+		result.deferred = {"card_ops": state.drain_result_op_log()}
+		assert_eq(int(result.deferred.card_ops[0].op), 5 if recover else 4)
+		var view := RiteView.new()
+		view.setup(state, db, RNG.new(1), 5001001)
+		add_child_autofree(view)
+		await wait_process_frames(2)
+		view._rebuild_result_lists(result)
+		var cell: Control = view._result_cards_layer.get_child(0)
+		assert_eq(int(cell.get_meta("source_card_uid")), host)
+		assert_eq(cell.get_node("CardShow").card_id, 2001193)
+		if recover:
+			assert_not_null(cell.get_node_or_null("EquipAnimation"))
+			assert_eq(cell.get_node("EquipAnimation").clip.events[0].time, 0.5, "recovery uses its own Done time")
+		else:
+			assert_not_null(cell.get_node("EquipAnimation").get_node_or_null("Broker"), "destructive removal selects BROKER")
+
+func test_recovery_uses_normal_material_and_persists_curve_and_hand_state() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var host := state.add_card_to_hand(2001193, db)
+		var item := state.add_card_to_hand(2000246, db)
+		state.attach_equipment(host, item, db, true, true)
+		state.begin_result_op_log()
+		assert_true(state.detach_equipment(host, item, true))
+		var op: Dictionary = state.drain_result_op_log()[0]
+		state.round_transition = {"phase": "rites"}
+		var result := RiteResolver.RiteResult.new()
+		result.deferred = {"card_ops": [op,
+			{"op": 9, "card_uid": host, "card_id": 2001193, "pop": "回收后的发言"}]}
+		var view := RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		await wait_process_frames(2)
+		view._result_surface.show()
+		view._last_result = result
+		view._settlement_phase = "done"
+		view._resolution_committed = true
+		view._rebuild_result_lists(result)
+		view._remember_round_result()
+		var cell: Control = view._result_cards_layer.get_child(0)
+		var animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(1)
+		assert_eq(animation.source_position, Vector2(61.95, 42.54))
+		assert_almost_eq(animation.equipment.rotation, -2 * atan2(-0.14789572, 0.98900294), 0.00001)
+		animation.step(0.25)
+		assert_almost_eq(animation.source_position.x, 168.3046875, 0.001)
+		assert_almost_eq(animation.source_position.y, 72.459375, 0.001)
+		assert_almost_eq(animation.equipment.rotation, -2 * atan2(-0.023191731, 0.99973106), 0.00001)
+		assert_false(animation.completed)
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_not_emitted(view, "closed")
+		var saved: Dictionary = JSON.parse_string(JSON.stringify(SaveSystem.serialize(state)))
+		view.queue_free()
+		await wait_process_frames(2)
+		state = GameState.new()
+		SaveSystem.deserialize(saved, state, db)
+		view = RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		view.restore_round_result(state.round_transition.rite_display)
+		cell = view._result_cards_layer.get_child(0)
+		animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(2)
+		assert_true(item in state.hand)
+		assert_eq(state.get_card_instance(item).equipped_to_uid, 0)
+		assert_false(item in state.get_card_instance(host).equipped_uids)
+		assert_almost_eq(animation.source_position.x, 168.3046875, 0.001)
+		animation.step(0.24)
+		assert_false(animation.completed, "recovery cannot use equip's one-third-second Done")
+		assert_false(cell.get_node("Pop").visible)
+		animation.step(0.01)
+		await wait_process_frames(2)
+		assert_true(animation.completed)
+		assert_true(cell.get_node("Pop").visible)
+		animation.step(0.1)
+		assert_almost_eq(animation.source_distance, 0.005, 0.000001)
+		assert_eq(animation.source_position, Vector2(188, 78))
+		assert_almost_eq(animation.equipment.rotation, 0.0, 0.000001)
+		assert_true(animation.equipment.visible)
+		assert_eq(animation.equipment.modulate.a, 1.0, "NORMAL shader has no BrokerDist consumer: do not invent a fade")
+		if DisplayServer.get_name() != "headless" and not OS.get_environment("FAUST_RECOVERY_CAPTURE").is_empty():
+			await RenderingServer.frame_post_draw
+			viewport.get_texture().get_image().save_png(OS.get_environment("FAUST_RECOVERY_CAPTURE") + str(dimensions.x) + ".png")
+		for pressed in [true, false]:
+			var key := InputEventKey.new()
+			key.keycode = KEY_SPACE
+			key.pressed = pressed
+			viewport.push_input(key, true)
+			await wait_process_frames(2)
+		assert_false(view._result_presentation_busy())
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_emitted(view, "closed")
+
+func test_destructive_unequip_broker_persists_curve_and_removed_state() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var host := state.add_card_to_hand(2001193, db)
+		var item := state.add_card_to_hand(2000246, db)
+		state.attach_equipment(host, item, db, true, true)
+		state.begin_result_op_log()
+		assert_true(state.detach_equipment(host, item, false))
+		var op: Dictionary = state.drain_result_op_log()[0]
+		state.round_transition = {"phase": "rites"}
+		var result := RiteResolver.RiteResult.new()
+		result.deferred = {"card_ops": [op,
+			{"op": 9, "card_uid": host, "card_id": 2001193, "pop": "销毁后的发言"}]}
+		var view := RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		await wait_process_frames(2)
+		view._result_surface.show()
+		view._last_result = result
+		view._settlement_phase = "done"
+		view._resolution_committed = true
+		view._rebuild_result_lists(result)
+		view._remember_round_result()
+		var cell: Control = view._result_cards_layer.get_child(0)
+		var animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(1)
+		assert_eq(animation.source_position, Vector2(61.95, 42.54))
+		assert_almost_eq(animation.surface.rotation, -2 * atan2(-0.14789572, 0.98900294), 0.00001)
+		animation.step(0.25)
+		assert_almost_eq(animation.source_position.x, 168.3046875, 0.001)
+		assert_almost_eq(animation.source_position.y, 72.459375, 0.001)
+		assert_almost_eq(animation.surface.rotation, -2 * atan2(-0.023191731, 0.99973106), 0.00001)
+		assert_false(animation.completed)
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_not_emitted(view, "closed")
+		var saved: Dictionary = JSON.parse_string(JSON.stringify(SaveSystem.serialize(state)))
+		view.queue_free()
+		await wait_process_frames(2)
+		state = GameState.new()
+		SaveSystem.deserialize(saved, state, db)
+		view = RiteView.new()
+		view.size = Vector2(dimensions)
+		view.setup(state, db, RNG.new(1), 5001001)
+		viewport.add_child(view)
+		view.restore_round_result(state.round_transition.rite_display)
+		cell = view._result_cards_layer.get_child(0)
+		animation = cell.get_node("EquipAnimation")
+		animation.set_process(false)
+		await wait_process_frames(2)
+		assert_false(item in state.hand)
+		assert_eq(state.get_card_instance(item).zone, "removed")
+		assert_eq(state.get_card_instance(item).equipped_to_uid, 0)
+		assert_false(item in state.get_card_instance(host).equipped_uids)
+		assert_almost_eq(animation.source_position.x, 168.3046875, 0.001)
+		animation.step(0.24)
+		assert_false(animation.completed, "destructive removal cannot use equip's one-third-second Done")
+		assert_false(cell.get_node("Pop").visible)
+		animation.step(0.01)
+		await wait_process_frames(2)
+		assert_true(animation.completed)
+		assert_true(cell.get_node("Pop").visible)
+		animation.step(0.2)
+		assert_almost_eq(animation.source_distance, 0.005, 0.000001)
+		assert_eq(animation.source_position, Vector2(188, 78))
+		assert_almost_eq(animation.surface.rotation, 0.0, 0.000001)
+		assert_true(animation.equipment.visible)
+		assert_eq(animation.surface.modulate.a, 1.0, "BROKER displaces UV; no invented alpha fade")
+		assert_almost_eq(animation.surface.material.get_shader_parameter("broker_distance"), 0.005, 0.000001)
+		assert_true(animation.special_active)
+		assert_true(animation.special_enabled)
+		assert_almost_eq(animation.special_progress, 0.0, 0.000001)
+		if DisplayServer.get_name() != "headless" and not OS.get_environment("FAUST_BROKER_CAPTURE").is_empty():
+			await RenderingServer.frame_post_draw
+			viewport.get_texture().get_image().save_png(OS.get_environment("FAUST_BROKER_CAPTURE") + str(dimensions.x) + ".png")
+		for pressed in [true, false]:
+			var key := InputEventKey.new()
+			key.keycode = KEY_SPACE
+			key.pressed = pressed
+			viewport.push_input(key, true)
+			await wait_process_frames(2)
+		assert_false(view._result_presentation_busy())
+		watch_signals(view)
+		await _click_tag_result_next(viewport, view._result_next_button)
+		assert_signal_emitted(view, "closed")
+
+func test_broker_gpu_pixels_follow_original_dxbc_displacement() -> void:
+	if DisplayServer.get_name() == "headless":
+		pending("BROKER requires GPU readback")
+		return
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(256, 512)
+	viewport.transparent_bg = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child_autofree(viewport)
+	var card := CardWidget.new()
+	viewport.add_child(card)
+	card.set_card(db.get_card(2000246))
+	card.set_process(false)
+	var surface := preload("res://ui/source_opcard_broker.gd").new()
+	viewport.add_child(surface)
+	surface.setup(card)
+	# Independent scalar transcription of original DXBC181_7's r*a, signed
+	# RG, atlas-distance and premultiplication. Samples include the texture
+	# seam and both displacement signs; no shader source text assertions.
+	var broker_image: Image = load("res://assets/original/ui/broker.png").get_image()
+	if broker_image.is_compressed():
+		broker_image.decompress()
+	for distance in [0.0, 0.005]:
+		surface.set_distance(distance)
+		await wait_process_frames(4)
+		await RenderingServer.frame_post_draw
+		var source: Image = surface.render_cell.get_texture().get_image()
+		var actual: Image = viewport.get_texture().get_image()
+		var max_error := 0.0
+		var changed := 0
+		for y in [80, 180, 300, 320, 400]:
+			for x in [34, 70, 128, 185, 220]:
+				var uv := Vector2((x + 0.5) / 256.0, (y + 0.5) / 512.0)
+				var b := _broker_bilinear(broker_image, uv * Vector2(broker_image.get_size()) - Vector2(0.5, 0.5))
+				var offset: Vector2 = Vector2(2.0 * b.r * b.a - 1.0, -(2.0 * b.g - 1.0)) * distance * 4096.0
+				var expected := _broker_bilinear(source, Vector2(x, y) + offset)
+				expected = Color(expected.r * expected.a, expected.g * expected.a, expected.b * expected.a, expected.a)
+				var result := actual.get_pixel(x, y)
+				for channel in range(4):
+					max_error = maxf(max_error, absf(expected[channel] - result[channel]))
+				var original := source.get_pixel(x, y)
+				if absf(result.r - original.r) + absf(result.g - original.g) + absf(result.b - original.b) > 0.05:
+					changed += 1
+		assert_lt(max_error, 0.025, "GPU must follow original signed displacement including Y flip and alpha")
+		if distance > 0.0:
+			assert_gt(changed, 5, "BROKER must visibly change the rendered card")
+
+func _broker_bilinear(image: Image, pixel: Vector2) -> Color:
+	var base := Vector2i(floori(pixel.x), floori(pixel.y))
+	var fraction := pixel - Vector2(base)
+	var samples: Array[Color] = []
+	for offset in [Vector2i.ZERO, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.ONE]:
+		var at: Vector2i = base + offset
+		samples.append(image.get_pixel(clampi(at.x, 0, image.get_width() - 1), clampi(at.y, 0, image.get_height() - 1)))
+	return samples[0].lerp(samples[1], fraction.x).lerp(samples[2].lerp(samples[3], fraction.x), fraction.y)
+
+func _click_tag_result_next(viewport: SubViewport, button: Button) -> void:
+	var motion := InputEventMouseMotion.new()
+	motion.position = button.get_global_rect().get_center()
+	viewport.push_input(motion, true)
+	await wait_process_frames(1)
+	assert_eq(viewport.gui_get_hovered_control(), button)
+	for pressed in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.position = motion.position
+		click.button_index = MOUSE_BUTTON_LEFT
+		click.pressed = pressed
+		viewport.push_input(click, true)
+	await wait_process_frames(2)
+
 func _check_new_card_curve_and_save(dimensions: Vector2i) -> void:
 	var viewport := SubViewport.new()
 	viewport.size = dimensions

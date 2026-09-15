@@ -1,5 +1,60 @@
 # 界面、输入、动画与声音
 
+## 2026-09-15 销毁卸装 BROKER 采样与原始动画（PA01 增量）
+
+从 METHOD_MAP 的不回收卸装缺口推进。`OpCardNewController.Init0x572f40` case4普通分支先创建装备BROKER、再创建宿主NORMAL，播放unequip；case5仍为NORMAL回收。原始 `unequip.anim` 与 `broker.png` 逐字节导入并登记哈希。本批普通分支只覆盖正equipment标签，不扩展尚未核实的非equipment特殊效果。
+
+`OpCardShow.set_Type0x576790 → CardShows_FaceUnlit.op_cards[1] → OpCardBroker.mat` 的Shader为原编译path_id181，片段181_7..10读取_BrokerTex，先red*=alpha，再将RG映射到[-1,1]，乘_BrokerDist后加到atlas UV；最后乘顶点色并预乘alpha。broker.png已直接查看，原meta为线性过滤/Clamp/无mipmap；PlayerSettings.m_ActiveColorSpace=0为Gamma，不能把位移纹理按颜色转线性。Godot左上UV适配后，局部采样偏移为 `(2*r*a-1, -(2*g-1))*distance*(16,8)`；Y符号翻转，不能把它实现成淡出。shader额外保留vertex_color，避免Godot片段COLOR已含主贴图采样导致重复相乘。
+
+原投影链进一步定位：GameScene Canvas7582为Camera4417的ScreenSpaceCamera、透明清屏；Grid11629无padding/spacing、Cell256×512；Render11631及RiteOpCards.renderTexture为4096²、16列8行。`OpCardShowRender.AddOpCard0x575590 → OpCardShowController.Init0x575380 → GetCardShowPrefab0x43daf0`。CardShowItem根194×421，居中Icon194×422；当前CardWidget沿用Icon包围尺寸。销毁卸装新增独立256×512透明渲染格，卡面居中而非强拉伸；BROKER只应用在该整卡纹理，不分别扭曲子控件。**这是单格适配器，不是完整共享atlas**：格外采样透明，未渲染相邻格，完整CardRender/字体/邻格及多卡共享渲染仍待对拍；不能据此宣称所有操作卡投影等价。
+
+源unequip关键边界：位移(61.95,42.54)→(188,78)，旋转在1/3秒归零；5/12秒起distance由0变化，到2/3秒0.005；Done在0.5秒放行后继，余下动画继续。Equip/Special在5/12秒激活并启用，progress在7/12秒达1、2/3秒回0。仅保存/采样这些未实现层的源字段，不画替代特效。Prefab该层是独立194×422 RawImage上的`RiftGenerator`，不是装备alpha；dump.cs:420474与`OnEnable0x432550 → Reset0x432590 / Update0x432a50`显示它生成独立纹理并调用Unity Random/PerlinNoise。序列化posSeed不是固定运行种子，不能照抄并假称复现；本批没有额外消耗玩法RNG。
+
+GPU仪式整组49/49、494断言（broker-animation-gpu-final.log），无脚本错误、孤儿或泄漏。覆盖1920/1280真实attach→detach(false)操作日志、宿主身份、原始位移/旋转/Done、实际鼠标命中与阻塞/关闭、Space松键、0.25秒完整JSON及场景重建、装备不回手且zone=removed/宿主链接解除；两尺寸截图已查看。独立CPU按原DXBC指令计算50个GPU像素探针：零distance最大误差0，0.005时最大通道误差0.002112（阈值0.025），25个末帧探针中18个发生可见变化。它检验移植采样公式与坐标，不是原作进程画面的像素对拍。
+
+既存原第4→5天调用带复跑2/2、196断言（broker-original-replay.log），结算和读档各54/54、规则调用13/13，无引擎错误；本次未启动原作采集卸装过程，不能用旧带签署新动画等价。
+
+失败记录保留：前两轮测试解析失败（误用Color API、Variant类型推断）；第三轮虽然GUT报49/49，实际有测试访问不存在的removed字段导致提前返回，不能验收。修正为实际zone字段后最终494断言完整通过。再次证明必须检查引擎日志，不能只看GUT绿色摘要。新增证据进入external-evidence，历史批次数字保留各自边界。
+
+## 2026-09-15 卸装回收与编译Shader消费链纠错（PA01 增量）
+
+**已确认：有distance动画字段不等于卡片应消散。** `OpCardNewController.Init 0x572f40` case5无条件把Equip设为NORMAL(0)，case4普通卸装才设为BROKER(1)；dump.cs:321441枚举确认。`OpCardShow.set_Type 0x576790`从CardShows.op_cards[type]克隆材质；CardShows_FaceUnlit.asset的0/1引用分别经GUID对应OpCard.mat/OpCardBroker.mat。`LateUpdate 0x5761e0 → set_BrokenDistance 0x576590`把distance写入_BrokerDist；参数写出后还必须检查Shader是否消费。
+
+扩展现有 `tools/audit_card_shaders.py --profile opcard`，使用本机已有Python3.14/UnityPy，读取原安装 sharedassets0.assets 并由D3DDisassemble提取两个Shader的全部16个编译变体。全部原汇编、参数绑定、源文件SHA与索引在外部 `opcard-shader-20260915` 目录登记；未联网，未改原作文件。resources.assets没有目标Shader，第一次明确失败后改查sharedassets0，没有拿DummyShaderTextExporter正文当事实。工具原固定输出“2/9”也已改为实际提取数。
+
+| 原作编译证据 | 可确认结论 |
+|---|---|
+| OpCardShow/Default path_id182，顶点182_1..4、片段182_7..10；所有name_indices都没有_BrokerDist，片段只按Index/UVWidth/UVHeight/RowCount/ColCount采样主图 | NORMAL不受distance曲线影响；回收不应额外变透明或破碎 |
+| OpCardShow/Broker path_id181，片段181_7..10；_BrokerDist绑定CB0字节124=cb0[7].w，读取第二纹理_BrokerTex | BROKER在atlas采样前做 `(vec2(sample.r*sample.a,sample.g)*2-1)*_BrokerDist` 的UV位移；不是简单alpha淡出。BROKER采样在后续增量已接；完整不回收表现还含Equip/Special层，尚未移植 |
+
+本批接入原始 `unequip_recovery.anim`。原位移(61.95,42.54)→(188,78)，0.25秒为(168.3046875,72.459375)；36个平面四元数关键帧从z=-0.14789572,w=0.98900294回到零旋转。Done在0.5秒；0.5833333秒distance达到0.005，仍保持卡面可见。运行时保留源distance值便于诊断，但NORMAL没有对应视觉消费，不制造淡出。回收分支使用自己的原动画，不倒放equip。
+
+GPU仪式整组47/47、431断言通过（recovery-animation-gpu.log），覆盖1920/1280、真实attach→detach(recover=true)日志、原位移/旋转/半秒Done、真实确认点击等待与结束、Space松键、0.25秒完整JSON/场景重建、装备回手且宿主引用解除、末帧仍不透明。两尺寸截图已查看。此次不是原作回收操作的实时同帧捕获；完整结果堆移动、原RenderTexture投影、BROKER及Special层仍开放。
+
+经验补充：方法与字段只能证明“写了值”，还需追到材质实例和编译程序证明“值影响了什么”。上一批把所有卸装distance笼统称为消散属于证据链未闭合的推断，现纠正而非照着文档制造效果。
+
+## 2026-09-15 装备操作主从身份与普通装备动画（PA01 增量）
+
+原作 `CardOpContext.Equip 0x398ea0` 和 `OperationContext.AddCardOp_Equip 0x39e2f0` 保存 card=宿主、value=装备配置ID；dump.cs:394426 的 `Equip(Card card,int equipId)` 及 `DesktopModifyEquip` PreDo闭包0x5216e0→0x521f20为独立调用信号。`OpCardNewController.Init 0x572f40` case3/4/5用宿主Card设置背景与主卡，再把value对应装备画入Equip层。复刻日志已有equipment UID、card_id及host_uid，但界面错误把equipment UID当成主卡。现仅在表现入口解释为宿主主卡，不改旧存档载荷或装备玩法关系；后继宿主CardPop因此复用同一操作格。
+
+本批只接 case3 中**正equipment标签**可直接确认的普通装备分支（stringliteral 0x25a7710=`equipment`）。其他没有equipment标签但GetSFx为空的普通分支，以及equip_sfx/unequip_sfx暂未扩展；不能按资源名猜它们等价。`OpCardNewController.Init` 普通装备播放字面量0x25a7350=`equip`；case4卸装、case5回收分别为unequip/unequip_recovery；虽然都写distance，但是否影响画面取决于各自材质。后续编译Shader复核确认case5普通材质不消费该参数，详本章顶部纠错；仍不能反播equip来代替。
+
+原始 equip.anim 逐字节导入。m_FloatCurves位移(170,83)→(87,37)，0.25秒为(128.5,60)，1/3秒Done放行下一步、位移与旋转到0.5秒才停止；没有PlaySFx事件，不增加自制装备音效。31个原始四元数关键帧全部读取，分量按未加权Hermite求值并归一化；0.25秒关键值z=-0.07332523,w=0.9973081，0.5秒z=-0.14625569,w=0.98924685。该动画x/y分量为0，Godot平面旋转取-2*atan2(z,w)；非平面输入显式拒绝，不偷换为Euler缓动。中间采样遵循原切线，但未与Unity原生动画采样器逐帧实测，不能把关键帧一致外推为全动画运行等价。
+
+OpCard.prefab Equip RectTransform224998874197659892为256×512、center anchor/pivot(.5,.5)、scale1，跟主卡同级。Grid300×200下中心在(150,100)，Unity位移Y翻转；当前装备由已有CardWidget渲染适配器画在该中心，未擅自强拉为256×512。原OpCardShowRender的RenderTexture/相机投影和完整卡面渲染仍是既有缺口，截图不能签署尺寸/像素等价。
+
+GPU仪式整组46/46、380断言通过（equip-animation-final-gpu.log），覆盖真实attach产生日志、宿主及装备身份、发言复用、两尺寸、原始曲线关键值、完整SaveSystem中途JSON重建/装备关系保留、真实确认点击在等待时拒绝/结束后关闭、Space松开推进；另核对卸装不回收/回收两条路径主卡都为宿主且不误播equip。两尺寸截图已查看。首轮测试误写日志API名产生SCRIPT ERROR，失败日志保留；第二轮仅Float/Int断言警告，修正类型后最终整组无警告、无引擎错误或泄漏。本批未签署整套装备演出完成。
+
+## 2026-09-15 操作卡标签增减表现（PA01 增量）
+
+本批从 METHOD_MAP 的操作卡动画缺口取项。`OpCardNewController.Init 0x572f40` 的 case 6/7 均设置卡片稀有度背景、绑定 TagNode 并播放 add_tag/remove_tag；`OpCardTagController.set_TagNode 0x5768b0 → TagNodeExtensions.GetSprite 0x3932f0` 使用原 tag.json 的 resource。变化量读取 CardOpContext +0x28，格式来自 stringliteral.json 0x25bde80 `+{0}` / 0x25c17d0 `-{0}`，不能用卡牌最终属性值。颜色从 GameAssembly.dll RVA 0x1c9e790 / 0x1c9e780 的 float4 独立读取：加为(1,235/255,4/255,1)，减为红色；Prefab 序列化黄色并非 Init 后运行颜色。
+
+OpCard.prefab 的 TagBg 为 200×100、center anchor/pivot(.5,.5)、anchoredPosition(0,0)，在 Grid 300×200 cell 下翻转 Y 得到左上(50,50)。Tag 图标72×72，左上(64,14)；其子 TagModify 大小200×50、anchoredPosition(68,1)、pivot(.5,.5)，翻转后左上(4,10)，字号36。TagBg Image 引用 GUID da1c9b1afe55da445bf250177542aa10→prompt_2_bg，原图已直接查看；tagText 字段为 null，不额外制造标签名称摘要。
+
+原始 add_tag.anim / remove_tag.anim 逐字节导入，仍以原 YAML 作为运行输入。它们只含 TagBg 启用与 Y 位移0→-135的未加权曲线、0.33333334秒 Done，没有 PlaySFx，因而不增加标签变化音效。复用已存在的源曲线时钟和 Done 恢复逻辑；0.25秒 Godot Y=67.5，1/3秒放行后继，1/2秒到Y=135。操作6/7纳入与新卡、发言相同的逐项等待；保存保留 presentation_elapsed，重建从中间曲线继续。
+
+GPU仪式整组44/44、310断言通过（tag-animation-final-gpu.log），覆盖1920/1280、加标签→发言→减标签、显示变化量而非最终值、原资源图标、颜色和坐标、中途 SaveSystem JSON/场景重建、Space真实松开只推进一次、确认按钮真实鼠标命中、等待时拒绝关闭和结束后关闭。两尺寸渲染截图已检查。仅新增标签动画与相应等待，不修改玩法标签规则或 content；原作同帧/同标签操作的独立进程捕获、标签悬停详情、整套结果堆移动和其余操作动画仍未验收，因此 PA01 保持 🟡。
+
 ## 2026-09-15 改名禁词链恢复（PA09）
 
 `PromptChangeNameController.IsValidName 0x584de0`先验证UTF16长度1..20，再调用`Datapool.HasBanWords 0x4131c0`；空输入清错误但不可提交，其他非法输入显示ILLEGAL_NAME。复刻原先只检查长度，现接原始`Resources/ban_words.bytes`（368字节）及对应加载链，不制造明文词表或增加过滤词。

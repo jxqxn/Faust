@@ -2,14 +2,30 @@
 
 ## 当前判定
 
+**最新增量：普通装备销毁卸装已接原始unequip曲线、BROKER整卡采样与半秒Done。** GPU仪式49/49、494断言及像素探针通过，两尺寸真实输入、中途存读档和移除状态通过；共享atlas邻格、独立RiftGenerator裂口层、原作同帧捕获未闭合，仍🟡。详见[presentation正文](presentation.md)。
+
+**最新增量：卸装回收已接原始动画与半秒Done等待。** 原编译Shader证明NORMAL材质不读取distance，已纠正“回收也应消散”的旧推断。GPU仪式47/47、431断言通过，含两尺寸、真实输入和装备回手后的中途存档重建。该回收批次未覆盖不回收BROKER；后续已接单格采样，Special仍未完成。
+
+**最新增量：装备操作主卡已改为宿主，正equipment标签的普通装备已接原始位移/四元数曲线与Done等待。** GPU仪式46/46、380断言，真实输入和中途存档恢复通过；该装备批次当时卸装仅纠正主卡身份；后续回收分支已接，未回收BROKER、特殊效果分支和原RenderTexture投影仍开放。详见[presentation正文](presentation.md)。
+
+**最新增量：标签增减操作6/7已补原始图标、变化量颜色、动画与串行Done等待。** GPU仪式44/44、310断言通过，包含两种尺寸、真实按键/确认按钮和中途存档恢复；见[presentation正文](presentation.md)。仍不是全套操作卡表现等价。
+
 **2026-09-15 自审修复继续推进，尚未完成用户要求的全部还原。** 浅色操作文字行已移除，改为原作卡面、气泡和新卡条幅；新卡直接读取原始 `new.anim`，按 Hermite 曲线、1/3 秒 Done 与 1/2 秒视觉终点分别处理。气泡串行等待，真实松键只推进一次；播放中完整保存/重建/读档可继续，已播放音效不重播。新卡角色默认音效按原作使用正面音效，物品使用普通音效。
 
-手牌/仪式发言、镜头 focus 和 slide 已有执行宿主及持久化等待，不能再描述为全部未消费。仍开放：装备/删卡/加减标签/升稀有度等动画、结果堆叠与完整批次时序、旧 guide_cues 迁移、禁词原作实机边界、完整骰子演出、非16:9及其他原作运行边界。**54/54仍仅验收已采集的一条原作状态轨迹。**
+手牌/仪式发言、镜头 focus 和 slide 已有执行宿主及持久化等待，不能再描述为全部未消费。仍开放：装备/删卡/升稀有度等动画及标签悬停详情、结果堆叠与完整批次时序、旧 guide_cues 迁移、禁词原作实机边界、完整骰子演出、非16:9及其他原作运行边界。**54/54仍仅验收已采集的一条原作状态轨迹。**
 
 当前专项：仪式GPU42/42、257断言，覆盖1920与1280、新卡曲线/Done分离、原始NEW_CARD文案、发言真实按键、完整SaveSystem恢复及关闭等待；`op-sequence-save-gpu-2.log`为通过日志。前一版失败日志保留：旧测试错误要求新卡动画完成前自动关闭；初始截图因测试画布零尺寸为全灰，已作废，修复测试布局并重拍。全量结果见下表；全量启动后新增的禁词实现与气泡时限修正使用受影响整组复测，不冒充已纳入该次全量。
 
 | 当前回归范围 | 结果与边界 |
 |---|---|
+| 销毁卸装后原作带复跑 `broker-original-replay.log` | 2/2、196断言；结算和读档54/54、规则随机13/13。复用既存原作带，不是新原作销毁过程捕获 |
+| 销毁卸装GPU `broker-animation-gpu-final.log` | 49/49、494断言；含GPU采样检查、两尺寸、真实输入、中途存读档与移除状态；非原作销毁过程新采集 |
+| 回收动画后原作带GPU复跑 `recovery-animation-original-replay.log` | 2/2、196断言；结算/读档54/54，规则随机13/13；复用既存原作带，非原作回收过程新采集 |
+| 回收卸装GPU `recovery-animation-gpu.log` | 47/47、431断言；独立源材质消费链、两尺寸、真实输入、中途存档与装备回手状态 |
+| 装备动画后原作带GPU复跑 `equip-animation-original-replay.log` | 2/2、196断言；结算/读档54/54，规则随机13/13；复用已捕获原作带，不是新原作装备演出实测 |
+| 普通装备动画GPU `equip-animation-final-gpu.log` | 46/46、380断言；两尺寸、真实输入、中途存档与主从身份；特殊效果/卸装动画未纳入通过范围 |
+| 标签增减动画GPU `tag-animation-final-gpu.log` | 44/44、310断言；两尺寸、真实鼠标/按键、中途存档恢复 |
+| 标签动画后原作带复跑 `tag-animation-original-replay.log` | 2/2、196断言；结算/读档54/54，随机13/13；复用既存原作带，本次捕获复刻四阶段截图 |
 | 全量 `provenance-full-regression-4.log` | 75脚本、791测试，790通过、1 GPU pending；7868断言，退出0，无脚本错误/孤儿/泄漏。包含原作调用带，未包含启动后新加禁词测试及气泡时限修正 |
 | 最终原作带GPU复跑 `provenance-final-original-replay.log` | 2/2、192断言；结算54/54、读档54/54、规则随机13/13。复用原作已采集带，本次未重新启动原作；本次未配置截图导出 |
 | UI布局 `provenance-ui-layout-final.log` | 81/81、1070断言；在禁词实现后整组复测 |
@@ -17,7 +33,7 @@
 | GPU遮罩 `provenance-mask-final-gpu.log` | 1/1、18断言通过，补全上项跳过的渲染专项 |
 | 改名 `ban-word-save-regression-2.log` | 3/3、646断言；原资源303组.NET对照，两尺寸真实禁词输入，GameScreen拒绝空名、合法提交、待处理和完成后的JSON存档/场景重建 |
 
-**2026-09-15 全工作区自制行为审计：仍有同类问题，不能签署“复刻端无自制内容”。** 首次筛查102个运行文件；最新机器清单覆盖106个运行时代码/工程文件、32,067行，并登记6,090个配置/资产文件；这表示扫描范围完整，不表示每个方法和资产已与原作逐一等价。详细问题、经验及外部目录范围见[本次审计](#provenance-audit-20260915)。54/54仅代表已采集轨迹；复核实际RecordedRNG后，排除了骰子绕过记录入口的候选误报。
+**2026-09-15 全工作区自制行为审计：仍有同类问题，不能签署“复刻端无自制内容”。** 首次筛查102个运行文件；最新机器清单覆盖110个运行时代码/工程文件、32,321行，并登记6,096个配置/资产文件；这表示扫描范围完整，不表示每个方法和资产已与原作逐一等价。详细问题、经验及外部目录范围见[本次审计](#provenance-audit-20260915)。54/54仅代表已采集轨迹；复核实际RecordedRNG后，排除了骰子绕过记录入口的候选误报。
 
 **2026-09-15 随机调用带对拍：本次原作第4→5天轨迹，结算后54/54、磁盘重载后54/54，13/13规则随机调用参数和顺序匹配。** 这是该独立原作输入下的状态等价；不代表全游戏、所有随机分支或完整表现均已等价。
 
@@ -118,7 +134,7 @@
 
 ### 自审修复增量（尚未整体验收）
 
-- PA01：删除操作摘要Label，按OpCard.prefab创建原始CardWidget、稀有度背景和Pop贴图；UID复用，使用TextTranslate的`@RITE_SETTLEMENT_POP_TEXT`。DoCachedOp发言串行；PopJumpActionBlocker.OnActive0x5829d0注册canceled回调，InputActions/UI_PopJump独立确认Space/Enter/leftButton的松开跳过。剩余时间写入操作载荷，零剩余重建立即完成。新卡0/1已接原始new.anim、NEW_CARD条幅和PlaySFx；Done与曲线尾部分离，顺序/音效已接入完整存读档。尚缺其他操作动画、全部音效与最终结果堆移动，不能标为完整等价。
+- PA01：删除操作摘要Label，按OpCard.prefab创建原始CardWidget、稀有度背景和Pop贴图；UID复用，使用TextTranslate的`@RITE_SETTLEMENT_POP_TEXT`。DoCachedOp发言串行；PopJumpActionBlocker.OnActive0x5829d0注册canceled回调，InputActions/UI_PopJump独立确认Space/Enter/leftButton的松开跳过。剩余时间写入操作载荷，零剩余重建立即完成。新卡0/1已接原始new.anim、NEW_CARD条幅和PlaySFx；Done与曲线尾部分离，顺序/音效已接入完整存读档。另已补标签增减6/7原始动画、符号/颜色和中途恢复；尚缺装备/删除/升稀有度等操作动画、全部音效与最终结果堆移动，不能标为完整等价。
 - PA02纠错：旧DicePromptNew始终隐藏，自制摘要从未被证实可见；已移除未使用Count/CurrentDices/Success文字占位。原作骰子准备、NumberToSprites和实际骰子演出仍需补齐；删除死代码不是完成骰子还原。
 - PA03：HandPop/RitePop已进入可保存的pending_operations并消费，按实际卡牌/仪式UID显示，后继操作等待最后一句；change_desk_bg/location_icon写入Player对应持久化字段并由地图消费，close_*不再积压无消费者提示。focus已接MoveTo线性移动、地图边界和中途进度；slide已接原始素材/nativeSize/页界、SmoothDamp和关闭Promise；删除向guide_cues继续追加的兜底分支；旧存档残留因缺发生上下文仅无损保留，不擅自回放。不同输入设备和完整原作运行边界未验收。
 - PA03新增实证纠错：`close_begin_guide`在dump.cs:426398声明为`[Timing]`，`CloseBeginGuide.IsValid 0x45eb80`比较guide_type，没有Do；原始事件5310128/5310132/5310137把它放在on。已删除复刻虚构的同名结果指令及“清空全部旧cue”行为，收紧close_*为原作五项白名单。真实引导关闭仍由begin_guide_bar→trigger_events触发。43/43 DSL、184断言通过，未知指令不改变活动引导或等待队列。

@@ -47,12 +47,17 @@ def main():
     parser.add_argument("--source", type=Path, default=Path(
         r"D:\Sultans Game\Sultan's Game_Data\sharedassets0.assets"))
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--profile", choices=("card", "opcard"), default="card")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     targets = {
         "Sprite Shaders Ultimate/GUI SSU": {118, 135, 152, 169},
         "CardShow/Default": {14, 60, 65, 70, 75},
     }
+    if args.profile == "opcard":
+        # Export every compiled variant; do not infer parameter use from the
+        # AssetRipper dummy shader body or just the material property list.
+        targets = {"OpCardShow/Default": None, "OpCardShow/Broker": None}
     report = {"source": str(args.source.resolve()),
               "sha256": hashlib.sha256(args.source.read_bytes()).hexdigest(), "shaders": []}
     for obj in UnityPy.load(str(args.source)).objects:
@@ -81,7 +86,7 @@ def main():
                     for platform, variants in enumerate(program["m_PlayerSubPrograms"]):
                         for index, variant in enumerate(variants):
                             blob = variant["m_BlobIndex"]
-                            if blob not in targets[name]:
+                            if targets[name] is not None and blob not in targets[name]:
                                 continue
                             filename = f"{obj.path_id}_{blob}.asm"
                             code = bytes(programs.m_SubPrograms[blob].m_ProgramCode)
@@ -108,13 +113,14 @@ def main():
                                 "parameter_strings": strings,
                                 "common_parameters": program["m_CommonParameters"],
                                 "name_indices": render_pass["m_NameIndices"]})
-        if {v["blob"] for v in entry["variants"]} != targets[name]:
+        if targets[name] is not None and {v["blob"] for v in entry["variants"]} != targets[name]:
             raise RuntimeError(f"Missing expected variants for {name}")
         report["shaders"].append(entry)
     if len(report["shaders"]) != len(targets):
         raise RuntimeError("Missing target shader")
     (args.output / "index.json").write_text(json.dumps(report, indent=2), encoding="utf8")
-    print("Extracted 2 shaders / 9 selected programs; index.json contains bindings and source hash.")
+    count = sum(len(item["variants"]) for item in report["shaders"])
+    print(f"Extracted {len(report['shaders'])} shaders / {count} selected programs; index.json contains bindings and source hash.")
 
 
 if __name__ == "__main__":
