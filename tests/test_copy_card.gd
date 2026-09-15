@@ -91,7 +91,7 @@ func test_copy_of_an_unknown_source_returns_zero() -> void:
 	assert_eq(int(state.copy_card_instance(9999, db)), 0)
 
 
-func test_copy_operator_copies_each_count_unit_with_its_delta() -> void:
+func test_copy_operator_ignores_value_and_copies_each_target_once() -> void:
 	var state := GameState.new()
 	state.add_card_to_hand(HOST_CARD, db)
 	var source_uid := state.card_uid_for(HOST_CARD)
@@ -105,7 +105,7 @@ func test_copy_operator_copies_each_count_unit_with_its_delta() -> void:
 	assert_eq(target_uids, [source_uid], "the slot selector resolves the slotted source")
 	var hand_before := state.hand.size()
 	ResultExec.execute({"copy.s1": 2}, state, db, context)
-	assert_eq(state.hand.size(), hand_before + 2, "CopyCard runs CardExtensions.Copy once per count unit")
+	assert_eq(state.hand.size(), hand_before + 1, "CopyCard.Do ignores Value; one callback per selected card")
 	var copied_rows := 0
 	for uid in state.hand:
 		var instance = state.get_card_instance(uid)
@@ -114,4 +114,4 @@ func test_copy_operator_copies_each_count_unit_with_its_delta() -> void:
 		copied_rows += 1
 		assert_eq(int(instance.tags.get("社交", 0)), 2,
 			"each copy carries the source's runtime delta")
-	assert_eq(copied_rows, 2)
+	assert_eq(copied_rows, 1)

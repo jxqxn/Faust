@@ -278,16 +278,23 @@ func test_sudan_pool_tag_operations_apply_per_pool_object():
 	assert_eq(state.card_instances.size(), instance_count, "pool filtering leaves runtime instances including initial equipment untouched")
 	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 3, "both duplicate-id objects receive the op")
 	assert_eq(int(state.sudan_deck[2].tags.get("牌池测试", 0)), 3)
-	# The last entry is consumed first, and its own tag state travels with it.
-	RoundLoop.draw_weekly_sudan(state, db, RNG.new(43))
-	var drawn = state.get_card_instance(state.active_sudan_cards.back().card_uid)
-	assert_eq(drawn.card_id, 2010001)
-	assert_eq(int(drawn.tags.get("牌池测试", 0)), 3, "the drawn object carries its own pool state")
-	assert_eq(state.sudan_deck.size(), 2, "drawing removes exactly one pool object")
-	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 3, "the un-drawn object keeps its state")
-	ResultExec.execute({"sudan_pool.2010001+牌池测试": 3}, state, db)
-	assert_eq(int(drawn.tags.get("牌池测试", 0)), 3, "drawn instance is not retroactively changed")
-	assert_eq(int(state.sudan_deck[0].tags.get("牌池测试", 0)), 6, "only the remaining pool object grows")
+	# GenSudanCard shuffles before RemoveLast. Check object identity/state
+	# across every draw, without pinning a Godot seed to the old shuffle.
+	var draw_rng := RNG.new(43)
+	for i in 3:
+		var tags_by_uid := {}
+		for entry in state.sudan_deck:
+			tags_by_uid[entry.uid] = entry.tags.duplicate(true)
+		RoundLoop.draw_weekly_sudan(state, db, draw_rng)
+		var drawn = state.get_card_instance(state.active_sudan_cards.back().card_uid)
+		assert_true(tags_by_uid.has(drawn.uid), "draw promotes an existing pool object")
+		assert_eq(drawn.tags, tags_by_uid[drawn.uid], "own runtime state follows the drawn object")
+		assert_eq(state.sudan_deck.size(), 2 - i)
+		ResultExec.execute({"sudan_pool.2010001+牌池测试": 3}, state, db)
+		assert_eq(drawn.tags, tags_by_uid[drawn.uid], "drawn object is no longer a pool target")
+		for entry in state.sudan_deck:
+			var previous := int(tags_by_uid[entry.uid].get("牌池测试", 0))
+			assert_eq(int(entry.tags.get("牌池测试", 0)), previous + (3 if entry.card_id == 2010001 else 0))
 
 
 func test_redraw_reinserts_the_same_pool_object_with_its_tags():
@@ -299,9 +306,10 @@ func test_redraw_reinserts_the_same_pool_object_with_its_tags():
 	# Tag the pool entry that is still un-drawn, then redraw: the source
 	# re-inserts the discarded Card object, so its own tags re-enter the pool.
 	# [SRC: GameController.c @ RedrawSudanCard 0x5558b0 L3840-3842]
-	ResultExec.execute({"sudan_pool.2010002=重抽标签": 4}, state, db)
+	var remaining_id: int = state.sudan_deck[0].card_id
+	ResultExec.execute({"sudan_pool.%d=重抽标签" % remaining_id: 4}, state, db)
 	var discarded_card_id := int(state.get_card_instance(discarded_uid).card_id)
-	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), db), 2010002)
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), db), remaining_id)
 	var replacement = state.get_card_instance(state.active_sudan_cards.back().card_uid)
 	assert_eq(int(replacement.tags.get("重抽标签", 0)), 4)
 	assert_null(state.get_card_instance(discarded_uid),

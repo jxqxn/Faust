@@ -231,8 +231,7 @@ static func _apply_loot_ref(loot_ref: Variant, state, db, rng) -> void:
 	var loot_id := int(loot_ref)
 	var loot: Dictionary = db.get_loot(loot_id) if db != null and db.has_method("get_loot") else {}
 	if loot.is_empty():
-		if state.has_method("queue_prompt"):
-			state.queue_prompt({"id": "loot.%d" % loot_id, "text": "获得掉落 %d" % loot_id})
+		push_error("GenLoot: missing source loot %d" % loot_id)
 		return
 	# Type-3 loot reads Player.only_cards / Player.only_rites, not current
 	# ownership. A consumed unique card remains excluded on later draws.
@@ -272,17 +271,15 @@ static func _apply_loot_item(id: int, state, db, rng, item: Dictionary = {}) -> 
 				if stackable:
 					card_instance.count = count
 				card_instance.bag_pos = 1
-		if state.has_method("queue_prompt"):
-			var card: Dictionary = db.get_card(id)
-			state.queue_prompt({"id": "card.%d" % id, "text": "获得卡牌：%s" % str(card.get("name", id))})
+		# [SRC: GenLoot.RealGenCard 0x512260 -> GenCard / OnCardBorn;
+		# GenLoot.PreDo closures 14_1/14_2 -> AddCardOp_NewCard.
+		# Neither path creates a confirmation. add_card_to_hand records the
+		# result operation when collecting; a modal here stalls the next day.]
 		return
 	if db != null and not db.get_rite(id).is_empty():
-		var rite_uid := 0
 		if state.has_method("add_available_rite"):
-			rite_uid = int(state.add_available_rite(id, db, rng))
-		if rite_uid > 0 and state.has_method("queue_prompt"):
-			var rite: Dictionary = db.get_rite(id)
-			state.queue_prompt({"id": "rite.%d" % id, "text": "出现新的仪式：%s" % str(rite.get("name", id))})
+			# [SRC: GenLoot.RealGenCard 0x512260 -> InitRite -> AddRite]
+			state.add_available_rite(id, db, rng)
 		return
 	if db != null and not db.get_event(id).is_empty():
 		if state.has_method("enable_event"):
@@ -291,8 +288,9 @@ static func _apply_loot_item(id: int, state, db, rng, item: Dictionary = {}) -> 
 	if db != null and not db.get_loot(id).is_empty():
 		_apply_loot_ref(id, state, db, rng)
 		return
-	if state.has_method("queue_prompt"):
-		state.queue_prompt({"id": "loot_item.%d" % id, "text": "获得内容 %d" % id})
+	# Missing content is a developer diagnostic, never a fabricated reward.
+	# [SRC: GenLoot.RealGenCard 0x512260 calls Debug.LogError on invalid data.]
+	push_error("GenLoot: unknown source item %d" % id)
 
 
 static func _only_generated_ids(state) -> Array:

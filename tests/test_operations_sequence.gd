@@ -28,8 +28,15 @@ func test_original_confirm_waits_before_enabling_tutorial_event() -> void:
 		assert_false(state.is_event_enabled(5300066), "neither branch runs before the response")
 		assert_true(state.pending_operation().has("continuations"))
 		_finish(state, choice)
+		if choice == "confirm_ok":
+			# Original repeated event_on enables 5300300 first; its slide
+			# Promise blocks the subsequent event_on 5300066 until closed.
+			assert_eq(state.pending_operation().kind, "slide")
+			assert_eq(state.pending_operation().payload.images, ["slide/1-1"])
+			assert_false(state.event_done.get(5300066, false))
+			_finish(state)
 		assert_true(state.event_done.get(5300066, false), "both branches dispatch the non-replay start event")
-		assert_eq(state.pending_operation().payload.id, "5300066_prompt_01")
+		assert_eq(state.pending_operation().get("payload", {}).get("id"), "5300066_prompt_01")
 		assert_eq(state.last_confirm_cancelled, choice == "confirm_cancel")
 
 func test_cancel_skips_success_without_erasing_failed_status() -> void:

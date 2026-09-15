@@ -142,7 +142,9 @@ func test_original_save_continuous_days_and_pending_settlement_disk_rebuild() ->
 		assert_eq(main.state.round_number, expected_round)
 		assert_true(saw_day, "day entry occurs after settlements")
 		assert_true(rebuilt_pending, "rebuild while a real source rite is pending")
-		assert_true(rebuilt_prompt, "rebuild inside the nested source operation queue")
+		# A source random branch may contain no interactive operation.
+		# Mandatory nested-queue coverage is the explicit fixture below;
+		# any prompt encountered here still gets the real disk/input checks.
 		assert_true(rebuilt_final, "rebuild after effects finish but before final confirmation")
 		assert_eq(settled_uids.size(), 2, "both source auto rites retain their final confirmation, including after rebuild")
 		if not main.state.round_transition.is_empty():
@@ -151,6 +153,38 @@ func test_original_save_continuous_days_and_pending_settlement_disk_rebuild() ->
 		assert_eq(main.state.round_number, expected_round)
 		assert_true(main._game_screen.get_node("RightActions/AdvanceDayButton/NextDayTextButton").is_visible_in_tree())
 		await _capture(viewport, "day-%d-ready" % expected_round)
+
+func test_nested_queue_disk_rebuild_and_real_confirmation() -> void:
+	# Isolated persistence fixture, not original outcome evidence. Do not
+	# depend on a random court branch producing an extra (incorrect) modal.
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1920, 1080)
+	viewport.handle_input_locally = true
+	add_child_autofree(viewport)
+	var main = load("res://scenes/main.tscn").instantiate()
+	viewport.add_child(main)
+	main.state = GameState.new()
+	OperationsSequence.start([{
+		"counter+990001": 1,
+		"all": {"prompt": {"id": "resume_fixture", "text": "Continue nested operation"}, "counter+990002": 4},
+		"counter+990003": 8,
+	}], main.state, main.db, main.rng)
+	main._show_game()
+	await wait_process_frames(3)
+	assert_eq(main.state.get_counter(990001), 1)
+	assert_eq(main.state.get_counter(990002), 0)
+	main = await _restart_from_disk(main, viewport)
+	assert_eq(str(main.state.pending_operation().id), "resume_fixture")
+	assert_not_null(main._game_screen._event_overlay)
+	await _click(viewport, main._game_screen._event_overlay._confirm_button)
+	assert_true(main.state.pending_operations.is_empty())
+	assert_eq(main.state.get_counter(990001), 1, "executed prefix must not repeat")
+	assert_eq(main.state.get_counter(990002), 4, "nested continuation runs once")
+	assert_eq(main.state.get_counter(990003), 8, "parent resumes after child")
+	main = await _restart_from_disk(main, viewport)
+	assert_true(main.state.pending_operations.is_empty())
+	assert_eq(main.state.get_counter(990002), 4)
+	assert_eq(main.state.get_counter(990003), 8)
 
 func test_continuous_rounds_rebuild_mid_night_and_day_without_double_advance() -> void:
 	var viewport := SubViewport.new()

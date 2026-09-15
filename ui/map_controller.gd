@@ -139,6 +139,8 @@ const MAP_LOCAL_OFFSET := Vector2(0.0, -178.0)
 # [SRC: GameScene Desktop Camera Transform3970/Camera4419; Map7621.]
 const CAMERA_POSITION := Vector2(97, -106)
 const CAMERA_HALF_HEIGHT := 1732.0
+var camera_position := CAMERA_POSITION
+var camera_half_height := CAMERA_HALF_HEIGHT
 const MAP_SCALE := 1.25
 # Image children, independent of their LocationController container rectangles.
 # [SRC: GameScene RectTransforms 7684/7775/7695/7644/7632 and siblings.]
@@ -214,6 +216,7 @@ var _rite_bounds_dirty := false
 var last_rite: int = 0
 var ViewRange := Rect2()
 var DeskBGSpecial: TextureRect
+var _desk_bg_resource := ""
 
 var _think_drop_zone: ThinkDropZone
 var _thinking := false
@@ -247,6 +250,13 @@ func _ready() -> void:
 
 
 func _build_locations() -> void:
+	# GameScene bg_special: 4896x2947, scale2, centre(0,0), Image alpha0.
+	DeskBGSpecial = TextureRect.new()
+	DeskBGSpecial.name = "bg_special"
+	DeskBGSpecial.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	DeskBGSpecial.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	DeskBGSpecial.modulate = Color.TRANSPARENT
+	add_child(DeskBGSpecial)
 	for spec in LOCATION_SCENE_SPECS:
 		var location := Control.new()
 		location.name = "Location_%s" % str(spec["node"])
@@ -319,6 +329,9 @@ func _build_eft_end_map() -> void:
 
 
 func refresh_context() -> void:
+	if _state != null:
+		change_location_icons(int(_state.location_icon_show))
+		change_desk_background(str(_state.change_desk_bg))
 	if _state != null and not _state.think_session.is_empty() and not _think_presentation_running:
 		_thinking = true
 		_play_think_animation()
@@ -329,6 +342,37 @@ func refresh_context() -> void:
 	refresh_rite_pins()
 	refresh_rite_pin_lines()
 	queue_redraw()
+
+
+## [SRC: MapController.ChangeLocationIcon 0x567ef0; raw instructions
+## 0x568013 xorps/0x568019 movaps pass Color(0,0,0,0) to Image.set_color.
+## Value2 calls ChangeBGToEnd, all other values have no visual operation.]
+func change_location_icons(value: int) -> void:
+	if value == 1:
+		for location in locations:
+			var node := get_node_or_null("Location_" + location.node_name)
+			if node != null:
+				for child in node.get_children():
+					if child is TextureRect:
+						child.modulate = Color.TRANSPARENT
+	elif value == 2 and not _end_background_active:
+		change_bg_to_end()
+
+## [SRC: MapController.ChangeDeskBG 0x567e10; empty -> null sprite/clear,
+## nonempty -> image/<res>, white. This overlay is separate from table-map.]
+func change_desk_background(resource: String) -> void:
+	if DeskBGSpecial == null or resource == _desk_bg_resource:
+		return
+	_desk_bg_resource = resource
+	DeskBGSpecial.texture = null
+	DeskBGSpecial.modulate = Color.TRANSPARENT
+	if not resource.is_empty():
+		var path := "res://assets/original/ui/" + resource.trim_prefix("image/").trim_suffix(".png") + ".png"
+		if ResourceLoader.exists(path):
+			DeskBGSpecial.texture = load(path)
+			DeskBGSpecial.modulate = Color.WHITE
+		else:
+			push_error("Original desk background asset missing: " + resource)
 
 
 ## Direct counterpart of MapController.ChangeBGToEnd. The source replaces
@@ -473,6 +517,9 @@ func is_thinking() -> bool:
 func _layout() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
+	if DeskBGSpecial != null:
+		DeskBGSpecial.size = Vector2(4896, 2947) * 2.0 * size.y / (camera_half_height * 2.0)
+		DeskBGSpecial.position = _world_to_canvas(Vector2.ZERO) - DeskBGSpecial.size * 0.5
 	for spec in LOCATION_SCENE_SPECS:
 		var controller := maps.get(str(spec["location"])) as LocationController
 		if controller == null:
@@ -508,12 +555,43 @@ func _map_local_to_canvas(source_position: Vector2) -> Vector2:
 	return _world_to_canvas(world)
 
 
+## Source MoveTo uses clamped linear interpolation, then clamps against the
+## camera BoxCollider2D. Save cursor is owned by the pending focus occurrence.
+## [SRC: DesktopCameraController.Update 0x540ba0 / MoveTo 0x540900;
+## dump.cs:318422; GameScene Collider4832 5800x3600, Transform3997 scale1.5.]
+func step_source_focus(payload: Dictionary, delta: float) -> bool:
+	var target = rite_cards.get(int(payload.get("rite_uid", 0)))
+	if target == null:
+		return true
+	if not payload.has("from"):
+		# Focus targets RiteController.transform, not its offset click bound.
+		var source: Vector2 = _rite_card_source_positions.get(int(payload.rite_uid), Vector2.ZERO)
+		var world := source * MAP_SCALE + MAP_LOCAL_OFFSET
+		payload["from"] = [camera_position.x, camera_position.y]
+		payload["to"] = [world.x, world.y]
+		payload["from_distance"] = camera_half_height
+		payload["elapsed"] = 0.0
+	payload.elapsed = float(payload.elapsed) + delta
+	var duration := float(payload.duration)
+	var ratio := clampf(float(payload.elapsed) / duration, 0.0, 1.0) if duration > 0.0 else 1.0
+	var start := Vector2(payload.from[0], payload.from[1])
+	var destination := Vector2(payload.to[0], payload.to[1])
+	camera_position = start.lerp(destination, ratio)
+	camera_half_height = lerpf(float(payload.from_distance), float(payload.distance), ratio)
+	var half_width := camera_half_height * size.x / size.y
+	camera_position.x = clampf(camera_position.x, -4350.0 + half_width, 4350.0 - half_width) if half_width <= 4350.0 else 0.0
+	camera_position.y = clampf(camera_position.y, -2700.0 + camera_half_height, 2700.0 - camera_half_height) if camera_half_height <= 2700.0 else 0.0
+	_layout()
+	queue_redraw()
+	return ratio >= 1.0
+
+
 func _map_scale() -> float:
-	return size.y / (CAMERA_HALF_HEIGHT * 2.0) * MAP_SCALE
+	return size.y / (camera_half_height * 2.0) * MAP_SCALE
 
 
 func _world_to_canvas(world: Vector2) -> Vector2:
-	var relative := (world - CAMERA_POSITION) * size.y / (CAMERA_HALF_HEIGHT * 2.0)
+	var relative := (world - camera_position) * size.y / (camera_half_height * 2.0)
 	return size * 0.5 + Vector2(relative.x, -relative.y)
 
 
@@ -728,7 +806,8 @@ func refresh_rite_cards() -> void:
 		card.name = "RiteNew_%d" % instance.uid
 		card.rite_uid = instance.uid
 		card.rite_id = instance.id
-		card.tooltip_text = str(rite.get("name", instance.id))
+		# Hidden rites must not leak their name through the native tooltip.
+		card.tooltip_text = ""
 		card.disabled = is_scene_blocked()
 		for state_name in ["normal", "hover", "pressed", "focus", "disabled"]:
 			card.add_theme_stylebox_override(state_name, StyleBoxEmpty.new())
@@ -761,6 +840,7 @@ func refresh_rite_cards() -> void:
 		card.z_index = 7
 		add_child(card)
 		rite_cards[instance.uid] = card
+		_configure_rite_reveal(card, rite, instance)
 	_rite_bounds_dirty = true
 	_layout_rite_cards()
 
@@ -774,8 +854,44 @@ func _rite_icon(rite: Dictionary) -> Texture2D:
 func _on_rite_card_pressed(rite_uid: int) -> void:
 	if is_scene_blocked():
 		return
+	var card = rite_cards.get(rite_uid)
+	if card != null and not card.revealed:
+		card.open_after_reveal = true
+		card.begin_reveal()
+		return
 	last_rite = rite_uid
 	open_rite_instance.emit(rite_uid)
+
+
+## [SRC: RiteRender.Init 0x59a9e0, OnRiteShow 0x59bdb0,
+## OpenRitePanel 0x59c2f0; dump.cs Rite.is_show@0x21 / new_born@0x20,
+## RiteNode.once_new@0x50; RiteNew.prefab Mask / rite_show.anim.]
+func _configure_rite_reveal(card: RiteCardButton, rite: Dictionary, instance) -> void:
+	var known: bool = bool(_state.once_new_rites_is_show.get(instance.id, false)) and not instance.new_born
+	card.revealed = instance.is_show or int(rite.get("once_new", 0)) == -1 or known
+	if card.revealed:
+		# Init takes the same persistent known path without replaying rite_show.
+		instance.is_show = true
+		if _state.once_new_rites_is_show.has(instance.id):
+			_state.once_new_rites_is_show[instance.id] = true
+	var mask := TextureRect.new()
+	mask.name = "Mask"
+	mask.texture = _pin_atlas.frame("rite_0.png")
+	mask.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(mask)
+	card.get_node("TitleBG").visible = card.revealed
+	card.get_node("Icon").modulate.a = 1.0 if card.revealed else 0.0
+	mask.visible = not card.revealed
+	card.reveal_allowed = func(): return not is_scene_blocked()
+	card.mouse_entered.connect(card.begin_reveal)
+	card.focus_entered.connect(card.begin_reveal)
+	card.reveal_finished.connect(func():
+		instance.is_show = true
+		if _state.once_new_rites_is_show.has(instance.id):
+			_state.once_new_rites_is_show[instance.id] = true
+		if card.open_after_reveal and not is_scene_blocked():
+			_on_rite_card_pressed(instance.uid))
 
 
 func _build_rite_title(card: RiteCardButton, rite: Dictionary, instance) -> void:
@@ -871,6 +987,12 @@ func _layout_rite_pin(pin: Control, source_position: Vector2) -> void:
 
 func _layout_rite_card(card: Control, source_position: Vector2) -> void:
 	_layout_map_rect(card, source_position, RITE_CARD_BOUND_SIZE, RITE_CARD_BOUND_ANCHORED_POSITION, RITE_CARD_BOUND_PIVOT)
+	var mask := card.get_node_or_null("Mask") as Control
+	if mask != null:
+		# Root pivot(.5,.5); Mask pivot(.5,0), pos(0,-17.6), 123x133.
+		# Bound pos(0,-18): y-flipped relative top differs by -0.4.
+		mask.position = Vector2(0, -0.4) * _map_scale()
+		mask.size = Vector2(123, 133) * _map_scale()
 	var banner := card.get_node_or_null("TitleBG") as Control
 	if banner != null:
 		var source_scale := Vector2.ONE * _map_scale()
@@ -1103,7 +1225,7 @@ func show_satisfied_rites(rite_uids: Array) -> void:
 func _draw() -> void:
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
-	var world_scale := size.y / (CAMERA_HALF_HEIGHT * 2.0)
+	var world_scale := size.y / (camera_half_height * 2.0)
 	var table_size := Vector2(4896, 2947) * 2.0 * world_scale
 	draw_texture_rect(TABLE_TEXTURE, Rect2(_world_to_canvas(Vector2.ZERO) - table_size * 0.5, table_size), false)
 	var map_texture: Texture2D = END_MAP_TEXTURE if _end_background_active else MAP_TEXTURE
@@ -1118,10 +1240,39 @@ class RitePinView:
 
 class RiteCardButton:
 	extends Button
+	signal reveal_finished
+	var revealed := true
+	var revealing := false
+	var open_after_reveal := false
+	var reveal_allowed: Callable
+	var _reveal_tween: Tween
 	var rite_uid := 0
 	var rite_id := 0
 	var satisfied_hint := false
 	var _hint_tween: Tween
+
+	func begin_reveal() -> void:
+		if revealed or revealing or disabled or not reveal_allowed.call():
+			return
+		revealing = true
+		_reveal_tween = create_tween()
+		# Source title rotates Y=90->0 (zero-tangent Euler keys), Mask
+		# fades by 10/60s, Icon fades 10/60->25/60s. Open at 55/60s.
+		# Orthographic projection of Y rotation is horizontal cosine scale.
+		_reveal_tween.tween_method(_sample_reveal, 0.0, 55.0 / 60.0, 55.0 / 60.0)
+		_reveal_tween.tween_callback(func():
+			revealed = true
+			revealing = false
+			reveal_finished.emit())
+
+	func _sample_reveal(t: float) -> void:
+		var banner := get_node("TitleBG") as Control
+		banner.visible = t >= 1.0 / 60.0
+		banner.scale.x = banner.scale.y * sin(smoothstep(0.0, 25.0 / 60.0, t) * PI * 0.5)
+		var mask := get_node("Mask") as CanvasItem
+		mask.visible = t < 10.0 / 60.0
+		mask.modulate.a = 1.0 - smoothstep(0.0, 10.0 / 60.0, t)
+		(get_node("Icon") as CanvasItem).modulate.a = smoothstep(10.0 / 60.0, 25.0 / 60.0, t)
 
 	## [SRC: RiteRender.ShowEffect 0x59cc70 -> card_satisfied.anim.]
 	func set_satisfied_hint(on: bool) -> void:

@@ -5,8 +5,12 @@ const GameScreen = preload("res://ui/game_screen.gd")
 func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 	# [SRC: event/5310000 op3, 5310001 op1, 5310002 op2, 5310003 op2;
 	# save_samples/auto_save.json notes 10001/10002 provide independent rewards.]
-	var stage := Control.new()
-	stage.size = get_viewport().get_visible_rect().size
+	# Isolate window input from other GUT fixtures; the root viewport may
+	# retain a pointer over a newly spawned card from the preceding test.
+	var stage := SubViewport.new()
+	stage.size = Vector2i(1920, 1080)
+	stage.handle_input_locally = true
+	stage.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child_autofree(stage)
 	var main = load("res://scenes/main.tscn").instantiate()
 	stage.add_child(main)
@@ -54,9 +58,10 @@ func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 			group.get_child(index).pressed.emit()
 			var confirm = overlay.find_child("EventPromptConfirmButton", true, false)
 			assert_eq(confirm.text, "")
-			if id == "5310003_option_1" and DisplayServer.get_name() != "headless":
+			var capture := OS.get_environment("FAUST_OPENING_CAPTURE")
+			if id == "5310003_option_1" and DisplayServer.get_name() != "headless" and not capture.is_empty():
 				await RenderingServer.frame_post_draw
-				get_viewport().get_texture().get_image().save_png("res://docs/ui_layout/opening_wife_confirm.png")
+				stage.get_texture().get_image().save_png(capture + "wife-confirm.png")
 			confirm.pressed.emit()
 			picked.append(id)
 			if id == "5310000_option_1":
@@ -89,14 +94,19 @@ func test_real_new_game_choices_grant_source_sample_cards_before_sudan_draw():
 			actual.append(state.get_card_instance(uid).card_id)
 	expected.sort()
 	actual.sort()
-	assert_eq(actual, expected, "ordinary opening hand matches original save reward evidence")
+	var debug_cards: Array = []
+	for uid in state.hand:
+		var card = state.get_card_instance(uid)
+		debug_cards.append({"id": card.card_id, "uid": uid, "zone": card.zone, "bag": card.bag})
+	assert_eq(actual, expected, "ordinary opening hand matches original save reward evidence; card locations: " + str(debug_cards))
 	var actual_rites: Array = []
 	for instance in state.available_rite_instances():
 		actual_rites.append(instance.id)
 	assert_eq(actual_rites, expected_rites, "all opening rites and their order match original save notes")
-	if DisplayServer.get_name() != "headless":
+	var capture := OS.get_environment("FAUST_OPENING_CAPTURE")
+	if DisplayServer.get_name() != "headless" and not capture.is_empty():
 		await RenderingServer.frame_post_draw
-		get_viewport().get_texture().get_image().save_png("res://docs/ui_layout/opening_reward_hand.png")
+		stage.get_texture().get_image().save_png(capture + "reward-hand.png")
 
 
 func test_opening_then_viewport_click_starts_persistable_round_transition() -> void:

@@ -80,6 +80,9 @@ var _state
 var _db
 var _rng
 
+var _source_slide: Control
+var _source_pop: Control
+var _source_pop_operation: Dictionary = {}
 var _log_label: Label
 var _background: ColorRect
 var _begin_guide_bar: BeginGuideBar
@@ -753,11 +756,20 @@ func _apply_layout() -> void:
 	)
 	_set_rect(
 		_rail_padding,
-		Rect2(HAND_CONTENT_OFFSET * k, HAND_CONTENT_SIZE * k)
+		Rect2(HAND_CONTENT_OFFSET * k, HAND_CONTENT_SIZE)
 	)
-	# CardNew/SudanCard use their prefab RectTransforms directly. There is no
-	# legacy mockup scale between the card root and GameScene/MainUI/Hand.
+	# Preserve fractional CanvasScaler coordinates at non-integral scales.
+	_card_rail_view.position = Vector2(0, view_size.y - HAND_MASK_HEIGHT * k.y)
+	_rail_padding.position = HAND_CONTENT_OFFSET * k
+	_rail_padding.size = HAND_CONTENT_SIZE
+	# [SRC: GameScene.unity Hand RectTransform 7660 + CanvasScaler 11488;
+	# HandCardsController.Update 0x563520, dump.cs:320760, reads local rect
+	# and child sizeDelta * localScale, before the CanvasScaler transform.]
 	if _card_items != null:
+		# The Unity CanvasScaler scales the complete Hand subtree. Keep all
+		# child layout in authored 3840x2160 coordinates and apply the viewport
+		# factor once at the subtree boundary.
+		_rail_padding.scale = k
 		_card_items.scale = Vector2.ONE
 		_card_items.position = Vector2.ZERO
 	_card_items.custom_minimum_size = Vector2.ZERO
@@ -1863,6 +1875,15 @@ func _refresh_event_overlay() -> void:
 	if _state == null:
 		_clear_event_overlay()
 		return
+	if not _state.pending_operations.is_empty() and str(_state.pending_operations[0].get("kind", "")) == "slide":
+		_present_source_slide()
+		return
+	if not _state.pending_operations.is_empty() and str(_state.pending_operations[0].get("kind", "")) == "focus":
+		_present_source_focus()
+		return
+	if not _state.pending_operations.is_empty() and str(_state.pending_operations[0].get("kind", "")) == "source_pop":
+		_present_source_pop()
+		return
 	var display := _next_event_display()
 	if display.is_empty():
 		_clear_event_overlay()
@@ -1877,6 +1898,89 @@ func _refresh_event_overlay() -> void:
 			_wait_for_queued_sleep(float(display.get("seconds", 0.0)))
 		return
 	_show_event_overlay(display)
+
+
+## Reuse the persisted pending-operation queue; remaining time is updated on
+## the queued occurrence, so rebuilding the scene does not discard its promise.
+## [SRC: HandPop/RitePop -> ShowPop; completion resumes OperationsSequence.]
+var _focus_waiting := false
+
+func _present_source_slide() -> void:
+	if is_instance_valid(_source_slide):
+		return
+	_clear_event_overlay()
+	var operation: Dictionary = _state.pending_operations[0]
+	_source_slide = preload("res://ui/source_slide.gd").new()
+	_source_slide.name = "SourceSlide"
+	_source_slide.z_index = BLOCKING_PROMPT_Z
+	add_child(_source_slide)
+	_source_slide.setup(operation.payload, _db)
+	set_world_scene_blocker("source_slide", true)
+	_source_slide.closed.connect(func():
+		_source_slide.queue_free()
+		_source_slide = null
+		set_world_scene_blocker("source_slide", false)
+		if not _state.pending_operations.is_empty() and is_same(_state.pending_operations[0], operation):
+			_consume_event_display())
+
+
+func _present_source_focus() -> void:
+	if _focus_waiting:
+		return
+	_focus_waiting = true
+	var operation: Dictionary = _state.pending_operations[0]
+	var desk = get_node_or_null("SituationDesk")
+	if desk != null:
+		while is_inside_tree() and is_instance_valid(desk) and not desk.step_source_focus(operation.payload, get_process_delta_time()):
+			await get_tree().process_frame
+	_focus_waiting = false
+	if is_inside_tree() and not _state.pending_operations.is_empty() and is_same(_state.pending_operations[0], operation):
+		_consume_event_display()
+
+
+func _present_source_pop() -> void:
+	if is_instance_valid(_source_pop):
+		return
+	_source_pop_operation = _state.pending_operations[0]
+	var payload: Dictionary = _source_pop_operation.payload
+	var target: Control
+	if payload.has("card_uid"):
+		for card in _ordered_hand_cards():
+			if card.card_uid == int(payload.card_uid):
+				target = card
+				break
+	elif payload.has("rite_uid"):
+		var desk = get_node_or_null("SituationDesk")
+		if desk != null:
+			target = desk.rite_cards.get(int(payload.rite_uid))
+	if target == null:
+		# A removed target has no controller to show a pop, matching SafeShowPop.
+		call_deferred("_finish_source_pop")
+		return
+	_source_pop = preload("res://ui/source_pop.gd").new()
+	_source_pop.name = "SourcePop"
+	target.add_child(_source_pop)
+	# CardNew Pop anchors at its parent's top-left; RiteNew adds (-75.6,114)
+	# in Unity's upward Y. Both use POP_TEXT, not the settlement font size.
+	# [SRC: CardNew Rect224543584136297381; RiteNew Rect224941304181978548.]
+	_source_pop.position = Vector2(-75.6, -114) if payload.has("rite_uid") else Vector2.ZERO
+	if payload.has("rite_uid"):
+		var desk = get_node_or_null("SituationDesk")
+		var source_scale: float = desk._map_scale()
+		_source_pop.scale = Vector2.ONE * source_scale
+		# RiteController root relative to the host's Bound click rectangle.
+		_source_pop.position = (Vector2(61.5, 115) + Vector2(-75.6, -114)) * source_scale
+	_source_pop.setup(str(payload.text), float(payload.remaining), "@POP_TEXT")
+	_source_pop.progressed.connect(func(seconds: float): payload["remaining"] = seconds)
+	_source_pop.finished.connect(_finish_source_pop)
+
+func _finish_source_pop() -> void:
+	if is_instance_valid(_source_pop):
+		_source_pop.queue_free()
+	_source_pop = null
+	if _state != null and not _state.pending_operations.is_empty() and is_same(_state.pending_operations[0], _source_pop_operation):
+		_source_pop_operation = {}
+		_consume_event_display()
 
 
 func _next_event_display() -> Dictionary:

@@ -5,6 +5,54 @@ var _round_root: String
 var _global_path: String
 var _test_root: String
 
+## Test-only independent input, captured from the original executable.
+## Fail closed on missing, extra, reordered or differently bounded draws.
+class RecordedRNG extends GameRNG:
+	var calls: Array = []
+	var cursor := 0
+	var errors: Array = []
+	var observed: Array = []
+	func range_int_half_open(lo: int, hi: int) -> int:
+		observed.append([lo, hi])
+		if cursor >= calls.size():
+			errors.append("extra draw [%d,%d)" % [lo, hi])
+			return lo
+		var call: Dictionary = calls[cursor]
+		cursor += 1
+		if int(call.min) != lo or int(call.max) != hi:
+			errors.append("seq %s expected [%s,%s), got [%d,%d)" % [call.seq, call.min, call.max, lo, hi])
+			return lo
+		var value := int(call.value)
+		if value < lo or value >= hi:
+			errors.append("invalid captured value")
+			return lo
+		return value
+	func range_int(lo: int, hi: int) -> int:
+		return range_int_half_open(lo, hi + 1)
+	func value() -> float:
+		errors.append("uncaptured floating point gameplay draw")
+		return 0.0
+
+func test_recorded_rng_rejects_invalid_replay_inputs() -> void:
+	var tape := RecordedRNG.new()
+	tape.calls = [{"seq": 7, "min": 0, "max": 4, "value": 2}]
+	assert_eq(tape.range_int_half_open(0, 4), 2)
+	assert_true(tape.errors.is_empty())
+	tape.range_int_half_open(0, 4)
+	assert_eq(tape.errors.size(), 1, "exhaustion must fail, never use a fresh random stream")
+	tape.cursor = 0
+	tape.errors.clear()
+	tape.range_int_half_open(0, 5)
+	assert_eq(tape.errors.size(), 1, "candidate count mismatch must fail")
+	tape.cursor = 0
+	tape.errors.clear()
+	tape.calls[0].value = 4
+	tape.range_int_half_open(0, 4)
+	assert_eq(tape.errors.size(), 1, "out-of-range evidence must fail")
+	tape.errors.clear()
+	tape.value()
+	assert_eq(tape.errors.size(), 1, "missing float evidence must fail")
+
 func before_each() -> void:
 	_save_path = SaveSystem.save_path_override
 	_round_root = SaveSystem.round_save_root_override
@@ -74,6 +122,12 @@ func test_household_original_runtime_oracle() -> void:
 	var expected: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(evidence.path_join("original-after.json")))
 	var imported := OriginalSaveImporter.import_save(before, main.db)
 	main.state = imported.state
+	var tape: RecordedRNG = null
+	var tape_path := evidence.path_join("gameplay-random-tape.json")
+	if FileAccess.file_exists(tape_path):
+		tape = RecordedRNG.new()
+		tape.calls = JSON.parse_string(FileAccess.get_file_as_string(tape_path)).calls
+		main.rng = tape
 	main.state.global_state = GlobalState.load_default()
 	main._show_game()
 	await wait_process_frames(3)
@@ -109,13 +163,26 @@ func test_household_original_runtime_oracle() -> void:
 		# click the final close once. Repeated Next clicks race the commit.
 		if not main._rite_overlay._resolution_committed:
 			continue
+		if rite_id == 5001001 and tape == null:
+			var court_ops: Array = main._rite_overlay._last_result.deferred.get("card_ops", [])
+			receipt["court_card_ops"] = court_ops.duplicate(true)
+			var speeches := court_ops.filter(func(op): return int(op.get("op", -1)) == 9)
+			assert_false(speeches.is_empty(), "original court speech remains in card result stream")
+			var rendered_speech := false
+			for row in main._rite_overlay._result_ops_layer.get_children():
+				if int(row.get_meta("source_card_op", -1)) == 9:
+					rendered_speech = row is Label and not row.text.is_empty() and row.is_visible_in_tree()
+			assert_true(rendered_speech, "real result panel renders the card speech without an extra modal")
 		if main._rite_overlay._resolution_committed and rite_id == 5000001 and not household_rebuilt:
 			var text_before: String = main._rite_overlay._result_surface_text.text
 			assert_true(text_before.contains("没有派遣任何人治理家业"), "original no-manager branch")
 			await _capture(viewport, "oracle-household-before-close")
 			receipt.household_committed = SaveSystem.serialize(main.state)
-			main = await _restart_from_disk(main, viewport)
-			assert_eq(main._rite_overlay._result_surface_text.text, text_before)
+			# Taped run follows the original operation trace exactly; the
+			# independent untaped regression retains the mid-result restart.
+			if tape == null:
+				main = await _restart_from_disk(main, viewport)
+				assert_eq(main._rite_overlay._result_surface_text.text, text_before)
 			household_rebuilt = true
 			continue
 		receipt.actions.append({"rite": rite_id, "uid": uid, "committed": main._rite_overlay._resolution_committed})
@@ -124,7 +191,11 @@ func test_household_original_runtime_oracle() -> void:
 			closed.append(rite_id)
 	assert_true(main.state.round_transition.is_empty(), "transition completes")
 	assert_eq(closed, [5001001, 5000001], "same original final-close order")
-	assert_true(household_rebuilt, "disk rebuild before household final close")
+	assert_true(household_rebuilt, "household final-close boundary reached")
+	for action in receipt.actions:
+		assert_false(str(action.get("prompt", "")).begins_with("pop."), "original trace has no fullscreen CardPop confirmation")
+		assert_false(str(action.get("prompt", "")).begins_with("card."), "original trace has no generated-card confirmation")
+		assert_false(str(action.get("prompt", "")).begins_with("rite."), "original trace has no generated-rite confirmation")
 	assert_eq(main.state.round_number, int(expected.round))
 	# The original trace dismisses TIME_OUT, then BACK_ROUND, before saving.
 	for guide_type in ["TIME_OUT", "BACK_ROUND"]:
@@ -134,6 +205,10 @@ func test_household_original_runtime_oracle() -> void:
 			receipt.actions.append({"close_guide": guide_type})
 			await _click(viewport, guide._close)
 	receipt.after = OriginalSaveImporter.diff_against_original(expected, main.state)
+	if tape != null:
+		receipt.random_tape = {"consumed": tape.cursor, "total": tape.calls.size(), "errors": tape.errors, "observed": tape.observed}
+		assert_eq(tape.errors, [], "original random call boundaries and order")
+		assert_eq(tape.cursor, tape.calls.size(), "all original gameplay draws consumed")
 	receipt.clone_after = SaveSystem.serialize(main.state)
 	for row in receipt.after:
 		assert_true(row.pass, "after runtime transition: " + row.check)
@@ -145,5 +220,8 @@ func test_household_original_runtime_oracle() -> void:
 	assert_null(main._rite_overlay)
 	assert_true(main.state.round_transition.is_empty())
 	await _capture(viewport, "oracle-reloaded")
-	var output := FileAccess.open(evidence.path_join("clone-replay.json"), FileAccess.WRITE)
+	var receipt_path := OS.get_environment("FAUST_DAY_REPLAY_RECEIPT")
+	if receipt_path.is_empty():
+		receipt_path = "user://clone-replay.json"
+	var output := FileAccess.open(receipt_path, FileAccess.WRITE)
 	output.store_string(JSON.stringify(receipt, "\t"))

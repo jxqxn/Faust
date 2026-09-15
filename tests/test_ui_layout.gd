@@ -693,6 +693,7 @@ func test_game_screen_map_pin_and_menu_are_interactive():
 	assert_not_null(menu, "menu should be an interactive button")
 	if pin != null:
 		pin.pressed.emit()
+		await get_tree().create_timer(1.0).timeout
 	if menu != null:
 		menu.pressed.emit()
 	assert_eq(opened, [pin.rite_uid] if pin != null else [], "the pin must expose its exact runtime rite uid")
@@ -737,7 +738,7 @@ func test_rite_card_opens_its_runtime_rite_without_location_selector_shortcut():
 		return
 	var rng_state_before: int = game.rng.get_state()
 	rite_card.pressed.emit()
-	await wait_process_frames(2)
+	await get_tree().create_timer(1.0).timeout
 
 	assert_eq(game.rng.get_state(), rng_state_before, "opening a pin must not consume simulation RNG")
 	var rite_panel := _find_node_by_name(game, "RiteOverlayPanel") as Control
@@ -1654,8 +1655,8 @@ func test_game_screen_card_rail_replays_source_hand_and_mask_rects():
 		var k := Vector2(view.x / 3840.0, view.y / 2160.0)
 		assert_almost_eq(rail_padding.position.x, 516.7349 * k.x, 1.0, "Hand's resolved left inset must replay GameScene")
 		assert_almost_eq(rail_padding.position.y, 36.0 * k.y, 1.0, "Hand sits 36 pixels below the source mask top")
-		assert_almost_eq(rail_padding.size.x, 2723.264 * k.x, 1.0, "Hand uses the source 2723.264 width, not full viewport width")
-		assert_almost_eq(rail_padding.size.y, 430.0 * k.y, 1.0, "Hand keeps its source 430 height")
+		assert_almost_eq(rail_padding.get_global_rect().size.x, 2723.264 * k.x, 1.0, "Hand uses the source 2723.264 width, scaled once")
+		assert_almost_eq(rail_padding.get_global_rect().size.y, 430.0 * k.y, 1.0, "Hand keeps its source 430 height, scaled once")
 		assert_almost_eq(screen._card_items.size.x, rail_padding.size.x, 1.0, "card layout uses the source Hand rectangle")
 
 

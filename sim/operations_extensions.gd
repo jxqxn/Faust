@@ -128,11 +128,10 @@ static func _run(sequence: Dictionary, state, db, rng) -> Dictionary:
 			var count := maxi(1, int(key.substr(7))) if key.begins_with("choose:") else 1
 			# [SRC: ChooseOperations.GetOperations 0x4f3830: N > Count keeps order.]
 			if count <= keys.size():
-				for i in range(keys.size() - 1, 0, -1):
-					var j: int = rng.range_int(0, i) if rng != null else randi_range(0, i)
-					var temp = keys[i]
-					keys[i] = keys[j]
-					keys[j] = temp
+				# ChooseOperations.GetOperations 0x4f3830 calls the same
+				# ListExtensions.Shuffle as other original list consumers.
+				var shuffle_rng = rng if rng != null else GameRNG.new()
+				keys = shuffle_rng.shuffle(keys)
 				keys = keys.slice(0, count)
 			_push(sequence, value, keys)
 			continue

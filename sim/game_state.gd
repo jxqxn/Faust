@@ -288,6 +288,9 @@ var story_unshow := false
 var prestige_unshow := false
 var deadline_unshow := false
 var helpbtn_unshow := false
+# [SRC: Player.change_desk_bg@0x58 / location_icon_show@0x50; ChangeDeskBG/ChangeLocationIcon.Do.]
+var change_desk_bg := ""
+var location_icon_show := 0
 var once_new_rites_is_show: Dictionary = {}
 # Historical generation counters. They are event history rather than current
 # ownership: a card's id increments once when PlayerExtensions.AddCard creates
@@ -297,12 +300,14 @@ var once_new_rites_is_show: Dictionary = {}
 var gen_cards: Dictionary = {}
 var gen_tags: Dictionary = {}
 # Active on-screen beginner-guide directive from the last `begin_guide`
-# action (type/anim_type/pos/ring_pos/bind...). `close_begin_guide` clears
-# it. Presentation cues (focus/hand_pop/rite_pop/slide/close_*) accumulate
-# in guide_cues for the overlay; the rules layer never reads them.
+# action (type/anim_type/pos/ring_pos/bind...). The guide controller closes
+# it and emits the close_begin_guide TIMING; that name is not a DSL action.
 # [SRC: BeginGuideController.c @ ShowBeginGuide (0x526220) /
 #       GetBeginGuideItem (0x525630); CloseBeginGuide.c]
 var begin_guide: Dictionary = {}
+# Legacy clone-save residue only. No new operations write here. Retained
+# losslessly because these old entries lack the execution context needed
+# for safe replay; migration remains explicit in METHOD_MAP/verification.
 var guide_cues: Array = []
 # Original Player keeps the terminal outcome independently of the transient
 # game-over presentation request. `over_reason` uses int.MinValue while no
@@ -1171,6 +1176,8 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	prestige_unshow = false
 	deadline_unshow = false
 	helpbtn_unshow = false
+	change_desk_bg = ""
+	location_icon_show = 0
 	once_new_rites_is_show.clear()
 	gen_cards.clear()
 	gen_tags.clear()
@@ -2783,6 +2790,12 @@ func trigger_events(timing: String, ctx: Dictionary = {}) -> Array[int]:
 	if event_runtime == null:
 		return []
 	var trigger_ctx := ctx.duplicate(true)
+	# Bind before fire: timing re-arming itself consumes the shared stream.
+	# [SRC: TimingRoundBase.IsValid 0x465d30 -> NextRound 0x465f20.]
+	if _event_rng == null:
+		_event_rng = GameRNG.new()
+	if trigger_ctx.get("rng") == null:
+		trigger_ctx["rng"] = _event_rng
 	if not trigger_ctx.has("acting_card") and timing in ["card_clean", "card_born", "card_dead"]:
 		var card_uid := int(trigger_ctx.get("card_uid", 0))
 		if card_uid <= 0:

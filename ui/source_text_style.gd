@@ -8,6 +8,8 @@ static func clear_cache() -> void:
 const Preferences = preload("res://ui/game_application_settings.gd")
 var _control: Control
 var _style: Dictionary
+var _last_measured_text := ""
+var _measuring := false
 
 # TextTranslate.UpdateTextInternal 0x1566ad0 / UpdateFontSize 0x1566920;
 # dump.cs:393716 TextStyleNode. Font paths follow SDF m_SourceFontFile GUIDs.
@@ -41,17 +43,13 @@ static func fit_point_size(font: Font, text: String, box: Vector2, floor_size: i
 
 
 static func _fits_at(font: Font, text: String, box: Vector2, point_size: int) -> bool:
-	var line_height := font.get_height(point_size)
-	if line_height <= 0.0:
-		return true
-	var sample := font.get_string_size("汉", HORIZONTAL_ALIGNMENT_LEFT, -1, point_size).x
-	if sample <= 0.0:
-		sample = font.get_string_size("M", HORIZONTAL_ALIGNMENT_LEFT, -1, point_size).x
-	if sample <= 0.0:
-		return true
-	var per_line := maxi(1, int(floor(box.x / sample)))
-	var lines := int(ceil(float(text.length()) / float(per_line)))
-	return float(lines) * line_height <= box.y
+	# Shape the actual string with the renderer: mixed-width glyphs, explicit
+	# newlines and word boundaries cannot be estimated from a single Han glyph.
+	# Host adapter for TextTranslate.UpdateFontSize 0x1566920 -> TMP auto sizing.
+	var extent := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_LEFT,
+		box.x, point_size, -1, TextServer.BREAK_MANDATORY | TextServer.BREAK_WORD_BOUND | TextServer.BREAK_ADAPTIVE)
+	return extent.x <= box.x and extent.y <= box.y
+
 
 static func apply(control: Control, key: String, size_class: String = "") -> void:
 	# Immutable source configuration; preferences are still read for each binding.
@@ -120,6 +118,8 @@ func _ready() -> void:
 
 
 func _apply_auto_size(font: Font = null) -> void:
+	if _measuring:
+		return
 	if _control == null or not bool(_style.get("enableAutoSize", false)):
 		return
 	var limits: Array = _style.get("sizeRange", [])
@@ -138,13 +138,46 @@ func _apply_auto_size(font: Font = null) -> void:
 	var box := _control.size
 	if box.x <= 0.0 or box.y <= 0.0:
 		return
+	_measuring = true
 	var fitted := fit_point_size(font, text, box, floor_size, ceiling)
+	if _control is RichTextLabel:
+		# Shape BBCode with RichTextLabel itself, including relative font sizes,
+		# explicit newlines and embedded sprites. Raw markup is not visible text.
+		var probe := RichTextLabel.new()
+		probe.bbcode_enabled = _control.bbcode_enabled
+		probe.scroll_active = false
+		probe.autowrap_mode = _control.autowrap_mode
+		probe.size = box
+		probe.theme = _control.theme
+		for key in ["normal_font", "bold_font", "italics_font", "bold_italics_font"]:
+			probe.add_theme_font_override(key, _control.get_theme_font(key))
+		for point in range(ceiling, floor_size - 1, -1):
+			for key in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size"]:
+				probe.add_theme_font_size_override(key, point)
+			if _control.has_meta("source_markup"):
+				load("res://ui/source_rich_text.gd").set_label_text(probe, str(_control.get_meta("source_markup")))
+			else:
+				probe.text = text
+			if probe.get_content_height() <= box.y and probe.get_content_width() <= box.x:
+				fitted = point
+				break
+			fitted = floor_size
+		probe.free()
 	_control.set_meta("source_text_fitted_size", fitted)
 	if _control is RichTextLabel:
 		for key in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size"]:
 			_control.add_theme_font_size_override(key, fitted)
 	else:
 		_control.add_theme_font_size_override("font_size", fitted)
+	if _control is RichTextLabel and _control.has_meta("source_markup"):
+		load("res://ui/source_rich_text.gd").set_label_text(_control, str(_control.get_meta("source_markup")))
+	_last_measured_text = str(_control.text)
+	_measuring = false
+
+func _process(_delta: float) -> void:
+	if _control != null and bool(_style.get("enableAutoSize", false)) and str(_control.text) != _last_measured_text:
+		_apply_auto_size()
+
 
 
 # [SRC: TextTranslate.UpdateFontSize 0x1566920 / OnDestroy 0x15665d0.]

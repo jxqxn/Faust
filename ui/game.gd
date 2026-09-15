@@ -192,55 +192,6 @@ func _show_game() -> void:
 		_on_open_rite_instance(int(state.round_transition.rite_display.uid))
 
 
-## Visual-capture hooks used by the managed UI review tool. Each enters a
-## normal player-reachable presentation state.
-func _mcp_capture_situation_desk() -> void:
-	if state == null:
-		_on_new_game_pressed()
-	elif _game_screen == null:
-		_show_game()
-	if _game_screen != null and _game_screen.has_method("return_to_situation_desk"):
-		_game_screen.return_to_situation_desk()
-
-
-func _mcp_capture_site_actions() -> void:
-	_mcp_capture_situation_desk()
-	_mcp_capture_first_map_pin()
-
-
-func _mcp_capture_tabletop_market_actions() -> void:
-	_mcp_capture_situation_desk()
-	_mcp_capture_first_map_pin()
-
-
-func _mcp_capture_first_map_pin() -> void:
-	if _game_screen == null:
-		return
-	var desk := _game_screen.get_node_or_null("SituationDesk")
-	if desk == null:
-		return
-	for child in desk.get_children():
-		var pin := child as Button
-		if pin != null and str(pin.name).begins_with("RitePin_") and not pin.disabled:
-			pin.pressed.emit()
-			return
-
-
-func _mcp_capture_compact_prompt() -> void:
-	if state == null:
-		_on_new_game_pressed()
-	elif _game_screen == null:
-		_show_game()
-	if state == null or _game_screen == null:
-		return
-	state.queue_prompt({
-		"id": "capture.compact_prompt",
-		"title": "一闪而过的念头",
-		"text": "也许趁机把房子装修一番，可以满足眷属的需求……",
-	})
-	_game_screen.refresh()
-
-
 func _on_open_rite(rite_id: int) -> void:
 	var instance = state.find_rite_instance_by_id(rite_id) if state != null and state.has_method("find_rite_instance_by_id") else null
 	if instance == null:

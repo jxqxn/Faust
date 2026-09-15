@@ -162,6 +162,8 @@ static func serialize(state) -> Dictionary:
 		"prestige_unshow": state.prestige_unshow,
 		"deadline_unshow": state.deadline_unshow,
 		"helpbtn_unshow": state.helpbtn_unshow,
+		"change_desk_bg": state.change_desk_bg,
+		"location_icon_show": state.location_icon_show,
 		"once_new_rites_is_show": state.once_new_rites_is_show.duplicate(true),
 		"gen_cards": state.gen_cards.duplicate(true),
 		"gen_tags": state.gen_tags.duplicate(true),
@@ -364,6 +366,8 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.prestige_unshow = bool(data.get("prestige_unshow", false))
 	state.deadline_unshow = bool(data.get("deadline_unshow", false))
 	state.helpbtn_unshow = bool(data.get("helpbtn_unshow", false))
+	state.change_desk_bg = str(data.get("change_desk_bg", ""))
+	state.location_icon_show = int(data.get("location_icon_show", 0))
 	state.once_new_rites_is_show = _restore_int_bool_dictionary(data.get("once_new_rites_is_show", {}))
 	state.gen_cards = _restore_int_count_dictionary(data.get("gen_cards", {}))
 	state.gen_tags = _restore_string_count_dictionary(data.get("gen_tags", {}))
@@ -401,7 +405,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.ithink_card_uid = int(data.get("ithink_card_uid", 0))
 	if data.get("pending_operations", null) is Array:
 		for operation in data.pending_operations:
-			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep", "rename_card"]:
+			if operation is Dictionary and str(operation.get("kind", "")) in ["event", "prompt", "choice", "sleep", "rename_card", "source_pop", "focus", "slide"]:
 				state.pending_operations.append(operation.duplicate(true))
 	else:
 		# First queue-schema saves were still v5. Their old split queues have no

@@ -76,3 +76,5 @@
 - 原创设计仅以 docs/design/next-stage-handoff.md 及其专题正文为当前契约；旧架构、计划和来源记录不具备指令效力。
 - 当前持久化版本以 sim/save_system.gd 为准。pending_operations按发生上下文保存，不按配置ID去重；手动档案使用SaveSystem API，保持索引与载荷一致。
 - 实际全链、测试、原作差分分别记录；随机输入未同步时不得宣称相同随机轨迹。运行 tools/check_workspace_documentation.py 校验完整整合与引用。
+
+- 项目外部备份、对拍证据及测试产物统一放在 `C:/Users/User/Documents/GitHub/Faust-artifacts/`，禁止继续在 Documents 顶层创建 Faust-* 目录。迁移时保留旧→新路径和文件哈希；历史脚本内的旧路径只作为历史记录，执行时显式传入新根目录。

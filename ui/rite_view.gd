@@ -105,13 +105,11 @@ var _result_auto_play := false
 var _result_text_progress := 0.0
 var _result_text_done := true
 var _result_ops_layer: Control
+var _result_presentation_waiters: Array[Control] = []
 var _result_hand_ops_layer: Control
 var _result_cards_layer: Control
 var _dice_prompt_surface: Control
 var _dice_count_prompt_surface: Control
-var _dice_roll_label: Label
-var _dice_count_label: Label
-var _dice_success_label: Label
 var _dice_count_title: Label
 var _dice_count_value: Label
 var _dice_count_kind := ""
@@ -472,13 +470,17 @@ func _build_result_surface() -> void:
 	_result_surface.add_child(result_scroll)
 	_result_surface_text = _rich_text("", 36)
 	_result_surface_text.name = "Text (TMP)"
+	_result_surface_text.set_meta("source_settlement_markup", true)
 	_result_surface_text.fit_content = true
 	_result_surface_text.mouse_filter = Control.MOUSE_FILTER_STOP
 	_result_surface_text.gui_input.connect(_on_result_text_input)
 	_result_surface_text.custom_minimum_size = Vector2(1100, 1146)
+	# TMP scales spacing by base font size * .01; see the same shared mapping
+	# used by event prompts. This must be set before binding size preferences.
+	# [SRC: TMP_Text.CalculatePreferredValues 0x18c40f0,
+	# VA1818c4668 / 1818c6f44; RiteResultPanel.prefab paragraphSpacing=80.]
+	_result_surface_text.set_meta("source_tmp_spacing", Vector2(0, 80))
 	preload("res://ui/source_text_style.gd").apply(_result_surface_text, "@MAIN_BODY")
-	# RiteResultPanel.prefab TextTranslate 114117307842306080, TMP paragraphSpacing=80.
-	_result_surface_text.add_theme_constant_override("paragraph_separation", 80)
 	_result_surface_text.add_theme_color_override("default_color", Color("#403525"))
 	result_scroll.add_child(_result_surface_text)
 	var op_bg := _picture(_result_surface, "Op BG", "settlement_op_bg", Rect2(1804, 1403, 1224, 188))
@@ -532,6 +534,7 @@ func _build_result_lists() -> void:
 
 
 func _clear_result_lists() -> void:
+	_result_presentation_waiters.clear()
 	for layer in [_result_ops_layer, _result_hand_ops_layer, _result_cards_layer]:
 		if layer == null:
 			continue
@@ -542,75 +545,100 @@ func _clear_result_lists() -> void:
 			child.free()
 
 
-## Card-operation labels, keyed by the original CardOpType values.
-## [SRC: dump.cs:394326 CardOpType NEW0 COPY1 DELETE2 EQUIP3 UNEQUIP4
-##       UNEQUIP_RECOVERY5 ADD_TAG6 REMOVE_TAG7 UPRARE8 POP9 HAND_POP10
-##       THINK_POP11 REBIRTH_SUDAN_CARD12]
-const CARD_OP_LABELS := {
-	0: "新增",
-	1: "复制",
-	2: "移除",
-	3: "装备",
-	4: "卸下",
-	5: "卸下收回",
-	6: "加标签",
-	7: "减标签",
-	8: "升稀有",
-}
-
-## One short line per card operation. The original plays a full OpCardNewController
-## animation per queued CardOpContext (SetBG/SetEft/animation clip/pop); that
-## playback layer is still unported, so this renders the real recorded operation
-## stream as plain rows instead of leaving the authored destinations empty.
-## [SRC: RiteResultPanelController.c @ AddCardOp (0x5a0e60) queues
-##       CardOpContext into +0x1d8; OpCardNewController @ Init (0x572f40) is the
-##       unported playback. Layers keep their authored rects.]
+## [SRC: RiteResultPanelController.DoCachedOp 0x5a1a60 / closure98_1
+## 0x5b8c00: POP reuses a card with the same identity. Op Cards has a
+## GridLayoutGroup: 3 columns, 300x200 cells, MiddleCenter alignment.
+## OpCardShowController.Init 0x575190 delegates to the original CardRender.]
 func _rebuild_result_lists(res) -> void:
 	_clear_result_lists()
-	# RiteResolver returns the deferred struct itself, so the recorded stream
-	# sits at the top level (`res.card_ops`), not under `res.deferred`.
-	var ops: Array = []
-	if res is Dictionary:
-		ops = (res as Dictionary).get("card_ops", [])
-	if ops.is_empty():
+	if _result_cards_layer == null:
 		return
-	var row_height := 34.0
-	var index := 0
+	var ops: Array = []
+	if res is RiteResolver.RiteResult:
+		ops = res.deferred.get("card_ops", [])
+	elif res is Dictionary:
+		ops = res.get("card_ops", res.get("deferred", {}).get("card_ops", []))
+	var cards_by_uid: Dictionary = {}
+	var previous_waiter: Control = null
 	for op in ops:
-		if not (op is Dictionary):
+		if not op is Dictionary:
 			continue
 		var op_type := int(op.get("op", -1))
-		var label := str(CARD_OP_LABELS.get(op_type, "操作"))
-		var card_name := _card_op_name(op)
-		var layer := _result_cards_layer if op_type in [0, 1, 2, 8] else _result_ops_layer
-		if layer == null:
+		var uid := int(op.get("card_uid", 0))
+		var card_data: Dictionary = _state.card_data_for(uid, _db) if _state != null else {}
+		if card_data.is_empty():
+			card_data = _db.get_card(int(op.get("card_id", 0))).duplicate(true)
+		if card_data.is_empty():
 			continue
-		var row := Label.new()
-		row.name = "CardOp%d" % index
-		row.text = "%s %s" % [label, card_name]
-		row.add_theme_font_size_override("font_size", 32)
-		row.position = Vector2(0, index * row_height)
-		row.size = Vector2(layer.size.x, row_height)
-		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		row.set_meta("source_card_op", op_type)
-		row.set_meta("source_card_uid", int(op.get("card_uid", 0)))
-		layer.add_child(row)
-		index += 1
+		var cell: Control = cards_by_uid.get(uid) if op_type == 9 else null
+		var creates_cell := cell == null
+		if cell == null:
+			cell = Control.new()
+			cell.name = "CardOp%d" % _result_cards_layer.get_child_count()
+			cell.size = Vector2(300, 200)
+			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			cell.set_meta("source_card_op", op_type)
+			cell.set_meta("source_card_uid", uid)
+			_result_cards_layer.add_child(cell)
+			cards_by_uid[uid] = cell
+			# Source Background Rect 564x661 centred at (-22,0).
+			var tier := int(card_data.get("rare", 0))
+			var bg_name: String = {0:"empty",1:"stone",2:"copper",3:"silver",4:"gold"}.get(tier,"empty")
+			_picture(cell, "Background", "card_bg_" + bg_name, Rect2(-154, -230.5, 564, 661))
+			var card := CardWidget.new()
+			card.name = "CardShow"
+			cell.add_child(card)
+			card.set_card(card_data)
+			card.position = (cell.size - card.size) * 0.5
+			card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			card.set_process(false)
+			card.set_process_input(false)
+			card.set_process_unhandled_input(false)
+		var waiter: Control = null
+		if op_type in [0, 1]:
+			var animation := preload("res://ui/source_new_card_animation.gd").new()
+			animation.name = "NewGet"
+			cell.add_child(animation)
+			animation.setup(op, _db)
+			waiter = animation
+		if op_type == 9:
+			var bubble := preload("res://ui/source_pop.gd").new()
+			bubble.name = "Pop"
+			cell.add_child(bubble)
+			# Grid controls the OpCard root (300x200); Pop retains top-left anchor.
+			bubble.position = Vector2(60, -106)
+			bubble.setup(str(op.get("pop", "")), float(op.get("presentation_remaining", _db.variable_config.get("pop_show_time", 5.0))))
+			bubble.progressed.connect(func(seconds: float): op["presentation_remaining"] = seconds)
+			waiter = bubble
+		# [SRC: DoCachedOp 0x5a1a60 -> closure98_0 0x5b8bf0 ->
+		# DoSequence; Init's Done resolves before new.anim reaches its end.]
+		if waiter != null:
+			_result_presentation_waiters.append(waiter)
+			waiter.hide()
+			var start_step := func():
+				cell.show()
+				_layout_result_cards()
+				if waiter.has_method("begin"):
+					waiter.call_deferred("begin")
+				else:
+					waiter.show()
+			if previous_waiter != null:
+				if creates_cell:
+					cell.hide()
+				previous_waiter.finished.connect(start_step, CONNECT_DEFERRED)
+			else:
+				start_step.call()
+			previous_waiter = waiter
+	_layout_result_cards()
 
-
-## Best-effort card name for one recorded operation. The source rows carry a
-## Card reference (CardOpContext.card@0x18); the clone's log carries the uid, so
-## the name is resolved from the live instance, falling back to the config id.
-## [SRC: CardOpContext fields dump.cs:6305; CardExtensions.GetName 0x37ff50]
-func _card_op_name(op: Dictionary) -> String:
-	var uid := int(op.get("card_uid", 0))
-	if _state != null and uid > 0:
-		var card: Dictionary = _state.card_data_for(uid, _db)
-		if not card.is_empty():
-			var name := str(card.get("name", ""))
-			if not name.is_empty():
-				return name
-	return str(op.get("card_id", ""))
+func _layout_result_cards() -> void:
+	var cells := _result_cards_layer.get_children().filter(func(node): return node.visible)
+	var count := cells.size()
+	var columns := mini(count, 3)
+	var rows := ceili(float(count) / 3.0)
+	var origin := (_result_cards_layer.size - Vector2(columns * 300, rows * 200)) * 0.5
+	for index in count:
+		cells[index].position = origin + Vector2((index % 3) * 300, floori(float(index) / 3.0) * 200)
 
 
 func _toggle_play_rate() -> void:
@@ -676,7 +704,9 @@ func _append_result_paragraph() -> void:
 	var previous_count := _result_surface_text.get_total_character_count()
 	var text := _result_paragraphs[_result_paragraph_index]
 	_result_paragraph_index += 1
-	var separator := "\n\n" if not _result_surface_text.text.is_empty() else ""
+	# [SRC: Settlement b__0 0x5b3300 / DoPriorSettlement b__9 0x5b6190:
+	# StringBuilder.AppendLine once per paragraph, not an extra blank line.]
+	var separator := "\n" if not _result_surface_text.text.is_empty() else ""
 	var source := str(_result_surface_text.get_meta("source_markup", ""))
 	preload("res://ui/source_rich_text.gd").set_label_text(_result_surface_text, source + separator + text)
 	_result_text_progress = float(previous_count)
@@ -735,12 +765,6 @@ func _build_dice_surfaces() -> void:
 	fight_art.visible = false
 	var ring := _picture(_dice_prompt_surface, "Ring", "dice_prompt_ring", Rect2(460, 460, 112, 112))
 	ring.visible = false
-	_dice_count_label = _source_label(_dice_prompt_surface, "Count", Rect2(416, 250, 200, 100), 46)
-	_dice_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dice_roll_label = _source_label(_dice_prompt_surface, "CurrentDices", Rect2(300, 355, 440, 100), 30)
-	_dice_roll_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dice_success_label = _source_label(_dice_prompt_surface, "Success", Rect2(300, 455, 440, 100), 30)
-	_dice_success_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 	_dice_count_prompt_surface = Control.new()
 	_dice_count_prompt_surface.name = "DiceCountPromptNew"
@@ -802,9 +826,6 @@ func _refresh_dice_surface(res) -> void:
 	var fight: bool = res.dice_types_seen is Array and "f" in res.dice_types_seen
 	_dice_prompt_surface.get_node("Normal").visible = not fight
 	_dice_prompt_surface.get_node("Fight").visible = fight
-	_dice_count_label.text = "骰子 × %d" % rolls.size()
-	_dice_roll_label.text = "结果: " + "  ".join(rolls.map(func(v): return str(v)))
-	_dice_success_label.text = "成功数: %d" % _successes_for_result(res)
 
 
 func _successes_for_result(res) -> int:
@@ -1077,7 +1098,18 @@ func refresh() -> void:
 # Result and start actions await their prompt promises before another panel
 # action can mutate the running rite.
 func _waiting_for_result_operations() -> bool:
-	return _awaiting_confirmation or (_resolution_pending and _state != null and not _state.pending_operations.is_empty())
+	return _awaiting_confirmation or _result_presentation_busy() or (_resolution_pending and _state != null and not _state.pending_operations.is_empty())
+
+func _result_presentation_busy() -> bool:
+	for waiter in _result_presentation_waiters:
+		if not is_instance_valid(waiter):
+			continue
+		if waiter.has_method("begin"):
+			if not waiter.completed:
+				return true
+		elif not waiter._completed:
+			return true
+	return false
 
 
 func _process(_delta: float) -> void:
@@ -1092,6 +1124,9 @@ func _process(_delta: float) -> void:
 		_update_result_wait_controls()
 	if _close_after_commit and _resolution_pending and not waiting:
 		_commit_resolution()
+	elif _close_after_commit and _resolution_committed and not waiting:
+		_close_after_commit = false
+		_close_panel()
 	if _result_surface_text != null and _result_surface_text.visible and not _result_text_done:
 		var total := _result_surface_text.get_total_character_count()
 		if total <= 0:
@@ -1467,6 +1502,7 @@ func _commit_resolution() -> void:
 		return
 	_resolution_pending = false
 	_resolution_committed = true
+	_rebuild_result_lists(_last_result)
 	_remember_round_result()
 	_update_result_wait_controls()
 	_pending_table_entries.clear()
@@ -1477,7 +1513,7 @@ func _commit_resolution() -> void:
 	# A rite-driven game over fires only after the result is committed.
 	if bool(_last_result.deferred.get("over", false)):
 		game_over_requested.emit()
-	if _close_after_commit:
+	if _close_after_commit and not _result_presentation_busy():
 		_close_after_commit = false
 		closed.emit()
 
@@ -1594,6 +1630,10 @@ func _display_result(res) -> void:
 			if _state != null:
 				value = _state.substitute_text(value)
 			if not value.is_empty():
+				# [SRC: DoNormalSettlement b__3 0x5b6460, field@0x198;
+				# dump.cs:325497; raw variable.json result title/text formats.]
+				var format_key := "RITE_SETTLEMENT_RESULT_TITLE_FORMAT" if key == "result_title" else "RITE_SETTLEMENT_RESULT_TEXT_FORMAT"
+				value = str(_db.variable_config.get(format_key, "{0}")).replace("{0}", value)
 				sections.append(value)
 	var txt := "\n".join(sections)
 	if _result_label:

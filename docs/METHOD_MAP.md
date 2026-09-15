@@ -1,17 +1,22 @@
 # 原作—克隆方法映射表
 
-这是复刻唯一主TODO。完整系统仍🟡：已完成第4→5天双端实际重放，但随机轨迹和表现未等价。原始配置无损与GUT通过不替代这项验收。
+这是复刻唯一主TODO。完整系统仍🟡：第4→5天新采集轨迹已实现13次规则随机调用匹配、结算和读档54/54状态投影一致；表现仍有差异。原始配置无损与GUT通过不替代这项验收。
 
 ## 当前批次与优先项
 
 | 项目 | 原作背书/当前工作 | 状态 |
 |---|---|---|
+| 全范围自制行为筛查 | OpCardNew、RiteResultDicePrompt、Slide/ChangeDeskBG、TextTranslate、CopyCard；方法及独立信号见[审计正文](replica/verification.md#provenance-audit-20260915) | ❌/⬜/🟡：原始审计102个运行文件；已修操作卡片/气泡基础显示、旧译文、复制次数扩展，删除隐藏骰子摘要与测试入口/死规则；手牌/仪式发言、focus、slide、地图字段已接，新卡原始曲线/Done/角色音效及完整存读档已接；原始禁词解密/过滤/真实输入和存档重建已接，气泡超时已按严格大于修正；其他逐卡动画、结果堆叠、旧guide_cues迁移、原作禁词实机和非16:9仍待闭合。当前修复与证据见验收正文，不能宣称全量等价 |
+| 次日事件共享随机流 | TimingRoundBase.IsValid0x465d30→NextRound0x465f20；GenLoot.SimpleWeightLoot0x512b90；原作实机13次规则抽取 | 2026-09-15：在fire重设周期之前传入本轮RNG，奖励也使用同一流；该原作轨迹54/54，非全局Unity RNG算法等价 |
+| Choose洗牌随机顺序 | ChooseOperations.GetOperations0x4f3830→ListExtensions.Shuffle<object>0x6feb50/int0x6fe7b0 | 2026-09-15：原作前向洗牌，两张牌Range==1交换；修正克隆反向及相反的双牌条件 |
+| 仪式结果CardPop | CardPop.PreDo回调0x5083a0→OperationContext.AddCardOp_Pop0x39e640；dump.cs:394346，type9/card/pop | 2026-09-15：结果阶段卡牌发言接回操作流，取消错误全屏确认；原作气泡动画仍🟡 |
+| 周期事件随机流接线 | TimingRoundBase.NextRound 0x465f20 + dump.cs:427066；原始事件5310809的[3,7]周期 | 2026-09-15：修正传入GameRNG却落入全局randi的接口误用；不代表Unity随机状态已同步 |
 | have计数 | BaseHaveCardCount.ctor0x3f58a0、GetCountFunc0x3f55a0、dump416723；卡id筛选与标签求和分离 | 本批修复，边界通过，整链待验收 |
 | 标签历史计数 | ModifyTag闭包0x524a70→AddTag0x37e6a0→MarkTagGen@0x48/dump383603 | 本批修复，增加调用计一次 |
 | 普通吸附 | RiteExtensions.AdsorbCards0x38fca0/c1425-1438、dump389090；多候选随机，单候选不抽 | 本批纠正首张误判，特殊堆叠仍需独立验收 |
 | 对拍投影 | 活卡bag_positions排除removed墓碑 | 本批修复比较器误报 |
-| 随机流与暂停恢复 | Unity RNG没有被原作样本完整承载 | ⬜ 未同步，禁止选seed凑通过 |
-| 提示/结果表现 | CardPop、GenLoot附加结果与操作流 | 🟡 仍有额外全屏提示及表现差异 |
+| 随机流与暂停恢复 | 原作Random.Range实机参数、返回值、调用栈；存档未承载完整Unity RNG状态 | 🟡 本次规则调用带已同步；相同操作与最终读档通过，中途重建随机延续仍未验证，禁止选seed凑通过 |
+| 提示/结果表现 | CardPop、GenLoot附加结果与操作流 | 2026-09-15：GenLoot 不创建自制确认；卡牌/仪式经原作操作流；RiteNew 未知仪式按 RiteRender + rite_show 动画先显示问号并在悬停揭示。结果正文改为原作逐段换行（AppendLine），标题模板仍由原始 variable.json 驱动；标题 TMP sprite/字体/缩进已接，Hand父级统一缩放已修；OpCard气泡逐卡动画、精确TMP glyph与揭示曲线/尾事件仍 🟡；证据见 docs/replica/presentation.md#presentation-20260915 |
 | 完整家业→关闭→次日 | 原第4/5天真实存档、输入、保存重载 | 🟡 以[最新验收](replica/verification.md)为准 |
 
 具体规则与源指针见[state](replica/state.md)、[loop](replica/loop.md)、[presentation](replica/presentation.md)。下方保留结构主表，表中的方法级对齐不代表全系统完成。历史逐批论证已整合进[验证证据](replica/verification.md#method-history)，不再在入口混排。

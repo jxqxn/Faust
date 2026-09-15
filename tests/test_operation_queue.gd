@@ -219,3 +219,34 @@ func test_sudan_pool_operations_are_reported_as_supported_dsl():
 	}}, {}, db)
 	for key in ["total.parent+测试标签", "sudan_pool.friend+测试标签", "total.2000005+equip"]:
 		assert_true(unsupported_report.action.unsupported.has(key), "%s remains explicit audit debt" % key)
+
+
+func test_hand_pop_waits_then_resumes_after_json_save_reload() -> void:
+	var state := _state()
+	var rng := RNG.new(72)
+	OperationsSequence.start([{"hand_pop.audit.主角": ["第一句", "第二句"]}, {"counter+990123": 1}], state, db, rng)
+	assert_eq(state.pending_operations.size(), 2)
+	assert_eq(state.pending_operation().kind, "source_pop")
+	assert_eq(int(state.local_counters.get(990123, 0)), 0, "following operation waits for the last speech")
+	state.pending_operations[0].payload.remaining = 1.25
+	var restored := GameState.new()
+	SaveSystem.deserialize(JSON.parse_string(JSON.stringify(SaveSystem.serialize(state))), restored, db)
+	assert_eq(restored.pending_operations.size(), 2)
+	assert_eq(float(restored.pending_operation().payload.remaining), 1.25)
+	assert_eq(str(restored.pending_operations[1].payload.text), "第二句")
+	var first := restored.consume_pending_operation()
+	OperationsSequence.resume(first, restored, db, rng)
+	assert_eq(int(restored.local_counters.get(990123, 0)), 0)
+	var second := restored.consume_pending_operation()
+	OperationsSequence.resume(second, restored, db, rng)
+	assert_eq(int(restored.local_counters.get(990123, 0)), 1)
+	assert_true(restored.pending_operations.is_empty())
+
+func test_map_guide_commands_persist_without_inert_cues() -> void:
+	var state := _state()
+	ResultExec.execute({"change_desk_bg": "test_resource", "change_location_icon": 1}, state, db)
+	assert_true(state.guide_cues.is_empty())
+	var restored := GameState.new()
+	SaveSystem.deserialize(JSON.parse_string(JSON.stringify(SaveSystem.serialize(state))), restored, db)
+	assert_eq(restored.change_desk_bg, "test_resource")
+	assert_eq(restored.location_icon_show, 1)

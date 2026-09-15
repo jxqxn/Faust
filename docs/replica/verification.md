@@ -2,7 +2,168 @@
 
 ## 当前判定
 
-**已执行双端对拍，完整等价尚未通过。** 2026-09-14后续修正have计数、标签历史计数、墓碑投影及普通吸附随机选择；最新完整测试和实际重放结果在本页顶部更新。旧批次测试数字、待办优先级和“当前完成”措辞均是历史，不是当前验收。
+**2026-09-15 自审修复继续推进，尚未完成用户要求的全部还原。** 浅色操作文字行已移除，改为原作卡面、气泡和新卡条幅；新卡直接读取原始 `new.anim`，按 Hermite 曲线、1/3 秒 Done 与 1/2 秒视觉终点分别处理。气泡串行等待，真实松键只推进一次；播放中完整保存/重建/读档可继续，已播放音效不重播。新卡角色默认音效按原作使用正面音效，物品使用普通音效。
+
+手牌/仪式发言、镜头 focus 和 slide 已有执行宿主及持久化等待，不能再描述为全部未消费。仍开放：装备/删卡/加减标签/升稀有度等动画、结果堆叠与完整批次时序、旧 guide_cues 迁移、禁词原作实机边界、完整骰子演出、非16:9及其他原作运行边界。**54/54仍仅验收已采集的一条原作状态轨迹。**
+
+当前专项：仪式GPU42/42、257断言，覆盖1920与1280、新卡曲线/Done分离、原始NEW_CARD文案、发言真实按键、完整SaveSystem恢复及关闭等待；`op-sequence-save-gpu-2.log`为通过日志。前一版失败日志保留：旧测试错误要求新卡动画完成前自动关闭；初始截图因测试画布零尺寸为全灰，已作废，修复测试布局并重拍。全量结果见下表；全量启动后新增的禁词实现与气泡时限修正使用受影响整组复测，不冒充已纳入该次全量。
+
+| 当前回归范围 | 结果与边界 |
+|---|---|
+| 全量 `provenance-full-regression-4.log` | 75脚本、791测试，790通过、1 GPU pending；7868断言，退出0，无脚本错误/孤儿/泄漏。包含原作调用带，未包含启动后新加禁词测试及气泡时限修正 |
+| 最终原作带GPU复跑 `provenance-final-original-replay.log` | 2/2、192断言；结算54/54、读档54/54、规则随机13/13。复用原作已采集带，本次未重新启动原作；本次未配置截图导出 |
+| UI布局 `provenance-ui-layout-final.log` | 81/81、1070断言；在禁词实现后整组复测 |
+| 气泡时限及仪式GPU `pop-strict-timeout-gpu.log` | 43/43、260断言；严格超时、重复结束、真实松键顺序、两尺寸及存档恢复 |
+| GPU遮罩 `provenance-mask-final-gpu.log` | 1/1、18断言通过，补全上项跳过的渲染专项 |
+| 改名 `ban-word-save-regression-2.log` | 3/3、646断言；原资源303组.NET对照，两尺寸真实禁词输入，GameScreen拒绝空名、合法提交、待处理和完成后的JSON存档/场景重建 |
+
+**2026-09-15 全工作区自制行为审计：仍有同类问题，不能签署“复刻端无自制内容”。** 首次筛查102个运行文件；最新机器清单覆盖106个运行时代码/工程文件、32,067行，并登记6,090个配置/资产文件；这表示扫描范围完整，不表示每个方法和资产已与原作逐一等价。详细问题、经验及外部目录范围见[本次审计](#provenance-audit-20260915)。54/54仅代表已采集轨迹；复核实际RecordedRNG后，排除了骰子绕过记录入口的候选误报。
+
+**2026-09-15 随机调用带对拍：本次原作第4→5天轨迹，结算后54/54、磁盘重载后54/54，13/13规则随机调用参数和顺序匹配。** 这是该独立原作输入下的状态等价；不代表全游戏、所有随机分支或完整表现均已等价。
+
+用户批准后已从PyPI安装Frida 17.18.0。只读观察原作1.0.2feaceb3的GameAssembly.dll中UnityEngine.Random.Range(int,int)参数、返回值、调用栈，未修改参数、返回值、随机种子或游戏状态。完整记录和脚本纳入[外部证据索引](external-evidence.json)，本批根目录为`C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915`。
+
+原作鼠标轨迹：继续第4天存档→下一天→等待宫廷自动结算后关闭→等待空派遣家业结算后关闭→关闭TIME_OUT→关闭BACK_ROUND→保存并退出→继续游戏→再次保存并退出→退出游戏。返回地图与重载后的引导关闭状态已在原作窗口截图中观察；本次未量测原作动画持续时间。两份原作结果存档仅saveTime不同。原15个存档文件已逐一SHA256恢复，新生成round_5.json移出玩家目录归入采集证据。
+
+本次原作宫廷抽中了另一条自然分支，不沿用旧分支的after期望。规则抽取从原作调用返回值独立生成，不读取after存档；按源码调用点分离RiftGenerator裂隙、ThinkController动画触发和结果卡片位置/旋转的表现抽取。浮点调用仅记录出现和调用点，未采集数值，因此不宣称表现随机等价。所有观测调用点必须有归属，未知点会让提取失败。
+
+修复两类共同机制：ListExtensions.Shuffle原作为前向抽取，两元素时仅Range(0,2)==1交换；次日事件之前漏传主RNG，周期重设和事件掉落走了独立随机流。现在在事件fire之前绑定本轮流，weighted_pick_int也经统一半开区间入口，供真实调用带检查。背书：ListExtensions0x6feb50/0x6fe7b0、ChooseOperations0x4f3830、TimingRoundBase0x465d30/0x465f20、GenLoot0x512b90及dump.cs和实机调用记录。
+
+测试适配器只存在于专项测试内；逐项检查区间、顺序、越界、耗尽和剩余调用，任何不匹配均拒绝等价验收。该次轨迹不插入原作未做的家业中途重建；原有未同步随机的中途重建回归保留为独立边界。最终保存→重建→读档仍进行54项对照。
+
+**2026-09-15 表现修正：** 依据 `GenLoot.RealGenCard 0x512260`（dump.cs:314584）和 `RiteRender.OnRiteShow 0x59bdb0/OpenRitePanel 0x59c2f0`，移除克隆自制的 GenLoot 卡牌/仪式确认框；生成物直接进入原作对应的卡牌操作或地图实例链。RiteNew 未知仪式现在按 `RiteNew.prefab` 的 Mask（123×133，anchoredPosition (0,-17.6)）与 `Resources/anims/rite/rite_show.anim`（Mask 0→1/6s、标题揭示、Icon 10→25/60s、事件 55/60s）先显示问号，真实悬停/焦点触发揭示，完成后写 `is_show` 与 `once_new_rites_is_show`；真实鼠标、阻断态、两种窗口尺寸、读档重复揭示专项 7 测试/52 断言通过。结果正文段落改为原作 `StringBuilder.AppendLine`（`RiteResultPanelController.AppendResultText 0x5a13e0`）的单换行，保留原始 paragraphSpacing=80 配置并按 TMP 基准字号×0.01换算；恢复原始标题模板的 Title SDF、+10字号、菱形与10%缩进。手牌改为源坐标布局并在父级统一缩放，1280/1920真实拖动和读档恢复通过。详细来源与未完成边界见 [表现修正](presentation.md#presentation-20260915)。本次自审修复前，OpCard 气泡曾为文字行近似，`OpCardNewController.Init 0x572f40/ShowPop 0x574960` 的逐卡资源与动画未完全迁移；因此表现整体仍 🟡，但此前三次额外确认差异已消除。
+
+早先随机对拍批次详情见[历史机器报告](followup-results.json)；当前自审修复结果以本页顶部和追加专项为准；以下45/54、50/54均为随机未同步的历史批次。
+
+| 历史表现批次检查（不是当前最终回归） | 当时结果 |
+|---|---|
+| 最终无渲染原作调用带对拍 | 2/2，192断言；结算54/54、读档54/54、随机13/13 |
+| 最终GPU真实鼠标对拍 | 2/2，196断言；结算/读档54/54；多余确认0次，阶段截图归档 |
+| 本次表现全量初跑 | 784测试：778通过、5失败、1 GPU pending；7708/7717断言，退出1 |
+| 失败组修正后整组复测 | 手牌7/7、65断言；sim59/59、183；桌面14/14、149；UI布局81/81、1068 |
+| 最新结果排版与揭示专项 | 结果40/40、205断言；揭示GPU7/7、52断言；字号7/7、39断言 |
+| 手牌真实输入与重建 | 1280/1920尺寸、鼠标命中、真实拖动/失败回手、序列化重建均通过，包含在手牌组 |
+
+全量初跑的5项失败来自旧测试依赖生成物确认框、未知仪式立即打开；各失败组已按原作入口修订并整组复测。该历史批次当时未复跑整套；后续自审全量已另行运行，见顶部最新表，不能改写此失败日志。之前随机批次的781项全量结果保留在机器报告历史中。揭示专项曾在断言通过后卡于GUT对已释放地图对象的信号监听清理；测试现先断开监听再释放，最终整组正常退出。
+
+此前截图发现的未知仪式直接显示名字、标题模板缺失、段距与手牌尺寸差异已修正。**仍未完整表现等价**：CardPop文字行已替换为卡片/气泡，但原作发牌/逐卡操作串行演出、揭示四元数逐帧投影及尾事件、动画中途重建和声音验收尚未闭合。54/54只验收当前原作轨迹的状态投影，不能遮盖这些未迁项。
+
+<a id="provenance-audit-20260915"></a>
+
+## 2026-09-15 自制行为全范围筛查与复盘
+
+本节表格保留首次审计事实；用户随后已授权实施修复与目录迁移。各项当前状态见下面的修复增量，不能把初次发现继续当当前未改代码。运行代码基于本轮已有未提交工作区；[机器清单](clone-provenance-audit.json)记录每个文件的SHA256、源注释和候选行。可运行 `py -3 tools/audit_clone_provenance.py` 重建。候选行不是问题数量，缺少SRC注释也不是自制的充分证据。
+
+### 这次错误为什么会发生
+
+| 成因 | 如何暴露 | 修复及今后门禁 |
+|---|---|---|
+| 为了让输出“看得见”，用自制确认框或文字行替代缺失的原作控制器 | 双端鼠标轨迹多出确认；用户截图显示浅色“新增/发言”叠在托盘上 | GenLoot确认与操作记录文字行现已删除。仍须完整迁移CardOpContext→OpCardNew→OpCardShow→气泡/动画/结果去向；不能再次用临时可见文本签署完成 |
+| 只抄子节点尺寸，漏了父级CanvasScaler | 原作与克隆截图手牌明显不等大；1920下194×422仍画成194×422 | Hand源坐标与父级统一缩放已修。检查父尺寸/锚点/pivot/scale/y翻转和最终屏幕矩形，不能只断言card_size常量 |
+| 将序列化初值当运行时最终值 | 本轮追查画廊同一GameObject的启用TextTranslate，发现原作会覆盖TMP.m_text | 原始配置→翻译组件→运行文本必须连查。此前引用原作Prefab字符串并不自动有效 |
+| 数字看起来来自原作，但单位和曲线丢失 | paragraphSpacing=80被当成80像素；标题旋转被近似成平滑横向伸缩 | 段距已按TMP的字号×0.01因子修正；四元数曲线仍开放。记录单位、空间、采样、切线和事件，而不仅是数值 |
+| 测试把当前实现写成期望，反过来保护错误 | 旧测试要求额外奖励框、未知仪式立即打开；本轮又发现copy值=2的测试要求复制两次 | 原作证据先于测试期望；保留失败运行与修订依据，不能靠测试全绿宣称原作等价 |
+| 局部通过被扩张为全局通过 | 13次规则调用带通过不能覆盖所有分支；审计初读接口名又误报Dice绕过记录，实际适配器已桥接 | 先查实际覆盖方法和调用链，撤回误报；增加含检定的原作轨迹，按“本轨迹/全机制/表现/持久化”分开验收 |
+| 为保留材料而不断新建外部目录，目录范围又没被校验器覆盖 | Documents出现8个Faust目录，仓库门禁却仍通过 | 证据、临时缓存、备份需统一根与保留期；外部清单必须核对缺失/散落材料，不能只查仓库内链接 |
+
+### 已确认的问题或非等价替代
+
+这里的“已确认”表示已经核对克隆落点和列出的原作证据；不是所有项都已完成原作实机重放。状态型风险优先于表面修饰；同一链条按METHOD_MAP统一修复。
+
+| ID / 优先级 | 克隆行为与原作证据 | 影响和下一步 |
+|---|---|---|
+| PA01 / P1 | `ui/rite_view.gd:_rebuild_result_lists` 手写“新增/复制/移除/发言”，用Label、32字号、34行距画卡牌操作。原作 `OpCardNewController.Init 0x572f40/ShowPop 0x574960/Update 0x574af0` + OpCard.prefab、CardOpContext enum 使用操作卡片及气泡 | 用户截图的浅色小字来源已确认。发言数据是原作的，文字行呈现不是。不可仅隐藏文字后宣布修复，须迁移整个逐卡表现及承诺链 |
+| PA02 / P1 | `ui/rite_view.gd:_build_dice_surfaces/_show_dice_surfaces` 自建Count/CurrentDices/Success标签，写“骰子 × N / 结果: / 成功数:”。`RiteResultDicePromptController.Show 0x59e9e0` 使用NumberToSprites及动画节点，dump.cs:324773、RiteResultPanel.prefab为第二信号 | 复核纠错：这些摘要所在DicePromptNew始终隐藏，不能声称玩家曾看见；现已删除。原作逐骰/成功环/数字精灵仍未完整迁移 |
+| PA03 / P1 | `sim/result.gd:511` 把hand_pop/rite_pop/focus/slide/change_desk_bg等塞入guide_cues，超过32条删最早项；全运行代码无相应消费器，仅保存/载入/清空。原作 `Slide.Do 0x51bb70→GameController.ShowSlide`；`ChangeDeskBG.Do→MapController.ChangeDeskBG`并写Player.desk_bg和RequestSavePlayer；dump Slide/ChangeDeskBG与配置事件5300300～5300303为独立信号 | 这是用队列承载替代真实功能，不是完成。close_*五个显示字段已接，不应误报为全部无效；其余操作需分别迁移，并避免用“supported”掩盖未执行 |
+| PA05 / P2 | `ui/gallery_panel.gd:155/162`硬写“历史画廊”“在这里可以看到已经触发过的游戏内容。”。StartScene GameObject258的TMP4274确实有旧文字，但启用的TextTranslate6001绑定GALLERY_TITLE；`TextTranslate.UpdateTextInternal 0x1566ad0`调用Datapool.Translate，content/ui.json最终值为“游戏画廊”和“在这里，你可以看到一些汇总的游戏内容。” | 已确认漏掉运行时覆盖，不能拿Prefab旧值自证正确。图鉴标题/正文应直接绑定原始文本及样式 |
+| PA06 / P2 | `ui/main_help.gd:_help_text`手抄整份帮助文本且注释称zhTW转简体；当前content/ui.json已有zhCN。BAG手写“切换和使用卡牌栏位。”比原配置多句号。`TextTranslate.UpdateTextInternal`和GameScene帮助TextTranslate是对应链 | 有损手抄和重复真源；主体多数文字相同，不夸大为新增剧情。逐项改读content，检查卡片帮助/改名/任务按钮等同类字面量 |
+| PA07 / P2 | `sim/result.gd:_apply_copy_slot`把value当次数且至少1次；`CopyCard.Do 0x4f51b0`只过滤目标，每目标回调4_0 0x507430追加一次，4_1 0x508090只Copy一次，不读SingleValue.Value。dump.cs:313552 + 原始copy.s3重复键为第二信号 | 克隆自行扩展了“copy.s1:2”的次数语义；tests/test_copy_card.gd:94、test_dsl_batch1.gd也保护该扩展。本轮对原始StreamingAssets全部JSONC去注释、保留重复键解析：53处copy操作值全部为1，解析错误0；因此是合成输入暴露的语义扩展，未证明现有原作内容会触发差异 |
+| PA08 / P2 | `ui/source_text_style.gd:_fits_at`以“汉”字宽度估算每行字数再按总字符数估算高度。`TextTranslate.UpdateFontSize 0x1566920`实际委托TMP auto-sizing，dump TextTranslate与textstyle配置承载auto/min/max | 混合宽窄字符、显式换行、富文本字号会得出不同拟合。是宿主自制近似，需实际排版测量并对齐TMP；不能把“字体文件相同”当排版相同 |
+| PA09 / P2 | `ui/change_name_view.gd:_validate_name`只验UTF16长度；`PromptChangeNameController.IsValidName 0x584de0`在长度通过后还调用Datapool.HasBanWords0x4131c0，dump.cs:323419和ILLEGAL_NAME配置为独立信号 | 已核对HasBanWords：仅在Datapool+0x2a8过滤器非空时调用HasMaskWord，否则记录错误并返回false。初审时缺少该分支；现已恢复加密资源、匹配规则和真实输入拒绝路径，详下方增量与presentation正文；原作进程同场景验收仍开放 |
+
+### 待核验、旧残留与不能误报的事项
+
+- **PA04，已排除的误报**：`tests/test_household_dual_replay.gd:30`的实际RecordedRNG覆盖range_int，并转入range_int_half_open(lo,hi+1)。因此不能以core/dice调用range_int推断它绕过记录或走另一个随机流；此前交流中的该判断撤回。扩大原作检定轨迹覆盖仍是验收需求，与此误报分开。
+
+- **PA10，宽高独立缩放**：多个界面使用Vector2(width/3840,height/2160)，与GameScene CanvasScaler11488的统一ScaleWithScreenSize/Expand结构不同；1280×720和1920×1080均为16:9，无法暴露。非16:9最终画布、相机与锚点需要实际宽屏/窗口输入对拍，暂记结构风险，不冒称所有界面都已实测变形。
+- **PA11，测试工具混入生产脚本**：`ui/game.gd:_mcp_capture_compact_prompt`含自制“capture.compact_prompt”及直接pressed.emit；全项目引用扫描未找到普通玩家入口。应迁至tools，不能将其等同正常游玩会弹框。`--dev-menu`测试开局已有debug+显式参数门，属于开发工具，不应当作未授权正式玩法。
+- **PA12，死代码也是误导源**：`RiteOpen.is_interactive`按“有槽+有结算”筛仪式；ScopeFilter.is_match把tag统一当>=。当前生产调用未发现（RiteOpen仅旧测试；生产筛选走RuntimeOperationFilter/ConditionEval），不能报为当前可达机制错误，但应在复刻主表清理/隔离，禁止后续智能体复用。
+- **PA13，已有近似仍需闭合**：rite_show四元数、尾事件、未知仪式闲置摆动、OpCard串行生命周期、TMP sprite尺寸与长标题缩进；沿用本章当前表现缺口，不能因这轮静态筛查升级状态。
+- **未直接判错**：结果打字的20字/秒在RiteResultPanel.prefab的characterPerSecond=20可核对，并非凭空数字；AudioManager的0/-1音效键来自原始表，但新卡仍须区分角色默认1与物品默认0，不能用“键来自原作”替代分支验证；Godot平台适配、缓存、存档迁移不因原作没有同名类就成为违规玩法。FaustTheme自选色板、贴图缺失时FlatStyle、头像/字体兜底是候选，具体可见调用和原作资源失败分支尚未逐项闭合。
+
+### 范围与完整性
+
+102个运行时代码/工程文件全部进入静态筛查（core7、data3、platform2、scenes1、sim23、ui65、project.godot1），共31,472行、349个候选行；6,078个content/asset文件全部登记字节指纹。候选包括正常代码和历史注释，不作缺陷计数。新增JSON留在既有replica证据区，正式结论只在本节，METHOD_MAP只保留TODO入口。
+
+本轮没有逐行反编译重证全部31,472行，也没有重新跑每个游戏页面、所有动画、宽屏和所有原作存档。因此准确结论是“全范围筛查发现上述问题”，不是“全文件深度等价审计已通过”。本轮未改玩法；原有GUT、54/54和配置门禁仍按原批日期解释。本轮新增工具两次输出逐字节一致，6,180个文件指纹复核通过；文档门禁通过（137条来源、567件既有证据），git diff --check通过。该文档门禁不等于外部目录登记完整，也不统计新增静态清单为运行时通过证据。
+
+### 用户Documents目录的材料债务
+
+2026-09-15实查8个目录约2.53GiB。它们是此前工具/备份操作留下的外部产物，游戏本体不依赖这些对拍目录；其中capstone-local是研究工具依赖，不是运行游戏依赖。
+
+| 目录 | 文件数 / MiB | 内容和处理边界 |
+|---|---|---|
+| Faust-backups | 21 / 0.51 | 两批UI更正备份；当前external-evidence未逐文件登记，先判定是否已被Git/正式证据覆盖 |
+| Faust-cleanup-20260911 | 11,419 / 2,452.72 | .godot约1,163.62MiB，commit-cleanup-102511约1,162.78MiB；另有capstone-local、原始token oracle及旧文档/日志。不能把整个目录都当缓存删掉 |
+| Faust-dual-replay-20260914 | 151 / 50.49 | 原作截图、存档前后态、存档备份及会话提取 |
+| Faust-dual-replay-20260915 | 12 / 0.60 | 后续对拍与日志；外部索引仅10项，另2项需补登记或归入可再生产物 |
+| Faust-dual-replay-followup-20260914 | 29 / 8.59 | 失败与后续重放、清单和日志 |
+| Faust-dual-replay-pop-20260915 | 20 / 1.12 | CardPop专项和旧结果 |
+| Faust-phase-close-20260914 | 17 / 19.19 | 阶段收尾检查与DSL审计 |
+| Faust-rng-capture-20260915 | 102 / 59.91 | 独立随机带、原作备份、脚本、截图及表现复测 |
+
+初次外部索引只覆盖329文件，不能支持“8目录全部审过”。现在迁移收据覆盖11,771文件，校验器逐文件检查迁移哈希、旧路径消失及目录章节归属；这证明材料完整性，不代表缓存、旧脚本和所有原作证据都已获得语义等价验收。新增运行产物另入外部索引。
+
+**迁移已执行**：8个目录现统一位于 `C:/Users/User/Documents/GitHub/Faust-artifacts/`，11,771个文件迁移前后逐一SHA256相等，Documents顶层旧目录已不存在。迁移收据 `migration-20260915.json` 保留全部旧→新路径、字节数与哈希；没有删除原作证据。项目文档/索引已改新路径，历史外部脚本中的旧字符串不重写为新历史，执行时显式指定新根。AGENTS已加入输出目录约束。
+
+### 自审修复增量（尚未整体验收）
+
+- PA01：删除操作摘要Label，按OpCard.prefab创建原始CardWidget、稀有度背景和Pop贴图；UID复用，使用TextTranslate的`@RITE_SETTLEMENT_POP_TEXT`。DoCachedOp发言串行；PopJumpActionBlocker.OnActive0x5829d0注册canceled回调，InputActions/UI_PopJump独立确认Space/Enter/leftButton的松开跳过。剩余时间写入操作载荷，零剩余重建立即完成。新卡0/1已接原始new.anim、NEW_CARD条幅和PlaySFx；Done与曲线尾部分离，顺序/音效已接入完整存读档。尚缺其他操作动画、全部音效与最终结果堆移动，不能标为完整等价。
+- PA02纠错：旧DicePromptNew始终隐藏，自制摘要从未被证实可见；已移除未使用Count/CurrentDices/Success文字占位。原作骰子准备、NumberToSprites和实际骰子演出仍需补齐；删除死代码不是完成骰子还原。
+- PA03：HandPop/RitePop已进入可保存的pending_operations并消费，按实际卡牌/仪式UID显示，后继操作等待最后一句；change_desk_bg/location_icon写入Player对应持久化字段并由地图消费，close_*不再积压无消费者提示。focus已接MoveTo线性移动、地图边界和中途进度；slide已接原始素材/nativeSize/页界、SmoothDamp和关闭Promise；删除向guide_cues继续追加的兜底分支；旧存档残留因缺发生上下文仅无损保留，不擅自回放。不同输入设备和完整原作运行边界未验收。
+- PA03新增实证纠错：`close_begin_guide`在dump.cs:426398声明为`[Timing]`，`CloseBeginGuide.IsValid 0x45eb80`比较guide_type，没有Do；原始事件5310128/5310132/5310137把它放在on。已删除复刻虚构的同名结果指令及“清空全部旧cue”行为，收紧close_*为原作五项白名单。真实引导关闭仍由begin_guide_bar→trigger_events触发。43/43 DSL、184断言通过，未知指令不改变活动引导或等待队列。
+- PA03新手选择链：原始5300000重复event_on先触发5300300的slide，等关闭才启用5300066。过去测试跳过此等待，因滑页曾是空实现而通过；现在按原始JSONC调整，OperationsSequence7/7、42断言通过。
+- PA05/06：图鉴使用原ui.json的GALLERY_TITLE/GALLERY_TEXT，帮助使用MAIN_HELP_*_PROMPT，删除复刻自写正文，不再沿用Prefab序列化旧译文。
+- PA07：CopyCard每个筛选目标只Copy一次，不以操作value制造复制次数；已改合成value=2回归。原始JSONC53处copy值均1，不虚报其为已观察原作轨迹差异。
+- PA08：删除“汉字宽×字符数”估算，改用真实Font和RichTextLabel排版测量，并随文字变化重算；仍是Godot适配，尚未证明TMP逐像素等价。
+- PA11：删除ui/game.gd中无外部调用的5个_mcp_capture_*入口，包括自制测试弹框与pressed.emit模拟操作；现有真实输入测试继续保留。
+- PA12：删除无生产调用的RiteOpen.is_interactive与core/scope_filter.gd；原死代码测试迁为RuntimeOperationFilter身份、丢失排除、六种比较运算边界，避免后续误用统一>=规则。
+- PA09：原加密禁词库已导入并由运行时解密，303组独立.NET对照、两尺寸真实输入及GameScreen待处理/完成后存档重建共3/3、646断言通过；原作进程实机边界仍未验收。PA10/13仍待实现/验收：非16:9统一缩放、源动画/Shader/音效完整链条。未以静态筛查或54项状态投影掩盖缺口。
+
+新增经验：修改执行器时必须区分“支持性检查”和“实际执行”两个同名条件段；本次一次错插曾导致未定义state/val的编译失败，现已修复并通过引擎导入。GUT遇脚本错误可能仍显示通过计数，因此必须连同SCRIPT ERROR、孤儿/泄漏检查，不仅看Passing Tests。
+
+本次原作随机带GPU复跑：`op-sequence-original-replay.log`2/2、196断言；独立报告`op-sequence-oracle-report.json`结算54/54、读档54/54，13次规则随机顺序/参数通过。原作没有重新启动采集，本次重用之前捕获的输入带与独立终态。新增slide首尾限界、单页、真实鼠标命中层级/底层阻挡、重入关闭测试2/2、34断言通过；初版断言误把合法子节点命中当失败，保留失败日志并改为验证真实命中属于该面板层级。
+
+## 2026-09-15 CardPop后续批次（历史）
+
+**2026-09-15 CardPop后续：最新真实输入重放45/54，尚未等价。** 前一次50/54保留为历史单次结果，不代表稳定进度；没有筛选种子或只保留高分运行。
+
+已按原作CardPop.PreDo回调0x5083a0→OperationContext.AddCardOp_Pop0x39e640（dump.cs:394346，type9/card/pop）修正仪式results阶段的发言：绑定目标UID、按原顺序记录文本，不再排入全屏确认。空目标不产生匿名发言。原作Do阶段CardController.ShowPop0x508690是另一条路径，本批未替代它。
+
+同时发现并修正结果面板读取错误：实际输入为RiteResolver.RiteResult.deferred，旧实现只接受顶层Dictionary.card_ops，已记录的结果无法显示。现在支持真实对象和字典，并在提交结算后刷新。前一份纯字典单测不足以验证实机宿主，已补真实RiteResult回归。
+
+最新原作对拍显示：uid41/卡2000024的发言“就没有点新鲜事吗？”进入可见结果行；真实鼠标完成结算，CardPop全屏确认数为0。当前行式呈现仍不是原作气泡动画，完整占位符、动画时序及结果外发言仍待完成。GenLoot生成仪式/卡牌仍有额外全屏提示，不作表现全通过结论。
+
+验证：边界13/13、55断言（含发言顺序、空槽、保存恢复）；仪式UI40/40、201断言；原作专项173/191断言，转换后与重载后均45/54，退出码1。专项剩余失败均为9个状态投影项，发言可见与无额外CardPop确认断言通过。日志没有SCRIPT ERROR/ERROR/泄漏报告；本批未重跑全量和GPU。详细运行证据见[机器报告](followup-results.json)和[外部索引](external-evidence.json)。
+
+当时随机调用采集尚未建立，本机缺少Frida且等待联网授权；此阻塞已由上方本批采集解除。相同存档不含完整Unity随机状态、中途重建克隆会重置main RNG的边界仍需区别处理，不得根据目标终态反填返回值。
+
+## 2026-09-15早先周期事件批次（历史）
+
+**2026-09-15：实际重放50/54，仍未等价。** 本次只执行一次新重放，未更换种子挑选结果。修正周期事件把GameRNG误当作Godot原生RNG、从而退回全局randi的接口接线。该修正由原作TimingRoundBase.NextRound 0x465f20、dump.cs:427066和原始event/5310809.json共同背书。
+
+| 剩余差异 | 原作 | 本次克隆 | 判断 |
+|---|---|---|---|
+| 周期531080900下次触发日 | 8 | 9 | 当前第5日加Range(3,7)；原作与克隆随机输入未同步 |
+| 上朝uid24槽s3 | uid33 | uid34 | 普通多候选随机吸附，需原作调用轨迹确认选择序号 |
+| 上朝uid24槽s4 | uid100 | uid35 | 同上；候选集和消耗顺序还需轨迹对齐 |
+| 淘书uid27槽s2 | uid35 | uid58 | 同上；同时引起hand/table成员差异 |
+
+四个不一致投影项为timing_rounds、hand_membership、table_operation_root_membership、rites。后三项共享上述槽位归属差异，不是三套互不相关的数值错误。其余50项在本次运行一致，不推广为所有随机输入均等价。
+
+验证：边界组12/12、46断言；事件集成14/14、76断言；原作专项177/185断言，转换后与磁盘重载后均50/54，退出码1。未重跑全量；下方777测试是9月14日历史结果。日志及紧凑差异见[本轮机器报告](followup-results.json)和[外部证据索引](external-evidence.json)。
+
+下一项需要独立采集原作Random调用的顺序、参数、返回值及对应游戏操作，再与克隆逐调用对齐；不得从终态反推选择并伪装成输入证据。当前没有可用的原作随机调用采集器，本机Python也未安装frida/pymem，本轮未联网安装。已有测试在家业关闭前额外重建克隆场景，而main RNG未持久化；后续应分别验收同操作轨迹和中途重建边界，不能混称同一随机输入。CardPop/GenLoot额外全屏提示仍待修正，50/54不包括完整表现通过。
 
 ## 本轮实际结果（2026-09-14）
 
@@ -125,7 +286,7 @@
 
 
 
-最终回归：特殊投槽4/16、生产投槽13/69、生命周期16/57、卡牌实例11/51、仪式界面36/175、原存档导入桥7/91，合计 **87测试、459断言通过**。六组日志无SCRIPT ERROR、ERROR、Orphans、泄漏或失败；`git diff --check`通过。日志位于仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911/adsorb-test_*.log`。
+最终回归：特殊投槽4/16、生产投槽13/69、生命周期16/57、卡牌实例11/51、仪式界面36/175、原存档导入桥7/91，合计 **87测试、459断言通过**。六组日志无SCRIPT ERROR、ERROR、Orphans、泄漏或失败；`git diff --check`通过。日志位于仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/adsorb-test_*.log`。
 
 
 
@@ -725,7 +886,7 @@ if (type == 6 || type == 7) {
 
 
 
-2026-09-11 用户随后要求提交并清理工作区：上述临时日志及生成文件555个（79464282 字节）和Godot缓存（约1.22GB）已移至仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911`，验收计数保留在本文。批量删除被自动审批拦截，改用可恢复迁出。原作素材、布局数据、反编译证据与截图保留，机器工具配置保留；本文引用的日志现在位于该备份目录。
+2026-09-11 用户随后要求提交并清理工作区：上述临时日志及生成文件555个（79464282 字节）和Godot缓存（约1.22GB）已移至仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911`，验收计数保留在本文。批量删除被自动审批拦截，改用可恢复迁出。原作素材、布局数据、反编译证据与截图保留，机器工具配置保留；本文引用的日志现在位于该备份目录。
 
 
 
@@ -1157,7 +1318,7 @@ Godot 4.7 / RTX 4070 Ti SUPER / Forward+ / 1280×720 独立窗口，导入只读
 
 
 
-原作版本 1.0.2feaceb3，buildguid 2feaceb3d0bc4398a7a056d700aef121。裁判根目录：`C:/Users/User/Documents/Faust-dual-replay-20260914/`。原始文件保留在该目录，不复制完整原作存档进仓库。
+原作版本 1.0.2feaceb3，buildguid 2feaceb3d0bc4398a7a056d700aef121。裁判根目录：`C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-20260914/`。原始文件保留在该目录，不复制完整原作存档进仓库。
 
 
 
@@ -1291,7 +1452,7 @@ gen_tags 后续已有源码入口但本批未擅自扩大实现：CardExtensions
 
 
 
-静态审计与早期日志根：`C:/Users/User/Documents/Faust-phase-close-20260914/`；实际双端及最终回归根：`C:/Users/User/Documents/Faust-dual-replay-20260914/`。精简字段、哈希与最终计数见[机器报告](../audit/phase-close-20260914.json)。早期765测试结果仅作历史记录，不是当前代码最终验收。
+静态审计与早期日志根：`C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-phase-close-20260914/`；实际双端及最终回归根：`C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-20260914/`。精简字段、哈希与最终计数见[机器报告](../audit/phase-close-20260914.json)。早期765测试结果仅作历史记录，不是当前代码最终验收。
 
 
 
@@ -1523,7 +1684,7 @@ AGENTS.md 与 check_content_parity.ps1 已改为原始 StreamingAssets 基准。
 
 
 
-本批修复与之前批次的相关改动一并纳入本地提交。测试日志在 C:/Users/User/Documents/Faust-cleanup-20260911/converge-*.log。
+本批修复与之前批次的相关改动一并纳入本地提交。测试日志在 C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/converge-*.log。
 
 
 
@@ -5977,7 +6138,7 @@ GameApplicationConfig..cctor 0x300380 写 GAME_FONT_SIZE@0x78，stringliteral 0x
 
 ### 设置页新版结构（2026-09-08 实机续批，部分已接）
 
-实机 1.0.2feaceb3 使用 SettingsPanelNew，旧宿主依据 SettingsPanel 的单面板结构不匹配。依据 SettingsController.ShowSettings 0x5ab420 / OnEnable 0x5ab270（dump.cs:325897），SettingsPanelNew.prefab 的分页 ToggleGroup→SetActive 序列，SettingToggleGroupsController.Start 0x5aadc0，以及 KeyMapController.OnEnable 0x565aa0 / KeyItemController.SetKey 0x5656e0 + Resources/InputActions.asset，迁移三分页、原图背景、源字号与键位列表。实机截图见 docs/ui_layout/original_runtime/settings_*.jpg；新版几何见 SettingsPanelNew.md / KeyItem.md。原作存档与注册表在启动前已备份于 C:/Users/User/Documents/Faust-backups/original-ui-20260908-212447。UI76/76、显示设置6/6；两种GPU分辨率实际切页/滚动/关闭通过。功能与视觉缺口详见 PageFidelity，整页尚未完成。
+实机 1.0.2feaceb3 使用 SettingsPanelNew，旧宿主依据 SettingsPanel 的单面板结构不匹配。依据 SettingsController.ShowSettings 0x5ab420 / OnEnable 0x5ab270（dump.cs:325897），SettingsPanelNew.prefab 的分页 ToggleGroup→SetActive 序列，SettingToggleGroupsController.Start 0x5aadc0，以及 KeyMapController.OnEnable 0x565aa0 / KeyItemController.SetKey 0x5656e0 + Resources/InputActions.asset，迁移三分页、原图背景、源字号与键位列表。实机截图见 docs/ui_layout/original_runtime/settings_*.jpg；新版几何见 SettingsPanelNew.md / KeyItem.md。原作存档与注册表在启动前已备份于 C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-backups/original-ui-20260908-212447。UI76/76、显示设置6/6；两种GPU分辨率实际切页/滚动/关闭通过。功能与视觉缺口详见 PageFidelity，整页尚未完成。
 
 RitePanelTitleController.Show 0x5992a0（dump.cs:324417）：text@0x48绑定ScrollViewTextController，源实际样式@MAIN_BODY；@RITE_TEXT在OpenTips，已修正旧正文误用。Stop@0x70仅start且start_round等于Player.round才显示；LastState@0x60按!start显示且有缓存才可操作。已接两个显隐门及停止处理函数边界，仍保留完整富文本/字号档/预览提交链缺口。
 

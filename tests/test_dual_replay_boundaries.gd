@@ -2,11 +2,63 @@ extends GutTest
 
 var db: ConfigDB
 
+func test_rite_result_pop_keeps_card_text_without_global_confirmation() -> void:
+	var state := GameState.new()
+	var rite = state.create_rite_instance(5001001)
+	var uid := state.add_card_to_hand(2000001, db)
+	state.add_card_to_slot(uid, 2, db, rite.uid)
+	state.rite_settlements[str(rite.uid)] = {"phase": "results"}
+	var context := {"rite_uid": rite.uid, "settlement_job": str(rite.uid)}
+	var deferred := ResultExec.execute({"pop.test.s2": ["第一句话", "第二句话"]}, state, db, context)
+	DeferredEffects.apply(deferred, state, db, GameRNG.new(1))
+	assert_true(state.pending_operations.is_empty(), "CardPop.PreDo does not create a fullscreen confirmation")
+	assert_eq(deferred.card_ops.size(), 2, "one card operation per authored speech")
+	assert_eq(deferred.card_ops[0].op, 9)
+	assert_eq(deferred.card_ops[0].card_uid, uid)
+	assert_eq(deferred.card_ops[0].pop, "第一句话")
+	assert_eq(deferred.card_ops[1].pop, "第二句话")
+	state.rite_settlements[str(rite.uid)]["deferred"] = deferred
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+	assert_eq(restored.rite_settlements[str(rite.uid)].deferred.card_ops, deferred.card_ops,
+		"speech target, authored order and text survive save deserialization")
+	var empty := ResultExec.execute({"pop.test.s3": "不应出现"}, state, db, context)
+	assert_true(empty.card_ops.is_empty(), "empty slot produces no anonymous speech")
+	assert_true(empty.prompts.is_empty())
+
 class LastCandidateRNG extends GameRNG:
 	var calls := 0
+	var ranges: Array = []
 	func range_int_half_open(from_n: int, to_n: int) -> int:
 		calls += 1
+		ranges.append([from_n, to_n])
 		return to_n - 1 if to_n > from_n else from_n
+
+func test_source_shuffle_uses_forward_ranges_and_pair_swap() -> void:
+	var rng := LastCandidateRNG.new()
+	assert_eq(rng.shuffle(["a", "b", "c", "d"]), ["d", "a", "b", "c"])
+	assert_eq(rng.ranges, [[0, 4], [1, 4], [2, 4]])
+	assert_eq(rng.shuffle(["a", "b"]), ["b", "a"], "source swaps pair when Range returns 1")
+	assert_eq(rng.shuffle(["a"]), ["a"])
+	assert_eq(rng.calls, 4, "singleton consumes no draw")
+
+func test_round_timing_rearm_uses_supplied_game_rng_before_event_condition() -> void:
+	var state := GameState.new()
+	state.event_status[5310809] = true
+	state.timing_rounds[531080900] = 5
+	state.event_runtime = EventRuntime.new()
+	state.event_runtime._db = db
+	state.event_runtime._state = weakref(state)
+	state.event_runtime.enable_event(5310809)
+	var rng := LastCandidateRNG.new()
+	var fired: Array[int] = state.event_runtime.fire("round_begin_ba", {"round": 5, "rng": rng})
+	assert_false(5310809 in fired, "missing madness/protagonist fails the event condition")
+	assert_eq(state.timing_rounds[531080900], 11, "source rearms first: round 5 + Range(3,7)=6")
+	assert_eq(rng.calls, 1, "rearming consumes the supplied game stream, not global randi")
+	state.event_runtime.fire("round_begin_ba", {"round": 6, "rng": rng})
+	assert_eq(rng.calls, 1, "before due date no draw is consumed")
+	assert_eq(EventRuntime.next_round([3], 5, {"rng": rng}), 8)
+	assert_eq(rng.calls, 1, "single period is deterministic")
 
 func test_adsorption_samples_multiple_candidates_but_not_singletons() -> void:
 	var state := GameState.new()

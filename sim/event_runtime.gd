@@ -187,7 +187,12 @@ static func next_round(trigger_value, base_round: int, ctx: Dictionary) -> int:
 			var period := lo
 			if hi > lo:
 				var rng = ctx.get("rng", null)
-				if rng != null and rng.has_method("randi_range"):
+				# [SRC: TimingRoundBase.NextRound 0x465f20;
+				# dump.cs:427066; event/5310809.json on=[3,7].]
+				# GameRNG exposes the Unity half-open adapter, not randi_range.
+				if rng != null and rng.has_method("range_int_half_open"):
+					period = rng.range_int_half_open(lo, hi)
+				elif rng != null and rng.has_method("randi_range"):
 					period = rng.randi_range(lo, hi - 1)
 				else:
 					period = lo + (randi() % (hi - lo))

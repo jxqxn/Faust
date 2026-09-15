@@ -261,11 +261,13 @@ func _stamp_button(node_name: String, rect: Rect2, texture_name: String, with_ic
 
 ## [SRC: IsValidName0x584de0 / OnNameChanged0x585450, dump.cs:323419.
 ## String.Length counts UTF-16 units, not Godot Unicode codepoints.
-## Datapool.HasBanWords0x4131c0 remains unported: this verifies length only.]
+## Datapool.HasBanWords0x4131c0 uses the original encrypted word resource.]
 func _validate_name(value: String) -> bool:
 	_last_validated_text = value
 	_has_validated_text = true
 	var valid := not value.is_empty() and value.to_utf16_buffer().size() / 2 <= MAX_NAME_LENGTH
+	if valid:
+		valid = not preload("res://data/source_ban_words.gd").has_ban_words(value)
 	var error := find_child("ContentInvalidPrompt", true, false) as Label
 	if error != null:
 		error.text = ""

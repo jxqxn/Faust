@@ -61,8 +61,8 @@ var sfx_config := {}
 # [SRC: _unpack/data/config/sfx_npc_role_dub.json. Card 2000029 -> ["item_coin"]
 #       ties the key domain to CardNode.id.]
 var npc_role_dub := {}
-# sfx_settle_card_new.json: card id -> settlement cue name. The "0" key is the
-# default, so the table is a sparse override on top of a generic cue.
+# sfx_settle_card_new.json: card id -> cue, with defaults 1 for characters
+# and 0 for other cards (OpCardNewController.PlaySFx 0x5744b0).
 # Values: settle_card_new_nomal / _great / _bad.
 # [SRC: _unpack/data/config/sfx_settle_card_new.json]
 var settle_card_new := {}

@@ -143,7 +143,8 @@ func _layout_design() -> void:
 
 
 func _build_title() -> void:
-	# [SRC: GalleryNew/Title pos (315,-270), title fs60; Text fs36.]
+	# [SRC: TextTranslate.UpdateTextInternal 0x1566ad0; enabled StartScene
+	# TextTranslate6001 overrides the serialized initial title with GALLERY_TITLE.]
 	var title := Control.new()
 	title.name = "Title"
 	title.position = Vector2(249, 206)
@@ -152,14 +153,14 @@ func _build_title() -> void:
 	_design.add_child(title)
 	var headline := Label.new()
 	headline.name = "title"
-	headline.text = "历史画廊"
+	headline.text = _ui_text("GALLERY_TITLE", "")
 	headline.position = Vector2(160, 24)
 	headline.size = Vector2(1000, 80)
 	headline.add_theme_font_size_override("font_size", 60)
 	title.add_child(headline)
 	var copy := Label.new()
 	copy.name = "Text"
-	copy.text = "在这里可以看到已经触发过的游戏内容。"
+	copy.text = _ui_text("GALLERY_TEXT", "")
 	copy.position = Vector2(-71.87, 200)
 	copy.size = Vector2(940, 351.36)
 	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

@@ -96,6 +96,8 @@ func test_rite_new_card_opens_its_instance_without_a_location_selector_shortcut(
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
 	state.create_rite_instance(5000001)
+	for instance in state.available_rite_instances():
+		instance.is_show = true
 	var desk := _desk(state, rng)
 	await wait_process_frames(2)
 	var card: Button = null
@@ -345,3 +347,26 @@ func _desk(
 	desk.size = stage.size
 	stage.add_child(desk)
 	return desk
+
+
+func test_source_focus_interpolates_root_and_survives_midway_payload_reload():
+	var rng := RNG.new(81)
+	var state := GameState.new()
+	state.setup_new_run(db, 0, rng)
+	state.create_rite_instance(5000001)
+	var desk := _desk(state, rng, Vector2(1920, 1080)) as MapController
+	await wait_process_frames(2)
+	var uid: int = desk.rite_cards.keys()[0]
+	var payload := {"rite_uid": uid, "distance": 600.0, "duration": 1.0}
+	assert_false(desk.step_source_focus(payload, 0.25))
+	assert_almost_eq(desk.camera_half_height, 1449.0, 0.001, "source Lerp(1732,600,.25)")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(payload))
+	assert_false(desk.step_source_focus(payload, 0.25))
+	var expected_position := desk.camera_position
+	var rebuilt := _desk(state, RNG.new(81), Vector2(1920, 1080)) as MapController
+	await wait_process_frames(2)
+	assert_false(rebuilt.step_source_focus(saved, 0.25))
+	assert_almost_eq(rebuilt.camera_half_height, 1166.0, 0.001)
+	assert_eq(rebuilt.camera_position, expected_position, "saved source endpoints preserve motion through scene rebuild")
+	assert_true(rebuilt.step_source_focus(saved, 0.5))
+	assert_almost_eq(rebuilt.camera_half_height, 600.0, 0.001)

@@ -882,7 +882,7 @@ asc.days_left = rebirth_lifetime     # = card_vanishing，全长
 
 
 
-最终验证：聚合4/17、投槽12/64、仪式36/175、模拟59/181、原存档导入桥7/91，合计 **118测试、528断言通过**。五组最终日志无SCRIPT ERROR、ERROR、Orphans、泄漏或失败记录；`git diff --check`通过。日志保存在仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911/aggregate-test_*.log`。Godot4.7已重新导入运行资源。未重跑全量、未联网或推送。
+最终验证：聚合4/17、投槽12/64、仪式36/175、模拟59/181、原存档导入桥7/91，合计 **118测试、528断言通过**。五组最终日志无SCRIPT ERROR、ERROR、Orphans、泄漏或失败记录；`git diff --check`通过。日志保存在仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/aggregate-test_*.log`。Godot4.7已重新导入运行资源。未重跑全量、未联网或推送。
 
 
 

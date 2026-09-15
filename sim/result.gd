@@ -70,15 +70,14 @@ static func is_supported_key(key: String) -> bool:
 		return true
 	if k == "difficulty" or k == "magic_sudan" or k.begins_with("magic_sudan."):
 		return true
-	if k == "begin_guide" or k == "close_begin_guide" or k == "slide" or k == "change_desk_bg":
+	if k in ["begin_guide", "slide", "change_desk_bg", "change_location_icon", "close_box", "close_deadline", "close_helpbtn", "close_prestige", "close_story"]:
 		return true
 	if k.begins_with("table.change_card_name.") or k.begins_with("total.change_card_name.") \
 			or k.begins_with("table.change_card_text.") or k.begins_with("total.change_card_text."):
 		return true
 	if _is_domain_equip_key(k) and (k.begins_with("table.") or k.begins_with("g.")):
 		return true
-	if k.begins_with("hand_pop") or k.begins_with("rite_pop") or k.begins_with("focus.") \
-			or k.begins_with("close_") or k.begins_with("change_location_icon"):
+	if _source_guide_key_kind(k) != "":
 		return true
 	if k.begins_with("loot."):
 		return true
@@ -118,9 +117,22 @@ static func is_supported_key(key: String) -> bool:
 	return false
 
 
+## Match the original Operation attributes, not an arbitrary string prefix.
+## [SRC: dump.cs HandPop/RitePop/Focus Operation regexes;
+## engine_spec/operations.json entries at 1629/2167/1234.]
+static func _source_guide_key_kind(key: String) -> String:
+	var parts := key.split(".")
+	if parts.size() >= 3 and parts[0] in ["hand_pop", "hand_pop_normal", "hand_pop_gamepad"] and not parts[1].is_empty() and not ".".join(parts.slice(2)).is_empty():
+		return "hand_pop"
+	if parts.size() == 3 and parts[0] == "rite_pop" and not parts[1].is_empty() and parts[2].length() == 7 and parts[2].is_valid_int():
+		return "rite_pop"
+	if parts.size() == 2 and parts[0] == "focus" and parts[1].length() == 7 and parts[1].is_valid_int():
+		return "focus"
+	return ""
+
 static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionary, context: Dictionary = {}) -> void:
 	var k := key.strip_edges()
-	# copy.s<n>: CopyCard runs CardExtensions.Copy once per count unit over every
+	# copy.s<n>: CopyCard runs CardExtensions.Copy once over every
 	# card the slot selector matches.
 	# [SRC: operations.json "copy\\.(.+)" -> CopyCard; CopyCard.c @ Do 0x4f51b0]
 	var copy_slot := k.substr("copy.".length()) if k.begins_with("copy.") else ""
@@ -209,15 +221,11 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		var candidates := SourceJSON.entries(val)
 		var keys: Array = range(candidates.size())
 		var rng = context.get("rng", null)
-		if rng != null and rng.has_method("randi_range"):
-			# Fisher-Yates with the settlement RNG keeps replays deterministic.
-			for i in range(keys.size() - 1, 0, -1):
-				var j: int = rng.randi_range(0, i)
-				var tmp = keys[i]
-				keys[i] = keys[j]
-				keys[j] = tmp
-		else:
-			keys.shuffle()
+		# ChooseOperations.GetOperations 0x4f3830 keeps order when
+		# requested count exceeds candidates; otherwise source Shuffle.
+		if pick_n <= keys.size():
+			var shuffle_rng = rng if rng != null else GameRNG.new()
+			keys = shuffle_rng.shuffle(keys)
 		var take := mini(pick_n, keys.size())
 		for i in take:
 			var candidate: Dictionary = candidates[keys[i]]
@@ -481,20 +489,14 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	# [SRC: MagicSudan.c @ Do (0x515160) -> WizardController.ShowDrawSudan]
 	if k == "magic_sudan" or k.begins_with("magic_sudan."):
 		return
-	# Beginner-guide family: `begin_guide` installs the on-screen directive,
-	# `close_begin_guide` clears it; the remaining cues (focus/hand_pop/
-	# rite_pop/slide/close_box/close_deadline/close_helpbtn/close_prestige/
-	# close_story/change_desk_bg/change_location_icon) accumulate for the
-	# overlay presentation only.
-	# [SRC: BeginGuide.c / CloseBeginGuide.c (DSL ops);
-	#       BeginGuideController.c @ ShowBeginGuide (0x526220)]
+	# [SRC: BeginGuide.Do 0x4ee5b0 -> ShowBeginGuide 0x526220.]
+	# close_begin_guide is an event TIMING, not a result operation. Closing
+	# the actual guide fires that event through its controller; never clear
+	# unrelated pending presentation from a fabricated DSL instruction.
+	# [SRC: CloseBeginGuide.IsValid 0x45eb80; dump.cs:426398 ITiming.]
 	if k == "begin_guide":
 		if val is Dictionary:
 			state.begin_guide = val.duplicate(true)
-		return
-	if k == "close_begin_guide":
-		state.begin_guide = {}
-		state.guide_cues.clear()
 		return
 	# The close_* guide operations also mutate Player's persisted visibility
 	# preferences. A zero operation value requests ShowX(true); non-zero hides
@@ -512,12 +514,50 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 		state.deadline_unshow = int(val) != 0
 	elif k == "close_helpbtn":
 		state.helpbtn_unshow = int(val) != 0
-	if k.begins_with("hand_pop") or k.begins_with("rite_pop") or k.begins_with("focus.") \
-			or k == "slide" or k.begins_with("close_") \
-			or k == "change_desk_bg" or k.begins_with("change_location_icon"):
-		state.guide_cues.append({"key": k, "value": val})
-		if state.guide_cues.size() > 32:
-			state.guide_cues.remove_at(0)
+	# [SRC: ChangeDeskBG.Do 0x4f2bf0 and ChangeLocationIcon.Do 0x4f2e70
+	# write Player fields before RequestSavePlayer; they are not queued hints.]
+	if k == "change_desk_bg":
+		state.change_desk_bg = str(val)
+		return
+	if k == "change_location_icon":
+		state.location_icon_show = int(val)
+		return
+	if k in ["close_box", "close_story", "close_prestige", "close_deadline", "close_helpbtn"]:
+		return
+	# HandPop filters the current hand and selects only the first match.
+	# [SRC: HandPop.Do 0x514010 / ShouldShow 0x514620, closure predicate
+	# 0x51df80 -> IsCurrentHandCard; FilterFirst -> sequential pop promises.]
+	if _source_guide_key_kind(k) == "hand_pop":
+		var input_kind := k.get_slice(".", 0)
+		if input_kind == "hand_pop_gamepad":
+			return # This runtime currently exposes the PC mouse/keyboard input path.
+		var selector := ".".join(k.split(".").slice(2))
+		for uid in state.visible_rail_card_uids():
+			var instance = state.get_card_instance(uid)
+			if not RuntimeOperationFilter._matches(instance, state, db, selector):
+				continue
+			for speech in (val if val is Array else [val]):
+				state.queue_operation("source_pop", k, {"card_uid": uid, "text": state.substitute_text(str(speech)), "remaining": float(db.variable_config.get("pop_show_time", 5.0))}, _queue_context(context))
+			break
+		return
+	# [SRC: RitePop.Do 0x51a190 resolves the matching live rite, not a new pin.]
+	if _source_guide_key_kind(k) == "rite_pop":
+		var instance = state.find_rite_instance_by_id(int(k.get_slice(".", 2)))
+		if instance != null:
+			for speech in (val if val is Array else [val]):
+				state.queue_operation("source_pop", k, {"rite_uid": instance.uid, "text": state.substitute_text(str(speech)), "remaining": float(db.variable_config.get("pop_show_time", 5.0))}, _queue_context(context))
+		return
+	# [SRC: Slide.Do 0x51bb70 -> GameController.ShowSlide -> OnClose promise.]
+	if k == "slide":
+		state.queue_operation("slide", k, {"images": val if val is Array else [val], "index": 0, "position": 0.0, "velocity": 0.0}, _queue_context(context))
+		return
+	# Focus.Do awaits DesktopCameraController.MoveTo; absent live rites resolve.
+	# [SRC: Focus.Do 0x50f900; DesktopCameraController.MoveTo 0x540900.]
+	if _source_guide_key_kind(k) == "focus":
+		var instance = state.find_rite_instance_by_id(int(k.get_slice(".", 1)))
+		if instance != null:
+			var values: Array = val if val is Array else [val]
+			state.queue_operation("focus", k, {"rite_uid": instance.uid, "distance": float(values[0]), "duration": float(values[1]) if values.size() > 1 else 0.5}, _queue_context(context))
 		return
 	# End / back.
 	if k == "over":
@@ -557,6 +597,19 @@ static func _apply_key(key: String, val: Variant, state, db, deferred: Dictionar
 	if k == "prompt" and val is Dictionary:
 		deferred.prompts.append(val.duplicate(true))
 		_record_effect(deferred, "prompt", val, context)
+		return
+	# In a rite result PreDo queues a card-bound POP, not Prompt.Do.
+	# [SRC: CardPop.DisplayClass4_2 b__1 0x5083a0 ->
+	# OperationContext.AddCardOp_Pop 0x39e640; dump.cs:394346.]
+	# Outside the result phase the source uses CardController.ShowPop;
+	# that separate playback path remains to be ported.
+	var pop_job: Dictionary = state.rite_settlements.get(str(context.get("settlement_job", "")), {})
+	if k.begins_with("pop.") and k.count(".") >= 2 and str(pop_job.get("phase", "")) == "results":
+		var selector := k.substr(k.find(".", 4) + 1)
+		var speeches: Array = val if val is Array else [val]
+		for uid in _slot_target_uids(selector, state, context):
+			for speech in speeches:
+				state._record_card_op(9, uid, {"pop": state.substitute_text(str(speech)), "source_key": k})
 		return
 	if k.begins_with("think_pop.") or k.begins_with("think_pop_gamepad.") or k.begins_with("think_pop_normal.") or k.begins_with("pop."):
 		var prompt := {"id": k, "text": str(val)}
@@ -969,25 +1022,23 @@ static func _generate_card(card_id: int, tag_modify: String, state, db) -> int:
 	return instance.uid
 
 
-static func _apply_copy_slot(k: String, val: Variant, state, db, context: Dictionary) -> void:
+static func _apply_copy_slot(k: String, _val: Variant, state, db, context: Dictionary) -> void:
 	# CopyCard copies the matched Card OBJECT `count` times through
 	# CardExtensions.Copy: the copy is a new Card built from the definition id
 	# (PlayerExtensions.AddCard), then the source's runtime tag deltas are
 	# re-applied through AddTag, the source's count is written onto it, and its
 	# equipped cards are copied recursively.
 	# [SRC: CopyCard.__c__DisplayClass4_1.c @ <Do>b__1 (RVA 0x508090) calls
-	#       CardExtensions.Copy(card, false); GameController.__c.c owns the loop
-	#       over CopyCard's count; CardExtensions.c @ Copy (RVA 0x37f4e0):
+	#       CardExtensions.Copy(card, false) once per filtered target. CopyCard.Do
+	#       0x4f51b0 does not read Value; CardExtensions.Copy (RVA 0x37f4e0):
 	#       AddCard(id) -> equips @+0x40 recursive Copy(...,true) -> tag @+0x30
 	#       AddTag loop -> count @+0x20 when the keep-count flag is false.]
 	var selector := k.substr("copy.".length())
-	var copies := maxi(int(val), 1)
 	for uid in _slot_target_uids(selector, state, context):
 		var instance = state.get_card_instance(uid)
 		if instance == null:
 			continue
-		for i in copies:
-			state.copy_card_instance(instance.uid, db)
+		state.copy_card_instance(instance.uid, db)
 
 
 static func _apply_delay_off(val: Variant, state, deferred: Dictionary) -> void:

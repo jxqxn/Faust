@@ -3,7 +3,21 @@ extends RefCounted
 ## Retain TMP input so a font preference change can re-evaluate relative sizes.
 static func set_label_text(label: RichTextLabel, source: String) -> void:
 	label.set_meta("source_markup", source)
-	label.text = to_bbcode(source, label.get_theme_font_size("normal_font_size"))
+	var rendered := to_bbcode(source, label.get_theme_font_size("normal_font_size"))
+	if label.has_meta("source_settlement_markup"):
+		# [SRC: RiteResultPanel.prefab TMP spriteAsset guid 2a35b096...;
+		# rite_settlement_icon.asset character index1 -> dot_dark glyph1;
+		# original atlas rectangle (687,107,18,18), top-left image space.]
+		rendered = rendered.replace("<sprite=1>", "[img width=18 height=18 region=687,107,18,18]res://assets/original/ui/rite_settlement_icon.png[/img]")
+		# Preserve the original 10%-width tab stop in the heading paragraph.
+		var indent := label.size.x * 0.1
+		rendered = rendered.replace("<indent=10%>", "\t").replace("</indent>", "")
+		var lines := rendered.split("\n")
+		for i in lines.size():
+			if lines[i].contains("[img width=18"):
+				lines[i] = "[p tab_stops=%s]%s[/p]" % [indent, lines[i]]
+		rendered = "\n".join(lines)
+	label.text = rendered
 
 # TMP text in content/ui.json and rite tips uses these style tags.
 # Convert complete recognized tokens; ordinary comparisons such as 3 > 2

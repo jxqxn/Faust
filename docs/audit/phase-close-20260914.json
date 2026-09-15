@@ -86,7 +86,7 @@
       "powershell5": "PASS",
       "jsonc_boundary_probes": "PASS"
     },
-    "log_directory": "C:/Users/User/Documents/Faust-phase-close-20260914",
+    "log_directory": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-phase-close-20260914",
     "blockers": [
       "No paired original/clone post-action traces",
       "No synchronized original/clone random input stream",
@@ -176,7 +176,7 @@
     "console": "full-final-console.log"
   },
   "dual_replay": {
-    "evidence_root": "C:\\Users\\User\\Documents\\Faust-dual-replay-20260914",
+    "evidence_root": "C:\\Users\\User\\Documents\\GitHub\\Faust-artifacts\\Faust-dual-replay-20260914",
     "tests": 1,
     "passed_assertions": 174,
     "total_assertions": 188,

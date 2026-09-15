@@ -271,6 +271,8 @@ static func to_clone_payload(original: Dictionary, db) -> Dictionary:
 		"prestige_unshow": bool(original.get("prestige_unshow", false)),
 		"deadline_unshow": bool(original.get("deadline_unshow", false)),
 		"helpbtn_unshow": bool(original.get("helpbtn_unshow", false)),
+		"change_desk_bg": str(original.get("change_desk_bg", "")),
+		"location_icon_show": int(original.get("location_icon_show", 0)),
 		"hand": ordered_hand,
 		"player_card_order": original.get("cards", []).map(func(card): return int(card.uid)),
 		"rail_order": rail_order,

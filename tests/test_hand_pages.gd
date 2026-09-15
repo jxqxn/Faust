@@ -10,6 +10,65 @@ func before_all() -> void:
 	db.load_all()
 
 
+func test_hand_canvas_scale_real_drag_and_reload_at_two_sizes() -> void:
+	for dimensions in [Vector2i(1280, 720), Vector2i(1920, 1080)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var uid := state.add_card_to_hand(2000001, db)
+		state.get_card_instance(uid).tags["own"] = 1
+		for reload_pass in range(2):
+			var screen := GameScreen.new()
+			screen.size = dimensions
+			screen.setup(state, db, GameRNG.new(183))
+			viewport.add_child(screen)
+			await wait_process_frames(4)
+			var card: CardWidget = screen._ordered_hand_cards()[0]
+			var factor := float(dimensions.y) / 2160.0
+			assert_almost_eq(card.get_global_rect().size, Vector2(194, 422) * factor, Vector2.ONE * 0.01,
+				"CardNew and Hand share one CanvasScaler factor, including after reload")
+			assert_almost_eq(card.get_global_rect().end.y, 2156.0 * factor, 0.01)
+			var start := card.get_global_rect().get_center()
+			var motion := InputEventMouseMotion.new()
+			motion.position = start
+			viewport.push_input(motion, true)
+			await wait_process_frames(1)
+			assert_eq(viewport.gui_get_hovered_control(), card, "scaled hand still receives real mouse input")
+			var press := InputEventMouseButton.new()
+			press.position = start
+			press.button_index = MOUSE_BUTTON_LEFT
+			press.pressed = true
+			press.button_mask = MOUSE_BUTTON_MASK_LEFT
+			viewport.push_input(press, true)
+			motion.position = start - Vector2(0, 80)
+			motion.relative = Vector2(0, -80)
+			motion.button_mask = MOUSE_BUTTON_MASK_LEFT
+			viewport.push_input(motion, true)
+			await wait_process_frames(2)
+			assert_true(viewport.gui_is_dragging(), "real scaled card drag starts")
+			motion.position = Vector2(4, 4)
+			viewport.push_input(motion, true)
+			press.position = motion.position
+			press.pressed = false
+			press.button_mask = 0
+			viewport.push_input(press, true)
+			await wait_process_frames(3)
+			assert_false(viewport.gui_is_dragging())
+			assert_eq(state.visible_rail_card_uids(), [uid], "invalid drop preserves hand membership")
+			var capture_dir := OS.get_environment("FAUST_PRESENTATION_CAPTURE")
+			if reload_pass == 1 and DisplayServer.get_name() != "headless" and not capture_dir.is_empty():
+				await RenderingServer.frame_post_draw
+				viewport.get_texture().get_image().save_png(capture_dir.path_join("hand-%d.png" % dimensions.x))
+			var restored := GameState.new()
+			SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+			state = restored
+			viewport.remove_child(screen)
+			screen.free()
+
+
 func test_condition_sort_uses_source_ties_and_persists_only_current_page() -> void:
 	var state := GameState.new()
 	var other := state.add_card_to_hand(2000001, db)
@@ -127,6 +186,10 @@ func test_rite_title_is_independent_of_icon_bound_and_clicks_instance() -> void:
 	var rng := preload("res://core/rng.gd").new(182)
 	state.setup_new_run(db, 0, rng)
 	state.add_available_rite(5000001, db, rng)
+	# This test exercises the known title; unseen hover/animation is covered
+	# by test_card_hold_hint with real viewport input.
+	for instance in state.available_rite_instances():
+		instance.is_show = true
 	var stage := Control.new()
 	stage.size = Vector2(3840, 2160)
 	add_child_autofree(stage)

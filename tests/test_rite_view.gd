@@ -9,6 +9,190 @@ func before_all():
 	db = ConfigDB.new()
 	db.load_all()
 
+func test_card_pop_uses_source_bubble_and_card_identity() -> void:
+	var state := GameState.new()
+	var uid := state.add_card_to_hand(2000001, db)
+	var view := _owned(RiteView.new()) as RiteView
+	view.setup(state, db, RNG.new(1), 5001001)
+	add_child(view)
+	await wait_process_frames(2)
+	var result := RiteResolver.RiteResult.new()
+	result.deferred = {"card_ops": [{"op": 9, "card_uid": uid, "card_id": 2000001, "pop": "原作卡牌发言"}]}
+	view._rebuild_result_lists(result)
+	var card := view._result_cards_layer.get_node("CardOp0") as Control
+	var bubble = card.get_node("Pop")
+	assert_eq(bubble.label.get_parsed_text(), "原作卡牌发言")
+	assert_true(card.get_node("CardShow") is CardWidget, "speaker is the actual card, not a prefixed label")
+	assert_eq(int(card.get_meta("source_card_uid")), uid)
+	assert_eq(card.mouse_filter, Control.MOUSE_FILTER_IGNORE)
+	assert_eq(view._result_ops_layer.get_child_count(), 0, "no synthetic result rows")
+	assert_almost_eq(bubble.remaining, float(db.variable_config.pop_show_time), 0.01)
+
+	view.queue_free()
+
+
+func test_pop_input_waits_for_release_and_preserves_order_after_reload() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(1920, 1080)
+	viewport.handle_input_locally = true
+	add_child_autofree(viewport)
+	var state := GameState.new()
+	var uid := state.add_card_to_hand(2000001, db)
+	var result := RiteResolver.RiteResult.new()
+	result.deferred = {"card_ops": [
+		{"op": 9, "card_uid": uid, "card_id": 2000001, "pop": "第一句"},
+		{"op": 9, "card_uid": uid, "card_id": 2000001, "pop": "第二句"}]}
+	var view := RiteView.new()
+	view.setup(state, db, RNG.new(1), 5001001)
+	viewport.add_child(view)
+	await wait_process_frames(2)
+	view._result_surface.show()
+	view._rebuild_result_lists(result)
+	var cell: Control = view._result_cards_layer.get_child(0)
+	var bubbles: Array = cell.get_children().filter(func(node): return node.has_signal("progressed"))
+	assert_eq(bubbles.size(), 2)
+	assert_true(bubbles[0].visible)
+	assert_false(bubbles[1].visible, "later source speech waits for its predecessor")
+	var input := InputEventKey.new()
+	input.keycode = KEY_SPACE
+	input.pressed = true
+	viewport.push_input(input, true)
+	await wait_process_frames(2)
+	assert_true(bubbles[0].visible, "source canceled callback must not fire on press")
+	input = InputEventKey.new()
+	input.keycode = KEY_SPACE
+	input.pressed = false
+	viewport.push_input(input, true)
+	await wait_process_frames(2)
+	assert_false(bubbles[0].visible)
+	assert_true(bubbles[1].visible, "one real release advances one speech only")
+	assert_eq(float(result.deferred.card_ops[0].presentation_remaining), 0.0)
+	var remaining: float = bubbles[1].remaining
+	# A JSON round-trip exercises the same payload stored in rite_display.
+	result.deferred = JSON.parse_string(JSON.stringify(result.deferred))
+	view._rebuild_result_lists(result)
+	await wait_process_frames(2)
+	cell = view._result_cards_layer.get_child(0)
+	bubbles = cell.get_children().filter(func(node): return node.has_signal("progressed"))
+	assert_false(bubbles[0].visible, "completed speech does not restart after rebuild")
+	assert_true(bubbles[1].visible)
+	assert_lte(bubbles[1].remaining, remaining)
+	assert_gt(bubbles[1].remaining, 0.0)
+
+func test_pop_timeout_is_strictly_after_source_duration_and_finishes_once() -> void:
+	var bubble := preload("res://ui/source_pop.gd").new()
+	add_child_autofree(bubble)
+	bubble.setup("原作计时边界", float(db.variable_config.pop_show_time))
+	bubble.set_process(false)
+	var completions: Array = []
+	bubble.finished.connect(func(): completions.append(true))
+	bubble._process(float(db.variable_config.pop_show_time))
+	assert_true(bubble.visible, "OpCardNew.Update retains pop at elapsed == pop_show_time")
+	assert_true(completions.is_empty())
+	bubble._process(0.001)
+	assert_false(bubble.visible, "timeout requires elapsed > duration")
+	assert_eq(completions.size(), 1)
+	bubble._process(1.0)
+	bubble.advance()
+	assert_eq(completions.size(), 1, "timeout and repeated jump cannot resolve twice")
+
+
+func test_new_card_curve_done_pop_order_and_full_save_resume() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		await _check_new_card_curve_and_save(dimensions)
+
+func _check_new_card_curve_and_save(dimensions: Vector2i) -> void:
+	var viewport := SubViewport.new()
+	viewport.size = dimensions
+	viewport.handle_input_locally = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child_autofree(viewport)
+	var state := GameState.new()
+	var uid := state.add_card_to_hand(2000001, db)
+	var other := state.add_card_to_hand(2000006, db)
+	state.round_transition = {"phase": "rites"}
+	var result := RiteResolver.RiteResult.new()
+	result.deferred = {"card_ops": [
+		{"op": 1, "card_uid": uid, "card_id": 2000001},
+		{"op": 9, "card_uid": uid, "card_id": 2000001, "pop": "新卡发言"},
+		{"op": 1, "card_uid": other, "card_id": 2000006}]}
+	var view := RiteView.new()
+	view.size = Vector2(dimensions)
+	view.setup(state, db, RNG.new(1), 5001001)
+	viewport.add_child(view)
+	await wait_process_frames(2)
+	view._result_surface.show()
+	view._last_result = result
+	view._settlement_phase = "done"
+	view._resolution_committed = true
+	view._rebuild_result_lists(result)
+	view._remember_round_result()
+	var first: Control = view._result_cards_layer.get_child(0)
+	var animation = first.get_node("NewGet")
+	var speech = first.get_node("Pop")
+	var cues: Array = []
+	animation.audio_requested.connect(func(cue): cues.append(cue))
+	await wait_process_frames(2)
+	animation.set_process(false)
+	result.deferred.card_ops[0].presentation_elapsed = 0.0
+	animation.step(0.16666667)
+	assert_almost_eq(animation.banner.position.y, 0.0, 0.001, "source first sixth holds the banner")
+	assert_false(speech.visible)
+	assert_false(view._result_cards_layer.get_child(1).visible, "a later new card waits behind the speech")
+	assert_eq(cues, ["settle_card_new_great.ogg"], "time-zero source event plays exactly once")
+	animation.step(0.16666667)
+	await wait_process_frames(2)
+	assert_true(animation.completed, "Done at one third resolves the promise")
+	assert_true(speech.visible)
+	assert_almost_eq(animation.banner.position.y, 55.0, 0.001, "Hermite midpoint is not the animation endpoint")
+	animation.step(0.16666666)
+	assert_almost_eq(animation.banner.position.y, 110.0, 0.001, "animation continues after Done")
+	assert_eq(animation.banner.get_child(0).text, db.translate("NEW_CARD"))
+	watch_signals(view)
+	view._close_panel()
+	assert_signal_not_emitted(view, "closed", "final close waits for presentation promise")
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		var capture := OS.get_environment("FAUST_OP_CAPTURE")
+		if not capture.is_empty():
+			assert_gt(view._source_canvas.scale.x, 0.0, "rendered canvas cannot have zero scale")
+			viewport.get_texture().get_image().save_png(capture + str(dimensions.x) + ".png")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(SaveSystem.serialize(state)))
+	view.queue_free()
+	await wait_process_frames(2)
+	state = GameState.new()
+	SaveSystem.deserialize(saved, state, db)
+	view = RiteView.new()
+	view.size = Vector2(dimensions)
+	view.setup(state, db, RNG.new(1), 5001001)
+	viewport.add_child(view)
+	view.restore_round_result(state.round_transition.rite_display)
+	await wait_process_frames(4)
+	first = view._result_cards_layer.get_child(0)
+	animation = first.get_node("NewGet")
+	speech = first.get_node("Pop")
+	assert_true(animation.completed)
+	assert_true(speech.visible, "full save resumes the pending speech")
+	assert_false(view._result_cards_layer.get_child(1).visible)
+	var replayed_cues: Array = []
+	animation.audio_requested.connect(func(cue): replayed_cues.append(cue))
+	animation.step(0.0)
+	assert_true(replayed_cues.is_empty(), "saved source event is not replayed")
+	for pressed in [true, false]:
+		var input := InputEventKey.new()
+		input.keycode = KEY_SPACE
+		input.pressed = pressed
+		viewport.push_input(input, true)
+		await wait_process_frames(2)
+	assert_false(speech.visible)
+	assert_true(view._result_cards_layer.get_child(1).visible, "real release starts the next operation")
+	var last = view._result_cards_layer.get_child(1).get_node("NewGet")
+	last.step(0.5)
+	assert_false(view._result_presentation_busy())
+	watch_signals(view)
+	view._close_panel()
+	assert_signal_emitted(view, "closed")
+
 
 func _test_rite_uid(state: GameState, local_db: ConfigDB, rng: RNG, rite_id: int, absorb_open_slots := false) -> int:
 	var instance = state.find_rite_instance_by_id(rite_id)
@@ -772,6 +956,8 @@ func test_zero_day_auto_result_waits_for_prompt_before_closing():
 	screen._consume_event_display()
 	await wait_process_frames(3)
 	assert_signal_emitted(view, "resolved")
+	assert_signal_not_emitted(view, "closed", "new-card operation must finish before auto-close")
+	await wait_seconds(0.4)
 	assert_signal_emitted(view, "closed")
 	assert_null(state.get_rite_instance(view._rite_uid))
 
@@ -957,10 +1143,14 @@ func test_result_text_uses_matched_prior_and_extra_content_without_dsl_debug_row
 	view._advance_result_text()
 	assert_eq(view._result_paragraph_index, 1, "first click finishes typing without advancing")
 	view._advance_result_text()
-	assert_eq(view._result_surface_text.get_parsed_text(), str(view._rite.text) + "\n\n前置标题", "second click appends next paragraph")
+	assert_true(view._result_surface_text.get_parsed_text().contains("前置标题"), "second click appends source-formatted title")
+	assert_true(str(view._result_surface_text.get_meta("source_markup")).contains('<font="Title SDF">前置标题</font>'), "title uses original variable template")
+	assert_true(view._result_surface_text.text.contains("[font_size=%d]" % (view._result_surface_text.get_theme_font_size("normal_font_size") + 10)))
+	assert_false(view._result_surface_text.text.contains("<sprite=1>"), "title sprite is rendered, not printed as markup")
 	view._advance_result_text()
 	view._advance_result_text()
-	assert_true(view._result_surface_text.get_parsed_text().ends_with("\n\n前置正文"))
+	assert_true(str(view._result_surface_text.get_meta("source_markup")).ends_with("\n前置正文"))
+	assert_false(str(view._result_surface_text.get_meta("source_markup")).contains("\n\n"), "AppendLine does not insert extra blank paragraphs")
 	assert_eq(view._result_ops_layer.get_child_count(), 0, "raw DSL keys are not operation card results")
 	assert_eq(view._result_cards_layer.get_child_count(), 0, "slot snapshots are not operation card playback")
 	res.settlements = [{"result_text": "普通正文"}, {"result_text": "额外正文"}]

@@ -193,31 +193,23 @@ func test_book_search_loot_generates_one_variant_per_trigger():
 		if out.size() == 1:
 			assert_true(int(out[0]) in variants, "book-search draw stays inside its configured variants")
 
-# ---- ScopeFilter (vc#11-#12) ----
-func test_scope_parse_and_targets():
-	assert_eq(ScopeFilter.parse_scope("friend"), ScopeFilter.Friend)
-	assert_eq(ScopeFilter.parse_scope("enemy"), ScopeFilter.Enemy)
-	assert_eq(ScopeFilter.parse_scope("all"), ScopeFilter.All)
-	assert_eq(ScopeFilter.parse_scope("self"), ScopeFilter.Self)
-	assert_eq(ScopeFilter.parse_scope("parent"), ScopeFilter.Parent)
-	# All bitmask = Friend|Enemy.
-	assert_eq(ScopeFilter.scope_targets(ScopeFilter.All), "all")
-	assert_eq(ScopeFilter.scope_targets(ScopeFilter.Friend), "friend/enemy")
-	assert_eq(ScopeFilter.scope_targets(ScopeFilter.Self), "self")
-	assert_eq(ScopeFilter.scope_targets(0), "all")
+# Runtime selector coverage replaces the dormant ScopeFilter's invented >= rule.
+func test_runtime_filter_card_identity_and_lost_exclusion():
+	var db := ConfigDB.new()
+	db.load_all()
+	var state := GameState.new()
+	var uid := state.add_card_to_hand(2000460, db)
+	assert_eq(RuntimeOperationFilter.select_total(state, db, "2000460").size(), 1)
+	assert_eq(RuntimeOperationFilter.select_total(state, db, "999").size(), 0)
+	state.get_card_instance(uid).is_lost = true
+	assert_eq(RuntimeOperationFilter.select_total(state, db, "2000460").size(), 0)
 
-func test_scope_ismatch_card_id():
-	var card := {"id": 2000460, "tags": {}}
-	assert_true(ScopeFilter.is_match(card, {"flags": ScopeFilter.FLAG_CARD_ID, "card_id": 2000460}).match)
-	assert_false(ScopeFilter.is_match(card, {"flags": ScopeFilter.FLAG_CARD_ID, "card_id": 999}).match)
-	# Lost card excluded.
-	var lost := {"id": 2000460, "tags": {}, "is_lost": true}
-	assert_false(ScopeFilter.is_match(lost, {"flags": ScopeFilter.FLAG_CARD_ID, "card_id": 2000460}).match)
-
-func test_scope_ismatch_tag():
-	var card := {"id": 1, "tags": {"智慧": 3}}
-	assert_true(ScopeFilter.is_match(card, {"flags": ScopeFilter.FLAG_TAG, "tags": {"智慧": 2}}).match)
-	assert_false(ScopeFilter.is_match(card, {"flags": ScopeFilter.FLAG_TAG, "tags": {"智慧": 5}}).match)
+func test_runtime_filter_honors_each_comparison_instead_of_assuming_greater_equal():
+	var tags := {"智慧": 3}
+	for selector in ["1.智慧=3", "1.智慧>=3", "1.智慧<=3", "1.智慧>2", "1.智慧<4", "1.智慧!=2"]:
+		assert_true(RuntimeOperationFilter.matches_card_data(1, tags, null, selector), selector)
+	for selector in ["1.智慧=2", "1.智慧>=4", "1.智慧<=2", "1.智慧>3", "1.智慧<3", "1.智慧!=3"]:
+		assert_false(RuntimeOperationFilter.matches_card_data(1, tags, null, selector), selector)
 
 # ---- Branch (vc#13-#14) ----
 func test_choose_operations_count_lt_one_empty():

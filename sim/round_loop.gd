@@ -62,6 +62,9 @@ static func advance_day(state, db, rng, interactive: bool = false, animate: bool
 ## The original Then chain is serial; source order is not the numeric order
 ## of generated closure names. See docs/replica/loop.md#e040.
 static func _pump_day(state, db, rng, result: Dictionary) -> void:
+	# [SRC: TimingRoundBase.NextRound 0x465f20 and GenLoot.SimpleWeightLoot
+	# 0x512b90 share UnityEngine.Random; original runtime capture 2026-09-15.]
+	state._event_rng = rng
 	while state.pending_operations.is_empty() and state.rite_settlements.is_empty():
 		if state.over_pending:
 			result.game_over = true

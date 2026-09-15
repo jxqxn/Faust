@@ -23,6 +23,71 @@ func before_all():
 	db.load_all()
 
 
+func test_unseen_rite_reveals_on_real_hover_then_persists() -> void:
+	for dimensions in [Vector2i(1280, 720), Vector2i(1920, 1080)]:
+		var viewport := SubViewport.new()
+		viewport.size = dimensions
+		viewport.handle_input_locally = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child_autofree(viewport)
+		var state := GameState.new()
+		var instance = state.create_rite_instance(RITE_ID)
+		state.once_new_rites_is_show[RITE_ID] = false
+		var map := MapController.new()
+		map.size = dimensions
+		map.setup(state, db, RNG.new(5))
+		viewport.add_child(map)
+		await wait_process_frames(3)
+		var card = map.rite_cards[instance.uid]
+		assert_true(card.get_node("Mask").visible)
+		assert_false(card.get_node("TitleBG").visible)
+		assert_eq(card.tooltip_text, "")
+		var point: Vector2 = card.get_global_rect().get_center()
+		var motion := InputEventMouseMotion.new()
+		motion.position = point
+		map.set_scene_blocker("test-overlay", true)
+		viewport.push_input(motion, true)
+		await wait_process_frames(2)
+		assert_false(card.revealing, "overlay blocks hover revelation")
+		motion.position = Vector2.ZERO
+		viewport.push_input(motion, true)
+		map.set_scene_blocker("test-overlay", false)
+		motion.position = point
+		viewport.push_input(motion, true)
+		await wait_process_frames(2)
+		assert_eq(viewport.gui_get_hovered_control(), card, "real hover hits unrevealed rite")
+		assert_true(card.revealing)
+		assert_false(instance.is_show, "reveal writes state only at source animation event")
+		# Clicking during hover revelation retains the pending open request.
+		watch_signals(map)
+		for down in [true, false]:
+			var click := InputEventMouseButton.new()
+			click.button_index = MOUSE_BUTTON_LEFT
+			click.position = point
+			click.pressed = down
+			viewport.push_input(click, true)
+		await get_tree().create_timer(1.0).timeout
+		assert_true(instance.is_show)
+		assert_true(state.once_new_rites_is_show[RITE_ID])
+		assert_false(card.get_node("Mask").visible)
+		assert_true(card.get_node("TitleBG").visible)
+		assert_signal_emit_count(map, "open_rite_instance", 1)
+		var capture_dir := OS.get_environment("FAUST_PRESENTATION_CAPTURE")
+		if DisplayServer.get_name() != "headless" and not capture_dir.is_empty():
+			await RenderingServer.frame_post_draw
+			viewport.get_texture().get_image().save_png(capture_dir.path_join("revealed-%d.png" % dimensions.x))
+		var restored := GameState.new()
+		SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+		map.setup(restored, db, RNG.new(5))
+		map.refresh_rite_cards()
+		await wait_process_frames(2)
+		assert_true(map.rite_cards[instance.uid].revealed, "loaded rite does not repeat reveal")
+		# Disconnect GUT's object-keyed watcher while its target is still alive.
+		clear_signal_watcher()
+		viewport.remove_child(map)
+		map.free()
+
+
 func _state() -> GameState:
 	var rng := RNG.new(8801)
 	var state := GameState.new()

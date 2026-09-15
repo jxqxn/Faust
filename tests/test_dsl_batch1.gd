@@ -90,9 +90,9 @@ func test_copy_slot_grants_fresh_copies_to_hand() -> void:
 
 	ResultExec.execute({"copy.s2": 2}, state, local_db, ctx)
 
-	assert_eq(state.hand.size(), hand_before + 2, "copy.s2 grants two copies to the hand")
+	assert_eq(state.hand.size(), hand_before + 1, "CopyCard copies the selected card once regardless of Value")
 	var copied_ids := state.hand.map(func(uid): return state.get_card_instance(uid).card_id)
-	assert_eq(copied_ids.count(2000113), 2, "copies carry the slot card's config id")
+	assert_eq(copied_ids.count(2000113), 1, "copies carry the slot card's config id")
 
 
 func test_delay_off_clears_all_then_removes_by_id() -> void:
@@ -470,7 +470,10 @@ func test_redraw_writes_discarded_runtime_tags_back_to_pool() -> void:
 	var active_uid: int = int(state.active_sudan_cards[0].card_uid)
 	state.get_card_instance(active_uid).tags["重抽回写"] = 5
 	var discarded_id := int(state.active_sudan_cards[0].card_id)
-	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), local_db), 2010002)
+	# With one card remaining, redraw must take it regardless of the first
+	# draw's shuffle. A fixed seed/card expectation encoded the old shuffle.
+	var remaining_id := 2010003 if discarded_id == 2010002 else 2010002
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(46), local_db), remaining_id)
 	var reinserted = state.sudan_pool_entry(active_uid)
 	assert_not_null(reinserted, "the discarded Card object itself returns to the pool")
 	assert_eq(int(reinserted.card_id), discarded_id)
@@ -489,7 +492,8 @@ func test_redraw_spends_extra_counter_when_per_round_is_exhausted() -> void:
 	state.set_counter(7100008, 1)
 	state.reset_sudan_pool_to_ids([2010002, 2010003])
 	RoundLoop.draw_weekly_sudan(state, local_db, RNG.new(47))
-	assert_eq(RoundLoop.use_redraw(state, RNG.new(48), local_db), 2010002,
+	var remaining_id := 2010003 if int(state.active_sudan_cards[0].card_id) == 2010002 else 2010002
+	assert_eq(RoundLoop.use_redraw(state, RNG.new(48), local_db), remaining_id,
 		"the extra redraw counter funds a redraw")
 	assert_eq(state.get_counter(7100008), 0, "the extra redraw counter is spent")
 	assert_eq(RoundLoop.use_redraw(state, RNG.new(49), local_db), -1,
@@ -671,9 +675,9 @@ func test_difficulty_action_switches_mid_run() -> void:
 		"leaving the free-rollback difficulty drops the budget to its allowance")
 
 
-func test_begin_guide_family_installs_and_clears_directive() -> void:
-	# [SRC: BeginGuide.c / CloseBeginGuide.c; BeginGuideController.c
-	#       @ ShowBeginGuide (0x526220) / OnCloseBtnClick (0x525fa0)]
+func test_begin_guide_does_not_treat_event_timing_as_result_operation() -> void:
+	# [SRC: BeginGuide.Do 0x4ee5b0; CloseBeginGuide.IsValid 0x45eb80;
+	# dump.cs:426398 marks close_begin_guide as Timing, not Operation.]
 	var local_db := _db_with_batch_rites()
 	var state := GameState.new()
 	state.setup_new_run(local_db, 0, RNG.new(101))
@@ -681,10 +685,17 @@ func test_begin_guide_family_installs_and_clears_directive() -> void:
 	ResultExec.execute({"begin_guide": {"type": "NEXT_DAY", "bind": "UI/Submit"}}, state, local_db)
 	assert_eq(str(state.begin_guide.get("type", "")), "NEXT_DAY", "begin_guide installs the directive")
 	ResultExec.execute({"hand_pop.1_1.主角": "看这里", "focus.2": 1}, state, local_db)
-	assert_eq(state.guide_cues.size(), 2, "presentation cues accumulate")
-	ResultExec.execute({"close_begin_guide": 1}, state, local_db)
-	assert_true(state.begin_guide.is_empty(), "close_begin_guide clears the directive")
-	assert_true(state.guide_cues.is_empty(), "and drops the cue queue")
+	assert_true(state.guide_cues.is_empty(), "missing focus target resolves without an inert cue")
+	assert_eq(state.pending_operation().get("kind"), "source_pop", "hand speech has an executable, persisted promise")
+	state.guide_cues = [{"key": "slide", "value": ["old-context-unavailable"]}]
+	var pending := state.pending_operations.duplicate(true)
+	for key in ["close_begin_guide", "close_unknown", "change_location_icon_unknown", "hand_pop_unknown.1.主角", "rite_pop.1.2", "focus.2"]:
+		assert_false(ResultExec.is_supported_key(key), "only original operation names are supported")
+		var rejected := ResultExec.execute({key: 1}, state, local_db)
+		assert_true(str(rejected.logs).contains("UNHANDLED result key"))
+	assert_eq(str(state.begin_guide.get("type", "")), "NEXT_DAY", "a timing name cannot clear the active guide")
+	assert_eq(state.pending_operations, pending, "unknown instructions cannot discard a live promise")
+	assert_eq(state.guide_cues.size(), 1, "old save residue is not silently destroyed or appended")
 	# The guide state round-trips through the save.
 	ResultExec.execute({"begin_guide": {"type": "BACK_ROUND"}}, state, local_db)
 	var restored := GameState.new()

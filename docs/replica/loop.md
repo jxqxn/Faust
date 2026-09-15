@@ -918,7 +918,7 @@ A13 原登记为"待复核现状：回到同一调用链审计副作用顺序，
 
 - 上述最终日志无 SCRIPT ERROR、ERROR、orphan 或泄漏诊断；`git diff --check` 通过。
 
-- 原作配置未改动。日志在 `C:/Users/User/Documents/Faust-cleanup-20260911/opening-*.log`。
+- 原作配置未改动。日志在 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/opening-*.log`。
 
 
 </details>
@@ -1138,7 +1138,7 @@ A13 原登记为"待复核现状：回到同一调用链审计副作用顺序，
 
 
 
-仓库外日志：`C:/Users/User/Documents/Faust-cleanup-20260911/`。
+仓库外日志：`C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`。
 
 
 
@@ -1328,7 +1328,7 @@ BackToHandOrBag。原作没有“无效落点恢复旧槽”的分支。
 
 
 
-验证（日志在仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911/`）：
+验证（日志在仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`）：
 
 
 
@@ -1675,7 +1675,7 @@ TagBg 200×100；它们目前只是证据，**未宣称对应渲染器或 PreDo 
 
 
 
-日志均位于仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911/`。
+日志均位于仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`。
 
 
 
@@ -2110,7 +2110,7 @@ hand_have 却未执行原作 IsHandCard：直接恢复初始表会把 NPC 全摆
 
 
 
-日志在 `C:/Users/User/Documents/Faust-cleanup-20260911/`。
+日志在 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`。
 
 
 
@@ -2277,7 +2277,7 @@ round_begin_ba并执行启动期苏丹抽取。明确选择哈桑、商人家族
 
 
 
-日志置于 `C:/Users/User/Documents/Faust-cleanup-20260911/`。
+日志置于 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`。
 
 
 
@@ -2810,7 +2810,7 @@ round_begin_ba并执行启动期苏丹抽取。明确选择哈桑、商人家族
 
 合计 168 测试通过；最终专项日志无 SCRIPT ERROR/ERROR、孤儿或泄漏记录。
 
-测试日志位于仓库外 `C:/Users/User/Documents/Faust-cleanup-20260911/`。
+测试日志位于仓库外 `C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-cleanup-20260911/`。
 
 
 

@@ -1,15 +1,64 @@
 # 界面、输入、动画与声音
 
+## 2026-09-15 改名禁词链恢复（PA09）
+
+`PromptChangeNameController.IsValidName 0x584de0`先验证UTF16长度1..20，再调用`Datapool.HasBanWords 0x4131c0`；空输入清错误但不可提交，其他非法输入显示ILLEGAL_NAME。复刻原先只检查长度，现接原始`Resources/ban_words.bytes`（368字节）及对应加载链，不制造明文词表或增加过滤词。
+
+来源链：`GameApplicationCreator.Awake 0x300bb0`从InitScene GameObject21的PackerSeed及Camera.cullingMask初始化资源参数。源PackerSeed=16191269472359725396，cullingMask=1744830530；System.Random两次Next得到1220381830/1844380820，临时Unity状态候选推导CARD_SEED=-1782231110517193840。该推导没有冒充原作进程实测：用AES PKCS7完整解密校验独立确认资源键，28项原始JSON明文SHA256=`a4969c5a3e07c4fc690ef588c3509d3c4f69a39283f7a59e17589b63e512074a`，去重小写后22项。初始有界候选搜索88项只产生这一合法明文，运行代码不含候选搜索；资源种子不接玩法RNG。
+
+`Datapool.LoadBanWords 0x4145c0`→`Util.AES.GeneratePassword 0x397200/0x3974a0`（4个ulong、32字节）→PBKDF2-HMAC-SHA1/1000/AES256-CBC/首16字节IV/PKCS7。GDScript采用有符号64位同位模式及显式逻辑右移；首次十六进制超范围测试已失败并纠正为同位负整数，失败日志保留。读取后先校验明文哈希，再创建过滤器；加载失败遵循原HasBanWords记录错误返回false，不造备用词库。
+
+`MaskWordsHelper.ctor 0x3025a0`和闭包5_0/5_1/5_2/5_3：Trim/ToLower/Distinct、原始skip字符集分组、Regex.Escape、长词优先、特殊组去除已被普通组完全覆盖的项。`HasMaskWord 0x301cd0`先匹配特殊组，再删除skip字符后匹配普通组。skip集合直接取`.cctor 0x302530`引用的`stringliteral.json RVA0x25ac008`；点、斜杠和数字并不是可任意忽略的字符，不能换成“所有标点”。
+
+独立`tools/export_source_ban_word_oracle.ps1`使用.NET自身AES/PBKDF2/Regex，从原始加密文件和源码字符串生成303组测试输入；GDScript两路判定共608断言通过。真实鼠标/键盘在1920/1280输入禁词、点击禁用确认、Ctrl+A改为合法名并提交，再补GameScreen待处理存档重建、真实输入拒绝空名/接受合法名、关闭后存档重建，共3测试646断言通过（ban-word-save-regression-2.log）。首次测试漏发Backspace，Ctrl+A只选中没有清空，故误提交旧名；修正真实输入序列后通过，失败日志保留。它证明源码算法及该输入矩阵对照，不是原作可执行程序改名全过程对拍；Unicode特殊语言大小写、全部名字范围和完整独立进程存读档仍不可外推。
+
+
+## 2026-09-15 气泡计时边界纠正
+
+`OpCardNewController.Update 0x574af0`在elapsed小于或等于pop_show_time时仍保留气泡，仅超过时自动关闭；独立`CardController.Update 0x52c890`也比较 `duration <= elapsed && elapsed != duration`，dump.cs:321362/PopStartTime及原始variable.json的5秒为结构与数据交叉信号。复刻先钳零再按等于零关闭，丢失相等边界；现保留相等帧，超过后结束一次。回归覆盖恰好5秒、再推进0.001秒、重复结束；真实松键及完整存档恢复随仪式GPU整组复测43/43、260断言通过（pop-strict-timeout-gpu.log）。此修复不证明不同引擎逐帧时间量化相同。
+
+## 2026-09-15 操作卡片与引导增量（部分链条）
+
+当前浅色“新增/发言”操作摘要已删除。`rite_view`按OpCard卡面、背景、气泡组织；源`DoCachedOp`→closure98_0 `0x5b8bf0`→`DoSequence`分别等待新卡Done与发言结束。`new.anim`逐字节导入`assets/original/anims/opcard/new.anim`，运行时直接读取原始m_FloatCurves/m_Events，未生成转译动画配置。原始未加权曲线按Hermite求值；1/6秒前条幅不移动、1/3秒触发Done、1/2秒到达y=-110（Godot翻转为+110），Done后视觉曲线继续。只完成新卡0/1，不覆盖其他操作类型。
+
+NewGet父级300×200，center anchor/pivot=.5，子200×60；屏幕设计矩形(50,70,200,60)。文字子200×50、(0,5)、字号30和源颜色，运行文本经TextTranslate绑定NEW_CARD，不能采用Prefab旧字“新获得!”。`OpCardNewController.PlaySFx 0x5744b0`先查cardId覆盖，再按CardData.type选择角色默认1、其他默认0（原始sfx_settle_card_new.json独立确认）；这修正了旧测试统一默认0的错误。
+
+`presentation_elapsed`和`presentation_audio_played`随每次操作保存，不按cardId去重。新卡→发言→新卡的GPU专项覆盖1920×1080、1280×720、曲线采样、音效事件一次、真实Space按下/松开、SaveSystem完整序列化/场景重建及关闭等待。截图是合成边界输入的克隆渲染，不是新采集的原作同帧对拍；原始曲线、静态几何、真实输入和状态复現分别记录。禁用或缺失的逐操作Shader不能据此标绿。
+
+SlideController.Show `0x5ab9c0`/OnNext `0x5ab900`/OnPrev `0x5ab960`/OnClose `0x5ab890`已接pending_operations。源SlideItem prefab尺寸3000×1565会被UIImageExtensions.LoadSprite(nativeSize=true)→Image.SetNativeSize覆盖；当前4张2048×1068、PPU75.65571素材按Canvas referencePPU100显示，纠正了按Prefab旧尺寸造成的裁切。源ScrollRect禁用horizontal/vertical拖动，复刻不添加拖拽手势。页移动用SmoothDamp .03、阈值.001，进度和速度保存；一页隐藏双箭头，关闭先清完成状态，避免重入。PageDotItem在Prefab/GameScene为0；未补造页点。键盘/手柄导航、原作实机同帧、完整音效及覆盖层组合仍开放。
+
+原作素材导入哈希、测试日志、两尺寸截图统一登记[外部证据](external-evidence.json)；当前完成范围以[验收正文](verification.md)为准。仍未实现结果堆移动、装备/删卡/标签/升稀有度全部原始动画、批次起始延时和完整持久化覆盖，不能写成全部表现等价。
+
+
 ## 当前采用的规则
 
 UI使用原作3840×2160设计坐标，宿主默认窗口与设计画布不同。Unity右下锚点必须结合父尺寸、pivot、scale和y翻转换算；图像本体、组件启用状态与实际输入命中必须一起检查。
 
-界面可见不代表机制一致，静态几何一致也不代表动画时序正确。本次实际对拍仍观察到额外全屏提示、段落/字体和手牌尺度等差异，不能使用历史页面“1:1”标题签署整体完成。字体、着色器、音频、原生噪声及性能优化的详细参数和证据全部按下列模块整合。
+界面可见不代表机制一致，静态几何一致也不代表动画时序正确。2026-09-15 已修正 GenLoot 额外全屏确认、结果标题模板与段距、未知仪式遮罩和手牌尺度；仍不能使用历史页面“1:1”标题签署整体完成。字体、着色器、音频、原生噪声及性能优化的详细参数和证据全部按下列模块整合。
 
 原作矩形表统一进入[布局数据册](layout.md)，截图/反汇编/日志统一进入[证据登记](evidence.md)。历史工具、测试和路径在下面记录原批次口径，执行新工作只取METHOD_MAP当前项。
 
 
 ## 按表现问题阅读
+
+<a id="presentation-20260915"></a>
+
+### 2026-09-15 原作调用带后的表现修正
+
+本节是本批当前规则；下文历史批次的“未迁标题模板”“额外 GenLoot 确认”等描述不覆盖本节。当前全局判定仍以 [verification.md](verification.md) 为准。
+
+| 原作双信号 | 已接入的行为 | 验收边界 |
+|---|---|---|
+| `GenLoot.c RealGenCard 0x512260/Do 0x5110a0/PreDo 0x512000`；闭包14/16的 AddCardOp_NewCard/OnCardBorn；dump.cs:314584；原始 loot/6000051.json | 删除自制 `card.*`/`rite.*` 确认；卡牌写真实操作记录、仪式创建地图实例，缺配置只报开发诊断 | 本次宫廷→家业→次日重放额外确认0次；不代表完整 OpCard 动画已迁 |
+| `RiteRender.c Init 0x59a9e0/OnRiteShow 0x59bdb0/OpenRitePanel 0x59c2f0`；`RiteController.OnPointerEnter 0x58b660`；dump Rite.is_show@0x21/new_born@0x20、RiteNode.once_new@0x50；RiteNew.prefab、rite_show.anim | 未知仪式先遮罩且不泄漏名称；悬停揭示，揭示中点击延迟打开一次；已知/-1入口直接写首见状态 | 1280/1920真实输入、阻塞、动画完成、序列化后重建；尚未覆盖动画中途存读档/地图刷新、原声触发 |
+| 结果闭包79_0 b__3 0x5b6460、56_0 b__0 0x5b3300 的 AppendLine；variable.json:519；RiteResultPanel.prefab TMP/TextTranslate；rite_settlement_icon.asset | 逐段单换行；直接消费原始标题/正文模板、Title SDF、+10字号、菱形与10%缩进；段距经 SourceTextStyle 换算 | 源 TMP paragraphSpacing=80不是80屏幕像素；CalculatePreferredValues RVA0x18c40f0 的0.01×基准字号因子由本机DLL反汇编复核（外部 tmp-paragraph-source.txt）；长标题换行、精确glyph缩放仍未逐像素通过 |
+| `HandCardsController.Update 0x563520` 读取自身rect及child.sizeDelta×localScale；`HandBagController.SetChild 0x55e360`；dump.cs:320760；GameScene.unity RectTransform7660和CanvasScaler11488 | 手布局保持源坐标，父级一次缩放整棵手牌树；取消小数坐标取整 | 源Hand父尺寸3840×2160、anchor(0,0)-(1,0)、pivot(.52,0)、pos(-63.967773,4)、sizeDelta(-1116.736,430)，Unity翻Y后rect(516.7349,1726,2723.264,430)。1920窗口k=.5，CardNew194×422变97×211，底边1078；1280窗口k=1/3，底边718.6667；两尺寸真实拖动、失败回手及重建读档通过 |
+
+动画已接关键时间：Mask淡出0→10/60秒；标题1/60秒开始显示，Y翻转投影至25/60秒；Icon淡入10/60→25/60秒；55/60秒打开事件。当前标题投影采用Euler平滑近似，尚未逐帧复现原始四元数曲线；`rite_new.anim` 根位移(0,-10,0,10,0)及切线、CheckAllRiteKnow/OnUpdateBound尾事件未完整接入，不能登记为动画完全等价。
+
+**仍开放的操作卡片链**：`OpCardNewController.Init 0x572f40` op9先SetBG/AddOpCard；`ShowPop 0x574960`显示Pop、写PopStartTime并创建Promise；`Update 0x574af0`在elapsed严格大于原始`pop_show_time=5`或输入信号时隐藏，并经PromiseTimer恢复。OpCard.prefab中的Pop依赖OpCardShow卡片、ContentSizeFitter/VerticalLayoutGroup和背景子层。该表现批次当时仍以文字行显示；后续已替换为卡片/气泡并补新卡串行恢复，最新实现见本章顶部，其他操作动画及最终结果堆移动仍开放。不能把删除多余确认写成这条链已完成。
+
+证据统一位于外部 `Faust-rng-capture-20260915`，按 [external-evidence.json](external-evidence.json) 登记来源、散列与角色；失败全量和成功复测分别保留，未重命名为全量全绿。
 
 阅读顺序是“原作组件与资源→坐标和显示条件→真实命中→过程与恢复”。布局原始表提供静态依据，截图提供某个运行状态，两者都不单独证明完整过程等价。
 

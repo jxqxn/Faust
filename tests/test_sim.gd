@@ -167,9 +167,11 @@ func test_deferred_effects_apply_choice_and_loot_to_world():
 	DeferredEffects.execute_choice("pop.test", "hello", st, db, RNG.new(51))
 	assert_eq(str(st.event_prompts[0].get("text", "")), "hello", "choice operation should enqueue its resulting prompt")
 
+	st.begin_result_op_log()
 	DeferredEffects.apply({"loots": [6000005]}, st, db, RNG.new(52))
 	assert_gt(st.hand.size(), initial_hand, "loot results should grant generated cards into hand")
-	assert_gt(st.event_prompts.size(), 1, "loot grants should be visible to the player")
+	assert_eq(st.event_prompts.size(), 1, "GenLoot does not add a fullscreen confirmation")
+	assert_false(st.drain_result_op_log().is_empty(), "new cards remain in the result operation stream")
 
 func test_dsl_audit_exposes_unsupported_rite_keys():
 	# All configured rite keys are supported now; the audit must still make a

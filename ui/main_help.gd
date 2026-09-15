@@ -128,34 +128,11 @@ static func _unity_rect(
 	return Rect2(unity_min.x, parent_size.y - unity_max.y, unity_max.x - unity_min.x, unity_max.y - unity_min.y)
 
 
-## ui.json MAIN_HELP_* (zhTW; simplified for the clone's rendering).
-## The original marks keywords with <b><color=white><size=86>…</size></color></b>;
-## the simplified text keeps the emphasis markup for the RichTextLabel.
+## [SRC: TextTranslate.UpdateTextInternal 0x1566ad0; ui.json MAIN_HELP_*.
+## Read the original JSONC directly; never maintain a second copy of help prose.]
 static func _help_text(kind: String) -> String:
-	match kind:
-		"SUDAN_BOX":
-			return "点击可以叫出<b><color=white><size=86>女术士</size></color></b>，她会为你排疑解难。\n每7天你有一次机会可以通过这里<b><color=white><size=86>更换苏丹卡</size></color></b>。"
-		"STORY":
-			return "<b><color=white><size=86>俺寻思</size></color></b>，将卡牌拖入其中，可以触发对这张卡牌的思考。"
-		"DEADLINE":
-			return "你的<b><color=white><size=86>声望</size></color></b>，会影响事件的触发。"
-		"HANDCARD":
-			return "你可以支配的卡牌都会显示在这里。"
-		"MENU":
-			return "如果处刑倒计时<b><color=white><size=86>归0</size></color></b>，你的手牌区还持有苏丹卡的话，你就会被苏丹<b><color=white><size=86>处决</size></color></b>，游戏就会结束！"
-		"NEXT_DAY":
-			return "点击下一天推进游戏的时间。"
-		"ONE_T":
-			return "整理收集你的成就。"
-		"INFO":
-			return "今日所发生的事件通知。"
-		"BAG":
-			return "切换和使用卡牌栏位。"
-		"GOLD":
-			return "在检定时消耗一枚金骰子可以增加一点成功。"
-		"BACK":
-			return "次数足够时你可以随时选择回到<b><color=white><size=86>上一天</size></color></b>。"
-	return ""
+	var ui: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/ui.json"))
+	return str(ui.get("MAIN_HELP_" + kind + "_PROMPT", {}).get("zhCN", "MAIN_HELP_" + kind + "_PROMPT"))
 
 
 func close_view() -> void:

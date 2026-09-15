@@ -218,8 +218,12 @@ func test_settle_card_cue_uses_specific_then_default() -> void:
 	assert_false(local_db.settle_card_new.is_empty(), "the settle table is required content")
 	assert_eq(GameAudio.settle_card_cue(local_db, 2000083), "settle_card_new_bad.ogg",
 		"a listed card gets its own cue")
-	assert_eq(GameAudio.settle_card_cue(local_db, 2000006), "settle_card_new_nomal.ogg",
-		"an unlisted card falls back to the table's 0 key")
+	assert_eq(GameAudio.settle_card_cue(local_db, 2000029), "settle_card_new_nomal.ogg",
+		"an unlisted item falls back to the table's 0 key")
+	assert_eq(GameAudio.settle_card_cue(local_db, 2000006), "settle_card_new_great.ogg",
+		"the wife's character card uses the source character default")
+	assert_eq(GameAudio.settle_card_cue(local_db, 2000001), "settle_card_new_great.ogg",
+		"unlisted characters use the source table's 1 key")
 	assert_eq(GameAudio.settle_card_cue(local_db, 9999999), "settle_card_new_nomal.ogg",
 		"and so does an unknown one -- the fallback is not silence")
 	assert_eq(GameAudio.settle_card_cue(null, 2000006), "", "a missing config is silent")

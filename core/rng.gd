@@ -62,13 +62,20 @@ func value() -> float:
 func shuffle(arr: Array) -> Array:
 	var out := arr.duplicate()
 	var n := out.size()
-	var i := n - 1
-	while i > 0:
-		var j := _gen.randi_range(0, i)
+	# [SRC: ListExtensions.Shuffle<object> 0x6feb50 / Shuffle<int>
+	# 0x6fe7b0: Count==2 swaps only on Range(0,2)==1; otherwise
+	# forward i=0..Count-2, Range(i,Count).]
+	if n == 2:
+		if range_int_half_open(0, 2) == 1:
+			out.reverse()
+		return out
+	var i := 0
+	while i < n - 1:
+		var j := range_int_half_open(i, n)
 		var tmp = out[i]
 		out[i] = out[j]
 		out[j] = tmp
-		i -= 1
+		i += 1
 	return out
 
 
@@ -81,7 +88,7 @@ func weighted_pick_int(weights: PackedInt32Array) -> int:
 		total += int(w)
 	if total <= 0:
 		return -1
-	var r := _gen.randi_range(0, total - 1)
+	var r := range_int_half_open(0, total)
 	for i in weights.size():
 		r -= int(weights[i])
 		if r < 1:

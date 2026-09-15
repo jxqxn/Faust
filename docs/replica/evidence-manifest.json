@@ -733,8 +733,8 @@
     },
     {
       "path": "docs/audit/phase-close-20260914.json",
-      "bytes": 9616,
-      "sha256": "7aaead04796ed7927c7215cdf4fca59adf5948010a0fac9183a01d1b8f96a122",
+      "bytes": 9664,
+      "sha256": "37f11468f9ea45b4dddd50cbb7ccdd80145ced53caaa571610483f5d41860449",
       "role": "状态审计与验证数据",
       "integrated_into": "docs/replica/verification.md",
       "boundary": "范围以配套方法与输入记录为准",

@@ -375,9 +375,9 @@ static func npc_dub_file(config, card_id: int, index: int = 0) -> String:
 	return str(files[clampi(index, 0, files.size() - 1)])
 
 
-## Settlement cue for a card id. The table's "0" key is the default, so an
-## unlisted card falls back to it rather than to silence.
-## [SRC: _unpack/data/config/sfx_settle_card_new.json]
+## Specific card overrides first, then character/non-character defaults.
+## [SRC: OpCardNewController.PlaySFx 0x5744b0; original
+## content/sfx_settle_card_new.json explicitly assigns defaults 1/0.]
 static func settle_card_cue(config, card_id: int) -> String:
 	return _cue_file(_settle_lookup(config, card_id))
 
@@ -392,7 +392,8 @@ static func _settle_lookup(config, card_id: int) -> String:
 	var specific: Variant = dict.get(str(card_id), null)
 	if specific is String and not (specific as String).is_empty():
 		return str(specific)
-	var fallback: Variant = dict.get("0", null)
+	var card: Dictionary = config.get_card(card_id)
+	var fallback: Variant = dict.get("1" if str(card.get("type", "")) == "char" else "0", null)
 	return str(fallback) if fallback is String else ""
 
 

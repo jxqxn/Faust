@@ -72,5 +72,58 @@ actual_md = {p.relative_to(ROOT).as_posix() for base in [DOCS, ROOT / '.reasonix
 actual_md.update(x for x in ['AGENTS.md', 'README.md', 'THIRD_PARTY_NOTICES.md'] if (ROOT / x).is_file())
 if active != actual_md:
     errors.append('Unassigned active documentation: ' + repr(sorted(active ^ actual_md)))
+# Project-external migration is a separate completeness gate. These files are
+# not gameplay inputs; original evidence, backups and caches retain their roles.
+external = json.loads((OUT / 'external-evidence.json').read_text(encoding='utf-8'))
+external_paths = set()
+for row in external.get('files', []):
+    path = Path(row['path']).resolve()
+    if path in external_paths:
+        errors.append('Duplicate external evidence: ' + str(path))
+    external_paths.add(path)
+    if not path.is_file():
+        errors.append('Missing external evidence: ' + str(path))
+    elif path.stat().st_size != row['bytes'] or hashlib.sha256(path.read_bytes()).hexdigest() != row['sha256']:
+        errors.append('External evidence changed; refresh provenance: ' + str(path))
+    if not (ROOT / row['integrated_into']).is_file():
+        errors.append('Unassigned external evidence domain: ' + str(path))
+for imported in external.get('asset_imports', []):
+    destination = ROOT / imported['path']
+    source = Path(imported['source'])
+    for path in [destination, source]:
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != imported['sha256']:
+            errors.append('Original presentation asset missing/changed: ' + str(path))
+    if not (ROOT / imported['integrated_into']).is_file():
+        errors.append('Unassigned imported presentation asset: ' + imported['path'])
+if external.get('migration_manifest'):
+    external_root = Path(external['artifact_root']).resolve()
+    migration = Path(external['migration_manifest'])
+    if not migration.is_file():
+        errors.append('Missing external migration manifest: ' + str(migration))
+    else:
+        blob = migration.read_bytes()
+        if hashlib.sha256(blob).hexdigest() != external['migration_manifest_sha256']:
+            errors.append('External migration manifest changed')
+        migrated = json.loads(blob)
+        if len(migrated) != external['migration_file_count']:
+            errors.append('External migration count mismatch')
+        destinations = set()
+        changes = {Path(x["path"]).resolve(): x for x in external.get("post_migration_changes", [])}
+        for row in migrated:
+            path = Path(row['path']).resolve()
+            if not path.is_relative_to(external_root) or path in destinations:
+                errors.append('Invalid external migration destination: ' + str(path))
+                continue
+            destinations.add(path)
+            expected_hash = changes[path]['sha256'] if path in changes else row['sha256']
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected_hash:
+                errors.append('Missing/changed migrated artifact: ' + str(path))
+            if Path(row['old']).exists():
+                errors.append('Old Documents artifact still exists: ' + row['old'])
+        for collection in external.get('collections', []):
+            if not (ROOT / collection['integrated_into']).is_file():
+                errors.append('Unassigned external collection: ' + collection['root'])
+    print('External migration verified:', external['migration_file_count'], 'files')
+
 assert not errors, '\n'.join(errors)
 print(f'Workspace integration passed: {len(manifest["records"])} source records, {len(seen)} evidence artifacts, retired paths absent, local links valid; {source_headings} original headings retained.')

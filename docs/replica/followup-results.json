@@ -1,20 +1,171 @@
 {
-  "date": "2026-09-14",
-  "verdict": "not_equivalent",
-  "full_suite": {
-    "tests": 777,
-    "passed": 775,
-    "pending": 2,
-    "assertions": 7462,
-    "exit_code": 0,
-    "log": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/full-final-console.log"
+  "date": "2026-09-15",
+  "batch": "original-rng-tape-and-presentation",
+  "verdict": "captured_trace_state_equivalent_presentation_incomplete",
+  "passed": 54,
+  "total": 54,
+  "reloaded_passed": 54,
+  "failed_fields": [],
+  "original_artifact": "C:\\Users\\User\\Documents\\GitHub\\Faust-artifacts\\Faust-rng-capture-20260915\\original-after.json",
+  "clone_artifact": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/clone-replay.json",
+  "clone_sha256": "628bf467ee9a1c1c0a3041013c5aec081c046cc1ab69d6516c17906dcc8469ab",
+  "random_tape": {
+    "consumed": 13,
+    "errors": [],
+    "observed": [
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        0,
+        120
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        0,
+        19
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        3,
+        7
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        0,
+        180
+      ],
+      [
+        0,
+        10
+      ]
+    ],
+    "total": 13
   },
-  "native_replay": {
-    "assertions_passed": 167,
-    "assertions_total": 185,
-    "exit_code": 1,
-    "after_pass": 45,
-    "after_total": 54,
+  "gpu_state_passed": 54,
+  "gpu_reloaded_passed": 54,
+  "extra_clone_prompts": [],
+  "tests": {
+    "headless_oracle": {
+      "tests": 2,
+      "passed": 2,
+      "assertions": 192,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-headless-final.log",
+      "exit_code": 0
+    },
+    "gpu_oracle": {
+      "tests": 2,
+      "passed": 2,
+      "assertions": 196,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-gpu-final.log",
+      "exit_code": 0
+    },
+    "hand_pages": {
+      "tests": 7,
+      "passed": 7,
+      "assertions": 65,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-hand-final.log",
+      "exit_code": 0
+    },
+    "rite_reveal": {
+      "tests": 7,
+      "passed": 7,
+      "assertions": 52,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/rite-reveal-final.log",
+      "exit_code": 0
+    },
+    "rite_view": {
+      "tests": 40,
+      "passed": 40,
+      "assertions": 205,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-rite-final.log",
+      "exit_code": 0
+    },
+    "ui_layout": {
+      "tests": 81,
+      "passed": 81,
+      "assertions": 1068,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-layout-final.log",
+      "exit_code": 0
+    },
+    "sim": {
+      "tests": 59,
+      "passed": 59,
+      "assertions": 183,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-sim.log",
+      "exit_code": 0
+    },
+    "tabletop": {
+      "tests": 14,
+      "passed": 14,
+      "assertions": 149,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-tabletop.log",
+      "exit_code": 0
+    },
+    "text_style": {
+      "tests": 7,
+      "passed": 7,
+      "assertions": 39,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-text.log",
+      "exit_code": 0
+    },
+    "full_initial": {
+      "tests": 784,
+      "passed": 778,
+      "failed": 5,
+      "pending": 1,
+      "assertions_passed": 7708,
+      "assertions_total": 7717,
+      "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-full.log",
+      "exit_code": 1,
+      "qualification": "Before fixing old immediate-open/modal expectations; each failing script rerun green. Final whole-suite not rerun."
+    }
+  },
+  "original_restore": {
+    "processExited": true,
+    "extrasArchived": [
+      "round_5.json"
+    ],
+    "restored": 15
+  },
+  "limits": [
+    "Only the independently captured day4-to-day5 trace is state-equivalent; not every branch.",
+    "Float presentation random values were not captured.",
+    "OpCard/CardPop animation, reveal exact quaternion curves/end events/audio and interrupted-presentation reload remain incomplete.",
+    "Final whole-suite not rerun; initial failures and whole-script reruns retained separately."
+  ],
+  "previous_card_pop_run": {
+    "date": "2026-09-15",
+    "batch": "rite-result-card-pop",
+    "verdict": "not_equivalent",
+    "passed": 45,
+    "total": 54,
     "failed_fields": [
       "per_id_counts",
       "timing_rounds",
@@ -26,17 +177,245 @@
       "gen_cards",
       "gen_tags"
     ],
-    "artifact": "C:/Users/User/Documents/Faust-dual-replay-followup-20260914/clone-replay.json"
+    "original_artifact": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-pop-20260915/original-after.json",
+    "clone_artifact": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-pop-20260915/clone-replay.json",
+    "clone_sha256": "7710dc4cca4c30e52c74da69bb2aa6037814f27b956df4f4acc9f3c8d603b859",
+    "card_speeches": [
+      {
+        "card_id": 2000024,
+        "card_uid": 41,
+        "op": 9,
+        "pop": "就没有点新鲜事吗？",
+        "source_key": "pop.5001001_result_05_2.s2"
+      }
+    ],
+    "fullscreen_card_pop_count": 0,
+    "tests": {
+      "boundaries": {
+        "passed": 13,
+        "assertions": 55
+      },
+      "rite_ui": {
+        "passed": 40,
+        "assertions": 201
+      },
+      "native": {
+        "passed_assertions": 173,
+        "assertions": 191,
+        "exit": 1
+      }
+    },
+    "limitations": [
+      "Unsynchronized RNG makes projection scores vary; do not claim steady improvement",
+      "Result rows preserve text but original bubble animation and full placeholder support remain incomplete",
+      "CardPop outside result PreDo and GenLoot fullscreen reward notices remain unported"
+    ],
+    "previous_run": {
+      "date": "2026-09-15",
+      "verdict": "not_equivalent",
+      "scope": "one actual replay; unsynchronized random inputs; no seed search",
+      "source_artifact": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-20260915/clone-replay.json",
+      "source_sha256": "76d495bb2971410ba3ff1970e7606b1d74663d37d8c66a6c259afa12a10c3ccb",
+      "passed": 50,
+      "total": 54,
+      "failed_fields": [
+        "timing_rounds",
+        "hand_membership",
+        "table_operation_root_membership",
+        "rites"
+      ],
+      "timing_differences": [
+        {
+          "id": "531080900",
+          "original": 8,
+          "clone": 9
+        }
+      ],
+      "slot_differences": [
+        {
+          "rite_uid": 24,
+          "rite_id": 5001001,
+          "slot": "s3",
+          "original": 33,
+          "clone": 34
+        },
+        {
+          "rite_uid": 24,
+          "rite_id": 5001001,
+          "slot": "s4",
+          "original": 100,
+          "clone": 35
+        },
+        {
+          "rite_uid": 27,
+          "rite_id": 5002006,
+          "slot": "s2",
+          "original": 35,
+          "clone": 58
+        }
+      ],
+      "tests": {
+        "boundaries": {
+          "passed": 12,
+          "assertions": 46
+        },
+        "integration": {
+          "passed": 14,
+          "assertions": 76
+        },
+        "native": {
+          "passed_assertions": 177,
+          "assertions": 185,
+          "exit": 1
+        }
+      },
+      "limitations": [
+        "No complete original Unity RNG state or call tape",
+        "Clone oracle test additionally rebuilds at household close; main RNG currently resets on rebuild",
+        "CardPop and loot still use extra fullscreen prompts; visual equivalence not passed"
+      ],
+      "previous_run": {
+        "date": "2026-09-14",
+        "verdict": "not_equivalent",
+        "full_suite": {
+          "tests": 777,
+          "passed": 775,
+          "pending": 2,
+          "assertions": 7462,
+          "exit_code": 0,
+          "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-followup-20260914/full-final-console.log"
+        },
+        "native_replay": {
+          "assertions_passed": 167,
+          "assertions_total": 185,
+          "exit_code": 1,
+          "after_pass": 45,
+          "after_total": 54,
+          "failed_fields": [
+            "per_id_counts",
+            "timing_rounds",
+            "hand_membership",
+            "table_operation_root_membership",
+            "rites",
+            "only_rites",
+            "once_new_rites_is_show",
+            "gen_cards",
+            "gen_tags"
+          ],
+          "artifact": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-dual-replay-followup-20260914/clone-replay.json"
+        },
+        "boundary_suite": {
+          "tests": 11,
+          "assertions": 40,
+          "passed": 11
+        },
+        "rite_ui_suite": {
+          "tests": 39,
+          "passed": 39,
+          "assertions": 197
+        },
+        "scope": "局部机制修正及全部可访问工作区资料整合；完整跨日等价仍未通过"
+      }
+    }
   },
-  "boundary_suite": {
-    "tests": 11,
-    "assertions": 40,
-    "passed": 11
+  "engine_diagnostics": "Final listed regression logs scanned: no engine errors or leak/nonzero-orphan diagnostics. Interrupted reveal teardown diagnostic logs are historical, not passes.",
+  "content_parity": {
+    "files": 3889,
+    "differences": 0
   },
-  "rite_ui_suite": {
-    "tests": 39,
-    "passed": 39,
-    "assertions": 197
+  "presentation_fix": {
+    "genloot_confirmation_prompts": 0,
+    "rite_reveal": "Mask + rite_show animation",
+    "result_paragraph_spacing": "TMP paragraphSpacing * fontSize * 0.01",
+    "tests": {
+      "hand_pages": {
+        "tests": 7,
+        "passed": 7,
+        "assertions": 65,
+        "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-hand-final.log",
+        "exit_code": 0
+      },
+      "rite_reveal": {
+        "tests": 7,
+        "passed": 7,
+        "assertions": 52,
+        "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/rite-reveal-final.log",
+        "exit_code": 0
+      },
+      "rite_view": {
+        "tests": 40,
+        "passed": 40,
+        "assertions": 205,
+        "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-rite-final.log",
+        "exit_code": 0
+      },
+      "ui_layout": {
+        "tests": 81,
+        "passed": 81,
+        "assertions": 1068,
+        "log": "C:/Users/User/Documents/GitHub/Faust-artifacts/Faust-rng-capture-20260915/presentation-layout-final.log",
+        "exit_code": 0
+      }
+    },
+    "hand_scale": "Source-space layout; scale complete subtree once; fractional coordinates retained",
+    "teardown_diagnostic": "GUT signal watcher disconnected before freeing watched MapController; final GPU group exits cleanly."
   },
-  "scope": "局部机制修正及全部可访问工作区资料整合；完整跨日等价仍未通过"
+  "previous_rng_batch_tests": {
+    "headless_oracle": {
+      "tests": 1,
+      "assertions": 188,
+      "passed": true
+    },
+    "gpu_oracle": {
+      "tests": 1,
+      "assertions": 192,
+      "passed": true
+    },
+    "tape_guard": {
+      "tests": 1,
+      "assertions": 6,
+      "passed": true,
+      "oracle_pending_without_fixture": true
+    },
+    "shuffle_boundaries": {
+      "tests": 14,
+      "assertions": 60,
+      "passed": true
+    },
+    "operations_sequence": {
+      "tests": 7,
+      "assertions": 39,
+      "passed": true
+    },
+    "redraw_regression": {
+      "tests": 43,
+      "assertions": 170,
+      "passed": true
+    },
+    "resume_regression": {
+      "tests": 3,
+      "assertions": 135,
+      "passed": true
+    },
+    "full_initial": {
+      "tests": 781,
+      "passed": 775,
+      "failed": 5,
+      "pending": 1,
+      "assertions_passed": 7659,
+      "assertions_total": 7667,
+      "exit_code": 1,
+      "seconds": 695.007,
+      "qualification": "before correction of stale test assumptions; all five failing tests covered by subsequent whole-script regression; final whole-suite not rerun"
+    },
+    "sudan_regression": {
+      "tests": 22,
+      "assertions": 599,
+      "passed": true
+    },
+    "gpu_mask": {
+      "tests": 1,
+      "passed": true
+    }
+  }
 }
