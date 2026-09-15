@@ -70,6 +70,9 @@
 
 ## 当前入口与维护规则
 
+- 2026-09-15 用户批准进入创新并保留复刻参考。固定标签 `replica-baseline-2026-09-15` 指向 `013b6b73`，不得移动/覆盖；创新在 `codex/innovation` 及后续 `codex/` 试验分支进行。先读 docs/design/next-stage-handoff.md 的基线规则，以及 docs/design/evidence-and-decisions.md 的创新试验记录规则。
+- 原作复刻约束用于维护/声称原作行为；明确登记的创新按自身目标验收，不伪称原作等价。原作源码、基线测试、已知缺口和失败经验必须保留；创新撤回只撤实现，保留证据与去留理由。外部语料/证据不包含在Git标签中，禁止当成可再生缓存删除。
+
 - 当前复刻工作从 docs/METHOD_MAP.md 取项；验收状态只读 docs/replica/verification.md，禁止把历史批次“已完成”当当前全局验收。
 - 规则与实例：docs/replica/state.md；仪式/事件/次日：docs/replica/loop.md；表现与真实输入：docs/replica/presentation.md；原作布局：docs/replica/layout.md。
 - 全工作区资料已经纳入 docs/replica/integration-manifest.json 与 evidence-manifest.json；新增材料必须分配正式章节和证据角色，不能恢复平行“最终方案”。
