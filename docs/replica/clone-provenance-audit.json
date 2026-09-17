@@ -10,7 +10,7 @@
   ],
   "counts": {
     "runtime_files": 110,
-    "runtime_lines": 32321,
+    "runtime_lines": 32381,
     "resource_files": 6096,
     "candidate_lines": 327,
     "by_runtime_root": {
@@ -269,7 +269,7 @@
     },
     {
       "path": "data/db.gd",
-      "sha256": "6d68f3d2e062768c877ce392b5f031bb8dccda5f52f2d9c6dd265af925e4b5ae",
+      "sha256": "7e4be00391d5a905375c67e4607e9d5f8a16834c75e65892088cebd9b434a6f0",
       "lines": 455,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -488,7 +488,7 @@
     },
     {
       "path": "data/source_ban_words.gd",
-      "sha256": "7f44f434e64fc070c060e8203d7be2849b8877102bf982b30fc28f225dcbf5c7",
+      "sha256": "a60d2a7d5f1011a1640c0792b9c3e3bb76b1d00e5f88305eef29b539f3ec4724",
       "lines": 139,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -572,7 +572,7 @@
     },
     {
       "path": "platform/windows/DisplayHost.cs",
-      "sha256": "44f2b7b6083fb0e4de966c6a44b5642389d2f3b467c589a54d81278cd19fb6b0",
+      "sha256": "c9d5cf817d4fa20c215abb984c08d560513a9f345d1b21242327886341746b08",
       "lines": 165,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -597,7 +597,7 @@
     },
     {
       "path": "sim/card_instance.gd",
-      "sha256": "7f087201f837a430c388e737935f2a0c517236392854bebdc69715da55c58ae4",
+      "sha256": "9a04cfcf5ca7b9d2f285e8b550d197e37d810e4cc1e02df842c07235829545c9",
       "lines": 126,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -674,7 +674,7 @@
     },
     {
       "path": "sim/condition.gd",
-      "sha256": "24a7e322c4a38b41531601fdbfd04ba964d3d58804af32cf30d3c0e426ffc371",
+      "sha256": "f33f5be1e17f5286b52322683fe45aa1518c6fdbb9c58306f3bf54e7d74e79ff",
       "lines": 1157,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -954,7 +954,7 @@
     },
     {
       "path": "sim/deferred_effects.gd",
-      "sha256": "9b980a26c0bf2f96c43e636002455956889f704b061a5272d4a29626157d6954",
+      "sha256": "8991883aa2ddd32c835fea286a1133efe93c42a50978e94d59e02a61ce814492",
       "lines": 333,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -1094,7 +1094,7 @@
     },
     {
       "path": "sim/dsl_audit.gd",
-      "sha256": "377f9b16a86799384b8db6ea4c704f5ff6a828f5501431923999d71eb45d6d4c",
+      "sha256": "10ebafc46e6e75e195d8a4177522a78a9828c8e308d4c10662caf04e139727f0",
       "lines": 427,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -1115,7 +1115,7 @@
     },
     {
       "path": "sim/event_runtime.gd",
-      "sha256": "7fa2f840cb139c145b0387a264f4f45d356a07f6d849f23c40349d1b17edf4e4",
+      "sha256": "aa1a2557ab171fb4027e8b50715ae8c387c56190138974833356388c74f68600",
       "lines": 285,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -1225,8 +1225,8 @@
     },
     {
       "path": "sim/game_state.gd",
-      "sha256": "aefecaa0283fd059f84f8b60d77c5566aa08f0933b8f2088548b2156b439c5f6",
-      "lines": 3246,
+      "sha256": "abaeef03aa44f946216e032415915c4355dd8088002c3112dacacefbe1dd84e4",
+      "lines": 3247,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
         {
@@ -1986,95 +1986,95 @@
           "text": "## conditions read this in post_rite. [SRC: HasTagTips.c @ IsSatisfied]"
         },
         {
-          "line": 2658,
+          "line": 2659,
           "text": "# [SRC: PlayerExtensions.c @ AddDelayOp (RVA 0x38be90);"
         },
         {
-          "line": 2659,
+          "line": 2660,
           "text": "#       GameController.c @ UpdateSingleDelayOps (RVA 0x55a700)]"
         },
         {
-          "line": 2687,
+          "line": 2688,
           "text": "## [SRC: decompiled/DelayOff.c @ Do (RVA 0x4f7eb0): value 1 calls"
         },
         {
-          "line": 2694,
+          "line": 2695,
           "text": "## [SRC: decompiled/DelayOff.c @ Do: PlayerExtensions.RemoveDelayOp(player, id)]"
         },
         {
-          "line": 2720,
+          "line": 2721,
           "text": "## [SRC: decompiled/EventOn.__c__DisplayClass2_0.c @ <Do>b__0 (RVA 0x51f1a0);"
         },
         {
-          "line": 2721,
+          "line": 2722,
           "text": "##       decompiled/EventTrigger.c @ Add(EventNode) (RVA 0x4fa9d0)]"
         },
         {
-          "line": 2739,
+          "line": 2740,
           "text": "## [SRC: decompiled/EventOff.c @ Do (RVA 0x50ef60): SetEventStatus(id, false)"
         },
         {
-          "line": 2751,
+          "line": 2752,
           "text": "## [SRC: decompiled/EventTrigger.__c__DisplayClass4_0.c @ <Add>b__0"
         },
         {
-          "line": 2752,
+          "line": 2753,
           "text": "##       (RVA 0x507360), EventNode.is_replay in dump.cs:385232]"
         },
         {
-          "line": 2794,
+          "line": 2795,
           "text": "# [SRC: TimingRoundBase.IsValid 0x465d30 -> NextRound 0x465f20.]"
         },
         {
-          "line": 2811,
+          "line": 2812,
           "text": "# [SRC: EventTrigger.c @ DoSettlements (0x4fb1c0): fire -> settle;"
         },
         {
-          "line": 2828,
+          "line": 2829,
           "text": "## [SRC: event/5300066.json \"[sudan_life_time]天时间\", event/5300339.json"
         },
         {
-          "line": 2947,
+          "line": 2948,
           "text": "## [SRC: ChangeCardName.DoTemplate0x4f2130 reads Player.cards@0x88."
         },
         {
-          "line": 2984,
+          "line": 2985,
           "text": "## [SRC: PlayerExtensions.GetTotalCards0x38de90, dump.cs:388887;"
         },
         {
-          "line": 2985,
+          "line": 2986,
           "text": "## Player.cards@0x88 then rites@0x90 -> Rite.cards@0x30, no equip recursion.]"
         },
         {
-          "line": 2998,
+          "line": 2999,
           "text": "## Cost payment candidates: Player.cards@0x88 in list order. The clone keeps one"
         },
         {
-          "line": 3003,
+          "line": 3004,
           "text": "## [SRC: CostCondition.c @ IsSatisfied 0x3f6160 enumerates player+0x88;"
         },
         {
-          "line": 3011,
+          "line": 3012,
           "text": "## [SRC: CardExtensions.c @ GetTag (RVA 0x3814a0), HasTag (0x382250).]"
         },
         {
-          "line": 3019,
+          "line": 3020,
           "text": "## [SRC: RiteResultPanelController.c @ UpdateResultTextSpeed (0x5a74a0):"
         },
         {
-          "line": 3020,
+          "line": 3021,
           "text": "##       autoPlay == 0 -> Player.result_text_play_rate@0x68, else"
         },
         {
-          "line": 3021,
+          "line": 3022,
           "text": "##       Player.result_text_auto_play_rate@0x6C, clamped to"
         },
         {
-          "line": 3023,
+          "line": 3024,
           "text": "##       GameAssembly.dll .rdata) and written to ScrollViewTextController+0x38.]"
         },
         {
-          "line": 3137,
+          "line": 3138,
           "text": "## [SRC: DesktopCleanCard.DoTemplate 0x4f8250 / callback 0x5208b0:"
         }
       ],
@@ -2199,91 +2199,91 @@
           "text": "var index: int = rng.range_int_half_open(0, candidates.size()) if rng != null else randi_range(0, candidates.size() - 1)"
         },
         {
-          "line": 2660,
+          "line": 2661,
           "reasons": [
             "state_clamp"
           ],
           "text": "var delay_round := maxi(int(SourceJSON.member(payload, \"round\", 0)), 0)"
         },
         {
-          "line": 2840,
+          "line": 2841,
           "reasons": [
             "prompt_or_presentation_queue"
           ],
           "text": "func queue_prompt(prompt: Dictionary) -> void:"
         },
         {
-          "line": 2859,
+          "line": 2860,
           "reasons": [
             "prompt_or_presentation_queue"
           ],
           "text": "func queue_choice_prompt(choices: Dictionary, title: String = \"选择\", text: String = \"请选择回应。\", context: Dictionary = {}) -> void:"
         },
         {
-          "line": 2862,
+          "line": 2863,
           "reasons": [
             "prompt_or_presentation_queue"
           ],
           "text": "queue_prompt({"
         },
         {
-          "line": 2889,
+          "line": 2890,
           "reasons": [
             "state_clamp"
           ],
           "text": "rail_index = clampi(rail_index, 0, rail_order.size())"
         },
         {
-          "line": 2953,
+          "line": 2954,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "# Migration fallback preserves known insertion order, not the visual rail."
         },
         {
-          "line": 2972,
+          "line": 2973,
           "reasons": [
             "state_clamp"
           ],
           "text": "next_card_uid = maxi(next_card_uid, int(uid) + 1)"
         },
         {
-          "line": 2974,
+          "line": 2975,
           "reasons": [
             "state_clamp"
           ],
           "text": "next_card_uid = maxi(next_card_uid, int(entry.uid) + 1)"
         },
         {
-          "line": 3029,
+          "line": 3030,
           "reasons": [
             "state_clamp"
           ],
           "text": "return clampf(rate, 0.5, 100.0)"
         },
         {
-          "line": 3038,
+          "line": 3039,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "if _fallback_db == null:"
         },
         {
-          "line": 3039,
+          "line": 3040,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "_fallback_db = ConfigDB.new()"
         },
         {
-          "line": 3040,
+          "line": 3041,
           "reasons": [
             "approximation_or_fallback"
           ],
           "text": "_fallback_db.load_all()"
         },
         {
-          "line": 3041,
+          "line": 3042,
           "reasons": [
             "approximation_or_fallback"
           ],
@@ -2293,7 +2293,7 @@
     },
     {
       "path": "sim/global_extensions.gd",
-      "sha256": "ecf6b6c3c9d36d261490fb5f03c0f2f8e1955f1c36c6ca4620541c58cc902d6e",
+      "sha256": "d2a72cd25e9cf10297c5afabc2011fb629ba11d59e66b2a8522f9f05ac4a32b0",
       "lines": 116,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -2396,7 +2396,7 @@
     },
     {
       "path": "sim/operation_filter.gd",
-      "sha256": "10dd75463602b345d04c22b9fe0249c861b039f1eb18fdab1a6c2be69a261299",
+      "sha256": "58d21eb70b12baa408c20d131f593a458699917ce72ec189bc720c00721029a0",
       "lines": 98,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -2429,7 +2429,7 @@
     },
     {
       "path": "sim/operations_extensions.gd",
-      "sha256": "7e6d3fa138591e933d45522668a6736edf1e97d7a65ce90ee901a23520fca0e1",
+      "sha256": "b4eaa069d0124d0558b762c70c7bb1d230b1d70d479d3569238015da82153f13",
       "lines": 201,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -2520,7 +2520,7 @@
     },
     {
       "path": "sim/original_save_importer.gd",
-      "sha256": "448b10e82a6759248c62eab62ef99756e77f3b8c95d8028a24bbe5ff7355be1e",
+      "sha256": "2f1fb9105620ed4b5e3a049bf1f7549d6e97c12e8282d294857fc81521decfa7",
       "lines": 971,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -2693,7 +2693,7 @@
     },
     {
       "path": "sim/original_save_schema.gd",
-      "sha256": "52d89b480d0f2b6053f539cd6ba1c4a0e16b834f29bf84a2f18611ad53b528f6",
+      "sha256": "4266a3cdb6be64bf0ee8fdc9ac740972857afe42c0757b2887e382f30637a877",
       "lines": 218,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -2755,7 +2755,7 @@
     },
     {
       "path": "sim/result.gd",
-      "sha256": "5924f89b419a2dffc0b66fc451e5ac7a5c3a8e42bd2553a8fdaea3293a8d14c6",
+      "sha256": "b31e0827deab87a0ccda83533e02236ad4c9a8372dc711c39de32a1f4be03c1f",
       "lines": 1503,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3325,7 +3325,7 @@
     },
     {
       "path": "sim/rite_open.gd",
-      "sha256": "2af324dd9b0a14a5728dfa6b1f322e07fba6d083dc41a262370e0614fb73c618",
+      "sha256": "e0e788d03fc5a4d376cf42f011284a5952ff0d3ae28d0ea7b3cceebb8608a686",
       "lines": 27,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3360,7 +3360,7 @@
     },
     {
       "path": "sim/rite_resolver.gd",
-      "sha256": "042b28bdda91be73b098f0f35af9e1883ed68e10ab57322be554386e18edbb06",
+      "sha256": "1069de4d1695514a1d0685ee7bc1d3e635b08fd2173c9e18d07d8f5f03358862",
       "lines": 165,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3434,8 +3434,8 @@
     },
     {
       "path": "sim/rite_settlement.gd",
-      "sha256": "61230a0dee4ecb865877eef5eb2199aba4c17d815733f0de2a52957df5a52082",
-      "lines": 216,
+      "sha256": "45415a40033ec37e3b97ea7c5733f407e957d81ae0fc25329ee57f44ea714df0",
+      "lines": 275,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
         {
@@ -3475,19 +3475,31 @@
           "text": "# [SRC: DisplayClass56_3 b__13 0x5b4f20 and 56_5 b__15 0x5b5070:"
         },
         {
-          "line": 146,
-          "text": "# [SRC: RiteExtensions.ReturnCards 0x5016d0, Rite.cards@0x30.]"
-        },
-        {
-          "line": 150,
+          "line": 154,
           "text": "# [SRC: Settlement b__6 0x5b44b0 precedes finalOperations b__7.]"
         },
         {
-          "line": 188,
+          "line": 198,
+          "text": "## [SRC: DisplayClass56_0.<Settlement>b__5 0x5b3e20;"
+        },
+        {
+          "line": 199,
+          "text": "## DisplayClass56_4.b__14 0x5b5010; dump.cs:324962/325044;"
+        },
+        {
+          "line": 200,
+          "text": "## stringliteral 0x259A5A0 consumable, 0x2580360 own, 0x2586BD0 recovery.]"
+        },
+        {
+          "line": 218,
+          "text": "# RemoveTag 0x382e40 is not the additive SUB helper: absent"
+        },
+        {
+          "line": 247,
           "text": "## [SRC: RiteResultPanelController.OnClose 0x5a3ae0; CardExtensions.DoPostRite"
         },
         {
-          "line": 189,
+          "line": 248,
           "text": "## 0x4f0d70; DisplayClass2_0 b__0 0x506010; DisplayClass1_1 b__0 0x505a60.]"
         }
       ],
@@ -3495,7 +3507,7 @@
     },
     {
       "path": "sim/round_loop.gd",
-      "sha256": "94d2b43788220888ecdd3f102d358d709a37e148429258cceb2ec12810891368",
+      "sha256": "eb3753ad866e35b07799a5982c8140ee2e3061aa721e0c86402070515a714fb5",
       "lines": 736,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3721,7 +3733,7 @@
     },
     {
       "path": "sim/save_system.gd",
-      "sha256": "b1e1191d8816185f2297b715ffbba0bd49cea2705e0863277dffd87b46253859",
+      "sha256": "2876514377470307726b232fa7a9b6b31d7ab07eb86ac0591c7a756ff165d5ec",
       "lines": 895,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3940,7 +3952,7 @@
     },
     {
       "path": "sim/sudan_pool_card.gd",
-      "sha256": "ea3a171d6e27267b26e5b3b544711856510203b457d6c019f74056a9513bfd1b",
+      "sha256": "fdfbee588e457456a2f70423a6d41fc1a35f5b4163cbe9ea8f72e283695d008a",
       "lines": 74,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -3985,7 +3997,7 @@
     },
     {
       "path": "ui/atlas.gd",
-      "sha256": "b807ad4668fe4aef9df87ecaca14513fe72f76462ab8dbc623a2a63396c48670",
+      "sha256": "423a51c4d3e827e3654c2bf394f3ea6021fa562b44edec2705d3d079c43b20ef",
       "lines": 86,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -4155,7 +4167,7 @@
     },
     {
       "path": "ui/cached_events_view.gd",
-      "sha256": "a1ffd6799d02e64c9b96739ceedbffdcfb112cfc4f7c2f8fdec3e4041ee49a29",
+      "sha256": "c16b7e136cff0a8c9e7b07c1bac1d30c4c3d4b1bf9a75a914ae1dc12fc1522b9",
       "lines": 249,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -4236,7 +4248,7 @@
     },
     {
       "path": "ui/card_flash.gdshader",
-      "sha256": "f4175f1239852033452bf6afb2ad0fd522590e5f62d2e6109f91bb18a7b297ea",
+      "sha256": "ed6a4c999b30c9e25e57c018c43f3fd01d1ef1ed3fc835193841c2332b928e3e",
       "lines": 31,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -4253,7 +4265,7 @@
     },
     {
       "path": "ui/card_info_view.gd",
-      "sha256": "ec71e5e51cae531ed3306e5e329414a95a875b49042fac9fef175cd883725729",
+      "sha256": "7c6940eacadc6943fbaacd3888c4f47c6d94e6b1d55d80f5963edb9e490c8523",
       "lines": 749,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -4510,7 +4522,7 @@
     },
     {
       "path": "ui/card_widget.gd",
-      "sha256": "d363fecb032e7700763908a7958008ac4b9bb2e565067b2d56b76836307a5152",
+      "sha256": "a42ba3d10a6310495fe48b218f7a49883d1867e20db453a22db2e3b1be3a8b4a",
       "lines": 978,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -4779,7 +4791,7 @@
     },
     {
       "path": "ui/change_name_view.gd",
-      "sha256": "374d509648ef03b1007a7342b478bd5d0d0ea66038e40bc567f22873fd845d57",
+      "sha256": "713ca546106228e82be381d2b087d8c0f409fa0471ff8c0c721f60cc76eda9df",
       "lines": 367,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5079,7 +5091,7 @@
     },
     {
       "path": "ui/esc_game_panel.gd",
-      "sha256": "ae6bb0403a290036e9b27e9ac516977df4280eccfc8646d7dff8eba964d1fb23",
+      "sha256": "78d6193e9f839944741666eb917b52b9c9e4150053fb29fb42cab673237da676",
       "lines": 144,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5111,7 +5123,7 @@
     },
     {
       "path": "ui/event_prompt_view.gd",
-      "sha256": "b6a9f556f4882ce9a888fa650e54f420f6e1c18b60af8277c14d5a600e53d6bd",
+      "sha256": "233993b24af32d4bd425e0edac86d291cf0bb8fe1a20d1d9b5f08e15c600bbed",
       "lines": 571,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5236,7 +5248,7 @@
     },
     {
       "path": "ui/gallery_card_info.gd",
-      "sha256": "d758550f5fdc1327d40c83f6ff8a039125274da4ee4b43b98d288142706d0c2a",
+      "sha256": "b5472e1399ca2b7ea6e0398a48cc3333c65c281d9a547d82a99cc8e8bf19630b",
       "lines": 554,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5334,7 +5346,7 @@
     },
     {
       "path": "ui/gallery_panel.gd",
-      "sha256": "a59e764def1cb7cdea9c2252afe7aca0639a4036563bdaafd8a39c4536fd00b6",
+      "sha256": "1997584d25b798e249aeb2c14238c400e5da1a235bfc870dd28db72bda968ebc",
       "lines": 698,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5468,7 +5480,7 @@
     },
     {
       "path": "ui/game.gd",
-      "sha256": "6b47d863ad4f48baa83c98ebaa101e37f7ea648d899c74130d7a5f60fb233f6c",
+      "sha256": "b88aa73e5b44d0f76c06ab004151015d9e2033d39fe962c062048a008dc441d4",
       "lines": 624,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5613,7 +5625,7 @@
     },
     {
       "path": "ui/game_application_settings.gd",
-      "sha256": "2d04b49d20d6b3d3a29b2a3660cc93556f38c892e11bc3f65a890eb269bad456",
+      "sha256": "2994118827bba66f3265011a1a481ea6cc167051a02ea955f43405f10301af6d",
       "lines": 247,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5683,7 +5695,7 @@
     },
     {
       "path": "ui/game_over.gd",
-      "sha256": "3c2c2d1bba30858733c29889c3047656f764a6d22ff447fcebd6e9f8ad422a59",
+      "sha256": "3ca3650fc7c22185f46cfa4b2003da100724338f818a8d233d3eda030761f497",
       "lines": 379,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -5751,7 +5763,7 @@
     },
     {
       "path": "ui/game_screen.gd",
-      "sha256": "266b1307b4cffd87171a460552d3048c396796f3538ebfc723508f296cced30e",
+      "sha256": "0c5f16f55e7601f8700c5d0650cbe19d3c5251795c155759e8a068f372d58cdc",
       "lines": 2500,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6326,7 +6338,7 @@
     },
     {
       "path": "ui/main_help.gd",
-      "sha256": "cb6cb276ac5773bf077780b1a281fb0342fe3449080167da2ba1b076629e2a86",
+      "sha256": "8d31fa50b039defcd8b584272ddc8be82bd2958705f5064a59d1c263c52a2ab7",
       "lines": 140,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6370,7 +6382,7 @@
     },
     {
       "path": "ui/main_menu.gd",
-      "sha256": "9a0bb6e49290f96b71a0a076cf986e9ae711a856adade22d564a413574a9097a",
+      "sha256": "740ed5d554e3973666a5418bcc30c042c879ba33ff106c02e6c728ac13a7a1f0",
       "lines": 414,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6523,7 +6535,7 @@
     },
     {
       "path": "ui/map_controller.gd",
-      "sha256": "6c88e4ce98638bf4034c8140f5a859773cb33b2161abbc2dfbe6ffda791a8ccf",
+      "sha256": "f631c4472c550c938c15f30a03b59082115c62ba24583f2121da6dce08e3e8f7",
       "lines": 1302,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6801,7 +6813,7 @@
     },
     {
       "path": "ui/next_day_clock.gd",
-      "sha256": "52e12e0c6c6fb250474dc625e06bde0c545c159440ffd8a683c555b959143ec8",
+      "sha256": "cdb555494f2f966d45edac206f45ae972313b34c353da9c53c1a0ed2c0006e66",
       "lines": 64,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6851,7 +6863,7 @@
     },
     {
       "path": "ui/next_day_mask.gdshader",
-      "sha256": "df1738ee4a4c8d985aea504f417ddfdba04ab8433298e0ad1f931d53ab8af771",
+      "sha256": "bf0f329c091c0aa16d291ecc6c104006908f82b1222c74418265587130920907",
       "lines": 10,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6864,7 +6876,7 @@
     },
     {
       "path": "ui/next_day_transition.gd",
-      "sha256": "b53fdc2fc14b4bf3d7fa06776add75be45b83985970eb5af7c93bf8a23546afd",
+      "sha256": "c2a2b2f915d62e47105ca17975b812483c7fa1143697a248b1687742ec41199b",
       "lines": 74,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -6910,7 +6922,7 @@
     },
     {
       "path": "ui/over_new_step2.gd",
-      "sha256": "64e31cd914247b05828cca9d362193e3eed20ed33ee2251809b93ba0a376ac7d",
+      "sha256": "46d2884f832119be807456ed235440d0e6b8bb60e4f26edee5246865f0c8b124",
       "lines": 247,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -7087,7 +7099,7 @@
     },
     {
       "path": "ui/over_record_view.gd",
-      "sha256": "7434cfdab9dca5605489c93ef9d0cd6defb34b3a2feb1b789366f24b8f8fc309",
+      "sha256": "ffe405f19148e191bc79abdb0f64bf10287b31b34c96605d4c0fd00238484490",
       "lines": 86,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -7104,7 +7116,7 @@
     },
     {
       "path": "ui/point_shop_controller.gd",
-      "sha256": "9561576e6090dff045a4262b3033f8a540646d2b1faa5c75a3197bcdee408f78",
+      "sha256": "7cbaf391b717c50f2a15b90ba172e02fe7adf787f856478bd2d714bc7290bc7c",
       "lines": 276,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -7250,7 +7262,7 @@
     },
     {
       "path": "ui/rite_view.gd",
-      "sha256": "b0a85f9c4fe4e32af3b97f6ed4df2f9f43308afd54aa4519989bde673cafd93e",
+      "sha256": "d98b5009bdaa571fe5327c1ba5de98b2e3672493dde9e2bbe561825d80de8414",
       "lines": 2499,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -7888,7 +7900,7 @@
     },
     {
       "path": "ui/settings_panel.gd",
-      "sha256": "07b7def2e10e41e2620ca61982a6d0d02104ea82fa5743dacb9446d5be5f2f30",
+      "sha256": "9f6a04421afe8e5eb651f4bd5a7e8bb64f49ed2d30fdb6c2353e5d5e4ea3a669",
       "lines": 420,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -7946,7 +7958,7 @@
     },
     {
       "path": "ui/source_confirm_dialog.gd",
-      "sha256": "58fe85f1c21bbd92aae993aa2292ec0bff1b46ab2d2e706db0e11e2d8c5fe138",
+      "sha256": "93336fcf84a71ff33dd5932f91f3b3c4633cc0aa94d38adfd09e27093c6e2874",
       "lines": 144,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8152,7 +8164,7 @@
     },
     {
       "path": "ui/source_opcard_broker.gdshader",
-      "sha256": "11fb03811ac1cc02eae1a97780cc7c2e061c9328ec7329c98ad5eeefa24608e7",
+      "sha256": "922cc462e70636ffc78b24aa4cc863df755cd69f703641e37dc0cb9a903f764c",
       "lines": 29,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8165,7 +8177,7 @@
     },
     {
       "path": "ui/source_pop.gd",
-      "sha256": "1f9ef286106fa8a51368e2ded55572ecc7fcbe9e381c742d034bbd05626fe6f0",
+      "sha256": "1fef068313da3efb3209c92c7cbc2d7f8339acc866158d8afbcffa659f930fe2",
       "lines": 87,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8279,7 +8291,7 @@
     },
     {
       "path": "ui/source_slide.gd",
-      "sha256": "b1b500a5b6085e9c8acb00eacf3eadfb6e5fd8330ae107bd5c56c4bee1dca4d2",
+      "sha256": "8c281710c0275e7f2028a9d629e5671838e91a0beca1669e0d4646218edce3e1",
       "lines": 129,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8348,7 +8360,7 @@
     },
     {
       "path": "ui/source_text_style.gd",
-      "sha256": "827efca2e57c0d0f320b96f167f93051b010c747b841cfda6ae282109a5e67f2",
+      "sha256": "688c6c1ef93ba2d6292e52dfefddebbdd423fefffeb0752e931f8a1260b8b45f",
       "lines": 221,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8425,7 +8437,7 @@
     },
     {
       "path": "ui/source_tips.gd",
-      "sha256": "8253cfb11bf9979e24881ec212c4676b8f864588d3bbed293c74d0a67efee670",
+      "sha256": "1ef08f79ece16e987771ca7c1c3f52f9bdd1afa3eab218351cd50f15fbcb31a1",
       "lines": 44,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8553,7 +8565,7 @@
     },
     {
       "path": "ui/story_target_item_controller.gd",
-      "sha256": "6a7990dc42428d3d0ec207f2ca0e5046b0f3b46383f7e94faae887c6e9ca2ca1",
+      "sha256": "d954dee35ed60a290be8f3ecbbf68d6a0b4a8e558a47a742055255db92d64080",
       "lines": 81,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8591,7 +8603,7 @@
     },
     {
       "path": "ui/tips_view.gd",
-      "sha256": "34ccab448aa0197b208298789477f6b63f87bba4af1597bc98a360dff4c65dac",
+      "sha256": "180c87aa87a41ada1f57fa6664e2011b1b8439b924f6f6821c649cad4d8612ef",
       "lines": 169,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8654,7 +8666,7 @@
     },
     {
       "path": "ui/user_archive_panel.gd",
-      "sha256": "40a457aae3aed366f59daf0a306a8682f75fbb43e2e5ba0b66fc9fb04004f179",
+      "sha256": "53b07908e68eebd788a1b953a352983586177cf8a9c7874bce2c3923a23fca22",
       "lines": 449,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [
@@ -8728,7 +8740,7 @@
     },
     {
       "path": "project.godot",
-      "sha256": "58a36c6163edd50880ccbb5dbd8e86380f3efca449611f550399f0a23225fe55",
+      "sha256": "8f0a443741262c0e1993b3abc6b9ba837f1d5dfd0618d69b8c3d4ac98c2a24a3",
       "lines": 34,
       "screening": "static_scan_only_not_semantic_clearance",
       "source_annotations": [],
@@ -17408,8 +17420,8 @@
     },
     {
       "path": "assets/original/ithink/01e7970aa92b45b4bab2636ef54008cb.asset",
-      "bytes": 10882,
-      "sha256": "6c6fea86311aa3370d019986678a9b8e7bd4564e2cc7c74c0e7987803f91a82f",
+      "bytes": 11140,
+      "sha256": "f606f660a4417355098ffbdbda79c1a9839393093c8904f701099ab9b7d52e0c",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17420,8 +17432,8 @@
     },
     {
       "path": "assets/original/ithink/02388c58819be774797482f33d429e20.asset",
-      "bytes": 10882,
-      "sha256": "ce84894976e1a2fd3214b45f9fdb422176f6e9eae970c4dc529dd662b4ab4a81",
+      "bytes": 11140,
+      "sha256": "a0d636ab59559552cc671141de5066a98303479c77624763ffbd29eef59c87aa",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17432,8 +17444,8 @@
     },
     {
       "path": "assets/original/ithink/100d0f4dbf2211c4d94832f3229ef8f7.asset",
-      "bytes": 10882,
-      "sha256": "bed59e0271551c8d2f31f2815cfc9cd932d45469ad880e0607b809af5c5ab9a5",
+      "bytes": 11140,
+      "sha256": "7d65cbc31f5e6247ebebc1fc87664c04659cbbda9a26288d36e2baff57d9eb17",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17444,8 +17456,8 @@
     },
     {
       "path": "assets/original/ithink/27a0ab1e12a005f45801e0e5586a27a8.asset",
-      "bytes": 10882,
-      "sha256": "04f7fafa962494fce0e41be7b626be7202dd7df004c7f4a7996b25075a1102ec",
+      "bytes": 11140,
+      "sha256": "8cf91260295fdaaf325ed20a229bb80d75c88da22776f79a4de004fec711e54c",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17456,8 +17468,8 @@
     },
     {
       "path": "assets/original/ithink/2aae3d81c1241fd42b2fd4ff6f315ede.asset",
-      "bytes": 10882,
-      "sha256": "31fd3266c1aa256a7fca0251140dc440ff9428bb96940523f5624827e6f78648",
+      "bytes": 11140,
+      "sha256": "224783b7612e226219d0136bec48e15eb354c41b34cdad7f9ed162750e69efca",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17468,8 +17480,8 @@
     },
     {
       "path": "assets/original/ithink/33d0fb6359076e94f9fe82e7a3a0a94c.asset",
-      "bytes": 10882,
-      "sha256": "a55945b2a8815e7c2bd9ae19ff3060809a62749bcd31e01315f0f0dd98baa65c",
+      "bytes": 11140,
+      "sha256": "795d2d7250f230d14a213c312ad803aac6a7c6839bb59afd2960dd1015772468",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17480,8 +17492,8 @@
     },
     {
       "path": "assets/original/ithink/39ce02f38b1133048b9560367c62461f.asset",
-      "bytes": 10882,
-      "sha256": "d2ec030222add879546eab4265629f42f193cd427c3b35b9056b4da1336032ed",
+      "bytes": 11140,
+      "sha256": "af61cc5158ca321da4d0e0e5c1de3a6af6643e8ab75d06cf297ff31b027c578e",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17492,8 +17504,8 @@
     },
     {
       "path": "assets/original/ithink/3b0f84db71ac11745a38e0fe4a16c407.asset",
-      "bytes": 10882,
-      "sha256": "9c4a431a7efc893d885157914041b2a7bb824b21ef6add6dc48e243c5caadc13",
+      "bytes": 11140,
+      "sha256": "4c25fa5ee20d4e35d4c4d4a9290a639cf8a30624a4ba2ad2c4366344671ace69",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17504,8 +17516,8 @@
     },
     {
       "path": "assets/original/ithink/5f852f8b079112746bc075f107ad3862.asset",
-      "bytes": 10882,
-      "sha256": "299b11c80f43d10cc262416579164d69adbbcf1fa6e4d795dfd3db6ae1ef7fca",
+      "bytes": 11140,
+      "sha256": "44a9b0fba13ec4394c44f1b9505511c08fb286a8b2f02ee4352d6a8c580356b8",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17516,8 +17528,8 @@
     },
     {
       "path": "assets/original/ithink/654ca22dbadac2545bdc4919da96b8ba.asset",
-      "bytes": 10882,
-      "sha256": "f4a81514cbb246faafd88e0006e2563a295c01018f5f08e7945f2c014d3a2486",
+      "bytes": 11140,
+      "sha256": "32b75d4d6c85c5c136a4c814230e8b65a7c15491660af4fe2f1d79e3547e1697",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17528,8 +17540,8 @@
     },
     {
       "path": "assets/original/ithink/6b6c13faec7b5c04bb37e2b1f281f103.asset",
-      "bytes": 10882,
-      "sha256": "e7842b17df413840994a012fbf754c2ecfea2e259e5d79a0db0109324eb862cb",
+      "bytes": 11140,
+      "sha256": "f074f9ed9132388a8c6fe8c27016b33ac854b69ed5aa6c1e22cfe402bbde23bb",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17540,8 +17552,8 @@
     },
     {
       "path": "assets/original/ithink/7ff375d09e4bc174a93162a15d40181e.asset",
-      "bytes": 10882,
-      "sha256": "1b6e27ce67fe39abe8099a6c488cdb49d08ac5ec3b03f9e3e9f201ab451be11b",
+      "bytes": 11140,
+      "sha256": "98a61a7b649ff9c51c746197023ab95b0b26e0228ff78d32b05619e4bb72da9a",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17552,8 +17564,8 @@
     },
     {
       "path": "assets/original/ithink/8bb69356041b29e47a929d39190c1426.asset",
-      "bytes": 10882,
-      "sha256": "04916349396cb9198c6fed4e393c0c6d8696a2d83ad6d01dd13cbd74dd391718",
+      "bytes": 11140,
+      "sha256": "4190ef01cc2ad789c643a8e67e87583f0357336a690d43941055dc8874e0066b",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17564,8 +17576,8 @@
     },
     {
       "path": "assets/original/ithink/9369cd434ca2ba5469a9d476595b9226.asset",
-      "bytes": 10882,
-      "sha256": "898875d1a9d4c41e2e50ef7c3b56e58536ccd8711830cbf4beeb3e95efb136a7",
+      "bytes": 11140,
+      "sha256": "824dc62c80a14010865af8154718524e2fcbd7dc33a0a6a0502ec27c2545543b",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17576,8 +17588,8 @@
     },
     {
       "path": "assets/original/ithink/99337054e91dc774dbe80191e622b360.asset",
-      "bytes": 10882,
-      "sha256": "90c03587399fc977a507e33a292fba4b2c7ddbd2c608030367958e8de1f5ad3d",
+      "bytes": 11140,
+      "sha256": "db3a03aced5ad1b8b8f117852e4ab2e8cd153475872fab7d7c184de51265d322",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17588,8 +17600,8 @@
     },
     {
       "path": "assets/original/ithink/9b39d9cf8d9ccb14a89e77d182bcd72d.asset",
-      "bytes": 10882,
-      "sha256": "91357de2bb8dd88af58afb748be1de9e81197daf263d3b6ebbc3d9964e803ae5",
+      "bytes": 11140,
+      "sha256": "4a9cd360deeec5bafc8e6369362233b7b8cbe02d38475e358b3f960fc50f948b",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17600,8 +17612,8 @@
     },
     {
       "path": "assets/original/ithink/a4eb28ef555a79c4ba766c6b1f32eee9.asset",
-      "bytes": 10882,
-      "sha256": "7dd819645643454a4fad92368e2ecc11b18015899a7b276a97ef6110d8149b6b",
+      "bytes": 11140,
+      "sha256": "a3eafa32dcaa1cc8dbfe0322bd056d30f405b63dd2b7e57a9fe2f31aa6c3021d",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17612,8 +17624,8 @@
     },
     {
       "path": "assets/original/ithink/a8f3176ebafe7204eb07026f0c560d5f.asset",
-      "bytes": 10882,
-      "sha256": "0fe9eb1254d41d1692c49c86648e69cbba4ef5b893375f9af841bb032e6ff5a8",
+      "bytes": 11140,
+      "sha256": "d1892a504c9dc783a13f3bd6ce99b631d94566b520167ac57b38d7a972cc19d4",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17624,8 +17636,8 @@
     },
     {
       "path": "assets/original/ithink/bb94e0d63b7b87946878b5f0ca67a281.asset",
-      "bytes": 10882,
-      "sha256": "b9e4b94e98c696be5269366de3b9ca0a21a8306d2733308616a73ed6e14a1341",
+      "bytes": 11140,
+      "sha256": "f928885aa63032c69822088ee90beecbdc8be733fa6e29f384d124a4ba5e5d41",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17636,8 +17648,8 @@
     },
     {
       "path": "assets/original/ithink/bbcd337de092bb441be05d5302d2bcc0.asset",
-      "bytes": 10882,
-      "sha256": "abe3c3e4ca2e8d8d9b3fccce721e717d11930377b9e14ff5a0abc7ffda3768d3",
+      "bytes": 11140,
+      "sha256": "b7b3cbefbeb8ee7cffb786ac26a1bdfc29a78b49c280a4c481f814e8e6f031c1",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17648,8 +17660,8 @@
     },
     {
       "path": "assets/original/ithink/c1aba0cd57ffe3a40ad0cc9b35493bd2.asset",
-      "bytes": 15902,
-      "sha256": "c8b2ee9e1fd39e66d98a3803c0c2475141f953d5ddbdd2bdb8c5f0f36bd1f9f3",
+      "bytes": 16365,
+      "sha256": "25117937904c43a16968b3c94d89793ade703055e1d2ba7c11c15f45464975ce",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17660,8 +17672,8 @@
     },
     {
       "path": "assets/original/ithink/ce5242abab45f814f8fe44f4996b077a.asset",
-      "bytes": 10882,
-      "sha256": "5337b59825222f12d14a09b726c4804b7bcf8c7dd1c3f6f15d9dfc937650eeab",
+      "bytes": 11140,
+      "sha256": "1b97fc2c70e27aea0803033055098133877208dfd773e29acef787711b2ffaa0",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17672,14 +17684,14 @@
     },
     {
       "path": "assets/original/ithink/Close.anim",
-      "bytes": 2109,
-      "sha256": "72495d7a28ad4cb8715041e873ee87b11a570cad6e92245dba4264f1e57ad235",
+      "bytes": 2188,
+      "sha256": "b69fefa5e1c2d004245fc4df37c6601b278039646d4c264fd9f4229101dab7f5",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/d68f309ee7d3bd944968137f00a67a30.asset",
-      "bytes": 10882,
-      "sha256": "151362a9cdd8a6f8659d81d78c622f3bbe712a9fe6790795df9bf1b137a086e9",
+      "bytes": 11140,
+      "sha256": "e4020f02e1214286debb57f0c9265ce3b78e1bdc7770d61f3d39b622be14a1be",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17690,8 +17702,8 @@
     },
     {
       "path": "assets/original/ithink/dfc5129b5291e41438f57ed345fe8a03.asset",
-      "bytes": 10882,
-      "sha256": "aa20814907e5ae1dba7202cd890d57c3808bb55121898094d20c4f8a74334235",
+      "bytes": 11140,
+      "sha256": "236cf9d01a8deba07323b3d7aa70e1d20fc451f4b26993a0f6d544196ee524ec",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17702,8 +17714,8 @@
     },
     {
       "path": "assets/original/ithink/e1526afe94d8cb8498f2c0c1fd0bc8de.asset",
-      "bytes": 10882,
-      "sha256": "1966bfd7e2069bdfc2578fa3b8346caee3b62f30d72a52d343cd98eabd19fc90",
+      "bytes": 11140,
+      "sha256": "8f6c4c18a085f2353fea25bc4405f8644f87bc7273d0da3aacd97e33371a0b84",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17714,8 +17726,8 @@
     },
     {
       "path": "assets/original/ithink/e863058a200cc37489721483a1f1d46e.asset",
-      "bytes": 10882,
-      "sha256": "c99f03e91c3473bd43034c6c81279f974805b67ac94823a46b43539f83aebd8d",
+      "bytes": 11140,
+      "sha256": "816c6646979befaac527bd9aa261e9c73230dec0d9e615a80faaa38f2c5045d7",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -17726,38 +17738,38 @@
     },
     {
       "path": "assets/original/ithink/Idle.anim",
-      "bytes": 6311,
-      "sha256": "201d6b8b78e465fc2f1104ad535712a86b9fecda7f95cf2ce85102a0d5681929",
+      "bytes": 6462,
+      "sha256": "fca69b9eaf88c37d2356a1ff36f19473fd41b827bb7aa4b1edeea943c9204ece",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/IThink.controller",
-      "bytes": 11218,
-      "sha256": "f4ea746ae66bf6cbc7a60ab68ad9d0fa427f591e17527c251d1bbc5c381f1b29",
+      "bytes": 11649,
+      "sha256": "dec94b02e0fcbce332d08d01f38b00c816fc5943e2e9fe9db452c1fbffd016e0",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/Open.anim",
-      "bytes": 2107,
-      "sha256": "68e9b653e983bd24fcd05db570f439ef61a57474c9bc71cc9f93b1232c00f10b",
+      "bytes": 2186,
+      "sha256": "1d44d5125986c729c3a7c5464c93a677f3d6e2d13e24bd75b0307bf3251e87d1",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/Thinking.anim",
-      "bytes": 6152,
-      "sha256": "a795b345571abe03a56f9441edbb5dc6e231703e73ddf731db75ccdac2cd78c0",
+      "bytes": 6296,
+      "sha256": "a59cc20befbdd9b74180c6261a5c7b8be61bfc43c04cd6ee2cb7d8781107ee24",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/ThinkOver.anim",
-      "bytes": 3383,
-      "sha256": "5aa18985af59252a30f1e212e8b236d6c9c0b60c59bbd1839b75ea6ca624bfe3",
+      "bytes": 3528,
+      "sha256": "ba8d59a766a19981dbc950211ba55b9c3ec0d8ad1afb626a24d1aab6c8acc489",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
       "path": "assets/original/ithink/WaitingProcessDone.anim",
-      "bytes": 2778,
-      "sha256": "db58cf493d2f3c55b3b9e91a773e5f630d4cd16ae4f841ec741e2c988262efc4",
+      "bytes": 2887,
+      "sha256": "41304d05928f7c590cafd0fa4bfbdba767478849f064e48771c8b4abb4ee77a6",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -18458,8 +18470,8 @@
     },
     {
       "path": "assets/original/ui/begin_guide.json",
-      "bytes": 3554,
-      "sha256": "2e0720870903d24ce922ab8f95971dca0c4ae1d2cdaabe904ccde02edd0481b7",
+      "bytes": 3422,
+      "sha256": "2dd2d43a5358077736500023daf4df689984d1c83374210af3f928b513ad5206",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -19010,8 +19022,8 @@
     },
     {
       "path": "assets/original/ui/countdown_pics.json",
-      "bytes": 2013,
-      "sha256": "4ad945837c600471cf98e419ad9fde55e9af9ee9999dc0394f89db5c967af881",
+      "bytes": 1937,
+      "sha256": "8af7aac68d80dfec484a680a5a346b5d0959b0b50a93ad745419ccccd26feee3",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -19106,8 +19118,8 @@
     },
     {
       "path": "assets/original/ui/end_map.json",
-      "bytes": 2451,
-      "sha256": "7ed241ac1983f1254c558e9300b3aa2802c5578ed8d496f7d9c05f530a96a553",
+      "bytes": 2359,
+      "sha256": "8bfc435b6bd8a91e3bc79eb37a7ee676b77c0c083700b103450f26033fb1c669",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -19232,8 +19244,8 @@
     },
     {
       "path": "assets/original/ui/heads.json",
-      "bytes": 63688,
-      "sha256": "1418a8bfbc837c5c86bb6e5ef7ce9079ce7c050745e170094e9efaa0e5092e5a",
+      "bytes": 60074,
+      "sha256": "3f1d41d6ae267271366b77e3aeb4c63950642a58b89a74f9192d9e0c0b6ef1df",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -21398,8 +21410,8 @@
     },
     {
       "path": "assets/original/ui/rite_outlines.json",
-      "bytes": 10132,
-      "sha256": "47d08aa92e10325705a672085d04c1a3412c7bb3e3fc5c34936c908f4a0bb302",
+      "bytes": 9568,
+      "sha256": "9da483c4c24b06891240fdeace3113dd0d529aefb5935d7348106e1f83557ce5",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -21524,8 +21536,8 @@
     },
     {
       "path": "assets/original/ui/rites.json",
-      "bytes": 22178,
-      "sha256": "1f1ea19c5bc356a216ac6d494397f8a97025f1fc3ff7d427c80e553852914d1a",
+      "bytes": 20939,
+      "sha256": "20ee2edb4d2b2af017cc6907ad4af61244499bfca81b4380610930d79713561a",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -21788,8 +21800,8 @@
     },
     {
       "path": "assets/original/ui/touch.json",
-      "bytes": 4351,
-      "sha256": "8b32be1cd3a80cbe21d827c3b13ad9ab283024ceca26088ab861333a4a985c45",
+      "bytes": 4112,
+      "sha256": "f4eb18451fd16315147865b8ce17eabd47fdf824c5cc785f6e3595f129ea95f3",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {
@@ -21968,8 +21980,8 @@
     },
     {
       "path": "assets/third_party/kenney_new_platformer_subset/License.txt",
-      "bytes": 691,
-      "sha256": "331b533649cafed2e07e850e40010041ceee70473df242af82ed9ea7ce206956",
+      "bytes": 702,
+      "sha256": "0a9b495d8b39752228492a89b0f9ebd07efa138f5c3487eb70ef5e28a1f411b9",
       "scope": "byte_inventory_not_visual_or_runtime_verification"
     },
     {

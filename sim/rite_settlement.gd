@@ -140,12 +140,16 @@ static func pump(state, db, rng) -> void:
 				return
 			if state.over_pending:
 				return
-			# ReturnCards adds surviving cards to player.cards but retains the
-			# original Rite.cards references for finalOperations. Preserve only
-			# survivors, never the pre-result cards consumed by CleanSlot.
-			# [SRC: RiteExtensions.ReturnCards 0x5016d0, Rite.cards@0x30.]
 			job.returned_slots = state.cards_in_slot_entries_for_rite(int(job.uid)).duplicate(true)
-			state.return_rite_cards(int(job.uid), db)
+			job.phase = "return_cards"
+		if job.phase == "return_cards":
+			if job.get("kind", "settlement") == "timeout":
+				# Dead uses ReturnCards, not normal Settlement b__5.
+				state.return_rite_cards(int(job.uid), db)
+			else:
+				_return_normal_cards(job, state, db)
+				if not state.pending_operations.is_empty() or state.over_pending:
+					return
 			if job.get("kind", "settlement") != "timeout":
 				# [SRC: Settlement b__6 0x5b44b0 precedes finalOperations b__7.]
 				state.add_note(3, instance.id, instance.uid)
@@ -165,6 +169,12 @@ static func pump(state, db, rng) -> void:
 				state.remove_rite_instance(instance.uid)
 				job.phase = "done"
 			else:
+				# Consumed objects remain in Rite.cards through finalOperations,
+				# but are never returned to Player.cards by b__5.
+				for raw_uid in job.get("consumed_cards", []):
+					var consumed = state.get_card_instance(int(raw_uid))
+					if consumed != null and consumed.zone == "slot" and consumed.rite_uid == int(job.uid):
+						state.remove_card_instance_from_play(consumed.uid, false)
 				RoundLoop.finalize_rite_settlement(instance, job.deferred, state, db, job.table, rng)
 				job.phase = "post_lives"
 		if job.phase == "post_lives":
@@ -180,6 +190,55 @@ static func pump(state, db, rng) -> void:
 			state.rite_settlements.erase(key)
 			if not state.pending_operations.is_empty():
 				return
+
+
+## Normal settlement first returns all survivors, then dispatches the queued
+## OnCardClean calls serially. Unlike Dead/ReturnCards, owned consumables without
+## recovery stay out of the hand. Snapshot the decision before events mutate tags.
+## [SRC: DisplayClass56_0.<Settlement>b__5 0x5b3e20;
+## DisplayClass56_4.b__14 0x5b5010; dump.cs:324962/325044;
+## stringliteral 0x259A5A0 consumable, 0x2580360 own, 0x2586BD0 recovery.]
+static func _return_normal_cards(job: Dictionary, state, db) -> void:
+	if not job.has("consumed_cards"):
+		job.consumed_cards = []
+		job.clean_cursor = 0
+		for entry in job.returned_slots:
+			var card = state.get_card_instance(int(entry.get("card_uid", 0)))
+			if card == null or card.zone == "removed":
+				continue
+			var tags: Dictionary = state.effective_card_tags(card.uid, db)
+			var consumable: String = db.tag_code_to_name.get("consumable", "consumable")
+			var own: String = db.tag_code_to_name.get("own", "own")
+			var recovery: String = db.tag_code_to_name.get("recovery", "recovery")
+			if int(tags.get(consumable, 0)) > 0 and int(tags.get(own, 0)) > 0 and int(tags.get(recovery, 0)) <= 0:
+				job.consumed_cards.append(card.uid)
+				continue
+			# recovery is non-additive: RemoveTag removes its instance override.
+			# It is invisible; this is not a ModifyTag operation-card animation.
+			# RemoveTag 0x382e40 is not the additive SUB helper: absent
+			# non-additive tags stay absent; an existing override is erased.
+			if card.tags.has(recovery):
+				card.tags.erase(recovery)
+			elif db.get_card(card.card_id).get("tag", {}).has(recovery):
+				card.tags[recovery] = -1
+			state.validate_tag_attributes(card.uid, recovery, db)
+			if state.is_active_sudan_card(card.uid):
+				if card.uid not in state.player_card_order:
+					state.player_card_order.append(card.uid)
+				state._unlink_slot_instance(card)
+				card.zone = "sudan"
+				card.rite_uid = 0
+				card.slot_key = ""
+			else:
+				state.add_card_to_hand(card.uid)
+	while int(job.clean_cursor) < job.consumed_cards.size():
+		var uid := int(job.consumed_cards[int(job.clean_cursor)])
+		job.clean_cursor = int(job.clean_cursor) + 1
+		var card = state.get_card_instance(uid)
+		if card != null:
+			state.trigger_events("card_clean", {"card": card.card_id, "card_uid": uid})
+		if not state.pending_operations.is_empty() or state.over_pending:
+			return
 
 
 ## OnClose checks returned cards again without increasing life: shelter
