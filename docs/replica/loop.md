@@ -1,5 +1,20 @@
 # 仪式、事件与每日循环
 
+## 正常结算消耗品纠错（2026-09-17）
+
+原先正常结算复用了超时的 `ReturnCards`，导致浴场费用与投入的情报被返还。原作正常路径是 `RiteResultPanelController.DisplayClass56_0.<Settlement>b__5`（0x5b3e20，dump.cs:324962），条件为 `consumable && own && !recovery`；消费回调为 DisplayClass56_4.b__14（0x5b5010），调用 OnCardClean。字段字符串与原始 card/tag/rite 配置提供独立信号；浴场 5001501 不需要额外写 clean 才能消费。
+
+| 输入/路径 | 结算行为 |
+|---|---|
+| 玩家拥有的消耗品，无回收 | 不回手；幸存者全部返还后，逐张触发 OnCardClean |
+| 有回收，或非玩家拥有，或非消耗品 | 返还；按 RemoveTag 0x382e40 移除非叠加 recovery 覆盖；不存在的标签不制造负值 |
+| 超时 Dead | 沿用 ReturnCards 0x5016d0，不套用正常结算消费规则 |
+| 堆叠金币支付 | 仅消费实际进入槽位的切片，不删除手中余款 |
+
+消费对象仍在 Rite.cards 中供 finalOperations 访问，直到移除旧仪式；不凭空添加 DELETE 表现。复刻使用可保存的 return_cards 阶段及逐张 clean_cursor，遇提示暂停，读档后不重复触发已派发的清理事件。已结算完毕的旧存档不追溯补扣，以免猜测历史投入。
+
+证据强度见 [当前验收](verification.md)：规则与克隆交互回归已验证，原作浴场同输入实机对拍仍未采集，不宣称十天原作结算等价。
+
 ## 当前采用的规则
 
 创建、吸附、开始、成熟、支付、结算、返卡、后置操作、移除与次日是独立步骤。运行时直接使用content原始JSONC及重复成员顺序；条件的卡牌域、仪式UID和操作发生上下文要贯穿等待与存读档。

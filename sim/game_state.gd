@@ -2544,7 +2544,7 @@ func rite_slot_card_uids(rite_uid: int) -> Array[int]:
 
 ## Remove a card instance from play wherever it sits (hand, rite slot, active
 ## Sultan, or equipped). Selector-cleaned cards funnel through here.
-func remove_card_instance_from_play(uid: int) -> bool:
+func remove_card_instance_from_play(uid: int, record_operation: bool = true) -> bool:
 	var instance = get_card_instance(uid)
 	if instance == null or instance.zone == "removed":
 		return false
@@ -2567,7 +2567,8 @@ func remove_card_instance_from_play(uid: int) -> bool:
 					active_sudan_cards.erase(active_sudan)
 	instance.zone = "removed"
 	player_card_order.erase(uid)
-	_record_card_op(CARD_OP_DELETE, uid)
+	if record_operation:
+		_record_card_op(CARD_OP_DELETE, uid)
 	return true
 
 

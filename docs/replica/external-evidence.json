@@ -2786,6 +2786,110 @@
       "boundary": "仅限正文列出的采样/动画/输入和状态范围；不是原作销毁卸装过程新捕获"
     },
     {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-import.log",
+      "bytes": 453150,
+      "sha256": "9b39790e1076c02ed89132dc821cccbb0e65209b938a34d559766b925c05db1a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-original-final-report.json",
+      "bytes": 442134,
+      "sha256": "da9923c073b00348b1af35a17359041bb2249e30977695373a5540230611d8c3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-original-final.log",
+      "bytes": 13811,
+      "sha256": "080517fd5dc4550505ee2be4af1feb512b2e560dcad71d273221dd54352f3177",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-original-report.json",
+      "bytes": 442263,
+      "sha256": "cf87c42244b817ae4fc328594f014c0ab5f9ce4212aac46fd51c75e0fc6df8d8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-original.log",
+      "bytes": 13811,
+      "sha256": "ae880c0b687ccba86e8cad37b6ffb7bbf17aae80481dcae5fea5c4d3e2ba369b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-rules-gpu-final.log",
+      "bytes": 6542,
+      "sha256": "d869112e406db5c27169a9fa2dab1711df227c4945fcc28cdb69dbf8ddd8b775",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-rules-gpu.log",
+      "bytes": 6476,
+      "sha256": "07a0f81205e917656a795e9b20a9d3731bec21cb5084402869f871680dc22584",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-rules.log",
+      "bytes": 3455,
+      "sha256": "901470a825feaac60b6ae6e0f82548e254e259ce80b147410e0e5cab3b7577eb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ten-day-final.log",
+      "bytes": 93729,
+      "sha256": "2ae71900e7be1dccc221c5239b218e94272768cf5596aa7f77974829e7cb4a24",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ten-day.gd",
+      "bytes": 5521,
+      "sha256": "0e5e778c209a658cb4adc58e35dcc411623174e5aacdba198689e45bbfdc60a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ten-day.log",
+      "bytes": 94059,
+      "sha256": "e55887f2a4d90b87399b1a10a2d7a42860076eab33701af8e490a61aa6c7f5ea",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ten-day/final-save.json",
+      "bytes": 153694,
+      "sha256": "764e44dbff42eed213bb097bd2aa4e5b24ba640ae73b1822e6fd900e83583a55",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ui.log",
+      "bytes": 45525,
+      "sha256": "31714afcbff1621cb5ec5a4799fe2c4e9b0cd4b33a1b0100a732479859a58a5c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
       "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/copy-audit-fix.log",
       "integrated_into": "docs/replica/verification.md",
       "role": "通过的专项运行日志",
@@ -3776,6 +3880,54 @@
       "boundary": "按当前验收正文解释；仅证明该次运行，不构成全游戏等价",
       "bytes": 190,
       "sha256": "920b1211e902c553d7daad0d566b1729dbf874ec7b31302ddbd16f7f72ab6ddf"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-docs.log",
+      "bytes": 2383,
+      "sha256": "6fd2b20d5c3d012a7177af0b67fb028f21abf46c06ee05f1ff55c2fd5fb3dbd1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-full.log",
+      "bytes": 2060149,
+      "sha256": "ac8486a9beb96b6f1c873f2d18c7c35502f5243bf0212d6c2232c6e2d222ef4f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-ime-gpu.log",
+      "bytes": 67534,
+      "sha256": "2da45f871d6644792763a259f38172c9294e0c95e05168f6e1ed96ad26dc5386",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-mask-gpu.log",
+      "bytes": 2789,
+      "sha256": "2b162b0a4bd86ca4cac07e474ba7f41a413528df2f59cf1534394d5b6ef71d3e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-rules-gpu-acceptance.log",
+      "bytes": 6542,
+      "sha256": "fe5dfb981d9ca768fb3b11463637aca462c5b244c80307af6c4e1819bc23a2bb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "正常结算消耗品纠错运行证据",
+      "boundary": "过程日志与最终验收分离；full含无窗口IME报错与3待测，docs.log为证据换行恢复前失败，最终判定读正文；非完整十天原作对拍"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/consumable-fix-docs-final.log",
+      "bytes": 190,
+      "sha256": "920b1211e902c553d7daad0d566b1729dbf874ec7b31302ddbd16f7f72ab6ddf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "文档完整整合门禁通过日志",
+      "boundary": "独立worktree补齐登记本地证据原字节后验证；没有删除或改写原证据"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
