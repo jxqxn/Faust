@@ -1,5 +1,7 @@
 # Faust 游戏设计数据研究：公开证据、建模方法与结论
 
+> 2026-09-15 Loop Hero增量：重新核对开发者复盘与官方说明，补入官方v1.1公告、社区机制证据和冲突边界。结构分析见[机制专题第8节](../design/mechanics-and-narrative.md#loop-hero-bridge)，仍为研究候选，没有Faust玩家实验。
+
 > 2026-09-14 本地数据维护：静态快照切换到原始 StreamingAssets JSONC，以保留重复成员的读取器计算；本节列出的聚合数值未变化，原始文件指纹已更新。既有公开来源没有在本次联网重查。阶段续接见[讨论汇总](../design/next-stage-handoff.md)和[机制审计](../replica/verification.md#e029)。
 
 > 2026-09-14 纠错：CS-RULE-003 撤回必要条件口吻；CS-RULE-005 撤回“只借鉴”排他推论；LH-GENRE-001 撤回稳定共识；美术北极星降级。原始版本在本地 Git，旧分散论述见归档。
@@ -246,11 +248,11 @@
 | TIP-EXPL-001 | 《苏丹的游戏》主创亲述其玩法骨架来自《这就是警察》（"把资源卡填入各种事件内"）+《文明》的"下一回合"节奏；苏丹的仪式槽位投入卡牌结构由此而来，而非直接继承密教 | 外部事实 | A | CS-OFFICIAL-004、CS-OFFICIAL-005 | 主创自述，非实验；与 TIP-RULE-001 的结构对应是研究解释 |
 | LH-RULE-001 | 循环是自动运转结构：英雄沿环形路径自动移动与战斗，玩家不直接控制；概念源自“零玩家游戏” | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 开发者自述设计意图，不是效果实验 |
 | LH-RULE-002 | 地块之间存在组合（山脉→哥布林、宝库→石像鬼、草地邻接 +50% 治疗），放置因此是有代价的取舍 | 外部事实 | A | LH-OFFICIAL-002、LH-OFFICIAL-003 | 组合是配置规则，不是玩家行为数据 |
-| LH-RULE-003 | 远征结算三档：战斗死亡保留 30%、非营地撤退 60%、营地格撤退 100%、击败 Boss 后 100% | 外部事实 | A | LH-GUIDE-001 | 攻略级数值，非官方文档，口径可能随版本调整 |
-| LH-RULE-004 | 营地是跨局 meta 成长；死亡仍带回 30% 资源，设计上不惩罚实验 | 外部事实 | A | LH-OFFICIAL-002、LH-GUIDE-001 | 开发者意图 + 攻略；无玩家实验数据 |
+| LH-RULE-003 | 历史攻略记录死亡/途中撤退/安全撤退的资源保留有差别（30%/60%/100%） | 外部事实 | B | LH-GUIDE-001、LH-WIKI-008 | 不能把三档视为穷尽所有状态；本轮营火缓存另列靠近营火或前方无敌人的安全撤退例外；无本机实测 |
+| LH-RULE-004 | 营地支持跨远征积累；部分收益保留可能缓和失败代价 | 研究解释 | C | LH-STORE-001、LH-GUIDE-001 | 撤回“不惩罚实验”的绝对说法；存在资源损失，不保证每局净收益或低失败焦虑 |
 | LH-RULE-005 | 怪物属性随圈数按公式 `base × n × (1+(n−1)×loopmod) × difficultymod` 成长（loopmod 第 1—4 章为 0.02/0.03/0.04/0.04，difficultymod 为 0.95/1/1.05/1.1）；第四章化简为 `y=(0.04n²+0.96n)×base×1.1`，怪物为二次成长而主角属性线性成长，因此战斗刷法存在极限圈数（社区算例：群伤沙漠贼约 1300 圈封顶） | 外部事实 | B | LH-GUIDE-007、LH-GUIDE-008 | 社区逆向公式（reddit 转载），非官方文档；未逐版本复核 |
 | LH-RULE-006 | 装备有等级和四档稀有度（普通/蓝/黄/橙），稀有度越高附加属性越多；未使用装备可分解为资源 | 外部事实 | B | LH-GUIDE-006 | 攻略级描述，非官方数值表 |
-| LH-RULE-007 | 地块组合带明确数值：山脉+岩石 3×3 变山巅（+120 HP、每 2 天生成鹰身女妖）、草地邻接非草地变开花草地（3 HP vs 2 HP）、村庄+吸血鬼公馆变洗劫村庄（每圈最多 4 食尸鬼、3 圈后变伯爵领地 `[15+5×loop]` HP）、血林变饥饿林（`[5+3×loop]` 伤害、击杀血量低于 20% 的敌人）、森林受风暴神殿雷击变燃烧森林（+0.5 魔法伤害）、宝库填满 8 格给资源装备（品质随圈数）、河流+沙漠变绿洲（英雄 −0.5% 攻速、其他生物 −1%）、河流+战场变沉船（每圈宝箱+海妖）、河流+荒地变桥或芦苇（每 3 天鱼人）、郊区 5 格十字变城镇（+2 经验）、战场内荒地变血径（每 4 天血凝块）、哥布林营地+沼泽变瞭望台 | 外部事实 | B | LH-GUIDE-002 | IGN wiki 攻略数值，非官方文档；数值可能随版本调整 |
+| LH-RULE-007 | 地块组合带明确数值：山脉+岩石 3×3 变山巅（+120 HP、每 2 天生成鹰身女妖）、草地邻接非草地变开花草地（3 HP vs 2 HP）、村庄+吸血鬼公馆变洗劫村庄（每圈最多 4 食尸鬼、3 圈后变伯爵领地（旧恢复公式撤下，待核））、血林变饥饿林（`[5+3×loop]` 伤害、击杀血量低于 20% 的敌人）、森林受风暴神殿雷击变燃烧森林（+0.5 魔法伤害）、宝库填满 8 格给资源装备（品质随圈数）、河流+沙漠变绿洲（英雄 −0.5% 攻速、其他生物 −1%）、河流+战场变沉船（每圈宝箱+海妖）、河流+荒地变桥或芦苇（每 3 天鱼人）、郊区 5 格十字变城镇（+2 经验）、战场内荒地变血径（每 4 天血凝块）、哥布林营地+沼泽变瞭望台 | 外部事实 | B | LH-GUIDE-002 | IGN wiki 攻略数值，非官方文档；数值可能随版本调整 |
 | LH-RULE-008 | Boss 按章节各一：第一章巫妖（Lich）、第二章女祭司（Priestess）、第三章猎人（Hunter）、第四章 Omega；另有秘密 Boss 蛙王 | 外部事实 | B | LH-GUIDE-004 | 攻略级结构描述，非官方数值表 |
 | LH-RULE-009 | 资源约 13 种（星界宝珠、记忆碎片、口粮、蜕变、来世/工艺/进化/扩张/不朽/统一宝珠、保存岩石、稳定金属、稳定木材），由碎片合成（10—20 碎片合 1 个完整资源），来源分为敌人掉落、卡牌掉落与地块转换三类 | 外部事实 | B | LH-GUIDE-003 | 攻略级清单，非官方掉落表 |
 | LH-RULE-010 | 营地建筑提供跨局能力并带具体数值：营火进入恢复 20% 最大 HP、草药屋药水恢复 4% 最大 HP 且最多携带 3 瓶（营火补 2 瓶）、农场每完成一圈给 1 口粮、野战厨房 +10% 营火治疗、体育馆解锁怪物击杀获得特质、墓穴解锁死灵法师 | 外部事实 | B | LH-GUIDE-005 | 攻略级数值，非官方文档 |
@@ -261,6 +263,14 @@
 | LH-EXPL-001 | 循环结构是“首次成型后继续运转”的一个候选原型：自动循环持续接受地块输入并转化为战斗、资源与风险 | 研究解释 | C | LH-RULE-001—LH-RULE-004、MJ-HYP-001 | 结构类比；Loop Hero 是单主角，不含具名关系或阵容转换 |
 | LH-GAP-001 | 循环结构为何成立的逐局玩家行为（撤退时机、地块放置决策、死亡率）已有公开量化 | 未知 | U | 无 | 无公开玩家遥测，不得填入推测数值 |
 | LH-GENRE-001 | 主流游戏媒体在评测与预览中将《循环勇者》归类为 deck-building roguelite（地块构筑肉鸽）或“自己玩自己的 RPG”，未将其归入 autobattler / 自走棋品类 | 外部事实 | A | LH-PRESS-001、LH-PRESS-002 | 媒体描述级归类，非开发者正式品类声明；品类边界本身无严格学术定义，本样本不能证明整个媒体或玩家群体的分类共识 |
+
+| LH-TIME-001 | 按天触发、按圈触发和地图完成进度分属不同条件；Chrono Crystals不增强每圈效果 | 外部事实 | B | LH-WIKI-001、LH-WIKI-002、LH-WIKI-003、LH-WIKI-008 | 社区缓存正文；精确秒数、暂停/战斗时钟边界及Boss阈值未实测 |
+| LH-LOOP-001 | 持续投放环境与即时选择装备形成两种相互约束的构筑，重复经过让过去安排继续兑现 | 研究解释 | C | LH-STORE-001、LH-OFFICIAL-001 | 结构分析，不是开发者效果实验证明；不等于自动装备用品 |
+| LH-CLASS-001 | 盗贼常规击杀积累战利品到营火兑换，任务/宝库有例外；死灵法师围绕召唤构筑 | 外部事实 | B | LH-WIKI-006、LH-WIKI-007 | 社区缓存，无职业平衡或最优build结论 |
+| LH-QOL-001 | 官方2021-06-15 v1.1公告列出途中保存、加速、锁装备和Boss特质筛选 | 外部事实 | A | LH-UPDATE-001 | 经搜索返回官方公告正文；不代表2026新功能或各平台当前版本完整清单 |
+| LH-CONFLICT-001 | 旧伯爵领地恢复公式与普通村庄混用的风险：旧记录15+5×loop，当前社区伯爵领地条目15+20×loop，普通村庄条目15+5×loop | 未知 | U | LH-GUIDE-002、LH-WIKI-004、LH-WIKI-005 | 已撤下主张中的确定数值；没有原版数据/实机，不能只凭新网页确认替代公式 |
+| LH-BRIDGE-001 | 把一次指令变为持续经历的安排，可能连接自动执行、人物后果与时间机会成本 | 研究候选 | C | LH-LOOP-001、LH-TIME-001、LH-CLASS-001 | 用户确认研究兴趣，不是选定实现；不能由单主角循环推出群体关系或校园日历已成立 |
+| LH-VERIFY-001 | Loop Hero复盘正文日期为2021-08-26，编号图解描述原型；旧2021-03登记错误 | 外部事实 | A | LH-OFFICIAL-001 | 本轮重读；仅修正该来源的日期/覆盖，不替其他访谈背书 |
 
 ### 2.6 本地统计的复现协议
 
@@ -1507,13 +1517,13 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 
 | 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
 | --- | --- | --- | --- | --- |
-| LH-OFFICIAL-001 | [Postmortem: Loop Hero](https://www.gamedeveloper.com/design/postmortem-loop-hero) | 2021-03；开发者复盘 | 4 人团队、约 1.5 年、零玩家游戏起源、极简核心、加法制衡、Mac/Linux 首发教训 | 开发者单方复盘，无玩家行为数据 |
+| LH-OFFICIAL-001 | [Postmortem: Loop Hero](https://www.gamedeveloper.com/design/postmortem-loop-hero) | 2021-08-26；2026-09-15重读正文 | 原型起源、小规模beta验证、范围控制、后加机制与测试教训 | 开发者单方复盘；原型草图不等于现行规则；加法制衡不由该正文支持 |
 | LH-OFFICIAL-002 | [Destructoid: Closing the Loop 访谈](https://www.destructoid.com/closing-the-loop-four-quarters-on-the-making-of-loop-hero/) | 2021-03；Goreslavets 邮件访谈 | 循环概念起源、地块组合、营地 meta、死亡不惩罚实验 | 开发者自述，非实验 |
 | LH-OFFICIAL-003 | [Rock Paper Shotgun 访谈](https://www.rockpapershotgun.com/how-loop-heros-impossible-mishmash-of-ideas-came-to-exist) | 2021-03-17；blinch 访谈 | “零玩家游戏”定义、LD45 起源、平衡靠加法 | 开发者自述，非实验 |
 | LH-OFFICIAL-004 | [gamesindustry.biz 首周销量报道](https://www.gamesindustry.biz/indie-breakout-loop-hero-sells-500-000-in-first-week) | 2021-03-11；引述 Devolver 公告 | 首周销量超 50 万；Devolver 史上最快售出原声带 | 二手行业媒体转述 |
 | LH-OFFICIAL-005 | [TechRaptor: Steam 破 100 万](https://techraptor.net/gaming/news/loop-hero-sales-hits-1-million-copies-on-steam) | 2021-12；Switch 版发布同期 | Steam 版累计销量超 100 万 | 二手行业媒体转述；Steam 销量不含其他平台 |
 | LH-GUIDE-001 | [IGN wiki: Risk Vs. Reward](https://www.ign.com/wikis/loop-hero/Risk_Vs._Reward) | 攻略持续维护；核对 2026-08-14 | 死亡/撤退三档结算精确数值（30%/60%/100%） | 攻略级数值，非官方文档 |
-| LH-GUIDE-002 | [IGN wiki: All Tile Combos and Synergies](https://www.ign.com/wikis/loop-hero/All_Tile_Combos_and_Synergies) | 攻略持续维护；核对 2026-08-14 | 地块组合完整清单与数值（山巅 +120 HP、伯爵领地 `[15+5×loop]` HP、绿洲攻速等） | 攻略级数值，非官方文档，口径可能随版本调整 |
+| LH-GUIDE-002 | [IGN wiki: All Tile Combos and Synergies](https://www.ign.com/wikis/loop-hero/All_Tile_Combos_and_Synergies) | 攻略持续维护；核对 2026-08-14 | 地块组合完整清单与数值（山巅、伯爵领地、绿洲等；伯爵领地旧公式已撤下） | 攻略级数值，非官方文档，口径可能随版本调整 |
 | LH-GUIDE-003 | [IGN wiki: All Resources](https://www.ign.com/wikis/loop-hero/All_Resources) | 攻略持续维护；核对 2026-08-14 | 约 13 种资源清单、碎片合成数量（10—20 碎片合一）与三类获取途径 | 攻略级清单，非官方掉落表 |
 | LH-GUIDE-004 | [IGN wiki: Bosses](https://www.ign.com/wikis/loop-hero/Bosses) | 攻略持续维护；核对 2026-08-14 | 四章 Boss 结构（巫妖/女祭司/猎人/Omega）与秘密 Boss 蛙王 | 攻略级结构描述，非官方数值表 |
 | LH-GUIDE-005 | [IGN wiki: All Camp Buildings](https://www.ign.com/wikis/loop-hero/All_Camp_Buildings) | 攻略持续维护；核对 2026-08-14 | 营地建筑清单与数值（营火 20% 治疗、药水 4% 最大 HP、农场口粮等） | 攻略级数值，非官方文档 |
@@ -1523,6 +1533,24 @@ P5R 证明庞大长期状态可以通过日期和可用性压缩为有限当下�
 | LH-PRESS-001 | [IGN: Loop Hero Review](https://www.ign.com/articles/loop-hero-review) | 2021 评测；核对 2026-08-14 | 归类为 deck-based rogue-like；强调玩家不直接控制英雄 | 评测级品类描述，非品类学术定义 |
 | LH-PRESS-002 | [Rock Paper Shotgun 预览](https://www.rockpapershotgun.com/loop-hero-looks-like-a-nifty-deck-based-rogue-like) | 2021 预览；核对 2026-08-14 | 标题与正文以 “deck-based rogue-like” 归类 | 预览非正式评测；媒体描述级 |
 | LH-PRESS-003 | [Kotaku: Tips For Playing Loop Hero](https://kotaku.com/tips-for-playing-loop-hero-1846432102) | 2021-03-08 | 以 “deck-building roguelite” 归类游戏；报道 Steam 周末同时在线峰值约 5 万 | 媒体描述级；并发为发售初期单点峰值 |
+
+
+2026-09-15增量来源：商店与复盘读取正文；公告/下列Wiki由搜索返回正文核对，Wiki直接访问被robots阻止。缓存抓取时间不是发布日期，也不证明本机版本一致。全量网页未下载归档。
+
+| 来源 ID | 来源 | 发布/版本 | 数据或方法 | 主要限制 |
+|---|---|---|---|---|
+| LH-STORE-001 | [Loop Hero Steam官方介绍](https://store.steampowered.com/app/1282730/Loop_Hero/) | 2026-09-15重读 | 选职业/卡组、投放环境、选择装备、营地成长 | 产品说明，非完整规则和效果实验 |
+| LH-UPDATE-001 | [Loop Hero官方公告汇总](https://steamcommunity.com/app/1282730/allnews/) | 2021-06-15 v1.1正式公告；本轮检索核对 | 途中保存、装备锁定、Boss特质筛选、远征4倍/战斗2.5倍速 | 搜索返回正文；与6月1日beta区别；不是最新全平台版本声明 |
+| LH-WIKI-001 | [Cemetery Card](https://loophero.fandom.com/wiki/Cemetery_%28Card%29) | 2026-09-15检索缓存 | 墓地按天生怪，与营地同名建筑区分 | 社区来源，无本机验证 |
+| LH-WIKI-002 | [Chrono Crystals](https://loophero.fandom.com/wiki/Chrono_Crystals) | 2026-09-15检索缓存 | 只加强日触发、不加强每圈效果 | 社区来源，精确时钟未实测 |
+| LH-WIKI-003 | [Temporal Beacon](https://loophero.fandom.com/wiki/Temporal_Beacon) | 2026-09-15检索缓存 | 日条速度与攻击/移动速度的区别 | 社区来源，不移植数值 |
+| LH-WIKI-004 | [Counts Land](https://loophero.fandom.com/wiki/Count%27s_Land) | 2026-09-15检索缓存 | 转化后的恢复/任务描述及旧公式冲突 | 非官方公式，待原版数据复核 |
+| LH-WIKI-005 | [Village](https://loophero.fandom.com/wiki/Village) | 2026-09-15检索缓存 | 普通村庄恢复/任务，和伯爵领地比较 | 社区来源，旧数值疑似混用 |
+| LH-WIKI-006 | [Rogue](https://loophero.fandom.com/wiki/Rogue) | 2026-09-15检索缓存 | 击杀战利品/营火兑换与其他装备来源例外 | 社区来源，不引用最优配装建议 |
+| LH-WIKI-007 | [Necromancer](https://loophero.fandom.com/wiki/Necromancer) | 2026-09-15检索缓存 | 召唤构筑变量、攻速影响召唤 | 社区来源，不迁移推荐数值 |
+| LH-WIKI-008 | [Campfire tile](https://loophero.fandom.com/wiki/Campfire_%28tile%29) | 2026-09-15检索缓存 | 安全撤退、地图条与Boss、营地效果 | 社区来源，条件例外及精确触发未实测 |
+| LH-WIKI-009 | [Ransacked Village](https://loophero.fandom.com/wiki/Ransacked_Village) | 2026-09-15检索缓存 | 村庄/公馆组合、三圈转化 | 社区来源，无版本锁定 |
+| LH-WIKI-010 | [Enemies](https://loophero.fandom.com/wiki/Enemies) | 2026-09-15检索缓存 | 圈数参与敌人属性成长 | 社区来源，不认可所有公式或极限刷法已验证 |
 
 ### 14.3C 《密教模拟器》与叙事卡牌谱系
 

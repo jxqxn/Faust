@@ -23,7 +23,7 @@
 - [机制与人物叙事](mechanics-and-narrative.md)：论点、参考、反例、候选与验证方法。
 - [美术与创作生产](art-and-production.md)：否决记录、探索方法、约束与生产纪律。
 - [证据、决定与纠错账](evidence-and-decisions.md)：原话、冲突、未决事项和覆盖边界。
-- [详细研究总报告](../research/faust-game-design-data-research.md)：92 条主张、92 条来源及数据模型。
+- [详细研究总报告](../research/faust-game-design-data-research.md)：99 条主张、104 条来源及数据模型。
 
 复刻查[阶段审计](../replica/verification.md)和 [METHOD_MAP](../METHOD_MAP.md)，设计解释不充当原作裁判。原始材料见[归档清单](../archive/innovation-20260914/manifest.json)。
 
@@ -45,7 +45,7 @@
 
 ## 下一步建议与交付要求
 
-推荐先检验一个减少管理负担又保留人物意义的改动，可从相关人物筛选/名册或稳定安排的复用切入。**这是建议，不是已选定实现。** 用户可以从美术、世界观或其他更有价值的问题切入。
+2026-09-15用户选择优先深入研究Loop Hero，探索其连接现有卡牌循环、自动战斗与校园时间管理的可能性。当前讨论入口是[循环勇者桥梁分析](mechanics-and-narrative.md#loop-hero-bridge)，尚未选定具体机制或批准编码。此前名册/筛选/安排复用只是建议，不再当作当前默认第一步。
 
 每批交付一条可玩的完整经历：操作前后变化、人物如何被改写、后续如何读取、保存恢复、失败反例和去留结论。不以新界面/配置数量代替体验成立。
 

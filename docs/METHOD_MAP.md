@@ -6,6 +6,10 @@
 
 2026-09-17：正常结算消耗品返还差异修复批次。原作RiteResultPanelController.DisplayClass56_0.b__5 0x5b3e20、DisplayClass56_4.b__14 0x5b5010（dump.cs:324962）按consumable/own/recovery分流，返还幸存者后串行触发OnCardClean，再进入finalOperations。超时Dead使用另一ReturnCards路径。复刻原先混同两者；本批验证记录见verification正文，未完成门禁前不作全链通过声明。
 
+发现时记录（修复前，保留溯源；当前状态以上述修复记录为准）：
+
+2026-09-17新增❌：正常结算b__5消耗品清理。原作RiteResultPanelController.__c__DisplayClass56_0.<Settlement>b__5 0x5b3e20（dump.cs:324962）按consumable && own && !recovery清理，其余移除recovery并返还；复刻RiteSettlement.pump无该分支。十日逻辑示例实见浴场金币及秘氛返还，未修复、不得宣称资源等价。依据、例子与局限见[十日示例](replica/loop.md#前十天教学示例2026-09-17)。后续须验证成功/失败、回收、非own、超时、事件与清理顺序、真实输入和存读档；不能只统一删除全部消耗品。
+
 | 项目 | 原作背书/当前工作 | 状态 |
 |---|---|---|
 | 销毁卸装BROKER采样（当前批次） | Init0x572f40 case4；OpCardBroker.mat、原DXBC181_7..10、broker.png及unequip.anim；RiftGenerator0x432550/0x432590/0x432a50 | 🟡 单格整卡采样位移/原始曲线/半秒Done已接，GPU49/49、494断言；共享atlas邻格、裂口生成器及原作过程捕获仍缺失 |

@@ -3928,6 +3928,142 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "文档完整整合门禁通过日志",
       "boundary": "独立worktree补齐登记本地证据原字节后验证；没有删除或改写原证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916/final-save.json",
+      "bytes": 153944,
+      "sha256": "be89235b2e64e5284e53a66e3df184cfdf359a3199bcfbdfc3b18b0f051acc0e",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916/settlements.json",
+      "bytes": 52638,
+      "sha256": "832612607d423bc8d47c69a55c5982d12fd4ce7cd61837280db6e000de8ba03a",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-checked.log",
+      "bytes": 49023,
+      "sha256": "d26d3eb6a37725c021cdb9fba426eeeab25cee23229e2074e0da9e4941c9d25f",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-complete-probe.log",
+      "bytes": 92369,
+      "sha256": "8ac7c3685d58bf6085c877e28416637ac3242f47ea8905431c5fefd9371dc046",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-discovery.log",
+      "bytes": 12398,
+      "sha256": "4caaaac2b81843d5b70a04e5db80d1713bf270fafe4407b5cf9b53abc2d79bcb",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-final.log",
+      "bytes": 100392,
+      "sha256": "4b68ef2b0f144e88e0f22155bd475a50177f198890f5b46fb5c1120e1a684fbc",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-fixed.log",
+      "bytes": 38832,
+      "sha256": "e1c7febf22157f6ceddf39f1b8781060525eea0df5cbc65598b2e9f3952ab359",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-late.log",
+      "bytes": 80196,
+      "sha256": "4aad0abe4d90b462e38015071d8df7eb9d1c7e2c078d907d9f590084b5478ee6",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-mid.log",
+      "bytes": 59960,
+      "sha256": "3b8e56a178e25bb92927594427753ecbc1a1d798a336708fcabff6ba11c79404",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-opening.log",
+      "bytes": 16515,
+      "sha256": "fd1c04a81c3602887b3400df315275342a349c0cb673633095affa9e79489fc7",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-probe.log",
+      "bytes": 80302,
+      "sha256": "2743889166af73d633cda1a0169e971a1a3dbf01a51ae3bae1808e08e8909485",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-redraw.log",
+      "bytes": 22346,
+      "sha256": "f6a907e2f6df491e40a1d86d74ee676c8e3f2615b48f7b7d72b5c719a442e5ea",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-route.log",
+      "bytes": 30429,
+      "sha256": "c8597f995fcddaffd6979e0fea0e7a5877f9596391be9f8515f81cbc50a70dd9",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-summary.log",
+      "bytes": 34444,
+      "sha256": "efe64c5d5a328700ea85ae493ed665200f019962aad3c33617ae9e10e9fc5a3c",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916.gd",
+      "bytes": 5523,
+      "sha256": "1157f9a462f06f0c4cf390ca6ca11c9bac32a0429c0b6fbeaa646672247f1a39",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/register-ten-day-20260916.py",
+      "bytes": 968,
+      "sha256": "2a2e342046ec75380e838316677803856b3565c1971dbaf50a1a7e7cb66ef258",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/summarize-ten-day-20260916.py",
+      "bytes": 1153,
+      "sha256": "b02f0080f22fdb6c7e8f1754d9a316daba70da2e4be99d3882c0c33070d0e0ff",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
