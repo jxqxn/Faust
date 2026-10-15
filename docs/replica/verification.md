@@ -1,5 +1,156 @@
 # 验收、证据与当前交付状态
 
+<a id="close-fix-20261015"></a>
+## 结果关闭时序修复（2026-10-15）
+
+状态：修复已合入当前 `codex/innovation`（`33f13b95`，独立修复提交 `88d954a2`），最终全量回归通过。修复分支 `codex/rea-close-boundary` 从 `4f4356dc` 派生（固定基线之后的消耗品修复），未移动基线标签。本批不是全游戏还原声明。
+
+源依据：`RiteResultPanelController.c:1268` 的 backCards.DoPostRite 与 1289 行 OnRiteEnd 位于 OnClose（0x5a3ae0），不是 Settlement.b__8（0x5b4850）的一部分；`DisplayClass62_0.b__0`（0x5b51c0）在事件后请求保存并 Resolve；dump.cs 的 finalPromise@0xD8、backCards@0xE8 和 IPromise Slot 8/20 提供结构/调用顺序交叉核对。
+
+| 边界 | 修复后的承载 |
+|---|---|
+| 最终操作结束 | 移除原仪式，但保留 `await_close` job；保存 b__5 实际返还的 back_card_uids，不再把原始全桌面当 backCards |
+| 关闭输入 | 隐藏面板，幂等启动 post_lives → rite_end；阻塞操作未结束时不移除 job、不释放 closed |
+| 事件完成 | 完成 end_open 收尾、清除显示续体，通知控制器刷新并保存，再释放 overlay/次日等待 |
+| 手动与跨日存档 | v9 顶层 rite_result_display 保存同一 UID、提交状态、关闭状态及已有表现进度；不依赖 round_transition 才保存，恢复已移除的仪式时不制造新实例 |
+| v5–v8 升级 | 迁移旧 round_transition.rite_display；尚在 results/return_cards/actions/finalizing 的显示任务接入等待关闭。已经执行的旧关闭副作用不回滚、不重放 |
+| 自动关闭与终局 | 自动路径走同一 close_result；game_over 分支跳过普通关闭副作用，等待最终关闭后交给终局控制器 |
+| 无界面的模拟调用 | begin 默认自动继续，UI 明确要求等待关闭；此分工不用于宣称无界面测试覆盖了玩家输入 |
+
+- 最终全量 GPU：`full-final-2.log`，78 脚本、813/813 测试、8956 断言，0 待测、0 脚本错误；既存原作带结算/重载各54/54、随机13/13。测试代码与当前项目一致；只有既有消耗品测试 UID 文件的分支差异。
+- 最终专项 GPU：`final-gpu.log`，4 脚本、70/70 测试、934 断言；覆盖两尺寸真实鼠标、手动与关闭中磁盘重建、装备到期、自动关闭、终局与 v8 迁移。无脚本错误；存档版本拒载警告来自负向测试。
+- 既存原作第4→5天轨迹：`final-gpu-original-receipt.json`，结算与重载各54/54、随机13/13；复用既存原作带，没有新启动原作采集。
+- 结算规则专项：`selection-final.log`，18/18、99 断言。两条旧测试改为检查原作 rite_end 提示期间任务保留，处理提示后才清空；未删除失败断言对应的行为检查。
+- `full-regression.log` 为过渡版本：811测试，805通过、2失败、4待测；`full-final.log` 在发现上述旧断言后主动停止。保留原日志，均不作为最终通过依据。最终全量见 `full-final-2.log`。
+
+测试产物归入 `Faust-artifacts/rea-sultans-game/20261015-close-boundary/`，保留最初失败与修复中的失败日志。诊断夹具中的人工阻塞用于证明续体，不替代原作可达实例。原作新增关闭提示实机带、全部成功/失败/超时组合以及完整逐帧音画等价仍须分别验证。
+
+
+<a id="rea-plan-20261014"></a>
+## REA 定向复核与闭合验收计划（2026-10-14）
+
+状态：2026-10-14 完成两个真实目标函数的 REA 静态分析，2026-10-15 复核保存的结果；阶段 1 有限范围可用，阶段 2 完整链及原作重放尚未完成。用户指定目标为 `D:/Sultans Game`。本节并入既有验收章节，METHOD_MAP 继续作为唯一复刻 TODO；不建立平行完成度清单。采用 reverse-engineer-anything 与 faust-clone-reference 两套流程，前者提供工具，后者约束原作依据和验收。
+
+### 阶段 1 实测与证据边界（2026-10-15 复核）
+
+**结论：REA 可按地址复核该 IL2CPP 游戏的原生函数，但不能直接生成可靠的 C# 类型与完整游戏规则。** 本次只验证两个结算方法；没有新增玩法修复或全链验收通过。沿用既有带符号语料为主线，REA 用于具体汇编、分支和引用疑点。
+
+产物目录：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/`。`probe-summary.json` 保存校验结果，`summarize_probe.py` 可离线重新生成摘要；完整原始回包、Evidence bundle、snapshot、资源采样及失败记录均登记在 external-evidence.json。
+
+| 项目 | 实测与解释 |
+|---|---|
+| 首次失败 | 客户端约 300 秒超时；保留 first-attempt-error.json，未保留该次完整 Ghidra 日志，不能虚构失败根因 |
+| 修复后的尝试 | 使用已安装 REA 的本地 MCP SDK，同会话查询两个函数；子进程启动时限临时设为 1,800,000 ms。首次查询 926,346 ms（约 15 分 26 秒），第二次 22 ms；后者受益于已导入会话，不能外推所有函数性能 |
+| 资源与清理 | Java PID 5628 的每 10 秒采样中，peak working set 最大 2,041,257,984 字节（约 1.90 GiB）；不是整个进程树的内存峰值。关闭回执成功，2026-10-15 检查该 PID 不存在，所属 rea-ghidra 临时目录不存在 |
+| 身份与坐标 | 分析后 DLL SHA-256 仍与上述值一致；两个入口各 32 字节与 target-anchors.json 一致，REA 入口指令与这些字节对应。VA、RVA、文件偏移分别保留 |
+| 函数边界 | b__5 地址 0x1805b3e20，Ghidra body 共 1,623 字节、跨度 1,660 字节，分为三个区间；b__14 地址 0x1805b5010，共 88 字节。未扩入 dump.cs 中下一方法入口；这不是所有异常路径边界正确的证明 |
+| 信息保真 | 两个方法伪代码均误推断返回 void，dump.cs/script.json 则声明 IPromise。b__5 的 native_value_flow.truncated=true；完整导出记录仍不代表值流完整。b__14 对应标记为 false |
+| 引擎诊断 | 完整日志有 0x180a41090 的函数重叠修复失败及其他导入警告；该地址不在两个目标 body 内，但不能声称全库无错误。函数 body 也受 Ghidra no-return 推断影响 |
+
+证据 ID：b__5 为 `ev_8c2424e6b98744011451fed80d226751dff26df25c0488aaa499ccba644097e9`；b__14 为 `ev_f0ba72aee6ca3244bd553c10e1f01786e472355046a80fdd9ef64da10c4e67fb`。close 回执记录 snapshot 保留 2 个 primitive entries、2 条 Evidence；snapshot 是已查询结果缓存，新增查询可能仍需导入。
+
+#### 本次确认的静态分支
+
+`HasTag` 的三个布尔返回值依次对应 consumable、own、recovery。原始字符串地址分别为 RVA 0x259a5a0、0x2580360、0x2586bd0（script.json ScriptString）；方法名依据 ScriptMethod，未把裸 FUN 名字猜成语义。
+
+| consumable | own | recovery | b__5 中的路径 |
+|---|---|---|---|
+| false | 任意 | 任意 | RemoveTag(recovery, 1) → AddCard → 返回列表 → UpdateHandCardPos |
+| true | false | 任意 | 同上 |
+| true | true | true | 同上 |
+| true | true | false | 加入清理回调列表；不走该返卡路径 |
+
+循环结束后调用 DoSequence；b__14 调用 OnCardClean，传入捕获的卡牌。这个回调列表的执行晚于上述循环返卡过程。此表只描述 HasTag 返回值的分流，**不重新证明标签叠加、数值正负、死亡或最终删除语义**。
+
+来源交叉核对：`decompiled/RiteResultPanelController.__c__DisplayClass56_0.c:442`（RVA 0x5b3e20，分流在 530–558 行，排队在 626–630 行，循环末 DoSequence 在 519–522 行）；`decompiled/RiteResultPanelController.__c__DisplayClass56_4.c:3`（RVA 0x5b5010）；`dump.cs:324962`、`dump.cs:325042`；`script.json` 的 HasTag 0x3821a0、RemoveTag 0x382dc0、AddCard 0x38bc70、DoSequence 0x38b120、OnCardClean 0x4f9110。旧反编译与新分析属于同一二进制的静态解释，不算两次独立运行证据。
+
+当前 `sim/rite_settlement.gd` 的 `_return_normal_cards` 已有先返还、后逐项清理的结构，与既有 4f4356dc 修复方向一致。本次未找到该局部分流的新矛盾；未重跑游戏/GUT，也未扩大之前的验收范围。接下来从 METHOD_MAP 的结算链继续核对 final operations、清理结束、OnClose 与次日等待，再补原作可达输入及存读档证据。成功、失败、超时和过程表现仍需分别验收。
+
+### 阶段 2：关闭边界复核（2026-10-15）
+
+**发现时记录（修复前）：克隆把 OnClose 阶段的 rite_end 提前到最终结算提交时执行。当前修复和回归见[本批修复](#close-fix-20261015)。** 两尺寸真实鼠标的局部测试失败记录保留，不能继续把关闭链描述为已对齐。此轮使用同字节旧反编译、dump.cs、script.json 及当前克隆运行证据；没有重复进行 15 分钟 Ghidra 导入，也没有把这轮旧语料查询冒称新增 REA Evidence。
+
+原作顺序和宿主差异见 [结算关闭边界](loop.md#settlement-close-boundary-20261015)。关键位置：b__7（0x5b45c0）串行 finalOperations → b__8（0x5b4850）移除 Rite、登记结束、启用 btnNext → 手动 OnClose（0x5a3ae0）隐藏面板、backCards.DoPostRite、OnRiteEnd → OnClose.b__0（0x5b51c0）请求保存、手牌刷新、Resolve finalPromise。自动跳过与 game_over 分支另列，不能将手动路径泛化为所有路径。
+
+外部目录 `C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/`：
+
+- `test_close_boundary.gd`：GUT 诊断夹具，加载真实 ConfigDB，使用空 selected result 隔离关闭边界；提交阶段直接调用宿主方法，最终关闭注入真实鼠标移动及按下/释放，并断言命中结果按钮。它不是完整原作可达场景，也不是全流程输入验收。
+- `probe.log`：Godot 4.7 / GUT 9.7.1，1 测试，14/16 断言通过、2 条源顺序断言失败。1920×1080、1280×720 均观测到关闭输入前 rite_end=1、committed=true、结果界面 visible=true、job_count=0、rite_display 存在；关闭后 rite_end 仍为 1。鼠标命中、closed 信号和单次事件计数断言通过。日志未出现引擎错误或泄漏诊断；这是 headless 控件输入测试，不能称 GPU 视觉验收。
+- `audit-summary.json`：六个方法的 script.json 名称/签名、入口 RVA/VA/文件偏移/32 字节、原作与克隆文件哈希，以及测试边界。只保存索引和摘要，不复制只读语料。
+
+**当前判定：🟡，差异已证实，修复和闭合验收未完成。** 已持久化 rite_display 只能证明结果界面待关闭；本次未做保存后重建，不能证明关闭后续操作可恢复。下一修复批次须从固定基线派生并纳入 4f4356dc，分离“结果提交完毕”和“关闭后续完成”，保留待关闭任务，覆盖事件阻塞、保存重建、自动跳过、终局分支及次日等待。不能只延迟一个事件调用而留下 DoPostRite、finalPromise 与保存顺序分裂。
+
+### 已完成的只读预检
+
+本轮读取真实文件、PE 头、IL2CPP 元数据头并计算 SHA-256；不是根据文件名判断引擎。
+
+| 对象 | 实测结果 |
+|---|---|
+| `D:/Sultans Game/GameAssembly.dll` | 42,987,008 字节；PE machine `0x8664`，PE32+ `0x20B`，ImageBase `0x180000000`，CLI 元数据目录 RVA 为 0 |
+| `D:/Sultans Game/Sultan's Game_Data/il2cpp_data/Metadata/global-metadata.dat` | 8,503,260 字节；magic `0xFAB11BAF`，metadata version 31 |
+| DLL SHA-256 | `96465c476693fa5ecd24609e4f22111ab92df1d60c93c195bc858f5842c8964f` |
+| 元数据 SHA-256 | `25b29fea42be1f60d336e261e81a954db7859431ca4047569ffffab2d67263cb` |
+
+两项哈希均与只读语料根 `_unpack/GameAssembly.dll`、`_unpack/global-metadata.dat` 一致。这允许复用既有版本的逆向索引，但不证明旧伪代码解释、配置、全部资产或存档同样准确；配置及资产一致性仍需分别验。已确认目标属于原生 PE + IL2CPP 元数据路线。主分析对象选择 GameAssembly.dll；UnityPlayer.dll 仅在调用证据指向引擎层时扩展。
+
+### GitHub 工作流与本机边界
+
+依据 2026-10-14 读取的 REA [原生调查说明](https://github.com/morluto/rea/blob/main/docs/native-investigation.md)、[CLI 与 Evidence](https://github.com/morluto/rea/blob/main/docs/cli.md)、[Windows Ghidra 范围](https://github.com/morluto/rea/blob/main/docs/windows-ghidra-p0.md)。main 文档不保证已安装版本提供所有新增能力；执行以 REA 6.4.0 实际工具 schema 和会话 availability 为准。
+
+- 使用 Ghidra 原生分析。REA 的普通 .NET 读取器不解码 IL2CPP 元数据；继续使用既有 `dump.cs`、`script.json`、反编译 `.c` 和原始配置相互定位。若无法自动导入符号，就按验证后的地址查询，不把 `FUN_*` 名字当作无行为。
+- 先解决一个问题，再追有限深度的调用者、被调用者和引用；不把整库反编译输出灌入上下文。完整 Evidence 保存，阅读时取摘要或分页。
+- 用同一 MCP 会话复用已导入目标；CLI 每次调用是独立进程。snapshot 只是匹配目标、参数、引擎和设置的查询缓存，不是完整 Ghidra 工程，不能承诺免除新查询的导入成本。
+- Windows 支持边界有限。不能承诺载入旧 Ghidra 工程或批量改名、导入结构、Windows 游戏动态观测均受支持。已有工程保持只读；依赖动态证据时复用项目原作捕获工具，并先检查工具与环境。
+- 静态调用图不证明运行时可达，空调用集合不证明没有间接调用，伪代码不等于原始 C#。闭包、泛型共享、虚调用和 Promise 回调均保留未解析项。
+
+### 分阶段执行与退出条件
+
+| 阶段 | 工作 | 可验收产物 / 退出条件 |
+|---|---|---|
+| 0. 固定目标与安全工作区 | 保留上述二进制身份；核对原始配置、语料来源和旧映射。确认工具版本与可用操作。首次运行前确认实际存档位置并备份，隔离原作与克隆测试档 | 版本与路径清单、符号锚点核对；目标目录和语料保持只读。只读预检已做，配置、存档和映射完整检查未做 |
+| 1. 小范围可用性试验 | `open_binary` 指定 GameAssembly.dll 与 ghidra；测量首次导入耗时、峰值内存与清理；选既有结算方法核对伪代码、汇编和调用引用 | 至少一个真实游戏函数返回有效 Evidence；地址、原始字节和旧映射一致；超时或类型恢复不足如实记录，不因测试 DLL 成功就判目标通过 |
+| 2. 完整结算链复核 | 从 METHOD_MAP 的仪式结算条目出发，覆盖成功、失败、超时、消费/返还、清理事件、最终操作、关闭与次日等待 | 方法到状态转换的映射、分支真值表、未知项和现有实现差异。已修复消耗品路径作为已知校验点，不当成新发现；先核源，再决定是否改代码 |
+| 3. 修复并双端验收 | 将证实的差异按共享机制修复；以原作可达场景记录相同操作、规则 RNG 调用及输入，复刻侧重放 | 状态、操作顺序、UI、动画/音效、保存恢复与原作证据相符；保留失败记录。无法构造的原作分支登记未覆盖，不能拿合成单测补成实机通过 |
+| 4. 扩展核心底座 | 第一条链闭合后，按 METHOD_MAP 扩展：骰子/金骰与随机流；事件/loot/条件及重复操作；卡牌实例/装备/标签/死亡；跨日和存档恢复。每域先读匹配 MANIFEST 全部列项 | 按功能域增量闭合，核对 dump.cs 类/方法清单，记录遗漏；以验收覆盖扩大衡量进展，不以导出函数数衡量完成度 |
+| 5. 创新所需底座交付 | 明确创新将依赖的接口、已验证边界与保留差异，建立新的可引用修复提交，再按需移入创新分支 | 创新使用具体底座版本，继承对应回归；尚未覆盖的原作内容不宣称已还原。创新本身按独立目标验收 |
+
+用户随后批准执行，已开展上述阶段 1 静态试验。后续按此顺序推进，完成范围以各批次实测证据为准；当前未启动游戏或采集新轨迹，未实施玩法修改。不预报整库复刻成功率或完成日期。
+
+### 首批方法与地址使用
+
+从 METHOD_MAP 已登记的方法链起步。旧 `dump.cs:324962` 记录结算 `<Settlement>b__5`：RVA `0x5b3e20`、文件偏移 `0x5b2c20`、VA `0x1805b3e20`；`dump.cs:325042` 对应后续 `<Settlement>b__14` 的 RVA `0x5b5010`、VA `0x1805b5010`。这两处仅作初始导航，行为需重新读取 `.c` 方法体、实际 REA 结果和独立信号。
+
+不能将 RVA 直接当作 Ghidra VA；先核对导入基址与字节映射。也不能把文件偏移当内存地址。原作运行时地址则以该次加载模块基址加 RVA 计算，另记 ASLR，不固定套用首选 ImageBase。
+
+阶段 1 的调用轮廓（具体参数以当前 schema 为准）：
+
+1. `open_binary({path: "D:/Sultans Game/GameAssembly.dll", provider_id: "ghidra"})`。
+2. 核对导入坐标后，`analyze_function` 查询 `0x1805b3e20` 等已知方法；必要时读汇编、引用，再追相邻 Promise 回调。
+3. 大结果用 `inspect_analysis_view` 分页；只对明确函数集合使用 `batch_decompile`。不启动无界全调用图遍历。
+4. 未解析目标、证据冲突和运行时未观察分支进入 `record_unknown`/未知项表；静态结果与实机结果分开。
+5. `export_evidence_bundle` 保存完整记录；未做元数据修改时按需 `close_binary` 保存 snapshot，并检查关闭/清理结果。失败不悄悄切换后端或重复整库导入。
+
+### 首批验收矩阵
+
+| 边界 | 同时检查的内容 |
+|---|---|
+| 新局 / 既有存档 / 正常可操作 | 相同内容版本，UID 与卡牌归属、槽位、资源、仪式实例、待处理操作和随机调用基线 |
+| 成功 / 失败 / 超时 | 消费与返还、回收与非拥有分支、苏丹卡处理、OnCardClean 和后继操作顺序；只对原作可达组合要求实机对拍 |
+| 提示阻塞 / 详情或菜单覆盖 | 可见性、disabled、mouse_filter、输入命中、队列、锁、确认是否只消费一次 |
+| 结果演出 / 关闭 / 跨日 | 逐卡操作、骰子、Promise 完成与动画尾部的区别，音效触发、过场起止和事件顺序；不能仅比最终金币 |
+| 操作或动画中保存 / 重建 / 读档 | 剩余操作与时序、UID、锁、音效是否重播、最终状态；原作不支持的中途保存点另标为克隆恢复保证，不虚构原作同操作 |
+| 两种尺寸 / 非16:9 | 至少两种尺寸真实鼠标与键盘输入；涉及布局则增加非16:9。断言目标命中和最终状态，信号直发只算单元辅助 |
+
+规则随机比较优先沿用已建立的参数、返回值和调用顺序记录。相同数字 seed 不保证 Unity/Godot 相同随机轨迹；中途随机状态恢复仍需独立验证。原作捕获若可能联网或修改用户存档，按现有网络报备与备份规则单独处理。
+
+### 产物、分支与完成标准
+
+- 新产物拟放 `C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/<批次>/`：目标身份、工具版本、完整 Evidence、snapshot、未知项、双端输入和 RNG 带、存档前后态、截图/过程记录及测试日志。实际生成时登记 external-evidence 与既有证据清单，不能把拟定目录写成已有证据。
+- 行为背书与克隆落点写 METHOD_MAP；规则、过程、表现写既有 state/loop/presentation 正文；本章记录验收范围与失败，避免平行“最终方案”。
+- 固定标签 `replica-baseline-2026-09-15` 不动。实现批次从该基线创建独立修复分支，并明确纳入需要保留的已验证后续修复（包括已记录的消耗品修复）；不能只回到旧标签便丢失后续纠错。验收后记录新提交，按需移入创新分支；不改写历史，不自动 push。
+- 每批完成条件：原作方法及独立信号、可达状态矩阵、真实输入、过程表现、存读档、原作差分与适当 GUT 检查同时具备；检查引擎错误、孤儿和泄漏日志。缺一项仍保留 🟡/⬜。
+- REA 试验价值以新增可审计证据、确认或推翻的旧假设、减少的未决分支和新增双端验收场景衡量。若首次导入成本过高或恢复质量不如旧工程，保留现有 `.c` 为主线，仅在有汇编/引用疑点时调用 REA。
+
 ## main 底座消耗品修复（2026-09-17）
 
 **错误已定位并修复：正常结算混用了超时返卡路径，浴场金币和情报被错误返还。** 方法与完整分流见 [循环正文](loop.md)。本批基于 main 的独立修复分支，创新工作区的未提交研究资料不混入；固定复刻标签不移动。

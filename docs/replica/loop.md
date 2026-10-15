@@ -1,5 +1,26 @@
 # 仪式、事件与每日循环
 
+<a id="settlement-close-boundary-20261015"></a>
+## 结果提交与关闭的边界（2026-10-15 复核与修复）
+
+当前修复与验收见[结果关闭时序修复](verification.md#close-fix-20261015)。以下保留修复前的发现过程与原作方法依据，表中差距描述不作为修复后的状态。
+
+原作把“最终操作完成”和“关闭结果界面完成”分成两段。修复前克隆的 `RiteSettlement.pump` 将 post_lives 与 rite_end 接在 finalizing 后立即执行，随后移除 job；`RiteView` 到 job 消失才标记 committed，下一次输入才走 `_close_panel`。因此即使次日仍被 overlay 挡住，事件执行时机也已经提前。两尺寸局部输入复现及失败日志见[当前验收](verification.md#rea-plan-20261014)。
+
+| 原作方法 / 直接证据 | 原作次序 | 修复前克隆与差距 |
+|---|---|---|
+| DisplayClass56_0.b__7，RVA 0x5b45c0，`.c:765–801`；dump.cs:324968、finalOperations@0x118 | 枚举 finalOperations，创建回调，再 DoSequence | `_run_phase(action)`；本次只核对外层串行结构，未复核所有 DSL 操作 |
+| b__8，RVA 0x5b4850，`.c:868–909,968–989`；dump.cs:324971、btnNext@0x88、goNextNotify@0x90 | ClearExtraResult → 销毁 Rite 控件/RemoveRite → final_pin 分流 → 返回卡表现 → AddEndRite/AddDoneRite → btnNext 可操作与提示显示 | `finalize_rite_settlement` 后立即进入 post_lives；缺少持久化的等待关闭阶段。不能只因 RemoveRite 已执行就把后续也提前 |
+| OnClose，RVA 0x5a3ae0，`RiteResultPanelController.c:1156–1197,1258–1295`；dump.cs:325549、backCards@0xE8、finalPromise@0xD8 | btnNext 不可操作则返回；隐藏按钮背景和面板；正常非 game_over 分支遍历 backCards.DoPostRite，再 OnRiteEnd.Then(Action) | `_post_lives`、trigger_events(rite_end) 已在提交时完成；诊断夹具确认 rite_end 在关闭前触发。DoPostRite 的提前由静态控制流确认，本次没有带卡实例的动态复现 |
+| DisplayClass62_0.b__0，RVA 0x5b51c0；`.c:25–147`、dump.cs:325094 | 5010009 写 end_open；音频条件分支；RequestSavePlayer → UpdateHandCards → FlashAndSortCard → 清空并 Resolve finalPromise | `_close_panel` 只处理部分关闭状态与 end_open；原作 sfx_config 链仍是既有缺口。待关闭 job、阻塞和保存重建需要一起设计 |
+| GameController.Settlement，RVA 0x556ae0，`.c:4516–4530`；b__181_0，RVA 0x559850，`.c:10622–10633`；dump.cs riteSettling@0x2D9 | 置 riteSettling=true，将完成回调接到返回 Promise.Finally；正常收尾清锁；Update 对 needSavePlayer/needUpdateHandCards 同时检查 !riteSettling | 克隆 ui/game.gd `_drive_round_settlements` 仍检查 `_rite_overlay != null`；不能把本轮事件提前等同于次日已提前 |
+
+接口调用不是按名字猜测：script.json 的 RVA 0x259d188 为 RSG.IPromise_TypeInfo；dump.cs:534242 的 IPromise 中 Slot 8 为 Then(Action)，Slot 20 为 Finally(Action)，分别对应上述 `FUN_180002bc0(8,...)` 与 `(0x14,...)`。六个入口另按 PE section 映射核对原始字节，记录在 audit-summary.json。
+
+分支边界：b__8 捕获的自动跳过标记可直接调用关闭虚方法，不能要求它一定等鼠标；OnClose 在 GameController.game_over@0x2C8 为 true 时绕过普通返卡/OnRiteEnd 链并 Resolve；b__181_0 另有 DoGameOver 分支。当前诊断只覆盖手动、非终局、无阻塞的空结果，不覆盖这些例外。原作 OnClose 的 backCards 与克隆 job.table 也不能未经逐卡验证就认定范围等价。
+
+修复须以原作两段链为单位：保留提交后的等待关闭状态、关闭输入只启动一次后续、后续事件阻塞期间保持待完成状态、保存后重建继续相同 UID 和顺序，最后释放结果关闭及次日等待。只移动 rite_end 一行不足以完成该功能。
+
 ## 正常结算消耗品纠错（2026-09-17）
 
 原先正常结算复用了超时的 `ReturnCards`，导致浴场费用与投入的情报被返还。原作正常路径是 `RiteResultPanelController.DisplayClass56_0.<Settlement>b__5`（0x5b3e20，dump.cs:324962），条件为 `consumable && own && !recovery`；消费回调为 DisplayClass56_4.b__14（0x5b5010），调用 OnCardClean。字段字符串与原始 card/tag/rite 配置提供独立信号；浴场 5001501 不需要额外写 clean 才能消费。
