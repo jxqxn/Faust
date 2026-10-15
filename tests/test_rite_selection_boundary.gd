@@ -96,6 +96,7 @@ func test_equipment_inherits_shelter_and_post_rite_expiry_does_not_age_twice() -
 	OperationsSequence.resume(restored.consume_pending_operation(), restored, local_db, rng)
 	RiteSettlement.pump(restored, local_db, rng)
 	assert_eq(restored.coin_count, 2)
+	_finish_end_prompts(restored, local_db, rng, rite.uid)
 	assert_true(restored.rite_settlements.is_empty())
 
 class ConfirmationProbe extends GameState:
@@ -289,9 +290,23 @@ func test_settlement_resumes_after_save_without_repeating_reward() -> void:
 	RiteSettlement.pump(restored, db, rng)
 	assert_eq(restored.coin_count, 10)
 	assert_null(restored.get_rite_instance(rite.uid))
+	_finish_end_prompts(restored, db, rng, rite.uid)
 	assert_true(restored.rite_settlements.is_empty())
 	RiteSettlement.pump(restored, db, rng)
 	assert_eq(restored.coin_count, 10, "completion is idempotent")
+
+
+func _finish_end_prompts(state: GameState, config: ConfigDB, rng, uid: int) -> void:
+	# OnRiteEnd.Then must retain its job while an original event prompt waits.
+	assert_false(state.pending_operations.is_empty(), "original rite_end event still awaits acknowledgement")
+	assert_eq(str(state.rite_settlements.get(str(uid), {}).get("phase", "")), "done",
+		"event dispatched exactly once, but close continuation is still retained")
+	for step in range(16):
+		if state.pending_operations.is_empty():
+			break
+		OperationsSequence.resume(state.consume_pending_operation(), state, config, rng, "option:0")
+		RiteSettlement.pump(state, config, rng)
+	assert_true(state.pending_operations.is_empty(), "all end prompts acknowledged within bounded fixture")
 
 func test_clean_after_prompt_is_scoped_to_the_correct_runtime_rite() -> void:
 	var state := GameState.new()

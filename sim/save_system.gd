@@ -10,7 +10,9 @@ const CardInstanceData = preload("res://sim/card_instance.gd")
 const SudanPoolCardData = preload("res://sim/sudan_pool_card.gd")
 
 const DEFAULT_SAVE_PATH := "user://save.json"
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
+# v9 retains a result-close continuation outside round_transition, so manual
+# same-day results and closing prompts also survive rebuilding the scene.
 # v6 moved gold from the coin_count scalar to stacked gold card objects
 # (GenCard 2000029). v7 moved the back-to-prev quota off the run payload onto
 # the global domain (user://global.json, COUNTER_BACK_TO_PREV 7100007).
@@ -172,6 +174,7 @@ static func serialize(state) -> Dictionary:
 		"rite_settlements": state.rite_settlements.duplicate(true),
 		"rite_confirmations": state.rite_confirmations.duplicate(true),
 		"round_transition": state.round_transition.duplicate(true),
+		"rite_result_display": state.rite_result_display.duplicate(true),
 		"think_session": state.think_session.duplicate(true),
 		"ithink_card_uid": state.ithink_card_uid,
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -401,6 +404,13 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	state.rite_settlements = data.get("rite_settlements", {}).duplicate(true)
 	state.rite_confirmations = data.get("rite_confirmations", {}).duplicate(true)
 	state.round_transition = data.get("round_transition", {}).duplicate(true)
+	state.rite_result_display = data.get("rite_result_display", state.round_transition.get("rite_display", {})).duplicate(true)
+	state.round_transition.erase("rite_display")
+	# Upgrade only work that has not entered the old close-effects phase.
+	# Already-fired effects in old saves cannot be rolled back or replayed.
+	var displayed_job: Dictionary = state.rite_settlements.get(str(int(state.rite_result_display.get("uid", 0))), {})
+	if int(data.get("version", 0)) < 9 and displayed_job.get("phase", "") in ["results", "return_cards", "actions", "finalizing"]:
+		displayed_job.wait_for_close = true
 	state.think_session = data.get("think_session", {}).duplicate(true)
 	state.ithink_card_uid = int(data.get("ithink_card_uid", 0))
 	if data.get("pending_operations", null) is Array:
