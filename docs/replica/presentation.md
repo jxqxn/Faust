@@ -1,5 +1,38 @@
 # 界面、输入、动画与声音
 
+<a id="armageddon-boundary-20261015"></a>
+## 仪式专属音乐的状态与触发边界（2026-10-15）
+
+本批从 METHOD_MAP 的 end/armageddon 状态行继续逆向，未修改游戏实现。`is_armageddon` 与 `armageddon_rite_id` 是音乐恢复状态，不是独立战斗模式。原作反编译、dump.cs 字段、stringliteral.json 与 SFxManager.controller 参数/状态提供交叉证据；本批没有重新导入 Ghidra，不声称新增 REA Evidence，也未启动原作实机采集。
+
+### 已确认的原作分支
+
+| 入口/条件 | Player 持久状态 | Animator / 时机 |
+|---|---|---|
+| StartRite.Do 成功创建，表内且 play_in_rite_create=true | is_armageddon=true；armageddon_rite_id=新仪式配置ID | SetInteger(ArmageddonEndIndex) → SetBool(IsArmageddon,true) → SetTrigger(Armageddon)；不检查 play_instant |
+| 普通非终局结果关闭、OnRiteEnd 完成，表内且 play_in_rite_create=false | 同上，但使用刚关闭仪式的配置ID | 先写 ArmageddonEndIndex；仅 play_instant=true 时写 Animator IsArmageddon；最后读取 Animator 当前 IsArmageddon，真才触发 Armageddon |
+| play_instant=false 且 Animator 当前未进入专属音乐 | Player 已标记 true，Animator 可仍为 false | 不能把 Player 标记当成“已经播放”；次日 b__5 检测两者差异后激活 |
+| play_instant=false 且 Animator 已进入专属音乐 | 更新仪式ID | 仍会触发切换，不能解释为“一律等次日” |
+| 未命中音乐表，或关闭时条目 play_in_rite_create=true | 该关闭回调不更新这两个字段 | 不凭空停止或清零既有音乐；game_over 跳过普通 OnClose 回调 |
+| GameController.Start 读档 | 从 Player 恢复 | 恢复 IsArmageddon；真时按保存的ID查表并设置 ArmageddonEndIndex，再触发 Armageddon |
+
+源指针：StartRite.c:126–177（Do RVA 0x51bcf0；成功 InitRite/AddRite 之后）；RiteResultPanelController.__c__DisplayClass62_0.c:42–117（0x5b51c0，写状态先于 RequestSavePlayer）；GameController.c:1765–1811（Start 0x557e10）；GameController.__c__DisplayClass142_0.c:153–185（次日 b__5 0x570850）。dump.cs:391608/391610 定义 Player@0x179/@0x17C，386781–386785 定义音乐条目 loop_end@0x20、play_instant@0x24、play_in_rite_create@0x25。stringliteral.json 将 0x2587F78 / 0x25BF568 / 0x2587F08 分别映射为 ArmageddonEndIndex / IsArmageddon / Armageddon；原始 SFxManager.controller:456–472 为相同参数，6423–6431 为组合条件到 Armageddon 状态的边。
+
+### 播放器边界与尚未闭合部分
+
+SFxStatePlayLoopArmageddon.OnStateEnter（0x407d90）区分未播放、正在淡出、已播放：存在直接 PlayArmageddon 与 FadeOutReplay 两条路径。LoopArmageddonController.PlayArmageddon（0x403520）读取 Animator 的仪式ID，再查配置、装载 clip、设置 start/loop 边界并播放；Update（0x404110，.c:53–75）仅在播放中检查到达 loopEnd 后跳回 loopStart。`ArmageddonStop` 是特殊控制字符串（0x2587FE8），不能机械追加 `.ogg` 当普通素材；当前配置相关示例位于注释，不能当成已启用条目。
+
+仍待验证：完整 Animator 转移、淡入淡出参数与重入竞态、停止分支对整个音频状态机的影响、原作同输入的可达轨迹及录音/时间线。尚不把本批静态分支表提升为完整音画等价。
+
+### 克隆差距与局部动态证据
+
+当前 data/db.gd:116 已加载原始 sfx_config；ui/audio_manager.gd 提供 armageddon_loop_for 等查询，但 runtime 的 ui/game.gd 只调用普通 main BGM。sim/deferred_effects.gd:_add_rite_and_note 未写音乐状态，ui/rite_view.gd:_continue_result_close 仅处理 end_open；全范围 sim/ui 查询发现两字段只有声明、初始化、存读档与导入桥的赋值。旧 METHOD_MAP“配置尚未接入 ConfigDB”已失效，纠正为“配置已接，触发/播放器未接”。
+
+外部证据目录：`Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/`。probe.gd 对关闭回调进行隔离调用，5003027（普通延后条目）、5010013（即时条目）均观测到 false/0，序列化恢复仍为 false/0，与上述源期望不符；5006068（创建触发条目）及5000001（不在表内）作为关闭不更新的对照符合期望。两项创建探针5006068/5010069因空手牌不能通过原始吸附条件，eligible=false，不计为创建路径动态证明；创建写点缺失目前由源码对照确认。probe.log 无脚本错误；退出0只表示采集成功，不代表实现通过。
+
+本探针没有真实鼠标、完整仪式过程或实际音频输出，不替代功能验收。后续实现必须联合覆盖创建成功/失败、关闭前后、已激活/未激活 Animator、次日与读档，并按原配置驱动，不能只在关闭时调用一次 play_bgm。
+
+
 ## 2026-09-15 销毁卸装 BROKER 采样与原始动画（PA01 增量）
 
 从 METHOD_MAP 的不回收卸装缺口推进。`OpCardNewController.Init0x572f40` case4普通分支先创建装备BROKER、再创建宿主NORMAL，播放unequip；case5仍为NORMAL回收。原始 `unequip.anim` 与 `broker.png` 逐字节导入并登记哈希。本批普通分支只覆盖正equipment标签，不扩展尚未核实的非equipment特殊效果。
