@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-15：推进 [REA 定向复核与闭合验收计划](replica/verification.md#rea-plan-20261014)。目标 `D:/Sultans Game` 的 GameAssembly.dll 与 IL2CPP 元数据已核对为既有语料同字节；已取得并复核 b__5（0x5b3e20）与 b__14（0x5b5010）的真实静态 Evidence，消费/返还分流与既有修复方向一致。类型恢复错误与 b__5 值流截断已登记；完整结算至次日及原作重放未闭合，不升级任何功能验收状态。
+
 2026-09-17：正常结算消耗品返还差异修复批次。原作RiteResultPanelController.DisplayClass56_0.b__5 0x5b3e20、DisplayClass56_4.b__14 0x5b5010（dump.cs:324962）按consumable/own/recovery分流，返还幸存者后串行触发OnCardClean，再进入finalOperations。超时Dead使用另一ReturnCards路径。复刻原先混同两者；本批验证记录见verification正文，未完成门禁前不作全链通过声明。
 
 | 项目 | 原作背书/当前工作 | 状态 |
@@ -23,7 +25,7 @@
 | 对拍投影 | 活卡bag_positions排除removed墓碑 | 本批修复比较器误报 |
 | 随机流与暂停恢复 | 原作Random.Range实机参数、返回值、调用栈；存档未承载完整Unity RNG状态 | 🟡 本次规则调用带已同步；相同操作与最终读档通过，中途重建随机延续仍未验证，禁止选seed凑通过 |
 | 提示/结果表现 | CardPop、GenLoot附加结果与操作流 | 2026-09-15：GenLoot 不创建自制确认；卡牌/仪式经原作操作流；RiteNew 未知仪式按 RiteRender + rite_show 动画先显示问号并在悬停揭示。结果正文改为原作逐段换行（AppendLine），标题模板仍由原始 variable.json 驱动；标题 TMP sprite/字体/缩进已接，Hand父级统一缩放已修；OpCard气泡逐卡动画、精确TMP glyph与揭示曲线/尾事件仍 🟡；证据见 docs/replica/presentation.md#presentation-20260915 |
-| 完整家业→关闭→次日 | 原第4/5天真实存档、输入、保存重载 | 🟡 以[最新验收](replica/verification.md)为准 |
+| 完整家业→关闭→次日 | 原第4/5天真实存档、输入、保存重载；OnClose 0x5a3ae0 + b__0 0x5b51c0 + IPromise 槽位 | 🟡 2026-10-15 源码背书修复：await_close 保存等待状态，实际关闭后执行 backCards.DoPostRite → OnRiteEnd，阻塞结束后保存并释放；v9 支持手动/跨日结果与关闭中重建。局部两尺寸真实输入及既存原作带通过，完整原作新增关闭提示/音画轨迹仍待验；见[关闭边界](replica/loop.md#settlement-close-boundary-20261015)与[最新验收](replica/verification.md) |
 
 具体规则与源指针见[state](replica/state.md)、[loop](replica/loop.md)、[presentation](replica/presentation.md)。下方保留结构主表，表中的方法级对齐不代表全系统完成。历史逐批论证已整合进[验证证据](replica/verification.md#method-history)，不再在入口混排。
 
@@ -47,7 +49,7 @@
 | `TimingRoundBase.c`（周期事件重臂，`player+0x128`） | `sim/round_loop.gd` timing_rounds | `round_begin_ba:N` = 周期 |
 | `OperationFilter.c` Filter 0x3a15c0（s<n>/self/parent/all/enemy/friend/卡牌id 选择器族） | `sim/result.gd` `_slot_target_uids`、`sim/condition.gd` `_selector_condition_cards` | 通用于槽操作/装备/clean/条件 |
 | `HasTagTips.c` IsSatisfied 0x3fe3c0（读卡实例 tag_tips 列表） | `sim/condition.gd` `tag_tips.<tag>` + `GameState.record_tag_tip` | 属性检定时记录，运行时不进存档 |
-| `RiteResultPanelController.c:1268` → `CardExtensions.DoPostRite`（参战卡+装备逐张结算） | `sim/round_loop.gd` `_run_post_rites` | 卡牌定义 post_rite 执行链 |
+| `RiteResultPanelController.c:1268` → `CardExtensions.DoPostRite`；dump.cs backCards@0xE8 | `sim/rite_settlement.gd` `_post_lives`（当前宿主） | 🟡 2026-10-15：原作从 OnClose 遍历 backCards，克隆却在最终提交后立即执行；调用时点未对齐，job.table 与 backCards 范围仍需逐卡复核。历史 `_run_post_rites` 不能作为当前完整背书 |
 | `RebirthSudanCard` 0x519d60 + b__4_0 set_life(0) | `sim/result.gd` `rebirth.s<n>` | 无freeze置life=0；freeze按难度头起步量，完整分支见state |
 | FuncCompare 运算符键尾最长匹配 | `sim/condition.gd` dispatch | 审计报告一 |
 | `operations.json` / `conditions.json` 全键域 + `case:opN` 子树 + cards.json `post_rite`/`vanish` | `sim/dsl_audit.gd` + `tools/export_dsl_audit.gd` | 历史静态键识别归零；不等同语义全支持，新键必须入审计 |

@@ -3928,6 +3928,654 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "文档完整整合门禁通过日志",
       "boundary": "独立worktree补齐登记本地证据原字节后验证；没有删除或改写原证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916/final-save.json",
+      "bytes": 153944,
+      "sha256": "be89235b2e64e5284e53a66e3df184cfdf359a3199bcfbdfc3b18b0f051acc0e",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916/settlements.json",
+      "bytes": 52638,
+      "sha256": "832612607d423bc8d47c69a55c5982d12fd4ce7cd61837280db6e000de8ba03a",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-checked.log",
+      "bytes": 49023,
+      "sha256": "d26d3eb6a37725c021cdb9fba426eeeab25cee23229e2074e0da9e4941c9d25f",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-complete-probe.log",
+      "bytes": 92369,
+      "sha256": "8ac7c3685d58bf6085c877e28416637ac3242f47ea8905431c5fefd9371dc046",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-discovery.log",
+      "bytes": 12398,
+      "sha256": "4caaaac2b81843d5b70a04e5db80d1713bf270fafe4407b5cf9b53abc2d79bcb",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-final.log",
+      "bytes": 100392,
+      "sha256": "4b68ef2b0f144e88e0f22155bd475a50177f198890f5b46fb5c1120e1a684fbc",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-fixed.log",
+      "bytes": 38832,
+      "sha256": "e1c7febf22157f6ceddf39f1b8781060525eea0df5cbc65598b2e9f3952ab359",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-late.log",
+      "bytes": 80196,
+      "sha256": "4aad0abe4d90b462e38015071d8df7eb9d1c7e2c078d907d9f590084b5478ee6",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-mid.log",
+      "bytes": 59960,
+      "sha256": "3b8e56a178e25bb92927594427753ecbc1a1d798a336708fcabff6ba11c79404",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-opening.log",
+      "bytes": 16515,
+      "sha256": "fd1c04a81c3602887b3400df315275342a349c0cb673633095affa9e79489fc7",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-probe.log",
+      "bytes": 80302,
+      "sha256": "2743889166af73d633cda1a0169e971a1a3dbf01a51ae3bae1808e08e8909485",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-redraw.log",
+      "bytes": 22346,
+      "sha256": "f6a907e2f6df491e40a1d86d74ee676c8e3f2615b48f7b7d72b5c719a442e5ea",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-route.log",
+      "bytes": 30429,
+      "sha256": "c8597f995fcddaffd6979e0fea0e7a5877f9596391be9f8515f81cbc50a70dd9",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916-summary.log",
+      "bytes": 34444,
+      "sha256": "efe64c5d5a328700ea85ae493ed665200f019962aad3c33617ae9e10e9fc5a3c",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/ten-day-example-20260916.gd",
+      "bytes": 5523,
+      "sha256": "1157f9a462f06f0c4cf390ca6ca11c9bac32a0429c0b6fbeaa646672247f1a39",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/register-ten-day-20260916.py",
+      "bytes": 968,
+      "sha256": "2a2e342046ec75380e838316677803856b3565c1971dbaf50a1a7e7cb66ef258",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/summarize-ten-day-20260916.py",
+      "bytes": 1153,
+      "sha256": "b02f0080f22fdb6c7e8f1754d9a316daba70da2e4be99d3882c0c33070d0e0ff",
+      "integrated_into": "docs/replica/loop.md",
+      "role": "前十天教学路线逻辑模拟及诊断",
+      "boundary": "非原作实录；消耗品清理差异未修复；最终轨迹及过程失败均由loop正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/close-receipt.json",
+      "bytes": 608,
+      "sha256": "373e4efc9634c81a4fd1540173dd38b84ad4f08dd65dd06b16eadbc5e1b76bdc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/evidence-bundle.json",
+      "bytes": 3471288,
+      "sha256": "501f61bb10b1c58b558b3ec6fe14023a36f67166097c9a026c43d163f5b950a6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/export-receipt.json",
+      "bytes": 534,
+      "sha256": "06b490d54d300161765885d6fe0e6e4a3b52a4f3237f062d92dc6277f867b2fd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/first-attempt-error.json",
+      "bytes": 160,
+      "sha256": "e19b0c5e6208e7778ba456cd60c3cbd555219d80a9ea674b819b66a1fabff408",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/function-cleanup.json",
+      "bytes": 11044088,
+      "sha256": "884cf196bded55f30d95dc65de1e31cefd3dcfb4afe18c6cca010e365a527c69",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/function-on-card-clean.json",
+      "bytes": 211392,
+      "sha256": "1ff562fe2ac4c0473ce457b6784a2f01b8fb3eaa0f019f513aff5c93d20cb6c5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/java-sample.json",
+      "bytes": 161,
+      "sha256": "0fcf3af60c487dd388e53142b7c35832329c9c4311598199ced0000ac98e8559",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/probe-summary.json",
+      "bytes": 17975,
+      "sha256": "c47fcdd223c217d17dabe7d822eea12fb2ada7338c44a242478acb101921edba",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-ghidra.log",
+      "bytes": 21929,
+      "sha256": "83049c3c950965573929e29940a9aadfa1d2fe709562eaedde7a7e3c9ff59bdf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-resources.jsonl",
+      "bytes": 13070,
+      "sha256": "51f840cbdd74f8a132f0caf0e06c5066f4e300ca7ee38573d22aa24b1f800924",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-server.log",
+      "bytes": 718,
+      "sha256": "86fc46885aad0b5fa6d557cfa3e4089c1c72ea1bec1821dbdc8e3a9bcb830d4a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-thread-sample.txt",
+      "bytes": 20232,
+      "sha256": "d60fe671142d081aeb1ab7b3b1d9149799da931edfdf23d5c2c6968f5de39d89",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/retry-timings.json",
+      "bytes": 949,
+      "sha256": "4e394ce123eadc373ce2ec8b6e9ec42426831c5e5f72633b880de621861de392",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/run-probe.cjs",
+      "bytes": 2598,
+      "sha256": "983e0bfb5f4d469de912573e9b06533008c46f4da08a154a2010ce21e8b3af02",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/snapshot.json",
+      "bytes": 6940858,
+      "sha256": "35cb3cca71ae68179f59a9be37932aac77f34b5cf4776b582f50260f85981a46",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/summarize_probe.py",
+      "bytes": 2956,
+      "sha256": "36ed1037b3d39545f54fec8259a41224bf7e7b6b601678b7d09d1cc0887feac3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261014-settlement-probe/target-anchors.json",
+      "bytes": 675,
+      "sha256": "b804f5d0f9cc249a67d8002a4f821c7774db71723963cd6416a9ebedebdce133",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA 结算函数静态复核与诊断产物",
+      "boundary": "20261014 两个函数试验；包含失败记录和截断值流，不代表原作运行或全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/audit-summary.json",
+      "bytes": 5981,
+      "sha256": "9fdc8e02e518177bc3ef568a6d96ed0163c5e8fbc0241fe7ac0aea8df5147d6e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结算关闭边界审计与失败复现",
+      "boundary": "两尺寸局部合成夹具及真实关闭输入；故意保留原作时序断言失败，不是完整运行验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/console.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结算关闭边界审计与失败复现",
+      "boundary": "两尺寸局部合成夹具及真实关闭输入；故意保留原作时序断言失败，不是完整运行验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/probe.log",
+      "bytes": 2688,
+      "sha256": "55b90d5f582b02e9fe9ef70a42a44dab6254b1edb0a3bff52ac7e97f8106e114",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结算关闭边界审计与失败复现",
+      "boundary": "两尺寸局部合成夹具及真实关闭输入；故意保留原作时序断言失败，不是完整运行验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/test_close_boundary.gd",
+      "bytes": 3081,
+      "sha256": "7ceac5c1a54b8c1c271cd24a4a12c1c0f14c0872314a4a6623e40da1c5d82a16",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结算关闭边界审计与失败复现",
+      "boundary": "两尺寸局部合成夹具及真实关闭输入；故意保留原作时序断言失败，不是完整运行验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-2-console.log",
+      "bytes": 10143,
+      "sha256": "f51e36061b341cab8bc1c2b6762619c03d7edddeae75b75d112a4cc81c58b20e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-2.log",
+      "bytes": 9237,
+      "sha256": "720140e42ccfeb81d916193b5ba040ad2eb6f282d9885035b8fcc1cfb923c689",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-3-console.log",
+      "bytes": 5647,
+      "sha256": "9851c5148b8ba4db18f692c932fc3f433883968fde7b372e763f921c13a8c582",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-3.log",
+      "bytes": 4854,
+      "sha256": "b4df748cbe8d4cff0ed2284be3aa5de2b450c85635d9d52a991eea45304159ca",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-headless-console.log",
+      "bytes": 6871,
+      "sha256": "abe1e16fb38c07ec664d7c677a77e8d9c69ef88d1c674b4fa6451d192591f3d7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/close-regression-headless.log",
+      "bytes": 5956,
+      "sha256": "26dc04b5c4aa10a41f71a8d537d6b8f9320d86e142c586dc231238ff2d18bacf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-closing-prompt.png",
+      "bytes": 1630298,
+      "sha256": "b91c114832289f964191e46fb664ad860fdddd3f9257d0ad8d7286401c26f323",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-console.log",
+      "bytes": 329617,
+      "sha256": "e2790fe1ab6d11c06843a1459e049e775291ce25057f32ac149262b3435fd44b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "a85407326f4dc882db999a44d861f8157133446ee250d70aaf135baf3f8ae5fa",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu-stderr.log",
+      "bytes": 2279,
+      "sha256": "6cfb63787d97cbbfb4496e571d481b24c81c5ffeb9dd66a95895906c2e06c375",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/final-gpu.log",
+      "bytes": 310868,
+      "sha256": "a2d1fa665b1e232f80f609fdb77337bd5de617be553fd9eca2d91789b61cab96",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/finalize-evidence.py",
+      "bytes": 3725,
+      "sha256": "32df2be827c2118fc4c831e0deedbb79aa9a18a0fc60d99479311d6793937890",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/fixed-original-console.log",
+      "bytes": 2454,
+      "sha256": "ed3f94bae6e63cb18184f5f35367c21afd4316fa86f1737e5c544fcb10f900c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/fixed-original-probe.log",
+      "bytes": 2200,
+      "sha256": "ed53336019b19c8983e1641d926680c2c4e69ddc9c1a08f15b7950db53156fb4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-2-console.log",
+      "bytes": 2079427,
+      "sha256": "d3dd70e3e4e7fac4978cab912f00f31f416507b84c410c97dc33127511878cc6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-2-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "183eda062634fa1782949ffdb0f52e88d49e9d47dc0e8fa5e41ad327d72b8c80",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-2-stderr.log",
+      "bytes": 2787,
+      "sha256": "d4fe597a6f78ef9dae8b304ac7cf6d20e3fe5014821ff1f0a81ffe0a56e8010f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-2.log",
+      "bytes": 1976678,
+      "sha256": "3796c147bed891163b32ed63e43e02e503c2943163fb566679a9dad592f657ce",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-console.log",
+      "bytes": 111568,
+      "sha256": "c3ab769b14a0fb9cf8bfb8ec475f6aa1bf3cac0d9e1227e9c6701b783d4684ba",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-final.log",
+      "bytes": 95780,
+      "sha256": "310fd96215f102305ee571581a1872047eaafb17f5b8bc741b1a0ffde7dcf5a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "586af4820c5b37237df14e8c7f8c452ab52110e3d13e2dbd6829257a2dfc12d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-regression-console.log",
+      "bytes": 2021889,
+      "sha256": "46d37f75878f38dfe2e5de574b4fe269478d4fb86dc86fe0bd001b7830b85e57",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/full-regression.log",
+      "bytes": 1922958,
+      "sha256": "7ad0122d8e295c4b5ec575cba52bd7fb68a815c9b1f946c55a0141a1dbc7483e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-closing-prompt.png",
+      "bytes": 1630298,
+      "sha256": "b91c114832289f964191e46fb664ad860fdddd3f9257d0ad8d7286401c26f323",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-committed-1280.png",
+      "bytes": 1747820,
+      "sha256": "e6cc4fcb955058437d30f5bc27b9dc412b8f2991fb6ae3ed98856d382e7a938a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-focused-console.log",
+      "bytes": 66426,
+      "sha256": "158fbfa9732a5703a2e5f7860f5606b98cfdb61a79f141674ef18a7d01d3c9e0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-focused-stderr.log",
+      "bytes": 6764,
+      "sha256": "a27ee85987f66aca7416eb859e91fd48435dc8ca8bb0fa47ec7be0f50c8dee97",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-focused.log",
+      "bytes": 64928,
+      "sha256": "a0efa5bb8f132620d5c07deedb91d0920087c5a7af17b452eb44d5b0587cb776",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "fece6a11e91daa200dd22595865e506712134da8009d1d291eb2320410e936a6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/gpu-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/run-focused.gd",
+      "bytes": 2349,
+      "sha256": "8be864eb5a4d045283e4e1db55413b4d4ad37c49563b72f9c9ee6808528bbb0b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/run-status.json",
+      "bytes": 3000,
+      "sha256": "5ae22c4c69e0a4b32b1a48ef3bec1fc8d9cd832cae2d2924b84472fc1d687c8e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/selection-final-console.log",
+      "bytes": 9889,
+      "sha256": "2726980e5c674921db5cae6da449f91bd11a76d5df462e0fa867cb08b1aea2ac",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/selection-final.log",
+      "bytes": 8747,
+      "sha256": "2b8bca50d5f03111d77c4e74da05937aa498c9ea9a41879b096570589bae0500",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复最终回归或截图",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-close-boundary/worktree-import.log",
+      "bytes": 453209,
+      "sha256": "baf9a70d85882d1aab3c69bfcc4dd5cc295a2dd830af45f089b446965e001a9c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "关闭链修复过程、失败留档或可复跑工具",
+      "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
