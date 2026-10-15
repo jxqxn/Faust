@@ -262,6 +262,8 @@ func set_sound_settings(value: float, enabled: bool) -> void:
 
 func play_bgm(track: String) -> void:
 	if _current_bgm == track and _bgm_player.playing:
+		# Loading/backtracking may cancel an in-flight MainGame exit fade.
+		_bgm_player.volume_db = _music_db
 		return
 	var file := str(BGM_TRACKS.get(track, ""))
 	if file.is_empty():

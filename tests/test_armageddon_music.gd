@@ -149,6 +149,23 @@ func test_rebind_cancels_old_fade_and_detaches_old_state() -> void:
 	loaded.apply_rite_music(5010013, db, false)
 	assert_false(audio.armageddon.player.playing)
 
+func test_restore_normal_music_during_main_exit_fade() -> void:
+	var state := GameState.new()
+	var audio = _audio(state)
+	state.apply_rite_music(5010013, db, false)
+	audio.armageddon.set_process(false)
+	audio.armageddon._process(audio.armageddon._main_duration / 2.0)
+	assert_true(audio._bgm_player.playing)
+	assert_lt(audio._bgm_player.volume_db, 0.0)
+	# Same calls as the controller after restoring an earlier normal-music save.
+	audio.play_bgm("main")
+	audio.bind_music_state(GameState.new(), db)
+	assert_true(audio._bgm_player.playing)
+	assert_almost_eq(audio._bgm_player.volume_db, 0.0, 0.001)
+	assert_false(audio.armageddon.player.playing)
+	audio.armageddon._process(10.0)
+	assert_true(audio._bgm_player.playing, "cancelled exit fade cannot stop restored main music")
+
 func test_headless_auto_close_preserves_original_music_state() -> void:
 	var state := CloseState.new()
 	var rite = state.create_rite_instance(5010013)
