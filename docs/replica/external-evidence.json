@@ -4576,6 +4576,38 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "关闭链修复过程、失败留档或可复跑工具",
       "boundary": "以 close-fix-20261015 验收段与 run-status.json 为准；人工提示夹具不是原作新增实机带，历史失败日志不作通过依据；scratch 存档子目录不作为独立原作裁判"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/probe.gd",
+      "bytes": 2185,
+      "sha256": "7a34d2527e93b4b5393ddff9b9d943da6b6d0904d86016ad23448aeea5b145cc",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "仪式专属音乐状态边界逆向与克隆局部诊断",
+      "boundary": "静态源码/字段/原始Animator及隔离回调；两项创建前提失败，不计动态证明；非REA新Evidence，非原作实机音频或真实输入验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/probe.json",
+      "bytes": 2865,
+      "sha256": "57e292376bc4f330daab68d9db0d7fb08432c419523310509c05f15f11423ef5",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "仪式专属音乐状态边界逆向与克隆局部诊断",
+      "boundary": "静态源码/字段/原始Animator及隔离回调；两项创建前提失败，不计动态证明；非REA新Evidence，非原作实机音频或真实输入验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/probe.log",
+      "bytes": 118,
+      "sha256": "b9efbe58114b3e6546be6a84229a8500785bd83298e81666bbfc31ed0c0c9f58",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "仪式专属音乐状态边界逆向与克隆局部诊断",
+      "boundary": "静态源码/字段/原始Animator及隔离回调；两项创建前提失败，不计动态证明；非REA新Evidence，非原作实机音频或真实输入验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/source-audit.json",
+      "bytes": 4788,
+      "sha256": "5bef6186a77e54e3b97e912541c00c1902819098b98933edbd7ccb7802057f68",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "仪式专属音乐状态边界逆向与克隆局部诊断",
+      "boundary": "静态源码/字段/原始Animator及隔离回调；两项创建前提失败，不计动态证明；非REA新Evidence，非原作实机音频或真实输入验收"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
