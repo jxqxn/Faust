@@ -188,8 +188,8 @@ func _show_game() -> void:
 	gs.refresh()
 	if state.round_transition.has("animation"):
 		gs.present_day_transition(state.round_transition)
-	if state.round_transition.has("rite_display"):
-		_on_open_rite_instance(int(state.round_transition.rite_display.uid))
+	if not state.rite_result_display.is_empty():
+		_on_open_rite_instance(int(state.rite_result_display.uid))
 
 
 func _on_open_rite(rite_id: int) -> void:
@@ -201,7 +201,7 @@ func _on_open_rite(rite_id: int) -> void:
 
 func _on_open_rite_instance(rite_uid: int) -> void:
 	var instance = state.get_rite_instance(rite_uid) if state != null and state.has_method("get_rite_instance") else null
-	var saved_display: Dictionary = state.round_transition.get("rite_display", {}) if state != null else {}
+	var saved_display: Dictionary = state.rite_result_display if state != null else {}
 	var restoring := int(saved_display.get("uid", 0)) == rite_uid
 	if instance == null and not restoring:
 		return
@@ -214,6 +214,7 @@ func _on_open_rite_instance(rite_uid: int) -> void:
 	rv.setup(state, db, rng, _current_rite_id, rite_uid)
 	rv.closed.connect(_close_rite_overlay)
 	rv.resolved.connect(_after_rite_resolution)
+	rv.settlement_closed.connect(_after_rite_close)
 	rv.game_over_requested.connect(_show_game_over)
 	if _game_screen != null and _game_screen.has_method("add_source_overlay"):
 		_game_screen.add_source_overlay(rv)
@@ -430,8 +431,15 @@ func _close_user_archive_overlay() -> void:
 	_user_archive_overlay = null
 
 
+func _after_rite_close() -> void:
+	# [SRC: OnClose.b__0 0x5b51c0 requests save only after OnRiteEnd.]
+	if _game_screen != null:
+		_game_screen.refresh()
+	SaveSystem.save(state)
+
+
 func _after_rite_resolution() -> void:
-	# The shared settlement host dispatches rite_end exactly once.
+	# Final operations are committed; OnClose still owns rite_end.
 	# No same-day round start: consuming a Sultan card does not draw the next
 	# one until the next day boundary (TryGenSudanCard lives in OnNextRound).
 	if _game_screen != null:

@@ -175,6 +175,9 @@ var pending_operations: Array[Dictionary] = []
 var rite_settlements: Dictionary = {}
 var rite_confirmations: Dictionary = {}
 var round_transition: Dictionary = {}
+# Persist the result panel's finalPromise for manual as well as overnight rites.
+# [SRC: RiteResultPanelController.finalPromise@0xD8; OnClose 0x5a3ae0.]
+var rite_result_display: Dictionary = {}
 var think_session: Dictionary = {}
 # [SRC: Player.ithink_card +0x80; ThinkController.OnDrop 0x5c3050.]
 var ithink_card_uid := 0
@@ -1250,6 +1253,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	rite_settlements.clear()
 	rite_confirmations.clear()
 	round_transition.clear()
+	rite_result_display.clear()
 	think_session.clear()
 	ithink_card_uid = 0
 	event_queue.clear()

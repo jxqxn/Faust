@@ -41,6 +41,7 @@ class RiteSlotButton:
 		if owner_view != null and owner_view.has_method("drop_card_on_slot"):
 			owner_view.drop_card_on_slot(slot_key, data)
 
+signal settlement_closed
 signal closed()
 signal resolved()
 signal game_over_requested()
@@ -120,6 +121,8 @@ var _slot_effect_tweens: Dictionary = {}
 var _slot_tips: Control
 var _settlement_context: Dictionary = {}
 var _settlement_phase := "selection"
+var _close_started := false
+var _close_finished := false
 var _qualified_slot := ""
 var _qualified_bags: Array[int] = []
 var _qualified_bag_index := -1
@@ -139,7 +142,7 @@ func setup(state, db, rng, rite_id: int, rite_uid: int = 0) -> void:
 	if _state != null and _state.has_method("get_rite_instance"):
 		_rite_uid = rite_uid
 		var instance = _state.get_rite_instance(_rite_uid) if _rite_uid > 0 else _state.find_rite_instance_by_id(rite_id)
-		var saved_display: Dictionary = _state.round_transition.get("rite_display", {})
+		var saved_display: Dictionary = _state.rite_result_display
 		if instance == null and int(saved_display.get("uid", 0)) != _rite_uid:
 			_rite_uid = int(_state.add_available_rite(rite_id, _db, _rng))
 		elif instance != null:
@@ -1131,6 +1134,9 @@ func _result_presentation_busy() -> bool:
 
 
 func _process(_delta: float) -> void:
+	if _close_started:
+		_continue_result_close()
+		return
 	_update_drag_slot_effects()
 	if _awaiting_confirmation:
 		RiteSettlement.pump_confirmations(_state)
@@ -1506,7 +1512,7 @@ func _commit_resolution() -> void:
 		return
 	if _settlement_phase == "selection":
 		_settlement_phase = "results"
-		var job := RiteSettlement.begin(_rite_uid, _last_result, _settlement_context, _state, _db, _rng)
+		var job := RiteSettlement.begin(_rite_uid, _last_result, _settlement_context, _state, _db, _rng, true)
 		if job.is_empty():
 			# The source cannot settle a removed instance. Keep the panel open and
 			# avoid manufacturing a result or emitting a false completion.
@@ -1528,12 +1534,9 @@ func _commit_resolution() -> void:
 		_gold_dice_btn.disabled = true
 	_update_resolve_button()
 	resolved.emit()
-	# A rite-driven game over fires only after the result is committed.
-	if bool(_last_result.deferred.get("over", false)):
-		game_over_requested.emit()
 	if _close_after_commit and not _result_presentation_busy():
 		_close_after_commit = false
-		closed.emit()
+		_close_panel()
 
 
 ## Persist the outstanding result-close Promise independently of RemoveRite.
@@ -1542,15 +1545,15 @@ func _commit_resolution() -> void:
 ## finalPromise@0xD8. Original runtime requires a final click for each rite.]
 ## This is host resume state, not a new content format or a replay of effects.
 func _remember_round_result() -> void:
-	if _state.round_transition.is_empty() or _last_result == null:
+	if _state == null or _last_result == null or _result_surface_text == null:
 		return
 	var result := {}
 	for field in ["prior_log", "normal_entry", "extre_log", "deferred", "dice_rolls", "successes", "dice_types_seen", "settlements", "entry_contexts"]:
 		result[field] = _last_result.get(field)
-	_state.round_transition["rite_display"] = {
+	_state.rite_result_display = {
 		"uid": _rite_uid, "rite_id": _rite_id, "result": result,
 		"table": _pending_table_entries.duplicate(true),
-		"phase": _settlement_phase, "committed": _resolution_committed,
+		"phase": _settlement_phase, "committed": _resolution_committed, "closing": _close_started,
 		"text": _result_surface_text.text,
 		"source_text": str(_result_surface_text.get_meta("source_markup", "")),
 	}
@@ -1561,6 +1564,7 @@ func restore_round_result(saved: Dictionary) -> void:
 		_last_result.set(field, saved.result[field])
 	_pending_table_entries = saved.table.duplicate(true)
 	_settlement_phase = str(saved.phase)
+	_close_started = bool(saved.get("closing", false))
 	_resolution_committed = bool(saved.committed)
 	_resolution_pending = not _resolution_committed
 	_display_result(_last_result)
@@ -1575,6 +1579,8 @@ func restore_round_result(saved: Dictionary) -> void:
 	_result_surface_text.visible_characters = -1
 	_result_text_done = true
 	_result_paragraph_index = _result_paragraphs.size()
+	if _close_started:
+		hide()
 	_refresh_gold_label()
 	_update_result_wait_controls()
 
@@ -1584,7 +1590,7 @@ func _advance_settlement_execution() -> void:
 		_update_result_wait_controls()
 		_refresh_game_screen()
 		return
-	if not _state.rite_settlements.has(str(_rite_uid)):
+	if not _state.rite_settlements.has(str(_rite_uid)) or _state.rite_settlements[str(_rite_uid)].phase == "await_close":
 		_settlement_phase = "done"
 		_commit_resolution()
 		_refresh_game_screen()
@@ -1593,10 +1599,19 @@ func _advance_settlement_execution() -> void:
 ## Closing selection abandons the uncommitted selection only. It never
 ## restores a player snapshot or refunds already spent gold dice.
 func _close_panel() -> void:
+	if _close_started or _close_finished:
+		return
 	if _waiting_for_result_operations():
 		return
-	if _state != null and int(_state.round_transition.get("rite_display", {}).get("uid", 0)) == _rite_uid:
-		_state.round_transition.erase("rite_display")
+	if _resolution_committed and _state != null:
+		_close_started = true
+		hide()
+		_remember_round_result()
+		RiteSettlement.close_result(_rite_uid, _state, _db, _rng)
+		_continue_result_close()
+		return
+	if _state != null and int(_state.rite_result_display.get("uid", 0)) == _rite_uid:
+		_state.rite_result_display = {}
 	_qualified_slot = ""
 	_qualified_bags.clear()
 	_qualified_bag_index = -1
@@ -1618,15 +1633,28 @@ func _close_panel() -> void:
 		_update_gold_button()
 		_update_resolve_button()
 		_refresh_game_screen()
-	# The source writes this only when the committed 5010009 result panel is
-	# closed. It does not make `final_pin` rites in general terminal rites.
-	# GameController then consumes its transient flag at the next-day boundary;
-	# MapController.Start also restores the background directly from Player.
-	# [SRC: RiteResultPanelController.<>c__DisplayClass62_0.<OnClose>b__0
-	#       (RVA 0x5b51c0); MapController.Start (RVA 0x56a890).]
-	if _resolution_committed and _rite_id == 5010009 and _state != null:
-		_state.end_open = true
 	closed.emit()
+
+
+func _continue_result_close() -> void:
+	if _close_finished:
+		return
+	RiteSettlement.pump(_state, _db, _rng)
+	_refresh_game_screen()
+	if _state.rite_settlements.has(str(_rite_uid)) or not _state.pending_operations.is_empty():
+		return
+	_close_finished = true
+	# [SRC: OnClose.b__0 0x5b51c0 follows OnRiteEnd.Then; game_over
+	# bypasses that branch in OnClose 0x5a3ae0. Never replay on reconstruction.]
+	if not _state.over_pending and _rite_id == 5010009:
+		_state.end_open = true
+	if int(_state.rite_result_display.get("uid", 0)) == _rite_uid:
+		_state.rite_result_display = {}
+	if not _state.over_pending:
+		settlement_closed.emit()
+	closed.emit()
+	if _state.over_pending:
+		game_over_requested.emit()
 
 
 func _display_result(res) -> void:

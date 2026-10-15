@@ -34,7 +34,7 @@ static func pump_confirmations(state) -> void:
 				return
 		state.rite_confirmations.erase(key)
 
-static func begin(uid: int, selected, context: Dictionary, state, db, rng) -> Dictionary:
+static func begin(uid: int, selected, context: Dictionary, state, db, rng, wait_for_close := false) -> Dictionary:
 	var key := str(uid)
 	if state.rite_settlements.has(key):
 		return state.rite_settlements[key]
@@ -46,6 +46,7 @@ static func begin(uid: int, selected, context: Dictionary, state, db, rng) -> Di
 		return {}
 	var job := {
 		"uid": uid, "rite_id": rite_id, "phase": "results",
+		"wait_for_close": wait_for_close,
 		"entries_json": JSON.stringify(selected.settlements, "", false),
 		"entry_index": 0,
 		"entry_contexts": selected.entry_contexts.duplicate(true),
@@ -56,6 +57,17 @@ static func begin(uid: int, selected, context: Dictionary, state, db, rng) -> Di
 	state.rite_settlements[key] = job
 	pump(state, db, rng)
 	return job
+
+
+## The result button releases OnClose, not Settlement's finalOperations.
+## The job survives RemoveRite and awaits any OnRiteEnd prompt before deletion.
+## [SRC: RiteResultPanelController.OnClose 0x5a3ae0;
+## DisplayClass62_0.b__0 0x5b51c0; dump.cs:325466 finalPromise@0xD8.]
+static func close_result(uid: int, state, db, rng) -> void:
+	var job: Dictionary = state.rite_settlements.get(str(uid), {})
+	if job.get("phase", "") == "await_close":
+		job.phase = "post_lives"
+	pump(state, db, rng)
 
 ## Dead has the same result/return/action order but no result presentation,
 ## rite_end or final_pin. Conditions are collected AFTER OnRiteClean completes.
@@ -125,11 +137,14 @@ static func pump(state, db, rng) -> void:
 		var job: Dictionary = state.rite_settlements[key]
 		if state.over_pending:
 			job.deferred.over = true
+			if job.get("wait_for_close", false) and job.phase not in ["post_lives", "rite_end", "done"]:
+				job.phase = "await_close"
+				continue
 			job.phase = "done"
 			state.rite_settlements.erase(key)
 			continue
 		var instance = state.get_rite_instance(int(job.uid))
-		if instance == null and job.phase not in ["post_lives", "rite_end", "done"]:
+		if instance == null and job.phase not in ["await_close", "post_lives", "rite_end", "done"]:
 			state.rite_settlements.erase(key)
 			continue
 		if job.phase == "timeout_selection":
@@ -176,7 +191,7 @@ static func pump(state, db, rng) -> void:
 					if consumed != null and consumed.zone == "slot" and consumed.rite_uid == int(job.uid):
 						state.remove_card_instance_from_play(consumed.uid, false)
 				RoundLoop.finalize_rite_settlement(instance, job.deferred, state, db, job.table, rng)
-				job.phase = "post_lives"
+				job.phase = "await_close" if job.get("wait_for_close", false) else "post_lives"
 		if job.phase == "post_lives":
 			_post_lives(job, state, db, rng)
 			if not state.pending_operations.is_empty():
@@ -187,9 +202,9 @@ static func pump(state, db, rng) -> void:
 			if not state.over_pending:
 				state.trigger_events("rite_end", {"rite": int(job.rite_id)})
 		if job.phase == "done":
-			state.rite_settlements.erase(key)
 			if not state.pending_operations.is_empty():
 				return
+			state.rite_settlements.erase(key)
 
 
 ## Normal settlement first returns all survivors, then dispatches the queued
@@ -201,6 +216,7 @@ static func pump(state, db, rng) -> void:
 static func _return_normal_cards(job: Dictionary, state, db) -> void:
 	if not job.has("consumed_cards"):
 		job.consumed_cards = []
+		job.back_card_uids = []
 		job.clean_cursor = 0
 		for entry in job.returned_slots:
 			var card = state.get_card_instance(int(entry.get("card_uid", 0)))
@@ -213,6 +229,7 @@ static func _return_normal_cards(job: Dictionary, state, db) -> void:
 			if int(tags.get(consumable, 0)) > 0 and int(tags.get(own, 0)) > 0 and int(tags.get(recovery, 0)) <= 0:
 				job.consumed_cards.append(card.uid)
 				continue
+			job.back_card_uids.append(card.uid)
 			# recovery is non-additive: RemoveTag removes its instance override.
 			# It is invisible; this is not a ModifyTag operation-card animation.
 			# RemoveTag 0x382e40 is not the additive SUB helper: absent
@@ -249,8 +266,11 @@ static func _return_normal_cards(job: Dictionary, state, db) -> void:
 static func _post_lives(job: Dictionary, state, db, rng) -> void:
 	if not job.has("post_cards"):
 		job.post_cards = []
-		for entry in job.table:
-			var card = state.get_card_instance(int(entry.get("card_uid", 0)))
+		# OnClose iterates backCards, not every card originally on the table.
+		# Keep the old table fallback only for pre-v9 in-flight settlements.
+		var back_uids: Array = job.get("back_card_uids", job.table.map(func(entry): return int(entry.get("card_uid", 0))))
+		for uid in back_uids:
+			var card = state.get_card_instance(int(uid))
 			if card == null or card.zone == "removed":
 				continue
 			for equipment in card.equipped_uids:
