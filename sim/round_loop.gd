@@ -123,6 +123,8 @@ static func _pump_day(state, db, rng, result: Dictionary) -> void:
 					payload.erase("round")
 					OperationsSequence.start([payload], state, db, rng, delayed.get("context", {}))
 				else:
+					# OnNextRound.b__5 0x570850 precedes the day-entry Promise.
+					state.round_music_requested.emit()
 					if result.has("animation"):
 						preload("res://ui/next_day_clock.gd").continue_to_day(result.animation)
 						result.phase = "day_enter"

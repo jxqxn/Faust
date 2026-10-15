@@ -104,6 +104,8 @@ static func _add_rite_and_note(rite_id: int, state, db, rng) -> int:
 		var new_rite = state.get_rite_instance(new_rite_uid)
 		if new_rite != null and new_rite.new_born:
 			state.add_note(1, new_rite.id, new_rite.uid)
+	if new_rite_uid > 0:
+		state.apply_rite_music(rite_id, db, true)
 	return new_rite_uid
 
 

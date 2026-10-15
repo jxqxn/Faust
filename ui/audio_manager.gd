@@ -17,6 +17,8 @@ const BGM_TRACKS := {
 var _bgm_player: AudioStreamPlayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _current_bgm := ""
+var armageddon: Node
+var _music_db := 0.0
 
 # Static registry: overlays fire cues without touching the scene tree (the
 # rite panel may resolve while detached in tests).
@@ -227,6 +229,9 @@ func _ready() -> void:
 	_bgm_player.name = "BgmPlayer"
 	_bgm_player.bus = "Master"
 	add_child(_bgm_player)
+	armageddon = preload("res://ui/armageddon_music.gd").new()
+	armageddon.name = "ArmageddonMusic"
+	add_child(armageddon)
 	for i in 8:
 		var player := AudioStreamPlayer.new()
 		player.name = "SfxPlayer%d" % i
@@ -243,7 +248,10 @@ func _ready() -> void:
 func set_music_settings(value: float, enabled: bool) -> void:
 	if _bgm_player == null:
 		return
-	_bgm_player.volume_db = linear_to_db(maxf(value, 0.0001) / 100.0) if enabled else -80.0
+	_music_db = linear_to_db(maxf(value, 0.0001) / 100.0) if enabled else -80.0
+	_bgm_player.volume_db = _music_db
+	if armageddon != null:
+		armageddon.set_volume_db(_music_db)
 
 
 func set_sound_settings(value: float, enabled: bool) -> void:
@@ -253,7 +261,7 @@ func set_sound_settings(value: float, enabled: bool) -> void:
 
 
 func play_bgm(track: String) -> void:
-	if _current_bgm == track:
+	if _current_bgm == track and _bgm_player.playing:
 		return
 	var file := str(BGM_TRACKS.get(track, ""))
 	if file.is_empty():
@@ -262,8 +270,17 @@ func play_bgm(track: String) -> void:
 	if stream == null:
 		return
 	_current_bgm = track
+	_bgm_player.volume_db = _music_db
 	_bgm_player.stream = stream
 	_bgm_player.play()
+
+
+func bind_music_state(state: GameState, db: ConfigDB) -> void:
+	armageddon.bind_state(state, db, _bgm_player)
+
+
+func detach_music_state() -> void:
+	armageddon.detach()
 
 
 func play(cue: String) -> void:
