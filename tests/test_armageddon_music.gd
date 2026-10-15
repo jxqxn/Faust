@@ -158,6 +158,17 @@ func test_headless_auto_close_preserves_original_music_state() -> void:
 	assert_eq(state.armageddon_rite_id, 5010013)
 	assert_true(state.is_armageddon)
 
+func test_timeout_does_not_run_normal_close_music() -> void:
+	var state := CloseState.new()
+	state.apply_rite_music(5003027, db, false)
+	var rite = state.create_rite_instance(5010013)
+	watch_signals(state)
+	RiteSettlement.expire(rite.uid, state, db, GameRNG.new(15))
+	assert_true(state.rite_settlements.is_empty())
+	assert_null(state.get_rite_instance(rite.uid))
+	assert_eq(state.armageddon_rite_id, 5003027)
+	assert_signal_not_emitted(state, "armageddon_music_requested")
+
 func test_real_audio_clock_wraps_at_clip_end_and_stop_marker_is_not_a_file() -> void:
 	var state := GameState.new()
 	var audio = _audio(state)
