@@ -204,6 +204,9 @@ static func pump(state, db, rng) -> void:
 		if job.phase == "done":
 			if not state.pending_operations.is_empty():
 				return
+			if not job.get("wait_for_close", false):
+				# Headless callers auto-close; UI does this in OnClose.b__0.
+				state.apply_rite_music(int(job.rite_id), db, false)
 			state.rite_settlements.erase(key)
 
 

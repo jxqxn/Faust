@@ -5,6 +5,9 @@
 class_name GameState
 extends RefCounted
 
+signal armageddon_music_requested(rite_id: int, activate: bool)
+signal round_music_requested
+
 const CardInstanceData = preload("res://sim/card_instance.gd")
 const SudanPoolCardData = preload("res://sim/sudan_pool_card.gd")
 
@@ -329,6 +332,20 @@ var over_reason := -2147483648
 var end_open := false
 var is_armageddon := false
 var armageddon_rite_id := 0
+
+
+## Player state and Animator activation are distinct in the original.
+## [SRC: StartRite.Do 0x51bcf0; OnClose.b__0 0x5b51c0;
+## dump.cs Player@0x179/0x17C, ArmageddonClipLoopNode@0x24/0x25.]
+func apply_rite_music(rite_id: int, db, on_create: bool) -> void:
+	if db == null:
+		return
+	var entry: Dictionary = db.sfx_config.get("armageddon_music_loop", {}).get(str(rite_id), {})
+	if entry.is_empty() or bool(entry.get("play_in_rite_create", false)) != on_create:
+		return
+	is_armageddon = true
+	armageddon_rite_id = rite_id
+	armageddon_music_requested.emit(rite_id, on_create or bool(entry.get("play_instant", false)))
 # Set when a silently-settled event chain requests game over; the UI checks
 # and clears it after its current surface closes.
 var over_pending := false

@@ -80,6 +80,7 @@ func _exit_tree() -> void:
 
 func _show_menu() -> void:
 	_clear_current()
+	_audio.detach_music_state()
 	_game_screen = null
 	var menu := MainMenu.new()
 	menu.setup(db)
@@ -171,6 +172,7 @@ func _show_game() -> void:
 		# Preserve loaded/preparing/running rite states. Merely showing the
 		# desktop cannot execute the next-round automatic-start transition.
 	_audio.play_bgm("main")
+	_audio.bind_music_state(state, db)
 	var gs := GameScreen.new()
 	gs.setup(state, db, rng)
 	gs.open_rite.connect(_on_open_rite)
@@ -573,6 +575,8 @@ func _on_back_to_prev() -> void:
 		return
 	var log_text := ""
 	if RoundLoop.back_to_prev_round_end(state, db):
+		_audio.play_bgm("main")
+		_audio.bind_music_state(state, db)
 		log_text = "已回到上一回合结束（第 %d 回合）。剩余回退次数: %s" % [
 			state.round_number,
 			"∞" if state.back_to_prev_left >= 9999 else str(state.back_to_prev_left),

@@ -1648,6 +1648,8 @@ func _continue_result_close() -> void:
 	# bypasses that branch in OnClose 0x5a3ae0. Never replay on reconstruction.]
 	if not _state.over_pending and _rite_id == 5010009:
 		_state.end_open = true
+	if not _state.over_pending:
+		_state.apply_rite_music(_rite_id, _db, false)
 	if int(_state.rite_result_display.get("uid", 0)) == _rite_uid:
 		_state.rite_result_display = {}
 	if not _state.over_pending:
