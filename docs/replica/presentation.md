@@ -1,9 +1,38 @@
 # 界面、输入、动画与声音
 
+<a id="armageddon-fix-20261015"></a>
+## 仪式专属音乐接线与恢复（2026-10-15）
+
+状态：2026-10-16 已合入 `codex/innovation`（`9b5eac2f`、`2fa9ae41`、`6099ba0d`），独立分支最终提交 `399653fb`。最终GPU全量79脚本、823/823测试、9054断言通过，零脚本错误；既存原作带结算/重载各54/54、随机13/13。本批基于上一批关闭边界修复，固定基线标签不移动；完整音频状态机与原作音频实录等价仍为🟡。
+
+| 原作边界 | 实现与验证 |
+|---|---|
+| StartRite.Do 成功创建后 | DeferredEffects._add_rite_and_note 成功返回UID才调用 GameState.apply_rite_music；失败吸附不写状态。使用原作5010201、主角卡及必需标签建立成功/失败夹具，未伪造生产配置 |
+| OnClose.b__0，OnRiteEnd 完成之后 | 同一音乐方法处理非创建条目；非即时条目只更新 Player 和 Animator ID，已经激活时仍切曲。普通结束自动保存发生在写状态之后；终局分支不写；无界面结算自动关闭时沿同一数据规则更新 |
+| 次日 b__5 / 白昼过场 | 在 delays 完成、进入 day_enter 之前发出通知；Player=true 而 Animator=false 才激活；已激活不重播。该通知是瞬时调用，不添加内容表或持久队列 |
+| 场景重建/读档/回退 | 绑定新状态时断开旧信号、取消旧淡出，按 Player 两字段恢复曲目；不保存播放秒数或淡出游标，因为原作 Player 未保存这些字段，Start从配置start恢复 |
+| SFxManager main_game → Armageddon | main_game 原始启用 ExitMusicStop(MainGame) 负责淡出普通音乐；Armageddon 单独 AudioStreamPlayer 负责专属轨。原资源中 Armageddon 的 ExitMusicStop 和 EnterMusicStop(MainGame) 被禁用，不误照抄为第二次淡出 |
+| 曲目切换与循环 | LoopArmageddonController 风格的淡出→读取当前Animator ID→从start播放→淡入；读取原始loop_start/loop_end，-1映射实际片长；AudioStreamPlayer自然结束回调重入循环，源资源不被修改 |
+| 音量与停止标记 | 原始variable.json提供各通道淡入淡出时间；Utils 0x3ab640的归一化四分之一次幂映射作用于独立通道增益，用户静音/音量另叠加。ArmageddonStop 是控制分支，绝不拼成素材文件；当前原始配置中的停止示例仍为注释 |
+
+新增播放器宿主 `ui/armageddon_music.gd` 对应原作 LoopArmageddonController、相关 StateMachineBehaviour 与 MusicFade* 方法，不生成转译内容。`audio-source-proof.json` 保存 `.c`/dump/原始Animator/配置哈希、DLL标量的RVA/文件偏移/字节；MD4 MonoScript ID与原始Controller序列化引用交叉定位启用组件。字节读取确认 -80/20/0.25 及 -1 哨兵；相同幂运算helper另见SRMath.TweenFunctions.ExpoEaseOut。原始 sfx_config 与 variable 均逐字节核对通过。
+
+### 验收边界
+
+- 最终专项 `audio-final.log`：新音乐10项与既有音频18项，共28/28、1425断言；包含两尺寸真实 InputEventMouseButton 命中结果与提示按钮，提交前不激活、关闭事件阻塞时不激活、隐藏结果面板、磁盘保存/重建、提示完成后播放及自动保存、再次读档恢复。`music-third.log` 的8/8、88断言为早期专项，不代替最终结果。
+- 最终全量 `full-final.log`：79脚本、823/823、9054断言、754.818秒；`full-final-original-receipt.json` 记录既存原作第4→5天带结算/重载各54/54与随机13/13。`final-receipt.json` 固定受测提交及9个改动文件哈希，合入后已核对正文一致。证据根为 `C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/`，脚本与日志登记在 external-evidence.json。
+- 创建成功/失败、延后激活、次日门槛、立即/非立即切换、设置静音、曲尾实际音频时钟重启、旧状态解绑、淡出中载入新状态、终局跳过分别有断言。部分边界用受控夹具隔离，未声称是玩家自然解锁终局的完整轨迹。
+- 淡出中重定向使用当前Animator ID，单个宿主合并尚未完成的重定向；跨帧反复Animator自转移的所有Coroutine竞态尚未与原作录音对拍，不标等价。
+- 普通主音乐难度层、结算音乐、结局音乐与所有其他Animator分支不在本批接线范围；不能把专属音乐恢复写成全游戏音频已完成。真实设备声压、原作录音波形与逐帧混音对拍未做；GPU测试使用Dummy输出驱动，可验证引擎播放与循环而非人耳听感。
+- 保留失败命令 `implementation-parse.log`：首次测试名写成不存在的 test_audio.gd，零测试；随后18项既有音频测试与新增专项分别通过，不把该失败命令计入通过数据。
+- 2026-10-16 边界补正：`Dead` 不进入正常 OnClose，依据 `RiteExtensions.Dead 0x501460`、DisplayClass0_0.b__2 0x505780（ReturnCards）、b__1 0x505630（Destroy/RemoveRite）及 dump.cs:312039–312045；无界面正常结算音乐接线必须排除 `kind=timeout`。`full.log` 含错误读取 rite_id 的脚本错误且未完成，不计通过；修正后 `timeout-fixed.log` 15/15、170断言通过。
+- 同日恢复补正：普通音乐淡出途中回退至非专属音乐存档时，同曲仍在播放也必须恢复用户音量，并取消旧淡出；专项同时验证播放器不会被旧过渡继续停止。`full-2.log` 为补此边界主动中止的中间版本，不计最终通过。
+
+
 <a id="armageddon-boundary-20261015"></a>
 ## 仪式专属音乐的状态与触发边界（2026-10-15）
 
-本批从 METHOD_MAP 的 end/armageddon 状态行继续逆向，未修改游戏实现。`is_armageddon` 与 `armageddon_rite_id` 是音乐恢复状态，不是独立战斗模式。原作反编译、dump.cs 字段、stringliteral.json 与 SFxManager.controller 参数/状态提供交叉证据；本批没有重新导入 Ghidra，不声称新增 REA Evidence，也未启动原作实机采集。
+以下保留修复前的逆向发现，当前接线状态见[本批实现](#armageddon-fix-20261015)。本次审计从 METHOD_MAP 的 end/armageddon 状态行继续逆向，审计时未修改游戏实现。`is_armageddon` 与 `armageddon_rite_id` 是音乐恢复状态，不是独立战斗模式。原作反编译、dump.cs 字段、stringliteral.json 与 SFxManager.controller 参数/状态提供交叉证据；本批没有重新导入 Ghidra，不声称新增 REA Evidence，也未启动原作实机采集。
 
 ### 已确认的原作分支
 
