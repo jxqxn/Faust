@@ -4608,6 +4608,198 @@
       "integrated_into": "docs/replica/presentation.md",
       "role": "仪式专属音乐状态边界逆向与克隆局部诊断",
       "boundary": "静态源码/字段/原始Animator及隔离回调；两项创建前提失败，不计动态证明；非REA新Evidence，非原作实机音频或真实输入验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/audio-final.log",
+      "bytes": 98312,
+      "sha256": "5b88867d7e3386a64e9546ecc03d3a2fa3eb41f2755e8150aeb0c49fd8b696c3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/audio-initial.log",
+      "bytes": 91393,
+      "sha256": "2832b6b402e8d5d006b11987f75d532cb912ba6eeeb166fafb7927a2145cffcc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/audio-source-proof.json",
+      "bytes": 7322,
+      "sha256": "e9c066d426e49d84696c4a9f003bd2a8bc0ec1cba6e2042097f0cc08a97ad983",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作静态源码、配置、Animator和DLL标量交叉证据",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/audio-source-proof.py",
+      "bytes": 4540,
+      "sha256": "4199dc0cc5bbcf301b2b443e260021158c3366d8539c15b6337912e291045c73",
+      "integrated_into": "docs/replica/presentation.md",
+      "role": "原作静态源码、配置、Animator和DLL标量交叉证据",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/final-receipt.json",
+      "bytes": 2718,
+      "sha256": "af9f95606b51edd34dd9e142547380fab2324d6765e8603aafbf3fda8d81affe",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-2-console.log",
+      "bytes": 100323,
+      "sha256": "0d9d08643c4536b30eae482253c988a7d40366e38e506569eb5122cae1fafc3b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-2-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-2.log",
+      "bytes": 85616,
+      "sha256": "665f00a9b1fd920f082f05d041ef152c47f2864b16a9006fc170395dc8554606",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-console.log",
+      "bytes": 1952087,
+      "sha256": "b458ec72dfee5b2cd8359abac17fe8a7604315e22e1f8339ad9f756b6caa21a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-final-console.log",
+      "bytes": 2086107,
+      "sha256": "bc6a8856a011402f163df9c47a4241cf2beca0c11a4cfb5be1564d2b6b4ce8a6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-final-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "0a1f4df7c8ab1b641ed369d6c580fee55879c602478f70cc029aa053b46eafbc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-final-stderr.log",
+      "bytes": 2787,
+      "sha256": "d4fe597a6f78ef9dae8b304ac7cf6d20e3fe5014821ff1f0a81ffe0a56e8010f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-final.log",
+      "bytes": 1982352,
+      "sha256": "8b7935530561e76ed8873d9c95ee64e22175cc96f7aa99516b6fb96c12434dce",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-original-receipt.json",
+      "bytes": 444765,
+      "sha256": "b815fc357480744eca79509478d0e79823cffb330925469e4656e746d6c83405",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full-stderr.log",
+      "bytes": 4459738,
+      "sha256": "5d7fd9adcbd4e09a0800d6b747b4690d06b17b9e778c797da6647f324f8e884d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/full.log",
+      "bytes": 6240706,
+      "sha256": "dd6019bf201207881f5b0705a9d4fca022eaa50e225674e5964fc4a90d379b0c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/implementation-parse.log",
+      "bytes": 431,
+      "sha256": "d27ef7efbf95cd7b78514f3e7c280d8be82fc3cbcc3da93adbd014c1a4c272c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/music-first.log",
+      "bytes": 5730,
+      "sha256": "6429f5dfa5f4ba64b53ab5f4783a8221310ecc1b84142691043600c9e30e1f50",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/music-second.log",
+      "bytes": 6381,
+      "sha256": "dabcdb41ce03dbbb9832d3280f842a27993f77d633eee653f670512279ebdfab",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/music-third.log",
+      "bytes": 6764,
+      "sha256": "10839fc369b8ff05e1151cad105c393046697cd932e16be86a8faef10d016336",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/register-evidence.py",
+      "bytes": 1758,
+      "sha256": "b99d70d6216078c167348feb8576f18271635835c9815499b2d3eaf61f419795",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本地复跑或验证脚本",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/run-full.ps1",
+      "bytes": 1700,
+      "sha256": "df05a2144a422e3bba85081241bde5dcd405a45e44e9e9dbde9697060347d9f9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本地复跑或验证脚本",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/timeout-fixed.log",
+      "bytes": 12988,
+      "sha256": "6d195306d35ab44a15c533cc9eef1f336562966fc5d0cd670ff7095caed109d8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式音乐接线测试或诊断产物",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261015-armageddon-audit/verify-final.py",
+      "bytes": 2701,
+      "sha256": "12d435867932deda8732dc5cd629c03c2cf27017c3c706057408fc882f37eb43",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "本地复跑或验证脚本",
+      "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
