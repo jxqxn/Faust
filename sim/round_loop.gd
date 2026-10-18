@@ -712,16 +712,35 @@ static func _redraws_per_round(state, db) -> int:
 
 
 ## UpdateHandCardPos: normalize bag positions on the current page to 1..N in
-## hand order. IsCurrentHandCard checks BagIndex and own/adherent/player;
+## CompareBagPos order. IsCurrentHandCard checks BagIndex and own/adherent/player;
 ## hidden NPCs and other pages retain their existing positions.
 ## [SRC: GameController.c @ UpdateHandCardPos (0x559a70) L1060-1097]
 static func update_hand_card_pos(state) -> void:
 	if state == null or not state.has_method("get_card_instance"):
 		return
-	# Active Sultan presentation is a host rail extension, not IsHandCard.
+	# Sultan definitions gain own during source config post-processing.
 	var page: Array = state.visible_rail_card_uids().filter(func(uid): return state.is_hand_card(int(uid)))
+	# [SRC: GameController.UpdateHandCardPos 0x559a70 sorts with
+	# b__139_0 0x56f390 (dump.cs:319283), CompareBagPos 0x37eff0.]
+	page.sort_custom(func(a, b):
+		var left = state.get_card_instance(int(a))
+		var right = state.get_card_instance(int(b))
+		var lp: int = left.bag_pos if left.bag_pos > 0 else 2147483647
+		var rp: int = right.bag_pos if right.bag_pos > 0 else 2147483647
+		if lp != rp:
+			return lp < rp
+		if left.card_id != right.card_id:
+			return left.card_id < right.card_id
+		return left.uid < right.uid
+	)
 	for index in page.size():
 		state.get_card_instance(int(page[index])).bag_pos = index + 1
+	var next := 0
+	for index in state.rail_order.size():
+		if state.rail_order[index] in page:
+			state.rail_order[index] = page[next]
+			next += 1
+	state._sync_hand_order_from_rail()
 
 
 ## Shelter for ANY card (sudan execution included) is presence in any rite

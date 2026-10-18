@@ -176,3 +176,22 @@ func test_payment_consumes_oldest_gold_objects_first() -> void:
 	assert_eq(st.coin_count, 2)
 	assert_eq(remaining_uids.size(), 1)
 	assert_eq(st.get_card_instance(remaining_uids[0]).count, 2)
+
+
+# [SRC: GenCoin.Do 0x510b40; NoteCardBeReward 0x38ea40; original
+# 2026-10-16 manager trace records [10002,2000029,223,5] on round 5.]
+func test_coin_reward_journal_uses_current_round_count_and_survives_save():
+	var st := _new_state()
+	st.round_number = 5
+	st.add_coin(5, db)
+	var uid: int = st.gold_card_uids()[0]
+	var expected := {"type": 10002, "id": 2000029, "uid": uid, "count": 5}
+	assert_eq(st.notes[4].back(), expected)
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(st), restored, db)
+	assert_eq(restored.notes, st.notes, "reload must not duplicate a reward")
+	var before: Array = st.notes.duplicate(true)
+	st.reconcile_gold(9, db)
+	assert_eq(st.notes, before, "save reconciliation is not a GenCoin reward")
+	st.add_coin(-2, db)
+	assert_eq(st.notes, before, "negative count fails NoteCardBeReward own > 0 gate")

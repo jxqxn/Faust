@@ -251,6 +251,16 @@ func _load_cards(path: String) -> void:
 	for key in parsed:
 		var cd: Dictionary = parsed[key]
 		var id := int(cd.get("id", key.to_int()))
+		# [SRC: Datapool.<LoadConfig>d__154.MoveNext 0x455ae0 L1058-1067;
+		# stringliteral 0x2596500=sudan, 0x2580360=own. Runtime post-load
+		# defaults only; the original JSONC stays byte-identical.]
+		var tag_row: Dictionary = cd.get("tag", {})
+		var sudan_name: String = tag_code_to_name.get("sudan", "sudan")
+		var own_name: String = tag_code_to_name.get("own", "own")
+		if str(cd.get("type", "")) == "sudan" or int(tag_row.get(sudan_name, tag_row.get("sudan", 0))) > 0:
+			if int(tag_row.get(own_name, tag_row.get("own", 0))) <= 0:
+				tag_row[own_name] = 1
+				cd["tag"] = tag_row
 		cards[id] = cd
 		cards_by_str[str(id)] = cd
 

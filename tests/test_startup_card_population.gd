@@ -142,3 +142,50 @@ func test_rendered_rail_uses_original_sample_visibility_instead_of_player_popula
 	var displayed: Array = screen._ordered_hand_cards().map(func(card): return card.card_uid)
 	assert_eq(displayed, state.visible_rail_card_uids())
 	assert_eq(displayed.size(), 5, "four ordinary cards plus the active Sultan card")
+
+
+func test_position_compaction_sorts_positions_then_id_and_uid():
+	var state := fresh()
+	var actor = state.get_card_instance(state.player_actor_uid)
+	actor.bag_pos = 0
+	var high := state.add_card_to_hand(2000029, db)
+	var low := state.add_card_to_hand(2000006, db)
+	var same := state.add_card_to_hand(2000029, db)
+	for uid in [high, low, same]:
+		state.get_card_instance(uid).tags["own"] = 1
+		state.get_card_instance(uid).bag_pos = 8
+	RoundLoop.update_hand_card_pos(state)
+	assert_eq(state.visible_rail_card_uids(), [low, high, same, actor.uid])
+	assert_eq(actor.bag_pos, 4, "zero means unplaced, after positive positions")
+
+
+func test_close_sort_promotes_reward_and_returned_card_then_persists():
+	var state := fresh()
+	var actor = state.get_card_instance(state.player_actor_uid)
+	actor.bag_pos = 1
+	var returned := state.add_card_to_hand(2000372, db)
+	state.get_card_instance(returned).tags["adherent"] = 1
+	state.get_card_instance(returned).bag_pos = 3
+	state.add_coin(5, db)
+	var reward: int = state.gold_card_uids()[0]
+	var job := {"back_card_uids": [returned], "deferred": {"card_ops": [
+		{"op": GameState.CARD_OP_NEW, "card_uid": reward}]}}
+	RiteSettlement._sort_closed_result(job, state, db)
+	assert_eq(state.visible_rail_card_uids(), [reward, returned, actor.uid])
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+	assert_eq(restored.visible_rail_card_uids(), state.visible_rail_card_uids())
+	assert_eq(restored.get_card_instance(actor.uid).bag_pos, 3)
+
+
+func test_sultan_ownership_is_a_load_default_without_mutating_source_content():
+	var raw: Dictionary = SourceJSON.parse_string(FileAccess.get_file_as_string("res://content/cards.json"))
+	var own: String = db.tag_code_to_name["own"]
+	assert_false(raw["2010012"].tag.has(own), "raw config has no default ownership")
+	assert_eq(int(db.get_card(2010012).tag.get(own, 0)), 1)
+	var state := fresh()
+	var uid := state.add_card_to_hand(2010012, db)
+	assert_true(state.is_hand_card(uid, db), "source IsCurrentHandCard includes a loaded Sultan card")
+	state.get_card_instance(uid).bag_pos = 7
+	RoundLoop.update_hand_card_pos(state)
+	assert_eq(state.get_card_instance(uid).bag_pos, 1, "positive positions precede the unplaced actor")
