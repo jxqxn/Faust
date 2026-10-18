@@ -4800,6 +4800,950 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "本地复跑或验证脚本",
       "boundary": "见2026-10-15至16日音乐批次；full/full-2与零测试日志不计通过；非原作音频录音等价证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/000-household-close-after.jpg",
+      "bytes": 521884,
+      "sha256": "e67cee609a3f2a7e5f291719e10c152605f2cd24a75da82a3ff15107e080a461",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/000-household-close-before.jpg",
+      "bytes": 549362,
+      "sha256": "806830c321ba5ebee72651418d09e8c1cbed276342ca9bec25392ee4ddd52df5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/001-household-open-again-after.jpg",
+      "bytes": 546931,
+      "sha256": "796fef0a32093e785e92139e9f43ad624252c82b63dd968f3221a4c5c01b9a3d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/001-household-open-again-before.jpg",
+      "bytes": 521884,
+      "sha256": "e67cee609a3f2a7e5f291719e10c152605f2cd24a75da82a3ff15107e080a461",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/002-place-falaj-helper-after.jpg",
+      "bytes": 547131,
+      "sha256": "447637aae5318ecdacc5fd3f82d73c9187f6961a2b81f95dc8a307ce4e11b0cb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/002-place-falaj-helper-before.jpg",
+      "bytes": 546931,
+      "sha256": "796fef0a32093e785e92139e9f43ad624252c82b63dd968f3221a4c5c01b9a3d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/003-household-confirm-after.jpg",
+      "bytes": 511870,
+      "sha256": "5dc5fce72410fba8e114018cc205bde56f0371de435783c1712bdf4d7a0a9430",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/003-household-confirm-before.jpg",
+      "bytes": 547131,
+      "sha256": "447637aae5318ecdacc5fd3f82d73c9187f6961a2b81f95dc8a307ce4e11b0cb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/004-next-day5-after.jpg",
+      "bytes": 511934,
+      "sha256": "1f042286e78cd4f8ed89773e498c86c0233272bb502aacf35a6eca012d0841b9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/004-next-day5-before.jpg",
+      "bytes": 511870,
+      "sha256": "5dc5fce72410fba8e114018cc205bde56f0371de435783c1712bdf4d7a0a9430",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/backup-manifest.json",
+      "bytes": 2464,
+      "sha256": "0ff5d3e7c9d6893cc2700564e114abd98dc8d4104b9ec8db2b6ebe42cb2dc704",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/capture.py",
+      "bytes": 2396,
+      "sha256": "2331e5c4309242583352459b6de19d6359833f854323538ac3917a46a222ae50",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/comparison-summary.json",
+      "bytes": 2849,
+      "sha256": "f004fd1fe37f9569ab3e55d64b9968c3d8767fa8d29567e2f402d21facd6a5e0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/day5-first-result.jpg",
+      "bytes": 531681,
+      "sha256": "5d46456fca4785a7378ea1083aa9b453ef5f5a5759cb25411aca42fe7dc72f76",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/auto_save.json",
+      "bytes": 45677,
+      "sha256": "b50c1ab298842ad212a43a755524adf945edf3b0478aaa2a5a7a61cd46d5710a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/failed_messages.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/global.json",
+      "bytes": 1778,
+      "sha256": "b212d9f86de14c080be654c2d88eb22c4d9b9e56631c6adaa4f1c4237aed1cab",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/global.json.bak.json",
+      "bytes": 1778,
+      "sha256": "b212d9f86de14c080be654c2d88eb22c4d9b9e56631c6adaa4f1c4237aed1cab",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_0_end.json",
+      "bytes": 36291,
+      "sha256": "467d30a498879d29004bd7ce9e57775f607dfa7d53e386f0e3d524f3ab295a0e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_1.json",
+      "bytes": 44050,
+      "sha256": "41922fdeab08dffba22fc3de6fcfcec256448348c876b0dec3e9119b3456050e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_1_end.json",
+      "bytes": 44244,
+      "sha256": "a01900daee3a5afd0f44039ee874ee16ba0bcb33bf3be6769037cf25ab0ed256",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_2.json",
+      "bytes": 44801,
+      "sha256": "ff2421443d36a8c092152f66aa9756bae13895e03aabcca92eccab2e0e7cb280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_2_end.json",
+      "bytes": 44801,
+      "sha256": "58013216c7d4dc14b93fefa63839148b0db33fb155038de7b412e51594ecb47c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_3.json",
+      "bytes": 44956,
+      "sha256": "c654c28bfc53998424c8329a851832df8388d9f2b3e4f9b8463e1e0e877f6e2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_3_end.json",
+      "bytes": 44956,
+      "sha256": "0189c9c30e9babe8b75e48394a1fab44ecce33aef83f796473faa3120fac9f4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_4.json",
+      "bytes": 44942,
+      "sha256": "59558661d7cfd89523e6db54c37552df4a190bd439b8a359aa288cd68ae57b9f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_4_end.json",
+      "bytes": 44977,
+      "sha256": "df22585737398f65e66ec4f219f64409068459b2fd016b444ede86b373beea3d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/round_5.json",
+      "bytes": 45677,
+      "sha256": "2dc2fd38132cb41695f995a38262559ec341397d97843a519b58dcf53492a1c5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/user_archive.json",
+      "bytes": 426,
+      "sha256": "7aa59a07aa9f729a033ace8a4418edb066d0015b4f1857ef3631a261d769ff85",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/final-save-snapshot/USERARCHIVE/000.json",
+      "bytes": 44065,
+      "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/generated-save-files/round_5.json",
+      "bytes": 45677,
+      "sha256": "2dc2fd38132cb41695f995a38262559ec341397d97843a519b58dcf53492a1c5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/household-helper-placed.jpg",
+      "bytes": 549362,
+      "sha256": "806830c321ba5ebee72651418d09e8c1cbed276342ca9bec25392ee4ddd52df5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/auto_save.json",
+      "bytes": 44977,
+      "sha256": "bb6e8e9f63db87cc473ba4d6a5e95db41a1071b6b21de6ff48f38c400321138c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/failed_messages.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/global.json",
+      "bytes": 1762,
+      "sha256": "355a8bdb3f3a3cca391cddbf947540b42d5ab93da7a74f65937ed542dd72bac8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/global.json.bak.json",
+      "bytes": 1762,
+      "sha256": "355a8bdb3f3a3cca391cddbf947540b42d5ab93da7a74f65937ed542dd72bac8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_0_end.json",
+      "bytes": 36291,
+      "sha256": "467d30a498879d29004bd7ce9e57775f607dfa7d53e386f0e3d524f3ab295a0e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_1.json",
+      "bytes": 44050,
+      "sha256": "41922fdeab08dffba22fc3de6fcfcec256448348c876b0dec3e9119b3456050e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_1_end.json",
+      "bytes": 44244,
+      "sha256": "a01900daee3a5afd0f44039ee874ee16ba0bcb33bf3be6769037cf25ab0ed256",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_2.json",
+      "bytes": 44801,
+      "sha256": "ff2421443d36a8c092152f66aa9756bae13895e03aabcca92eccab2e0e7cb280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_2_end.json",
+      "bytes": 44801,
+      "sha256": "58013216c7d4dc14b93fefa63839148b0db33fb155038de7b412e51594ecb47c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_3.json",
+      "bytes": 44956,
+      "sha256": "c654c28bfc53998424c8329a851832df8388d9f2b3e4f9b8463e1e0e877f6e2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_3_end.json",
+      "bytes": 44956,
+      "sha256": "0189c9c30e9babe8b75e48394a1fab44ecce33aef83f796473faa3120fac9f4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_4.json",
+      "bytes": 44942,
+      "sha256": "59558661d7cfd89523e6db54c37552df4a190bd439b8a359aa288cd68ae57b9f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/round_4_end.json",
+      "bytes": 44977,
+      "sha256": "7ec7358909d1f5c84eab5db72222a0a24028a48bb27c69923e5bc1d1c702c100",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/user_archive.json",
+      "bytes": 426,
+      "sha256": "7aa59a07aa9f729a033ace8a4418edb066d0015b4f1857ef3631a261d769ff85",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/interrupted-save-snapshot/USERARCHIVE/000.json",
+      "bytes": 44065,
+      "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/auto_save.json",
+      "bytes": 44942,
+      "sha256": "a5b18089e30239afeaad6dd3226929b572e41145fe7065e697763d5a5372b98d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/failed_messages.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/global.json",
+      "bytes": 1762,
+      "sha256": "f31d6be8be97eba24cc1abc4f464e7bb3b3845eb8d95d45b3c643af5eb18fdd0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/global.json.bak.json",
+      "bytes": 1762,
+      "sha256": "f31d6be8be97eba24cc1abc4f464e7bb3b3845eb8d95d45b3c643af5eb18fdd0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_0_end.json",
+      "bytes": 36291,
+      "sha256": "467d30a498879d29004bd7ce9e57775f607dfa7d53e386f0e3d524f3ab295a0e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_1.json",
+      "bytes": 44050,
+      "sha256": "41922fdeab08dffba22fc3de6fcfcec256448348c876b0dec3e9119b3456050e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_1_end.json",
+      "bytes": 44244,
+      "sha256": "a01900daee3a5afd0f44039ee874ee16ba0bcb33bf3be6769037cf25ab0ed256",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_2.json",
+      "bytes": 44801,
+      "sha256": "ff2421443d36a8c092152f66aa9756bae13895e03aabcca92eccab2e0e7cb280",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_2_end.json",
+      "bytes": 44801,
+      "sha256": "58013216c7d4dc14b93fefa63839148b0db33fb155038de7b412e51594ecb47c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_3.json",
+      "bytes": 44956,
+      "sha256": "c654c28bfc53998424c8329a851832df8388d9f2b3e4f9b8463e1e0e877f6e2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_3_end.json",
+      "bytes": 44956,
+      "sha256": "0189c9c30e9babe8b75e48394a1fab44ecce33aef83f796473faa3120fac9f4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_4.json",
+      "bytes": 44942,
+      "sha256": "59558661d7cfd89523e6db54c37552df4a190bd439b8a359aa288cd68ae57b9f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/round_4_end.json",
+      "bytes": 44942,
+      "sha256": "ce96c93097b74f67fc959f37baf7a2e17a764e5e395ed7da09246f9a7c718671",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/user_archive.json",
+      "bytes": 426,
+      "sha256": "7aa59a07aa9f729a033ace8a4418edb066d0015b4f1857ef3631a261d769ff85",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-backup/USERARCHIVE/000.json",
+      "bytes": 44065,
+      "sha256": "13c9349963a729eb1d75c672b3a9c1ea3a339ce8629f73a51f9bce3ff4e54682",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/original-before-day5.json",
+      "bytes": 44977,
+      "sha256": "f249b84ba4b0e4c7aeea40ec634b8a706d2deee8cd35b70fd6cddc043e8c4e97",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/rea-runtime-availability.json",
+      "bytes": 3227,
+      "sha256": "8fb1abb8c6d5d26dfb183c3a4f1c9b86d5768babc4c14679378674e066037fc5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/000-continue-after.jpg",
+      "bytes": 62924,
+      "sha256": "0b2faa0b86afe7dc80b3ca45340f82cba56878f327db0c145255a2e6aaee7ebe",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/000-continue-before.jpg",
+      "bytes": 220647,
+      "sha256": "2329a339b9985e4b17bf9cd2cc3c84ddec481bb9a7a605ef520b659e76da3c6f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/001-next-day5-after.jpg",
+      "bytes": 510955,
+      "sha256": "0e633ef563a0c350c29cfe9e1e799821c13f5b9a8806afefa76e8621a54e919e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/001-next-day5-before.jpg",
+      "bytes": 511314,
+      "sha256": "3a82179a3a63f10e2855d689e9fbd221f0cc0f591eedc5a9235543cf6b894194",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/002-court-close-after.jpg",
+      "bytes": 468162,
+      "sha256": "8aec6a202c50170ffc410ba7bfe7861b0db6041f6c827729d61623832e31b2a8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/002-court-close-before.jpg",
+      "bytes": 520845,
+      "sha256": "4ff6171f0cb6950eeab95be0abf2b21eea773798b8392b97e74b3774d768ad78",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/003-household-roll-after.jpg",
+      "bytes": 472741,
+      "sha256": "7e5cb0c5abc19b5517790859e2bd2fcf1095a7debd4fe9d15957fd1284a65e59",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/003-household-roll-before.jpg",
+      "bytes": 472260,
+      "sha256": "0b5f1ccac474a60cc432bc7f5582919ca5bc529b8fd21e1ac24a2fd6349360dd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/004-dice-tray-after.jpg",
+      "bytes": 482181,
+      "sha256": "7c92a37e8309f923de1ab2aaa23736b6f46e8ff365a23173233ce22e13d87388",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/004-dice-tray-before.jpg",
+      "bytes": 472187,
+      "sha256": "7fe767dd393a09a27f626bde03e74712ab14dca56993096d0aea6e30cfc48f15",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/005-accept-three-successes-after.jpg",
+      "bytes": 474609,
+      "sha256": "cdce10eb002c882ebd919ea94aa8f5e4bffdd8c0aa1922469da341ad06da064b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/005-accept-three-successes-before.jpg",
+      "bytes": 475783,
+      "sha256": "46867180519601a79b0e12dffd3e1e3c87767ecd1fd0fda864acdd435d4b6e4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/006-accept-dice-center-after.jpg",
+      "bytes": 497425,
+      "sha256": "7d7275e26aa48f48410ad06f37d21c17de4e1fe9e00a57e900802699a606e9fe",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/006-accept-dice-center-before.jpg",
+      "bytes": 475046,
+      "sha256": "f3da858c32295a72a1cb9b04e8ceb9637b35a22ad51e366ef1773465b618d0af",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/007-household-final-close-after.jpg",
+      "bytes": 384318,
+      "sha256": "c8513a048f44d1b2bc5563fbb0041828be81d28c8a6ed4012b49895ee16abd8d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/007-household-final-close-before.jpg",
+      "bytes": 535377,
+      "sha256": "f3520de97b57b17c8c37f35b47cf15cb9c83e5602f9c9f43a540fc1e532ed67f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/008-dismiss-stack-guide-after.jpg",
+      "bytes": 530927,
+      "sha256": "888da7d229221cb6dbfd4fa495139496e34805d343fc3dade21bb47eece4b2b5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/008-dismiss-stack-guide-before.jpg",
+      "bytes": 539361,
+      "sha256": "b687d7ce22f6d44ddb6460090a5ab2a6a774ae6927606b4d0d2c28f9e50cabf1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/009-close-timeout-guide-after.jpg",
+      "bytes": 540045,
+      "sha256": "d1b5ce4ac2c174d39d4aacd2918622e700f53763d4bd1ef2a33a4bfb258cdd99",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/009-close-timeout-guide-before.jpg",
+      "bytes": 530927,
+      "sha256": "888da7d229221cb6dbfd4fa495139496e34805d343fc3dade21bb47eece4b2b5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/010-close-back-round-guide-after.jpg",
+      "bytes": 539746,
+      "sha256": "6deb1abc10026348ceeb550b63d4e758297a00a966bf3bd1e343f1d5d3da9ba1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/010-close-back-round-guide-before.jpg",
+      "bytes": 540045,
+      "sha256": "d1b5ce4ac2c174d39d4aacd2918622e700f53763d4bd1ef2a33a4bfb258cdd99",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/011-open-menu-after.jpg",
+      "bytes": 531108,
+      "sha256": "0869a3a2d10bad96014966bf144d5dc8700a51c0eb8e4e61c2ed58d059b65c2c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/011-open-menu-before.jpg",
+      "bytes": 531069,
+      "sha256": "ba39fa59336f59c477a56178584439c3eb85d3c7142523d4308b66f44174a126",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/012-save-exit-after.jpg",
+      "bytes": 223678,
+      "sha256": "c6d0be0f0779f658868bdbf731f820b848b5972c39a1c9461f055539a0e1b1e8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/012-save-exit-before.jpg",
+      "bytes": 325586,
+      "sha256": "f8f239140c7d0598d6327e96843b8b82f62a375885b3c0016bba66da593a1670",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/013-reload-day5-after.jpg",
+      "bytes": 62936,
+      "sha256": "c95c26fd09fd055e826617459b7f77dbcd684544b821198f4d87f7b3f6bcc765",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/013-reload-day5-before.jpg",
+      "bytes": 223678,
+      "sha256": "c6d0be0f0779f658868bdbf731f820b848b5972c39a1c9461f055539a0e1b1e8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/capture.py",
+      "bytes": 2396,
+      "sha256": "2331e5c4309242583352459b6de19d6359833f854323538ac3917a46a222ae50",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-console.log",
+      "bytes": 15526,
+      "sha256": "d10162fdc480823d0116c3d804148985f6af45d0a660158fa4bf10ce5fe615b4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-oracle-after.png",
+      "bytes": 3588133,
+      "sha256": "a7e399adbf44f7094d6abc49e48193f19707fe34f106923942d526e096164a6b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-oracle-before.png",
+      "bytes": 3529255,
+      "sha256": "7afe41015bb877b22a6f55322da4a7aec421c9df8d8e68ab88010773ec57e22e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-oracle-household-before-close.png",
+      "bytes": 3354980,
+      "sha256": "4332de763196c1886e3fed5c627f383da5d2e1dfaa289cbeeffd90b06e3452f0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-oracle-reloaded.png",
+      "bytes": 3587753,
+      "sha256": "d815f6ce71920eb7bd99a74143828ba57111184268b8da5fcdb4eacc1fda403c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-receipt.json",
+      "bytes": 456320,
+      "sha256": "2fa93c03c58b2168b2135208f14eac1b0a6818ef3f379e6a7c8032f01d39e9e3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/clone-probe.log",
+      "bytes": 13316,
+      "sha256": "846e627359213307ae7265f774cf613ac584ab56c21fea2c3be09246ae6078c3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/day5-reloaded.jpg",
+      "bytes": 531263,
+      "sha256": "3e7958f561fe20b922fe4399856ad097787160203594b6ca13a5e4867a0a515e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/gameplay-random-tape.json",
+      "bytes": 4733,
+      "sha256": "f4137ba9789f653db31ad8adbd223051aee3db798a02a993e9192fac1155efbd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/original-after-save-exit.json",
+      "bytes": 45677,
+      "sha256": "dd1eda808bf2e1de6e7605a545f7c84ac378f37cf8baa948e19b563e117528c6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/original-after.json",
+      "bytes": 45677,
+      "sha256": "90333b7075c2109562fc68eb9b6f796d0a6d1343545431f6ce8b5d4b8726f338",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/original-before.json",
+      "bytes": 44977,
+      "sha256": "60e34b5b255fbb94bdc42a4837313def6baaa42f13f274ece37e288575862fad",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/original-reloaded.json",
+      "bytes": 45677,
+      "sha256": "b50c1ab298842ad212a43a755524adf945edf3b0478aaa2a5a7a61cd46d5710a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/random-classification.json",
+      "bytes": 1793,
+      "sha256": "3c9b004c8f62a4c20979cfbcf983dd3e9f559f6562a9d7aab7ff475fb6a861a9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/run-focused.gd",
+      "bytes": 2349,
+      "sha256": "8be864eb5a4d045283e4e1db55413b4d4ad37c49563b72f9c9ee6808528bbb0b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/run-replay.ps1",
+      "bytes": 1106,
+      "sha256": "9b26a9234f1d7bba9a864dfaf1c68ab6402b91df6bc7b7d4ca64e838530566e6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/runtime-calls.jsonl",
+      "bytes": 35070,
+      "sha256": "240fc266e8214cd37c8e46461cf4d7983f8509f190fb8860dbdbecf84135eaf7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/stop-capture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/test_manager_replay.gd",
+      "bytes": 11255,
+      "sha256": "b1b01074751fff9ddc48c228f13ada53da4123a34ccdebba2619623058aee268",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/retry/ui-actions.jsonl",
+      "bytes": 1313,
+      "sha256": "1d96ddad797989272f5db511eea14e443ef7c161f1a524baa402356030daa283",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/runtime-calls.jsonl",
+      "bytes": 146046,
+      "sha256": "03cf3b6a55ce068fd677cfb4db94fdc8380a4df45c9c4309d8c395f02753203a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/save-restoration.json",
+      "bytes": 2074,
+      "sha256": "02fc221dff2732c806f43d4120cf7a9ec9dfdb64b4fcd3b43392fd0d07a780ce",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/stop-capture",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/ui-actions.jsonl",
+      "bytes": 478,
+      "sha256": "d30bf04902c47bbe79fc773fd0b7f5ee40a0b3c6eb3f68a163508939171c5ed0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
+      "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
