@@ -1,5 +1,31 @@
 # 验收、证据与当前交付状态
 
+<a id="manager-runtime-20261016"></a>
+## 新增原作轨迹：法拉杰治理家业（2026-10-16采集，17日归档）
+
+**当前结果：新增轨迹未通过；结算、磁盘重建各52/54。** 旧无人治理样本54/54及既有823测试通过不能覆盖本次失败。受测代码为 `6b57cce1`，本批没有修改游戏实现。
+
+从方法表“完整家业→关闭→次日”项继续。原作真实鼠标完成：第4天已派遣法拉杰→下一天→宫廷结果关闭→家业4骰检定（3成功，不重投、不用金骰）→领取5金币→关闭结果与堆叠/期限/回溯提示→保存退出→继续读档。原作结算后、保存退出、重载后三份JSON仅saveTime不同。原始15个存档已按备份逐文件恢复并核验SHA-256；新增轮次文件移入证据目录保留。
+
+### 工具与证据边界
+
+- REA `binary_session` 实测此Windows宿主的native UI/process capture不可用；能力检查保存在 `rea-runtime-availability.json`。原作输入来自Computer Use，方法/随机采样来自本地Frida `Interceptor.attach`，不能称为REA原生运行采集。
+- 第一轮在宫廷结果界面中断，进程随后已不存在，原因未确认；`interrupted-save-snapshot`、首次日志与截图保留。成功采样在 `retry/`，不混拼两轮随机数据。
+- 被动方法记录确认正常路径 `Settlement.b__5 → OnClose → OnRiteEnd → OnClose.b__0`，两次关闭后才进入 `OnNextRound.b__5`；不等于已测到阻塞式OnRiteEnd事件。仅采方法进入/返回，未读取Promise完成值，未录制音频。
+- 26项候选规则随机带被复刻按顺序、边界全部消费且无错误；其中共同Shuffle调用点尚缺上层调用栈，分类含配置/时序推断，不能宣称完整随机轨迹已独立证明。具体分类与局限见 `retry/random-classification.json`。
+- 外部回放探针保留旧测试原件，新增有人治理文本与骰子接受动作；复刻用真实InputEventMouseButton命中Next按钮接受骰子，与原作骰盘/中心点击控件不同，因此不构成控件1:1通过。探针2测试中1失败，200/204断言，58.205秒；没有删掉差异断言。
+
+### 新登记差异（修复前基线）
+
+| 投影 | 原作 | 克隆 | 源码定位与后续门禁 |
+|---|---|---|---|
+| `notes` | 第5页在家业完成日志前写入 `[10002,2000029,223,5]` | 缺失金币奖励日志 | `GenCoin.Do 0x510b40` 在count/bagpos写后调用 `NoteCardBeReward 0x38ea40`，再触发CardBorn；`_grant_gold`漏调用。只接GenCoin奖励路径，避免reconcile/旧档恢复伪造日志；须验证own标签门及CardBorn观察顺序 |
+| `bag_positions` | 法拉杰UID130位置2；UID29/31/21位置3/4/5 | 法拉杰位置4；后三者2/3/4 | `Settlement.b__5 0x5b3e20`返还卡后调用 `UpdateHandCardPos 0x559a70`；克隆返还仅add_card_to_hand。须核对排序比较器、同位置/跨包规则及调用时点，不把本例位置硬编码 |
+
+源指针：`decompiled/GenCoin.c:98–131`、`PlayerExtensions.c:2124–2144`（奖励门）、`RiteResultPanelController.__c__DisplayClass56_0.c:537–549`（返还及整理）、`GameController.c:1005–1097`（筛选/排序/重编号）；`dump.cs:314369–314370`、`388827`、`320004`；新原作存档为独立信号。游戏日志notes并非begin_guide提示记录。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261016-runtime-replay/`，全文件登记于[外部证据清单](external-evidence.json)。`retry/clone-probe-receipt.json`保留全部投影，`comparison-summary.json`是紧凑差异，`retry/run-replay.ps1 -Prefix <新名称>`离线复跑。修复应从保留复刻基线的修复分支推进，先使新增与旧原作带同时通过，再进行完整功能链验收；本次没有覆盖消耗品、终局音乐、两尺寸或音画时序闭合，维持🟡。
+
 <a id="armageddon-fix-20261015"></a>
 ## 仪式专属音乐接线验证（2026-10-15）
 
