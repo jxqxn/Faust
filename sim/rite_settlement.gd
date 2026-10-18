@@ -208,6 +208,8 @@ static func pump(state, db, rng) -> void:
 				# Headless callers auto-close; UI does this in OnClose.b__0.
 				# Dead has no OnClose callback and must not activate its music.
 				state.apply_rite_music(int(job.rite_id), db, false)
+			if job.get("kind", "settlement") != "timeout" and not state.over_pending:
+				_sort_closed_result(job, state, db)
 			state.rite_settlements.erase(key)
 
 
@@ -252,6 +254,8 @@ static func _return_normal_cards(job: Dictionary, state, db) -> void:
 				card.slot_key = ""
 			else:
 				state.add_card_to_hand(card.uid)
+			# [SRC: Settlement.b__5 0x5b3e20 .c:549, after each survivor.]
+			RoundLoop.update_hand_card_pos(state)
 	while int(job.clean_cursor) < job.consumed_cards.size():
 		var uid := int(job.consumed_cards[int(job.clean_cursor)])
 		job.clean_cursor = int(job.clean_cursor) + 1
@@ -297,3 +301,21 @@ static func _post_lives(job: Dictionary, state, db, rng) -> void:
 			{"card_uid": uid, "self_card_uid": uid, "settlement_job": str(job.uid)})
 		if not state.pending_operations.is_empty() or state.over_pending:
 			return
+
+
+## OnClose accumulates resultCards/backCards before OnRiteEnd; b__0 promotes
+## them via FlashAndSortCard before resolving the final Promise.
+## [SRC: RiteResultPanelController.c OnClose 0x5a3ae0 L1202-1280;
+## DisplayClass62_0.b__0 0x5b51c0 L121; GameController.FlashAndSortCard
+## 0x54eff0; comparator 0x56f1c0, dump.cs:319322/325467-325468.]
+static func _sort_closed_result(job: Dictionary, state, db) -> void:
+	var selected: Array = job.get("back_card_uids", []).duplicate()
+	for op in job.get("deferred", {}).get("card_ops", []):
+		if int(op.get("op", -1)) in [GameState.CARD_OP_NEW, GameState.CARD_OP_COPY]:
+			selected.append(int(op.get("card_uid", 0)))
+	var visible: Array = state.visible_rail_card_uids()
+	selected = selected.filter(func(uid): return uid in visible)
+	if selected.is_empty():
+		return
+	state.sort_current_hand_by_condition(db, func(card: Dictionary):
+		return int(card.get("instance_uid", 0)) in selected)

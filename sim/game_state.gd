@@ -1557,7 +1557,7 @@ func add_coin(n: int, db = null) -> void:
 	# sign (Card.set_count(value)); negative totals are representable.
 	if n == 0:
 		return
-	_grant_gold(n, db)
+	_grant_gold(n, db, true)
 
 
 func spend_coin(n: int) -> bool:
@@ -1578,7 +1578,7 @@ func reconcile_gold(target: int, db = null) -> void:
 		_grant_gold(desired - current, db)
 
 
-func _grant_gold(amount: int, db = null) -> void:
+func _grant_gold(amount: int, db = null, record_reward: bool = false) -> void:
 	if amount == 0:
 		return
 	var effective_db = db
@@ -1594,6 +1594,14 @@ func _grant_gold(amount: int, db = null) -> void:
 	# GenCoin pins the gold stack to the front of the hand (set_bagpos(1)).
 	insert_card_to_hand(uid, 0)
 	instance.bag_pos = 1
+	if record_reward:
+		RoundLoop.update_hand_card_pos(self)
+	# [SRC: GenCoin.Do 0x510b40 -> NoteCardBeReward 0x38ea40;
+	# dump.cs:314370/388827. Reconciliation is not a reward operation.]
+	if record_reward and effective_db != null:
+		var own: String = effective_db.tag_code_to_name.get("own", "own")
+		if int(effective_card_tags(uid, effective_db).get(own, 0)) > 0:
+			add_note(10002, instance.card_id, uid, instance.count)
 	trigger_events("card_born", {"card": GOLD_CARD_ID, "card_uid": uid})
 
 
