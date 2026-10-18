@@ -346,7 +346,7 @@ static func draw_weekly_sudan(state, db, rng) -> int:
 	state.active_sudan_cards.append(
 		ActiveSudan.new(cid, mini(init_life, lifetime), state.round_number, card_uid))
 	if state.has_method("insert_card_to_rail"):
-		state.insert_card_to_rail(card_uid, 0)
+		state.insert_card_to_rail(card_uid, state.rail_order.size())
 	return cid
 
 
@@ -482,6 +482,12 @@ static func _promote_sudan_pool_entry(state, db, entry, life_override: int = -1)
 	# Pool tags are the entry's own runtime delta and travel with it.
 	instance.tags = entry.tags.duplicate(true)
 	instance.bag = state.current_bag_index
+	# [SRC: GenSudanCard 0x54f6f0 -> PutCardOnTable 0x5556c0 ->
+	# AddCard 0x54ad40 L3057-3064: only bagpos=0 gets Hand.childCount.
+	# A discarded pool Card retains its previous bagpos.]
+	instance.bag_pos = int(entry.bag_pos) if entry is CardInstanceData else int(entry.pos)
+	if instance.bag_pos == 0:
+		instance.bag_pos = state.visible_rail_card_uids().size() + 1
 	if state.has_method("record_card_generation"):
 		state.record_card_generation(instance, db)
 	# GenSudanCard's drawn Card goes onto the table rail, so the same

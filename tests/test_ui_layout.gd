@@ -1914,7 +1914,7 @@ func test_game_screen_can_reorder_sudan_card_in_bottom_rail():
 	assert_eq(state.rail_order[0], sudan_uid, "active sudan cards should be reorderable in the same bottom rail")
 
 
-func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
+func test_game_screen_places_new_unplaced_sudan_at_end_of_rail():
 	var rng := RNG.new(15)
 	var state := GameState.new()
 	state.setup_new_run(db, 0, rng)
@@ -1926,11 +1926,11 @@ func test_game_screen_defaults_drawn_sudan_card_to_front_of_rail():
 	stage.add_child(screen)
 	await wait_process_frames(2)
 
-	assert_eq(state.rail_order[0], sudan_uid, "newly drawn sudan cards should default to the first rail position")
+	assert_eq(state.rail_order.back(), sudan_uid, "AddCard assigns the new hand child its final sibling position")
 	var rail_widgets: Array = screen._ordered_hand_cards()
 	assert_true(rail_widgets.size() > 0, "rail should render at least one card")
 	if rail_widgets.size() > 0:
-		assert_eq(int((rail_widgets[0] as CardWidget).card_id), sudan_id, "bag-ordered rail starts with the sudan card; painter order may differ under overflow")
+		assert_eq(int((rail_widgets.back() as CardWidget).card_id), sudan_id, "GenSudanCard does not force bagpos=1 like GenCoin")
 
 
 func test_game_screen_can_open_card_detail_overlay():
