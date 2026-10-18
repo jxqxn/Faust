@@ -1,9 +1,35 @@
 # 验收、证据与当前交付状态
 
+<a id="manager-fix-20261018"></a>
+## 家业奖励日志与返还排序修复（2026-10-18）
+
+状态：已合入 `codex/innovation`（`2c69ecfe`、`512814ff`）；受测隔离提交为 `23af4211`、`c21d0902`，7份实现/测试文件在统一工作区换行后SHA-256与受测版本逐字节一致，Git内容无差异。新法拉杰治理家业轨迹与旧无人治理轨迹，结算/磁盘重建均各54/54；全量79脚本、827/827测试、9070断言通过，退出0。修复前52/54保留于下节，不能以历史通过覆盖失败。
+
+### 方法映射与原因
+
+- `GenCoin.Do 0x510b40`：写入count、bagpos后整理手牌，再执行 `NoteCardBeReward 0x38ea40`，最后CardBorn。`add_coin`显式启用奖励日志；`reconcile_gold`与旧档恢复仍不写日志。own有效值必须大于0，负数堆叠不满足门槛。
+- `GameController.UpdateHandCardPos 0x559a70`：通过 `b__139_0 0x56f390` 使用 `CompareBagPos 0x37eff0`，正位置在先，0/负位置在后，同位置按id、uid排序，再写1..N。只处理当前页可见手牌。`Settlement.b__5 0x5b3e20` 每返还一张卡后调用，GenCoin也调用。
+- `OnClose.b__0 0x5b51c0`：OnRiteEnd完成后调用 `FlashAndSortCard 0x54eff0`，将本次奖励/返还卡排在前面；同组选用上述比较器。复刻在结算job完成、删除前落盘对应排序，阻塞提示期间不提前释放。当前实现覆盖NEW/COPY操作记录及back_card_uids；原作完整结果卡控件收集、闪烁与动画仍未等价验收。
+- `Datapool.<LoadConfig>d__154.MoveNext 0x455ae0` 的1058–1067行：对HasTag(sudan)且尚无own的卡定义补own=1。字符串常量 `0x2596500=sudan`、`0x2580360=own`；CardNode字段见dump.cs:389759起。此前缺该运行时后处理，苏丹卡被普通手牌整理排除，导致最终位置仍停在4。补齐加载逻辑；未改写任何content文件。
+
+独立信号：2026-10-16原作运行轨迹奖励UID223、返还UID130及苏丹UID21最终位置1/2/5；原始cards.json的2010012无own，类型sudan，正好对应加载后补默认值。原作GetTag(CardNode)支持type作为标签；三资格常量own/adherent/player已从stringliteral.json核对，不能继续标为“未解”。源体还包括 `RiteResultPanelController.c:1202–1280`、`GameController.c:7815–8000` 与 `GameController.__c.c:334`；dump.cs:319283、319322、325467–325468。
+
+### 相邻回归：新苏丹卡入手
+
+首轮全量在 `test_hand_positions` 出现两条失败：补齐own后，新抽卡也会参与手牌检查，暴露原有bagpos=0、强制插到轨道最前的问题。`GenSudanCard 0x54f6f0` 调用 `PutCardOnTable 0x5556c0`，后者进入 `AddCard 0x54ad40`（GameController.c:3057–3064）；AddCard只在bagpos=0时写当前Hand子节点数量。复刻为新卡设置当前可见页末位置，保留池对象已有位置；新抽卡不再无条件放到第一格。原有UI断言“新抽卡必须排最前”缺原作背书，已改为该源码的末位规则，而非删除断言。包含重抽、历史非零位置的完整原作输入轨迹仍未采集。
+
+`full.log` 在这两条失败后主动终止，不能计为通过；`draw.log` 的20条实际测试断言通过，但命令误含不存在的test_sudan_pool.gd，GUT报告1个加载错误，也不能计为完整通过。`final-full.log`也未形成结束汇总，工具报运行不完整，原因未确认，不计通过。最终以`accepted-full.log`重新运行完整GPU回归，并以实际存在的test_sudan.gd补查。
+
+### 验收范围
+
+新增轨迹使用真实InputEventMouseButton推进下一天、结算及提示，并保存重建；26项候选随机带全部消费，无边界错误。该带的Shuffle分类推断、克隆接受骰子的控件差异、缺音频采集等限制仍按下节执行。54/54只证明这条状态投影，不代表全部游戏或音画流程完成，保持🟡。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/`（17日开始，18日继续）；`probe`、`probe2`、`probe3`依次保留未通过中间结果，`probe4`为新增轨迹首次通过及边界测试。最终专项 `final-manager.log`：24/24、803断言、73.222秒、退出0（包括22条苏丹卡规则测试）；新增带结算/重载各54/54，候选随机26/26。初次边界批次`probe4.log`为40/40、653断言；补充`load-default.log`为11/11、223断言；`reward-order.log`为1/1、4断言，使用受控CardBorn观察器确认日志先于事件。该观察器不是新增原作轨迹。最终完整回归 `accepted-full.log`：79脚本、827/827、9070断言、1257.273秒、退出0；无脚本错误、GUT错误或资源泄漏报告。旧原作轨迹结算/重载各54/54，随机13/13、无错误；新增轨迹候选26/26，分类限制不变。`verified-summary.json`与`verify-fix.py`记录日志、状态投影和受测文件哈希核验，`run-full.ps1`/`run-manager.ps1`支持离线复跑。原作content未变，固定复刻标签仍指向013b6b73；仅本地提交，未推送。 已登记本批68份外部证据，`tools/check_workspace_documentation.py`与`git diff --check`通过。
+
 <a id="manager-runtime-20261016"></a>
 ## 新增原作轨迹：法拉杰治理家业（2026-10-16采集，17日归档）
 
-**当前结果：新增轨迹未通过；结算、磁盘重建各52/54。** 旧无人治理样本54/54及既有823测试通过不能覆盖本次失败。受测代码为 `6b57cce1`，本批没有修改游戏实现。
+**修复前基线：新增轨迹未通过；结算、磁盘重建各52/54。** 旧无人治理样本54/54及既有823测试通过不能覆盖本次失败。受测代码为 `6b57cce1`，本批没有修改游戏实现。
 
 从方法表“完整家业→关闭→次日”项继续。原作真实鼠标完成：第4天已派遣法拉杰→下一天→宫廷结果关闭→家业4骰检定（3成功，不重投、不用金骰）→领取5金币→关闭结果与堆叠/期限/回溯提示→保存退出→继续读档。原作结算后、保存退出、重载后三份JSON仅saveTime不同。原始15个存档已按备份逐文件恢复并核验SHA-256；新增轮次文件移入证据目录保留。
 
