@@ -5744,6 +5744,550 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "2026-10-16新增有人治理原作轨迹及失败对拍证据",
       "boundary": "REA能力检查与Computer Use/Frida采集分列；首次中断保留，retry为有效新样本；52/54失败基线，随机归因含推断，不构成全链验收"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/accepted-full-console.log",
+      "bytes": 2089512,
+      "sha256": "36db67b2f87f9e8aa7f27876b48a180272d300982f71f89605251c1d0ee4d69b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/accepted-full-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "cfc0b6251c0882dd29281215d88f33d1d655f2d6b9754e1260e7ad30a00a4e24",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/accepted-full-stderr.log",
+      "bytes": 2787,
+      "sha256": "d4fe597a6f78ef9dae8b304ac7cf6d20e3fe5014821ff1f0a81ffe0a56e8010f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/accepted-full.log",
+      "bytes": 1985526,
+      "sha256": "0d278384d707a7225e1c1924e04c4faabc86c1f1ada85530ce9b24060bd3e75d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/draw-console.log",
+      "bytes": 23143,
+      "sha256": "5fe92f3522b71c8ea6cc2e35c9161b055597a7a6f0095bd2d962a5d5a2d7a4c6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/draw-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/draw.log",
+      "bytes": 20462,
+      "sha256": "d2446dde618575715891f21e3128ae85219d71eb3b379a54f66ec078568b4050",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-full-console.log",
+      "bytes": 239260,
+      "sha256": "7ac8768ae978cdf06f73b22da42d04ccbe980abf6d0606a17681c4c3649b356d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-full-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-full.log",
+      "bytes": 210194,
+      "sha256": "114529b4acf2453eeb96a010cee5ffb75d9758cac295f4a383b204b36f88fc6e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-console.log",
+      "bytes": 85122,
+      "sha256": "87c060c2f6bd0818975016482677b57741ab289063ef38bd3e2e566f609af8b0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-oracle-after.png",
+      "bytes": 3589774,
+      "sha256": "8508c7cd17bcad0c8f1000c992d31588d18314a2c083d325c52e01caad4c2a09",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-oracle-before.png",
+      "bytes": 3529263,
+      "sha256": "9be3c44f11906d4267fd41d3ffbac938b927dd703e632c0b059d8ebc9377b4d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-oracle-household-before-close.png",
+      "bytes": 3353969,
+      "sha256": "2cc82dfcd0c2c6dbdebf9001cc90c2901280e51a74209d9746da88d6e8c5af77",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-oracle-reloaded.png",
+      "bytes": 3589203,
+      "sha256": "c43bc7021f160df357be9e3a23c5afff6276df472d4175abe18254b0045d9a22",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-receipt.json",
+      "bytes": 456612,
+      "sha256": "631b2aa25faffa8bf8e399a2c976643468964af0ed1a051ce78d88f87d4761e3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/final-manager.log",
+      "bytes": 76840,
+      "sha256": "7b78b6d2002e63895b7c5ba7208871acddb2e0a9634c759ded4cd7b293911579",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/full-console.log",
+      "bytes": 350482,
+      "sha256": "c733e46e79130f397b1e53b70f25507dda3d44360edf60b98c44116ca5c5073e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/full-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "254ba8ea74092b3cebee1282fde3d2697c0ae31c563ca7d5dd20002cfc76c189",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/full-process.json",
+      "bytes": 44,
+      "sha256": "d0f2b788a9527df83ad7db7512a8cd6c369a5605f322ae21c27dcd88f3cdb8b0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/full-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/full.log",
+      "bytes": 310071,
+      "sha256": "a29df2733399e33bf4e5a9ccae0257064e57a162e8db20dffe66b40f7034b3af",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/load-default-console.log",
+      "bytes": 15248,
+      "sha256": "6605be39b8c1104d8662af73f43bb57dd0042d4547f348fc6b87befdb50f18aa",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/load-default-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/load-default.log",
+      "bytes": 12819,
+      "sha256": "f8acb22037c2ef947d4c3d7be6887385aad0772761ec5c2278cfef1d3383a273",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-console.log",
+      "bytes": 15335,
+      "sha256": "9b05bcaea97218a1c488034b1c050fd9ee604c774a04d6405e7fad47340f4d88",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-oracle-after.png",
+      "bytes": 3588509,
+      "sha256": "d5f417f302e142350c0fd0d8b4fe583d9817d82b8fb881ad8d4a14e8d2aaed54",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-oracle-before.png",
+      "bytes": 3529263,
+      "sha256": "9be3c44f11906d4267fd41d3ffbac938b927dd703e632c0b059d8ebc9377b4d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-oracle-household-before-close.png",
+      "bytes": 3355036,
+      "sha256": "8fe1264e24be524636f4887b642c22a8a67bdbfedcf0641ef0e091a78472fc70",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-oracle-reloaded.png",
+      "bytes": 3588236,
+      "sha256": "ff5812468fc14d05824400cec93983a11add6c921dfed34157e259eab1fe2ff7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-receipt.json",
+      "bytes": 456614,
+      "sha256": "007bd16a0fe38f9bc0bf81ba9e8521e82dbbe3cdff730ab149a4854a71f7c41a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe.log",
+      "bytes": 13149,
+      "sha256": "30b41b9d5a39e776f8b67347dea1c95d145deb8977673ecf34980db3604b2082",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-console.log",
+      "bytes": 15335,
+      "sha256": "a0b832f58d656e350445a7b783693f4f8b01a2bae4de50e0ae7e8d97d3962911",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-oracle-after.png",
+      "bytes": 3588872,
+      "sha256": "207ffbdf1ebf09ea2c7fdddb3242256e6a4ed269dd48f0371ee2b948c8309506",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-oracle-before.png",
+      "bytes": 3529255,
+      "sha256": "7afe41015bb877b22a6f55322da4a7aec421c9df8d8e68ab88010773ec57e22e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-oracle-household-before-close.png",
+      "bytes": 3354808,
+      "sha256": "e946f67aa7bc23e7a1082e8be939f865d84c7dd6fd8671c314a1712b380de047",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-oracle-reloaded.png",
+      "bytes": 3588227,
+      "sha256": "64f707bf7085f3c52ebe94d01c2ef5f50075149a91f7eb366c9516afe9ecd606",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-receipt.json",
+      "bytes": 456614,
+      "sha256": "4633d2e33ffc8838f7c5b5a349b59c65ef0e8f87c60f058c773f5be4a253b150",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe2.log",
+      "bytes": 13149,
+      "sha256": "10df4ed2f4e9a1364cef03398977b3945b8a54940f1d6b2610b639f2e93089b8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-console.log",
+      "bytes": 15335,
+      "sha256": "861235d3a7f17d563951ead71849bc830ec68c04abe5f58aa3d3a76eef4fd1b9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-oracle-after.png",
+      "bytes": 3590451,
+      "sha256": "8a3fcfc24cb91358c99190da8a1fa377e213b1e9af372664da646b10ea89f9f4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-oracle-before.png",
+      "bytes": 3529255,
+      "sha256": "7afe41015bb877b22a6f55322da4a7aec421c9df8d8e68ab88010773ec57e22e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-oracle-household-before-close.png",
+      "bytes": 3354132,
+      "sha256": "2de3644a33cba3d3bc7c1a8c0831d395d569f3edb25eda0e96c1dd1ecd340ee8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-oracle-reloaded.png",
+      "bytes": 3589716,
+      "sha256": "937842090151a6efab1488b614553448cc4ddc8cec75dd63014e6fccd4650153",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-receipt.json",
+      "bytes": 456614,
+      "sha256": "105d777d7b3cdcdcb0ade7905b37ee9261ec2cc1fac7b794c1e917a60140a293",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe3.log",
+      "bytes": 13149,
+      "sha256": "40ba986729270c0142e6bc781bd85aae31828406c416d9148af9ba0030a76a76",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-console.log",
+      "bytes": 47625,
+      "sha256": "b2967b04f4944097d1544d8cc425dd1a195a55c21605027f7edfeff11953b4eb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-oracle-after.png",
+      "bytes": 3589774,
+      "sha256": "8508c7cd17bcad0c8f1000c992d31588d18314a2c083d325c52e01caad4c2a09",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-oracle-before.png",
+      "bytes": 3529263,
+      "sha256": "9be3c44f11906d4267fd41d3ffbac938b927dd703e632c0b059d8ebc9377b4d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-oracle-household-before-close.png",
+      "bytes": 3353940,
+      "sha256": "d5c8f54bc95643cca0a901622b5825333e3dbefcadcbe15b6bf44c41bc442e26",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-oracle-reloaded.png",
+      "bytes": 3589670,
+      "sha256": "82f317aae617c8a6f3a4b4c121aad2b463a0a17165a9e3c3653f17a69ab8c315",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-receipt.json",
+      "bytes": 456611,
+      "sha256": "4934c454af589695bccc0de736b2208239e9ea4afe16d887c236d57be93e7cee",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/probe4.log",
+      "bytes": 40732,
+      "sha256": "dd3d3bc4888b572784050bf1bb75393feee66598b4340afcc81cf91454870ee4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/reward-order-console.log",
+      "bytes": 1844,
+      "sha256": "48904afa3634856ccd2b8d26bdb8617c1f6d1ed6a0bf2275a9c05bed48e6f228",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/reward-order-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/reward-order.log",
+      "bytes": 1687,
+      "sha256": "a26fa87c67947bee33a19b379786e4a2dd693fe71bf6abd8d3ae5585bee6bfbc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/run-full.ps1",
+      "bytes": 1700,
+      "sha256": "df05a2144a422e3bba85081241bde5dcd405a45e44e9e9dbde9697060347d9f9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/run-manager.ps1",
+      "bytes": 1340,
+      "sha256": "a94662c512940f29f242a6b030d19b63e9cb3fa0564f8c427a1d2b28550a6d4c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/test_reward_order.gd",
+      "bytes": 1024,
+      "sha256": "abaef1b531344a393c4139de2eb8af0f1cb80bde8928d044e9c0248508745f16",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/tested-code-final.json",
+      "bytes": 677,
+      "sha256": "c834fb2da85d43932590432bf5d98a6a81d3869e7b7f09cdb06fb68dfa09754d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/tested-code.json",
+      "bytes": 579,
+      "sha256": "1df2eac07142498ce9426632b6b582dda346b2deec84f3d6262d99325792108c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/verified-summary.json",
+      "bytes": 771,
+      "sha256": "7a52616ad16f9ded75ffabadf5ca625f4ec1558b191ad2a10f48e1a34eb95868",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261017-manager-fix/verify-fix.py",
+      "bytes": 1521,
+      "sha256": "4517bf174ed9bcab538b81378fdd3bac91ac6b275a360d0bf16698435ab74f1a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
