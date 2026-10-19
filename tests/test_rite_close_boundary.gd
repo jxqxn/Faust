@@ -7,8 +7,11 @@ const RNG = preload("res://core/rng.gd")
 class TraceState extends GameState:
 	var timings: Array[String] = []
 	var block_end := false
+	var reveal_on_end_uid := 0
 	func trigger_events(timing: String, _ctx: Dictionary = {}) -> Array[int]:
 		timings.append(timing)
+		if timing == "rite_end" and reveal_on_end_uid > 0:
+			get_card_instance(reveal_on_end_uid).bag = current_bag_index
 		var result: Array[int] = [] # Controlled timing probe; real event content has separate oracle tests.
 		if timing == "rite_end" and block_end:
 			queue_prompt({"id": "close-boundary", "text": "仪式结束后的提示"})
@@ -304,3 +307,59 @@ func test_main_scene_rebuilds_manual_result_and_close_prompt_then_autosaves() ->
 	var autosave: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(test_path))
 	assert_true(autosave.rite_result_display.is_empty(), "automatic save happens after close completion")
 	assert_true(autosave.rite_settlements.is_empty())
+
+
+func test_close_sort_membership_precedes_end_event_and_survives_disk_prompt() -> void:
+	# Controlled boundary: OnClose collects flash_cards before OnRiteEnd.
+	# [SRC: RiteResultPanelController.c:1202-1298; dump.cs:325087.]
+	var state := TraceState.new()
+	state.block_end = true
+	var control := state.add_card_to_hand(2000006, db)
+	var returned := state.add_card_to_hand(2000372, db)
+	var late := state.add_card_to_hand(2000006, db)
+	for uid in [control, returned, late]:
+		state.get_card_instance(uid).tags["own"] = 1
+	state.get_card_instance(control).bag_pos = 1
+	state.get_card_instance(returned).bag_pos = 2
+	state.get_card_instance(late).bag_pos = 3
+	state.get_card_instance(late).bag = 1
+	state.reveal_on_end_uid = late
+	var rite = state.create_rite_instance(5000001)
+	var viewport := _viewport(Vector2i(1280, 720))
+	var view := _mount(viewport, state, rite.uid)
+	await wait_process_frames(2)
+	_prepare(view)
+	await _click(viewport, view._result_next_button)
+	var job: Dictionary = state.rite_settlements[str(rite.uid)]
+	job.back_card_uids = [returned]
+	job.deferred.card_ops = [{"op": GameState.CARD_OP_NEW, "card_uid": late}]
+	await _click(viewport, view._result_next_button)
+	assert_eq(state.pending_operations.size(), 1)
+	assert_eq(job.get("close_sort_uids", []), [returned], "end event cannot expand the captured group")
+	assert_true(SaveSystem.save(state))
+	view.get_meta("test_screen").queue_free()
+	await wait_process_frames(2)
+	state = _read_saved()
+	view = _mount(viewport, state, rite.uid)
+	view.restore_round_result(state.rite_result_display)
+	await wait_process_frames(3)
+	assert_eq(state.rite_settlements[str(rite.uid)].get("close_sort_uids", []).map(func(uid): return int(uid)), [returned], "JSON numeric representation preserves the captured identities")
+	await _click(viewport, viewport.find_child("EventPromptContinueButton", true, false) as Button)
+	await wait_process_frames(3)
+	assert_true(state.rite_settlements.is_empty())
+	assert_eq(state.visible_rail_card_uids(), [returned, control, late], "late-visible reward is not promoted")
+	assert_true(SaveSystem.save(state))
+	var reloaded := _read_saved()
+	assert_eq(reloaded.visible_rail_card_uids(), [returned, control, late])
+
+
+func test_empty_close_snapshot_does_not_fall_back_to_later_candidates() -> void:
+	var state := GameState.new()
+	var first := state.add_card_to_hand(2000006, db)
+	var late := state.add_card_to_hand(2000006, db)
+	for uid in [first, late]:
+		state.get_card_instance(uid).tags["own"] = 1
+		state.get_card_instance(uid).bag_pos = uid
+	var job := {"close_sort_uids": [], "back_card_uids": [late], "deferred": {"card_ops": []}}
+	RiteSettlement._sort_closed_result(job, state, db)
+	assert_eq(state.visible_rail_card_uids(), [first, late], "empty means no selected cards, not missing snapshot")

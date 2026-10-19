@@ -198,6 +198,8 @@ static func pump(state, db, rng) -> void:
 				return
 			job.phase = "rite_end"
 		if job.phase == "rite_end":
+			# OnClose captures membership before the potentially blocking event.
+			job.close_sort_uids = _close_sort_candidates(job, state)
 			job.phase = "done"
 			if not state.over_pending:
 				state.trigger_events("rite_end", {"rite": int(job.rite_id)})
@@ -308,13 +310,19 @@ static func _post_lives(job: Dictionary, state, db, rng) -> void:
 ## [SRC: RiteResultPanelController.c OnClose 0x5a3ae0 L1202-1280;
 ## DisplayClass62_0.b__0 0x5b51c0 L121; GameController.FlashAndSortCard
 ## 0x54eff0; comparator 0x56f1c0, dump.cs:319322/325467-325468.]
-static func _sort_closed_result(job: Dictionary, state, db) -> void:
-	var selected: Array = job.get("back_card_uids", []).duplicate()
+static func _close_sort_candidates(job: Dictionary, state) -> Array:
+	var selected: Array = job.get("back_card_uids", []).map(func(uid): return int(uid))
 	for op in job.get("deferred", {}).get("card_ops", []):
 		if int(op.get("op", -1)) in [GameState.CARD_OP_NEW, GameState.CARD_OP_COPY]:
 			selected.append(int(op.get("card_uid", 0)))
 	var visible: Array = state.visible_rail_card_uids()
-	selected = selected.filter(func(uid): return uid in visible)
+	return selected.filter(func(uid): return uid in visible)
+
+
+static func _sort_closed_result(job: Dictionary, state, db) -> void:
+	# Old in-flight v9 jobs lack the snapshot; retain their previous fallback.
+	# New jobs persist even an empty snapshot and never rebuild it after End.
+	var selected: Array = job.get("close_sort_uids", _close_sort_candidates(job, state)).map(func(uid): return int(uid))
 	if selected.is_empty():
 		return
 	state.sort_current_hand_by_condition(db, func(card: Dictionary):
