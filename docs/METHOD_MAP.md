@@ -4,7 +4,9 @@
 
 ## 当前批次与优先项
 
-2026-10-19表现审计：原作关闭后FlashAndSortCard已有源码/Prefab背书；新增真实关闭输入探针确认返还卡不闪烁（12测试中1失败）。控件曲线单测通过，但关闭接线缺失且refresh会重建控件。本批未改实现、未修复，见[结果闪烁审计](replica/verification.md#result-flash-audit-20261019)。
+2026-10-19闪烁接线已局部修复（934095c2）：按FlashAndSortCard 0x54eff0对当前页全部卡Reset并设置集合成员flash；CardFlashController 0x52e330/0x52e2d0与CardNew.prefab:1898–1922提供进度/曲线背书。将控制器time/flash映射为按UID保存的宿主表现状态，以通过刷新和磁盘重建；这是宿主持久化适配，不宣称原作存档含这些字段。专项31/31、原失败探针组13/13、新旧原作轨迹结算和读档各54/54；完整结果卡收集和原作动画实机对拍仍🟡，见[闪烁接线验收](replica/verification.md#result-flash-fix-20261019)。
+
+2026-10-19表现审计：原作关闭后FlashAndSortCard已有源码/Prefab背书；新增真实关闭输入探针确认返还卡不闪烁（12测试中1失败）。控件曲线单测通过，但关闭接线缺失且refresh会重建控件。该审计当时未改实现；后续修复见上项，原始失败见[结果闪烁审计](replica/verification.md#result-flash-audit-20261019)。
 
 2026-10-19：关闭排序候选改为OnRiteEnd之前保存，完成提示后消费同一集合；修复JSON读回UID浮点表示造成返还卡漏匹配。背书OnClose 0x5a3ae0、b__0 0x5b51c0及dump.cs:325087/389598。专项25/25与新旧原作带各54/54通过，已合入a40ab83e；本批未重跑全量，完整表现链仍🟡。见[关闭排序验收](replica/verification.md#close-sort-snapshot-20261019)。
 

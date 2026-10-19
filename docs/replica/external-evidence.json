@@ -6544,6 +6544,606 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "验证运行或诊断产物",
       "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/boundary-console.log",
+      "bytes": 280618,
+      "sha256": "801cbe9006b9f80f5283a12f3bf4053db56771b4409799d7b3d1fd10dc0a57be",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "a36750aff5dc6877c7f54ef4ce2ea8b668a1c671fe4a851401ce764cd8964aa3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "2964f1c6cd7be35aa8d419be150d5a7a1c7b0ea3e9bea3794734c6eefa62ff58",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/boundary.log",
+      "bytes": 267890,
+      "sha256": "52835f25930ffdf04901616fe64a94a913f0d795cf59ba4fa4e6a6c5c1a88c0b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-console.log",
+      "bytes": 286926,
+      "sha256": "1b6ae2be2583b8831f6acea99faaaf93dd921caaf133e6eb2626686468efaa5b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "003c4702e420feaa9a86c903e563064c2855de337bb6b2416d53abc4c7dad60b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "2964f1c6cd7be35aa8d419be150d5a7a1c7b0ea3e9bea3794734c6eefa62ff58",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-boundary.log",
+      "bytes": 273302,
+      "sha256": "8035fc5fb28711eabfeb3e2fb16d99f732af9350a80132e4ed219d610eaf02d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-manager-console.log",
+      "bytes": 14717,
+      "sha256": "66a946845677517da91dda0e3eafcf01d7bb3f390a373a97eb0674982aabc4df",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-manager-receipt.json",
+      "bytes": 456940,
+      "sha256": "2d781c0a25734364140909ca654f8ecc5f749d1ed62a559a325dd79a1afc275b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-manager.log",
+      "bytes": 12607,
+      "sha256": "3c488ff228ea1803babd93d44e99154f2ed3bb0772f8694b5679744fca430e1a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-original-console.log",
+      "bytes": 13917,
+      "sha256": "ab2afe27f90540b7a73aba70e90b50d8b466aea581e9bdfb97bc5db5b559dfcd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-original-receipt.json",
+      "bytes": 443584,
+      "sha256": "e973b5daf120121d25cb36794d135515416f607faa8ab17df861184a98169865",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-original.log",
+      "bytes": 11887,
+      "sha256": "fa33a1e3470bb9e63b00859cd65f78434a1729f21f815efb9582598669ed8560",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-closing-prompt.png",
+      "bytes": 1630298,
+      "sha256": "b91c114832289f964191e46fb664ad860fdddd3f9257d0ad8d7286401c26f323",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-committed-1280.png",
+      "bytes": 1747820,
+      "sha256": "e6cc4fcb955058437d30f5bc27b9dc412b8f2991fb6ae3ed98856d382e7a938a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-console.log",
+      "bytes": 19414,
+      "sha256": "51f31a57e00d3d207165369e543089392b88fe639da8b604873e6369894507ff",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-flash-falling-1280.png",
+      "bytes": 1700255,
+      "sha256": "5d042dd0eda426e79aaaf297819ba7bf69cc94cd4bb0fe79d8f3b34bc2c15695",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/final-probe.log",
+      "bytes": 17044,
+      "sha256": "ded7ecdb20093a132e72a0982695895f8c99e590f23846b39599d67fd83cc17d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/initial-probe-console.log",
+      "bytes": 12779,
+      "sha256": "49a2b4acf56ace10007dd2ccad7e80f151bcb020e99112d45f1ca0d21839b416",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/initial-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/initial-probe-stderr.log",
+      "bytes": 520,
+      "sha256": "e0a01b3b47dc3c7bbd9d1d9a382c46f383ad2d39ed9caa568d0aa56af9c91e82",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/initial-probe.log",
+      "bytes": 11752,
+      "sha256": "0e305f22ced1cd484536fde92b6c16f3c325b54d49c467a45d1c7cd36f241e4b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/run.ps1",
+      "bytes": 2034,
+      "sha256": "22b9c0de1346d11e5cdca8ff493481a12b0d9de98b0367b8ed988b23e187de58",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-closing-prompt.png",
+      "bytes": 1630298,
+      "sha256": "b91c114832289f964191e46fb664ad860fdddd3f9257d0ad8d7286401c26f323",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-console.log",
+      "bytes": 286928,
+      "sha256": "f9b8a90b33bb394718f44f388adc8866fc18840e1777bb18cfda99fe60352005",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "431cefdfbf1319fc819256a7acd83313659d09cd433fb1d9ac504dc91b902057",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "2964f1c6cd7be35aa8d419be150d5a7a1c7b0ea3e9bea3794734c6eefa62ff58",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-boundary.log",
+      "bytes": 273304,
+      "sha256": "910cfa1147407db1dbd687de45050e449040a01522ba5f78eba738cf5e5e434e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-committed-1280.png",
+      "bytes": 1747820,
+      "sha256": "e6cc4fcb955058437d30f5bc27b9dc412b8f2991fb6ae3ed98856d382e7a938a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-console.log",
+      "bytes": 18610,
+      "sha256": "e122efec578f575746e344a0b364408e7f5ef03ab1a705e3a96a1e15b486411b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-probe.log",
+      "bytes": 16312,
+      "sha256": "24b48ef930ecf96ca91695202f4392a1d905c7da6a63610e03c19e0791ad7b65",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-fix/verified-summary.json",
+      "bytes": 5796,
+      "sha256": "d824b9f8e821787c466d3e2b740c1816f9b4ff2e1b87010abee69f87b8699573",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
