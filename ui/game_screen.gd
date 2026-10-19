@@ -1153,6 +1153,7 @@ func refresh() -> void:
 					sudan_widget.set_meta("reflow_from", previous_positions[uid])
 				sudan_widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
 				_card_items.add_child(sudan_widget)
+				_bind_hand_flash(sudan_widget)
 				sudan_widget.set_selected(uid == _card_detail_card_uid, false)
 				next_known_uids[uid] = true
 			continue
@@ -1184,12 +1185,19 @@ func refresh() -> void:
 			widget.set_meta("reflow_from", previous_positions[uid])
 		widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
 		_card_items.add_child(widget)
+		_bind_hand_flash(widget)
 		widget.set_selected(uid == _card_detail_card_uid, false)
 		next_known_uids[uid] = true
 	_known_rail_card_uids = next_known_uids
 	_layout_hand_cards()
 	call_deferred("_layout_hand_cards")
 	_refresh_event_overlay()
+
+
+func _bind_hand_flash(widget: CardWidget) -> void:
+	var key := str(widget.card_uid)
+	if _state.hand_card_flashes.has(key):
+		widget.bind_flash_snapshot(_state.hand_card_flashes[key])
 
 
 ## The original HandCardsController lays its children out itself and compresses

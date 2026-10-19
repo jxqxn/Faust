@@ -325,5 +325,9 @@ static func _sort_closed_result(job: Dictionary, state, db) -> void:
 	var selected: Array = job.get("close_sort_uids", _close_sort_candidates(job, state)).map(func(uid): return int(uid))
 	if selected.is_empty():
 		return
+	# [SRC: FlashAndSortCard 0x54eff0 resets every current hand card,
+	# sets flash from the captured UID set, then writes bagpos.]
+	for uid in state.visible_rail_card_uids():
+		state.hand_card_flashes[str(uid)] = {"time": 0.0, "rising": int(uid) in selected}
 	state.sort_current_hand_by_condition(db, func(card: Dictionary):
 		return int(card.get("instance_uid", 0)) in selected)

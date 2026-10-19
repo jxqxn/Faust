@@ -82,6 +82,7 @@ var _presentation_paused := false
 var _metal_materials: Array[ShaderMaterial] = []
 var _flash_time := 0.0
 var _flash_rising := false
+var _flash_snapshot: Dictionary = {}
 var _flash_material: ShaderMaterial
 var _candidate_scale := 1.0
 var _hand_height_extra := 0.0
@@ -89,6 +90,8 @@ var _applied_candidate_scale := 1.0
 
 
 func _process(delta: float) -> void:
+	if is_queued_for_deletion():
+		return
 	if not _presentation_paused:
 		_advance_card_flash(delta)
 	# [SRC: CardController.Update 0x52c890 — a press held for 0x15c seconds
@@ -108,8 +111,25 @@ func _process(delta: float) -> void:
 func reset_card_flash(trigger := false) -> void:
 	_flash_time = 0.0
 	_flash_rising = trigger
+	_store_flash_progress()
 	if _flash_material != null:
 		_flash_material.set_shader_parameter("outline_fade", 0.0)
+
+
+## Keep the original controller fields alive when this host rebuilds widgets.
+## This serialization adapter does not claim original save-file equivalence.
+func bind_flash_snapshot(snapshot: Dictionary) -> void:
+	_flash_snapshot = snapshot
+	_flash_time = clampf(float(snapshot.get("time", 0.0)), 0.0, 1.0)
+	_flash_rising = bool(snapshot.get("rising", false))
+	if _flash_material != null:
+		_flash_material.set_shader_parameter("outline_fade", _flash_time * (2.0 - _flash_time))
+
+
+func _store_flash_progress() -> void:
+	if not _flash_snapshot.is_empty():
+		_flash_snapshot.time = _flash_time
+		_flash_snapshot.rising = _flash_rising
 
 
 func set_candidate_highlight(matches: bool) -> void:
@@ -141,6 +161,7 @@ func _advance_card_flash(delta: float) -> void:
 		_flash_material.set_shader_parameter("outline_fade", _flash_time * (2.0 - _flash_time))
 	if _flash_rising and _flash_time >= 1.0:
 		_flash_rising = false
+	_store_flash_progress()
 
 
 func _apply_metal_surface(image: TextureRect) -> void:
