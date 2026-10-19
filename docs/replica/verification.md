@@ -1,5 +1,31 @@
 # 验收、证据与当前交付状态
 
+<a id="result-flash-audit-20261019"></a>
+## 结果卡收集与关闭闪烁：已复现的表现缺口（2026-10-19）
+
+**本批是逆向审计，未修改运行时代码，闪烁缺口尚未修复。** 受测隔离版本902015da，与当前a40ab83e实现一致。新增真实输入探针12测试中11通过、1失败，151/152断言，51.099秒，进程退出1；唯一失败为关闭后的返还卡没有闪烁。前三条独立CardFlash测试与继承的8条关闭边界测试通过，不构成新功能验收。既有原作状态54/54不能覆盖该表现失败。
+
+### 原作与克隆映射
+
+| 环节 | 原作证据 | 当前落点与结论 |
+|---|---|---|
+| 结果卡容器 | GameController.CardRewards@0x288，dump.cs:319823；PutCardOnTable 0x5556c0，GameController.c:3313起先入列表，再按IsCurrentHandCard决定是否建手牌控件 | 克隆NEW/COPY操作记录仍只是近似，不能将全部卡牌操作一律纳入 |
+| 已定位的入表路径 | GenCard 0x54f650调用PutCardOnTable；GenSudanCard 0x54f6f0也调用，GameController.c:3391/3679 | 文本具名调用搜索只定位这两处，不是完整二进制xref普查；苏丹卡不应因没有NEW/COPY操作就被先验排除 |
+| 结算接管列表 | Settlement.b__4 0x5b3a50，DisplayClass56_0.c:361–372，将CardRewards赋给cards@0xE0并清空 | 不能把列表理解成仅由最终奖励展示控件推导的集合 |
+| 关闭筛选 | OnClose 0x5a3ae0，RiteResultPanelController.c:1202–1298：先整理手牌，结果卡要求gameObject存在且IsCurrentHandCard；backCards另经DoPostRite并检查存活/当前页；RemoveCard 0x5a45b0移出cards | 候选时点已有局部修复，但控件存在性、逐张后处理及移出列表的完整输入链未覆盖；RemoveCard未定位到具名调用方，不能直接断言某种拖动必定调用 |
+| 复制链边界 | CopyCard.Do回调0x508090→CardExtensions.Copy 0x37f4e0→PlayerExtensions.AddCard，并登记CardBorn和奖励日志 | 这些方法体中未见直接PutCardOnTable，尚需追踪后续呈现/事件链；保留现有COPY处理，不凭负搜索删除 |
+| 关闭后的闪烁 | OnClose.b__0 0x5b51c0→FlashAndSortCard 0x54eff0；GameController.c:7979附近对每张当前手牌Reset、设置选中集合对应flash，再写bagpos | 克隆只排序，未将关闭集合交给CardWidget.reset_card_flash |
+| 曲线 | CardFlashController.Update 0x52e330/Reset 0x52e2d0；dump.cs:317254起字段；CardNew.prefab:1898–1922速度3、0/1关键帧、切线2/0 | CardWidget已有对应单次亮起/回落；原函数未见直接音效调用，不能擅加结算闪烁音效 |
+| 刷新生命周期 | 克隆GameScreen.refresh逐个queue_free并重新创建手牌控件，ui/game_screen.gd:1125起 | 单次补调用不能保证后续刷新后继续播放；需解决进度与控件重建的承载，再验保存/读档 |
+
+### 可重现失败与下一项实现门禁
+
+外部 `test_result_flash_probe.gd` 继承既有关闭测试，使用InputEventMouseButton命中两次结果按钮，确认job已完成、返还卡手牌控件存在，再检查flash上升或currentTime>0；该断言失败。这是受控宿主场景，不是原作新增实机对拍。测试未调用闪烁方法来制造成功，也未改变既有断言。
+
+下一项应将已冻结的关闭集合接到原作FlashAndSortCard表现，维持非匹配卡Reset、匹配卡单次闪烁、无候选不触发的分支；记录并验证刷新/覆盖界面/阻塞提示/磁盘重建时的进度规则。完整结果卡收集继续以CardRewards/PutCardOnTable为背书，不能以“所有NEW/COPY”宣称1:1。未补齐过程捕获、两个尺寸、新局与读档状态及原作画面对拍前保持🟡。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/`。`probe.log`、`stderr.log`、`exit.txt`保留失败运行；`audit-receipt.json`保留源码哈希与范围；未新增REA反编译结果，沿用本地只读反编译事实。本批未推送。
+
 <a id="close-sort-snapshot-20261019"></a>
 ## 关闭排序集合跨结束事件与读档（2026-10-19）
 

@@ -6496,6 +6496,54 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "验证运行或诊断产物",
       "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/audit-receipt.json",
+      "bytes": 2683,
+      "sha256": "d6cc3f0892f8ca021ddc40fa226a4a7e4128b436766774b43e8de29731953506",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/console.log",
+      "bytes": 13854,
+      "sha256": "c3782c1290bfd984fdd0b8ac412260818a2e95d6f0ba24db517d0fda26f03cb2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/probe.log",
+      "bytes": 12143,
+      "sha256": "b902bd98ebfc54acd2000769f5ac35b5c56cd4f25287736041f6132618772857",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-result-flash-audit/test_result_flash_probe.gd",
+      "bytes": 1112,
+      "sha256": "1d8aa7b969b813831bb680ea7a89ce6408d711de4edbf40eeb80d07cb3f2d746",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "已知关闭闪烁失败探针，不是通过验收或新增原作实机证据"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
