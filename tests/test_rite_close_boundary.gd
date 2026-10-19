@@ -363,3 +363,81 @@ func test_empty_close_snapshot_does_not_fall_back_to_later_candidates() -> void:
 	var job := {"close_sort_uids": [], "back_card_uids": [late], "deferred": {"card_ops": []}}
 	RiteSettlement._sort_closed_result(job, state, db)
 	assert_eq(state.visible_rail_card_uids(), [first, late], "empty means no selected cards, not missing snapshot")
+
+
+func _freeze_and_find_flash(screen: Control, uid: int) -> CardWidget:
+	var found: CardWidget = null
+	for widget in screen._ordered_hand_cards():
+		widget.set_process(false)
+		if widget.card_uid == uid:
+			found = widget
+	assert_not_null(found)
+	return found
+
+
+func test_close_flash_waits_for_end_and_survives_refresh_and_disk_at_both_sizes() -> void:
+	# [SRC: FlashAndSortCard 0x54eff0; CardFlashController 0x52e330;
+	# CardNew.prefab:1898-1922. Persistence is a host reconstruction adapter.]
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var state := TraceState.new()
+		state.block_end = true
+		var other := state.add_card_to_hand(2000006, db)
+		var returned := state.add_card_to_hand(2000372, db)
+		for uid in [other, returned]:
+			state.get_card_instance(uid).tags["own"] = 1
+			state.get_card_instance(uid).bag_pos = uid
+		var rite = state.create_rite_instance(5000001)
+		var viewport := _viewport(dimensions)
+		var view := _mount(viewport, state, rite.uid)
+		await wait_process_frames(2)
+		_prepare(view)
+		await _click(viewport, view._result_next_button)
+		state.rite_settlements[str(rite.uid)].back_card_uids = [returned]
+		await _click(viewport, view._result_next_button)
+		assert_true(state.hand_card_flashes.is_empty(), "blocked OnRiteEnd cannot start the flash")
+		assert_true(SaveSystem.save(state))
+		view.get_meta("test_screen").queue_free()
+		await wait_process_frames(2)
+		state = _read_saved()
+		view = _mount(viewport, state, rite.uid)
+		view.restore_round_result(state.rite_result_display)
+		await wait_process_frames(3)
+		await _click(viewport, viewport.find_child("EventPromptContinueButton", true, false) as Button)
+		var screen: Control = view.get_meta("test_screen")
+		var widget := _freeze_and_find_flash(screen, returned)
+		assert_true(widget._flash_rising or widget._flash_time > 0.0, "actual close starts the returned card flash")
+		assert_eq(float(state.hand_card_flashes[str(other)].time), 0.0)
+		assert_false(bool(state.hand_card_flashes[str(other)].rising), "nonmatch is reset")
+		var progress := widget._flash_time
+		screen.refresh()
+		widget = _freeze_and_find_flash(screen, returned)
+		assert_eq(widget._flash_time, progress, "refresh restores rather than restarts")
+		await wait_process_frames(1)
+		assert_eq(widget._flash_time, progress, "queued old widgets cannot advance shared state")
+		# Cross the clamp boundary; a computed exact delta can round below 1.0.
+		widget._advance_card_flash((1.0 - progress) / 3.0 + 0.000001)
+		assert_almost_eq(widget._flash_time, 1.0, 0.0001)
+		assert_false(widget._flash_rising)
+		await _capture(viewport, "flash-peak-%d" % dimensions.x)
+		assert_true(SaveSystem.save(state))
+		screen.queue_free()
+		await wait_process_frames(2)
+		state = _read_saved()
+		screen = GameScreen.new()
+		screen.setup(state, db, RNG.new(9615))
+		viewport.add_child(screen)
+		widget = _freeze_and_find_flash(screen, returned)
+		assert_almost_eq(widget._flash_time, 1.0, 0.0001, "disk reload keeps peak progress")
+		assert_false(widget._flash_rising, "disk reload keeps the falling direction")
+		widget._advance_card_flash(1.0 / 6.0)
+		assert_almost_eq(float(widget._flash_material.get_shader_parameter("outline_fade")), 0.75, 0.0001)
+		await _capture(viewport, "flash-falling-%d" % dimensions.x)
+		widget.set_process(true)
+		await wait_seconds(0.25)
+		assert_eq(widget._flash_time, 0.0, "real frame processing completes the falling half")
+		assert_true(SaveSystem.save(state))
+		var ended := _read_saved()
+		assert_eq(float(ended.hand_card_flashes[str(returned)].time), 0.0)
+		assert_false(bool(ended.hand_card_flashes[str(returned)].rising), "completed flashes do not replay on load")
+		viewport.queue_free()
+		await wait_process_frames(2)

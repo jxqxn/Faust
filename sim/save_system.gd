@@ -175,6 +175,7 @@ static func serialize(state) -> Dictionary:
 		"rite_confirmations": state.rite_confirmations.duplicate(true),
 		"round_transition": state.round_transition.duplicate(true),
 		"rite_result_display": state.rite_result_display.duplicate(true),
+		"hand_card_flashes": state.hand_card_flashes.duplicate(true),
 		"think_session": state.think_session.duplicate(true),
 		"ithink_card_uid": state.ithink_card_uid,
 		"delayed_operations": state.delayed_operations.duplicate(true),
@@ -401,6 +402,7 @@ static func deserialize(data: Dictionary, state, db) -> void:
 	if state.has_method("_sync_rite_instance_cards"):
 		state._sync_rite_instance_cards()
 	state.pending_operations.clear()
+	state.hand_card_flashes = data.get("hand_card_flashes", {}).duplicate(true)
 	state.rite_settlements = data.get("rite_settlements", {}).duplicate(true)
 	state.rite_confirmations = data.get("rite_confirmations", {}).duplicate(true)
 	state.round_transition = data.get("round_transition", {}).duplicate(true)

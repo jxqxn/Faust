@@ -181,6 +181,9 @@ var round_transition: Dictionary = {}
 # Persist the result panel's finalPromise for manual as well as overnight rites.
 # [SRC: RiteResultPanelController.finalPromise@0xD8; OnClose 0x5a3ae0.]
 var rite_result_display: Dictionary = {}
+## Host persistence of CardFlashController.currentTime/flash, keyed by UID.
+## [SRC: dump.cs:317254; FlashAndSortCard 0x54eff0.]
+var hand_card_flashes: Dictionary = {}
 var think_session: Dictionary = {}
 # [SRC: Player.ithink_card +0x80; ThinkController.OnDrop 0x5c3050.]
 var ithink_card_uid := 0
@@ -1271,6 +1274,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	rite_confirmations.clear()
 	round_transition.clear()
 	rite_result_display.clear()
+	hand_card_flashes.clear()
 	think_session.clear()
 	ithink_card_uid = 0
 	event_queue.clear()
