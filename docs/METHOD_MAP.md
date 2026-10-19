@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-19表现审计：原作关闭后FlashAndSortCard已有源码/Prefab背书；新增真实关闭输入探针确认返还卡不闪烁（12测试中1失败）。控件曲线单测通过，但关闭接线缺失且refresh会重建控件。本批未改实现、未修复，见[结果闪烁审计](replica/verification.md#result-flash-audit-20261019)。
+
 2026-10-19：关闭排序候选改为OnRiteEnd之前保存，完成提示后消费同一集合；修复JSON读回UID浮点表示造成返还卡漏匹配。背书OnClose 0x5a3ae0、b__0 0x5b51c0及dump.cs:325087/389598。专项25/25与新旧原作带各54/54通过，已合入a40ab83e；本批未重跑全量，完整表现链仍🟡。见[关闭排序验收](replica/verification.md#close-sort-snapshot-20261019)。
 
 2026-10-18：从“完整家业→关闭→次日”项修复GenCoin奖励日志、返还后CompareBagPos重排、OnClose奖励/返还卡优先排序，以及LoadConfig的苏丹卡own默认值。新旧轨迹结算与读档均各54/54；GPU全量827/827、9070断言，已合入codex/innovation，完整表现链仍为🟡。源码、失败迭代和覆盖限制见[本批验收](replica/verification.md#manager-fix-20261018)。
