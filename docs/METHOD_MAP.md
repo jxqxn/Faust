@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-19：关闭排序候选改为OnRiteEnd之前保存，完成提示后消费同一集合；修复JSON读回UID浮点表示造成返还卡漏匹配。背书OnClose 0x5a3ae0、b__0 0x5b51c0及dump.cs:325087/389598。专项25/25与新旧原作带各54/54通过，已合入a40ab83e；本批未重跑全量，完整表现链仍🟡。见[关闭排序验收](replica/verification.md#close-sort-snapshot-20261019)。
+
 2026-10-18：从“完整家业→关闭→次日”项修复GenCoin奖励日志、返还后CompareBagPos重排、OnClose奖励/返还卡优先排序，以及LoadConfig的苏丹卡own默认值。新旧轨迹结算与读档均各54/54；GPU全量827/827、9070断言，已合入codex/innovation，完整表现链仍为🟡。源码、失败迭代和覆盖限制见[本批验收](replica/verification.md#manager-fix-20261018)。
 
 2026-10-15至16日音乐接线批次：StartRite.Do/OnClose.b__0/次日b__5/Start以及LoopArmageddonController、MusicFade*均有源背书；已合入状态更新、原配置播放与读档恢复，排除超时Dead并补正淡出中回退。GPU全量823/823、9054断言；既存原作带结算/重载各54/54、随机13/13。完整原作混音/所有状态机分支仍🟡；见[本批接线](replica/presentation.md#armageddon-fix-20261015)。
