@@ -6288,6 +6288,214 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "验证运行或诊断产物",
       "boundary": "仅代表该输入和该次运行；失败及中断记录保留，以当前验收正文解释"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/before-console.log",
+      "bytes": 31334,
+      "sha256": "99579df0cbd0e69cceb33efb379f99ce5f11fb49f9f188fa659bc0b7a0a8ec05",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/before-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/before-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/before.log",
+      "bytes": 26837,
+      "sha256": "aded6ee120c18d1fc7f19e072f295f9ede9b8cb6881bf8da1d108ed4fcfb1114",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-boundary-console.log",
+      "bytes": 30673,
+      "sha256": "cb9c6321a3f53f6fba831d08b0f9492411a866ecc69af8f14456ee6935deb728",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-boundary-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-boundary.log",
+      "bytes": 26224,
+      "sha256": "d3c98e92de3cae27c6d54a62b7b9082a52cd802d04cf0a586bffdc08b17a65ee",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-manager-console.log",
+      "bytes": 14717,
+      "sha256": "890e7ab2a7b46e80896348326c2250f01d33e050c7cee6cceac0271b62d8f312",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-manager-receipt.json",
+      "bytes": 456611,
+      "sha256": "a0883a4b9de8e541d51f49fbec2cf554d0b08296b7bf4fa69e62d2c456cb52ce",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-manager.log",
+      "bytes": 12607,
+      "sha256": "79ec247ac678d121f899213e86ef90101b6729718b87c374e5ec9c1bf8d94b77",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-original-console.log",
+      "bytes": 13917,
+      "sha256": "c28909ffb490ff9b13528e64f4257aceef6b36b7794acebb5aeaca66e6f4f4f1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-original-receipt.json",
+      "bytes": 443531,
+      "sha256": "29ac356a34f826aa2c0b057cff18216fc72affa06cf698d95deadb845057eb55",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/final-original.log",
+      "bytes": 11887,
+      "sha256": "9ec3aa273b716f6e00a808a5b0dc267356aab5befcd18bbed1efdc9f9d3b620d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/fixed-console.log",
+      "bytes": 30637,
+      "sha256": "54f42a3cbfd6a2357e298c94caccd6510d8ba5859762fe69e8703fc048705ace",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/fixed-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/fixed.log",
+      "bytes": 26182,
+      "sha256": "54c76593e6d9392b1870c865eac588bd1ba1534ccdc7aaf59ad6495f9f0fa1e7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/rea-close-result.json",
+      "bytes": 181,
+      "sha256": "8dd8e85033f95037d89809e5db584cbdd70cdcf9b0aae4cf6ed862ea6d58a1e0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/run.ps1",
+      "bytes": 1782,
+      "sha256": "48056a721b17e851507e9911786df8e4c81f845fb195206fc19f03a5a6eaf2d1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/source-receipt.json",
+      "bytes": 1807,
+      "sha256": "607a8cf87bdaec36082045e9380cfbb220e456f50063144816dba7abb5c37497",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/verified-summary.json",
+      "bytes": 1330,
+      "sha256": "42d90e8a72691c4e7617358170e3baf9ea7d174897f79f541a6766ce152e83bd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "验证运行或诊断产物",
+      "boundary": "关闭排序受控回归及既有原作带重放；非新增原作运行采样，失败记录保留"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

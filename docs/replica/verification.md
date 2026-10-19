@@ -1,5 +1,20 @@
 # 验收、证据与当前交付状态
 
+<a id="close-sort-snapshot-20261019"></a>
+## 关闭排序集合跨结束事件与读档（2026-10-19）
+
+状态：已合入codex/innovation（a40ab83e；受测隔离提交902015da，两份代码文件Git内容一致）。专项25/25、415断言通过；新旧原作轨迹结算/读档均各54/54。本批从方法表“完整家业→关闭→次日”取项，仍🟡，不将前批827/827视为本批全量验收。
+
+原作 `OnClose 0x5a3ae0`（RiteResultPanelController.c:1202–1298）先整理手牌并收集结果卡、返还卡UID到flash_cards，再调用OnRiteEnd；`OnClose.b__0 0x5b51c0`在事件完成后将既有集合交给FlashAndSortCard。独立字段信号：dump.cs:325087为HashSet<int> flash_cards，389598为Card.uid@0x18；集合不是配置ID。`GameController.FlashAndSortCard 0x54eff0`按当前手牌与该集合交集排序，不重新扩充集合。GenCoin.Do每次新建金币实例，不以“直接叠到旧卡”的假设扩展本批。
+
+克隆原先在done阶段调用 `_sort_closed_result` 时才收集候选。受控场景：关闭前有一张在另一页的奖励卡；OnRiteEnd将它移入当前页并阻塞提示。旧实现把后来可见的卡也提前，磁盘重建还暴露了back_card_uids浮点表示未归一化而漏匹配的问题。修复为进入OnRiteEnd前保存 `close_sort_uids`，done只消费该集合，UID按整数比较；空集合与字段缺失分开处理。新增字段随既有rite_settlements持久化，存档版本仍9；旧版已经处在done的档案无法恢复历史集合，明确回退到旧候选重建规则，不重放事件。
+
+验证：`before.log`24测试中1失败，410/414断言；`fixed.log`保留JSON浮点/整数的测试比较失败，最终改为比较归一化的身份值。`final-boundary.log`25/25、415断言、42.449秒、退出0。真实InputEventMouseButton命中关闭按钮及EventPromptContinueButton，检查提示阻塞、磁盘保存、重建后继续、最终手牌顺序及再次保存加载；沿用既有两尺寸关闭测试，新候选变化场景在1280×720。另测空集合不回退。新场景是受控宿主边界，不是新增原作运行采样。
+
+边界：这里只纠正OnRiteEnd前后的收集时点及JSON身份比较。结果卡仍以NEW/COPY操作近似原作PutCardOnTable列表；原作逐张DoPostRite时的候选收集、控件存在性、移出结果列表、闪烁/动画/音频仍需后续闭合。REA本轮成功打开原作GameAssembly.dll并取得SHA-256，新的反编译请求300秒超时；不把超时当成新源码证据，使用只读语料的.c/dump交叉核对。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261019-close-sort/`；`source-receipt.json`记录源码位置与哈希，`rea-close-result.json`保留超时响应，`run.ps1`提供离线专项及原作带重放。 `final-original.log`为2/2、192断言、29.705秒，原作随机13/13；`final-manager.log`为2/2、200断言、38.816秒，候选随机26/26，仍保留既有Shuffle分类限制。三轮最终运行均退出0且无脚本/GUT错误或资源泄漏报告；合计29测试、807断言。`verified-summary.json`记录汇总和受测代码哈希。content未修改，固定基线标签未移动，未推送。
+
 <a id="manager-fix-20261018"></a>
 ## 家业奖励日志与返还排序修复（2026-10-18）
 
