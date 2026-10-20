@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-20复制呈现审计：REA重新分析Copy回调、CardExtensions.Copy、出生文案与RemoveCard四方法；确认cardBornResult与CardRewards不同。旧.c/dump/script补出OnBeginDrag经ICardSlot槽3调用RemoveCard，结果面板slot赋值有源码背书；调用点尚未本轮REA复核或原作实测。保留COPY近似，下一批优先结果卡真实拖动与名单变化；见[复制与接口移除审计](replica/verification.md#copy-presentation-audit-20261020)。
+
 2026-10-20结果名单局部修复（cfc7ae66）：REA快照重放四方法，按CardRewards@0x288/dump.cs:319823维护共享结果列表，开始清空、关闭前冻结、存档恢复；修复苏丹池晋升漏收。关闭专项34/34、生成回归45/45，两条原作轨迹结算和读档各54/54。COPY、控件存在性、逐张后处理与RemoveCard仍近似/待查，完整功能保持🟡，见[结果名单验收](replica/verification.md#result-card-list-20261020)。
 
 2026-10-20实际REA复核：原作DLL的OnClose、回调、FlashAndSortCard与结果卡收集共8函数新分析成功，支持前批局部接线；汇编确认GetCardByUId同时接收ID/UID。结果列表为共享CardRewards引用，不能等同NEW/COPY；Flash另有4个调用入口，本批只定位引用未审计其完整行为。完整收集/表现仍🟡，下一步优先结果列表生命周期，见[REA闭合链复核](replica/verification.md#rea-close-chain-20261020)。
