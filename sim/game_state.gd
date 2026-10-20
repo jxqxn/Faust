@@ -184,6 +184,8 @@ var rite_result_display: Dictionary = {}
 ## Host persistence of CardFlashController.currentTime/flash, keyed by UID.
 ## [SRC: dump.cs:317254; FlashAndSortCard 0x54eff0.]
 var hand_card_flashes: Dictionary = {}
+# [SRC: GameController.CardRewards@0x288; PutCardOnTable 0x5556c0.]
+var result_card_rewards: Array = []
 var think_session: Dictionary = {}
 # [SRC: Player.ithink_card +0x80; ThinkController.OnDrop 0x5c3050.]
 var ithink_card_uid := 0
@@ -493,6 +495,13 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 	_initialize_tag_attributes(instance, db)
 	_record_card_op(CARD_OP_NEW, instance.uid)
 	return instance
+
+
+## The source list records table generation independently of operation animation.
+## [SRC: PutCardOnTable 0x5556c0 appends before IsCurrentHandCard.]
+func record_result_card_reward(uid: int) -> void:
+	if get_card_instance(uid) != null:
+		result_card_rewards.append(uid)
 
 
 func record_card_generation(instance, db = null) -> void:
@@ -1275,6 +1284,7 @@ func setup_new_run(db, diff_index: int, rng, apply_resources := true) -> void:
 	round_transition.clear()
 	rite_result_display.clear()
 	hand_card_flashes.clear()
+	result_card_rewards.clear()
 	think_session.clear()
 	ithink_card_uid = 0
 	event_queue.clear()
@@ -1672,6 +1682,7 @@ func add_card_to_hand(card_or_uid: int, db = null) -> int:
 	#       GameController.c @ GenCard (0x54f650) -> PutCardOnTable (0x5556c0)]
 	if is_new_instance:
 		record_card_generation(instance, db)
+		record_result_card_reward(uid)
 	record_only_card(instance.card_id, db)
 	return uid
 

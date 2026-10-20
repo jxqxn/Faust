@@ -44,7 +44,10 @@ static func begin(uid: int, selected, context: Dictionary, state, db, rng, wait_
 		rite_id = int(instance.id)
 	if instance == null:
 		return {}
+	# [SRC: Settlement.b__4 0x5b3a50 aliases CardRewards then clears it.]
+	state.result_card_rewards.clear()
 	var job := {
+		"uses_card_rewards": true,
 		"uid": uid, "rite_id": rite_id, "phase": "results",
 		"wait_for_close": wait_for_close,
 		"entries_json": JSON.stringify(selected.settlements, "", false),
@@ -193,6 +196,7 @@ static func pump(state, db, rng) -> void:
 				RoundLoop.finalize_rite_settlement(instance, job.deferred, state, db, job.table, rng)
 				job.phase = "await_close" if job.get("wait_for_close", false) else "post_lives"
 		if job.phase == "post_lives":
+			_capture_result_card_rewards(job, state)
 			_post_lives(job, state, db, rng)
 			if not state.pending_operations.is_empty():
 				return
@@ -310,13 +314,33 @@ static func _post_lives(job: Dictionary, state, db, rng) -> void:
 ## [SRC: RiteResultPanelController.c OnClose 0x5a3ae0 L1202-1280;
 ## DisplayClass62_0.b__0 0x5b51c0 L121; GameController.FlashAndSortCard
 ## 0x54eff0; comparator 0x56f1c0, dump.cs:319322/325467-325468.]
-static func _close_sort_candidates(job: Dictionary, state) -> Array:
-	var selected: Array = job.get("back_card_uids", []).map(func(uid): return int(uid))
+static func _capture_result_card_rewards(job: Dictionary, state) -> void:
+	if not job.get("uses_card_rewards", false) or job.has("result_card_uids"):
+		return
+	var selected: Array = state.result_card_rewards.map(func(uid): return int(uid))
+	# COPY presentation is still unverified: retain its prior approximation
+	# explicitly until the Copy -> presentation chain is independently closed.
 	for op in job.get("deferred", {}).get("card_ops", []):
-		if int(op.get("op", -1)) in [GameState.CARD_OP_NEW, GameState.CARD_OP_COPY]:
+		if int(op.get("op", -1)) == GameState.CARD_OP_COPY:
 			selected.append(int(op.get("card_uid", 0)))
 	var visible: Array = state.visible_rail_card_uids()
-	return selected.filter(func(uid): return uid in visible)
+	job.result_card_uids = selected.filter(func(uid): return uid in visible)
+	# [SRC: OnClose 0x5a3ae0 collects cards then clears CardRewards BEFORE
+	# backCards.DoPostRite. A blocked continuation must not collect a second time.]
+	state.result_card_rewards.clear()
+
+
+static func _close_sort_candidates(job: Dictionary, state) -> Array:
+	var visible: Array = state.visible_rail_card_uids()
+	var selected: Array = job.get("back_card_uids", []).map(func(uid): return int(uid)).filter(func(uid): return uid in visible)
+	if job.has("result_card_uids"):
+		selected.append_array(job.result_card_uids.map(func(uid): return int(uid)))
+	else:
+		# Pre-list in-flight saves retain the old approximation.
+		for op in job.get("deferred", {}).get("card_ops", []):
+			if int(op.get("op", -1)) in [GameState.CARD_OP_NEW, GameState.CARD_OP_COPY] and int(op.get("card_uid", 0)) in visible:
+				selected.append(int(op.get("card_uid", 0)))
+	return selected
 
 
 static func _sort_closed_result(job: Dictionary, state, db) -> void:
