@@ -8056,6 +8056,222 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "结果名单REA重放与运行验证证据",
       "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/analysis-summary.json",
+      "bytes": 35001,
+      "sha256": "aa7a1d9954976358391b4e71683958be9cbf3a68b48f8641d231b18dbd39e5a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/close-receipt.json",
+      "bytes": 610,
+      "sha256": "1d08366eedacc198d6cdb43231d6ec041a3a42ce4ce820553bb8f35e5ca13ae9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/evidence-bundle.json",
+      "bytes": 4348096,
+      "sha256": "66ab8bf68ee9a3e951bb56293783fc83d50006aa5b7ce7dadcfc66369f0b3ac2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/export-receipt.json",
+      "bytes": 536,
+      "sha256": "75c7854b9791f7df3e27e80630c6844425f4d02c55cf1eab0af15328c928c226",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-card-copy-assembly.txt",
+      "bytes": 7782,
+      "sha256": "2dc66cc1dbb3e7f9261b3db99efed843055bd366caeede44a7419359c0d31dc3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-card-copy-pseudo.txt",
+      "bytes": 5473,
+      "sha256": "23bd7af6262ef6d1f86928199a50c4d098f9f351eb3038951c65b783f3435d0c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-card-copy.json",
+      "bytes": 6770780,
+      "sha256": "2d029a48ee941126604e0895a2b8aebc6ce0a68e88fca8f3852b482f3c78a5a6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-copy-do-assembly.txt",
+      "bytes": 3848,
+      "sha256": "6477fc30f3f201de5d9f6395d1d2e285ea7200e53be993a6f787cee41003c8c1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-copy-do-pseudo.txt",
+      "bytes": 1997,
+      "sha256": "7dd7169a12985fbdd9e91a86f0e728d7f50636b0a9ca70d2f3c71c928e401096",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-copy-do.json",
+      "bytes": 1828692,
+      "sha256": "08e5213cee3746af2332ad8dd2da476025f27aedcb880a09007384ccbe840506",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-extra-born-assembly.txt",
+      "bytes": 6749,
+      "sha256": "b10025fee8d6bcd7ac113529018b8defa64fb282b93312026456f0c4c5a9c092",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-extra-born-pseudo.txt",
+      "bytes": 4017,
+      "sha256": "2964dbd47ae11143c7d979eccfecb8d4b939a26d8221155c10ae86232c4c3246",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-extra-born.json",
+      "bytes": 5292910,
+      "sha256": "1dfc574d5d9ad48ec63a1758a11c0e35d9bc888c15bb9bd33a01f3fd40944465",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-remove-card-assembly.txt",
+      "bytes": 671,
+      "sha256": "034921e0cfb2ccfabc5200f3cc9bd70d8303987f4df795e76e86b7e961195611",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-remove-card-pseudo.txt",
+      "bytes": 406,
+      "sha256": "5b114ca063c867262a3ddf7e85758379ee6b8d6098b8867ef1d7db7eb0f04fae",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/function-remove-card.json",
+      "bytes": 198598,
+      "sha256": "268bac5018ad9259c6cdda876e9a363daf21e924c2050d09431d6773536349a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/ghidra-progress.log",
+      "bytes": 18688,
+      "sha256": "589bf0a5a20138ef429685b99a00ea1ed010f74afe0e13c3ae563d3b14198efb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/method-identities.json",
+      "bytes": 2238,
+      "sha256": "c5b32ca745b1783749baeb9a167428c7542adc1d22e97b28e0e4b28af644c16f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/resources.jsonl",
+      "bytes": 203,
+      "sha256": "60655a7bfcc59eca28dd5d6c850714fed1404e6440b58f056a96976984f1275b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/retry-server.log",
+      "bytes": 1080,
+      "sha256": "0887d47159ac55b5b0e287e378e9cac3b0f8409e70520853bc7d8cdfc98eb32f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/retry-timings.json",
+      "bytes": 1229,
+      "sha256": "31e74599c5a908fc9fda4361fe93b45896eba0bb413fe8c56a6b6c9df2aef341",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/run-probe.cjs",
+      "bytes": 2811,
+      "sha256": "96e56a5301ca70405ba21e0b21e586b53a88961cb960c4f380464d6929001d72",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/snapshot.json",
+      "bytes": 8691418,
+      "sha256": "eabaa75a616f535c6cfafaecbce56dc30c0b708a2372e9ea09cc306833e8b9da",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/source-crosscheck.json",
+      "bytes": 4392,
+      "sha256": "bf333e60f8c7c9dad7ef4cf9d4743e83ad34c761b87fc11df6f35e05424dcde0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/summarize.py",
+      "bytes": 1616,
+      "sha256": "5a779cda8be7dac6252f642c15d620c3fc82b13b6eb4c77d8c7c1934c917d54e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/verified-summary.json",
+      "bytes": 1399,
+      "sha256": "c598052d2a145968875795de860691a6e1d2df505a1b3252f7e308e58e6f5833",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA复制呈现静态审计与接口交叉核对",
+      "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

@@ -1,5 +1,40 @@
 # 验收、证据与当前交付状态
 
+<a id="copy-presentation-audit-20261020"></a>
+## REA 复制呈现与结果名单移除审计（2026-10-20）
+
+本批为静态审计，四个方法实际重新经REA/Ghidra分析；未修改运行时、未重跑GUT、未采集新的原作交互轨迹，完整复制/结果拖动仍🟡。补出了`RemoveCard`的接口调用线索，不能把“无直接caller”解释为无人调用。
+
+### 实际 REA 调用
+
+本地已安装REA MCP/stdio执行`open_binary → analyze_function ×4 → export_evidence_bundle → close_binary(snapshot_path)`，未导入旧快照。首个函数包含导入耗时870453ms（14分30.453秒），后续547/428/27ms；关闭成功。目标`D:/Sultans Game/GameAssembly.dll`前后SHA-256均为`96465c476693fa5ecd24609e4f22111ab92df1d60c93c195bc858f5842c8964f`，四个入口32字节及13份交叉源哈希保存在source-crosscheck.json。
+
+| 方法与VA | 本轮Evidence ID |
+|---|---|
+| CopyCard.Do回调b__1 0x180508090 | `ev_0478ce929c373035f0946e528fb07d3bbcceb97505ce3ff9bf475d333c13db7a` |
+| CardExtensions.Copy 0x18037f4e0 | `ev_41d3e1df3b163b8b444882045c49fd20bd77dc70a6b705ddfb60354a5acb6129` |
+| OperationContext.AddExtraResult_CardBorn 0x18039ee00 | `ev_9cde8f1108406e26fe084c853282d84c7d5da29eb1ef45ea7a23fc9b1945003c` |
+| RiteResultPanelController.RemoveCard 0x1805a45b0 | `ev_bbf050a16284f8ee20fc0b1db8db77b0b6839b07fd15f77de01d2a835567b055` |
+
+RemoveCard的内容证据ID与前轮相同，不据此声称新增唯一证据；本轮调用耗时、无快照导入、工具回包与新会话导出证明它被重新分析。方法名由script.json按地址交叉映射，不能把泛型共享地址的自动符号名当准确类型。
+
+### 已确认与边界
+
+1. **复制生成链（本轮REA）**：b__1调用CardExtensions.Copy(card,false)，然后AddExtraResult_CardBorn、NoteCardBeReward及EventTrigger.On。CardExtensions.Copy调用PlayerExtensions.AddCard、递归复制装备、复制运行时标签并写count；本轮两个方法体均未直接调用PutCardOnTable。调用者还包含拆分、堆叠、吸附与仪式回退等八个已解析入口，不把它们一并当成复制操作的呈现语义。dump.cs:313534–313547、388310–388311与对应.c交叉确认。
+2. **出生文案集合不同于奖励名单（本轮REA）**：AddExtraResult_CardBorn按文案/标签条件可能早退，后续写额外结果文本并将UID加入`OperationContext.cardBornResult@0x40`；dump.cs:394484确认HashSet字段。它不是`GameController.CardRewards@0x288`，不能因二者都涉及新卡而合并。
+3. **复制后的手牌显示（旧.c交叉核对，非本轮REA逐函数分析）**：PlayerExtensions.AddCard 0x38b620在no_add=false及相应标志下调用NotifyCardsChanged 0x3a4460；GameController.Awake所注册回调b__0 0x56f490设置NeedUpdateHandCards@0x2d8。Update调用UpdateHandCards 0x559d90，再经AddCard 0x54ad40创建/复用当前页控件；这些已读方法体未见向CardRewards追加。出生事件及其他间接回调的全链仍须核验，因此保留当前COPY名单近似，不把局部无直调升级为全局不入表结论。
+4. **RemoveCard行为（本轮REA）**：对面板`cards@0xE0`调用List.Remove，已解析直接caller仍为空。`RemoveCardOp 0x5a44a0`处理操作展示子控件，不能用其caller代替RemoveCard证据。
+5. **接口调用线索（旧.c＋dump/script，非本轮REA调用点分析）**：RiteResultPanelController实现ICardSlot（dump.cs:325449）；RemoveCard对应实现槽19（325553），接口RemoveCard是槽3（312118）。script.json定位ICardSlot_TypeInfo=0x182597e38；CardController.OnBeginDrag 0x5294e0在.c:782通过`FUN_180002bc0(3, ICardSlot_TypeInfo, slot, card)`间接调用，然后清slot@0x120并继续拖动。此前有交互使能、指针、冷却、CanMove等检查，不能简化为“所有拖动都移除”。Show 0x5a6d00的.c:823与Settlement.b__8 0x5b4850的.c:959把结果面板赋给卡牌控件slot；dump.cs:316967确认该字段为ICardSlot。CanMove由dump.cs:325565映射到0x341100，原DLL字节`b0 01 c3`支持返回true的静态推断；仍不是实机输入结果。
+6. **排除伪线索**：RemoveFromSlot 0x52ba20也使用槽3，但该分支要求CardSlotController类型，不能证明结果面板接收者可达。已有全部.c的精确RemoveCard名称搜索只找到定义；Unity导出.prefab/.unity/.asset未找到精确`m_MethodName: RemoveCard`绑定，这些有界阴性结果不否定接口分派。
+
+### 下一批验收范围
+
+优先REA复核OnBeginDrag的接口调用点、Show/Settlement的slot绑定及门禁；之后用真实鼠标覆盖结果卡拖出成功、取消/返回、覆盖层阻塞、保存后重建、关闭名单与闪烁，记录状态矩阵与原作过程证据。COPY继续单独核对出生事件和操作动画回调，不因本批四函数分析就删掉回退逻辑。
+
+四份value-flow均truncated=false，但间接目标、Ghidra终止调用假设和返回类型丢失仍存在（b__1在dump为IPromise而伪代码显示void）。导入日志仍有0x180a41090重叠修复失败、0x181744bb0修复警告；已保存日志是阶段采样，不是完整退出日志。静态源码交叉证据不算两条独立原作运行轨迹。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-copy-presentation/`。原始工具回包、伪代码/汇编导出、快照、源哈希、时限脚本、调用计时与限制已登记external-evidence.json。本轮content、运行时与基线标签不变；前批测试结果保持原范围，不追认成本轮验证。
+
 <a id="result-card-list-20261020"></a>
 ## 结果卡名单生命周期与苏丹卡漏收修复（2026-10-20）
 
