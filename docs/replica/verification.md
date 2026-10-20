@@ -1,5 +1,46 @@
 # 验收、证据与当前交付状态
 
+<a id="rea-close-chain-20261020"></a>
+## REA 实际复核：关闭、闪烁与结果卡收集（2026-10-20）
+
+**本批实际通过 REA 6.4.0 → Ghidra 12.1.4 分析原作DLL的8个函数，8份新Evidence全部成功；仅静态复核，未改运行时代码、未重跑GUT或采集新原作轨迹，完整功能仍🟡。** 先前旧语料审计不追认成REA结果。原作目标 `D:/Sultans Game/GameAssembly.dll`，SHA-256 `96465c476693fa5ecd24609e4f22111ab92df1d60c93c195bc858f5842c8964f`；分析前后文件哈希和8处32字节入口锚点一致。
+
+### 实际调用与证据
+
+使用已安装REA包的本地MCP SDK/stdio调用 `open_binary → analyze_function ×8 → export_evidence_bundle → close_binary`。为解决此前300秒超时，子进程环境仅对此次设置Ghidra启动时限1,800,000ms、客户端请求时限1,830,000ms；未下载或修改全局配置。首个OnClose查询耗时1,275,996ms（21分15.996秒），其余7个为28–1,098ms；这是复用同一已导入会话的结果，不能外推一般性能。
+
+| 方法 | 实际VA | 新REA Evidence ID |
+|---|---|---|
+| OnClose.b__0 | 0x1805b51c0 | `ev_d267d38a10d6168733f93ab72e4ead049d6eb5b0e7f5ed02cc8dc9b4be0a75de` |
+| FlashAndSortCard | 0x18054eff0 | `ev_6ed8267bba678c04d37a2337f5cbe92d911818d3707dc83fe56daa1d33d2d65f` |
+| GenCard | 0x18054f650 | `ev_2f21d1d7b2742fcedc47fdf2eca7dbfc848714e2d0abd0c674550577a8fd2124` |
+| GenSudanCard | 0x18054f6f0 | `ev_066e9fe498de5f58512db8f886b75695d549645a582f4443cdda8d86d6111e50` |
+| OnClose | 0x1805a3ae0 | `ev_192b7a7afb9cf814bcf444b786f5b88826c4e269c86fb424ccb2e59287d0588d` |
+| PutCardOnTable | 0x1805556c0 | `ev_9864e8d2a66bb56a7ffc51f7eeb395e172cb52994e1dfdf22a044ae3b65ee65b` |
+| RemoveCard | 0x1805a45b0 | `ev_bbf050a16284f8ee20fc0b1db8db77b0b6839b07fd15f77de01d2a835567b055` |
+| Settlement.b__4 | 0x1805b3a50 | `ev_e905fcfb64ccbee88eacaa37345eb8b3b9e46204c2844b6e23c67dad3ab5134a` |
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/`。每个function JSON是原始工具回包，pseudo/assembly文本由其normalized_result导出；analysis-summary.json保留调用关系、边界和限制，函数语义名由只读script.json的地址映射补充，不冒称REA自动恢复出C#名称。evidence-bundle.json、snapshot.json保留8份证据；关闭回执为8 primitive entries/8 evidence records，临时项目已消失。资源采样105次，Java PID 35920采样峰值2,223,828,992字节，非整个进程树峰值；ghidra-progress.log为阶段采样副本，不宣称完整退出日志。
+
+### 已确认的静态关系
+
+1. **OnClose → 结束事件 → 回调**：OnClose先处理`cards@0xE0`：有gameObject才检查当前手牌页，当前页卡加入flash集合；再清CardRewards，逐张执行backCards@0xE8的DoPostRite，检查存活及当前页后加入集合，最后调用OnRiteEnd并挂接回调。回调按RequestSavePlayer（0x556160）→ UpdateHandCards（0x559d90）→ FlashAndSortCard（0x54eff0）→ 清空finalPromise并Resolve执行。支持先前冻结集合与关闭接线的局部方向，不证明克隆的完整候选名单已等价。
+2. **漏参由汇编澄清**：新旧伪代码均只显示GetCardByUId的部分参数；新REA汇编0x1805a403f将Card+0x18载入R8D，0x1805a4043将Card+0x1C载入EDX，0x1805a4049调用0x18038cc40。因此同时传入实例UID和配置ID。dump.cs:389598–389599确认uid/id偏移，388679确认GetCardByUId(Player, card_id, uid)签名。不能凭伪代码漏参推断原作仅按ID查找。
+3. **FlashAndSortCard**：空集合早退；从当前手牌构建(card, uid是否命中)对并排序，再对每个控件Reset、设置flash、写bagpos=i+1。直接调用者查到5个：RitePanelController.OnClose（0x58edb0）、RitePanelShowController.OnClose（0x593b10）、Prompt.Hide.b__0（0x5a0aa0）、结果OnClose.b__0（0x5b51c0）、Wizard.OnEndDrawSudan（0x5ccf30）。本批只查调用边，不声称另4个调用者的方法体或交互均已审计；上一批结果关闭接线不能代表全部入口已还原。
+4. **结果列表不是NEW/COPY操作的同义词**：PutCardOnTable先向CardRewards@0x288追加卡，再按IsCurrentHandCard决定创建表现。REA已解析的直接调用者为GenCard和GenSudanCard，二者新方法体都调用PutCardOnTable；这是可解析直接引用的范围，不排除间接调用。不能先验排除苏丹卡，也不能仅据未见Copy直调就删除现有COPY路径。
+5. **列表共享与清空**：Settlement.b__4把CardRewards引用赋给结果面板cards@0xE0，随后清空这个列表，再构建并执行DoSequence。这里是共享列表引用，不是复制已有奖励快照。后续生成/移出规则仍须连同整个结算操作链追踪。
+6. **RemoveCard**：从cards@0xE0移除给定对象。REA本轮未返回已解析caller；虚调用/接口及目标不明的间接流仍有缺口，不能写成“没有调用者”或猜测具体拖动会调用它。
+
+交叉源：只读GameController.c的PutCardOnTable/GenCard/GenSudanCard/FlashAndSortCard；RiteResultPanelController.c的OnClose/RemoveCard；DisplayClass62_0.c的OnClose.b__0；DisplayClass56_0.c的Settlement.b__4。dump.cs:319823、320063、320066、320078、320240、324959、325087、325094、325549、325552提供字段/方法定位；script.json补充准确签名与地址。源码哈希、DLL入口及核验结果见target-anchors.json、verified-summary.json。同一DLL的两种静态分析不是两条独立实机轨迹。
+
+### 不完整项与下一步
+
+- FlashAndSortCard的native_value_flow.truncated=true；其余7个为false，但false也不证明整个行为链完整。函数body可能不连续（Flash为5段、OnClose为6段）；REA报告的terminal/no-return假设可能裁掉异常回落路径，不能将跨度当完整连续代码。
+- Ghidra伪代码/签名仍有类型丢失：例如GenCard被反推为void，而dump/script声明Card返回；Settlement.b__4声明IPromise，新伪代码仍为void。共享泛型函数同地址可对应多个符号名，不能单凭自动选取的名字判断语义。
+- 导入日志保留0x180a41090函数重叠修复失败及0x181744bb0修复警告；地址不在本批目标入口，不等于全库分析无错。OnClose UID参数以实际指令核验，未靠类型猜测补齐。
+- **下一项仍取METHOD_MAP结果卡收集缺口**：明确维护与PutCardOnTable对应的结果列表，验证苏丹卡、复制呈现链、逐张后处理和RemoveCard的实际调用路径，再做两尺寸真实输入及存读档闭合。新查出的另4个闪烁调用入口单独保留为待审计，不能一并标绿。
+- 本批无运行时代码、content或基线标签改动；前批31/31、13/13与原作54/54仅保留其原有范围，不算本批新增测试。tools/check_workspace_documentation.py通过（137来源记录、567整合证据项、11771外部迁移文件），git diff --check通过；本轮41份外部分析文件已登记。
+
 <a id="result-flash-fix-20261019"></a>
 ## 结算关闭闪烁接线与表现进度恢复（2026-10-19）
 
