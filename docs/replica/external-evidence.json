@@ -7144,6 +7144,334 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "验证运行或诊断产物",
       "boundary": "关闭闪烁局部修复；保留失败诊断，受控输入与原作状态回放分开，不证明完整结果卡收集或原作动画实机等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/analysis-summary.json",
+      "bytes": 66200,
+      "sha256": "d2174d89e8b83d46d05e510ea622afcf37581efdd2b471d2a23c5a57a9704a74",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/close-receipt.json",
+      "bytes": 608,
+      "sha256": "40054286c3d8f390af3e48f63c4ee34949ec7e74a5a9d9d595a7b092d5f209a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/evidence-bundle.json",
+      "bytes": 11111424,
+      "sha256": "cf4c44db09634b06dc081b050015d0226c36839fc9e7cf995eda697d06127b4a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/export-receipt.json",
+      "bytes": 534,
+      "sha256": "ed65d23632f288c84b399bceae122dbac23bd92d1ea02f6a9be9dbe22c20b939",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-close-callback-assembly.txt",
+      "bytes": 8486,
+      "sha256": "3be74a69b768400f65a979292fbc981c9aeaa28db6591045cc2243a50968dc28",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-close-callback-pseudo.txt",
+      "bytes": 5261,
+      "sha256": "a3476b34767b649721bb597b05d4a29a545804cfc6f2d3412907509f79cd6000",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-close-callback.json",
+      "bytes": 3869174,
+      "sha256": "f264ff1b673a4f6d5ad05e6c90d7c0fb6c07a58ffbe48e0036de28aaf2a1c3c1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-flash-and-sort-assembly.txt",
+      "bytes": 11224,
+      "sha256": "b87d3ccf9bb4e0d5e7c300426f04cbc1ea77ffcd61786b91739c20d1b6a94688",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-flash-and-sort-pseudo.txt",
+      "bytes": 6982,
+      "sha256": "b2028d14c16da66a44795ac56c944bedc609c03a1f9a3c5b7a321b7a72579df3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-flash-and-sort.json",
+      "bytes": 11244980,
+      "sha256": "ed0c0576dc5f674c1fbba5391a81318e4e09770e18e293d915f756e7ee6d575e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-card-assembly.txt",
+      "bytes": 1304,
+      "sha256": "2ebf9e8bdc7e072aac233213114531101c6b3bbe4779a11a9d717746c238aa54",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-card-pseudo.txt",
+      "bytes": 596,
+      "sha256": "79f6ddc7f0196d77a496c1aea15681d7033006968e4035a61b90e624ea25f13f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-card.json",
+      "bytes": 397798,
+      "sha256": "4eaa0525ed3eb2274975e6e6872bbfc69a3e01b94da64deeb82b8aa28d62d505",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-sudan-card-assembly.txt",
+      "bytes": 6301,
+      "sha256": "885bad95706b7febee483e83c149daa5e81fcf3deb6df296c4c1aa628fbfdd8f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-sudan-card-pseudo.txt",
+      "bytes": 3577,
+      "sha256": "ab4ca00cb5b58e8b909e139cba3eb37804bcfc7ad9e97463d9840730d2f74eff",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-gen-sudan-card.json",
+      "bytes": 4014540,
+      "sha256": "efa4bdeee73f7d7c8c14974629f31a5195431044e1ef61ab65e6a0bbafbc8178",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-on-close-assembly.txt",
+      "bytes": 12322,
+      "sha256": "f1e9a44c21704ee27fde706a3f2f97ac30e7f5d427d878a49a24fd5f8354f110",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-on-close-pseudo.txt",
+      "bytes": 9684,
+      "sha256": "a77cf48da2f3bed7b77b9da2c68ee2a57c0c52f0c3a23fafb8b54ec4e1732d5b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-on-close.json",
+      "bytes": 9685922,
+      "sha256": "e414c053efc3d82520bf7268873bd2c72c988e81082f38b9ff83af5f02e3781d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-put-card-on-table-assembly.txt",
+      "bytes": 3840,
+      "sha256": "956c7515e054732f1d76eaf16ff95307582448c04a72db5b3b8a55903f1be1b5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-put-card-on-table-pseudo.txt",
+      "bytes": 2735,
+      "sha256": "bbb9bea8c47ee096283babbea14a8231916932c28c1e6d6d8f019f36e209c24c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-put-card-on-table.json",
+      "bytes": 1570122,
+      "sha256": "01988d18781c69b8f807641427b965e743bf01a8223e19e808e78bb978835866",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-remove-card-assembly.txt",
+      "bytes": 671,
+      "sha256": "034921e0cfb2ccfabc5200f3cc9bd70d8303987f4df795e76e86b7e961195611",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-remove-card-pseudo.txt",
+      "bytes": 406,
+      "sha256": "5b114ca063c867262a3ddf7e85758379ee6b8d6098b8867ef1d7db7eb0f04fae",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-remove-card.json",
+      "bytes": 198598,
+      "sha256": "268bac5018ad9259c6cdda876e9a363daf21e924c2050d09431d6773536349a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-settlement-collect-assembly.txt",
+      "bytes": 7002,
+      "sha256": "f936919c85bcff15de63d16e7327d1ed6290b4463b2254ecb545f61dd1093ac3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-settlement-collect-pseudo.txt",
+      "bytes": 5039,
+      "sha256": "43e038ce1c53fa1acc2c6da8afeabe79523e148f9ebb6251aa65a3688f40650f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/function-settlement-collect.json",
+      "bytes": 5002456,
+      "sha256": "c089e7ec95d2cca95bb69739bddc92170ce0b7e9739ddb4b753f27926e724784",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/ghidra-progress.log",
+      "bytes": 21342,
+      "sha256": "a7ad567157d4b562be0fa4194992c861288207f467b8777f42ed6747fb4eae04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/monitor.ps1",
+      "bytes": 751,
+      "sha256": "a984f4ed7a3cf51f3d49a531be30719e985f41414a3a38723cfc3edcf20bc6c8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/resources.jsonl",
+      "bytes": 13784,
+      "sha256": "ae6bc9aa62d35c4e6a3c4719ef7e6dd5584e23940f14a97db0f54fc3049e2e4e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/retry-server.log",
+      "bytes": 1803,
+      "sha256": "5202f1862ecd39b6a4f83272fae28b7fd80cfc0900aafaf856e538e82ab9dbd1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/retry-timings.json",
+      "bytes": 1783,
+      "sha256": "ce9cf9eb66e65b58395587a0a5a04d90130f1dd3c5cb1c2ef02dff52d99bdf57",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/run-probe.cjs",
+      "bytes": 3200,
+      "sha256": "17e2d83dbf4177ad8f1f769f8d554772253436b19bf9c84050f48f56de620b08",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/snapshot.json",
+      "bytes": 22211962,
+      "sha256": "a1f351922c1b4b43344c377d5818130cb6069a0cc01a70a13f5401e3be0c3225",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/summarize.py",
+      "bytes": 1616,
+      "sha256": "5a779cda8be7dac6252f642c15d620c3fc82b13b6eb4c77d8c7c1934c917d54e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/target-anchors.json",
+      "bytes": 2738,
+      "sha256": "cec6851c73f1a70731bbc21f4392344519a66572c9910fcbe64ed84feefa65c1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/thread-sample.txt",
+      "bytes": 44135,
+      "sha256": "4bd6754eeccd040232e350f08cb1765d4ac937f5b1748ea8793f8a71407a82b0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/tooling.json",
+      "bytes": 476,
+      "sha256": "9a6dbd60e7ef8fb3dc968f38c2d0f52a07fd0abee1a4f2bca1ed40783682780f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-rea-close-chain/verified-summary.json",
+      "bytes": 809,
+      "sha256": "8510cb40f2cca5ea4c77a6afffc03612f2f56bfde31af490878d1bf33d343e35",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "逆向分析或诊断产物",
+      "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
