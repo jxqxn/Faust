@@ -441,3 +441,76 @@ func test_close_flash_waits_for_end_and_survives_refresh_and_disk_at_both_sizes(
 		assert_false(bool(ended.hand_card_flashes[str(returned)].rising), "completed flashes do not replay on load")
 		viewport.queue_free()
 		await wait_process_frames(2)
+
+
+func test_generated_sudan_is_collected_and_survives_disk_before_close() -> void:
+	for dimensions in [Vector2i(1920, 1080), Vector2i(1280, 720)]:
+		var state := TraceState.new()
+		state.reset_sudan_pool_to_ids([2010002])
+		var rite = state.create_rite_instance(5000001)
+		var viewport := _viewport(dimensions)
+		var view := _mount(viewport, state, rite.uid)
+		await wait_process_frames(2)
+		_prepare(view)
+		await _click(viewport, view._result_next_button)
+		# Controlled generation while the result panel owns CardRewards.
+		# REA GenSudanCard 0x54f6f0 -> PutCardOnTable 0x5556c0.
+		assert_eq(RoundLoop.draw_weekly_sudan(state, db, RNG.new(9615)), 2010002)
+		var generated := int(state.active_sudan_cards[0].card_uid)
+		assert_true(SaveSystem.save(state))
+		view.get_meta("test_screen").queue_free()
+		await wait_process_frames(2)
+		state = _read_saved()
+		view = _mount(viewport, state, rite.uid)
+		view.restore_round_result(state.rite_result_display)
+		await wait_process_frames(3)
+		await _click(viewport, view._result_next_button)
+		var widget := _freeze_and_find_flash(view.get_meta("test_screen"), generated)
+		assert_true(widget._flash_rising or widget._flash_time > 0.0, "generated Sultan belongs to close flash set after disk reload")
+		viewport.queue_free()
+		await wait_process_frames(2)
+
+
+func test_result_list_distinguishes_table_generation_and_freezes_once() -> void:
+	var state := TraceState.new()
+	var stale := state.add_card_to_hand(2000006, db)
+	var rite = state.create_rite_instance(5000001)
+	var selection := RiteResolver.RiteResult.new()
+	var job := RiteSettlement.begin(rite.uid, selection, {"rite_id": 5000001}, state, db, RNG.new(1), true)
+	assert_true(state.result_card_rewards.is_empty(), "Settlement b__4 clears prior shared list")
+	var generated := ResultExec.execute({"card": 2000372}, state, db)
+	var reward := int(generated.card_ops[0].card_uid)
+	state.get_card_instance(reward).tags["own"] = 1
+	assert_true(reward in state.visible_rail_card_uids(), "fixture reward is on current hand page")
+	state.begin_result_op_log()
+	var raw = state.create_card_instance(2000006, db, "hand")
+	state.add_card_to_hand(raw.uid, db)
+	var raw_ops: Array = state.drain_result_op_log()
+	job.deferred.card_ops.append_array(generated.card_ops)
+	job.deferred.card_ops.append_array(raw_ops)
+	assert_eq(state.result_card_rewards, [reward], "raw allocation/return is not PutCardOnTable")
+	RiteSettlement._capture_result_card_rewards(job, state)
+	assert_eq(job.result_card_uids, [reward])
+	assert_true(state.result_card_rewards.is_empty(), "OnClose clears list before post-rite effects")
+	var later := state.add_card_to_hand(2000006, db)
+	RiteSettlement._capture_result_card_rewards(job, state)
+	assert_eq(job.result_card_uids, [reward], "resuming a blocked close cannot collect again")
+	assert_eq(state.result_card_rewards, [later], "later generation belongs to the shared list, not frozen close")
+	assert_true(SaveSystem.save(state))
+	var restored := _read_saved()
+	var saved_job: Dictionary = restored.rite_settlements[str(rite.uid)]
+	assert_eq(RiteSettlement._close_sort_candidates(saved_job, restored), [reward])
+	assert_eq(restored.result_card_rewards, [later])
+	assert_false(saved_job.result_card_uids.has(stale))
+	assert_false(saved_job.result_card_uids.has(raw.uid))
+
+
+func test_pre_list_save_keeps_legacy_candidates() -> void:
+	var state := TraceState.new()
+	var reward := state.add_card_to_hand(2000372, db)
+	state.get_card_instance(reward).tags["own"] = 1
+	assert_true(reward in state.visible_rail_card_uids(), "legacy fixture reward is on current hand page")
+	var job := {"back_card_uids": [], "deferred": {"card_ops": [{"op": GameState.CARD_OP_NEW, "card_uid": reward}]}}
+	RiteSettlement._capture_result_card_rewards(job, state)
+	assert_false(job.has("result_card_uids"), "no new list marker in old in-flight saves")
+	assert_eq(RiteSettlement._close_sort_candidates(job, state), [reward])

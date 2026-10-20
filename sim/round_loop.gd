@@ -496,6 +496,7 @@ static func _promote_sudan_pool_entry(state, db, entry, life_override: int = -1)
 	# [SRC: GameController.c @ GenSudanCard (0x54f6f0) -> PutCardOnTable (0x5556c0)]
 	if state.has_method("record_only_card"):
 		state.record_only_card(card_id, db)
+	state.record_result_card_reward(instance.uid)
 	return instance
 
 

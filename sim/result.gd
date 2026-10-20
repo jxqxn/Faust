@@ -1019,6 +1019,8 @@ static func _generate_card(card_id: int, tag_modify: String, state, db) -> int:
 				int(state.effective_card_tags(instance.uid, db).get(tag_name, 0)),
 				db
 			)
+	# [SRC: GenCard 0x54f650 calls PutCardOnTable after its extra callback.]
+	state.record_result_card_reward(instance.uid)
 	return instance.uid
 
 
