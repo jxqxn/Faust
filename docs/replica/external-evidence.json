@@ -7472,6 +7472,590 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "逆向分析或诊断产物",
       "boundary": "本次REA八个函数静态分析；保留值流截断、no-return与间接引用缺口，不代表运行时或完整交互等价。"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-console.log",
+      "bytes": 288510,
+      "sha256": "2a29dc2d2f1f01007066c818acc70fcc95abef3906f3f148204f6d9ce0060455",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-data/global.json",
+      "bytes": 326,
+      "sha256": "e593b14d6811a8e356115334fc8ed8b918a8f8ab5dde7633bd6d6d6f0553c56a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/after.log",
+      "bytes": 274723,
+      "sha256": "d834e7d5eca51e5646b1e54ff69147b618a58a47c333935707689453560005cb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-console.log",
+      "bytes": 19897,
+      "sha256": "186f74247319e27949a4d50e4828147db0fcb21a8a91fc90ff3211034383e203",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/before.log",
+      "bytes": 17473,
+      "sha256": "cdd7edf50d4b8d32ff1cd2aaecf34b4c01fa4988ca898a85bd265d9dee58f440",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-committed-1280.png",
+      "bytes": 1747820,
+      "sha256": "e6cc4fcb955058437d30f5bc27b9dc412b8f2991fb6ae3ed98856d382e7a938a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-console.log",
+      "bytes": 291393,
+      "sha256": "78051083d0250d90012999c881b535aae515896d1635a3ad66dfd4db00634334",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "0d48abfb70c48a29d95118b50f1d842ce45661f92f312e914b49570b54b937f0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/final-boundary.log",
+      "bytes": 277342,
+      "sha256": "54f7d8b95540b21920aa7b0a1c1e82d4686793f4063d247bc8ab30648a4ca382",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/rea-replayed-evidence.json",
+      "bytes": 17366630,
+      "sha256": "3effd18b2f930731063ac267e1b4cb5166daf85b5f8599bfc19fe04c28d2ce51",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/run.ps1",
+      "bytes": 2221,
+      "sha256": "1336a95de47b4de9a080e1cf67cae34fd8c81ef3ca6f3e4c6ed5caeb1bd5e242",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/test_card_rewards_probe.gd",
+      "bytes": 1378,
+      "sha256": "aba8b676c6a5106a0cfd90ba389b6429f912a72a9c17cdd5579879ebfd78158d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verification-summary.json",
+      "bytes": 2630,
+      "sha256": "2688b352f03cf71ffc10e0fe990dc16ea6d59c8fc4c93a24c36846a04ee0ec13",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-console.log",
+      "bytes": 290623,
+      "sha256": "354b811a4b430039eeaa98f56adde3d5eeb0165a46af29dd5d69cfe3c0b1a13a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "afcab49869ef45193faed846bfe90378f63dbb6d8fc0e15ba97bbc604ce4c146",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-boundary.log",
+      "bytes": 276621,
+      "sha256": "bfe0009348b4b6638594134bdb63e8be574afde4a5a1166e089b67d4a6c2b21c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-generation-console.log",
+      "bytes": 94318,
+      "sha256": "601b619b93b73959b055d2b3f6056072fafe41ef013f78ade2849729da4554c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-generation-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-generation-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-generation.log",
+      "bytes": 85466,
+      "sha256": "ddb84acc0b49b80e7e2586d9fbd8ad15faff17648edde4414a9589da0d84d226",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-manager-console.log",
+      "bytes": 14717,
+      "sha256": "37dfb52815000c06c0f82f6e5342571f37431177ebc43768ec9520f4d2feee0c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-manager-receipt.json",
+      "bytes": 457038,
+      "sha256": "2816cec1d72e7eefedfcabe5d3a44ad42beed21822b8b2571299ec3deee2aef8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-manager.log",
+      "bytes": 12607,
+      "sha256": "8f5497ab0812c6c5aa71e411604684965617c0f059a25b30c6e9f0f813e6bb1a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-original-console.log",
+      "bytes": 13917,
+      "sha256": "55370b65ccc8218ec9373c943861ef7f573a41016afc169ad8bc334cda20389e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-original-receipt.json",
+      "bytes": 443673,
+      "sha256": "1c61b8dfc526639737330a27cce676e8779c5dd3b510eef9bc8be1cf7cf4ce82",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/verified-original.log",
+      "bytes": 11887,
+      "sha256": "7559ab965e9496aa86df5323524512c7a607572ac65dc69fd14307ac0ed781c8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果名单REA重放与运行验证证据",
+      "boundary": "本次输入与快照复用；含失败夹具迭代，不证明完整原作等价"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

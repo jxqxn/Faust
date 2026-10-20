@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-20结果名单局部修复（cfc7ae66）：REA快照重放四方法，按CardRewards@0x288/dump.cs:319823维护共享结果列表，开始清空、关闭前冻结、存档恢复；修复苏丹池晋升漏收。关闭专项34/34、生成回归45/45，两条原作轨迹结算和读档各54/54。COPY、控件存在性、逐张后处理与RemoveCard仍近似/待查，完整功能保持🟡，见[结果名单验收](replica/verification.md#result-card-list-20261020)。
+
 2026-10-20实际REA复核：原作DLL的OnClose、回调、FlashAndSortCard与结果卡收集共8函数新分析成功，支持前批局部接线；汇编确认GetCardByUId同时接收ID/UID。结果列表为共享CardRewards引用，不能等同NEW/COPY；Flash另有4个调用入口，本批只定位引用未审计其完整行为。完整收集/表现仍🟡，下一步优先结果列表生命周期，见[REA闭合链复核](replica/verification.md#rea-close-chain-20261020)。
 
 2026-10-19闪烁接线已局部修复（934095c2）：按FlashAndSortCard 0x54eff0对当前页全部卡Reset并设置集合成员flash；CardFlashController 0x52e330/0x52e2d0与CardNew.prefab:1898–1922提供进度/曲线背书。将控制器time/flash映射为按UID保存的宿主表现状态，以通过刷新和磁盘重建；这是宿主持久化适配，不宣称原作存档含这些字段。专项31/31、原失败探针组13/13、新旧原作轨迹结算和读档各54/54；完整结果卡收集和原作动画实机对拍仍🟡，见[闪烁接线验收](replica/verification.md#result-flash-fix-20261019)。

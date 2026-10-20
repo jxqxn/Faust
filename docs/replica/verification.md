@@ -1,5 +1,37 @@
 # 验收、证据与当前交付状态
 
+<a id="result-card-list-20261020"></a>
+## 结果卡名单生命周期与苏丹卡漏收修复（2026-10-20）
+
+本地实现提交`cfc7ae66`，隔离受测提交`f92f779a`，六文件Git blob一致。结果收集仍🟡：修复了仅从NEW/COPY操作日志取名单造成的苏丹卡漏收；不宣称完整结果面板或原作动画等价。
+
+### REA 使用与原作映射
+
+本轮实际调用REA `open_binary(snapshot_path) → analyze_function ×4 → export_evidence_bundle → close_binary`，重放PutCardOnTable 0x5556c0、Settlement.b__4 0x5b3a50、GenSudanCard 0x54f6f0、OnClose 0x5a3ae0。返回明确注明“Loaded from a local REA analysis snapshot; this call did not re-run the provider.”：这是上节新Ghidra结果的快照复用，不是再次新反编译。导出含8份导入记录与4份重放记录，ID、父快照哈希见外部verification-summary.json。
+
+`GameController.CardRewards@0x288`（dump.cs:319823）与结果面板`cards@0xE0`共享列表；PutCardOnTable先登记再判手牌呈现。宿主增加result_card_rewards：普通生成在额外标签回调后登记，苏丹池晋升保留原UID并登记；低层create_card_instance与已有UID返还不直接登记。Settlement开始清空，关闭进入post_lives之前冻结当前页名单并清空，阻塞恢复不重复收集。背书来自上节REA伪代码/汇编以及只读.c、dump.cs字段与签名。
+
+SaveSystem可选字段保存共享名单，job.result_card_uids保存关闭时冻结名单，读回规范化为整数UID；新局清空，旧版在途结算保持原NEW/COPY回退。这是宿主场景恢复适配，不声称原作Player存档保存该UI列表，版本保持9。
+
+### 验收矩阵与失败记录
+
+| 边界 | 本轮证据 |
+|---|---|
+| 修复前 | 新苏丹卡真实关闭探针在1920×1080、1280×720均漏闪；13测试中12通过、220/222断言 |
+| 真实输入与恢复 | 两尺寸真实鼠标提交及关闭；结果面板期间受控晋升苏丹卡，保存、销毁场景、磁盘读档、恢复面板后关闭，控件开始闪烁 |
+| 列表生命周期 | 开始清空旧名单；普通生成登记、仅创建/返还不登记；关闭冻结一次；后续生成不混入旧名单；冻结名单保存恢复；旧在途存档回退 |
+| 既有表现边界 | 阻塞结束提示、峰值/回落/结束恢复及非匹配卡Reset随关闭专项重跑；34/34、458断言 |
+| 生成相关回归 | 苏丹卡、复制、实例、手牌位置四脚本45/45、853断言 |
+| 原作裁判 | 旧无人治理与新法拉杰治理两条既存原作轨迹，结算后与读档后分别各54/54；随机带13/13与26/26，errors均为空 |
+
+保留全部迭代：after最初32/32、443断言；final-boundary新增两项普通卡测试因夹具缺少own标记而32/34失败，补齐可见手牌前提及断言后verified-boundary为34/34。未放宽运行时筛选。存档拒绝测试的预期warning保留，不作为运行错误。
+
+### 未闭合项与下一步
+
+苏丹卡探针是结果面板持有期间受控调用晋升入口，不是新采集的原作可达剧情轨迹；原作存档对拍仅覆盖列出的两条轨迹。COPY仍显式保留旧近似；当前页可见卡用于近似原作gameObject存在判断；backCards逐张DoPostRite的时点、RemoveCard实际调用链、其他四处闪烁入口和原作动画过程对拍仍未闭合。下一项优先用REA追踪COPY呈现及RemoveCard，不能因本批绿色测试标全链完成。
+
+外部证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261020-result-card-list/`；含REA完整导出、探针、各次日志/截图/隔离存档和对拍回执，逐文件登记external-evidence.json。content与固定基线标签未改动；仅本地提交，未推送。
+
 <a id="rea-close-chain-20261020"></a>
 ## REA 实际复核：关闭、闪烁与结果卡收集（2026-10-20）
 
