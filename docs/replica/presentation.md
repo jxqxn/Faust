@@ -1,5 +1,12 @@
 # 界面、输入、动画与声音
 
+## 结果卡呈现持有（2026-10-21）
+
+正常Settlement完成时，job.presented_result_uids固定本次结果面板持有的真实卡。GameScreen在await_close期间不建立这些卡的手牌控件，OnClose进入post_lives时恢复；操作展示卡独立保留，规则资格和卡实例所有权不变。字段随rite_settlements保存，读取UID规范化；旧在途档没有此字段时保留旧行为。
+
+原作依据为Settlement.b__8 0x5b4850重挂隐藏container、OnClose 0x5a3ae0及AddCard 0x54ad40返回手牌。宿主尚以当前手牌资格近似gameObject存在性，因此完整呈现仍🟡；[输入、恢复、对拍与限制](verification.md#result-visibility-fix-20261021)。
+
+
 <a id="armageddon-fix-20261015"></a>
 ## 仪式专属音乐接线与恢复（2026-10-15）
 

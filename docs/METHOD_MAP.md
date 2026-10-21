@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-21结果持有修复（3f3fe881）：绑定时保存presented_result_uids，GameScreen等待关闭期间排除这些物理手牌，post_lives释放；存档重建保留，其他/后续卡不追加入表。REA关闭链两方法快照重放；专项36/36、502断言，两条既存原作带结算和读档各54/54。gameObject存在性仍用手牌资格近似，完整表现🟡；见[本批验收](replica/verification.md#result-visibility-fix-20261021)。
+
 2026-10-21可见性续批：REA快照重放OnClose及回调两方法；核对AddCard重挂手牌/清slot、UpdateHandCards、133动画及容器父级。宿主两尺寸真实点击与双次读档探针32/36，四项均为结果期真实卡提前可见；关闭后呈现与闪烁启动通过。下一项为结果控件持有状态及恢复，不是删除奖励名单或全局禁拖；完整验收仍🟡，见[隐藏与回手牌链](replica/verification.md#result-visibility-chain-20261021)。
 
 2026-10-21结果拖动审计：REA新分析4函数，接口helper因传输上限未取得完整回包；原作Prefab与GameScene真实卡容器均默认inactive，结算锁暂停常规手牌刷新。宿主两尺寸真实拖动探针22/24，名单删除预期尚无原作可达性背书，不能据失败直接修复。下一步改为核验容器启用/回手牌状态矩阵，保持🟡；见[拖动与隐藏容器审计](replica/verification.md#result-drag-audit-20261021)。
