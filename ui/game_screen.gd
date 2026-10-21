@@ -1133,7 +1133,7 @@ func refresh() -> void:
 	# original runtime count badge: 8 -> two visible objects, 7 + 1.]
 	# Preserve each UID as a separate hit target until an explicit stack action.
 	var next_known_uids: Dictionary = {}
-	for card_uid in _state.visible_rail_card_uids():
+	for card_uid in _state.presented_rail_card_uids():
 		var uid := int(card_uid)
 		if _state.is_active_sudan_card(uid):
 			var asc = _active_sudan_for_card(uid)
@@ -1666,7 +1666,7 @@ func _global_rail_insert_index(page_index: int, dragged_uid: int) -> int:	# A sc
 	for uid in _state.rail_order:
 		if int(uid) != dragged_uid:
 			remaining.append(int(uid))
-	var page: Array[int] = _state.visible_rail_card_uids()
+	var page: Array[int] = _state.presented_rail_card_uids()
 	page.erase(dragged_uid)
 	if page.is_empty():
 		return remaining.size()
