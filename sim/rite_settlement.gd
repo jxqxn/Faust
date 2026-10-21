@@ -195,6 +195,8 @@ static func pump(state, db, rng) -> void:
 						state.remove_card_instance_from_play(consumed.uid, false)
 				RoundLoop.finalize_rite_settlement(instance, job.deferred, state, db, job.table, rng)
 				job.phase = "await_close" if job.get("wait_for_close", false) else "post_lives"
+				if job.phase == "await_close":
+					_bind_result_presentation(job, state)
 		if job.phase == "post_lives":
 			_capture_result_card_rewards(job, state)
 			_post_lives(job, state, db, rng)
@@ -307,6 +309,18 @@ static func _post_lives(job: Dictionary, state, db, rng) -> void:
 			{"card_uid": uid, "self_card_uid": uid, "settlement_job": str(job.uid)})
 		if not state.pending_operations.is_empty() or state.over_pending:
 			return
+
+
+## [SRC: Settlement.b__8 0x5b4850 reparents existing reward objects into
+## container@0x98; dump.cs:325458. GameScene GO308 is inactive.]
+## Capture once at binding, not from the live reward list on every refresh.
+## Current-hand eligibility remains the host proxy for source gameObject presence.
+## Persisted job data reconstructs presentation only, not original save fields.
+static func _bind_result_presentation(job: Dictionary, state) -> void:
+	if job.has("presented_result_uids"):
+		return
+	var eligible: Array = state.visible_rail_card_uids()
+	job.presented_result_uids = state.result_card_rewards.map(func(uid): return int(uid)).filter(func(uid): return uid in eligible)
 
 
 ## OnClose accumulates resultCards/backCards before OnRiteEnd; b__0 promotes

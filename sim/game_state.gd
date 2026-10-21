@@ -2067,6 +2067,23 @@ func is_hand_card(uid: int, db = null) -> bool:
 	return false
 
 
+## Presentation-only ownership; rule queries still use visible_rail_card_uids.
+## [SRC: Settlement.b__8 0x5b4850 -> inactive result container;
+## OnClose 0x5a3ae0 -> AddCard 0x54ad40 reparents to hand before end events.]
+## Missing fields in older in-flight saves retain their previous presentation.
+func presented_rail_card_uids() -> Array[int]:
+	var held := {}
+	for job in rite_settlements.values():
+		if job.get("phase", "") == "await_close":
+			for uid in job.get("presented_result_uids", []):
+				held[int(uid)] = true
+	var result: Array[int] = []
+	for uid in visible_rail_card_uids():
+		if not held.has(uid):
+			result.append(uid)
+	return result
+
+
 func visible_rail_card_uids(bag_index: int = -1) -> Array[int]:
 	sync_rail_order()
 	var page := current_bag_index if bag_index < 0 else bag_index

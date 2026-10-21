@@ -514,3 +514,30 @@ func test_pre_list_save_keeps_legacy_candidates() -> void:
 	RiteSettlement._capture_result_card_rewards(job, state)
 	assert_false(job.has("result_card_uids"), "no new list marker in old in-flight saves")
 	assert_eq(RiteSettlement._close_sort_candidates(job, state), [reward])
+
+
+func test_result_presentation_binding_is_frozen_and_does_not_change_rule_membership() -> void:
+	var state := TraceState.new()
+	var reward := state.add_card_to_hand(2000372, db)
+	state.get_card_instance(reward).tags["own"] = 1
+	var other := state.add_card_to_hand(2000006, db)
+	state.get_card_instance(other).tags["own"] = 1
+	state.result_card_rewards = [reward]
+	var job := {"phase": "await_close"}
+	state.rite_settlements["99"] = job
+	RiteSettlement._bind_result_presentation(job, state)
+	assert_true(reward in state.visible_rail_card_uids(), "ownership and rule scope unchanged")
+	assert_false(reward in state.presented_rail_card_uids(), "bound physical card leaves hand presentation")
+	assert_true(other in state.presented_rail_card_uids(), "unrelated hand remains usable")
+	var late := state.add_card_to_hand(2000006, db)
+	state.get_card_instance(late).tags["own"] = 1
+	state.result_card_rewards.append(late)
+	RiteSettlement._bind_result_presentation(job, state)
+	assert_true(late in state.presented_rail_card_uids(), "later generation is not retroactively bound")
+	assert_true(SaveSystem.save(state))
+	var restored := _read_saved()
+	assert_false(reward in restored.presented_rail_card_uids(), "JSON numeric UIDs restore ownership")
+	restored.rite_settlements["99"].phase = "post_lives"
+	assert_true(reward in restored.presented_rail_card_uids(), "OnClose releases before blocking end event")
+	job.erase("presented_result_uids")
+	assert_true(reward in state.presented_rail_card_uids(), "legacy job retains legacy presentation")
