@@ -8832,6 +8832,470 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "结果卡可见性与回手牌证据",
       "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-closed-1280.png",
+      "bytes": 1688925,
+      "sha256": "b15ef5895fed713c2c910545afaece74e99e70d41448b31ddd0df37f82363388",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-closed-1920.png",
+      "bytes": 3367057,
+      "sha256": "2b1b40ddefc05ba5bbd225a98b8f80c34038a36362616bb43a2a233ee7c1368d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-closing-prompt.png",
+      "bytes": 1630298,
+      "sha256": "b91c114832289f964191e46fb664ad860fdddd3f9257d0ad8d7286401c26f323",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-console.log",
+      "bytes": 294426,
+      "sha256": "cac4ebdb72e91f3ec7efadda6ee52a8787629dc0c950a5d9dc577994437a193b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "1c9c180276da04398b56d6611c1cbea605402fcc9ad9e5e89c333e5e8fe0f417",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-result-1280.png",
+      "bytes": 1760583,
+      "sha256": "5b5eab0bfc2e2c302dc6ce22e211cb32927c7c2ddc29b46207cb8ae20fa5a6a2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-result-1920.png",
+      "bytes": 3525381,
+      "sha256": "d3559a1208bfdcacabe149449b3a31c8b82d6131b8b74686d3a7b1927353fef1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/boundary.log",
+      "bytes": 279884,
+      "sha256": "5b4ba42658f9a286f423cabac9115414e7e0b81f92b1bf9683ba70ba4967142f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/manager-console.log",
+      "bytes": 14717,
+      "sha256": "c09ed6bd980330429fdd3ab13578a861a64ac0b61eca03e5dcb3806faba1f0d8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/manager-receipt.json",
+      "bytes": 457086,
+      "sha256": "5d16f98dcb182e5a74e8cd715127f1d6c1f50ad4a5051c39caebff55897b6f1f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/manager.log",
+      "bytes": 12607,
+      "sha256": "904a15fd6aa897b6f09f514e92a262b8dc2afa4f16b19b0bfc8a894390d3ba25",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/original-console.log",
+      "bytes": 13917,
+      "sha256": "a376b8eab6dc36e4c33dd14859c8b09338fdd2badfc240e307181b230492e40f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/original-receipt.json",
+      "bytes": 443706,
+      "sha256": "6216379d49a3173924e7522e9dfa22e7739e48acd9d80f625e46f613b5903a16",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/original.log",
+      "bytes": 11887,
+      "sha256": "686ae131feedd743dde62945f0e28ae74c8a5f09f2dcc591dfce031e0e9dc2bc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/close-receipt.json",
+      "bytes": 634,
+      "sha256": "f2d2ae00c49a9ca61a7b240e4cbd836837f1296c7444df41a48adb98ca9081a6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/evidence-bundle.json",
+      "bytes": 15296500,
+      "sha256": "971b0ae0367da652e1b76ed7da4226669d0bccd9edd12189b5bb5afda11c584b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/export-receipt.json",
+      "bytes": 560,
+      "sha256": "e91c597ec41f00d401fb5d2ffbbfa540d9797833079fa3196c9d0556e894dae0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/function-close-callback.json",
+      "bytes": 3869351,
+      "sha256": "7dd1cbfadea033cb380d8de5e22956bb03a18bad26116658d4185a46b11723a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/function-on-close.json",
+      "bytes": 9686099,
+      "sha256": "530d6be3f11f3d7fad7f2d42fd6d61dde2876b28148ee675097511e85682db86",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/retry-server.log",
+      "bytes": 716,
+      "sha256": "86226ca65ec8a6c592fa5c946e605a6a09397d4f418ffe6d0867e375d728fb29",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/retry-timings.json",
+      "bytes": 1098,
+      "sha256": "8ee01ddeeb9bccd80d2eebf6edc054ffc812245b241fef2bc96c672b354f4d74",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/run-replay.cjs",
+      "bytes": 2786,
+      "sha256": "fbfea88b5d77a58dc88dbe8d777838b62466f486f73f17a3fe08a744ebd6b99a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/rea/snapshot.json",
+      "bytes": 26397038,
+      "sha256": "47f0349baeb62b28e6284e58666831f4d87630a4eb60f9ecd39a233e74924c25",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/run.ps1",
+      "bytes": 2260,
+      "sha256": "b142330b81fca8792a8f4d7dd641a7fcc578d2a5e83a3998c365f6427a316707",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verification-summary.json",
+      "bytes": 1559,
+      "sha256": "a053647497f735b098e875abea979b399e2be3989bfafdcd096d9dd329ba8c1f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-closed-1280.png",
+      "bytes": 1688905,
+      "sha256": "a53e96b7eddcb388e329bb3a2cd15c0416ee32c41f8bf91450204aa62c78949a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-closed-1920.png",
+      "bytes": 3367046,
+      "sha256": "f620b26b64b7b7a5919709261a3758f35883e739a857844c3a02e4d91491e0aa",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-committed-1280.png",
+      "bytes": 1747820,
+      "sha256": "e6cc4fcb955058437d30f5bc27b9dc412b8f2991fb6ae3ed98856d382e7a938a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-console.log",
+      "bytes": 294026,
+      "sha256": "29ff794838c09469a19c6cb1a2315b07d7c77dbc5eccdc5a28b02a3832e55472",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "0638de2a6aa00d3961a47dc58894c326517fe91f4df0ed8140e4f80a307e3a29",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-result-1280.png",
+      "bytes": 1760583,
+      "sha256": "5b5eab0bfc2e2c302dc6ce22e211cb32927c7c2ddc29b46207cb8ae20fa5a6a2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-result-1920.png",
+      "bytes": 3525381,
+      "sha256": "d3559a1208bfdcacabe149449b3a31c8b82d6131b8b74686d3a7b1927353fef1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility-fix/verified-boundary.log",
+      "bytes": 279520,
+      "sha256": "5df19824c77bdcb51ed76c09fbdb412c9660054eb0dea831450def62d1d6f543",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果呈现持有修复验收",
+      "boundary": "含夹具失败；REA快照复用与既存原作带对拍，以result-visibility-fix-20261021为准"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
