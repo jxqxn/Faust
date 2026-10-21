@@ -8272,6 +8272,294 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "REA复制呈现静态审计与接口交叉核对",
       "boundary": "四方法新分析；接口调用点由旧语料核对，未做原作运行捕获"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/analysis-summary.json",
+      "bytes": 37440,
+      "sha256": "a49da90bcfa1a0ad304727958d6da781d9f34af18a05210867bca43a9b7a5c7d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe-console.log",
+      "bytes": 3841,
+      "sha256": "a5fef0e7e6c3ad3003006bd3670a0357000d0bc33034b7835c0690d9f287165d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe-drag-1280.png",
+      "bytes": 1778744,
+      "sha256": "d2a3ed7a57feca08ede9ba5d0ae026001ec51ff63b1af00c87ccf5ddceb0e227",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe-drag-1920.png",
+      "bytes": 3567755,
+      "sha256": "abf9abcf3dec58b1a74264dbb28238479106f42d71df40034947ef77e6bddd30",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/bound-probe.log",
+      "bytes": 3452,
+      "sha256": "41febc5136db0305072602bc46525bf3790c7f95e7099ded3d28bbfd55485241",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-begin-drag-assembly.txt",
+      "bytes": 16524,
+      "sha256": "b82a6bed31c5ce1252acfc3dec92a19987220ff3ec3bf8ab100c3baa1f4daa41",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-begin-drag-pseudo.txt",
+      "bytes": 12292,
+      "sha256": "15ea4c6fb1fc7cb70dd51fd9395f5b4b552e6e22306ae4644d52db57ad2e0e2b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-begin-drag.json",
+      "bytes": 11459562,
+      "sha256": "8bc25588f138bf0e8e5611d3353186ed668996ce2a2217c10a7d09d81146d319",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-can-move-assembly.txt",
+      "bytes": 42,
+      "sha256": "c0f4027f5a664577039256ccfec12e5ea89ca7f76f4807e535189614ee10fc28",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-can-move-pseudo.txt",
+      "bytes": 64,
+      "sha256": "0329111daa3aaafcb09ba31d57f28f184b9fb5e7ffc4ecc18a8a9e822c5ccccb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-can-move.json",
+      "bytes": 5690905,
+      "sha256": "80e9fa23b7eb65d111190234ef3184565a0c5a06f9f7e73254654057206e2bf7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-interface-dispatch.json",
+      "bytes": 1618,
+      "sha256": "c6cb51d393f88085d2f97767c47d2424f6c1c8642f7bdf8c6eabaf775d4743d8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-settlement-bind-assembly.txt",
+      "bytes": 10323,
+      "sha256": "95bcbf4324cd0b4aa2adc1717e2c6fd6605a07cb906ef60cd295a8b9b789c5a9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-settlement-bind-pseudo.txt",
+      "bytes": 8476,
+      "sha256": "80df950f158aa81dadad430c09025f651032b9ef75667e817b0877d5fea0263f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-settlement-bind.json",
+      "bytes": 7545096,
+      "sha256": "bfc6fa13974bb1866b3f0bcaa3c878d688eeffd47e8f7aba12a1cb8bda818d95",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-show-assembly.txt",
+      "bytes": 12835,
+      "sha256": "e55aff71e067d6e3ee0da5021a5b0e22b8e0d8f7c1d596d0c8545c927a4e7a8f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-show-pseudo.txt",
+      "bytes": 9318,
+      "sha256": "66d0ccaf888fb283f1f61727bd5a7ea45762b0fce2fdfe92749cd19139bb16c0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/function-show.json",
+      "bytes": 11301498,
+      "sha256": "ad55356c49f454046dc86635155fd81cafb1fa2504c927d186aad7fa319e271f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe-console.log",
+      "bytes": 4397,
+      "sha256": "8641ea29342c3f7bc2cdb97c154a64ae932acc07bef1c01cf26974af7840816d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe-drag-1280.png",
+      "bytes": 1780106,
+      "sha256": "e0ea5eb97f501b341bc717252a1aa8f4355c6115e488bab86728b6c9323e6ee5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe-drag-1920.png",
+      "bytes": 3563775,
+      "sha256": "e36ae7097eff47e3a981cbd812ea478c416c0bef8078a619dcb59548b44ce43e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/probe.log",
+      "bytes": 4000,
+      "sha256": "6e43dc7c18b7e7ad631ce0cf603e366a5d6863764cd07e02e6cedac90d02a527",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/queries.json",
+      "bytes": 767,
+      "sha256": "fd34af44ec37c78163a228f8510de6f6836f67d4fcd4c516a76f8db556a8e0ec",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/retry-error.json",
+      "bytes": 111,
+      "sha256": "cc960919a72bab4b46d04461bd09a262b0a7e4b8e8ed752ed5fd71297aa8c91a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/retry-server.log",
+      "bytes": 1079,
+      "sha256": "09166c7568d3d9416dde61219a4eb73773420fe4d59a7e3916b7855ffb1a5980",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/retry-timings.json",
+      "bytes": 880,
+      "sha256": "b1566eac371e6935ad8445f65fe68cb0b3eb80b6d8c6d7b63e831bedb2b65855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/run-probe.cjs",
+      "bytes": 2728,
+      "sha256": "f0e5339846c7ae2c3b8be47e6c5c0c15a3efe4c34adff7d70b43d5791c578d31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/source-hashes.json",
+      "bytes": 1349,
+      "sha256": "3b96e4696b7343095379beee2b63d2f009d63af6de2be7ee712f4a835680ebb3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/target-before.json",
+      "bytes": 122,
+      "sha256": "9c4f9656d61c16b4ae64ce6a962fcef0cc7067edd8d7eb24379567a6f4be7271",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/test_result_drag_bound_probe.gd",
+      "bytes": 7434,
+      "sha256": "76e55f9d35ef1aa9b4ceba82f188632da22f67787ecd823a29fe29d225b73376",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/test_result_drag_probe.gd",
+      "bytes": 7186,
+      "sha256": "3d9bbab9be887b7fb8ef15dbed85d0426bd60ef1ec6c1193ef9470b768e97833",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "REA结果卡拖动审计与宿主探针",
+      "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
