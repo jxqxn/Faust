@@ -1,5 +1,42 @@
 # 验收、证据与当前交付状态
 
+<a id="result-drag-audit-20261021"></a>
+## REA 结果卡拖动与隐藏容器审计（2026-10-21）
+
+本批未修改运行时。完整结果呈现仍🟡；暂停将“拖动后从名单移除”作为交互验收预期，先核验原作真实卡是否可见、可命中。此处更新前批下一步判断，不追改历史日志。
+
+### 实际 REA 与限制
+
+使用本地REA MCP/stdio重新打开原DLL，不导入快照。取得OnBeginDrag 0x1805294e0、Show 0x1805a6d00、Settlement.b__8 0x1805b4850、CanMove共享实现0x180341100四份完整回包、伪代码及汇编。首函数含Ghidra导入耗时774059ms。
+
+- `function-begin-drag.json`：`ev_24914bd79754107bbfdc16795bbe8cc1cbe196e81aaf1fba9dbeea79f2fad6bf`。
+- `function-can-move.json`：`ev_87879c7519bfa196282b37fb48cfb15dfcba58d1853571d00a6fedaf8df9acaa`。
+- `function-settlement-bind.json`：`ev_a3823495b4ca5ee8c689d37c305967f0899f9b1a23c79a6431a46f43d3c55d7c`。
+- `function-show.json`：`ev_ce5422159d3e64217e02d881eb544551a31a7118aae8af50c5192f9fcc46ad4c`。
+
+第五次analyze_function（接口分派0x180002bc0）返回resource_constraint：完整响应至少10576272字节，超过MCP传输预算10484736。只保留错误回包及其引用ev_bce3afa9498934472f7ec7550af479f0c8505b711ce885a7cb827167aa1b2c8a，不声称已取得/审阅该完整分析。脚本随后退出并关闭客户端，未执行后五个查询、bundle导出或显式close_binary快照保存；没有本轮成功关闭回执。下一次脚本须在此类错误后先导出保留证据，不能抛异常丢掉导出机会。四份已有回包仍可独立核查；间接调用未解析、Ghidra无返回假设等限制保留在analysis-summary.json。
+
+### 源码与资产交叉验证
+
+- 新REA汇编：OnBeginDrag在0x1805299dc–0x1805299f7传入card@0x118、接口槽3、ICardSlot_TypeInfo@0x182597e38与slot@0x120，调用0x180002bc0后清空slot。此前0x1805295fa调用槽1检查CanMove。dump.cs:312118/316967/325553交叉定位接口与字段，不能把这条静态路径等同于可见UI可达。
+- 新REA Show和Settlement.b__8均确认把真实卡转移到container@0x98并写入slot@0x120；CanMove共享方法返回1。操作展示卡与真实卡不是同一容器。
+- **资产反证**：RiteResultPanel.prefab控制器container指向RectTransform224906354973733972，其GameObject1407886329842316的m_IsActive=0。GameScene.unity:589593的container指向RectTransform7776，关联GameObject308；该对象在场景5636–5648同样m_IsActive=0。场景并未把该容器默认改为启用。这只是序列化初始状态，尚不证明运行全程关闭。
+- **刷新锁（旧.c直接核验，非本轮REA逐函数结果）**：GameController.Settlement RVA0x556ae0在.c:4516设置riteSettling@0x2D9；Update在734检查该锁后才允许常规UpdateHandCards。Settlement回调RVA0x559850在10632解除（游戏结束分支提前返回）。dump.cs:319838确认字段名；不能假设结算期间通知立即刷新手牌。
+
+### 真实输入探针与未闭合项
+
+| 探针 | 结果及有效范围 |
+|---|---|
+| 首次夹具 | 14/20断言；未设置正式rite阻塞上下文，鼠标命中RiteModalShade而非卡。无效交互夹具，不能据此判断原作行为。 |
+| 修正夹具 | 使用正式rite阻塞设置，生成时附own标签；1920×1080及1280×720均真实鼠标命中物理CardWidget，拖动信号各1次，GUI拖动激活。22/24断言；仅两尺寸“拖动后名单删除”断言失败。 |
+| 保存读回 | 两尺寸均观测奖励UID仍在名单，保存读回后仍存在；只是宿主状态观测，不是原作UI恢复等价证明。 |
+| 原作交互裁判 | 本轮未新增原作操作录像/输入轨迹；没有覆盖取消、关闭动画与重建后实际再次操作的完整链。 |
+
+失败脚本和日志原样保留，不为变绿修改预期，也不据此添加erase(uid)。这些失败说明宿主当前行为；因为原作容器默认隐藏，测试预期本身尚未建立。下一批从Show/Settlement重挂接继续查容器启用、动画绑定及OnClose回手牌路径，确认原作可见性状态矩阵后再决定宿主修复。COPY近似不变。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-drag/`；原始回包、时限脚本、日志、截图、探针和源哈希登记external-evidence.json。content、基线标签及运行时代码未改，既有通过记录不算本批重跑。
+
+
 <a id="copy-presentation-audit-20261020"></a>
 ## REA 复制呈现与结果名单移除审计（2026-10-20）
 
