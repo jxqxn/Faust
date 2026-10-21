@@ -8560,6 +8560,278 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "REA结果卡拖动审计与宿主探针",
       "boundary": "含失败及无效夹具；以result-drag-audit-20261021解释，不代表完整原作等价"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/animation-path-audit.json",
+      "bytes": 259,
+      "sha256": "a9ddc494248cd32f4f7e80c2584fd0979140cde96998ce512b8b06080d9d1c4d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/asset-hierarchy.json",
+      "bytes": 5279,
+      "sha256": "5185295d696a67d4f5c4d7411fd4cc098f07e9105164e6f187b99db67255bccc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/probe-console.log",
+      "bytes": 628,
+      "sha256": "24bc4ad0bb61a0b4edec2d3cfbed358aefcdee7e28dcb888b5c4aed1364c6832",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/probe.log",
+      "bytes": 588,
+      "sha256": "a672da1e112bb07a71f6e2e0b18f5c8d8024e9b82c416559be917c62ca180b09",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/close-receipt.json",
+      "bytes": 632,
+      "sha256": "5d4982d761f336943e0a349f2303941cdc1833aa92edaaa4956e508780ce72fe",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/evidence-bundle.json",
+      "bytes": 15296500,
+      "sha256": "971b0ae0367da652e1b76ed7da4226669d0bccd9edd12189b5bb5afda11c584b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/export-receipt.json",
+      "bytes": 558,
+      "sha256": "58a578b42a6d198958de5302bdba46cc05c065505feca5c2b1f22516dcb43d69",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-close-callback-assembly.txt",
+      "bytes": 8486,
+      "sha256": "3be74a69b768400f65a979292fbc981c9aeaa28db6591045cc2243a50968dc28",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-close-callback-pseudo.txt",
+      "bytes": 5261,
+      "sha256": "a3476b34767b649721bb597b05d4a29a545804cfc6f2d3412907509f79cd6000",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-close-callback.json",
+      "bytes": 3869351,
+      "sha256": "7dd1cbfadea033cb380d8de5e22956bb03a18bad26116658d4185a46b11723a7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-on-close-assembly.txt",
+      "bytes": 12322,
+      "sha256": "f1e9a44c21704ee27fde706a3f2f97ac30e7f5d427d878a49a24fd5f8354f110",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-on-close-pseudo.txt",
+      "bytes": 9684,
+      "sha256": "a77cf48da2f3bed7b77b9da2c68ee2a57c0c52f0c3a23fafb8b54ec4e1732d5b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/function-on-close.json",
+      "bytes": 9686099,
+      "sha256": "530d6be3f11f3d7fad7f2d42fd6d61dde2876b28148ee675097511e85682db86",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/retry-server.log",
+      "bytes": 716,
+      "sha256": "bcbcd9f587fcea416339005498fc155e137442103b54899149f04209d94ad16e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/retry-timings.json",
+      "bytes": 1096,
+      "sha256": "45851379cee47661e8903deaa349942a39711e315ce815004eb461a91a022d30",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/run-replay.cjs",
+      "bytes": 2786,
+      "sha256": "fbfea88b5d77a58dc88dbe8d777838b62466f486f73f17a3fe08a744ebd6b99a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/replay/snapshot.json",
+      "bytes": 26397038,
+      "sha256": "47f0349baeb62b28e6284e58666831f4d87630a4eb60f9ecd39a233e74924c25",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/retry-open.json",
+      "bytes": 558,
+      "sha256": "baa0683bd9e1ef0917c4c335095c20ff4a22d321effab57ad45cf5b63a4d23f8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/retry-server.log",
+      "bytes": 176,
+      "sha256": "01013b99bcc563ae109834d0a1353d706126c38f920062f2c624c7d3c60241a8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/retry-timings.json",
+      "bytes": 183,
+      "sha256": "9a0070539cfe9ac6d496f21da28bbf3c4e7ae3d60f5483fe869b4dd53ba0cadd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/run-rea.cjs",
+      "bytes": 2755,
+      "sha256": "1faaaef1a6de6d6c6d79d0ce232f021fdd3e05c1ed224acf98ab52d3bd87ebcc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/source-hashes.json",
+      "bytes": 1914,
+      "sha256": "0f8f5104675455b3b4ddf626f7bca08c946eaea2a918bd44059fffe6e00160c5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/test_result_visibility.gd",
+      "bytes": 7158,
+      "sha256": "3ef3f17f50f1e8a7980e7b2fde27b43c7de301cce86a42294e880ee330db3c36",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-closed-1280.png",
+      "bytes": 1688861,
+      "sha256": "f156cbffa8e59a20d9a81d4bb4626de96cfee16e80b3c19c96dfe1d886f341b7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-closed-1920.png",
+      "bytes": 3367069,
+      "sha256": "992a8285514ac0e768b068aa8a77306d36191172ea5374ce9df3ca1c08b42b9a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-console.log",
+      "bytes": 4328,
+      "sha256": "a0941e09b25e270d43cd8310cf663ae760bbdf94c7ccc3171ff832ad2957f5cb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-result-1280.png",
+      "bytes": 1779003,
+      "sha256": "31750d2ee8c12854a1c2c2e22bd42b8e82138f9e84e3009a47dd92895cc07f88",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-result-1920.png",
+      "bytes": 3568377,
+      "sha256": "fe10e3d543706626cd96e9f8eb520fc5e1d04a912a234e94c6f79f82eb1088cc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/verified.log",
+      "bytes": 3775,
+      "sha256": "903a2fd1dff1abf9c21388ecbfb020b2bf9579bf51324300de244edbd985c7e0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果卡可见性与回手牌证据",
+      "boundary": "含中断/无效尝试与失败探针；REA为快照复用，见result-visibility-chain-20261021"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

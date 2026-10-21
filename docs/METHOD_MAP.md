@@ -4,6 +4,8 @@
 
 ## 当前批次与优先项
 
+2026-10-21可见性续批：REA快照重放OnClose及回调两方法；核对AddCard重挂手牌/清slot、UpdateHandCards、133动画及容器父级。宿主两尺寸真实点击与双次读档探针32/36，四项均为结果期真实卡提前可见；关闭后呈现与闪烁启动通过。下一项为结果控件持有状态及恢复，不是删除奖励名单或全局禁拖；完整验收仍🟡，见[隐藏与回手牌链](replica/verification.md#result-visibility-chain-20261021)。
+
 2026-10-21结果拖动审计：REA新分析4函数，接口helper因传输上限未取得完整回包；原作Prefab与GameScene真实卡容器均默认inactive，结算锁暂停常规手牌刷新。宿主两尺寸真实拖动探针22/24，名单删除预期尚无原作可达性背书，不能据失败直接修复。下一步改为核验容器启用/回手牌状态矩阵，保持🟡；见[拖动与隐藏容器审计](replica/verification.md#result-drag-audit-20261021)。
 
 2026-10-20复制呈现审计：REA重新分析Copy回调、CardExtensions.Copy、出生文案与RemoveCard四方法；确认cardBornResult与CardRewards不同。旧.c/dump/script补出OnBeginDrag经ICardSlot槽3调用RemoveCard，结果面板slot赋值有源码背书；调用点尚未本轮REA复核或原作实测。保留COPY近似，下一批优先结果卡真实拖动与名单变化；见[复制与接口移除审计](replica/verification.md#copy-presentation-audit-20261020)。

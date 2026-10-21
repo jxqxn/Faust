@@ -1,5 +1,47 @@
 # 验收、证据与当前交付状态
 
+<a id="result-visibility-chain-20261021"></a>
+## 结果卡隐藏与回手牌链（2026-10-21，续批）
+
+本批定位宿主结果阶段的呈现差异，未修改运行时；状态仍🟡。正常关闭链已有源码与资产背书，但没有新增原作实机录像，不把静态路径和宿主探针合计为原作全链验收。
+
+### 实际 REA 使用
+
+首次新分析在Ghidra导入期间因会话中断停止，仅留open_binary回执，未得到UpdateHandCards等新分析结果，不计为成功。恢复后实际执行REA `open_binary(snapshot_path) → analyze_function ×2 → export_evidence_bundle → close_binary(snapshot_path)`，复用20261020-rea-close-chain快照：OnClose 0x1805a3ae0（ev_6fcb878d4cd67fa84d9fcf6866bd1383705a4f1347bd7c24463ac9817206c665）、关闭回调0x1805b51c0（ev_80a5545aa239529c056acba59c25b63af89179fd0f69697d6f07e4c152711c75）。两份回包均注明未重新运行provider；导出和关闭成功。AddCard、UpdateHandCards、BackToHandOrBag只直接核对既有.c与dump，不冒充本批REA新分析。
+
+### 原作静态状态矩阵
+
+| 阶段/边界 | 方法、状态与呈现依据 |
+|---|---|
+| 初始 | GameScene结果面板GO134 inactive；其Container GO308也inactive。Prefab的Container同样inactive。 |
+| Show/Settlement.b__8绑定结果 | 只处理已有gameObject的cards，将真实卡重挂到container@0x98，并赋CardController.slot@0x120。父面板启用不改变子容器activeSelf；操作展示opCards/opCardResults/opHandCardResults是独立对象，不能一并隐藏。 |
+| 结果等待 | GameController.riteSettling@0x2D9阻止Update的常规手牌刷新；这是Update调用处的门禁，不是UpdateHandCards内部全局禁止，直接调用路径仍须区分。 |
+| 不可关闭 | OnClose先检查btnNext交互使能；失败直接返回。隐藏面板后finalPromise为空也早退，不声称所有OnClose都走返还。 |
+| 正常关闭、非gameOver | OnClose先隐藏面板；遍历cards中已有gameObject的卡。IsCurrentHandCard为真则AddCard并登记闪烁ID；否则Destroy呈现对象。再清CardRewards、做backCards后处理并等待OnRiteEnd。 |
+| AddCard复用已有控件 | GameController.c:2988–3036：父级不为hand@0xC8时重挂手牌区，重设局部位置/旋转/缩放；清slot@0x120。这里不需要启用原Container。缺gameObject的创建分支单独Init，不与复用分支混为一谈。 |
+| 结束回调 | DisplayClass62_0.c:109–132：RequestSavePlayer → UpdateHandCards → FlashAndSortCard → 清finalPromise并Resolve。事件阻塞期间不能提前宣称最终闪烁完成。 |
+| 手动拖动返回 | BackToHandOrBag 0x4eef90根据背包面板状态选择AddCard或AddCardInBag并更新位置/数量、请求保存；这是拖动路线，不能替代正常OnClose路线。 |
+| 场景重建/读档 | 原作静态链未证明序列化结果UI所有权。宿主需保存/重建此呈现状态，明确作为适配层验收，不伪称原作存档字段。 |
+
+[SRC: decompiled/GameController.c @ AddCard RVA0x54ad40, UpdateHandCards RVA0x559d90; dump.cs:319765–319770 hand/hide字段；decompiled/RiteResultPanelController.c @ OnClose RVA0x5a3ae0；decompiled/RiteResultPanelController.__c__DisplayClass62_0.c @ b__0 RVA0x5b51c0；dump.cs:325458–325468 container/cards/backCards字段。]
+
+### 容器启用与动画的有界排查
+
+asset-hierarchy.json记录Prefab与GameScene中Container的父级链、组件、引用和行号。Container仅有RectTransform；自身及父级链无Animator/Animation组件；这两份资产里，除层级外仅结果面板控制器持有该容器引用。扫描全部133份导出.anim，没有path包含RiteResultPanel或以Container开头的匹配。结果面板及闭包.c中直接container@0x98用法是两处重挂接，没有找到容器SetActive路径；GetPriorSettlement同偏移属于其他对象，不能误算。
+
+因此，在已核验的序列化层级和直接方法路径中，真实结果卡由隐藏容器持有，正常关闭通过重挂手牌恢复。此有界结论不排除运行时动态挂组件、反射/外部脚本或未记录场景修改；不能写成“全程序绝无启用”。
+
+### 宿主诊断与后续修复边界
+
+外部test_result_visibility.gd使用受控结果card=[2000372,"own+1"]，正式rite阻塞上下文，真实鼠标点击提交和关闭；1920×1080、1280×720均保存→销毁场景→磁盘读档→恢复结果，再关闭并再次保存重建。结果32/36断言，四项失败均为结果阶段及恢复后的物理CardWidget仍可见。两尺寸关闭后手牌存在、名单清空、结果展示清空、闪烁启动、再读档后手牌仍可见均通过。截图同时显示左侧操作展示与底部真实手牌；不能把操作展示当成多生成了实例。
+
+首轮探针脚本生成遇到编码错误，GUT未执行任何测试；probe日志保留为无效尝试。修正编码后的verified日志才是上述32/36。未重跑全量GUT或原作存档差分；无新原作输入轨迹。探针不覆盖动画完整衰减/音效、菜单、跨日或阻塞结束事件，因此不标完成。
+
+下一实现项：建立结果阶段真实控件的持有/可见性状态，开始与释放时点对齐b__8和OnClose；保存重建保持该状态。只隐藏已被结果面板接管的真实卡，保留操作展示和其他手牌。不要把整个result_card_rewards动态列表一律隐藏：绑定后新增卡、无gameObject、COPY近似、自动关闭及旧存档必须分开验证；不要以全局禁拖或删除奖励UID替代所有权修复。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261021-result-visibility/`。REA回包/导出/快照、原作源哈希、资产审计、失败探针、日志与两尺寸截图登记external-evidence.json。运行时、content和固定基线标签不变。
+
+
 <a id="result-drag-audit-20261021"></a>
 ## REA 结果卡拖动与隐藏容器审计（2026-10-21）
 
