@@ -1,5 +1,7 @@
 # 界面、输入、动画与声音
 
+2026-10-22实现批：GameScreen刷新与换页现复用实际CardWidget；离页Hide保留处理、结果持有层停用处理，场景重建重新创建控件。结果绑定尚未接入实际对象关系；见[手牌复用边界](verification.md#hand-object-reuse-20261022)。
+
 2026-10-22续批：手牌刷新/换页仍会重建控件，与原作AddCard复用、UpdateHandCards隐藏及OnDestroy身份检查不同。两尺寸红色探针已保留；对象拥有链尚待迁移，见[生命周期证据](verification.md#object-lifetime-audit-20261022)。
 
 2026-10-22：结果面可见性按原StateSync取得/释放独立ResultHandMask；真实页签输入被拦截，关闭与读档恢复已验证。CardRail几何不能代替输入遮罩，完整表现仍🟡；见[遮罩边界](verification.md#result-hand-mask-20261022)。

@@ -1,5 +1,7 @@
 # 原作—克隆方法映射表
 
+2026-10-22手牌对象复用：按AddCard/UpdateHandCards保留根控件，离页隐藏、回页复用，释放按身份判断；原六项失败消除，专项40/40、597断言。Hide GO171仍active，与结果Container GO308 inactive分开承载；结果绑定资格近似尚未替换，见[实现验收](replica/verification.md#hand-object-reuse-20261022)。
+
 2026-10-22对象生命周期续批：REA快照重放AddCard/UpdateHandCards，直接.c/dump核对OnDestroy按身份清引用。宿主两尺寸真实换页探针14/20，六项为刷新/离页/回页对象身份不保留；未改运行时。下一项先迁移控件拥有和隐藏层，再替换结果绑定资格近似，见[审计与红色探针](replica/verification.md#object-lifetime-audit-20261022)。
 
 2026-10-22结果手牌遮罩：StateSync/场景双信号补足ResultHandMask，阻止结果阶段页签外观与数据分离；两尺寸真实输入、关闭和双次读档通过，专项37/37、560断言。离页控件重挂hide而非销毁，gameObject存在性近似仍🟡；见[本批边界](replica/verification.md#result-hand-mask-20261022)。
