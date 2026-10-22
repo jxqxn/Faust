@@ -312,15 +312,20 @@ static func _post_lives(job: Dictionary, state, db, rng) -> void:
 
 
 ## [SRC: Settlement.b__8 0x5b4850 reparents existing reward objects into
-## container@0x98; dump.cs:325458. GameScene GO308 is inactive.]
+## container@0x98; dump.cs:324971-324972. GameScene GO308 is inactive.]
 ## Capture once at binding, not from the live reward list on every refresh.
-## Current-hand eligibility remains the host proxy for source gameObject presence.
+## Bind observed objects, including retained objects from other pages.
 ## Persisted job data reconstructs presentation only, not original save fields.
 static func _bind_result_presentation(job: Dictionary, state) -> void:
 	if job.has("presented_result_uids"):
 		return
-	var eligible: Array = state.visible_rail_card_uids()
-	job.presented_result_uids = state.result_card_rewards.map(func(uid): return int(uid)).filter(func(uid): return uid in eligible)
+	job.presented_result_uids = []
+	if not state.result_card_object_exists.is_valid():
+		return
+	for raw_uid in state.result_card_rewards:
+		var uid := int(raw_uid)
+		if state.result_card_object_exists.call(uid):
+			job.presented_result_uids.append(uid)
 
 
 ## OnClose accumulates resultCards/backCards before OnRiteEnd; b__0 promotes

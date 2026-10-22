@@ -522,6 +522,11 @@ func test_result_presentation_binding_is_frozen_and_does_not_change_rule_members
 	state.get_card_instance(reward).tags["own"] = 1
 	var other := state.add_card_to_hand(2000006, db)
 	state.get_card_instance(other).tags["own"] = 1
+	var viewport := _viewport(Vector2i(1280, 720))
+	var screen := GameScreen.new()
+	screen.setup(state, db, RNG.new(9615))
+	viewport.add_child(screen)
+	await wait_process_frames(2)
 	state.result_card_rewards = [reward]
 	var job := {"phase": "await_close"}
 	state.rite_settlements["99"] = job
@@ -541,3 +546,6 @@ func test_result_presentation_binding_is_frozen_and_does_not_change_rule_members
 	assert_true(reward in restored.presented_rail_card_uids(), "OnClose releases before blocking end event")
 	job.erase("presented_result_uids")
 	assert_true(reward in state.presented_rail_card_uids(), "legacy job retains legacy presentation")
+
+	viewport.queue_free()
+	await wait_process_frames(2)

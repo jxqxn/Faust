@@ -7,6 +7,10 @@ extends RefCounted
 
 signal armageddon_music_requested(rite_id: int, activate: bool)
 signal round_music_requested
+signal result_card_recorded(uid: int)
+
+# Scene-local observation, never serialized. No UI means no observed object.
+var result_card_object_exists: Callable
 
 const CardInstanceData = preload("res://sim/card_instance.gd")
 const SudanPoolCardData = preload("res://sim/sudan_pool_card.gd")
@@ -502,6 +506,7 @@ func create_card_instance(card_id: int, db, zone: String = "hand"):
 func record_result_card_reward(uid: int) -> void:
 	if get_card_instance(uid) != null:
 		result_card_rewards.append(uid)
+		result_card_recorded.emit(uid)
 
 
 func record_card_generation(instance, db = null) -> void:
@@ -2071,12 +2076,18 @@ func is_hand_card(uid: int, db = null) -> bool:
 ## [SRC: Settlement.b__8 0x5b4850 -> inactive result container;
 ## OnClose 0x5a3ae0 -> AddCard 0x54ad40 reparents to hand before end events.]
 ## Missing fields in older in-flight saves retain their previous presentation.
-func presented_rail_card_uids() -> Array[int]:
-	var held := {}
+func held_result_card_uids() -> Array[int]:
+	var held: Array[int] = []
 	for job in rite_settlements.values():
 		if job.get("phase", "") == "await_close":
 			for uid in job.get("presented_result_uids", []):
-				held[int(uid)] = true
+				if int(uid) not in held:
+					held.append(int(uid))
+	return held
+
+
+func presented_rail_card_uids() -> Array[int]:
+	var held := held_result_card_uids()
 	var result: Array[int] = []
 	for uid in visible_rail_card_uids():
 		if not held.has(uid):
