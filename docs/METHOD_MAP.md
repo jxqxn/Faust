@@ -1,5 +1,7 @@
 # 原作—克隆方法映射表
 
+2026-10-22结果对象绑定：PutCardOnTable按原顺序创建当前页奖励对象，b__8读取实际手牌登记，已有离页对象可绑定、从未创建的离页对象跳过；两尺寸真实输入与读档回归通过。仅GameScreen范围，其他控制器仍🟡，见[本批验收](replica/verification.md#result-object-binding-20261022)。
+
 2026-10-22手牌对象复用：按AddCard/UpdateHandCards保留根控件，离页隐藏、回页复用，释放按身份判断；原六项失败消除，专项40/40、597断言。Hide GO171仍active，与结果Container GO308 inactive分开承载；结果绑定资格近似尚未替换，见[实现验收](replica/verification.md#hand-object-reuse-20261022)。
 
 2026-10-22对象生命周期续批：REA快照重放AddCard/UpdateHandCards，直接.c/dump核对OnDestroy按身份清引用。宿主两尺寸真实换页探针14/20，六项为刷新/离页/回页对象身份不保留；未改运行时。下一项先迁移控件拥有和隐藏层，再替换结果绑定资格近似，见[审计与红色探针](replica/verification.md#object-lifetime-audit-20261022)。
@@ -42,6 +44,7 @@
 |---|---|---|
 | 销毁卸装BROKER采样（当前批次） | Init0x572f40 case4；OpCardBroker.mat、原DXBC181_7..10、broker.png及unequip.anim；RiftGenerator0x432550/0x432590/0x432a50 | 🟡 单格整卡采样位移/原始曲线/半秒Done已接，GPU49/49、494断言；共享atlas邻格、裂口生成器及原作过程捕获仍缺失 |
 | 卸装回收与材质参数消费（当前批次） | OpCardNewController.Init0x572f40 case5→NORMAL；OpCardShow.set_Type0x576790/LateUpdate0x5761e0；CardShows_FaceUnlit.op_cards、OpCard.mat、原DXBC182_7..10无_BrokerDist | 🟡 已接原始unequip_recovery曲线/Done，GPU47/47、431断言；纠正“有distance就应消散”的推断；BROKER贴图位移后续已接，Special层仍待实现 |
+| 结果卡实际对象绑定（2026-10-22） | PutCardOnTable 0x5556c0 → AddCard；Settlement.b__8 0x5b4850；dump.cs:320063–320064、324971–324972 | 🟡 GameScreen实际对象查询及离页持有/读档已接入；其他控制器与全链未闭合，见[验收](replica/verification.md#result-object-binding-20261022) |
 | 装备操作主从身份与普通装备动画（当前批次） | CardOpContext.Equip0x398ea0 / OperationContext.AddCardOp_Equip0x39e2f0；OpCardNewController.Init0x572f40 cases3/4/5；OpCard.prefab / equip.anim | 🟡 修正主卡为宿主、装备为独立层；正equipment标签普通装备分支接原始位移与平面四元数曲线，GPU46/46、380断言及原作带54/54通过。卸装Shader、非equipment特殊效果分支、原RenderTexture投影仍开放 |
 | 操作卡标签增减动画（当前批次） | OpCardNewController.Init0x572f40 cases6/7、OpCardTagController.set_TagNode0x5768b0；OpCard.prefab TagBg/Tag/TagModify、add_tag/remove_tag.anim | 🟡 原始图标/变化量/颜色/曲线及Done等待已接；GPU44/44、310断言，真实输入及中途存档重建通过；原作同标签运行捕获、悬停详情与整套结果堆叠仍待闭合 |
 | 全范围自制行为筛查 | OpCardNew、RiteResultDicePrompt、Slide/ChangeDeskBG、TextTranslate、CopyCard；方法及独立信号见[审计正文](replica/verification.md#provenance-audit-20260915) | ❌/⬜/🟡：原始审计102个运行文件；已修操作卡片/气泡基础显示、旧译文、复制次数扩展，删除隐藏骰子摘要与测试入口/死规则；手牌/仪式发言、focus、slide、地图字段已接，新卡原始曲线/Done/角色音效及完整存读档已接；原始禁词解密/过滤/真实输入和存档重建已接，气泡超时已按严格大于修正；其他逐卡动画、结果堆叠、旧guide_cues迁移、原作禁词实机和非16:9仍待闭合。当前修复与证据见验收正文，不能宣称全量等价 |

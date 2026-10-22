@@ -10672,6 +10672,494 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "手牌对象复用实现与验收证据",
       "boundary": "REA快照重放、宿主真实输入与既存原作带分列；结果绑定及全局对象拥有关系仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-closed-1280.png",
+      "bytes": 1688925,
+      "sha256": "b15ef5895fed713c2c910545afaece74e99e70d41448b31ddd0df37f82363388",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-closed-1920.png",
+      "bytes": 3367035,
+      "sha256": "b0299f5d1a331284d06d6011008812f5c6d3554e9c8d56cdc6cd029fcf372080",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-committed-1920.png",
+      "bytes": 3479038,
+      "sha256": "43c0b4f5fb6d619db90509cde9308c91f0d6af6ef082481f3214e420a9d308a5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-console.log",
+      "bytes": 302601,
+      "sha256": "d1a4a46e7a3d6b22264f03b838a6d4bd4b4e96606e0a0a70d72a62999ed41d8a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "7a57d8c323f6d4ce4d4c66faef73c8c4ba964e9e999978268af8cfc84fd7efac",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-mask-1280.png",
+      "bytes": 1760537,
+      "sha256": "f5bbb2bf5c631431f7dd5d67c5e56ce6fcfe3994efbdc200a316002627dce989",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-mask-1920.png",
+      "bytes": 3524665,
+      "sha256": "b14effdd858cfcda4ea5b0b5a2c5087153337205416b2741d4e24b001f61d597",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-result-1280.png",
+      "bytes": 1760658,
+      "sha256": "b766f762d66b27058498ede820a9d40c99ce585cca742438ad24143eeadd9f33",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-result-1920.png",
+      "bytes": 3525381,
+      "sha256": "d3559a1208bfdcacabe149449b3a31c8b82d6131b8b74686d3a7b1927353fef1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/boundary.log",
+      "bytes": 287079,
+      "sha256": "7869d9d6b488b874a2122bdc6c6f4298d6a52757cd77b1801d62cc35a6e7d565",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/hands-console.log",
+      "bytes": 105675,
+      "sha256": "60872bde8f8a96b7eb61af50ed7d0c44fe9a483ec2eae3d73ca33a2f9620819b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/hands-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/hands-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/hands.log",
+      "bytes": 95678,
+      "sha256": "777cbc270a205e9a7114dee89b727a79724f342a770807f0b68e5c36afd5cf2f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/integration.json",
+      "bytes": 675,
+      "sha256": "cde2c6ff6eff7cdff38b4555d1d3d55ce14a628095d1203b1272fa5e5bd3d1f1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/manager-console.log",
+      "bytes": 14717,
+      "sha256": "5367a1a0a32b914a3a8999f8fb2c3b4ccd1c49c57e267fe97656358fa3d19642",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/manager-receipt.json",
+      "bytes": 457086,
+      "sha256": "b67b9e87a4079c5644e585093c7bf925bdec0cb7fa14d1b8f813631ad020d1d1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/manager.log",
+      "bytes": 12607,
+      "sha256": "5c628a41372c8e7f6f4f1d6f97e722f03d0e5be664dc99570b5350ac12b971ad",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/original-console.log",
+      "bytes": 13917,
+      "sha256": "aa348526c1c5332eb3c1c843beb1fcc5e7fcf68503b5a8fdd34c031af0a5030c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/original-receipt.json",
+      "bytes": 443706,
+      "sha256": "bcdd3b54f33bdbc44f0952d7c215f6d08fa261df03dcd2a7c0619995e4649ade",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/original.log",
+      "bytes": 11887,
+      "sha256": "dc409257f6900df5627e3ad7fa13b4da83aceeab1183c1da95dfb5d6397a2c09",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/rea-bundle.json",
+      "bytes": 11604225,
+      "sha256": "5d313af2b32f81a70ce5b7c9f10caf7aeaf411815c8087110cc1f732c7170e19",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/rea-calls.json",
+      "bytes": 478,
+      "sha256": "16c5c5ee6a516ff747381224c4be6e42d5dc5afb881def9985541f0e4a29de11",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/run.ps1",
+      "bytes": 2463,
+      "sha256": "a83a6180655fa4d3a7ea1ffaee6c89491d68915f98ca765a1e28e11aa25c78c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/source-hashes.json",
+      "bytes": 639,
+      "sha256": "f9b5221023d235288360cf8f103a890a0a49de2c7596371d68b0a753edea6718",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-closed-1280.png",
+      "bytes": 1688919,
+      "sha256": "f6eca0db4529b95b451fa9ba40412f0033fe832255425271af7911b847bc6a10",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-closed-1920.png",
+      "bytes": 3367054,
+      "sha256": "1781c8f6b556cefc73f78cc2386cbf211781790a9b5f9be2918b52c141ac5709",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-closing-prompt.png",
+      "bytes": 1630656,
+      "sha256": "825e987fea70a17eaf510cc68ca27b209ac565a8247c2788b500ef3c83033ab7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-committed-1280.png",
+      "bytes": 1747638,
+      "sha256": "d1dd825cdc929fc17b3ae8086708ff552f5ddbd180ee69b5d8489f41db638c31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-committed-1920.png",
+      "bytes": 3479020,
+      "sha256": "c45d22c228870b5299bcb5c328ac705a8b6ef0249c649bc8aa51e802c7a7406d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-console.log",
+      "bytes": 308825,
+      "sha256": "01bb83e29fcdf364c7ab15857afe6e8606fcd5053bf573fac5978a523af7ec07",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-data/global.json",
+      "bytes": 326,
+      "sha256": "8cc945074ff3412afb91b03d4870545ebd55dcceab3c8d8c539dc483edea139c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-flash-falling-1280.png",
+      "bytes": 1701569,
+      "sha256": "d5464def550ee383c7fa5cf45284eaba5b56857bc3262d11b6196b7760dab62f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-flash-falling-1920.png",
+      "bytes": 3398809,
+      "sha256": "39dd2943287f0af011b03819f18ef4a530d191f77243d4cdc2ca6340dd07f3a0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-flash-peak-1280.png",
+      "bytes": 1700460,
+      "sha256": "16c20dfb9cbea7085aa69fc8be72a7ac1b50c1f50307eab0e2749a3f2e91cb6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-flash-peak-1920.png",
+      "bytes": 3396768,
+      "sha256": "acd0799a083ea10d3def42eb5c2b49403795e8db9a1b15f4c124c65b02c44217",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-mask-1280.png",
+      "bytes": 1760507,
+      "sha256": "6cee137cc0ea1ab6ca2cab12318405b5f8d44aea32da24cf8e857c8f37454d4a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-mask-1920.png",
+      "bytes": 3524628,
+      "sha256": "639ee794ee310252556710a3041efa782affa1cf354adda54df8e7fd707eb215",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-off-page-bound-1280.png",
+      "bytes": 1723430,
+      "sha256": "bc7577f6d3359966fee7194c3b05d63d5b9c90aaad6f0fa564ea737b9c0dd7d9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-off-page-bound-1920.png",
+      "bytes": 3451712,
+      "sha256": "1eea026b9e19bd0a1ac337292895e7711c5912319aa6969dd185b59cf82acb5c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-restored-1280.png",
+      "bytes": 1712357,
+      "sha256": "82bc77ad7b2c042dccb55d15dc9362bc8a83b81f62468c4a9808d20b72a03396",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-restored-1920.png",
+      "bytes": 3407037,
+      "sha256": "2078993e278f4db11b348a03f7134e9f23a97cf451b110a817686b6d43fbd67e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-result-1280.png",
+      "bytes": 1760658,
+      "sha256": "b766f762d66b27058498ede820a9d40c99ce585cca742438ad24143eeadd9f33",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-result-1920.png",
+      "bytes": 3525381,
+      "sha256": "d3559a1208bfdcacabe149449b3a31c8b82d6131b8b74686d3a7b1927353fef1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-object-binding/verified-boundary.log",
+      "bytes": 292612,
+      "sha256": "9b479a5d6c7ffb07504a1080fc119eddfa91380be870a394884790770321a843",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "结果实际对象绑定实现与验收证据",
+      "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
