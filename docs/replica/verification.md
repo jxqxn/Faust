@@ -1,5 +1,43 @@
 # 验收、证据与当前交付状态
 
+<a id="result-hand-mask-20261022"></a>
+## 结果阶段背包误点击与原作遮罩（2026-10-22）
+
+隔离提交`1e2e622b`，当前分支移入为`c6433c76`，三个受测文件blob一致。本批修复结果界面页签外观与实际页码分离；完整结果呈现仍🟡。从上一批登记的不同页/gameObject存在性缺口进入，核对调用链后补足原作遮罩结构，没有把所有仪式手牌统一禁用。
+
+### 原作链与实现
+
+GameController.ChangeCurrentBag 0x54cb60 → UpdateHandCards 0x559d90 → AddCard 0x54ad40；InitBagGroup闭包0x572800。ChangeCurrentBag直接刷新，无riteSettling条件；UpdateHandCards把离页控件重挂hide而非销毁，AddCard复用gameObject并清slot。因此“当前页有资格”仍不能等价于“对象已经存在”，该旧近似尚未消除。直接调用能刷新也不能证明玩家真实点击可达。
+
+GameScene结果GO134上的StateSync组件12104，invert=false，targets为GO109 Next Round Mask和GO74 Hand Mask。Core.dll GUID与fileID -1511629927已核对；StateSync的MonoScript MD4计算值一致。dump.cs:420698–420710和StateSync.c OnEnable 0x436750 / OnDisable 0x4366d0对应激活/停用目标。Hand Mask Image11447启用、raycastTarget=true、alpha=1/255；MainUI顺序UI=11、BagBtnGroup=23、HandMask=29，页签位于遮罩之下。
+
+父画布3840×2160、Expand缩放；Hand Mask锚(0,0)-(1,0)、pivot(.52,0)、scale1、sizeDelta(0,470)，Y翻转后屏幕矩形(0,1690,3840,470)。BagBtnGroup锚(0,0)、pivot(0,0)、scale1、位置(420,0)、尺寸105×340，对应屏幕(420,1820,105,340)。1920×1080各值乘1/2，1280×720乘1/3；两个尺寸均覆盖页签。Canvas根序列化的零尺寸/缩放不是运行时屏幕大小。
+
+GameScreen增加ResultHandMask，MOUSE_FILTER_STOP；由RiteView结果面的实际可见性取得/释放，销毁也释放。读档重建根据结果面恢复，无新增持久化布尔字段。结果激活时延后调整树顺序，避免子节点装卸期间move_child错误；隐藏直接撤销遮罩。原有提示覆盖层保持在其上。
+
+本批实际REA：通过本机REA MCP SDK打开原作DLL，Ghidra12.1.4全新导入（未传snapshot），上述四函数analyze_function均成功，导出及close/snapshot成功。首次分析含导入耗时948787ms，后续约1073/295/26ms。原始回包、汇编/伪代码、evidence_id、script.json地址映射和DLL哈希均保留。StateSync本身使用既存.c/dump与场景核验，不称本次新反编译；Ghidra全局导入日志的其他函数修复警告不等于这些目标的语义保证。
+
+### 状态矩阵与验收边界
+
+| 状态 | 遮罩与输入证据 |
+|---|---|
+| 普通仪式打开 | 遮罩隐藏；不证明本批已验收普通仪式全部页签行为 |
+| 结果提交、出生POP结束、await_close | 遮罩显示；真实鼠标命中遮罩，页签pressed=0，外观/页码均不变 |
+| 保存、销毁、结果恢复 | 遮罩重新显示，同样拦截两种尺寸真实点击 |
+| 点击关闭并解除正式rite blocker | 遮罩隐藏；真实页签点击pressed=1，页码与外观同时切换到第二页 |
+| 再保存重建 | 页码第二页、无残留遮罩 |
+| 嵌套提示 | 既有关闭链真实输入/恢复回归重跑；未扩展为全部提示组合 |
+| 新局、菜单/详情、跨日、gameOver、音效及动画逐帧 | 本批没有完成全矩阵；仍🟡/⬜ |
+
+原失败探针两尺寸8/12：点击命中启用页签，pressed=1、外观第二页、数据仍第一页。首次遮罩实现12/12但销毁日志有move_child错误，不能算通过；错误已修正且保留日志。扩展测试首轮36/37、544/558：夹具在出生POP完成前保存，所谓“关闭点击”实际推进结算；补齐1.2秒等待并断言committed，未放宽运行时逻辑。最终六脚本37/37、560断言，包含原有可见性、关闭链、闪烁、存档与消耗结算。两尺寸渲染截图已查看。日志门禁拒绝脚本错误和泄漏。
+
+两条既存原作裁判已本批重跑：无人治理2/2、192断言，随机13/13；法拉杰治理2/2、200断言，随机26/26；两者结算后/读档后各54/54且随机errors=[]。这是既存原作带复用，不是新采原作遮罩过程；未跑全量GUT。
+
+受控结算夹具用于隔离遮罩边界，不冒充从新局完整投放过程；没有新采原作页签交互录像。不同页已有对象、COPY呈现、gameOver/直接Show及全部动画音效仍未闭合；下一项继续对象生命周期映射。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-result-pages/`。原作源哈希、fileID计算、层级矩形、失败与成功日志、截图及REA回执统一登记external-evidence.json。content和固定基线未改，未推送。
+
+
 <a id="result-visibility-fix-20261021"></a>
 ## 结果阶段真实奖励卡提前显示修复（2026-10-21）
 
