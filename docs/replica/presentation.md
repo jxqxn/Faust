@@ -1,5 +1,7 @@
 # 界面、输入、动画与声音
 
+2026-10-22：结果面可见性按原StateSync取得/释放独立ResultHandMask；真实页签输入被拦截，关闭与读档恢复已验证。CardRail几何不能代替输入遮罩，完整表现仍🟡；见[遮罩边界](verification.md#result-hand-mask-20261022)。
+
 ## 结果卡呈现持有（2026-10-21）
 
 正常Settlement完成时，job.presented_result_uids固定本次结果面板持有的真实卡。GameScreen在await_close期间不建立这些卡的手牌控件，OnClose进入post_lives时恢复；操作展示卡独立保留，规则资格和卡实例所有权不变。字段随rite_settlements保存，读取UID规范化；旧在途档没有此字段时保留旧行为。
@@ -2497,7 +2499,7 @@ clone-side 1280×720 measurement.
 
 | --- | --- | --- |
 
-| `GameScene/MainUI/Hand Mask` | stretch-x, `sizeDelta.y=470` | `CardRail`: full-width bottom band, height 470 |
+| `GameScene/MainUI/Hand Mask` | stretch-x, `sizeDelta.y=470`，Image raycastTarget=true | `ResultHandMask`：结果面显示时拦截底部输入；`CardRail`同高几何不代表已实现遮罩，见本批验收 |
 
 | `GameScene/MainUI/Hand` | anchors `(0,0)-(1,0)`, anchored `(-63.967773,4)`, `sizeDelta=(-1116.736,430)`, pivot `(0.52,0)` | resolved at 3840×2160 to `(516.7349,1726)` / `2723.264×430` |
 
