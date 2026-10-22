@@ -168,6 +168,14 @@ func _ready() -> void:
 	_held_hand_objects.hide()
 	_held_hand_objects.process_mode = Node.PROCESS_MODE_DISABLED
 	add_child(_held_hand_objects)
+	_state.result_card_object_exists = _has_hand_object
+	_state.result_card_recorded.connect(_on_result_card_recorded)
+	tree_exiting.connect(func():
+		if _state.result_card_object_exists == _has_hand_object:
+			_state.result_card_object_exists = Callable()
+		if _state.result_card_recorded.is_connected(_on_result_card_recorded):
+			_state.result_card_recorded.disconnect(_on_result_card_recorded)
+	)
 	# [SRC: GameScene Hand Mask GO74, Image raycastTarget=1, height=470;
 	# result panel StateSync targets GO74/109, invert=false.]
 	_result_hand_mask = Control.new()
@@ -1153,7 +1161,15 @@ func refresh() -> void:
 	# [SRC: UpdateHandCards 0x559d90 retains off-page controllers under hide;
 	# AddCard 0x54ad40 reuses Card.gameObject, rather than recreating it.]
 	var presented: Array[int] = _state.presented_rail_card_uids()
-	var eligible: Array[int] = _state.visible_rail_card_uids()
+	var held: Array[int] = _state.held_result_card_uids()
+	# Rebuild persisted ownership on scene restoration, not by page eligibility.
+	for uid in held:
+		var instance = _state.get_card_instance(uid)
+		if instance != null and instance.zone != "removed" and _hand_object(uid) == null:
+			var restored := _make_hand_object(uid)
+			if restored != null:
+				_hand_objects[uid] = restored
+				_held_hand_objects.add_child(restored)
 	for uid in _hand_objects.keys():
 		var existing = _hand_objects[uid]
 		if not is_instance_valid(existing):
@@ -1163,9 +1179,8 @@ func refresh() -> void:
 		if instance == null or instance.zone == "removed":
 			_release_hand_object(int(uid), existing)
 		elif int(uid) not in presented:
-			# Keep the existing result-binding proxy; source result Container
-			# GO308 is inactive, unlike the ordinary off-screen Hide GO171.
-			var target := _held_hand_objects if int(uid) in eligible else _hidden_hand_objects
+			# Source result Container GO308 is inactive; Hide GO171 stays active.
+			var target := _held_hand_objects if int(uid) in held else _hidden_hand_objects
 			if existing.get_parent() != target:
 				existing.reparent(target, false)
 	_card_items.modulate = Color(1, 1, 1, 0)
@@ -1201,25 +1216,9 @@ func refresh() -> void:
 				sudan_widget.set_selected(uid == _card_detail_card_uid, false)
 				next_known_uids[uid] = true
 			continue
-		var card: Dictionary = _state.card_data_for(uid, _db)
-		if card.is_empty():
-			continue
-		var widget: CardWidget = _hand_object(uid)
+		var widget := _make_hand_object(uid)
 		if widget == null:
-			widget = CardWidget.make(card, "hand")
-			widget.custom_minimum_size = widget.card_size()
-			widget.clicked.connect(_show_card_detail)
-			widget.quick_action_requested.connect(_on_hand_card_quick_action)
-			widget.stack_dropped.connect(_on_hand_card_stack_dropped)
-			widget.stack_drop_allowed = _can_drop_stack
-			widget.equipment_drop_allowed = _can_drop_equipment
-			widget.equipment_dropped.connect(_on_equipment_dropped)
-			widget.split_requested.connect(_on_hand_card_split_requested)
-			widget.split_one_requested.connect(func(uid: int): _on_hand_card_split_requested(uid, 1))
-			widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
-		if widget._card != card:
-			widget.set_card(card)
-		widget.drag_source = "hand"
+			continue
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
 		if has_drop_origin:
@@ -1242,6 +1241,46 @@ func refresh() -> void:
 	_layout_hand_cards()
 	call_deferred("_layout_hand_cards")
 	_refresh_event_overlay()
+
+
+## PutCardOnTable 0x5556c0 appends the reward first, then AddCard only
+## for IsCurrentHandCard. Do not create unseen off-page objects at binding.
+func _on_result_card_recorded(uid: int) -> void:
+	if uid not in _state.visible_rail_card_uids():
+		return
+	var widget := _make_hand_object(uid)
+	if widget != null:
+		_attach_hand_object(widget)
+
+
+func _has_hand_object(uid: int) -> bool:
+	return _hand_object(uid) != null
+
+
+func _make_hand_object(uid: int) -> CardWidget:
+	if _state.is_active_sudan_card(uid):
+		var asc = _active_sudan_for_card(uid)
+		if asc != null:
+			return _make_sudan_card(asc, int(_state.difficulty_config.get("sudan_life_time", 7)))
+	var card: Dictionary = _state.card_data_for(uid, _db)
+	if card.is_empty():
+		return null
+	var widget := _hand_object(uid)
+	if widget == null:
+		widget = CardWidget.make(card, "hand")
+		widget.clicked.connect(_show_card_detail)
+		widget.quick_action_requested.connect(_on_hand_card_quick_action)
+		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
+		widget.stack_drop_allowed = _can_drop_stack
+		widget.equipment_drop_allowed = _can_drop_equipment
+		widget.equipment_dropped.connect(_on_equipment_dropped)
+		widget.split_requested.connect(_on_hand_card_split_requested)
+		widget.split_one_requested.connect(func(card_uid: int): _on_hand_card_split_requested(card_uid, 1))
+		widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
+	elif widget._card != card:
+		widget.set_card(card)
+	widget.drag_source = "hand"
+	return widget
 
 
 ## Scene-local ownership, not serialized Godot instance IDs.
