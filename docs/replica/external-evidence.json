@@ -10072,6 +10072,126 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "REA逆向、原作层级或宿主回归证据",
       "boundary": "本批结果手牌遮罩；原作既存带与受控输入分列，完整呈现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/lifecycle-console.log",
+      "bytes": 4563,
+      "sha256": "8cd4a8f11b99b51c2d477d35ca2982a80e586ba5059de89ae7824d3d30af0785",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/lifecycle-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/lifecycle-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/lifecycle.log",
+      "bytes": 4162,
+      "sha256": "097bf9ae2acbe0a3221ecf9597b3f420b7baa2a5bb73fbf301a51566a1aab213",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/rea-bundle.json",
+      "bytes": 8658726,
+      "sha256": "593fe7bc3a13b40d7b1fb9cda680b93b7a801108bad6a54c7669d1a9f4f9c52b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/rea-call-summary.json",
+      "bytes": 644,
+      "sha256": "c843922963cdcfa9dd3f2ba2714dac5a58a8dc0d609065ec094d46130a5df6b8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/run-probe.ps1",
+      "bytes": 2095,
+      "sha256": "3361aece71ba1e4eeee0d8f886c45d0e0c3df34ec21796f01d8a3b7d5484cc73",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/snapshot.json",
+      "bytes": 13206788,
+      "sha256": "4f6a5ebeb83ae3538177ea141e1f2dbfff1a23538c9d85392b1b5c275bcad003",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/source-hashes.json",
+      "bytes": 968,
+      "sha256": "8c515975acfb36cefb72b6b07394327de472c1cbe8b7de765c62a7c92b89250b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/test_object_lifetime_initial.gd",
+      "bytes": 2730,
+      "sha256": "26d79c18edabce2422629e609e7b4aa3efe880cd05b53d40972661f7de2cf69b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/test_object_lifetime_probe.gd",
+      "bytes": 2790,
+      "sha256": "9496e52c4c04ebdb7a5651a65b9914124c44ef4ec92817e0ba0de5b70e7278ed",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/verified-lifecycle-console.log",
+      "bytes": 4436,
+      "sha256": "e957f371ec7e661f5ff244207b66bba721baa720253854e1eabbfe558c331195",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/verified-lifecycle-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/verified-lifecycle-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/verified-lifecycle.log",
+      "bytes": 4059,
+      "sha256": "94809c9ac8219b3de0c7559b2607b3d2a307ab2927ebb77494655354157545ff",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "对象生命周期审计与失败复现",
+      "boundary": "REA快照重放及原作源码推导，宿主真实输入探针仍失败；未修复运行时"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

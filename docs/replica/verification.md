@@ -1,5 +1,43 @@
 # 验收、证据与当前交付状态
 
+<a id="object-lifetime-audit-20261022"></a>
+## 换页对象生命周期与销毁身份审计（2026-10-22，续批）
+
+本批完成局部审计与可执行复现，未修复运行时。当前受测HEAD为ff28fae7；仍🟡。后续不能仅将presented_result_uids条件改成“访问过此页”：应先迁移对象拥有、隐藏、复用和销毁身份规则。
+
+### 证据与状态表
+
+REA实际打开原DLL并导入上一批snapshot，重放AddCard 0x54ad40、UpdateHandCards 0x559d90两份dossier，随后export/close成功；本批没有新运行Ghidra导入。两个新回执ID及源snapshot记录在rea-call-summary.json，完整Evidence在rea-bundle.json。CardController.OnDestroy与结果绑定通过直接读取旧.c/dump核验，不称本批REA新分析。
+
+| 条件/动作 | 原作源码规则 | 宿主现状 |
+|---|---|---|
+| AddCard遇到有效Card.gameObject | 复用现有对象；需要时重挂hand，清slot | GameScreen.refresh先queue_free全部手牌，再逐UID创建 |
+| 当前手牌离页 | UpdateHandCards把剩余controller重挂hide@0xF0，不在该路径Destroy | 换页刷新销毁旧控件 |
+| 返回此前页面 | AddCard复用尚存对象 | 新建，instance_id改变 |
+| 奖励卡在非当前页且已有对象 | Settlement.b__8只检查gameObject非空，再重挂container并赋slot，不以当前页资格筛选 | _bind_result_presentation使用visible_rail_card_uids，遗漏此类对象拥有关系 |
+| 奖励卡此前从未建立对象 | 绑定分支跳过 | 当前页资格不足以单独还原创建历史；“非当前页”不等于“无对象” |
+| CardController销毁 | OnDestroy先比较card.gameObject与自身gameObject；仅相等才清card+0x70 | 尚无对应原作权威对象引用；不能用永久ever-seen集合代替 |
+| 销毁旧控件但卡已指向新控件 | 不清除新控件引用 | 后续迁移必须保留身份检查，避免延迟queue_free清错引用 |
+
+[SRC: GameController.c AddCard 0x54ad40、UpdateHandCards 0x559d90；CardController.c:108–140 OnDestroy 0x529fe0；dump.cs:317041–317045方法、389615字段；RiteResultPanelController.__c__DisplayClass56_0.c:910–961/b__8 0x5b4850；宿主ui/game_screen.gd refresh、sim/rite_settlement.gd _bind_result_presentation。]
+
+最后两行由.c条件分支与dump字段交叉确认，未用“销毁必然清引用”替代实际条件。结果绑定关于不同页的差异为源代码推导，本批没有采集原作对应操作录像。
+
+### 可执行差异复现
+
+外部test_object_lifetime_probe.gd在1920×1080和1280×720分别创建两页手牌，检查首次对象→直接refresh→真实鼠标点击第二页→真实点击返回第一页的instance_id与对象有效性。每次点击断言命中目标TextureButton、实际页码变化；没有用pressed.emit替代。
+
+最终verified-lifecycle：1个测试失败，14/20断言；六项均为每尺寸的刷新身份改变、离页旧对象失效、回页身份改变。页签命中、页码和第二页控件检查通过；stderr为空。首次lifecycle为12/20，其中另两项来自夹具第二张人物卡缺own，已通过设置拥有标签修正并保留初版脚本/日志，未修改运行时代码。
+
+这是原作源码约束下的宿主结构差异测试，不是原作实时对拍；对象身份差异不单独证明所有玩家可见结果都错误。本批未重跑全量GUT或原作存档对拍，未声称保存/恢复、动画音效和完整交互链完成。
+
+### 下一实施边界
+
+先将GameScreen的无条件销毁/重建改为按UID拥有的实际控件：当前页、隐藏层、结果容器之间转移；仅确实销毁且身份相同时撤销引用。再让结算绑定读取真实对象拥有关系。需要一起核对数据更新、分裂/堆叠/装备、结果占有、清理与场景重建；读档应重建宿主所需状态，不能把旧Godot实例ID当持久标识。修复前保留当前呈现近似和本次红色探针。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-object-lifetime/`；已登记external-evidence.json。运行时、content、固定基线均未改，未推送。
+
+
 <a id="result-hand-mask-20261022"></a>
 ## 结果阶段背包误点击与原作遮罩（2026-10-22）
 
