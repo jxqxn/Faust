@@ -137,6 +137,8 @@ var _presentation_frozen := false
 var _presentation_blockers: Dictionary = {}
 var _persistent_action_locks: Dictionary = {}
 var _underlying_presentation_pauses: Dictionary = {}
+var _result_hand_mask: Control
+var _result_mask_owners: Dictionary = {}
 
 
 func setup(state, db, rng) -> void:
@@ -152,6 +154,14 @@ func _ready() -> void:
 	# the desktop's explicit layout falls back to the viewport size.
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
+	# [SRC: GameScene Hand Mask GO74, Image raycastTarget=1, height=470;
+	# result panel StateSync targets GO74/109, invert=false.]
+	_result_hand_mask = Control.new()
+	_result_hand_mask.name = "ResultHandMask"
+	_result_hand_mask.mouse_filter = Control.MOUSE_FILTER_STOP
+	_result_hand_mask.z_index = PERSISTENT_CONTROL_Z + 3
+	_result_hand_mask.hide()
+	add_child(_result_hand_mask)
 	resized.connect(_apply_layout)
 	call_deferred("_apply_layout")
 	refresh()
@@ -740,6 +750,9 @@ func _apply_layout() -> void:
 		_source_overlay_layer.scale = Vector2.ONE
 		_source_overlay_layer.size = view_size
 	# [SRC: Hand BG hand_bg 4096x356 anchors (0,0)-(1,0) bottom stretched]
+	if _result_hand_mask != null:
+		_result_hand_mask.position = Vector2(0, view_size.y - HAND_MASK_HEIGHT * k.y)
+		_result_hand_mask.size = Vector2(view_size.x, HAND_MASK_HEIGHT * k.y)
 	if _bag_tabs != null:
 		_bag_tabs.scale = k
 		_bag_tabs.position = Vector2(420 * k.x, view_size.y - 340 * k.y)
@@ -1749,12 +1762,31 @@ func add_overlay(node: Control) -> void:
 
 
 func add_source_overlay(node: Control) -> void:
+	if node.has_signal("result_visibility_changed"):
+		var owner_id := node.get_instance_id()
+		node.result_visibility_changed.connect(func(active: bool): _set_result_hand_mask(owner_id, active))
+		node.tree_exiting.connect(func(): _set_result_hand_mask(owner_id, false))
 	if _source_overlay_layer == null:
 		add_child(node)
 		return
 	_source_overlay_layer.add_child(node)
 	node.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_source_overlay_layer.move_child(node, _source_overlay_layer.get_child_count() - 1)
+
+
+## Visible result shells own the mask; closing/teardown releases it. Restored
+## RiteView visibility recreates it without adding another saved boolean.
+## [SRC: StateSync.OnEnable 0x436750 / OnDisable 0x4366d0.]
+func _set_result_hand_mask(owner_id: int, active: bool) -> void:
+	if active:
+		_result_mask_owners[owner_id] = true
+	else:
+		_result_mask_owners.erase(owner_id)
+	if not is_instance_valid(_result_hand_mask) or not is_inside_tree():
+		return
+	_result_hand_mask.visible = not _result_mask_owners.is_empty()
+	if active:
+		_set_underlying_presentation_paused.call_deferred(not _underlying_presentation_pauses.is_empty())
 
 
 func set_world_scene_blocker(
@@ -1815,6 +1847,8 @@ func _set_underlying_presentation_paused(paused: bool) -> void:
 	else:
 		move_child(_overlay_layer, -1)
 		move_child(_source_overlay_layer, -1)
+	if is_instance_valid(_result_hand_mask) and _result_hand_mask.visible:
+		move_child(_result_hand_mask, -1)
 	# Restoring a rite can reorder these layers AFTER its nested prompt was
 	# rebuilt. Keep the blocking prompt last for input as well as drawing.
 	# [SRC: GameScene Prompt above UI/RiteResultPanel; PromptController.Show

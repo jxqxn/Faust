@@ -41,6 +41,7 @@ class RiteSlotButton:
 		if owner_view != null and owner_view.has_method("drop_card_on_slot"):
 			owner_view.drop_card_on_slot(slot_key, data)
 
+signal result_visibility_changed(active: bool)
 signal settlement_closed
 signal closed()
 signal resolved()
@@ -443,8 +444,13 @@ func _build_panel_content() -> void:
 ## carrier while rendering this authored shell for the visible result state.
 ## [SRC: GameScene.md MainUI/UI/RiteResultPanel; RiteResultPanelController.c
 ##       @ Settlement (RVA 0x5a4800)]
+func _notify_result_visibility() -> void:
+	result_visibility_changed.emit(is_instance_valid(_result_surface) and _result_surface.is_visible_in_tree())
+
+
 func _build_result_surface() -> void:
 	_result_surface = Control.new()
+	_result_surface.visibility_changed.connect(_notify_result_visibility)
 	_result_surface.name = "RiteResultPanel"
 	# The result art is visual only; the blocking PromptNew sibling must still
 	# receive input while a settlement operation is waiting. Its child Next
