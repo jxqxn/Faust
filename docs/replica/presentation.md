@@ -1,5 +1,7 @@
 # 界面、输入、动画与声音
 
+2026-10-22结果绑定实现：结算已读取GameScreen实际对象，覆盖离页已有对象、当前页新奖励及存档重建；无场景不按页面推断。仪式槽/装备/COPY尚未统一登记，完整呈现仍🟡，见[验收边界](verification.md#result-object-binding-20261022)。
+
 2026-10-22实现批：GameScreen刷新与换页现复用实际CardWidget；离页Hide保留处理、结果持有层停用处理，场景重建重新创建控件。结果绑定尚未接入实际对象关系；见[手牌复用边界](verification.md#hand-object-reuse-20261022)。
 
 2026-10-22续批：手牌刷新/换页仍会重建控件，与原作AddCard复用、UpdateHandCards隐藏及OnDestroy身份检查不同。两尺寸红色探针已保留；对象拥有链尚待迁移，见[生命周期证据](verification.md#object-lifetime-audit-20261022)。
