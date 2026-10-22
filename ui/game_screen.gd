@@ -137,6 +137,9 @@ var _presentation_frozen := false
 var _presentation_blockers: Dictionary = {}
 var _persistent_action_locks: Dictionary = {}
 var _underlying_presentation_pauses: Dictionary = {}
+var _hand_objects: Dictionary = {}
+var _hidden_hand_objects: Control
+var _held_hand_objects: Control
 var _result_hand_mask: Control
 var _result_mask_owners: Dictionary = {}
 
@@ -154,6 +157,17 @@ func _ready() -> void:
 	# the desktop's explicit layout falls back to the viewport size.
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
+	_hidden_hand_objects = Control.new()
+	_hidden_hand_objects.name = "HiddenHandObjects"
+	_hidden_hand_objects.hide()
+	# Source Hide GO171 is active, positioned below the screen. Hiding in
+	# Godot removes drawing/input but preserves processing for retained cards.
+	add_child(_hidden_hand_objects)
+	_held_hand_objects = Control.new()
+	_held_hand_objects.name = "HeldResultHandObjects"
+	_held_hand_objects.hide()
+	_held_hand_objects.process_mode = Node.PROCESS_MODE_DISABLED
+	add_child(_held_hand_objects)
 	# [SRC: GameScene Hand Mask GO74, Image raycastTarget=1, height=470;
 	# result panel StateSync targets GO74/109, invert=false.]
 	_result_hand_mask = Control.new()
@@ -1136,8 +1150,24 @@ func refresh() -> void:
 	_update_prestige_strip()
 	_bag_tabs.update_page(_state.current_bag_index)
 	var previous_positions := _capture_hand_visual_positions()
-	for child in _card_items.get_children():
-		child.queue_free()
+	# [SRC: UpdateHandCards 0x559d90 retains off-page controllers under hide;
+	# AddCard 0x54ad40 reuses Card.gameObject, rather than recreating it.]
+	var presented: Array[int] = _state.presented_rail_card_uids()
+	var eligible: Array[int] = _state.visible_rail_card_uids()
+	for uid in _hand_objects.keys():
+		var existing = _hand_objects[uid]
+		if not is_instance_valid(existing):
+			_hand_objects.erase(uid)
+			continue
+		var instance = _state.get_card_instance(int(uid))
+		if instance == null or instance.zone == "removed":
+			_release_hand_object(int(uid), existing)
+		elif int(uid) not in presented:
+			# Keep the existing result-binding proxy; source result Container
+			# GO308 is inactive, unlike the ordinary off-screen Hide GO171.
+			var target := _held_hand_objects if int(uid) in eligible else _hidden_hand_objects
+			if existing.get_parent() != target:
+				existing.reparent(target, false)
 	_card_items.modulate = Color(1, 1, 1, 0)
 	_hand_sticky = false
 	var life := int(_state.difficulty_config.get("sudan_life_time", 7))
@@ -1146,7 +1176,7 @@ func refresh() -> void:
 	# original runtime count badge: 8 -> two visible objects, 7 + 1.]
 	# Preserve each UID as a separate hit target until an explicit stack action.
 	var next_known_uids: Dictionary = {}
-	for card_uid in _state.presented_rail_card_uids():
+	for card_uid in presented:
 		var uid := int(card_uid)
 		if _state.is_active_sudan_card(uid):
 			var asc = _active_sudan_for_card(uid)
@@ -1164,8 +1194,9 @@ func refresh() -> void:
 					_pending_hand_drop_poses.erase(uid)
 				elif previous_positions.has(uid):
 					sudan_widget.set_meta("reflow_from", previous_positions[uid])
-				sudan_widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
-				_card_items.add_child(sudan_widget)
+				if not sudan_widget.drag_visibility_changed.is_connected(_on_hand_card_drag_visibility_changed):
+					sudan_widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
+				_attach_hand_object(sudan_widget)
 				_bind_hand_flash(sudan_widget)
 				sudan_widget.set_selected(uid == _card_detail_card_uid, false)
 				next_known_uids[uid] = true
@@ -1173,17 +1204,22 @@ func refresh() -> void:
 		var card: Dictionary = _state.card_data_for(uid, _db)
 		if card.is_empty():
 			continue
-		var widget := CardWidget.make(card, "hand")
-		widget.custom_minimum_size = widget.card_size()
-		widget.clicked.connect(_show_card_detail)
-		widget.quick_action_requested.connect(_on_hand_card_quick_action)
-		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
-		widget.stack_drop_allowed = _can_drop_stack
-		widget.equipment_drop_allowed = _can_drop_equipment
-		widget.equipment_dropped.connect(_on_equipment_dropped)
-		widget.split_requested.connect(_on_hand_card_split_requested)
-		widget.split_one_requested.connect(func(uid: int): _on_hand_card_split_requested(uid, 1))
-		widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
+		var widget: CardWidget = _hand_object(uid)
+		if widget == null:
+			widget = CardWidget.make(card, "hand")
+			widget.custom_minimum_size = widget.card_size()
+			widget.clicked.connect(_show_card_detail)
+			widget.quick_action_requested.connect(_on_hand_card_quick_action)
+			widget.stack_dropped.connect(_on_hand_card_stack_dropped)
+			widget.stack_drop_allowed = _can_drop_stack
+			widget.equipment_drop_allowed = _can_drop_equipment
+			widget.equipment_dropped.connect(_on_equipment_dropped)
+			widget.split_requested.connect(_on_hand_card_split_requested)
+			widget.split_one_requested.connect(func(uid: int): _on_hand_card_split_requested(uid, 1))
+			widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
+		if widget._card != card:
+			widget.set_card(card)
+		widget.drag_source = "hand"
 		var has_drop_origin := _pending_hand_drop_origins.has(uid)
 		widget.set_meta("deal_pending", not has_drop_origin and not _known_rail_card_uids.has(uid))
 		if has_drop_origin:
@@ -1196,8 +1232,9 @@ func refresh() -> void:
 			_pending_hand_drop_poses.erase(uid)
 		elif previous_positions.has(uid):
 			widget.set_meta("reflow_from", previous_positions[uid])
-		widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
-		_card_items.add_child(widget)
+		if not widget.drag_visibility_changed.is_connected(_on_hand_card_drag_visibility_changed):
+			widget.drag_visibility_changed.connect(_on_hand_card_drag_visibility_changed)
+		_attach_hand_object(widget)
 		_bind_hand_flash(widget)
 		widget.set_selected(uid == _card_detail_card_uid, false)
 		next_known_uids[uid] = true
@@ -1205,6 +1242,30 @@ func refresh() -> void:
 	_layout_hand_cards()
 	call_deferred("_layout_hand_cards")
 	_refresh_event_overlay()
+
+
+## Scene-local ownership, not serialized Godot instance IDs.
+func _hand_object(uid: int) -> CardWidget:
+	var widget = _hand_objects.get(uid)
+	if is_instance_valid(widget) and not widget.is_queued_for_deletion():
+		return widget
+	return null
+
+
+func _attach_hand_object(widget: CardWidget) -> void:
+	_hand_objects[widget.card_uid] = widget
+	if widget.get_parent() == null:
+		_card_items.add_child(widget)
+	elif widget.get_parent() != _card_items:
+		widget.reparent(_card_items, false)
+
+
+## [SRC: CardController.OnDestroy 0x529fe0 compares object identity before
+## clearing card.gameObject; a stale widget must not clear its replacement.]
+func _release_hand_object(uid: int, expected: CardWidget) -> void:
+	if _hand_objects.get(uid) == expected:
+		_hand_objects.erase(uid)
+	expected.queue_free()
 
 
 func _bind_hand_flash(widget: CardWidget) -> void:
@@ -1439,11 +1500,16 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	card["id"] = int(asc.card_id)
 	card["type"] = "sudan"
 	card["remaining_life"] = int(asc.days_left)
-	var widget := CardWidget.make(card, "active_sudan")
-	widget.custom_minimum_size = widget.card_size()
-	widget.clip_contents = false
-	widget.clicked.connect(_show_card_detail)
-	widget.quick_action_requested.connect(_on_hand_card_quick_action)
+	var widget := _hand_object(int(asc.card_uid))
+	if widget == null:
+		widget = CardWidget.make(card, "active_sudan")
+		widget.custom_minimum_size = widget.card_size()
+		widget.clip_contents = false
+		widget.clicked.connect(_show_card_detail)
+		widget.quick_action_requested.connect(_on_hand_card_quick_action)
+	elif widget._card != card:
+		widget.set_card(card)
+	widget.drag_source = "active_sudan"
 	return widget
 
 
