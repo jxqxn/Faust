@@ -11536,6 +11536,422 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "仪式槽对象转移审计、REA新分析与失败探针",
       "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-console.log",
+      "bytes": 322261,
+      "sha256": "15afadaa0d364b40700aeab74b4c085d1ff4dd21b3bfd3fb38608521aae04478",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-data/global.json",
+      "bytes": 326,
+      "sha256": "83218b8d47d1eefbb25df0d730bbac47a05472e056807627432980b9c9f34cbb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-data/save.json",
+      "bytes": 2606,
+      "sha256": "808515d3197e2b8cd264414d3140d3b562c5dd47409ac91fbf7b265c994c75e2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-data/slot-1280.png",
+      "bytes": 1460765,
+      "sha256": "cd9136ac2bf4bbe761c13d5c88dba7d552a98f5467e572378996c0f8e457c643",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-data/slot-1920.png",
+      "bytes": 2937689,
+      "sha256": "4f2a2193051b987fcc7bfb28ed5d7e826860a322aa647bda25a11d2f2894d242",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/clean.log",
+      "bytes": 304437,
+      "sha256": "1ee8ae4ea1c46ad0a6d007fe02aca4900fb3637d6af7b733b26f0ba6e46cf0cc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close-console.log",
+      "bytes": 14790,
+      "sha256": "d902df93c2536e915cb44d3ead4e1bd4b92d3dc8cfa81ef2baa9ef79db9d83da",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close-data/slot-1280.png",
+      "bytes": 1460842,
+      "sha256": "20c9148509d72b107f5a34c3f5d76581a13b4498c417c7a49774ac2f1d47f0c5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close-data/slot-1920.png",
+      "bytes": 2937777,
+      "sha256": "dce7d7b252cd23a495c5553d141be4ae688ee36d0765b4265355736ca8372574",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/close.log",
+      "bytes": 13335,
+      "sha256": "af916dab916e0256f47445eeae4372142ea57f40216236e15fc5dae68a16546d",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final-console.log",
+      "bytes": 26242,
+      "sha256": "7091a1bf86d327f248ba5010f2e8450a5370fef6611d80f1d8803c25d48cb914",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final-data/slot-1280.png",
+      "bytes": 1460829,
+      "sha256": "b4ee463d85c23507acf51d0f3e12f170456b818e717a3e8aae2ebcbe4b5391a8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final-data/slot-1920.png",
+      "bytes": 2937673,
+      "sha256": "55be2753b5cdaec850f24ebe2cea7298f336352c1132253df3abb38200bd64b1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/final.log",
+      "bytes": 23465,
+      "sha256": "c3262ebcf751fefb04fc9439e9ade965d11ead78050f75c0b268e561235e2799",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-console.log",
+      "bytes": 5916,
+      "sha256": "280e50e5c57b220969bfd12f2e343643f1df2f26bb8c4e46e4c77ee8ae6906dd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-data/save.json",
+      "bytes": 2606,
+      "sha256": "808515d3197e2b8cd264414d3140d3b562c5dd47409ac91fbf7b265c994c75e2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-data/slot-1280.png",
+      "bytes": 1460772,
+      "sha256": "2d3a1d726c429432f6cf9d0d0a3efc5723c61710632da48e9b337334acefcf33",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-data/slot-1920.png",
+      "bytes": 2937702,
+      "sha256": "113f411f9654e50947f4b8c1565b95bac23e276fe828c14ff28b195367ab356c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed-stderr.log",
+      "bytes": 1120,
+      "sha256": "5e0bd5113dd43edfaecedb41b28e9acb23a6dc75a7b48d57fe1b0c6ab2314092",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/fixed.log",
+      "bytes": 6482,
+      "sha256": "f29a55d5f5c6a4b1f7ac2a8cdc31dabda70bb885cc93d8c699ed03788ece3abd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/hands-console.log",
+      "bytes": 105675,
+      "sha256": "f584f0b1915aa077ba5141d7e88846089e03f65762a044dd1f43b6735055029c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/hands-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/hands-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/hands.log",
+      "bytes": 95678,
+      "sha256": "d664ec4fd8b6346a6f7b97a0cb7896b5801a550dd99f4f1bbf0ff63f568bef1f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/integration.json",
+      "bytes": 900,
+      "sha256": "690949578b0612093f9f7bbb794780d994c6d4094bd92004b16c5e7664aee4cc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/manager-console.log",
+      "bytes": 14717,
+      "sha256": "a0f7b4df982274551bdcc7f6d73e0f7e918cfad7821c113ab63550899588ac82",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/manager-receipt.json",
+      "bytes": 457086,
+      "sha256": "09e4d94317b64a8039aa59b85400f091f890c2641445dea54594c92135768165",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/manager.log",
+      "bytes": 12607,
+      "sha256": "5fac3273219a15a895c367457635e0fb60cca4dc2e4e56b2c26519adde0be3b3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/original-console.log",
+      "bytes": 13917,
+      "sha256": "3c287cb407722186077b74e988d05a44058679a38e7dd6693331d2cdf4ded9c1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/original-receipt.json",
+      "bytes": 443706,
+      "sha256": "dfece5449ab460aa09549551ea06cbc058b2c22f09310cd09d27ae2d639eb526",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/original.log",
+      "bytes": 11887,
+      "sha256": "4e439d70d39b869ff5fcb01c87377718341405e2aef54d8c2f90af2725656495",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/probe-console.log",
+      "bytes": 474,
+      "sha256": "2dde8c4048e08236afc65022939208f56d81088a3822476a7b3b8c11fd1f1ac5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/probe-stderr.log",
+      "bytes": 610,
+      "sha256": "7b71955e42aeec96a48155b2391b17b158eede68e525114c05cd05e1663676bd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/probe.log",
+      "bytes": 1052,
+      "sha256": "da0e95f8a30e2726bd84a87a0779965a4a888c5ac9580209a7b7a77e0d8c3b6c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/rea-replay-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/rea-replay-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/rea-replay.json",
+      "bytes": 1135176,
+      "sha256": "e0b9a7bb391a3c9396a02fc3132b6139e2223aff2ae703d2b53a286b418e0252",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/replay.ps1",
+      "bytes": 2463,
+      "sha256": "a83a6180655fa4d3a7ea1ffaee6c89491d68915f98ca765a1e28e11aa25c78c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/run.ps1",
+      "bytes": 790,
+      "sha256": "216e6f074e108a37f81eff8631ebe6fb80602daf63d29c1f40b8ab461de23bbf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/snapshot.json",
+      "bytes": 2270584,
+      "sha256": "adf3594352c8e4f5cbcf308a485b0fcd46bc21d911ba38487b3e85f2d1020e19",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-slot-object-transfer/test_slot_object_probe.gd",
+      "bytes": 6053,
+      "sha256": "88a7b108350696141083eb6cf82d10a4f632ed59bee0d761d9c31cdfedf34b1b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移实现与回归证据",
+      "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
