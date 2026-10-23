@@ -48,6 +48,7 @@
 |---|---|---|
 | 销毁卸装BROKER采样（当前批次） | Init0x572f40 case4；OpCardBroker.mat、原DXBC181_7..10、broker.png及unequip.anim；RiftGenerator0x432550/0x432590/0x432a50 | 🟡 单格整卡采样位移/原始曲线/半秒Done已接，GPU49/49、494断言；共享atlas邻格、裂口生成器及原作过程捕获仍缺失 |
 | 卸装回收与材质参数消费（当前批次） | OpCardNewController.Init0x572f40 case5→NORMAL；OpCardShow.set_Type0x576790/LateUpdate0x5761e0；CardShows_FaceUnlit.op_cards、OpCard.mat、原DXBC182_7..10无_BrokerDist | 🟡 已接原始unequip_recovery曲线/Done，GPU47/47、431断言；纠正“有distance就应消散”的推断；BROKER贴图位移后续已接，Special层仍待实现 |
+| COPY 装备数量（2026-10-23） | CardExtensions.Copy 0x37f4e0 无条件复制 count@0x20；dump.cs:388311 参数为 no_add | 🟡 已移除递归装备数量重置，相关37/37、原作轨迹54/54；装备详情对象复用另待处理，见[数量修复与对象审计](replica/verification.md#copy-equipment-count-20261023) |
 | 仪式槽物理对象转移（2026-10-22） | CardSlotController.SetCard 0x53c7d0 / RecoveryCard 0x53c660 / RemoveCard 0x53c7b0；dump.cs:317977–317993 | 🟡 2026-10-23已统一手牌/槽根，原12项失败消除；两尺寸真实拖放、关闭、磁盘重建通过，完整表现及装备/COPY仍开放，见[实现验收](replica/verification.md#slot-object-transfer-20261023) |
 | 结果卡实际对象绑定（2026-10-22） | PutCardOnTable 0x5556c0 → AddCard；Settlement.b__8 0x5b4850；dump.cs:320063–320064、324971–324972 | 🟡 GameScreen实际对象查询及离页持有/读档已接入；其他控制器与全链未闭合，见[验收](replica/verification.md#result-object-binding-20261022) |
 | 装备操作主从身份与普通装备动画（当前批次） | CardOpContext.Equip0x398ea0 / OperationContext.AddCardOp_Equip0x39e2f0；OpCardNewController.Init0x572f40 cases3/4/5；OpCard.prefab / equip.anim | 🟡 修正主卡为宿主、装备为独立层；正equipment标签普通装备分支接原始位移与平面四元数曲线，GPU46/46、380断言及原作带54/54通过。卸装Shader、非equipment特殊效果分支、原RenderTexture投影仍开放 |

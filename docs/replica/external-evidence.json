@@ -11952,6 +11952,198 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "仪式槽对象转移实现与回归证据",
       "boundary": "REA已有快照重放；受控两尺寸输入及磁盘fixture，原作对拍复用既存轨迹；完整表现仍未闭合"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/green-console.log",
+      "bytes": 17005,
+      "sha256": "4d4c53de9384e0c90e72454d1ee91f1d74da1226cd8aa5b85b6e2657ea8893f5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/green-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/green-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/green.log",
+      "bytes": 14990,
+      "sha256": "7a7efa204bc0a79e48ae4d99120b0116acb6ab46cefe4faf6b152b20e47b885c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/integration.json",
+      "bytes": 689,
+      "sha256": "70545e09afc91010d5e17afb58149efcc00e2ac9d52620d9e012fed118ce0b37",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/original-console.log",
+      "bytes": 13917,
+      "sha256": "63fe039bf77a2a841c57eb1e965973357e33ed88f6fb61d06612ff7b303204b7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/original-receipt.json",
+      "bytes": 443706,
+      "sha256": "2d2e1a2c3eb33f47b97443f913403cfe274b34abcd520f97ae9819ccd2e47d22",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/original.log",
+      "bytes": 11887,
+      "sha256": "efc3be722407696d61275d5800b9e9086e90e78448ac6c004b17113643fd1504",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/rea-replay.json",
+      "bytes": 2084377,
+      "sha256": "553335da67ef9ff018e76367a4cc5e75a1f416522458829d5ec0ea32e78c5d2a",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/rea-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-console.log",
+      "bytes": 570,
+      "sha256": "54e2f1280541b9e8734147dbb08f1329c519061c11f7a0608bfddc8bb45f93fd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-count-console.log",
+      "bytes": 4256,
+      "sha256": "5f96152985bc6ae8f8b7f942dba4994abea661095b1288c9a2df311ce30bfa49",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-count-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-count-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-count.log",
+      "bytes": 3740,
+      "sha256": "f222fae8dfd46af784fd7c2036dc945935de5df933f07bd2997ffafb8032420c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red-stderr.log",
+      "bytes": 1212,
+      "sha256": "6fb672a4548ce203a50e75c69e05eed9898e5c1493a5571f62f54fc417ba2fea",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/red.log",
+      "bytes": 1726,
+      "sha256": "c69921188f6f15e2f4bbf6b38de9d72a1edbba31fbfd4e763e27ef75247aaa84",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/replay.ps1",
+      "bytes": 2463,
+      "sha256": "a83a6180655fa4d3a7ea1ffaee6c89491d68915f98ca765a1e28e11aa25c78c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/run.ps1",
+      "bytes": 790,
+      "sha256": "216e6f074e108a37f81eff8631ebe6fb80602daf63d29c1f40b8ab461de23bbf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/snapshot.json",
+      "bytes": 8691418,
+      "sha256": "eabaa75a616f535c6cfafaecbce56dc30c0b708a2372e9ea09cc306833e8b9da",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/source-summary.json",
+      "bytes": 1302,
+      "sha256": "20e644f6ad864a0b872a1d1342fd4ff3d6d0b9c624185f7199f3b7375b0a05fc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "COPY装备数量回归及REA快照重放证据",
+      "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",

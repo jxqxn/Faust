@@ -1,5 +1,18 @@
 # 验收、证据与当前交付状态
 
+<a id="copy-equipment-count-20261023"></a>
+## COPY 装备数量与详情对象审计（2026-10-23）
+
+本批针对 METHOD_MAP 的 COPY/装备开放项，修正递归复制装备时强制 count=1 的误实现。完整功能仍🟡；本批不是装备详情交互闭合。
+
+原作依据：直接阅读 `CardExtensions.c @ Copy (RVA 0x37f4e0)`，参数2仅转交 `PlayerExtensions.AddCard`，递归 `Copy(equip,true)` 后仍无条件把源 `count@0x20` 写入新卡。独立 `dump.cs:388311` 将该参数命名为 `no_add`，不是旧注释声称的 keep_count。实际调用 REA CLI 重放既有快照，Evidence `ev_41d3e1df3b163b8b444882045c49fd20bd77dc70a6b705ddfb60354a5acb6129`；不是新一轮 Ghidra 导入。DLL SHA256 与既有原作一致，完整回包和源码哈希见外部证据根。
+
+实现删除递归装备数量重置，保留独立 UID、装备宿主关联和不进入手牌的行为，修正源码/测试中错误参数释义。新增两层装备数量4/7的受控状态夹具，断言数量、UID不共享、宿主链、手牌排除、SaveSystem序列化重建及修改副本不影响原卡。该夹具验证源码边界，不声称原始配置自然可达，也不是磁盘重启或原作该分支录像。
+
+另已确认下一项差异：`CardInfoNewController.RefreshAllEquips 0x534c40`（dump.cs:317644）检查装备 `gameObject@0x70`，缺失才 AddCard，随后重挂到详情容器并设置 slot；当前 `card_info_view.gd::_build_equips` 总是创建新 CardWidget。此处仅为 .c/dump 核验，尚无该函数本轮 REA 新分析；尚未修改。后续必须一并审计关闭、拖出、替换装备、结果持有与存读档，不能只替换构造函数。
+
+隔离提交 `2267605e`，主分支提交 `33871090`，两文件 blob 一致。相关4脚本37/37、181断言通过；原作轨迹2/2、192断言通过，结算/读档分别54/54，随机带13/13无错误。接受日志无脚本错误或泄漏；未跑全量GUT，原作轨迹不直接覆盖本次多层数量夹具。外部证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-copy-equipment-count/`。初次测试写错 GameState.from_dict API 的解析失败保留但排除；修正为 SaveSystem 后旧实现7测试6通过、35断言31通过，四项失败全部为装备数量及序列化重建数量。
+
 <a id="slot-object-transfer-20261023"></a>
 ## 手牌与仪式槽共用物理对象（2026-10-23，实现批）
 
