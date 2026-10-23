@@ -457,10 +457,12 @@ func _notification(what: int) -> void:
 			var payload := _drag_payload_ref
 			_drag_payload_ref = {}
 			drag_finished.emit(payload, drag_succeeded)
+			visible = true
 			return
 		if drag_succeeded:
 			_hidden_for_drag = false
 			_drag_payload_ref = {}
+			visible = true
 			drag_visibility_changed.emit(card_uid, false)
 		else:
 			_restore_source_after_failed_drag()

@@ -1639,6 +1639,13 @@ func _close_panel() -> void:
 		_update_gold_button()
 		_update_resolve_button()
 		_refresh_game_screen()
+	# [SRC: RitePanelShowController.OnClose 0x593b10: !start && !is_adsorb
+	# calls RecoveryCard before destroying slot objects.]
+	var instance = _state.get_rite_instance(_rite_uid) if _state != null else null
+	if instance != null and not instance.start:
+		for key in _placed.keys():
+			if _can_edit_slot(str(key)):
+				return_card_to_hand(int(_placed[key]), str(key))
 	closed.emit()
 
 
@@ -2053,11 +2060,18 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 	if str(card_copy.get("type", "")) == "sudan":
 		var dec = SudanCards.decode(int(card_copy.get("id", 0)))
 		card_copy["name"] = "%s%s" % [dec.rank, dec.action]
-	var widget := CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
+	var screen = _object_screen()
+	var widget: CardWidget = screen.acquire_slot_object(card_uid) if screen != null else CardWidget.make(card_copy, "slot", slot_key, _rite_uid)
+	widget.set_card(card_copy)
+	widget.drag_source = "slot"
+	widget.drag_slot = slot_key
+	widget.drag_rite_uid = _rite_uid
+	widget.set_meta("slot_owner", self)
 	widget.drag_allowed = func(): return _can_edit_slot(slot_key)
-	widget.drag_started.connect(_begin_slot_drag.bind(widget))
-	widget.drag_finished.connect(_finish_slot_drag.bind(widget))
-	widget.quick_action_requested.connect(func(_uid: int): return_card_to_hand(card_uid, slot_key))
+	if screen == null:
+		widget.drag_started.connect(_begin_slot_drag.bind(widget))
+		widget.drag_finished.connect(_finish_slot_drag.bind(widget))
+		widget.quick_action_requested.connect(func(_uid: int): return_card_to_hand(card_uid, slot_key))
 	widget.name = "PlacedCard_%s" % slot_key.to_upper()
 	# [SRC: CardSlotController.SetCard 0x53c7d0; CardSlot.prefab Container]
 	# Preserve the card's own size and centre it in
@@ -2072,14 +2086,15 @@ func _render_slot_card(btn: Button, slot_key: String, card_uid: int, card: Dicti
 	widget.position = (container.size - widget.card_size()) * 0.5
 	# [SRC: CardController.OnPointerUp 0x52afe0: ordinary short click toggles
 	# ShowCardInfo; RemoveFromSlot belongs to the separate quick-action branch.]
-	widget.clicked.connect(func(_id: int, _card: Dictionary):
-		var screen := get_parent()
-		while screen != null:
-			if screen.has_method("show_card_detail"):
-				screen.show_card_detail(card_uid)
-				return
-			screen = screen.get_parent())
-	container.add_child(widget)
+	if widget.get_parent() != null:
+		widget.reparent(container, false)
+	else:
+		container.add_child(widget)
+	widget.position = (container.size - widget.card_size()) * 0.5
+	widget.scale = Vector2.ONE
+	widget.rotation = 0.0
+	widget.show()
+
 
 
 func _begin_slot_drag(data: Dictionary, widget: CardWidget) -> void:
@@ -2116,7 +2131,10 @@ func _finish_slot_drag(data: Dictionary, _accepted: bool, widget: CardWidget) ->
 		else:
 			_return_detached_card(uid)
 	_dragged_slot_widgets.erase(uid)
-	widget.queue_free()
+	if _object_screen() == null:
+		widget.queue_free()
+	else:
+		widget.show()
 
 
 func _return_detached_card(uid: int) -> void:
@@ -2133,6 +2151,10 @@ func _exit_tree() -> void:
 	# Closing/replacing the overlay during a drag must not orphan the UID.
 	for uid in _dragged_slot_widgets:
 		_return_detached_card(int(uid))
+		var screen = _object_screen()
+		if screen != null and not screen.is_queued_for_deletion() and not get_viewport().is_queued_for_deletion():
+			screen.park_slot_object(_dragged_slot_widgets[uid])
+			screen.call_deferred("refresh")
 
 
 func _can_edit_slot(slot_key: String) -> bool:
@@ -2159,9 +2181,26 @@ func _rite_state_from_placements() -> Dictionary:
 	return rite_state
 
 
+func _object_screen():
+	var node := get_parent()
+	while node != null:
+		if node.has_method("acquire_slot_object"):
+			return node
+		node = node.get_parent()
+	return null
+
+
 func _clear_slot_card(btn: Button) -> void:
+	var screen = _object_screen()
 	for child in btn.get_children():
 		if child is CardWidget or child.name == "Container":
+			if screen != null:
+				var cards: Array = [child] if child is CardWidget else child.get_children()
+				for card in cards:
+					if card is CardWidget and screen._hand_object(card.card_uid) == card:
+						screen.park_slot_object(card)
+				if child is CardWidget:
+					continue
 			btn.remove_child(child)
 			child.queue_free()
 
