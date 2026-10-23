@@ -1178,7 +1178,7 @@ func refresh() -> void:
 		var instance = _state.get_card_instance(int(uid))
 		if instance == null or instance.zone == "removed":
 			_release_hand_object(int(uid), existing)
-		elif int(uid) not in presented and (int(uid) in held or instance.zone not in ["slot", "drag"]):
+		elif int(uid) not in presented and (int(uid) in held or instance.zone not in ["slot", "drag"] and not (instance.zone == "equipped" and existing.has_meta("equipment_owner") and is_instance_valid(existing.get_meta("equipment_owner")))):
 			# Source result Container GO308 is inactive; Hide GO171 stays active.
 			var target := _held_hand_objects if int(uid) in held else _hidden_hand_objects
 			if existing.get_parent() != target:
@@ -1284,6 +1284,7 @@ func _make_hand_object(uid: int) -> CardWidget:
 	widget.drag_rite_uid = 0
 	widget.drag_allowed = Callable()
 	widget.set_meta("slot_owner", null)
+	widget.set_meta("equipment_owner", null)
 	_bind_object_drag(widget)
 	return widget
 
@@ -1310,6 +1311,8 @@ func _on_owned_card_split_requested(uid: int, amount: int = -1) -> void:
 
 func _on_owned_card_quick_action(uid: int) -> void:
 	var widget := _hand_object(uid)
+	if widget != null and widget.drag_source == "equipment":
+		return # Equipment quick-submit remains outside this drag/lifetime batch.
 	var owner = widget.get_meta("slot_owner") if widget != null and widget.has_meta("slot_owner") else null
 	if is_instance_valid(owner):
 		owner.return_card_to_hand(uid, widget.drag_slot)
@@ -1322,7 +1325,7 @@ func _bind_object_drag(widget: CardWidget) -> void:
 		return
 	widget.set_meta("owner_drag_bound", true)
 	widget.drag_started.connect(func(data: Dictionary):
-		var owner = widget.get_meta("slot_owner") if widget.has_meta("slot_owner") else null
+		var owner = widget.get_meta("slot_owner") if widget.has_meta("slot_owner") else (widget.get_meta("equipment_owner") if widget.has_meta("equipment_owner") else null)
 		widget.set_meta("drag_origin_owner", owner)
 		if is_instance_valid(owner):
 			owner._begin_slot_drag(data, widget))
@@ -1330,7 +1333,12 @@ func _bind_object_drag(widget: CardWidget) -> void:
 		var owner = widget.get_meta("drag_origin_owner") if widget.has_meta("drag_origin_owner") else null
 		widget.set_meta("drag_origin_owner", null)
 		if is_instance_valid(owner):
-			owner._finish_slot_drag(data, accepted, widget))
+			owner._finish_slot_drag(data, accepted, widget)
+		elif data.get("source", "") == "equipment":
+			var instance = _state.get_card_instance(int(data.card_uid))
+			if instance != null and instance.zone == "drag":
+				drop_card_to_hand(data, _card_rail_view.get_local_mouse_position())
+			SaveSystem.save(_state))
 
 
 ## Scene-local ownership, not serialized Godot instance IDs.
@@ -1603,6 +1611,7 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 	widget.drag_rite_uid = 0
 	widget.drag_allowed = Callable()
 	widget.set_meta("slot_owner", null)
+	widget.set_meta("equipment_owner", null)
 	_bind_object_drag(widget)
 	return widget
 
@@ -1615,7 +1624,7 @@ func can_drop_card_to_hand(data: Variant) -> bool:
 	if str(data.get("type", "")) != "card":
 		return false
 	var source := str(data.get("source", ""))
-	return source == "slot" or source == "hand" or source == "active_sudan"
+	return source in ["slot", "hand", "active_sudan"] or (source == "equipment" and bool(data.get("detached_from_slot", false)))
 
 
 # Clone-era compatibility adapter. The desk owns the player-facing
@@ -1672,7 +1681,13 @@ func drop_card_to_hand(data: Variant, rail_position: Vector2 = Vector2.INF) -> v
 			"tilt": data.get("drag_visual_tilt", Vector2(INF, INF)),
 		}
 	_hand_drop_preview_index = -1
-	if source == "slot":
+	if source == "equipment":
+		var equipment = _state.get_card_instance(card_uid)
+		if equipment == null or equipment.zone != "drag":
+			return
+		equipment.bag = _state.current_bag_index
+		_state.add_card_to_hand_at_rail(card_uid, _global_rail_insert_index(insert_index, card_uid), _db)
+	elif source == "slot":
 		var slot_num: int = (
 			source_slot.substr(1).to_int()
 			if source_slot.begins_with("s")

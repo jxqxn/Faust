@@ -74,6 +74,7 @@ func show_card(card: Dictionary, card_uid: int) -> void:
 
 
 func _build_panel(card: Dictionary) -> void:
+	_release_equipment_for_refresh()
 	for child in get_children():
 		child.queue_free()
 	if not resized.is_connected(_apply_layout):
@@ -495,11 +496,24 @@ func _build_equips(card: Dictionary) -> void:
 	for equipment in card.get("equipped_cards", []):
 		if not (equipment is Dictionary):
 			continue
-		var widget := CardWidget.new()
+		var screen = _object_screen()
+		var uid := int(equipment.get("instance_uid", 0))
+		var widget: CardWidget = screen.acquire_slot_object(uid) if screen != null and uid > 0 else null
+		if widget == null:
+			widget = CardWidget.new()
+			widget.set_card(equipment)
 		widget.name = "EquippedCard_%d" % index
-		widget.set_card(equipment)
-		_equip_rows.add_child(widget)
-		widget.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if widget.get_parent() == null:
+			_equip_rows.add_child(widget)
+		else:
+			widget.reparent(_equip_rows, false)
+		widget.drag_source = "equipment"
+		widget.set_meta("equipment_owner", self)
+		widget.drag_allowed = func(): return _can_move_equipment(uid)
+		widget.mouse_filter = Control.MOUSE_FILTER_STOP
+		widget.set_presentation_paused(false)
+		widget.scale = Vector2.ONE
+		widget.show()
 		# [SRC: RefreshAllEquips 0x534c40 and .cctor 0x537e30:
 		# two columns (260,-50,6)/(150,-150,16), steps (20,100)/(5,125), angle -4.]
 		var column := index % 2
@@ -747,3 +761,75 @@ func close_view() -> void:
 	hide_help()
 	for child in get_children():
 		child.queue_free()
+
+
+func _object_screen():
+	var node = get_parent()
+	while node != null and not node.has_method("acquire_slot_object"):
+		node = node.get_parent()
+	return node
+
+
+## [SRC: RefreshAllEquips 0x534c40 -> UnityEntensions.Clear(false) 0x394d40.]
+## Detach before rebuilding, but OnClose 0x533f00 destroys attached children.
+func _release_equipment_for_refresh() -> void:
+	if not is_instance_valid(_equip_rows):
+		return
+	var screen = _object_screen()
+	if screen == null:
+		return
+	for widget in _equip_rows.get_children():
+		if widget is CardWidget and screen._hand_object(widget.card_uid) == widget:
+			screen.park_slot_object(widget)
+
+
+## [SRC: CanMove 0x532690 + CheckCardCanModify 0x532d00;
+## stringliteral 0x25a7710=equipment; dump.cs:317646-317647.]
+func _can_move_equipment(uid: int) -> bool:
+	var screen = _object_screen()
+	var host = _state.get_card_instance(_card_uid)
+	var equipment = _state.get_card_instance(uid)
+	if screen == null or host == null or equipment == null or equipment.equipped_to_uid != _card_uid:
+		return false
+	if screen._presentation_frozen or not _state.is_hand_card(_card_uid, _db):
+		return false
+	for blocker in screen._presentation_blockers:
+		if blocker not in ["card_detail", "rite"]:
+			return false
+	var modifiable: bool = _card_uid in _state.hand
+	if host.zone == "slot":
+		var rite = _state.get_rite_instance(host.rite_uid)
+		modifiable = rite != null and not rite.start
+	return modifiable and int(_state.effective_card_tags(uid, _db).get(_db.tag_code_to_name.get("equipment", "equipment"), 0)) > 0
+
+
+func _begin_slot_drag(data: Dictionary, widget: CardWidget) -> void:
+	var uid := int(data.card_uid)
+	if not _can_move_equipment(uid):
+		return
+	var screen = _object_screen()
+	# OnBeginDrag 0x5294e0 -> ICardSlot.RemoveCard -> RemoveCard 0x536a00.
+	# Move out before refreshing the panel so the live drag source survives.
+	widget.reparent(screen)
+	_state.detach_equipment(_card_uid, uid, false)
+	var instance = _state.get_card_instance(uid)
+	if not _state.is_hand_card(uid, _db):
+		var own: String = _db.tag_code_to_name.get("own", "own")
+		instance.tags[own] = int(instance.tags.get(own, 0)) + 1
+		_state.validate_tag_attributes(uid, own, _db)
+		_state.record_tag_generation(own, _db)
+	instance.zone = "drag"
+	data.detached_from_slot = true
+	show_card(_state.card_data_for(_card_uid, _db), _card_uid)
+
+
+func _finish_slot_drag(data: Dictionary, _accepted: bool, widget: CardWidget) -> void:
+	var screen = _object_screen()
+	var instance = _state.get_card_instance(int(data.card_uid))
+	if screen == null:
+		return
+	# OnEndDrag 0x52a570 recovers unclaimed cards to hand, not the old equip slot.
+	if instance != null and instance.zone == "drag":
+		screen.drop_card_to_hand(data, screen._card_rail_view.get_local_mouse_position())
+	widget.show()
+	SaveSystem.save(_state)
