@@ -1,5 +1,39 @@
 # 验收、证据与当前交付状态
 
+<a id="slot-object-audit-20261022"></a>
+## 仪式槽对象转移审计（2026-10-22，失败探针）
+
+受测HEAD为a93c1db8。本批从METHOD_MAP的其他控制器缺口收敛到手牌→仪式槽→手牌；未修改运行时。两尺寸转移与读档探针42条断言中30通过、12失败，确认现有数据转移不能证明物理对象转移等价。装备/COPY未在本批扩展。
+
+### 原作依据与差异
+
+REA新分析已在2026-10-23收尾核验：使用已安装CLI重新运行Ghidra 12.1.4默认分析，SetCard返回范围0x18053c7d0–0x18053cb4c（893字节），Evidence `ev_d0a3ee784d0f77eb45a5c6af682f1851c94756035b2bf0c811a97e50597ff835`，耗时1029368ms；不是快照重放。匿名调用与字段偏移通过原有.c/dump.cs命名交叉核验；RecoveryCard/RemoveCard/OnDestroy仍仅为本批直接源码核验，不冒充本次REA新分析。
+
+首次MCP在300秒超时且未留存证据；CLI初次缺进程GHIDRA_INSTALL_DIR，配置后又遇330秒启动超时。仅本次进程设置REA_GHIDRA_STARTUP_TIMEOUT_MS=1200000后成功，未修改用户持久配置。完整回包、新snapshot及失败回包均保留。native value flow未截断，但Ghidra报告0x18053cac3终止调用及0x18053cb48的no-return假设；这些是工具限制，不是运行时执行证明，不能据此声称未知调用覆盖完整。
+
+[SRC: CardSlotController.c:203–354 SetCard 0x53c7d0，Card.gameObject@0x70为空才调用AddCard，然后重挂container@0x120、归一位置/缩放/旋转，设置current@0x148和CardController.slot@0x120；dump.cs:317914–317922字段、317977–317981方法。RecoveryCard 0x53c660把已有对象移到GameController.hide@0xF0，再Player.AddCard并清空槽；RemoveCard 0x53c7b0按current身份匹配才SetCard(null)。]
+
+OnDestroy 0x53bf70在此方法中清理的是prompt_material@0x160，不能据此推断卡牌对象必定销毁，也不能推断整棵槽节点被销毁时子对象仍存活。父级销毁、面板关闭与隐藏仍需独立核验。
+
+| 边界 | 原作源码 | 当前宿主 |
+|---|---|---|
+| 手牌→槽 | SetCard复用card.gameObject | _render_slot_card调用CardWidget.make，旧手牌根仍在隐藏层 |
+| 对象查询 | Card持有实际转移对象 | GameScreen查询仍返回隐藏的手牌根，非槽内根 |
+| 已放卡刷新 | 本次SetCard复用现有根 | _refresh_slot_visuals→_clear_slot_card销毁容器并新建根 |
+| 槽→手牌 | RecoveryCard保留对象，移到hide；后续AddCard复用 | 槽拖放结束queue_free槽卡，手牌显示原先隐藏根 |
+
+### 探针与局限
+
+使用原始5000005的s2，恰好3金币，不修改content或条件。1280×720、1920×1080均以InputEventMouseButton/InputEventMouseMotion开始拖动，命中源卡并检查GUI拖放状态；落点日志为OverlaySlot_S2，断言卡进入该槽；随后真实拖回手牌并断言归还成功。额外调用_refresh_slot_visuals检验纯刷新身份，此一步是辅助检查，不冒充鼠标动作。每尺寸四条对象断言失败，具体instance_id见SLOT_OBJECT_AUDIT日志。
+
+转移测试内的serialize/deserialize仅验证内存状态。第二项受控fixture另行磁盘保存槽内3金币、读取文件并重建GameScreen/RiteView：两尺寸槽卡均存在，但实际对象查询返回false，注入该UID奖励名单后结果绑定为空。每尺寸再产生两条失败，证明读档后存在对象会被上一批的手牌限定查询遗漏；这是受控名单，不是原作自然结算轨迹，也未完成动画/音效/全部状态的闭合验收。两尺寸截图已查看。最终日志除预期断言失败外无脚本错误、资源泄漏。前置试跑未设置正常rite blocker，以及使用带adsorb_spec法拉杰遭拒，已保留并明确排除；这些失败不算对象转移差异。
+
+本批不声称功能完成，不将红色探针加入常规绿灯套件。未测试全部阻塞态、菜单、新局/跨日、面板关闭销毁、动画/音效和保存重建完整链，也未重跑原作状态轨迹；没有修改运行时，上一批绿灯不用于掩盖本次失败。
+
+下一批实现边界：统一实际对象登记与转移，按当前所有者分派点击/快捷动作/拖放回调，防止刷新抢回槽内对象；在替换容器前移出仍被持有的卡，再接入结果绑定及关闭/读档回归。不能只把registry指向另一个仍会被queue_free的根，或让同一根同时保留手牌与槽两套动作。
+
+证据根：`C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/`。content与固定基线不变，未推送。
+
 <a id="result-object-binding-20261022"></a>
 ## 结果绑定读取实际手牌对象（2026-10-22，实现批）
 
