@@ -12144,6 +12144,470 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "COPY装备数量回归及REA快照重放证据",
       "boundary": "本批局部规则验证；不代表完整UI或原作该分支运行验证"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-console.log",
+      "bytes": 30940,
+      "sha256": "d2ba8f0a6507c0eb3b14198d8cbfe764e4bcdafa70a9d3003f799ed33a083f59",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-data/equipment-1280.png",
+      "bytes": 1821677,
+      "sha256": "4bece2440ad6a718fa56f089f0b7df070b440a7006c924761b18fe245385c9a1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-data/equipment-1920.png",
+      "bytes": 3689757,
+      "sha256": "a58c1380957002242ff54402f77324c7e0ab8b2a5155b7db8aaeb90a3c3e8899",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-data/slot-1280.png",
+      "bytes": 1460765,
+      "sha256": "cd9136ac2bf4bbe761c13d5c88dba7d552a98f5467e572378996c0f8e457c643",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-data/slot-1920.png",
+      "bytes": 2937791,
+      "sha256": "8ba26a8f55ae9b40de8c9b78217d054e53f49c26eef7f774115daba26c0253b4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/boundary.log",
+      "bytes": 27749,
+      "sha256": "cb0ad74da44505360504e1ada312eabd01f535843ff6f43dc51da3f43cfeaf5e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final-console.log",
+      "bytes": 9343,
+      "sha256": "f7a713ad8ffafa86ebc51dbe08301985f80eab858a570bd9f3396277f04ab73b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final-data/equipment-1280.png",
+      "bytes": 1821677,
+      "sha256": "4bece2440ad6a718fa56f089f0b7df070b440a7006c924761b18fe245385c9a1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final-data/equipment-1920.png",
+      "bytes": 3689757,
+      "sha256": "a58c1380957002242ff54402f77324c7e0ab8b2a5155b7db8aaeb90a3c3e8899",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/final.log",
+      "bytes": 8365,
+      "sha256": "eeb8bc80911c216471cb453da58d1303c678ecf9fcd09f8163ac53eb5f9d6d82",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/integration.json",
+      "bytes": 1389,
+      "sha256": "b94162ace532695afeab3d50dcd574965067d4ef97c087c444740ce2cc0bfcd3",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/layout-console.log",
+      "bytes": 3265,
+      "sha256": "7a3518978f2085122763b644d076a2a5fbbc5f7ba838fb90af7a7d7aa35ea6b0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/layout-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/layout-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/layout.log",
+      "bytes": 2962,
+      "sha256": "614d9938bd23434f9d697ea2e6d892521b1008a802eccd4ba7cf19a575392814",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/manager-console.log",
+      "bytes": 14716,
+      "sha256": "73dab0d5a7cfc47fea1de6586e99c2d357a71212ce5d2af75e19e60def7f6d14",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/manager-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/manager-receipt.json",
+      "bytes": 457086,
+      "sha256": "df860872678e29f8edd58ccfa80f2db0ee6b1edacdefb65be35cd770a88da6bc",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/manager-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/manager.log",
+      "bytes": 12606,
+      "sha256": "33c568a3042270672a7d6b26d4849059fdecfb5d0956d3d3bda38b9e8a700eb5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/original-console.log",
+      "bytes": 13917,
+      "sha256": "507e80e4edd66b361ebd82911c9a30038b3909c8d03a3926992f7a99c3fe5e8e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/original-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/original-receipt.json",
+      "bytes": 443706,
+      "sha256": "9c567196247c433569f44f6e204c8733ab1c1bb3bdb7efc4f7780ae6562f6909",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/original-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/original.log",
+      "bytes": 11887,
+      "sha256": "4141512e7e8cea9519d3cd1a68e2cc48d01d2e93b8a2238685bbf06798d0dda8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe-console.log",
+      "bytes": 7936,
+      "sha256": "e0782f53110bfd568d29eb8e4812b60dec7fe19c29e9b7ddc58f7eb59fd5a620",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe-data/equipment-1280.png",
+      "bytes": 1821298,
+      "sha256": "d121517f8dd1a6e1812b1431d28dfb125bbe3dbb2adf92c4e9c423679792293c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe-data/equipment-1920.png",
+      "bytes": 3689757,
+      "sha256": "a58c1380957002242ff54402f77324c7e0ab8b2a5155b7db8aaeb90a3c3e8899",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe-stderr.log",
+      "bytes": 816,
+      "sha256": "060b79f79c7fbb70fb507582e619f4ae6ae8e371a62048e23001b66775ef910b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe.log",
+      "bytes": 7927,
+      "sha256": "8aea11fcf92a133d7e40d8cbccb66a4a640324be16cffa7748821da170127863",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2-console.log",
+      "bytes": 6426,
+      "sha256": "d2c08204d78370777dd002c27b39cadf3cb439959ba29584175903acf494ade8",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2-data/equipment-1280.png",
+      "bytes": 1821677,
+      "sha256": "4bece2440ad6a718fa56f089f0b7df070b440a7006c924761b18fe245385c9a1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2-data/equipment-1920.png",
+      "bytes": 3689757,
+      "sha256": "a58c1380957002242ff54402f77324c7e0ab8b2a5155b7db8aaeb90a3c3e8899",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/probe2.log",
+      "bytes": 5772,
+      "sha256": "5ff8d5b35a6106b091cbb435d7d8500a153a2217c5443f39a3365cf7d22c65cb",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/rea-function.json",
+      "bytes": 2935572,
+      "sha256": "13cc0fa31e46077260b46093df1adca057e50f505d77707a2a74bb0f39b06008",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/rea-pseudocode.txt",
+      "bytes": 6860,
+      "sha256": "97ee10721d84e5c4828d750e7a8ab03a1c0db7b95facf73fbc3886461c894e38",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/rea-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/rea-summary.json",
+      "bytes": 8348,
+      "sha256": "eeb32ea9be35d4a5072e357f9ae03286e0136d48d21dbc72956429004b615f31",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-console.log",
+      "bytes": 289559,
+      "sha256": "eeb5c86f184d7e433c9fc3e21f4a5bbbe9d3e49d4bf3958ed759a94103a5f293",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-data/global.json",
+      "bytes": 326,
+      "sha256": "d98a918be3e162433fa85d7a2de8e8c29d5ff1247acd3b91cedd4c940a57f8c0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-data/slot-1280.png",
+      "bytes": 1460789,
+      "sha256": "8286efa80470a92763184425a67d099836b80fa4ed40808985270202dc1fe674",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-data/slot-1920.png",
+      "bytes": 2937771,
+      "sha256": "c68d000743cbb196c7d5976e7f1670fa30c4b7ba0999ad79ae7e757fbff4a55c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression-stderr.log",
+      "bytes": 2279,
+      "sha256": "77e5a9634a918c2a9595e4ced6c042c473f9bd4819da311c5f4e2837d3b8be61",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/regression.log",
+      "bytes": 276189,
+      "sha256": "d17bfd630314c7174592042d0db5a20bf885cea9fe2d3ecae206eef1a4740e26",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/replay.ps1",
+      "bytes": 2463,
+      "sha256": "a83a6180655fa4d3a7ea1ffaee6c89491d68915f98ca765a1e28e11aa25c78c7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/run-filtered.gd",
+      "bytes": 2411,
+      "sha256": "f579035b7291992d10450f2abbb230ef979795ebc1f27541f438c92e1ec1d24c",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/run-filtered.ps1",
+      "bytes": 787,
+      "sha256": "939135b6b3bbad93573d46fe2c450a0687cd394971dd68c503e5a578caee1df9",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/run.ps1",
+      "bytes": 790,
+      "sha256": "216e6f074e108a37f81eff8631ebe6fb80602daf63d29c1f40b8ab461de23bbf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/snapshot.json",
+      "bytes": 5871368,
+      "sha256": "221df35024f5e98882dcf63596b2d9a51fd277f440f429ac3b546318a47c99b7",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261023-equipment-object/source-summary.json",
+      "bytes": 1522,
+      "sha256": "d73959544dab272bc79cb80b567f27852a382f74044de4efb9027102256a8789",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "装备详情对象归属的REA新分析、真实输入回归与原作轨迹对拍",
+      "boundary": "局部对象/拖动验收；完整动画音效及原作同分支实测仍开放"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
