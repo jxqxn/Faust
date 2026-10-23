@@ -1178,7 +1178,7 @@ func refresh() -> void:
 		var instance = _state.get_card_instance(int(uid))
 		if instance == null or instance.zone == "removed":
 			_release_hand_object(int(uid), existing)
-		elif int(uid) not in presented:
+		elif int(uid) not in presented and (int(uid) in held or instance.zone not in ["slot", "drag"]):
 			# Source result Container GO308 is inactive; Hide GO171 stays active.
 			var target := _held_hand_objects if int(uid) in held else _hidden_hand_objects
 			if existing.get_parent() != target:
@@ -1269,18 +1269,68 @@ func _make_hand_object(uid: int) -> CardWidget:
 	if widget == null:
 		widget = CardWidget.make(card, "hand")
 		widget.clicked.connect(_show_card_detail)
-		widget.quick_action_requested.connect(_on_hand_card_quick_action)
+		widget.quick_action_requested.connect(_on_owned_card_quick_action)
 		widget.stack_dropped.connect(_on_hand_card_stack_dropped)
 		widget.stack_drop_allowed = _can_drop_stack
 		widget.equipment_drop_allowed = _can_drop_equipment
 		widget.equipment_dropped.connect(_on_equipment_dropped)
-		widget.split_requested.connect(_on_hand_card_split_requested)
-		widget.split_one_requested.connect(func(card_uid: int): _on_hand_card_split_requested(card_uid, 1))
+		widget.split_requested.connect(_on_owned_card_split_requested)
+		widget.split_one_requested.connect(func(card_uid: int): _on_owned_card_split_requested(card_uid, 1))
 		widget.hold_hint_requested.connect(_on_hand_card_hold_hint)
 	elif widget._card != card:
 		widget.set_card(card)
 	widget.drag_source = "hand"
+	widget.drag_slot = ""
+	widget.drag_rite_uid = 0
+	widget.drag_allowed = Callable()
+	widget.set_meta("slot_owner", null)
+	_bind_object_drag(widget)
 	return widget
+
+
+## [SRC: CardSlotController.SetCard 0x53c7d0, dump.cs:317977-317978.]
+## The same root crosses hand/slot ownership; handlers resolve its current owner.
+func acquire_slot_object(uid: int) -> CardWidget:
+	var widget := _make_hand_object(uid)
+	if widget != null:
+		_hand_objects[uid] = widget
+	return widget
+
+
+func park_slot_object(widget: CardWidget) -> void:
+	if widget.get_parent() != _hidden_hand_objects:
+		widget.reparent(_hidden_hand_objects, false)
+
+
+func _on_owned_card_split_requested(uid: int, amount: int = -1) -> void:
+	var widget := _hand_object(uid)
+	if widget != null and widget.drag_source == "hand":
+		_on_hand_card_split_requested(uid, amount)
+
+
+func _on_owned_card_quick_action(uid: int) -> void:
+	var widget := _hand_object(uid)
+	var owner = widget.get_meta("slot_owner") if widget != null and widget.has_meta("slot_owner") else null
+	if is_instance_valid(owner):
+		owner.return_card_to_hand(uid, widget.drag_slot)
+	else:
+		_on_hand_card_quick_action(uid)
+
+
+func _bind_object_drag(widget: CardWidget) -> void:
+	if widget.has_meta("owner_drag_bound"):
+		return
+	widget.set_meta("owner_drag_bound", true)
+	widget.drag_started.connect(func(data: Dictionary):
+		var owner = widget.get_meta("slot_owner") if widget.has_meta("slot_owner") else null
+		widget.set_meta("drag_origin_owner", owner)
+		if is_instance_valid(owner):
+			owner._begin_slot_drag(data, widget))
+	widget.drag_finished.connect(func(data: Dictionary, accepted: bool):
+		var owner = widget.get_meta("drag_origin_owner") if widget.has_meta("drag_origin_owner") else null
+		widget.set_meta("drag_origin_owner", null)
+		if is_instance_valid(owner):
+			owner._finish_slot_drag(data, accepted, widget))
 
 
 ## Scene-local ownership, not serialized Godot instance IDs.
@@ -1545,10 +1595,15 @@ func _make_sudan_card(asc, life: int) -> CardWidget:
 		widget.custom_minimum_size = widget.card_size()
 		widget.clip_contents = false
 		widget.clicked.connect(_show_card_detail)
-		widget.quick_action_requested.connect(_on_hand_card_quick_action)
+		widget.quick_action_requested.connect(_on_owned_card_quick_action)
 	elif widget._card != card:
 		widget.set_card(card)
 	widget.drag_source = "active_sudan"
+	widget.drag_slot = ""
+	widget.drag_rite_uid = 0
+	widget.drag_allowed = Callable()
+	widget.set_meta("slot_owner", null)
+	_bind_object_drag(widget)
 	return widget
 
 
