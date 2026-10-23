@@ -5,9 +5,8 @@ extends GutTest
 ## recursive copy of its equipped cards.
 ## [SRC: decompiled/CardExtensions.c @ Copy (RVA 0x37f4e0):
 ##       PlayerExtensions.AddCard(source.id) -> for each source.equips@+0x40
-##       Copy(equip, keep_count=true) -> for each source.tag@+0x30 entry AddTag
-##       (0x37e6a0) -> Card.set_count(source.count@0x20) when keep_count is
-##       false. CopyCard.__c__DisplayClass4_1.c @ <Do>b__1 (0x508090) is the
+##       Copy(equip, no_add=true) -> replay source.tag@+0x30 ->
+##       unconditionally copy source.count@0x20 (dump.cs:388311). CopyCard.__c__DisplayClass4_1.c @ <Do>b__1 (0x508090) is the
 ##       caller that runs CardExtensions.Copy(card, false).]
 
 const RNG = preload("res://core/rng.gd")
@@ -115,3 +114,35 @@ func test_copy_operator_ignores_value_and_copies_each_target_once() -> void:
 		assert_eq(int(instance.tags.get("社交", 0)), 2,
 			"each copy carries the source's runtime delta")
 	assert_eq(copied_rows, 1)
+
+
+func test_copy_preserves_nested_equipment_counts_and_save_ownership() -> void:
+	# [SRC: CardExtensions.Copy 0x37f4e0 writes count@0x20 unconditionally;
+	# dump.cs:388311 names its boolean no_add, not keep_count.]
+	var state := GameState.new()
+	var host_uid := state.add_card_to_hand(HOST_CARD, db)
+	var equip_uid := state.add_card_to_hand(EQUIP_CARD, db)
+	var child_uid := state.add_card_to_hand(EQUIP_CARD, db)
+	state.attach_equipment(equip_uid, child_uid, db, false, false)
+	state.attach_equipment(host_uid, equip_uid, db, false, false)
+	state.get_card_instance(equip_uid).count = 4
+	state.get_card_instance(child_uid).count = 7
+	var copied_uid := state.copy_card_instance(host_uid, db)
+	var copied = state.get_card_instance(copied_uid)
+	var equip_copy = state.get_card_instance(int(copied.equipped_uids[0]))
+	var child_copy = state.get_card_instance(int(equip_copy.equipped_uids[0]))
+	assert_eq(equip_copy.count, 4)
+	assert_eq(child_copy.count, 7)
+	assert_ne(equip_copy.uid, equip_uid)
+	assert_ne(child_copy.uid, child_uid)
+	assert_eq(equip_copy.equipped_to_uid, copied_uid)
+	assert_eq(child_copy.equipped_to_uid, equip_copy.uid)
+	assert_false(state.hand.has(equip_copy.uid))
+	assert_false(state.hand.has(child_copy.uid))
+	var restored := GameState.new()
+	SaveSystem.deserialize(SaveSystem.serialize(state), restored, db)
+	assert_eq(restored.get_card_instance(equip_copy.uid).count, 4)
+	assert_eq(restored.get_card_instance(child_copy.uid).count, 7)
+	assert_eq(restored.get_card_instance(child_copy.uid).equipped_to_uid, equip_copy.uid)
+	child_copy.count = 2
+	assert_eq(state.get_card_instance(child_uid).count, 7)
