@@ -1739,9 +1739,9 @@ func take_hand_card_count(card_id: int, amount: int) -> int:
 ## of the source copy; the extra lifecycle notifications belong to the caller.
 ## [SRC: CardExtensions.c @ Copy (RVA 0x37f4e0):
 ##       PlayerExtensions.AddCard(source.id) -> walk source.equips@+0x40 with
-##       Copy(equip, raw=true) and append -> walk source.tag@+0x30 through
-##       AddTag (0x37e6a0) -> Card.set_count(source.count@0x20) when the
-##       keep-count flag is false; the equip recursion passes the flag true.]
+##       Copy(equip, no_add=true) and append -> replay source.tag@+0x30 ->
+##       unconditionally copy source.count@0x20. dump.cs:388311 names the
+##       boolean no_add; it controls player insertion, not count inheritance.]
 func copy_card_instance(source_uid: int, db = null, zone := "hand") -> int:
 	var source = get_card_instance(source_uid)
 	if source == null:
@@ -1753,15 +1753,12 @@ func copy_card_instance(source_uid: int, db = null, zone := "hand") -> int:
 	_record_card_op(CARD_OP_COPY, copy.uid, {"source_uid": source_uid})
 	if zone == "hand":
 		add_card_to_hand(copy.uid, db)
-	# Equipped cards are copied recursively; the recursion passes keep-count=true
-	# so an equip copy keeps count 1 instead of inheriting the source's.
+	# Equipped copies remain out of the hand (source no_add=true), but inherit
+	# count at every recursive level just like the outer card.
 	for equipped_uid in source.equipped_uids:
 		var equipped_copy_uid := copy_card_instance(int(equipped_uid), db, "removed")
 		if equipped_copy_uid <= 0:
 			continue
-		var equipped_copy = get_card_instance(equipped_copy_uid)
-		if equipped_copy != null:
-			equipped_copy.count = 1
 		attach_equipment(copy.uid, equipped_copy_uid, db, false, false)
 	_copy_tag_delta_in_source_order(source, copy, db)
 	copy.count = int(source.count)
