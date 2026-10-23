@@ -1,5 +1,7 @@
 # 原作—克隆方法映射表
 
+2026-10-22仪式槽对象审计：原作SetCard转移同一gameObject；宿主新建槽卡、刷新重建、拖回销毁。两尺寸转移与读档探针30/42，12项失败（8项身份、4项读档后查询/绑定遗漏）；未修运行时，下一批统一所有权与回调，见[失败证据](replica/verification.md#slot-object-audit-20261022)。
+
 2026-10-22结果对象绑定：PutCardOnTable按原顺序创建当前页奖励对象，b__8读取实际手牌登记，已有离页对象可绑定、从未创建的离页对象跳过；两尺寸真实输入与读档回归通过。仅GameScreen范围，其他控制器仍🟡，见[本批验收](replica/verification.md#result-object-binding-20261022)。
 
 2026-10-22手牌对象复用：按AddCard/UpdateHandCards保留根控件，离页隐藏、回页复用，释放按身份判断；原六项失败消除，专项40/40、597断言。Hide GO171仍active，与结果Container GO308 inactive分开承载；结果绑定资格近似尚未替换，见[实现验收](replica/verification.md#hand-object-reuse-20261022)。
@@ -48,6 +50,7 @@
 |---|---|---|
 | 销毁卸装BROKER采样（当前批次） | Init0x572f40 case4；OpCardBroker.mat、原DXBC181_7..10、broker.png及unequip.anim；RiftGenerator0x432550/0x432590/0x432a50 | 🟡 单格整卡采样位移/原始曲线/半秒Done已接，GPU49/49、494断言；共享atlas邻格、裂口生成器及原作过程捕获仍缺失 |
 | 卸装回收与材质参数消费（当前批次） | OpCardNewController.Init0x572f40 case5→NORMAL；OpCardShow.set_Type0x576790/LateUpdate0x5761e0；CardShows_FaceUnlit.op_cards、OpCard.mat、原DXBC182_7..10无_BrokerDist | 🟡 已接原始unequip_recovery曲线/Done，GPU47/47、431断言；纠正“有distance就应消散”的推断；BROKER贴图位移后续已接，Special层仍待实现 |
+| 仪式槽物理对象转移（2026-10-22） | CardSlotController.SetCard 0x53c7d0 / RecoveryCard 0x53c660 / RemoveCard 0x53c7b0；dump.cs:317977–317993 | ❌ 两尺寸实际拖放确认根对象未转移、刷新重建；30/42断言；读档后槽卡存在但查询/绑定遗漏，未修复，见[失败探针](replica/verification.md#slot-object-audit-20261022) |
 | 结果卡实际对象绑定（2026-10-22） | PutCardOnTable 0x5556c0 → AddCard；Settlement.b__8 0x5b4850；dump.cs:320063–320064、324971–324972 | 🟡 GameScreen实际对象查询及离页持有/读档已接入；其他控制器与全链未闭合，见[验收](replica/verification.md#result-object-binding-20261022) |
 | 装备操作主从身份与普通装备动画（当前批次） | CardOpContext.Equip0x398ea0 / OperationContext.AddCardOp_Equip0x39e2f0；OpCardNewController.Init0x572f40 cases3/4/5；OpCard.prefab / equip.anim | 🟡 修正主卡为宿主、装备为独立层；正equipment标签普通装备分支接原始位移与平面四元数曲线，GPU46/46、380断言及原作带54/54通过。卸装Shader、非equipment特殊效果分支、原RenderTexture投影仍开放 |
 | 操作卡标签增减动画（当前批次） | OpCardNewController.Init0x572f40 cases6/7、OpCardTagController.set_TagNode0x5768b0；OpCard.prefab TagBg/Tag/TagModify、add_tag/remove_tag.anim | 🟡 原始图标/变化量/颜色/曲线及Done等待已接；GPU44/44、310断言，真实输入及中途存档重建通过；原作同标签运行捕获、悬停详情与整套结果堆叠仍待闭合 |

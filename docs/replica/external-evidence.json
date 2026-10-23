@@ -11160,6 +11160,382 @@
       "integrated_into": "docs/replica/verification.md",
       "role": "结果实际对象绑定实现与验收证据",
       "boundary": "REA已有快照重放；跨页为受控宿主测试；原作对拍复用既存轨迹，非新录全链"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/fixture-incomplete-probe-console.log",
+      "bytes": 3545,
+      "sha256": "1b20a938ce9a491bff26d9184d83d0343b31210f2efb29b31144e007b4020b19",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/fixture-incomplete-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/fixture-incomplete-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/fixture-incomplete-probe.log",
+      "bytes": 3182,
+      "sha256": "6543e4612bfa175d939f21740439ea4248ab9f36280ebf1871d84e9f2540ad1f",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/fixture-incomplete-test_slot_object_probe.gd",
+      "bytes": 3917,
+      "sha256": "7b3de7bbdb41c762bb7726afc2f01946bc0ea0c620ab9aa9a3bf3db9ac9f9326",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/gate-diagnostic-probe-console.log",
+      "bytes": 5904,
+      "sha256": "3e2957d4d19901e026ba6962c1449daff3009271ec773036d7c716e8c3b46fc0",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/gate-diagnostic-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/gate-diagnostic-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/gate-diagnostic-probe.log",
+      "bytes": 5583,
+      "sha256": "04dde905d37678fe821e7d875e9e9872dba4cf6bb25cd042cf3958c1a6bcc043",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/gate-diagnostic-test_slot_object_probe.gd",
+      "bytes": 4433,
+      "sha256": "eaf6cdcbbe4cd695545b9a333cb0e2bbfdd1cee3d21ca79c57d8f294630c7297",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-console.log",
+      "bytes": 8324,
+      "sha256": "67e9ef5eef3c919f4099ef6f3d6a5e0fcf973505698c5e35c152605b860ba596",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-data/save.json",
+      "bytes": 2606,
+      "sha256": "808515d3197e2b8cd264414d3140d3b562c5dd47409ac91fbf7b265c994c75e2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-data/slot-1280.png",
+      "bytes": 1460821,
+      "sha256": "17290205f10aaa910ce7b7665d9862a2e97878592974c9121abed68879e59791",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-data/slot-1920.png",
+      "bytes": 2937735,
+      "sha256": "859bfea8153556c7bdfdf76c9125bd69a0db32ec2d0013f102394d99742fd1ee",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe-summary.json",
+      "bytes": 1100,
+      "sha256": "63459d2738c1893964c20671b690b26e3ecbdff4a0ea7d131dffb241c8f1d6cd",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/probe.log",
+      "bytes": 7625,
+      "sha256": "05ac6e6ff9e74dda25afe790e32cd47ee8920244e543304294994f95544ef072",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-configured-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-configured-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-extended-exit.txt",
+      "bytes": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-extended-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-function-configured.json",
+      "bytes": 438,
+      "sha256": "85232ea8d4e1a0546e5347f1b2694e905052fca4b5381105adc54d30e5b8518b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-function-extended.json",
+      "bytes": 1135180,
+      "sha256": "d2813a614312e86d5b2d539dab7bf527e82df05c23b37ee10996aa540f1b9e56",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-function.json",
+      "bytes": 2270,
+      "sha256": "add6cd00cdc6082746df2b4e64094c721480c280897ad61064f5062de9f45299",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rea-summary.json",
+      "bytes": 5059,
+      "sha256": "5488bf93b2f4966e9a8f432731b13c511b8daac3a9c8c4ee51f3337f28cec645",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rejected-target-probe-console.log",
+      "bytes": 3125,
+      "sha256": "539bc6e898f13d8bbf2ae2b703dfbca88bc32aa62ba9b59aa622f4e6cc7210b1",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rejected-target-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rejected-target-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rejected-target-probe.log",
+      "bytes": 2806,
+      "sha256": "7157ab352363c01e34592bf9c780a03509291139b1e323b5bd1a3737d8f17850",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/rejected-target-test_slot_object_probe.gd",
+      "bytes": 4235,
+      "sha256": "98a075499770dd910725187541fc97a660859c756db518ddce10c2a4f936ab5e",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/run.ps1",
+      "bytes": 680,
+      "sha256": "2c477ec97a1f670330709a307d1bcde875b8a6a7a7d51e48caf4da2e9db94b26",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/snapshot.json",
+      "bytes": 2270584,
+      "sha256": "adf3594352c8e4f5cbcf308a485b0fcd46bc21d911ba38487b3e85f2d1020e19",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/source-hashes.json",
+      "bytes": 901,
+      "sha256": "6f377e977581b4b355c8c76ed0a6a7918b7aa7aba3405f3f237318de84341db2",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/target-incomplete-probe-console.log",
+      "bytes": 2870,
+      "sha256": "1dbca595c18b58eac4b8de171c2393a59d94586981fa915dc4d6a7361a5c8f84",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/target-incomplete-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/target-incomplete-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/target-incomplete-probe.log",
+      "bytes": 2555,
+      "sha256": "104f4ddb5c82a4fbb950f439bc4fef9f5fe5f1dbeddd7539a98942fa1ff60bcf",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/target-incomplete-test_slot_object_probe.gd",
+      "bytes": 4066,
+      "sha256": "57cfbd1ec65216e7ee351d6972d5e928789c776cd606c185522edcdeb52c02d5",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/test_slot_object_probe.gd",
+      "bytes": 6053,
+      "sha256": "88a7b108350696141083eb6cf82d10a4f632ed59bee0d761d9c31cdfedf34b1b",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/transfer-only-probe-console.log",
+      "bytes": 6304,
+      "sha256": "7b85b6a46a36e9feeae31071692e40f9b9ad27a7e5f59b782519b9337e8afdb6",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/transfer-only-probe-exit.txt",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/transfer-only-probe-stderr.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/transfer-only-probe.log",
+      "bytes": 5777,
+      "sha256": "fc7265dfb3d35c8464b6182c0647e09dc00c421cdf22e0d8c115b089cc568da4",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
+    },
+    {
+      "path": "C:/Users/User/Documents/GitHub/Faust-artifacts/rea-sultans-game/20261022-slot-object-audit/transfer-only-test_slot_object_probe.gd",
+      "bytes": 4277,
+      "sha256": "d9f6c3d1c98b3184f14e175c546bee638ec2fbaa7916f9e7a61a43d252521d04",
+      "integrated_into": "docs/replica/verification.md",
+      "role": "仪式槽对象转移审计、REA新分析与失败探针",
+      "boundary": "30/42断言，12项预期失败；前置试跑单独排除；受控宿主探针不等于原作自然运行录像；未修运行时"
     }
   ],
   "artifact_root": "C:/Users/User/Documents/GitHub/Faust-artifacts",
